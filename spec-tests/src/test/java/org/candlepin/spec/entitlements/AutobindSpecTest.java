@@ -76,7 +76,7 @@ public class AutobindSpecTest {
             .addAttributesItem(ProductAttributes.VirtualCpu.withValue("4"))
             .addAttributesItem(ProductAttributes.WarningPeriod.withValue("30"))
             .addAttributesItem(ProductAttributes.BrandType.withValue("OS"));
-        ownerProductApi.createProductByOwner(owner.getKey(), product);
+        ownerProductApi.createProduct(owner.getKey(), product);
 
         List<ProductDTO> skus = new ArrayList<>(3);
         for (int i = 0; i < 3; i++) {
@@ -88,7 +88,7 @@ public class AutobindSpecTest {
                 .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"))
                 .addAttributesItem(ProductAttributes.HostLimited.withValue("true"))
                 .providedProducts(Set.of(product));
-            skus.add(ownerProductApi.createProductByOwner(owner.getKey(), sku));
+            skus.add(ownerProductApi.createProduct(owner.getKey(), sku));
         }
 
         // create 4 pools, all must provide product "prod" . none of them
@@ -151,9 +151,9 @@ public class AutobindSpecTest {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
         ProductDTO product1 = Products.randomEng()
             .addAttributesItem(ProductAttributes.Addons.withValue("addon1"));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(product1));
-        ProductDTO product2 = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO product2 = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         PoolDTO pool2 = ownerApi.createPool(owner.getKey(), Pools.random(product2));
 
         ConsumerInstalledProductDTO installed = new ConsumerInstalledProductDTO()
@@ -186,9 +186,9 @@ public class AutobindSpecTest {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
         ProductDTO product1 = Products.randomEng()
             .addAttributesItem(ProductAttributes.Addons.withValue("addon1"));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(product1));
-        ProductDTO product2 = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO product2 = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         PoolDTO pool2 = ownerApi.createPool(owner.getKey(), Pools.random(product2));
 
         ConsumerInstalledProductDTO installed = new ConsumerInstalledProductDTO()
@@ -213,9 +213,9 @@ public class AutobindSpecTest {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
         ProductDTO product1 = Products.randomEng()
             .addAttributesItem(ProductAttributes.Roles.withValue("role1"));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(product1));
-        ProductDTO product2 = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO product2 = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         PoolDTO pool2 = ownerApi.createPool(owner.getKey(), Pools.random(product2));
 
         ConsumerInstalledProductDTO installed = new ConsumerInstalledProductDTO()
@@ -246,14 +246,14 @@ public class AutobindSpecTest {
     public void shouldPoolWithRoleHavePriorityOverPoolWithout() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ProductDTO mktProduct1 = Products.random()
             .addAttributesItem(ProductAttributes.Roles.withValue("role1"))
             .providedProducts(Set.of(engProduct));
-        mktProduct1 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct1);
+        mktProduct1 = ownerProductApi.createProduct(owner.getKey(), mktProduct1);
         ProductDTO mktProduct2 = Products.random()
             .providedProducts(Set.of(engProduct));
-        mktProduct2 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct2);
+        mktProduct2 = ownerProductApi.createProduct(owner.getKey(), mktProduct2);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct1));
         PoolDTO pool2 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct2));
 
@@ -285,14 +285,14 @@ public class AutobindSpecTest {
     public void shouldPoolWithAddonHavePriorityOverPoolWithout() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ProductDTO mktProduct1 = Products.random()
             .addAttributesItem(ProductAttributes.Addons.withValue("addon1"))
             .providedProducts(Set.of(engProduct));
-        mktProduct1 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct1);
+        mktProduct1 = ownerProductApi.createProduct(owner.getKey(), mktProduct1);
         ProductDTO mktProduct2 = Products.random()
             .providedProducts(Set.of(engProduct));
-        mktProduct2 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct2);
+        mktProduct2 = ownerProductApi.createProduct(owner.getKey(), mktProduct2);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct1));
         PoolDTO pool2 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct2));
 
@@ -326,11 +326,11 @@ public class AutobindSpecTest {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
         ProductDTO product1 = Products.randomEng()
             .addAttributesItem(ProductAttributes.Addons.withValue("addon1"));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(product1));
         ProductDTO product2 = Products.randomEng()
             .addAttributesItem(ProductAttributes.Addons.withValue("addon2"));
-        product2 = ownerProductApi.createProductByOwner(owner.getKey(), product2);
+        product2 = ownerProductApi.createProduct(owner.getKey(), product2);
         PoolDTO pool2 = ownerApi.createPool(owner.getKey(), Pools.random(product2));
 
         ConsumerInstalledProductDTO installed = new ConsumerInstalledProductDTO()
@@ -367,14 +367,14 @@ public class AutobindSpecTest {
     public void shouldPoolWithUsageHavePriorityOverPoolWithout() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ProductDTO mktProduct1 = Products.random()
             .addAttributesItem(ProductAttributes.Usage.withValue("my_usage"))
             .providedProducts(Set.of(engProduct));
-        mktProduct1 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct1);
+        mktProduct1 = ownerProductApi.createProduct(owner.getKey(), mktProduct1);
         ProductDTO mktProduct2 = Products.random()
             .providedProducts(Set.of(engProduct));
-        mktProduct2 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct2);
+        mktProduct2 = ownerProductApi.createProduct(owner.getKey(), mktProduct2);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct1));
         PoolDTO pool2 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct2));
 
@@ -406,10 +406,10 @@ public class AutobindSpecTest {
     public void shouldPoolWithMatchingRoleBeAttachedEvenIfItCoversNoProducts() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ProductDTO mktProduct1 = Products.random()
             .addAttributesItem(ProductAttributes.Roles.withValue("provided_role,another_role"));
-        mktProduct1 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct1);
+        mktProduct1 = ownerProductApi.createProduct(owner.getKey(), mktProduct1);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct1));
 
         ConsumerInstalledProductDTO installed = new ConsumerInstalledProductDTO()
@@ -443,11 +443,11 @@ public class AutobindSpecTest {
     public void shouldPoolWithMatchingAddonBeAttachedEvenIfItCoversNoProducts() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ProductDTO mktProduct1 = Products.random()
             .addAttributesItem(ProductAttributes.Addons.withValue("provided_addon,another_addon"))
             .providedProducts(Set.of(engProduct));
-        mktProduct1 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct1);
+        mktProduct1 = ownerProductApi.createProduct(owner.getKey(), mktProduct1);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct1));
 
         ConsumerInstalledProductDTO installed = new ConsumerInstalledProductDTO()
@@ -484,10 +484,10 @@ public class AutobindSpecTest {
     public void shouldPoolWithMatchingUsageNotBeAttachedWhenItCoversNoProducts() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ProductDTO mktProduct1 = Products.random()
             .addAttributesItem(ProductAttributes.Usage.withValue("provided_usage"));
-        mktProduct1 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct1);
+        mktProduct1 = ownerProductApi.createProduct(owner.getKey(), mktProduct1);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct1));
 
         ConsumerInstalledProductDTO installed = new ConsumerInstalledProductDTO()
@@ -516,10 +516,10 @@ public class AutobindSpecTest {
     public void shouldPoolWithMatchingSlaNotBeAttachedWhenItCoversNoProducts() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ProductDTO mktProduct1 = Products.random()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("provided_sla"));
-        mktProduct1 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct1);
+        mktProduct1 = ownerProductApi.createProduct(owner.getKey(), mktProduct1);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct1));
 
         ConsumerInstalledProductDTO installed = new ConsumerInstalledProductDTO()
@@ -549,31 +549,31 @@ public class AutobindSpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
 
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
 
         ProductDTO product1 = Products.random().providedProducts(Set.of(engProduct));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         PoolDTO poolWithEngProductOnly = ownerApi.createPool(owner.getKey(), Pools.random(product1));
 
         ProductDTO product2 = Products.random()
             .addAttributesItem(ProductAttributes.Roles.withValue("provided_role,non_provided_role"));
-        product2 = ownerProductApi.createProductByOwner(owner.getKey(), product2);
+        product2 = ownerProductApi.createProduct(owner.getKey(), product2);
         PoolDTO poolWithRoleOnly = ownerApi.createPool(owner.getKey(), Pools.random(product2));
 
         ProductDTO product3 = Products.random()
             .addAttributesItem(ProductAttributes.Addons.withValue("provided_addon,non_provided_addon"));
-        product3 = ownerProductApi.createProductByOwner(owner.getKey(), product3);
+        product3 = ownerProductApi.createProduct(owner.getKey(), product3);
         PoolDTO poolWithAddonOnly =
             ownerApi.createPool(owner.getKey(), Pools.random(product3));
 
         ProductDTO product4 = Products.random()
             .addAttributesItem(ProductAttributes.Usage.withValue("provided_usage"));
-        product4 = ownerProductApi.createProductByOwner(owner.getKey(), product4);
+        product4 = ownerProductApi.createProduct(owner.getKey(), product4);
         PoolDTO poolWithUsageOnly = ownerApi.createPool(owner.getKey(), Pools.random(product4));
 
         ProductDTO product5 = Products.random()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("provided_sla"));
-        product5 = ownerProductApi.createProductByOwner(owner.getKey(), product5);
+        product5 = ownerProductApi.createProduct(owner.getKey(), product5);
         PoolDTO poolWithSlaOnly = ownerApi.createPool(owner.getKey(), Pools.random(product5));
 
         ConsumerInstalledProductDTO installed = new ConsumerInstalledProductDTO()
@@ -625,7 +625,7 @@ public class AutobindSpecTest {
     public void shouldSlaMatchHaveAHigherImpactThanSocketMismatchOrOtherSyspurposeMismatchesOnAPool() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ProductDTO mktProduct1 = Products.random()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("mysla"))
             .addAttributesItem(ProductAttributes.Sockets.withValue("2"))
@@ -633,10 +633,10 @@ public class AutobindSpecTest {
             .addAttributesItem(ProductAttributes.Usage.withValue("random_usage"))
             .addAttributesItem(ProductAttributes.Addons.withValue("one,two"))
             .providedProducts(Set.of(engProduct));
-        mktProduct1 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct1);
+        mktProduct1 = ownerProductApi.createProduct(owner.getKey(), mktProduct1);
         ProductDTO mktProduct2 = Products.random()
             .providedProducts(Set.of(engProduct));
-        mktProduct2 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct2);
+        mktProduct2 = ownerProductApi.createProduct(owner.getKey(), mktProduct2);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct1));
         PoolDTO pool2 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct2));
 
@@ -660,15 +660,15 @@ public class AutobindSpecTest {
     public void shouldPoolWithVirtOnlyMatchNotOverpowerPoolWithUsageMatch() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ProductDTO mktProduct1 = Products.random()
             .addAttributesItem(ProductAttributes.Usage.withValue("my_usage"))
             .providedProducts(Set.of(engProduct));
-        mktProduct1 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct1);
+        mktProduct1 = ownerProductApi.createProduct(owner.getKey(), mktProduct1);
         ProductDTO mktProduct2 = Products.random()
             .addAttributesItem(ProductAttributes.VirtualOnly.withValue("true"))
             .providedProducts(Set.of(engProduct));
-        mktProduct2 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct2);
+        mktProduct2 = ownerProductApi.createProduct(owner.getKey(), mktProduct2);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct1));
         PoolDTO pool2 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct2));
 
@@ -692,10 +692,10 @@ public class AutobindSpecTest {
     public void shouldPoolWithVirtOnlyMatchNotOverpowerPhyicalPoolsWithoutSyspurposeMatches() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ProductDTO mktProduct1 = Products.random()
             .providedProducts(Set.of(engProduct));
-        mktProduct1 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct1);
+        mktProduct1 = ownerProductApi.createProduct(owner.getKey(), mktProduct1);
         ProductDTO mktProduct2 = Products.random()
             .addAttributesItem(ProductAttributes.VirtualOnly.withValue("true"))
             .addAttributesItem(ProductAttributes.Roles.withValue("random_role"))
@@ -703,7 +703,7 @@ public class AutobindSpecTest {
             .addAttributesItem(ProductAttributes.Usage.withValue("random_usage"))
             .addAttributesItem(ProductAttributes.SupportType.withValue("test_support"))
             .providedProducts(Set.of(engProduct));
-        mktProduct2 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct2);
+        mktProduct2 = ownerProductApi.createProduct(owner.getKey(), mktProduct2);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct1));
         PoolDTO pool2 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct2));
 
@@ -732,11 +732,11 @@ public class AutobindSpecTest {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
         ProductDTO product1 = Products.randomEng()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("Standard"));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         ProductDTO product2 = Products.randomEng()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("Layered"))
             .addAttributesItem(ProductAttributes.SupportLevelExempt.withValue("true"));
-        product2 = ownerProductApi.createProductByOwner(owner.getKey(), product2);
+        product2 = ownerProductApi.createProduct(owner.getKey(), product2);
         ownerApi.createPool(owner.getKey(), Pools.random(product1));
         ownerApi.createPool(owner.getKey(), Pools.random(product2));
 
@@ -767,17 +767,17 @@ public class AutobindSpecTest {
     public void shouldRemoveDuplicatesFromTheStackedPoolsProvideIdenticalRolesAddonsConsumerHasSpecified() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ProductDTO product1 = Products.randomEng()
             .addAttributesItem(ProductAttributes.Roles.withValue("my_role"))
             .addAttributesItem(ProductAttributes.Addons.withValue("my_addon"))
             .providedProducts(Set.of(engProduct));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         ProductDTO product2 = Products.randomEng()
             .addAttributesItem(ProductAttributes.Roles.withValue("my_role"))
             .addAttributesItem(ProductAttributes.Addons.withValue("my_addon"))
             .providedProducts(Set.of(engProduct));
-        product2 = ownerProductApi.createProductByOwner(owner.getKey(), product2);
+        product2 = ownerProductApi.createProduct(owner.getKey(), product2);
         ownerApi.createPool(owner.getKey(), Pools.random(product1));
         ownerApi.createPool(owner.getKey(), Pools.random(product2));
 
@@ -801,16 +801,16 @@ public class AutobindSpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
 
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
 
         ProductDTO product1 = Products.random()
             .addAttributesItem(ProductAttributes.Roles.withValue("pRoViDeD_rOlE,non_provided_role"));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         PoolDTO poolWithRoleOnly = ownerApi.createPool(owner.getKey(), Pools.random(product1));
 
         ProductDTO product2 = Products.random()
             .addAttributesItem(ProductAttributes.Addons.withValue("pRoViDeD_aDDoN,non_provided_addon"));
-        product2 = ownerProductApi.createProductByOwner(owner.getKey(), product2);
+        product2 = ownerProductApi.createProduct(owner.getKey(), product2);
         PoolDTO poolWithAddonOnly = ownerApi.createPool(owner.getKey(), Pools.random(product2));
 
         ConsumerInstalledProductDTO installed = new ConsumerInstalledProductDTO()
@@ -853,10 +853,10 @@ public class AutobindSpecTest {
     public void shouldVirtualSystemBindToVirtOnlyPoolDespiteLackingSyspurposeAttributeMatches() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ProductDTO mktProduct1 = Products.random()
             .providedProducts(Set.of(engProduct));
-        mktProduct1 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct1);
+        mktProduct1 = ownerProductApi.createProduct(owner.getKey(), mktProduct1);
         ProductDTO mktProduct2 = Products.random()
             .addAttributesItem(ProductAttributes.VirtualOnly.withValue("true"))
             .addAttributesItem(ProductAttributes.Roles.withValue("SP Server"))
@@ -865,7 +865,7 @@ public class AutobindSpecTest {
             .addAttributesItem(ProductAttributes.Addons.withValue("provided_addon"))
             .addAttributesItem(ProductAttributes.SupportType.withValue("test_support"))
             .providedProducts(Set.of(engProduct));
-        mktProduct2 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct2);
+        mktProduct2 = ownerProductApi.createProduct(owner.getKey(), mktProduct2);
         ownerApi.createPool(owner.getKey(), Pools.random(mktProduct1));
         ownerApi.createPool(owner.getKey(), Pools.random(mktProduct2));
 
@@ -889,16 +889,16 @@ public class AutobindSpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
 
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
 
         ProductDTO product1 = Products.random()
             .addAttributesItem(ProductAttributes.Roles.withValue("PROVIDED_ROLE,    NON_PROVIDED_ROLE "));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         PoolDTO poolWithRoleOnly = ownerApi.createPool(owner.getKey(), Pools.random(product1));
 
         ProductDTO product2 = Products.random()
             .addAttributesItem(ProductAttributes.Addons.withValue("PROVIDED_ADDON,   NON_PROVIDED_ADDON "));
-        product2 = ownerProductApi.createProductByOwner(owner.getKey(), product2);
+        product2 = ownerProductApi.createProduct(owner.getKey(), product2);
         PoolDTO poolWithAddonOnly = ownerApi.createPool(owner.getKey(), Pools.random(product2));
 
         ConsumerInstalledProductDTO installed = new ConsumerInstalledProductDTO()
@@ -943,11 +943,11 @@ public class AutobindSpecTest {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
         ProductDTO product1 = Products.randomEng()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("Standard"));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         ProductDTO product2 = Products.randomEng()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("Layered"))
             .addAttributesItem(ProductAttributes.SupportLevelExempt.withValue("true"));
-        product2 = ownerProductApi.createProductByOwner(owner.getKey(), product2);
+        product2 = ownerProductApi.createProduct(owner.getKey(), product2);
         ownerApi.createPool(owner.getKey(), Pools.random(product1));
         ownerApi.createPool(owner.getKey(), Pools.random(product2));
 
@@ -977,7 +977,7 @@ public class AutobindSpecTest {
         ProductDTO product3 = Products.randomEng()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("Standard"))
             .addAttributesItem(ProductAttributes.SupportLevelExempt.withValue("false"));
-        product3 = ownerProductApi.createProductByOwner(owner.getKey(), product3);
+        product3 = ownerProductApi.createProduct(owner.getKey(), product3);
         ownerApi.createPool(owner.getKey(), Pools.random(product3));
         consumerClient.consumers().bindProduct(consumer.getUuid(), product3.getId());
 
@@ -991,14 +991,14 @@ public class AutobindSpecTest {
     public void shouldPoolWithServiceTypeHavePriorityOverPoolWithout() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ProductDTO mktProduct1 = Products.random()
             .addAttributesItem(ProductAttributes.SupportType.withValue("test_support"))
             .providedProducts(Set.of(engProduct));
-        mktProduct1 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct1);
+        mktProduct1 = ownerProductApi.createProduct(owner.getKey(), mktProduct1);
         ProductDTO mktProduct2 = Products.random()
             .providedProducts(Set.of(engProduct));
-        mktProduct2 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct2);
+        mktProduct2 = ownerProductApi.createProduct(owner.getKey(), mktProduct2);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct1));
         PoolDTO pool2 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct2));
 
@@ -1030,10 +1030,10 @@ public class AutobindSpecTest {
     public void shouldPoolWithMatchingServiceTypeNotBeAttachedWhenItCoversNoProducts() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ProductDTO mktProduct1 = Products.random()
             .addAttributesItem(ProductAttributes.SupportType.withValue("test_support"));
-        mktProduct1 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct1);
+        mktProduct1 = ownerProductApi.createProduct(owner.getKey(), mktProduct1);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct1));
 
         ConsumerInstalledProductDTO installed = new ConsumerInstalledProductDTO()
@@ -1062,15 +1062,15 @@ public class AutobindSpecTest {
     public void shouldPoolWithVirtOnlyMatchNotOverpowerPoolWithServiceTypeMatch() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO engProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ProductDTO mktProduct1 = Products.random()
             .addAttributesItem(ProductAttributes.SupportType.withValue("test_support"))
             .providedProducts(Set.of(engProduct));
-        mktProduct1 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct1);
+        mktProduct1 = ownerProductApi.createProduct(owner.getKey(), mktProduct1);
         ProductDTO mktProduct2 = Products.random()
             .addAttributesItem(ProductAttributes.VirtualOnly.withValue("true"))
             .providedProducts(Set.of(engProduct));
-        mktProduct2 = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct2);
+        mktProduct2 = ownerProductApi.createProduct(owner.getKey(), mktProduct2);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct1));
         PoolDTO pool2 = ownerApi.createPool(owner.getKey(), Pools.random(mktProduct2));
 

@@ -14,12 +14,10 @@
  */
 package org.candlepin.service.impl;
 
-import org.candlepin.model.ContentCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificateCurator;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.ProductInfo;
 
@@ -38,15 +36,14 @@ import javax.inject.Inject;
  */
 public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
-    private OwnerProductCurator ownerProductCurator;
+    private ProductCurator productCurator;
     private ProductCertificateCurator prodCertCurator;
 
     @Inject
-    public DefaultProductServiceAdapter(OwnerProductCurator ownerProductCurator,
-        ProductCertificateCurator prodCertCurator, ContentCurator contentCurator,
-        UniqueIdGenerator idGenerator) {
+    public DefaultProductServiceAdapter(ProductCurator productCurator,
+        ProductCertificateCurator prodCertCurator) {
 
-        this.ownerProductCurator = ownerProductCurator;
+        this.productCurator = productCurator;
         this.prodCertCurator = prodCertCurator;
     }
 
@@ -55,7 +52,9 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         // for product cert storage/generation - not sure if this should go in
         // a separate service?
 
-        Product entity = this.ownerProductCurator.getProductByIdUsingOwnerKey(ownerKey, productId);
+        // Given the task here, we can't possibly know what namespace the product may exist in, so
+        // we'll need to check both.
+        Product entity = this.productCurator.resolveProductId(ownerKey, productId);
         return entity != null ? this.prodCertCurator.getCertForProduct(entity) : null;
     }
 
@@ -67,7 +66,8 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     @Override
     @Transactional
     public Collection<? extends ProductInfo> getProductsByIds(String ownerKey, Collection<String> ids) {
-        return this.ownerProductCurator.getProductsByIdsUsingOwnerKey(ownerKey, ids).list();
+        return this.productCurator.resolveProductIds(ownerKey, ids)
+            .values();
     }
 
 }

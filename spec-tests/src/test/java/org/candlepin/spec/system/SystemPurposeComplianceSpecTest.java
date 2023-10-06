@@ -89,7 +89,7 @@ public class SystemPurposeComplianceSpecTest {
 
     @Test
     public void shouldBeMatchedOnAFutureDateForAFutureEntitlement() {
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.Roles.withValue("myrole")));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(),
             Pools.random(product).startDate(YEAR_IN_FUTURE).endDate(TWO_YEAR_IN_FUTURE));
@@ -123,7 +123,7 @@ public class SystemPurposeComplianceSpecTest {
 
     @Test
     public void shouldNotRecalculateConsumerStatusDuringStatusCallWithSpecifiedDate() {
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.Roles.withValue("myrole")));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(),
             Pools.random(product).startDate(YEAR_IN_FUTURE).endDate(TWO_YEAR_IN_FUTURE));
@@ -162,7 +162,7 @@ public class SystemPurposeComplianceSpecTest {
 
     @Test
     public void shouldChangeToMatchedAfterSatisfyingRole() {
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.Roles.withValue("myrole")));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
         ConsumerDTO consumer = userClient.consumers().createConsumer(
@@ -180,7 +180,7 @@ public class SystemPurposeComplianceSpecTest {
 
     @Test
     public void shouldBeNotSpecifiedForAnySLAWhenConsumerHasNullSLA() {
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.SupportLevel.withValue("mysla")));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
         ConsumerDTO consumer = userClient.consumers().createConsumer(
@@ -198,7 +198,7 @@ public class SystemPurposeComplianceSpecTest {
 
     @Test
     public void shouldBeNotSpecifiedForAnyUsageWhenConsumerHasNullUsage() {
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.Usage.withValue("myusage")));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
         ConsumerDTO consumer = userClient.consumers().createConsumer(
@@ -216,7 +216,7 @@ public class SystemPurposeComplianceSpecTest {
 
     @Test
     public void shouldBeNotSpecifiedForAnyRoleWhenConsumerHasNullRole() {
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.Roles.withValue("myrole")));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
         ConsumerDTO consumer = userClient.consumers().createConsumer(
@@ -235,7 +235,7 @@ public class SystemPurposeComplianceSpecTest {
     @Test
     @SuppressWarnings("checkstyle:indentation")
     public void shouldBeNotSpecifiedForAnyAddonsWhenConsumerHasNullAddons() {
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.Addons.withValue("myaddon"),
                 ProductAttributes.Addons.withValue("myotheraddon")));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
@@ -270,7 +270,7 @@ public class SystemPurposeComplianceSpecTest {
 
     @Test
     public void shouldChangeToMatchedAfterSatisfyingUsage() {
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.Usage.withValue("myusage")));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
         ConsumerDTO consumer = userClient.consumers().createConsumer(
@@ -311,10 +311,10 @@ public class SystemPurposeComplianceSpecTest {
 
     @Test
     public void shouldChangeToMatchedAfterSatisfyingAllAddons() {
-        ProductDTO product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product1 = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.Addons.withValue("addons1")));
         PoolDTO pool1 = adminClient.owners().createPool(owner.getKey(), Pools.random(product1));
-        ProductDTO product2 = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product2 = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.Addons.withValue("addons2")));
         PoolDTO pool2 = adminClient.owners().createPool(owner.getKey(), Pools.random(product2));
         ConsumerDTO consumer = userClient.consumers().createConsumer(
@@ -349,7 +349,7 @@ public class SystemPurposeComplianceSpecTest {
     @Test
     @SuppressWarnings("checkstyle:indentation")
     public void shouldBeMismatchedForUnsatisfiedSLA() {
-        ProductDTO product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product1 = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.SupportLevel.withValue("mysla")));
         adminClient.owners().createPool(owner.getKey(), Pools.random(product1));
         ConsumerDTO consumer = userClient.consumers().createConsumer(
@@ -365,7 +365,7 @@ public class SystemPurposeComplianceSpecTest {
                 " consumed subscription."));
 
         // should not change for another SLA
-        ProductDTO product2 = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product2 = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.SupportLevel.withValue("anothersla")));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product2));
         userClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
@@ -382,7 +382,7 @@ public class SystemPurposeComplianceSpecTest {
 
     @Test
     public void shouldChangeToMatchedAfterSatisfyingSLA() {
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.SupportLevel.withValue("mysla")));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
         ConsumerDTO consumer = userClient.consumers().createConsumer(
@@ -402,10 +402,10 @@ public class SystemPurposeComplianceSpecTest {
 
     @Test
     public void shouldBeMatchedForMixedSLAs() {
-        ProductDTO product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product1 = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.SupportLevel.withValue("mysla")));
         PoolDTO pool1 = adminClient.owners().createPool(owner.getKey(), Pools.random(product1));
-        ProductDTO product2 = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product2 = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.SupportLevel.withValue("anothersla")));
         PoolDTO pool2 = adminClient.owners().createPool(owner.getKey(), Pools.random(product2));
         ConsumerDTO consumer = userClient.consumers().createConsumer(
@@ -422,10 +422,10 @@ public class SystemPurposeComplianceSpecTest {
 
     @Test
     public void shouldBeMatchedForMixedUsages() {
-        ProductDTO product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product1 = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.Usage.withValue("myusage")));
         PoolDTO pool1 = adminClient.owners().createPool(owner.getKey(), Pools.random(product1));
-        ProductDTO product2 = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product2 = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.Usage.withValue("anotherusage")));
         PoolDTO pool2 = adminClient.owners().createPool(owner.getKey(), Pools.random(product2));
         ConsumerDTO consumer = userClient.consumers().createConsumer(
@@ -442,7 +442,7 @@ public class SystemPurposeComplianceSpecTest {
 
     @Test
     public void shouldChangeToMismatchedAfterRevokingPools() {
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.Usage.withValue("myusage")));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
         ConsumerDTO consumer = userClient.consumers().createConsumer(
@@ -467,7 +467,7 @@ public class SystemPurposeComplianceSpecTest {
     @Test
     @SuppressWarnings("checkstyle:indentation")
     public void shouldAllowSettingSystemPurposePropertiesOnRegistration() {
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.SupportLevel.withValue("premium")));
         adminClient.owners().createPool(owner.getKey(), Pools.random(product));
         ConsumerDTO consumer = userClient.consumers().createConsumer(
@@ -489,10 +489,10 @@ public class SystemPurposeComplianceSpecTest {
     @Test
     @SuppressWarnings("checkstyle:indentation")
     public void shouldAllowUpdatingSystemPurposePropertiesOnConsumer() {
-        ProductDTO product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product1 = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.SupportLevel.withValue("basic"),
                 ProductAttributes.SupportType.withValue("basic_support")));
-        ProductDTO product2 = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product2 = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.SupportLevel.withValue("premium"),
                 ProductAttributes.SupportType.withValue("premium_support")));
         adminClient.owners().createPool(owner.getKey(), Pools.random(product1));
@@ -538,7 +538,7 @@ public class SystemPurposeComplianceSpecTest {
     @SuppressWarnings("checkstyle:indentation")
     public void shouldAllowClearingSystemPurposePropertiesOnConsumer() {
         // Create a product and pool so the service level is available.
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.SupportLevel.withValue("basic")));
         adminClient.owners().createPool(owner.getKey(), Pools.random(product));
         ConsumerDTO consumer = userClient.consumers().createConsumer(
@@ -579,7 +579,7 @@ public class SystemPurposeComplianceSpecTest {
 
     @Test
     public void shouldBeNotSpecifiedForAnyServiceTypeWhenConsumerHasNullServiceType() {
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.SupportType.withValue("test_support")));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
@@ -614,7 +614,7 @@ public class SystemPurposeComplianceSpecTest {
 
     @Test
     public void shouldChangeToMatchedAfterSatisfyingServiceType() {
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.SupportType.withValue("test_service_type")));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
         ConsumerDTO consumer = userClient.consumers().createConsumer(
@@ -635,10 +635,10 @@ public class SystemPurposeComplianceSpecTest {
 
     @Test
     public void shouldBeMatchedForMixedServiceType() {
-        ProductDTO product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product1 = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.SupportType.withValue("L1")));
         PoolDTO pool1 = adminClient.owners().createPool(owner.getKey(), Pools.random(product1));
-        ProductDTO product2 = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product2 = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.SupportType.withValue("L1")));
         PoolDTO pool2 = adminClient.owners().createPool(owner.getKey(), Pools.random(product2));
         ConsumerDTO consumer = userClient.consumers().createConsumer(

@@ -19,9 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
@@ -34,14 +32,12 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
-import org.candlepin.model.ResultIterator;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.model.CertificateInfo;
@@ -55,16 +51,20 @@ import org.junit.jupiter.api.Test;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
 
 
 // TODO: FIXME: Rewrite this test to not be so reliant upon mocks. It's making things incredibly brittle and
 // wasting dev time tracking down non-issues when a mock silently fails because the implementation changes.
+// :(
+
 public class DefaultProductServiceAdapterTest {
     private String someid = "deadbeef";
+
     private DefaultProductServiceAdapter dpsa;
-    private OwnerProductCurator opc;
+    private ProductCurator pc;
     private ProductCertificateCurator pcc;
     private UniqueIdGenerator idgen;
     private PKIUtility pki;
@@ -73,31 +73,29 @@ public class DefaultProductServiceAdapterTest {
 
     @BeforeEach
     public void init() {
-        opc = mock(OwnerProductCurator.class);
-        idgen = mock(UniqueIdGenerator.class);
         Configuration config = mock(Configuration.class);
+        when(config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING)).thenReturn(false);
+
+        pc = mock(ProductCurator.class);
+        idgen = mock(UniqueIdGenerator.class);
         pki = mock(PKIUtility.class);
         extUtil = new X509ExtensionUtil(config);
         cc = mock(ContentCurator.class);
         pcc = spy(new ProductCertificateCurator(pki, extUtil));
-        when(config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING)).thenReturn(false);
-        dpsa = new DefaultProductServiceAdapter(opc, pcc, cc, idgen);
+        dpsa = new DefaultProductServiceAdapter(pc, pcc);
     }
 
     @Test
     public void productsByIds() {
-        Owner o = mock(Owner.class);
-        List<String> ids = new ArrayList<>();
-        CandlepinQuery<Product> ccmock = mock(CandlepinQuery.class);
-        ResultIterator<Product> iterator = mock(ResultIterator.class);
+        Owner owner = TestUtil.createOwner("test_owner");
 
-        when(opc.getProductsByIdsUsingOwnerKey(nullable(String.class), anyCollection())).thenReturn(ccmock);
-        when(ccmock.iterate(anyInt(), anyBoolean())).thenReturn(iterator);
+        Map<String, Product> result = Map.of();
+        when(pc.resolveProductIds(nullable(String.class), anyCollection())).thenReturn(result);
 
-        ids.add(someid);
+        List<String> ids = List.of(someid);
 
-        dpsa.getProductsByIds(o.getKey(), ids);
-        verify(opc).getProductsByIdsUsingOwnerKey(eq(o.getKey()), eq(ids));
+        dpsa.getProductsByIds(owner.getKey(), ids);
+        verify(pc).resolveProductIds(eq(owner.getKey()), eq(ids));
     }
 
     @Test
@@ -106,7 +104,7 @@ public class DefaultProductServiceAdapterTest {
         Product product = TestUtil.createProduct("test_product");
         ProductCertificate cert = mock(ProductCertificate.class);
 
-        when(opc.getProductByIdUsingOwnerKey(eq(owner.getKey()), eq(product.getId()))).thenReturn(product);
+        when(pc.resolveProductId(eq(owner.getKey()), eq(product.getId()))).thenReturn(product);
         doReturn(cert).when(pcc).findForProduct(eq(product));
 
         CertificateInfo result = dpsa.getProductCertificate(owner.getKey(), product.getId());
@@ -121,7 +119,7 @@ public class DefaultProductServiceAdapterTest {
         Product product = TestUtil.createProduct("test_product");
         ProductCertificate cert = mock(ProductCertificate.class);
 
-        when(opc.getProductByIdUsingOwnerKey(eq(owner.getKey()), eq(product.getId()))).thenReturn(product);
+        when(pc.resolveProductId(eq(owner.getKey()), eq(product.getId()))).thenReturn(product);
         doAnswer(returnsFirstArg()).when(pcc).create(any(ProductCertificate.class));
         doReturn(null).when(pcc).findForProduct(eq(product));
 

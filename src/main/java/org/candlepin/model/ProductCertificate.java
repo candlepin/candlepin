@@ -33,7 +33,7 @@ import javax.validation.constraints.NotNull;
 public class ProductCertificate extends AbstractCertificate {
 
     /** Name of the table backing this object in the database */
-    public static final String DB_TABLE = "cp2_product_certificates";
+    public static final String DB_TABLE = "cp_product_certificates";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

@@ -1228,9 +1228,14 @@ public class DefaultEntitlementCertServiceAdapterTest {
         pool.setAccountNumber("account1");
         pool.setContractNumber("contract1");
         pool.setOrderNumber("order1");
-        for (ProductContent pc : product.getProductContent()) {
-            pc.setEnabled(false);
-        }
+
+        List<Content> content = product.getProductContent()
+            .stream()
+            .map(ProductContent::getContent)
+            .toList();
+
+        product.setProductContent(null);
+        content.forEach(elem -> product.addContent(elem, false));
 
         Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV3Extensions();
         Map<String, X509ExtensionWrapper> map = new HashMap<>();
@@ -1293,21 +1298,18 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
             contents = (List<Map<String, Object>>) prod.get("content");
             for (Map<String, Object> cont : contents) {
-                assertEquals(cont.get("id"), CONTENT_ID);
-                assertEquals(cont.get("name"), CONTENT_NAME);
-                assertEquals(cont.get("type"), CONTENT_TYPE);
-                assertEquals(cont.get("label"), CONTENT_LABEL);
-                assertEquals(cont.get("vendor"), CONTENT_VENDOR);
-                assertEquals(cont.get("gpg_url"), CONTENT_GPG_URL);
-                assertEquals(cont.get("path"), "prefix" + CONTENT_URL);
-                assertFalse((Boolean) cont.get("enabled"));
-                assertEquals(cont.get("metadata_expire"), 3200);
+                assertEquals(CONTENT_ID, cont.get("id"));
+                assertEquals(CONTENT_NAME, cont.get("name"));
+                assertEquals(CONTENT_TYPE, cont.get("type"));
+                assertEquals(CONTENT_LABEL, cont.get("label"));
+                assertEquals(CONTENT_VENDOR, cont.get("vendor"));
+                assertEquals(CONTENT_GPG_URL, cont.get("gpg_url"));
+                assertEquals("prefix" + CONTENT_URL, cont.get("path"));
+                assertEquals(Boolean.FALSE, cont.get("enabled"));
+                assertEquals(3200, cont.get("metadata_expire"));
+                assertEquals(List.of(ARCH_LABEL), cont.get("arches"));
 
-                List<String> arches = new ArrayList<>();
-                arches.add(ARCH_LABEL);
-                assertEquals(cont.get("arches"), arches);
-
-                String rTags = content.getRequiredTags();
+                String rTags = this.content.getRequiredTags();
                 st = new StringTokenizer(rTags, ",");
                 while (st.hasMoreElements()) {
                     assertTrue(((List) cont.get("required_tags")).contains(st.nextElement()));
@@ -1530,9 +1532,14 @@ public class DefaultEntitlementCertServiceAdapterTest {
         subscription.getProduct().setAttribute(Product.Attributes.WARNING_PERIOD, "0");
         subscription.getProduct().setAttribute(Product.Attributes.MANAGEMENT_ENABLED, "false");
         entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "false");
-        for (ProductContent pc : product.getProductContent()) {
-            pc.setEnabled(true);
-        }
+
+        List<Content> content = product.getProductContent()
+            .stream()
+            .map(ProductContent::getContent)
+            .toList();
+
+        product.setProductContent(null);
+        content.forEach(elem -> product.addContent(elem, true));
 
         Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV3Extensions();
         Map<String, X509ExtensionWrapper> map = new HashMap<>();

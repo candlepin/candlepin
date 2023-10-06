@@ -31,6 +31,36 @@ public final class Products {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Creates a shallow copy of the specified ProductDTO instance
+     *
+     * @param source
+     *  the source ProductDTO instance to copy
+     *
+     * @return
+     *  a shallow copy of the specified ProductDTO instance
+     */
+    public static ProductDTO copy(ProductDTO source) {
+        if (source == null) {
+            return null;
+        }
+
+        return new ProductDTO()
+            .uuid(source.getUuid())
+            .id(source.getId())
+            .created(source.getCreated())
+            .updated(source.getUpdated())
+            .name(source.getName())
+            .multiplier(source.getMultiplier())
+            .attributes(source.getAttributes())
+            .productContent(source.getProductContent())
+            .dependentProductIds(source.getDependentProductIds())
+            .branding(source.getBranding())
+            .derivedProduct(source.getDerivedProduct())
+            .providedProducts(source.getProvidedProducts())
+            .href(source.getHref());
+    }
+
     public static ProductDTO random() {
         return randomSKU();
     }

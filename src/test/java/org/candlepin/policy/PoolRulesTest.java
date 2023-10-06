@@ -42,7 +42,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
@@ -54,8 +53,6 @@ import org.candlepin.util.Util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -70,7 +67,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 
 
@@ -542,10 +538,6 @@ public class PoolRulesTest {
         derivedProd.addProvidedProduct(derivedProvidedProd1);
         derivedProd.addProvidedProduct(derivedProvidedProd2);
 
-        when(productCurator.getPoolProvidedProductsCached(p))
-            .thenReturn((Set<Product>) p.getProduct().getProvidedProducts());
-        when(productCurator.getPoolDerivedProvidedProductsCached(p))
-            .thenReturn((Set<Product>) p.getDerivedProduct().getProvidedProducts());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<>());
 
         // Should be virt_only pool for unmapped guests:
@@ -584,8 +576,6 @@ public class PoolRulesTest {
             .setId("mockVirtLimitSubCreateDerived")
             .setUpstreamPoolId("upstream_pool_id");
 
-        when(productCurator.getPoolDerivedProvidedProductsCached(p))
-            .thenReturn((Set<Product>) p.getDerivedProduct().getProvidedProducts());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<>());
 
         // Should be virt_only pool for unmapped guests:
@@ -973,105 +963,6 @@ public class PoolRulesTest {
 
         assertThrows(IllegalStateException.class,
             () -> poolRules.createAndEnrichPools(primaryPool, existingPools));
-    }
-
-    // TODO:
-    // Refactor these tests when isManaged is refactored to not be reliant upon the config
-    public static Stream<Object[]> getParametersForIsManagedTests() {
-        SourceSubscription srcSub = new SourceSubscription("test_sub_id", "test_sub_key");
-
-        return Stream.of(
-            // Standalone tests
-            new Object[] { Pool.PoolType.NORMAL, null, null, false, false },
-            new Object[] { Pool.PoolType.ENTITLEMENT_DERIVED, null, null, false, false },
-            new Object[] { Pool.PoolType.STACK_DERIVED, null, null, false, false },
-            new Object[] { Pool.PoolType.BONUS, null, null, false, false },
-            new Object[] { Pool.PoolType.UNMAPPED_GUEST, null, null, false, false },
-            new Object[] { Pool.PoolType.DEVELOPMENT, null, null, false, false },
-
-            new Object[] { Pool.PoolType.NORMAL, srcSub, null, false, false },
-            new Object[] { Pool.PoolType.ENTITLEMENT_DERIVED, srcSub, null, false, false },
-            new Object[] { Pool.PoolType.STACK_DERIVED, srcSub, null, false, false },
-            new Object[] { Pool.PoolType.BONUS, srcSub, null, false, false },
-            new Object[] { Pool.PoolType.UNMAPPED_GUEST, srcSub, null, false, false },
-            new Object[] { Pool.PoolType.DEVELOPMENT, srcSub, null, false, false },
-
-            new Object[] { Pool.PoolType.NORMAL, null, "upstream_pool_id", false, false },
-            new Object[] { Pool.PoolType.ENTITLEMENT_DERIVED, null, "upstream_pool_id", false, false },
-            new Object[] { Pool.PoolType.STACK_DERIVED, null, "upstream_pool_id", false, false },
-            new Object[] { Pool.PoolType.BONUS, null, "upstream_pool_id", false, false },
-            new Object[] { Pool.PoolType.UNMAPPED_GUEST, null, "upstream_pool_id", false, false },
-            new Object[] { Pool.PoolType.DEVELOPMENT, null, "upstream_pool_id", false, false },
-
-            new Object[] { Pool.PoolType.NORMAL, srcSub, "upstream_pool_id", false, true },
-            new Object[] { Pool.PoolType.ENTITLEMENT_DERIVED, srcSub, "upstream_pool_id", false, false },
-            new Object[] { Pool.PoolType.STACK_DERIVED, srcSub, "upstream_pool_id", false, false },
-            new Object[] { Pool.PoolType.BONUS, srcSub, "upstream_pool_id", false, true },
-            new Object[] { Pool.PoolType.UNMAPPED_GUEST, srcSub, "upstream_pool_id", false, true },
-            new Object[] { Pool.PoolType.DEVELOPMENT, srcSub, "upstream_pool_id", false, true },
-
-            // Hosted tests
-            new Object[] { Pool.PoolType.NORMAL, null, null, true, false },
-            new Object[] { Pool.PoolType.ENTITLEMENT_DERIVED, null, null, true, false },
-            new Object[] { Pool.PoolType.STACK_DERIVED, null, null, true, false },
-            new Object[] { Pool.PoolType.BONUS, null, null, true, false },
-            new Object[] { Pool.PoolType.UNMAPPED_GUEST, null, null, true, false },
-            new Object[] { Pool.PoolType.DEVELOPMENT, null, null, true, false },
-
-            new Object[] { Pool.PoolType.NORMAL, srcSub, null, true, true },
-            new Object[] { Pool.PoolType.ENTITLEMENT_DERIVED, srcSub, null, true, false },
-            new Object[] { Pool.PoolType.STACK_DERIVED, srcSub, null, true, false },
-            new Object[] { Pool.PoolType.BONUS, srcSub, null, true, true },
-            new Object[] { Pool.PoolType.UNMAPPED_GUEST, srcSub, null, true, true },
-            new Object[] { Pool.PoolType.DEVELOPMENT, srcSub, null, true, true },
-
-            new Object[] { Pool.PoolType.NORMAL, null, "upstream_pool_id", true, false },
-            new Object[] { Pool.PoolType.ENTITLEMENT_DERIVED, null, "upstream_pool_id", true, false },
-            new Object[] { Pool.PoolType.STACK_DERIVED, null, "upstream_pool_id", true, false },
-            new Object[] { Pool.PoolType.BONUS, null, "upstream_pool_id", true, false },
-            new Object[] { Pool.PoolType.UNMAPPED_GUEST, null, "upstream_pool_id", true, false },
-            new Object[] { Pool.PoolType.DEVELOPMENT, null, "upstream_pool_id", true, false },
-
-            new Object[] { Pool.PoolType.NORMAL, srcSub, "upstream_pool_id", true, true },
-            new Object[] { Pool.PoolType.ENTITLEMENT_DERIVED, srcSub, "upstream_pool_id", true, false },
-            new Object[] { Pool.PoolType.STACK_DERIVED, srcSub, "upstream_pool_id", true, false },
-            new Object[] { Pool.PoolType.BONUS, srcSub, "upstream_pool_id", true, true },
-            new Object[] { Pool.PoolType.UNMAPPED_GUEST, srcSub, "upstream_pool_id", true, true },
-            new Object[] { Pool.PoolType.DEVELOPMENT, srcSub, "upstream_pool_id", true, true });
-    }
-
-    @ParameterizedTest
-    @MethodSource("getParametersForIsManagedTests")
-    public void testIsManaged(Pool.PoolType type, SourceSubscription srcSub, String upstreamPoolId,
-        boolean hosted, boolean expected) {
-
-        Pool pool = TestUtil.createPool(owner, TestUtil.createProduct());
-
-        pool.setSourceSubscription(srcSub);
-        pool.setUpstreamPoolId(upstreamPoolId);
-
-        switch (type) {
-            case UNMAPPED_GUEST -> {
-                pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
-                pool.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
-            }
-            case ENTITLEMENT_DERIVED -> {
-                pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
-                pool.setSourceEntitlement(new Entitlement());
-            }
-            case STACK_DERIVED -> {
-                pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
-                pool.setSourceStack(new SourceStack());
-            }
-            case BONUS -> pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
-            case DEVELOPMENT -> pool.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-            default -> {
-                // Nothing to do here
-            }
-        }
-
-        boolean output = pool.isManaged(!hosted);
-        assertEquals(expected, output);
     }
 
     private PoolRules createRules(Configuration config) {

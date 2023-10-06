@@ -16,10 +16,15 @@ package org.candlepin.resource.validation;
 
 import org.candlepin.exceptions.BadRequestException;
 
+import org.xnap.commons.i18n.I18n;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
+
+import javax.inject.Inject;
+
 
 
 /**
@@ -29,6 +34,12 @@ import java.util.function.Supplier;
  */
 public class DTOValidator {
 
+    private final I18n i18n;
+
+    @Inject
+    public DTOValidator(I18n i18n) {
+        this.i18n = Objects.requireNonNull(i18n);
+    }
 
     /**
      * Accepts a variable amount of method references to getters that return Collections of elements, and
@@ -77,7 +88,7 @@ public class DTOValidator {
     public void validateCollectionElementsNotNull(Supplier<? extends Collection<?>> getter) {
         Collection<?> collection = getter.get();
         if (collection != null && collection.stream().anyMatch(Objects::isNull)) {
-            throw new BadRequestException("collection contains null elements");
+            throw new BadRequestException(this.i18n.tr("collection contains null elements"));
         }
     }
 
@@ -150,7 +161,7 @@ public class DTOValidator {
         if (map != null &&
             (map.values().stream().anyMatch(Objects::isNull) ||
             map.keySet().stream().anyMatch(Objects::isNull))) {
-            throw new BadRequestException("map contains null elements");
+            throw new BadRequestException(this.i18n.tr("map contains null elements"));
         }
     }
 

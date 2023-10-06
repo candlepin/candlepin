@@ -205,7 +205,7 @@ public class GuestsIdResourceSpecTest {
             .facts(Map.of("virt.uuid", uuid1, "virt.is_guest", "true")));
 
         // Create a product/subscription
-        ProductDTO product = admin.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = admin.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.VirtualLimit.withValue("10"),
                 ProductAttributes.HostLimited.withValue("true")));
         admin.owners().createPool(owner.getKey(), Pools.random(product));
@@ -277,7 +277,7 @@ public class GuestsIdResourceSpecTest {
             .facts(Map.of("virt.uuid", uuid1, "virt.is_guest", "true")));
 
         // Create a product/subscription
-        ProductDTO product = admin.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = admin.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.VirtualLimit.withValue("10"),
                 ProductAttributes.HostLimited.withValue("true")));
         admin.owners().createPool(owner.getKey(), Pools.random(product));

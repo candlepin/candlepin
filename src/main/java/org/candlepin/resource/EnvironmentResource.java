@@ -39,6 +39,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
@@ -46,7 +47,6 @@ import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
-import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.resource.server.v1.EnvironmentApi;
 import org.candlepin.resource.util.EntitlementEnvironmentFilter;
 import org.candlepin.resource.util.EnvironmentUpdates;
@@ -87,7 +87,7 @@ public class EnvironmentResource implements EnvironmentApi {
     private final ConsumerResource consumerResource;
     private final PoolService poolService;
     private final ConsumerCurator consumerCurator;
-    private final OwnerContentCurator ownerContentCurator;
+    private final ContentCurator contentCurator;
     private final RdbmsExceptionTranslator rdbmsExceptionTranslator;
     private final ModelTranslator translator;
     private final JobManager jobManager;
@@ -102,7 +102,7 @@ public class EnvironmentResource implements EnvironmentApi {
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
-        PoolService poolService, ConsumerCurator consumerCurator, OwnerContentCurator ownerContentCurator,
+        PoolService poolService, ConsumerCurator consumerCurator, ContentCurator contentCurator,
         RdbmsExceptionTranslator rdbmsExceptionTranslator, ModelTranslator translator,
         JobManager jobManager, DTOValidator validator, ContentAccessManager contentAccessManager,
         CertificateSerialCurator certificateSerialCurator,
@@ -116,7 +116,7 @@ public class EnvironmentResource implements EnvironmentApi {
         this.consumerResource = Objects.requireNonNull(consumerResource);
         this.poolService = Objects.requireNonNull(poolService);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
-        this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
+        this.contentCurator = Objects.requireNonNull(contentCurator);
         this.rdbmsExceptionTranslator = Objects.requireNonNull(rdbmsExceptionTranslator);
         this.translator = Objects.requireNonNull(translator);
         this.jobManager = Objects.requireNonNull(jobManager);
@@ -405,9 +405,11 @@ public class EnvironmentResource implements EnvironmentApi {
             throw new BadRequestException(i18n.tr("No content ID specified"));
         }
 
-        Content resolved = this.ownerContentCurator.getContentById(environment.getOwner(), contentId);
+        String namespace = environment.getOwner().getKey();
+
+        Content resolved = this.contentCurator.resolveContentId(namespace, contentId);
         if (resolved == null) {
-            throw new NotFoundException(i18n.tr("Unable to find content with the ID \"{0}\".", contentId));
+            throw new NotFoundException(i18n.tr("Unable to find a content with the ID \"{0}\"", contentId));
         }
 
         return resolved;
@@ -430,6 +432,7 @@ public class EnvironmentResource implements EnvironmentApi {
             throw new IseException(this.i18n.tr(
                 "An unexpected exception occurred while scheduling job \"{0}\"", config.getJobKey()), e);
         }
+
         return this.translator.translate(job, AsyncJobStatusDTO.class);
     }
 

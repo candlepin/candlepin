@@ -308,13 +308,9 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @JoinColumn(name = "cdn_id")
     private Cdn cdn;
 
-    /**
-     * A "locked (true)" pool is logically equivalent to a non-"custom" pool.
-     * A "un-locked (false)" pool is logically equivalent to a "custom" pool.
-     */
-    @Column(name = "locked")
+    @Column(name = "managed")
     @Type(type = "org.hibernate.type.NumericBooleanType")
-    private Boolean locked;
+    private Boolean managed;
 
     public Pool() {
         this.activeSubscription = Boolean.TRUE;
@@ -322,7 +318,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         this.entitlements = new HashSet<>();
 
         this.markedForDelete = false;
-        this.locked = false;
+        this.managed = false;
 
         this.setExported(0L);
         this.setConsumed(0L);
@@ -1283,45 +1279,35 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         return this;
     }
 
-    public boolean isLocked() {
-        return this.locked != null && locked;
-    }
-
-    public Pool setLocked(boolean locked) {
-        this.locked = locked;
-        return this;
-    }
-
     public boolean isDerived() {
         return "true".equals(this.getAttributeValue(Pool.Attributes.DERIVED_POOL));
     }
 
     /**
-     * Checks whether or not the given pool is a managed (that is, non-custom) pool.
-     *
-     * @param isStandalone
-     *  Whether the candlepin is running in standalone mode
+     * Checks whether or not the given pool is a managed (that is, non-custom) pool. Managed pools
+     * cannot be modified at the API level and may be updated or deleted during a pool refresh or
+     * manifest import.
      *
      * @return
      *  true if the pool is a managed pool; false otherwise
      */
-    public boolean isManaged(boolean isStandalone) {
-        // BZ 1452694: Don't delete pools for custom subscriptions
-        // We need to verify that we aren't deleting pools that are created via the API.
-        // Unfortunately, we don't have a 100% reliable way of detecting such pools at this point,
-        // so we'll do the next best thing: In standalone, pools with an upstream pool ID are those
-        // we've received from an import (and, thus, are eligible for deletion). In hosted,
-        // however, we *are* the upstream source, so everything is eligible for removal.
-        // This is pretty hacky, so the way we go about doing this check should eventually be
-        // replaced with something more generic and reliable, and not dependent on the config.
+    public boolean isManaged() {
+        return this.managed;
+    }
 
-        // TODO:
-        // Remove the standalone config check and replace it with a check for whether or not the
-        // pool is non-custom  -- however we decide to implement that in the future.
-
-        return this.getSourceSubscription() != null &&
-            !this.getType().isDerivedType() &&
-            (this.getUpstreamPoolId() != null || !isStandalone);
+    /**
+     * Sets whether or not this pool should be considered a "managed" pool (i.e. not custom), that
+     * cannot be modified at the API level.
+     *
+     * @param managed
+     *  true if this pool should be flagged as managed; false otherwise
+     *
+     * @return
+     *  a reference to this pool instance
+     */
+    public Pool setManaged(boolean managed) {
+        this.managed = managed;
+        return this;
     }
 
     /**

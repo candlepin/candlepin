@@ -24,9 +24,9 @@ import org.candlepin.dto.api.server.v1.PoolDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
@@ -63,7 +63,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
 
     private final ActivationKeyCurator activationKeyCurator;
     private final ActivationKeyContentOverrideCurator contentOverrideCurator;
-    private final OwnerProductCurator ownerProductCurator;
+    private final ProductCurator productCurator;
     private final PoolService poolService;
     private final I18n i18n;
     private final ServiceLevelValidator serviceLevelValidator;
@@ -75,7 +75,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator, I18n i18n,
         PoolService poolService, ServiceLevelValidator serviceLevelValidator,
-        ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator,
+        ActivationKeyRules activationKeyRules, ProductCurator productCurator,
         ModelTranslator translator, DTOValidator dtoValidator,
         ActivationKeyContentOverrideCurator contentOverrideCurator, ContentOverrideValidator coValidator) {
 
@@ -84,7 +84,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
         this.poolService = Objects.requireNonNull(poolService);
         this.serviceLevelValidator = Objects.requireNonNull(serviceLevelValidator);
         this.activationKeyRules = Objects.requireNonNull(activationKeyRules);
-        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
+        this.productCurator = Objects.requireNonNull(productCurator);
         this.translator = Objects.requireNonNull(translator);
         this.dtoValidator = Objects.requireNonNull(dtoValidator);
         this.contentOverrideCurator = Objects.requireNonNull(contentOverrideCurator);
@@ -375,8 +375,8 @@ public class ActivationKeyResource implements ActivationKeyApi {
         return pool;
     }
 
-    private Product confirmProduct(Owner o, String prodId) {
-        Product prod = this.ownerProductCurator.getProductById(o, prodId);
+    private Product confirmProduct(Owner owner, String prodId) {
+        Product prod = this.productCurator.resolveProductId(owner.getKey(), prodId);
 
         if (prod == null) {
             throw new BadRequestException(i18n.tr("Product with id {0} could not be found.", prodId));

@@ -174,7 +174,7 @@ public class OwnerResourceFuturePoolSpecTest {
 
     private static ProductDTO createProductByOwner(ApiClient adminClient, OwnerDTO owner)
         throws ApiException {
-        return adminClient.ownerProducts().createProductByOwner(owner.getKey(), Products.random());
+        return adminClient.ownerProducts().createProduct(owner.getKey(), Products.random());
     }
 
     private OwnerDTO createOwner(ApiClient client) throws ApiException {

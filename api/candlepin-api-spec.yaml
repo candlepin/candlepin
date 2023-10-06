@@ -2806,7 +2806,7 @@ paths:
       tags:
         - content
       description: Retrieves list of Content
-      operationId: listContent
+      operationId: getContents
       x-java-response:
         type: Iterable
         isContainer: true
@@ -2828,7 +2828,7 @@ paths:
       tags:
         - content
       description: Retrieves a single Content
-      operationId: getContent
+      operationId: getContentByUuid
       security: []
       parameters:
         - name: content_uuid
@@ -4456,21 +4456,43 @@ paths:
 
   /owners/{owner_key}/content:
     get:
-      description: Retrieves list of owner contents
+      description: |
+        Retrieves a list of contents within the given organization's namespace, optionally filtered
+        by a list of content IDs.
       tags:
         - owner_content
-      operationId: listOwnerContent
+      operationId: getContentsByOwner
+      security: []
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       parameters:
         - name: owner_key
           in: path
-          description: The key of the owner whose content has to be retrieved
+          description: Owner key
           required: true
           schema:
             type: string
-      security: []
+        - name: content
+          in: query
+          description: |
+            The ID of a content to fetch. If defined, the list of contents returned by this method
+            will only include those matching the given ID. May be specified multiple times to filter
+            on multiple content IDs.
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: omit_global
+          in: query
+          description: |
+            whether or not to limit the lookup to only contents defined within the organization's
+            namespace, excluding any globally defined contents
+          required: false
+          schema:
+            type: boolean
+            default: false
       responses:
         200:
           description: Content successfully listed
@@ -4536,7 +4558,7 @@ paths:
       description: Retrieves a single content
       tags:
         - owner_content
-      operationId: getOwnerContent
+      operationId: getContentById
       security: []
       parameters:
         - name: owner_key
@@ -4619,7 +4641,7 @@ paths:
       description: Deletes a Content
       tags:
         - owner_content
-      operationId: remove
+      operationId: removeContent
       security: []
       parameters:
         - name: owner_key
@@ -4654,7 +4676,10 @@ paths:
       description: Creates Contents in bulk
       tags:
         - owner_content
-      operationId: createBatchContent
+      operationId: createContentBatch
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
       security: []
       parameters:
         - name: owner_key
@@ -4672,9 +4697,6 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/ContentDTO'
-      x-java-response:
-        type: Iterable
-        isContainer: true
       responses:
         200:
           description: Contents created
@@ -5730,13 +5752,15 @@ paths:
 
   /owners/{owner_key}/products:
     get:
-      description: Retrieves a list of products by owner
+      description: |
+        Retrieves a list of products within the given organization's namespace, optionally filtered
+        by a list of product IDs.
       tags:
         - owner_product
       operationId: getProductsByOwner
       security: []
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       parameters:
         - name: owner_key
@@ -5747,12 +5771,24 @@ paths:
             type: string
         - name: product
           in: query
-          description: List of product ID's
-          required: true
+          description: |
+            The ID of a product to fetch. If defined, the list of products returned by this method
+            will only include those matching the given ID. May be specified multiple times to filter
+            on multiple product IDs.
+          required: false
           schema:
             type: array
             items:
               type: string
+        - name: omit_global
+          in: query
+          description: |
+            whether or not to limit the lookup to only products defined within the organization's
+            namespace, excluding any globally defined products
+          required: false
+          schema:
+            type: boolean
+            default: false
       responses:
         200:
           description: Retrieves a list of products by owner
@@ -5778,7 +5814,7 @@ paths:
       description: Creates a product for an owner
       tags:
         - owner_product
-      operationId: createProductByOwner
+      operationId: createProduct
       security: []
       parameters:
         - name: owner_key
@@ -5818,7 +5854,7 @@ paths:
       description: Retrieves a single product for an owner
       tags:
         - owner_product
-      operationId: getProductByOwner
+      operationId: getProductById
       security: []
       parameters:
         - name: owner_key
@@ -5856,7 +5892,7 @@ paths:
       description: Updates a product for an owner
       tags:
         - owner_product
-      operationId: updateProductByOwner
+      operationId: updateProduct
       security: []
       parameters:
         - name: owner_key
@@ -5894,15 +5930,6 @@ paths:
               example:
                 displayMessage: Invalid inputs, unable to update product
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        403:
-          description: Product is locked. Unable to update product
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Product is locked. Unable to update product
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
           description: Owner key could not be found
           content:
@@ -5919,7 +5946,7 @@ paths:
       description: Removes a product for an owner
       tags:
         - owner_product
-      operationId: deleteProductByOwner
+      operationId: removeProduct
       security: []
       parameters:
         - in: path
@@ -5945,15 +5972,6 @@ paths:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
                 displayMessage: Product cannot be deleted while subscriptions exists
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        403:
-          description: Product is locked. Unable to delete product
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Product is locked. Unable to delete product
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
           description: Owner key or product ID could not be found
@@ -6027,7 +6045,7 @@ paths:
       description: Retrieves a product certificate for an owner
       tags:
         - owner_product
-      operationId: getProductCertificateByOwner
+      operationId: getProductCertificateById
       security: []
       parameters:
         - name: owner_key
@@ -6075,7 +6093,7 @@ paths:
       description: Adds content to a product
       tags:
         - owner_product
-      operationId: addContent
+      operationId: addContentToProduct
       security: []
       parameters:
         - name: owner_key
@@ -6118,15 +6136,6 @@ paths:
               example:
                 displayMessage: Invalid inputs, unable to add content
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        403:
-          description: Product is locked. Unable to add content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Product is locked. Unable to add content
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
           description: Owner key could not be found
           content:
@@ -6143,7 +6152,7 @@ paths:
       description: Removes a single Content from a product
       tags:
         - owner_product
-      operationId: removeContent
+      operationId: removeContentFromProduct
       security: []
       parameters:
         - in: path
@@ -6180,15 +6189,6 @@ paths:
               example:
                 displayMessage: Invalid inputs, unable to remove content
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        403:
-          description: Product is locked. Unable to remove content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Product is locked. Unable to remove content
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
           description: Owner key could not be found
           content:
@@ -6206,7 +6206,7 @@ paths:
       description: Adds content to a product in bulk
       tags:
         - owner_product
-      operationId: addBatchContent
+      operationId: addContentsToProduct
       security: []
       parameters:
         - name: owner_key
@@ -6246,15 +6246,6 @@ paths:
               example:
                 displayMessage: Invalid inputs, unable to add content
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        403:
-          description: Product is locked. Unable to add content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Product is locked. Unable to add content
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
           description: Owner key could not be found
           content:
@@ -6271,7 +6262,7 @@ paths:
       description: Removes content from a product in batch
       tags:
         - owner_product
-      operationId: removeBatchContent
+      operationId: removeContentsFromProduct
       security: []
       parameters:
         - in: path
@@ -6310,15 +6301,6 @@ paths:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
                 displayMessage: Invalid inputs, unable to remove content
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        403:
-          description: Product is locked. Unable to remove content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Product is locked. Unable to remove content
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
           description: Owner key could not be found
@@ -6643,12 +6625,34 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /products:
+    get:
+      tags:
+        - products
+      description: Retrieves list containing all known products
+      operationId: getProducts
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      security: []
+      responses:
+        200:
+          description: product list successfully returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductDTO'
+        default:
+          $ref: '#/components/responses/default'
+
   /products/{product_uuid}:
     get:
       description: Retrieves a single Product
       tags:
         - products
-      operationId: getProduct
+      operationId: getProductByUuid
       parameters:
         - in: path
           name: product_uuid
@@ -6681,7 +6685,7 @@ paths:
       description: Retrieves a Certificate for a Product
       tags:
         - products
-      operationId: getProductCertificate
+      operationId: getProductCertificateByUuid
       parameters:
         - in: path
           name: product_uuid
@@ -7029,46 +7033,6 @@ paths:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
                 displayMessage: Pool or certificate for given ID could not be found
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-  /products/owners:
-    get:
-      description: Retrieves a list of Owners by Product
-      tags:
-        - products
-      operationId: getProductOwners
-      parameters:
-        - in: query
-          name: product
-          description: Multiple product Ids
-          required: true
-          schema:
-            type: array
-            items:
-              type: string
-      x-java-response:
-        type: java.util.stream.Stream
-        isContainer: true
-      security: []
-      responses:
-        200:
-          description: Owners for the provided product Ids
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/OwnerDTO'
-        400:
-          description: No product IDs specified
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: No product IDs specified
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
@@ -9186,7 +9150,7 @@ components:
               type: string
             subscriptionId:
               type: string
-            locked:
+            managed:
               type: boolean
 
     PoolQuantityDTO:

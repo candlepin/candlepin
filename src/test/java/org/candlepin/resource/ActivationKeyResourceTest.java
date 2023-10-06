@@ -80,8 +80,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
     private ActivationKeyResource buildActivationKeyResource() {
         return new ActivationKeyResource(this.mockActivationKeyCurator, this.i18n, this.poolService,
-            this.serviceLevelValidator, this.activationKeyRules, this.ownerProductCurator,
-            this.modelTranslator, this.validator, this.akcoCurator, this.coValidator);
+            this.serviceLevelValidator, this.activationKeyRules, this.productCurator, this.modelTranslator,
+            this.validator, this.akcoCurator, this.coValidator);
     }
 
     @Test

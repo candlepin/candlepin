@@ -408,7 +408,6 @@ public class CandlepinModule extends AbstractModule {
         bind(StoreFactory.PoolStore.class);
         bind(StoreFactory.UserStore.class);
         bind(StoreFactory.ActivationKeyStore.class);
-        bind(StoreFactory.ProductStore.class);
         bind(StoreFactory.AsyncJobStatusStore.class);
     }
 

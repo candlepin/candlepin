@@ -75,7 +75,7 @@ public class ConsumerResourceDevSpecTest {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
 
         // active subscription to allow this all to work
-        ProductDTO activeProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO activeProduct = ownerProductApi.createProduct(owner.getKey(), Products.random());
         PoolDTO activeSubscription = Pools.random(activeProduct)
             .subscriptionId(StringUtil.random("source_sub"))
             .subscriptionSubKey(StringUtil.random("sub_key"))
@@ -110,7 +110,7 @@ public class ConsumerResourceDevSpecTest {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
 
         // active subscription to allow this all to work
-        ProductDTO activeProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO activeProduct = ownerProductApi.createProduct(owner.getKey(), Products.random());
         PoolDTO activeSubscription = Pools.random(activeProduct)
             .subscriptionId(StringUtil.random("source_sub"))
             .subscriptionSubKey(StringUtil.random("sub_key"))
@@ -144,7 +144,7 @@ public class ConsumerResourceDevSpecTest {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
 
         // active subscription to allow this all to work
-        ProductDTO activeProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO activeProduct = ownerProductApi.createProduct(owner.getKey(), Products.random());
         PoolDTO activeSubscription = Pools.random(activeProduct)
             .subscriptionId(StringUtil.random("source_sub"))
             .subscriptionSubKey(StringUtil.random("sub_key"))
@@ -183,7 +183,7 @@ public class ConsumerResourceDevSpecTest {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
 
         // active subscription to allow this all to work
-        ProductDTO activeProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO activeProduct = ownerProductApi.createProduct(owner.getKey(), Products.random());
         PoolDTO activeSubscription = Pools.random(activeProduct)
             .subscriptionId(StringUtil.random("source_sub"))
             .subscriptionSubKey(StringUtil.random("sub_key"))
@@ -225,7 +225,7 @@ public class ConsumerResourceDevSpecTest {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
 
         // active subscription to allow this all to work
-        ProductDTO activeProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO activeProduct = ownerProductApi.createProduct(owner.getKey(), Products.random());
         PoolDTO activeSubscription = Pools.random(activeProduct)
             .subscriptionId(StringUtil.random("source_sub"))
             .subscriptionSubKey(StringUtil.random("sub_key"))
@@ -255,7 +255,7 @@ public class ConsumerResourceDevSpecTest {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
 
         // active subscription to allow this all to work
-        ProductDTO activeProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO activeProduct = ownerProductApi.createProduct(owner.getKey(), Products.random());
         PoolDTO activeSubscription = Pools.random(activeProduct)
             .subscriptionId(StringUtil.random("source_sub"))
             .subscriptionSubKey(StringUtil.random("sub_key"))
@@ -287,13 +287,13 @@ public class ConsumerResourceDevSpecTest {
             .addAttributesItem(ProductAttributes.ExpiresAfter.withValue("90"))
             .providedProducts(Set.of(providedProduct1, providedProduct2, providedProduct3)));
 
-        ProductDTO existingDevProduct = client.ownerProducts().getProductByOwner(owner.getKey(),
+        ProductDTO existingDevProduct = client.ownerProducts().getProductById(owner.getKey(),
             devProduct1.getId());
         AsyncJobStatusDTO job = client.owners().refreshPools(owner.getKey(), false);
         job = client.jobs().waitForJob(job.getId());
         assertThatJob(job).isFinished();
 
-        ProductDTO updatedDevProduct = client.ownerProducts().getProductByOwner(owner.getKey(),
+        ProductDTO updatedDevProduct = client.ownerProducts().getProductById(owner.getKey(),
             devProduct1.getId());
 
         // Verify base state

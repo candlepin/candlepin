@@ -453,9 +453,9 @@ public class ProductDataTest {
             new Content("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
         };
 
-        ProductContent pcentity1 = new ProductContent(null, contentEntities[0], true);
-        ProductContent pcentity2 = new ProductContent(null, contentEntities[1], false);
-        ProductContent pcentity3 = new ProductContent(null, contentEntities[1], true);
+        ProductContent pcentity1 = new ProductContent(contentEntities[0], true);
+        ProductContent pcentity2 = new ProductContent(contentEntities[1], false);
+        ProductContent pcentity3 = new ProductContent(contentEntities[1], true);
 
         ContentData[] content = new ContentData[] {
             contentEntities[0].toDTO(),
@@ -532,9 +532,9 @@ public class ProductDataTest {
             new Content("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
         };
 
-        ProductContent pcentity1 = new ProductContent(null, contentEntities[0], true);
-        ProductContent pcentity2 = new ProductContent(null, contentEntities[1], false);
-        ProductContent pcentity3 = new ProductContent(null, contentEntities[1], true);
+        ProductContent pcentity1 = new ProductContent(contentEntities[0], true);
+        ProductContent pcentity2 = new ProductContent(contentEntities[1], false);
+        ProductContent pcentity3 = new ProductContent(contentEntities[1], true);
 
         ContentData[] content = new ContentData[] {
             contentEntities[0].toDTO(),
@@ -736,9 +736,9 @@ public class ProductDataTest {
             new Content("c2", "content-3", "test_type", "test_label-3", "test_vendor-3"),
         };
 
-        ProductContent pcentity1 = new ProductContent(null, contentEntities[0], true);
-        ProductContent pcentity2 = new ProductContent(null, contentEntities[1], false);
-        ProductContent pcentity3 = new ProductContent(null, contentEntities[2], true);
+        ProductContent pcentity1 = new ProductContent(contentEntities[0], true);
+        ProductContent pcentity2 = new ProductContent(contentEntities[1], false);
+        ProductContent pcentity3 = new ProductContent(contentEntities[2], true);
 
         assertNull(dto.getProductContent());
         assertFalse(dto.removeProductContent(pcentity1));
@@ -1015,21 +1015,6 @@ public class ProductDataTest {
         assertEquals(input, output);
     }
 
-    @Test
-    public void testGetSetLocked() {
-        ProductData dto = new ProductData();
-        Boolean input = Boolean.TRUE;
-
-        Boolean output = dto.isLocked();
-        assertNull(output);
-
-        ProductData output2 = dto.setLocked(input);
-        assertSame(output2, dto);
-
-        output = dto.isLocked();
-        assertEquals(input, output);
-    }
-
     protected static Stream<Object[]> getValuesForEqualityAndReplication() {
         Map<String, String> attributes1 = new HashMap<>();
         attributes1.put("a1", "v1");
@@ -1088,7 +1073,6 @@ public class ProductDataTest {
             new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5") },
             new Object[] { "Branding", branding1, branding2 },
             // new Object[] { "Href", "test_value", null },
-            new Object[] { "Locked", Boolean.TRUE, false },
             new Object[] { "ProvidedProducts", providedProductData1, providedProductData2 });
     }
 
@@ -1250,9 +1234,8 @@ public class ProductDataTest {
             new Object[] { "Multiplier", 1234L, null },
             new Object[] { "Attributes", attributes, Collections.<String, String>emptyMap() },
             // new Object[] { "ProductContent", productContent, Arrays.asList() },
-            new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList() },
             // new Object[] { "Href", "test_value", null },
-            new Object[] { "Locked", Boolean.TRUE, false });
+            new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList() });
     }
 
     @ParameterizedTest
@@ -1348,7 +1331,6 @@ public class ProductDataTest {
         assertNull(base.getProductContent());
         assertNull(base.getDependentProductIds());
         assertNull(base.getHref());
-        assertNull(base.isLocked());
 
         base.populate(source);
 
@@ -1358,10 +1340,6 @@ public class ProductDataTest {
         assertNull(base.getName());
         assertNull(base.getMultiplier());
         assertNull(base.getHref());
-
-        // Note: entities are always locked or unlocked, so this can never be null following a
-        // populate.
-        assertFalse(base.isLocked());
 
         // Note: by default, entities have empty collections (NOT null, as was the case before
         // DTOs). As a result, these will never be null after a populate.
@@ -1384,9 +1362,9 @@ public class ProductDataTest {
             new Content("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
             new Content("c3", "content-3", "test_type", "test_label-3", "test_vendor-3"),
         };
-        ProductContent pcentity1 = new ProductContent(null, contentEntities[0], true);
-        ProductContent pcentity2 = new ProductContent(null, contentEntities[1], false);
-        ProductContent pcentity3 = new ProductContent(null, contentEntities[2], true);
+        ProductContent pcentity1 = new ProductContent(contentEntities[0], true);
+        ProductContent pcentity2 = new ProductContent(contentEntities[1], false);
+        ProductContent pcentity3 = new ProductContent(contentEntities[2], true);
 
         ProductContentData pcdata1 = pcentity1.toDTO();
         ProductContentData pcdata2 = pcentity2.toDTO();
@@ -1403,7 +1381,6 @@ public class ProductDataTest {
         assertNull(base.getProductContent());
         assertNull(base.getDependentProductIds());
         assertNull(base.getHref());
-        assertNull(base.isLocked());
 
         base.populate(source);
 
@@ -1413,10 +1390,6 @@ public class ProductDataTest {
         assertNull(base.getName());
         assertNull(base.getMultiplier());
         assertNull(base.getHref());
-
-        // Note: entities are always locked or unlocked, so this can never be null following a
-        // populate.
-        assertFalse(base.isLocked());
 
         // Note: by default, entities have empty collections (NOT null, as was the case before
         // DTOs). As a result, these will never be null after a populate.
@@ -1448,7 +1421,6 @@ public class ProductDataTest {
         assertNull(base.getProductContent());
         assertNull(base.getDependentProductIds());
         assertNull(base.getHref());
-        assertNull(base.isLocked());
 
         base.populate(source);
 
@@ -1456,10 +1428,6 @@ public class ProductDataTest {
         assertNull(base.getId());
         assertNull(base.getName());
         assertNull(base.getMultiplier());
-
-        // Note: entities are always locked or unlocked, so this can never be null following a
-        // populate.
-        assertFalse(base.isLocked());
 
         // Note: by default, entities have empty collections (NOT null, as was the case before
         // DTOs). As a result, these will never be null after a populate.

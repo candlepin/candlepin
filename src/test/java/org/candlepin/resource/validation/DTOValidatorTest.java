@@ -21,11 +21,14 @@ import org.candlepin.exceptions.BadRequestException;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -100,7 +103,9 @@ public class DTOValidatorTest {
 
     @BeforeAll
     public static void setUp() {
-        validator = new DTOValidator();
+        I18n i18n = I18nFactory.getI18n(DTOValidatorTest.class, Locale.US, I18nFactory.FALLBACK);
+
+        validator = new DTOValidator(i18n);
     }
 
 

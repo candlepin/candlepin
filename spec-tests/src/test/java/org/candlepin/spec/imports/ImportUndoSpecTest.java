@@ -75,8 +75,7 @@ public class ImportUndoSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         // Create a custom pool in the org
-        ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(), Products.random());
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         // Create a basic manifest & import

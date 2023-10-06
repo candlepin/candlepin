@@ -83,10 +83,10 @@ class CertRevocationSpecTest {
     void setUp() throws ApiException {
         owner = ownerClient.createOwner(Owners.random());
 
-        monitoring = ownerProductApi.createProductByOwner(owner.getKey(), Products.random()
+        monitoring = ownerProductApi.createProduct(owner.getKey(), Products.random()
             .name(StringUtil.random("monitoring"))
             .attributes(List.of(new AttributeDTO().name("variant").value("Satellite Starter Pack"))));
-        virtual = ownerProductApi.createProductByOwner(owner.getKey(), Products.random()
+        virtual = ownerProductApi.createProduct(owner.getKey(), Products.random()
             .name(StringUtil.random("virtualization")));
         monitoringPool = ownerClient.createPool(owner.getKey(), Pools.random(monitoring));
         ownerClient.createPool(owner.getKey(), Pools.random(virtual));

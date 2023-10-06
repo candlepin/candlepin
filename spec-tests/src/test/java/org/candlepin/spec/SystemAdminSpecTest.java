@@ -344,7 +344,7 @@ public class SystemAdminSpecTest {
     }
 
     private PoolDTO createPool(OwnerDTO owner) {
-        ProductDTO prod = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO prod = ownerProductApi.createProduct(owner.getKey(), Products.random());
         return ownerApi.createPool(owner.getKey(), Pools.random(prod));
     }
 }

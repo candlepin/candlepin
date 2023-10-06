@@ -71,7 +71,7 @@ public class AutobindDisabledForOwnerSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
 
         consumerClient.consumers().bindProduct(consumer.getUuid(), product);
 
@@ -89,7 +89,7 @@ public class AutobindDisabledForOwnerSpecTest {
             .createConsumer(Consumers.random(owner, ConsumerTypes.Hypervisor));
         ApiClient consumerClient = ApiClients.ssl(consumer);
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
 
         assertBadRequest(() -> consumerClient.consumers().bindProduct(consumer.getUuid(), product))
             .hasMessageContaining("Ignoring request to auto-attach. It is disabled for org")
@@ -104,7 +104,7 @@ public class AutobindDisabledForOwnerSpecTest {
             .autobindDisabled(true));
 
         ProductDTO activeProd = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         adminClient.owners().createPool(owner.getKey(), Pools.randomUpstream(activeProd));
         ProductDTO provProd1 = adminClient.hosted().createProduct(Products.random());
         ProductDTO provProd2 = adminClient.hosted().createProduct(Products.random());

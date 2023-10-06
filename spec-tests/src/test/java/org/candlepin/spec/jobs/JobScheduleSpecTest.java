@@ -77,7 +77,7 @@ public class JobScheduleSpecTest {
         PoolsApi poolsApi = client.pools();
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product = Products.random();
-        product = client.ownerProducts().createProductByOwner(owner.getKey(), product);
+        product = client.ownerProducts().createProduct(owner.getKey(), product);
 
         PoolDTO pool = Pools.random()
             .quantity(6L)

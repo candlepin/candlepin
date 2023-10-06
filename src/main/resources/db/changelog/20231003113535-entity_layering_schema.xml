@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <!-- content tables -->
+    <changeSet id="20231003113535-1" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cp_contents"/>
+            </not>
+        </preConditions>
+
+        <!--
+            Impl note:
+            The namespace column is not-nullable specifically to ensure the unique constraint on
+            (namespace, content_id) works as intended. If nulls are permitted, then we lose ID
+            uniqueness in the global (null) namespace. PostgreSQL can work around this with partial
+            indexes, but MariaDB/MySQL requires a far more annoying means of dealing with it.
+        -->
+
+        <createTable tableName="cp_contents">
+            <column name="uuid" type="varchar(32)">
+                <constraints primaryKey="true" primaryKeyName="cp_contents_pk"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+            <column name="namespace" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_url" type="varchar(255)"/>
+            <column name="gpg_url" type="varchar(255)"/>
+            <column name="label" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metadata_expire" type="bigint"/>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="release_ver" type="varchar(255)"/>
+            <column name="required_tags" type="varchar(255)"/>
+            <column name="type" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vendor" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="arches" type="varchar(255)"/>
+        </createTable>
+
+        <addUniqueConstraint constraintName="cp_contents_uidx1"
+            tableName="cp_contents"
+            columnNames="namespace, content_id"/>
+
+        <createIndex tableName="cp_contents" indexName="cp_contents_idx1">
+            <column name="namespace"/>
+        </createIndex>
+
+        <createIndex tableName="cp_contents" indexName="cp_contents_idx2">
+            <column name="content_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20231003113535-2" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cp_content_required_products"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="cp_content_required_products">
+            <column name="content_uuid" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="cp_content_required_products"
+            columnNames="content_uuid, product_id"
+            constraintName="cp_content_rp_pk"/>
+
+        <addForeignKeyConstraint baseTableName="cp_content_required_products" baseColumnNames="content_uuid"
+            constraintName="cp_content_rp_fk1"
+            referencedTableName="cp_contents"
+            referencedColumnNames="uuid"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- product tables -->
+    <changeSet id="20231003113535-3" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cp_products"/>
+            </not>
+        </preConditions>
+
+        <!--
+            Impl note:
+            The namespace column is not-nullable specifically to ensure the unique constraint on
+            (namespace, product_id) works as intended. If nulls are permitted, then we lose ID
+            uniqueness in the global (null) namespace. PostgreSQL can work around this with partial
+            indexes, but MariaDB/MySQL requires a far more annoying means of dealing with it.
+        -->
+
+        <createTable tableName="cp_products">
+            <column name="uuid" type="varchar(32)">
+                <constraints primaryKey="true" primaryKeyName="cp_products_pk"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+            <column name="namespace" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="multiplier" type="bigint"/>
+            <column name="derived_product_uuid" type="varchar(32)"/>
+        </createTable>
+
+        <addUniqueConstraint constraintName="cp_products_uidx1"
+            tableName="cp_products"
+            columnNames="namespace, product_id"/>
+
+        <createIndex tableName="cp_products" indexName="cp_products_idx1">
+            <column name="namespace"/>
+        </createIndex>
+
+        <createIndex tableName="cp_products" indexName="cp_products_idx2">
+            <column name="product_id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="cp_products" baseColumnNames="derived_product_uuid"
+            constraintName="cp_products_fk1"
+            referencedTableName="cp_products"
+            referencedColumnNames="uuid"
+            onDelete="SET NULL"/>
+    </changeSet>
+
+    <changeSet id="20231003113535-4" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cp_product_attributes"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="cp_product_attributes">
+            <column name="product_uuid" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="varchar(255)"/>
+        </createTable>
+
+        <addPrimaryKey tableName="cp_product_attributes"
+            columnNames="product_uuid, name"
+            constraintName="cp_product_attributes_pk"/>
+
+        <addForeignKeyConstraint baseTableName="cp_product_attributes" baseColumnNames="product_uuid"
+            constraintName="cp_product_attributes_fk1"
+            referencedTableName="cp_products"
+            referencedColumnNames="uuid"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="20231003113535-5" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cp_product_dependent_products"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="cp_product_dependent_products">
+            <column name="product_uuid" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="cp_product_dependent_products"
+            columnNames="product_uuid, product_id"
+            constraintName="cp_product_dps_pk"/>
+
+        <addForeignKeyConstraint baseTableName="cp_product_dependent_products" baseColumnNames="product_uuid"
+            constraintName="cp_product_dps_fk1"
+            referencedTableName="cp_products"
+            referencedColumnNames="uuid"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="20231003113535-6" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cp_product_provided_products"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="cp_product_provided_products">
+            <column name="product_uuid" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="provided_product_uuid" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="cp_product_provided_products"
+            columnNames="product_uuid, provided_product_uuid"
+            constraintName="cp_product_provided_products_pk"/>
+
+        <addForeignKeyConstraint baseTableName="cp_product_provided_products" baseColumnNames="product_uuid"
+            constraintName="cp_product_provided_products_fk1"
+            referencedTableName="cp_products"
+            referencedColumnNames="uuid"
+            onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="cp_product_provided_products" baseColumnNames="provided_product_uuid"
+            constraintName="cp_product_provided_products_fk2"
+            referencedTableName="cp_products"
+            referencedColumnNames="uuid"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="20231003113535-7" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cp_product_contents"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="cp_product_contents">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" primaryKeyName="cp_product_contents_pk"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+            <column name="product_uuid" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_uuid" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="boolean"/>
+        </createTable>
+
+        <!--
+        As much as I'd love to add this constraint, Hibernate's orphan removal happens *after*
+        persisting net-new elements, which causes it trigger a constraint violation in cases where
+        the collection is being rebuilt.
+
+        <addUniqueConstraint tableName="cp_product_contents" constraintName="cp_product_contents_uidx1"
+            columnNames="product_uuid, content_uuid"/>
+        -->
+
+        <addForeignKeyConstraint baseTableName="cp_product_contents" baseColumnNames="product_uuid"
+            constraintName="cp_product_contents_fk1"
+            referencedTableName="cp_products"
+            referencedColumnNames="uuid"
+            onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="cp_product_contents" baseColumnNames="content_uuid"
+            constraintName="cp_product_contents_fk2"
+            referencedTableName="cp_contents"
+            referencedColumnNames="uuid"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="20231003113535-8" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cp_product_branding"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="cp_product_branding">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" primaryKeyName="cp_product_branding_pk"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+            <column name="product_uuid" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="cp_product_branding" baseColumnNames="product_uuid"
+            constraintName="cp_product_branding_fk1"
+            referencedTableName="cp_products"
+            referencedColumnNames="uuid"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="20231003113535-9" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cp_product_certificates"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="cp_product_certificates">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" primaryKeyName="cp_product_certificates_pk"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+            <column name="product_uuid" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cert" type="${cert.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="${cert.type}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="cp_product_certificates" baseColumnNames="product_uuid"
+            constraintName="cp_product_certificates_fk1"
+            referencedTableName="cp_products"
+            referencedColumnNames="uuid"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- migrate products and content -->
+    <changeSet id="20231003113535-10" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyTableName="cp_pool" foreignKeyName="cp_pool_fk1"/>
+        </preConditions>
+
+        <dropForeignKeyConstraint baseTableName="cp_pool" constraintName="cp_pool_fk1"/>
+    </changeSet>
+
+    <!-- TODO: Add migration logic here -->
+
+    <!-- update FKs on pools and other external references to products and content -->
+    <changeSet id="20231003113535-12" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyTableName="cp_pool" foreignKeyName="cp_pool_fk1"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint baseTableName="cp_pool" baseColumnNames="product_uuid"
+            constraintName="cp_pool_fk1"
+            referencedTableName="cp_products"
+            referencedColumnNames="uuid"/>
+    </changeSet>
+
+</databaseChangeLog>

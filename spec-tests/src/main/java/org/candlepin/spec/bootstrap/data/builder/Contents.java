@@ -40,23 +40,21 @@ public final class Contents {
     }
 
     /**
-     * Creates a shallow copy of the specified content DTO
+     * Creates a shallow copy of the specified ContentDTO instance
      *
      * @param source
      *  the source ContentDTO instance to copy
      *
-     * @throws IllegalArgumentException
-     *  if source is null
-     *
      * @return
-     *  a shallow copy of the specified content DTO
+     *  a shallow copy of the specified ContentDTO instance
      */
     public static ContentDTO copy(ContentDTO source) {
         if (source == null) {
-            throw new IllegalArgumentException("source is null");
+            return null;
         }
 
         return new ContentDTO()
+            .uuid(source.getUuid())
             .id(source.getId())
             .name(source.getName())
             .type(source.getType())

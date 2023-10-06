@@ -238,10 +238,10 @@ public class EnvironmentSpecTest {
         promoteContent(env, content1, content2);
         assertEnvContentSize(env, 2);
 
-        ownerClient.ownerContent().remove(owner.getKey(), content1.getId());
+        ownerClient.ownerContent().removeContent(owner.getKey(), content1.getId());
         assertEnvContentSize(env, 1);
 
-        ownerClient.ownerContent().remove(owner.getKey(), content2.getId());
+        ownerClient.ownerContent().removeContent(owner.getKey(), content2.getId());
         assertEnvContentSize(env, 0);
     }
 
@@ -288,11 +288,13 @@ public class EnvironmentSpecTest {
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         ContentDTO content1 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content2 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content1.getId(), false);
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content2.getId(), false);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content1.getId(), false);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content2.getId(), false);
 
         promoteContentDisabled(env, content1);
 
@@ -317,11 +319,13 @@ public class EnvironmentSpecTest {
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         ContentDTO content1 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content2 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content1.getId(), false);
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content2.getId(), false);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content1.getId(), false);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content2.getId(), false);
         promoteContent(env, content1);
         PoolDTO pool = ownerClient.owners().createPool(owner.getKey(), Pools.random(product));
 
@@ -418,7 +422,7 @@ public class EnvironmentSpecTest {
         @Test
         public void shouldPassActivationKeyAuth() {
             ProductDTO product = ownerClient.ownerProducts()
-                .createProductByOwner(owner.getKey(), Products.randomEng());
+                .createProduct(owner.getKey(), Products.randomEng());
             PoolDTO pool = ownerClient.owners().createPool(owner.getKey(), Pools.random(product));
             EnvironmentDTO environment = ownerClient.owners()
                 .createEnv(owner.getKey(), Environments.random());
@@ -450,13 +454,16 @@ public class EnvironmentSpecTest {
     @Test
     public void shouldGiveConsumerContentFromMultipleEnvironments() {
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         ContentDTO content1 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content2 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content3 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content1.getId(), true);
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content2.getId(), true);
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content3.getId(), true);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content1.getId(), true);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content2.getId(), true);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content3.getId(), true);
         PoolDTO pool = ownerClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
@@ -489,13 +496,16 @@ public class EnvironmentSpecTest {
     public void shouldUseOwnerPrefixForContent() {
         OwnerDTO owner = admin.owners().createOwner(Owners.random().contentPrefix("/" + "test_owner"));
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         ContentDTO content1 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content2 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content3 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content1.getId(), true);
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content2.getId(), true);
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content3.getId(), true);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content1.getId(), true);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content2.getId(), true);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content3.getId(), true);
         PoolDTO pool = ownerClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
@@ -524,13 +534,16 @@ public class EnvironmentSpecTest {
     public void shouldUseEnvironmentPrefixForContent() {
         OwnerDTO owner = admin.owners().createOwner(Owners.random().contentPrefix("/test_owner" + "/$env"));
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         ContentDTO content1 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content2 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content3 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content1.getId(), true);
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content2.getId(), true);
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content3.getId(), true);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content1.getId(), true);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content2.getId(), true);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content3.getId(), true);
         PoolDTO pool = ownerClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
@@ -563,13 +576,16 @@ public class EnvironmentSpecTest {
     public void shouldDeduplicateContentFromMultipleEnvironments() {
         OwnerDTO owner = admin.owners().createOwner(Owners.random().contentPrefix("/" + "test_owner/$env"));
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         ContentDTO content1 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content2 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content3 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content1.getId(), true);
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content2.getId(), true);
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content3.getId(), true);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content1.getId(), true);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content2.getId(), true);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content3.getId(), true);
         PoolDTO pool = ownerClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
@@ -624,13 +640,15 @@ public class EnvironmentSpecTest {
     @Test
     public void shouldRegenerateOnlyEntitlementsAffectedByDeletedEnvironment() {
         ProductDTO product1 = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         ProductDTO product2 = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         ContentDTO content1 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content2 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
-        ownerClient.ownerProducts().addContent(owner.getKey(), product1.getId(), content1.getId(), true);
-        ownerClient.ownerProducts().addContent(owner.getKey(), product2.getId(), content2.getId(), true);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product1.getId(), content1.getId(), true);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product2.getId(), content2.getId(), true);
         EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
         EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
         promoteContent(env1, content1);

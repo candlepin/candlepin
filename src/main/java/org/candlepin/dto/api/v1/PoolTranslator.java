@@ -107,7 +107,7 @@ public class PoolTranslator implements ObjectTranslator<Pool, PoolDTO> {
             .subscriptionSubKey(source.getSubscriptionSubKey())
             .subscriptionId(source.getSubscriptionId())
             .href(source.getId() != null ? String.format("/pools/%s", source.getId()) : null)
-            .locked(source.isLocked());
+            .managed(source.isManaged());
 
         // Set product fields
         Product product = source.getProduct();

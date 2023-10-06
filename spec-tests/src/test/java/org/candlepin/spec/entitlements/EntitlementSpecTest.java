@@ -54,7 +54,7 @@ public class EntitlementSpecTest {
             .createConsumer(Consumers.random(owner, ConsumerTypes.Candlepin));
         ApiClient cpClient = ApiClients.ssl(consumer);
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         adminClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         cpClient.consumers().bindProduct(consumer.getUuid(), product.getId());
@@ -77,7 +77,7 @@ public class EntitlementSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         adminClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         adminClient.consumers().bindProduct(consumer.getUuid(), product);
@@ -92,7 +92,7 @@ public class EntitlementSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         adminClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
@@ -108,7 +108,7 @@ public class EntitlementSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         AttributeDTO multiEntAttr = ProductAttributes.MultiEntitlement.withValue("yes");
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random().attributes(List.of(multiEntAttr)));
+            .createProduct(owner.getKey(), Products.random().attributes(List.of(multiEntAttr)));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product).quantity(20L));
 
         adminClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 10);
@@ -124,7 +124,7 @@ public class EntitlementSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         adminClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 0);
@@ -145,9 +145,9 @@ public class EntitlementSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         AttributeDTO multiEntAttr = ProductAttributes.MultiEntitlement.withValue("yes");
         ProductDTO virtProd = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random().attributes(List.of(multiEntAttr)));
+            .createProduct(owner.getKey(), Products.random().attributes(List.of(multiEntAttr)));
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         PoolDTO virtPool = adminClient.owners().createPool(owner.getKey(), Pools.random(virtProd));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
 
@@ -164,7 +164,7 @@ public class EntitlementSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         adminClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         adminClient.consumers().bindProduct(consumer.getUuid(), product);
@@ -181,7 +181,7 @@ public class EntitlementSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         adminClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
@@ -197,10 +197,10 @@ public class EntitlementSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         AttributeDTO multiEntAttr = ProductAttributes.MultiEntitlement.withValue("yes");
         ProductDTO virtProd = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random().attributes(List.of(multiEntAttr)));
+            .createProduct(owner.getKey(), Products.random().attributes(List.of(multiEntAttr)));
         AttributeDTO expectedAttribute = ProductAttributes.Variant.withValue(StringUtil.random("var-"));
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random().attributes(List.of(expectedAttribute)));
+            .createProduct(owner.getKey(), Products.random().attributes(List.of(expectedAttribute)));
         PoolDTO virtPool = adminClient.owners().createPool(owner.getKey(), Pools.random(virtProd));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
         adminClient.consumers().bindPool(consumer.getUuid(), virtPool.getId(), 1);
@@ -224,7 +224,7 @@ public class EntitlementSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         AttributeDTO multiEntAttr = ProductAttributes.MultiEntitlement.withValue("yes");
         ProductDTO virtProd = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random().attributes(List.of(multiEntAttr)));
+            .createProduct(owner.getKey(), Products.random().attributes(List.of(multiEntAttr)));
         adminClient.owners().createPool(owner.getKey(), Pools.random(virtProd));
         adminClient.consumers().bindProduct(consumer.getUuid(), virtProd.getId());
         assertThat(adminClient.consumers().listEntitlements(consumer.getUuid()))
@@ -243,9 +243,9 @@ public class EntitlementSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         AttributeDTO multiEntAttr = ProductAttributes.MultiEntitlement.withValue("yes");
         ProductDTO virtProd = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random().attributes(List.of(multiEntAttr)));
+            .createProduct(owner.getKey(), Products.random().attributes(List.of(multiEntAttr)));
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         adminClient.owners().createPool(owner.getKey(), Pools.random(virtProd));
         adminClient.owners().createPool(owner.getKey(), Pools.random(product));
         adminClient.consumers().bindProduct(consumer.getUuid(), virtProd.getId());
@@ -265,7 +265,7 @@ public class EntitlementSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         adminClient.owners().createPool(owner.getKey(), Pools.random(product));
         adminClient.consumers().bindProduct(consumer.getUuid(), product.getId());
 
@@ -280,7 +280,7 @@ public class EntitlementSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
         adminClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
@@ -293,7 +293,7 @@ public class EntitlementSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         assertForbidden(() -> adminClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 3));
@@ -306,7 +306,7 @@ public class EntitlementSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         AttributeDTO attribute = ProductAttributes.MultiEntitlement.withValue("yes");
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random().attributes(List.of(attribute)));
+            .createProduct(owner.getKey(), Products.random().attributes(List.of(attribute)));
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         adminClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 4);

@@ -16,18 +16,20 @@ package org.candlepin.controller;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
@@ -41,6 +43,7 @@ import java.util.Collection;
 import java.util.Objects;
 
 import javax.inject.Inject;
+import javax.persistence.LockModeType;
 
 
 
@@ -59,8 +62,8 @@ public class OwnerManager {
     private final ExporterMetadataCurator exportCurator;
     private final ImportRecordCurator importRecordCurator;
     private final PermissionBlueprintCurator permissionCurator;
-    private final OwnerProductCurator ownerProductCurator;
-    private final OwnerContentCurator ownerContentCurator;
+    private final ProductCurator productCurator;
+    private final ContentCurator contentCurator;
     private final OwnerCurator ownerCurator;
     private final UeberCertificateCurator uberCertificateCurator;
 
@@ -72,8 +75,8 @@ public class OwnerManager {
         ExporterMetadataCurator exportCurator,
         ImportRecordCurator importRecordCurator,
         PermissionBlueprintCurator permissionCurator,
-        OwnerProductCurator ownerProductCurator,
-        OwnerContentCurator ownerContentCurator,
+        ProductCurator productCurator,
+        ContentCurator contentCurator,
         OwnerCurator ownerCurator,
         UeberCertificateCurator uberCertificateCurator) {
 
@@ -84,8 +87,8 @@ public class OwnerManager {
         this.exportCurator = Objects.requireNonNull(exportCurator);
         this.importRecordCurator = Objects.requireNonNull(importRecordCurator);
         this.permissionCurator = Objects.requireNonNull(permissionCurator);
-        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
-        this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
+        this.productCurator = Objects.requireNonNull(productCurator);
+        this.contentCurator = Objects.requireNonNull(contentCurator);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.uberCertificateCurator = Objects.requireNonNull(uberCertificateCurator);
     }
@@ -156,10 +159,10 @@ public class OwnerManager {
             permissionCurator.delete(perm);
         }
 
-        log.info("Deleting all products...");
+        log.info("Deleting all org-namespaced products...");
         this.removeAllProductsForOwner(owner);
 
-        log.info("Deleting all content...");
+        log.info("Deleting all org-namespaced content...");
         this.removeAllContentForOwner(owner);
 
         log.info("Deleting owner: {}", owner);
@@ -169,24 +172,34 @@ public class OwnerManager {
     }
 
     /**
-     * Removes all known products for the given owner
+     * Removes all products from the org's namespace
      *
      * @param owner
      *  the owner for which to remove all products
      */
     private void removeAllProductsForOwner(Owner owner) {
-        Collection<String> productUuids = this.ownerProductCurator.getProductUuidsByOwner(owner);
-        this.ownerProductCurator.removeOwnerProductReferences(owner, productUuids);
+        Collection<String> uuids = this.productCurator
+            .getProductsByNamespace(owner.getKey(), LockModeType.PESSIMISTIC_WRITE)
+            .stream()
+            .map(Product::getUuid)
+            .toList();
+
+        this.productCurator.bulkDeleteByUuids(uuids);
     }
 
     /**
-     * Removes all known content for the given owner
+     * Removes all content from the org's namespace
      *
      * @param owner
      *  the owner for which to remove all content
      */
     private void removeAllContentForOwner(Owner owner) {
-        Collection<String> contentUuids = this.ownerContentCurator.getContentUuidsByOwner(owner);
-        this.ownerContentCurator.removeOwnerContentReferences(owner, contentUuids);
+        Collection<String> uuids = this.contentCurator
+            .getContentsByNamespace(owner.getKey(), LockModeType.PESSIMISTIC_WRITE)
+            .stream()
+            .map(Content::getUuid)
+            .toList();
+
+        this.contentCurator.bulkDeleteByUuids(uuids);
     }
 }

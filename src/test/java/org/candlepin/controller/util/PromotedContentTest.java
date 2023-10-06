@@ -333,12 +333,11 @@ class PromotedContentTest {
     }
 
     private ProductContent createContent(String contentUrl) {
-        ProductContent productContent = new ProductContent();
         Content content = new Content()
             .setId(CONTENT_ID)
             .setContentUrl(contentUrl);
-        productContent.setContent(content);
-        return productContent;
+
+        return new ProductContent(content, false);
     }
 
     private PromotedContent createPromotedContent(String prefix) {

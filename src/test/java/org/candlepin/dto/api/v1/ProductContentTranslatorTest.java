@@ -48,12 +48,7 @@ public class ProductContentTranslatorTest extends
     @Override
     protected ProductContent initSourceObject() {
         Content content = this.contentTranslatorTest.initSourceObject();
-
-        ProductContent source = new ProductContent();
-        source.setContent(content);
-        source.setEnabled(true);
-
-        return source;
+        return new ProductContent(content, true);
     }
 
     @Override

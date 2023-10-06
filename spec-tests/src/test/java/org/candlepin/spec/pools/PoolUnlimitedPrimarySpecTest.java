@@ -171,7 +171,7 @@ public class PoolUnlimitedPrimarySpecTest {
         ProductDTO product = Products.randomSKU()
             .addAttributesItem(new AttributeDTO().name("virt_limit").value("4"))
             .addAttributesItem(new AttributeDTO().name("multi-entitlement").value("yes"));
-        product = ownerProductApi.createProductByOwner(owner.getKey(), product);
+        product = ownerProductApi.createProduct(owner.getKey(), product);
         // create pool with -100 quantity
         PoolDTO unlimitedPool = Pools.random(product)
             .quantity(-100L)
@@ -321,21 +321,21 @@ public class PoolUnlimitedPrimarySpecTest {
         if (noVirt) {
             productNoVirt = Products.randomSKU()
                 .addAttributesItem(new AttributeDTO().name("multi-entitlement").value("yes"));
-            productNoVirt = ownerProductApi.createProductByOwner(owner.getKey(), productNoVirt);
+            productNoVirt = ownerProductApi.createProduct(owner.getKey(), productNoVirt);
             poolNoVirt = createUnlimitedPool(productNoVirt);
         }
         if (unlimitedVirt) {
             productUnlimitedVirt = Products.randomSKU()
                 .addAttributesItem(new AttributeDTO().name("virt_limit").value("unlimited"))
                 .addAttributesItem(new AttributeDTO().name("multi-entitlement").value("yes"));
-            productUnlimitedVirt = ownerProductApi.createProductByOwner(owner.getKey(), productUnlimitedVirt);
+            productUnlimitedVirt = ownerProductApi.createProduct(owner.getKey(), productUnlimitedVirt);
             poolUnlimitedVirt = createUnlimitedPool(productUnlimitedVirt);
         }
         if (virt) {
             productVirt = Products.randomSKU()
                 .addAttributesItem(new AttributeDTO().name("virt_limit").value("5"))
                 .addAttributesItem(new AttributeDTO().name("multi-entitlement").value("yes"));
-            productVirt = ownerProductApi.createProductByOwner(owner.getKey(), productVirt);
+            productVirt = ownerProductApi.createProduct(owner.getKey(), productVirt);
             PoolDTO poolVirt = createUnlimitedPool(productVirt);
         }
         if (virtHostDep) {
@@ -343,7 +343,7 @@ public class PoolUnlimitedPrimarySpecTest {
                 .addAttributesItem(new AttributeDTO().name("virt_limit").value("5"))
                 .addAttributesItem(new AttributeDTO().name("multi-entitlement").value("yes"))
                 .addAttributesItem(new AttributeDTO().name("host-dependent").value("true"));
-            proudctVirtHostDep = ownerProductApi.createProductByOwner(owner.getKey(), proudctVirtHostDep);
+            proudctVirtHostDep = ownerProductApi.createProduct(owner.getKey(), proudctVirtHostDep);
             poolVirtHostDep = createUnlimitedPool(proudctVirtHostDep);
         }
         if (virtInstanceMultiplier) {
@@ -351,7 +351,7 @@ public class PoolUnlimitedPrimarySpecTest {
                 .addAttributesItem(new AttributeDTO().name("virt_limit").value("8"))
                 .addAttributesItem(new AttributeDTO().name("multi-entitlement").value("yes"))
                 .addAttributesItem(new AttributeDTO().name("instance_multiplier").value("6"));
-            productVirtInstanceMuliplier = ownerProductApi.createProductByOwner(owner.getKey(),
+            productVirtInstanceMuliplier = ownerProductApi.createProduct(owner.getKey(),
                 productVirtInstanceMuliplier);
             poolVirtInstanceMuliplier = createUnlimitedPool(productVirtInstanceMuliplier);
         }
@@ -360,7 +360,7 @@ public class PoolUnlimitedPrimarySpecTest {
                 .addAttributesItem(new AttributeDTO().name("virt_limit").value("8"))
                 .addAttributesItem(new AttributeDTO().name("multi-entitlement").value("yes"))
                 .multiplier(100L);
-            productVirtProductMuliplier = ownerProductApi.createProductByOwner(owner.getKey(),
+            productVirtProductMuliplier = ownerProductApi.createProduct(owner.getKey(),
                 productVirtProductMuliplier);
             poolVirtProductMuliplier = createUnlimitedPool(productVirtProductMuliplier);
         }

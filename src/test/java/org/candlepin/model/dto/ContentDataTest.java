@@ -338,21 +338,6 @@ public class ContentDataTest {
         assertEquals(input, output);
     }
 
-    @Test
-    public void testGetSetLocked() {
-        ContentData dto = new ContentData();
-        Boolean input = Boolean.TRUE;
-
-        Boolean output = dto.isLocked();
-        assertNull(output);
-
-        ContentData output2 = dto.setLocked(input);
-        assertSame(output2, dto);
-
-        output = dto.isLocked();
-        assertEquals(input, output);
-    }
-
     protected static Stream<Object[]> getValuesForEqualityAndReplication() {
         return Stream.of(
             new Object[] { "Uuid", "test_value", "alt_value" },
@@ -367,8 +352,7 @@ public class ContentDataTest {
             new Object[] { "GpgUrl", "test_value", "alt_value" },
             new Object[] { "MetadataExpiration", 1234L, 5678L },
             new Object[] { "ModifiedProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5", "6") },
-            new Object[] { "Arches", "test_value", "alt_value" },
-            new Object[] { "Locked", Boolean.TRUE, false }
+            new Object[] { "Arches", "test_value", "alt_value" }
         );
     }
 
@@ -511,8 +495,7 @@ public class ContentDataTest {
             new Object[] { "GpgUrl", "test_value", null },
             new Object[] { "MetadataExpiration", 1234L, null },
             new Object[] { "ModifiedProductIds", Arrays.asList("1", "2", "3"), Arrays.asList() },
-            new Object[] { "Arches", "test_value", null },
-            new Object[] { "Locked", Boolean.TRUE, false }
+            new Object[] { "Arches", "test_value", null }
         );
     }
 

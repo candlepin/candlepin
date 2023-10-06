@@ -29,11 +29,10 @@ import java.util.Date;
 public interface ContentInfo extends ServiceAdapterModel {
 
     /**
-     * Fetches the Red Hat ID of this content. If the ID has not yet been set, this method returns
-     * null.
+     * Fetches the Red Hat ID of this content. This method should not return a null or empty value.
      *
      * @return
-     *  the Red Hat ID of this content, or null if the ID has not been set
+     *  the Red Hat ID of this content
      */
     String getId();
 

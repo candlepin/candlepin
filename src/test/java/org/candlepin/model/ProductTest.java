@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import static org.candlepin.model.SourceSubscription.DERIVED_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -22,8 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
 
 import org.candlepin.util.Util;
 
@@ -75,15 +72,15 @@ public class ProductTest {
         }
 
         Collection<ProductContent> productContent1 = Arrays.asList(
-            new ProductContent(null, content[0], true),
-            new ProductContent(null, content[1], false),
-            new ProductContent(null, content[2], true)
+            new ProductContent(content[0], true),
+            new ProductContent(content[1], false),
+            new ProductContent(content[2], true)
         );
 
         Collection<ProductContent> productContent2 = Arrays.asList(
-            new ProductContent(null, content[3], true),
-            new ProductContent(null, content[4], false),
-            new ProductContent(null, content[5], true)
+            new ProductContent(content[3], true),
+            new ProductContent(content[4], false),
+            new ProductContent(content[5], true)
         );
 
         Set<Branding> brandings1 = Stream.of(
@@ -208,36 +205,6 @@ public class ProductTest {
         assertFalse(rhs.equals(lhs));
         assertTrue(lhs.equals(lhs));
         assertTrue(rhs.equals(rhs));
-    }
-
-    @Test
-    public void testBaseEntityVersion() {
-        Product lhs = new Product();
-        Product rhs = new Product();
-
-        assertEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0} => {1}, {2}")
-    @MethodSource("getValuesForEqualityAndReplication")
-    public void testEntityVersion(String valueName, Object value1, Object value2) throws Exception {
-        Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
-        Method accessor = methods[0];
-        Method mutator = methods[1];
-
-        Product lhs = new Product();
-        Product rhs = new Product();
-
-        mutator.invoke(lhs, value1);
-        mutator.invoke(rhs, value1);
-
-        assertEquals(accessor.invoke(lhs), accessor.invoke(rhs));
-        assertEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
-
-        mutator.invoke(rhs, value2);
-
-        assertNotEquals(accessor.invoke(lhs), accessor.invoke(rhs));
-        assertNotEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
@@ -423,327 +390,4 @@ public class ProductTest {
         assertFalse(providedProducts.contains(null));
     }
 
-    private List<Product> buildTestProducts() {
-        Product p1 = spy(new Product())
-            .setId("p1");
-
-        Product p2 = spy(new Product())
-            .setId("p2");
-
-        Product p3 = spy(new Product())
-            .setId("p3");
-
-        // Explictly set the entity version such that we can get into a case where the sum
-        // of a subset equals the sum of a different subset
-        doReturn(1L).when(p1).getEntityVersion();
-        doReturn(2L).when(p2).getEntityVersion();
-        doReturn(3L).when(p3).getEntityVersion();
-
-        return List.of(p1, p2, p3);
-    }
-
-    @Test
-    public void testEntityVersionChangesWithProvidedProducts() {
-        // The products here must be generated such that the sum of the entity versions of the first
-        // two children is equal to the entity version of the third.
-        List<Product> children = this.buildTestProducts();
-
-        Product p1 = new Product();
-
-        Product p2 = new Product();
-        p2.addProvidedProduct(children.get(0));
-
-        Product p3 = new Product();
-        p3.addProvidedProduct(children.get(0));
-        p3.addProvidedProduct(children.get(1));
-
-        Product p4 = new Product();
-        p4.addProvidedProduct(children.get(2));
-
-        assertNotEquals(p1.getEntityVersion(), p2.getEntityVersion());
-        assertNotEquals(p1.getEntityVersion(), p3.getEntityVersion());
-        assertNotEquals(p1.getEntityVersion(), p4.getEntityVersion());
-
-        assertNotEquals(p2.getEntityVersion(), p3.getEntityVersion());
-        assertNotEquals(p2.getEntityVersion(), p4.getEntityVersion());
-
-        assertNotEquals(p3.getEntityVersion(), p4.getEntityVersion());
-    }
-
-    @Test
-    public void testEntityVersionIgnoresProvidedProductOrder() {
-        List<Product> children = this.buildTestProducts();
-
-        Product p1 = new Product();
-        p1.addProvidedProduct(children.get(0));
-        p1.addProvidedProduct(children.get(1));
-        p1.addProvidedProduct(children.get(2));
-
-        Product p2 = new Product();
-        p2.addProvidedProduct(children.get(0));
-        p2.addProvidedProduct(children.get(2));
-        p2.addProvidedProduct(children.get(1));
-
-        Product p3 = new Product();
-        p3.addProvidedProduct(children.get(1));
-        p3.addProvidedProduct(children.get(0));
-        p3.addProvidedProduct(children.get(2));
-
-        Product p4 = new Product();
-        p4.addProvidedProduct(children.get(1));
-        p4.addProvidedProduct(children.get(2));
-        p4.addProvidedProduct(children.get(0));
-
-        Product p5 = new Product();
-        p5.addProvidedProduct(children.get(2));
-        p5.addProvidedProduct(children.get(0));
-        p5.addProvidedProduct(children.get(1));
-
-        Product p6 = new Product();
-        p6.addProvidedProduct(children.get(2));
-        p6.addProvidedProduct(children.get(1));
-        p6.addProvidedProduct(children.get(0));
-
-        assertEquals(p1.getEntityVersion(), p2.getEntityVersion());
-        assertEquals(p2.getEntityVersion(), p3.getEntityVersion());
-        assertEquals(p3.getEntityVersion(), p4.getEntityVersion());
-        assertEquals(p4.getEntityVersion(), p5.getEntityVersion());
-        assertEquals(p5.getEntityVersion(), p6.getEntityVersion());
-    }
-
-    private List<ProductContent> buildTestContent() {
-        ProductContent pc1 = spy(new ProductContent())
-            .setContent(new Content().setId("c1"));
-
-        ProductContent pc2 = spy(new ProductContent())
-            .setContent(new Content().setId("c2"));
-
-        ProductContent pc3 = spy(new ProductContent())
-            .setContent(new Content().setId("c3"));
-
-        // Explictly set the entity version such that we can get into a case where the sum
-        // of a subset equals the sum of a different subset
-        doReturn(1L).when(pc1).getEntityVersion();
-        doReturn(2L).when(pc2).getEntityVersion();
-        doReturn(3L).when(pc3).getEntityVersion();
-
-        return List.of(pc1, pc2, pc3);
-    }
-
-    @Test
-    public void testEntityVersionChangesWithContent() {
-        // The ProductContent instances here must be generated such that the sum of the entity
-        // versions of the first two children is equal to the entity version of the third.
-        List<ProductContent> children = this.buildTestContent();
-
-        Product p1 = new Product();
-
-        Product p2 = new Product();
-        p2.addProductContent(children.get(0));
-
-        Product p3 = new Product();
-        p3.addProductContent(children.get(0));
-        p3.addProductContent(children.get(1));
-
-        Product p4 = new Product();
-        p4.addProductContent(children.get(2));
-
-        assertNotEquals(p1.getEntityVersion(), p2.getEntityVersion());
-        assertNotEquals(p1.getEntityVersion(), p3.getEntityVersion());
-        assertNotEquals(p1.getEntityVersion(), p4.getEntityVersion());
-
-        assertNotEquals(p2.getEntityVersion(), p3.getEntityVersion());
-        assertNotEquals(p2.getEntityVersion(), p4.getEntityVersion());
-
-        assertNotEquals(p3.getEntityVersion(), p4.getEntityVersion());
-    }
-
-    @Test
-    public void testEntityVersionIgnoresContentOrder() {
-        List<ProductContent> children = this.buildTestContent();
-
-        Product p1 = new Product();
-        p1.addProductContent(children.get(0));
-        p1.addProductContent(children.get(1));
-        p1.addProductContent(children.get(2));
-
-        Product p2 = new Product();
-        p2.addProductContent(children.get(0));
-        p2.addProductContent(children.get(2));
-        p2.addProductContent(children.get(1));
-
-        Product p3 = new Product();
-        p3.addProductContent(children.get(1));
-        p3.addProductContent(children.get(0));
-        p3.addProductContent(children.get(2));
-
-        Product p4 = new Product();
-        p4.addProductContent(children.get(1));
-        p4.addProductContent(children.get(2));
-        p4.addProductContent(children.get(0));
-
-        Product p5 = new Product();
-        p5.addProductContent(children.get(2));
-        p5.addProductContent(children.get(0));
-        p5.addProductContent(children.get(1));
-
-        Product p6 = new Product();
-        p6.addProductContent(children.get(2));
-        p6.addProductContent(children.get(1));
-        p6.addProductContent(children.get(0));
-
-        assertEquals(p1.getEntityVersion(), p2.getEntityVersion());
-        assertEquals(p2.getEntityVersion(), p3.getEntityVersion());
-        assertEquals(p3.getEntityVersion(), p4.getEntityVersion());
-        assertEquals(p4.getEntityVersion(), p5.getEntityVersion());
-        assertEquals(p5.getEntityVersion(), p6.getEntityVersion());
-    }
-
-    private List<Branding> buildTestBranding() {
-        // Explictly set the hashcode such that we can get into a case where the sum
-        // of a subset equals the sum of a different subset
-        Branding b1 = new Branding() {
-            @Override
-            @SuppressWarnings("EqualsHashCode")
-            public int hashCode() {
-                return 1;
-            }
-        };
-        b1.setId("b1");
-
-        Branding b2 = new Branding() {
-            @Override
-            @SuppressWarnings("EqualsHashCode")
-            public int hashCode() {
-                return 2;
-            }
-        };
-        b2.setId("b2");
-
-        Branding b3 = new Branding() {
-            @Override
-            @SuppressWarnings("EqualsHashCode")
-            public int hashCode() {
-                return 3;
-            }
-        };
-        b3.setId("b3");
-
-        return List.of(b1, b2, b3);
-    }
-
-    @Test
-    public void testEntityVersionChangesWithBranding() {
-        // The branding here must be generated such that the sum of the hashcodes of the first two
-        // children is equal to the hash code of the third.
-        List<Branding> children = this.buildTestBranding();
-
-        Product p1 = new Product();
-
-        Product p2 = new Product();
-        p2.addBranding(children.get(0));
-
-        Product p3 = new Product();
-        p3.addBranding(children.get(0));
-        p3.addBranding(children.get(1));
-
-        Product p4 = new Product();
-        p4.addBranding(children.get(2));
-
-        assertNotEquals(p1.getEntityVersion(), p2.getEntityVersion());
-        assertNotEquals(p1.getEntityVersion(), p3.getEntityVersion());
-        assertNotEquals(p1.getEntityVersion(), p4.getEntityVersion());
-
-        assertNotEquals(p2.getEntityVersion(), p3.getEntityVersion());
-        assertNotEquals(p2.getEntityVersion(), p4.getEntityVersion());
-
-        assertNotEquals(p3.getEntityVersion(), p4.getEntityVersion());
-    }
-
-    @Test
-    public void testEntityVersionIgnoresBrandingOrder() {
-        List<Branding> children = this.buildTestBranding();
-
-        Product p1 = new Product();
-        p1.addBranding(children.get(0));
-        p1.addBranding(children.get(1));
-        p1.addBranding(children.get(2));
-
-        Product p2 = new Product();
-        p2.addBranding(children.get(0));
-        p2.addBranding(children.get(2));
-        p2.addBranding(children.get(1));
-
-        Product p3 = new Product();
-        p3.addBranding(children.get(1));
-        p3.addBranding(children.get(0));
-        p3.addBranding(children.get(2));
-
-        Product p4 = new Product();
-        p4.addBranding(children.get(1));
-        p4.addBranding(children.get(2));
-        p4.addBranding(children.get(0));
-
-        Product p5 = new Product();
-        p5.addBranding(children.get(2));
-        p5.addBranding(children.get(0));
-        p5.addBranding(children.get(1));
-
-        Product p6 = new Product();
-        p6.addBranding(children.get(2));
-        p6.addBranding(children.get(1));
-        p6.addBranding(children.get(0));
-
-        assertEquals(p1.getEntityVersion(), p2.getEntityVersion());
-        assertEquals(p2.getEntityVersion(), p3.getEntityVersion());
-        assertEquals(p3.getEntityVersion(), p4.getEntityVersion());
-        assertEquals(p4.getEntityVersion(), p5.getEntityVersion());
-        assertEquals(p5.getEntityVersion(), p6.getEntityVersion());
-    }
-
-    @Test
-    public void testEntityVersioningAvoidsCollidingOnDifferentChildren() {
-        // Create a set of children which all have the same version or hashcode
-        Product derived = spy(new Product())
-            .setId(DERIVED_POOL_SUB_KEY);
-        Product provided = spy(new Product())
-            .setId("provided");
-        ProductContent pcontent = spy(new ProductContent())
-            .setContent(new Content().setId("content"));
-
-        doReturn(1L).when(derived).getEntityVersion();
-        doReturn(1L).when(provided).getEntityVersion();
-        doReturn(1L).when(pcontent).getEntityVersion();
-
-        Branding branding = new Branding() {
-            @Override
-            @SuppressWarnings("EqualsHashCode")
-            public int hashCode() {
-                return 1;
-            }
-        };
-        branding.setId("b1");
-
-
-        Product p1 = new Product();
-        p1.setDerivedProduct(derived);
-
-        Product p2 = new Product();
-        p2.addProvidedProduct(provided);
-
-        Product p3 = new Product();
-        p3.addProductContent(pcontent);
-
-        Product p4 = new Product();
-        p4.addBranding(branding);
-
-        assertNotEquals(p1.getEntityVersion(), p2.getEntityVersion());
-        assertNotEquals(p1.getEntityVersion(), p3.getEntityVersion());
-        assertNotEquals(p1.getEntityVersion(), p4.getEntityVersion());
-
-        assertNotEquals(p2.getEntityVersion(), p3.getEntityVersion());
-        assertNotEquals(p2.getEntityVersion(), p4.getEntityVersion());
-
-        assertNotEquals(p3.getEntityVersion(), p4.getEntityVersion());
-    }
 }

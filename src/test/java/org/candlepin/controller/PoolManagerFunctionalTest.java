@@ -326,17 +326,16 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testEntitleByProductsWithModifierAndModifiee() throws EntitlementRefusedException {
-        Product modifier = TestUtil.createProduct("modifier", "modifier");
+        Set<String> modified = Set.of(PRODUCT_VIRT_HOST);
 
-        Set<String> modified = new HashSet<>();
-        modified.add(PRODUCT_VIRT_HOST);
         Content content = TestUtil.createContent("modifier-content", "modifier-content");
         content.setModifiedProductIds(modified);
+
+        Product modifier = TestUtil.createProduct("modifier", "modifier");
         modifier.addContent(content, true);
 
         contentCurator.create(content);
         productCurator.create(modifier);
-        this.ownerContentCurator.mapContentToOwner(content, this.o);
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
 

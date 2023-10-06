@@ -67,7 +67,7 @@ public class VirtOnlySpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO virtProduct = Products.random()
             .addAttributesItem(new AttributeDTO().name("virt_only").value("true"));
-        ownerProductApi.createProductByOwner(owner.getKey(), virtProduct);
+        ownerProductApi.createProduct(owner.getKey(), virtProduct);
         PoolDTO pool = Pools.random().productId(virtProduct.getId());
         ownerApi.createPool(owner.getKey(), pool);
 
@@ -84,7 +84,7 @@ public class VirtOnlySpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO physicalProduct = Products.random()
             .addAttributesItem(new AttributeDTO().name("virt_only").value("false"));
-        ownerProductApi.createProductByOwner(owner.getKey(), physicalProduct);
+        ownerProductApi.createProduct(owner.getKey(), physicalProduct);
         PoolDTO pool = Pools.random().productId(physicalProduct.getId());
         ownerApi.createPool(owner.getKey(), pool);
 
@@ -101,7 +101,7 @@ public class VirtOnlySpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO virtProduct = Products.random()
             .addAttributesItem(new AttributeDTO().name("virt_only").value("true"));
-        ownerProductApi.createProductByOwner(owner.getKey(), virtProduct);
+        ownerProductApi.createProduct(owner.getKey(), virtProduct);
         PoolDTO pool = Pools.random().productId(virtProduct.getId());
         ownerApi.createPool(owner.getKey(), pool);
 
@@ -118,7 +118,7 @@ public class VirtOnlySpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO virtProduct = Products.random()
             .addAttributesItem(new AttributeDTO().name("virt_only").value("true"));
-        ownerProductApi.createProductByOwner(owner.getKey(), virtProduct);
+        ownerProductApi.createProduct(owner.getKey(), virtProduct);
         PoolDTO pool = Pools.random().productId(virtProduct.getId());
         ownerApi.createPool(owner.getKey(), pool);
 
@@ -141,7 +141,7 @@ public class VirtOnlySpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO virtProduct = Products.random()
             .addAttributesItem(new AttributeDTO().name("virt_only").value("true"));
-        ownerProductApi.createProductByOwner(owner.getKey(), virtProduct);
+        ownerProductApi.createProduct(owner.getKey(), virtProduct);
         PoolDTO pool = Pools.random().productId(virtProduct.getId());
         ownerApi.createPool(owner.getKey(), pool);
 

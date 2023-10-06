@@ -1053,7 +1053,7 @@ class PostBindBonusPoolSpecTest {
             ProductAttributes.MultiEntitlement.withValue("yes"),
             ProductAttributes.Type.withValue("SVC"));
 
-        return client.ownerProducts().createProductByOwner(ownerKey, limitedVirtProd);
+        return client.ownerProducts().createProduct(ownerKey, limitedVirtProd);
     }
 
     private SubscriptionDTO createLimitedHostVirtSub() {
@@ -1075,7 +1075,7 @@ class PostBindBonusPoolSpecTest {
             ProductAttributes.VirtualLimit.withValue("unlimited"),
             ProductAttributes.MultiEntitlement.withValue("yes"));
 
-        return client.ownerProducts().createProductByOwner(ownerKey, unlimitedVirtProd);
+        return client.ownerProducts().createProduct(ownerKey, unlimitedVirtProd);
     }
 
     private ProductDTO createUnlimitedProduct(ApiClient client, String ownerKey, int virtLimit)
@@ -1085,7 +1085,7 @@ class PostBindBonusPoolSpecTest {
             ProductAttributes.MultiEntitlement.withValue("yes"),
             ProductAttributes.Unlimited.withValue("true"));
 
-        return client.ownerProducts().createProductByOwner(ownerKey, unlimitedProd);
+        return client.ownerProducts().createProduct(ownerKey, unlimitedProd);
     }
 
     private SubscriptionDTO createUnlimitedProdSub() {
@@ -1106,7 +1106,7 @@ class PostBindBonusPoolSpecTest {
             ProductAttributes.MultiEntitlement.withValue("yes"),
             ProductAttributes.HostLimited.withValue("true"));
 
-        return client.ownerProducts().createProductByOwner(ownerKey, hostLimitedProd);
+        return client.ownerProducts().createProduct(ownerKey, hostLimitedProd);
     }
 
     private ProductDTO createVirtLimitStackedProduct(ApiClient client, String ownerKey, int virtLimit)
@@ -1116,7 +1116,7 @@ class PostBindBonusPoolSpecTest {
             ProductAttributes.MultiEntitlement.withValue("yes"),
             ProductAttributes.StackingId.withValue(StringUtil.random("stack-")));
 
-        return client.ownerProducts().createProductByOwner(ownerKey, virtLimitStackedProd);
+        return client.ownerProducts().createProduct(ownerKey, virtLimitStackedProd);
     }
 
     private ProductDTO createHostLimitedStackedProduct(ApiClient client, String ownerKey, int virtLimit)
@@ -1127,7 +1127,7 @@ class PostBindBonusPoolSpecTest {
             ProductAttributes.StackingId.withValue(StringUtil.random("stack-")),
             ProductAttributes.HostLimited.withValue("true"));
 
-        return client.ownerProducts().createProductByOwner(ownerKey, hostLimitedStackedProd);
+        return client.ownerProducts().createProduct(ownerKey, hostLimitedStackedProd);
     }
 
     private ProductDTO createHostLimitedUnlimitedVirtProduct(ApiClient client, String ownerKey)
@@ -1137,7 +1137,7 @@ class PostBindBonusPoolSpecTest {
             ProductAttributes.MultiEntitlement.withValue("yes"),
             ProductAttributes.HostLimited.withValue("true"));
 
-        return client.ownerProducts().createProductByOwner(ownerKey, hostLimitedUnlimitedVirtProd);
+        return client.ownerProducts().createProduct(ownerKey, hostLimitedUnlimitedVirtProd);
     }
 
 }

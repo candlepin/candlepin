@@ -57,8 +57,8 @@ public class ConsumerBonusPoolSpecTest {
     @SuppressWarnings("indentation")
     public void bonusPoolShouldHaveProvidedProducts() {
         ProductDTO providedProduct = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
-        ProductDTO product = ownerClient.ownerProducts().createProductByOwner(owner.getKey(),
+            .createProduct(owner.getKey(), Products.random());
+        ProductDTO product = ownerClient.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(
                 ProductAttributes.VirtualLimit.withValue("5"),
                 ProductAttributes.HostLimited.withValue("true")

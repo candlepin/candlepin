@@ -14,17 +14,20 @@
  */
 package org.candlepin.model;
 
+import org.hibernate.annotations.QueryHints;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.inject.Singleton;
+import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 
@@ -201,6 +204,62 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
             result.put(consumerId, environments);
         }
         return result;
+    }
+
+    /**
+     * Removes the content references from environments in the given organization. Called as part
+     * of the removeOwnerContentReferences operation.
+     *
+     * @param owner
+     *  the owner/organization in which to remove content references from environments
+     *
+     * @param contentIds
+     *  a collection of IDs of the content to remove from environments within the specified org
+     *
+     * @return
+     *  the number of environment-content references removed as a result of this operation
+     */
+    public int removeEnvironmentContentReferences(Owner owner, Collection<String> contentIds) {
+        EntityManager entityManager = this.getEntityManager();
+
+        String jpql = "SELECT DISTINCT env.id FROM Environment env WHERE env.ownerId = :owner_id";
+        List<String> envIds = entityManager.createQuery(jpql, String.class)
+            .setParameter("owner_id", owner.getId())
+            .getResultList();
+
+        int count = 0;
+
+        if (envIds != null && !envIds.isEmpty()) {
+            // Delete the entries
+            // Impl note: at the time of writing, JPA doesn't support doing this operation without
+            // interacting with the objects directly. So, we're doing it with native SQL to avoid
+            // even more work here.
+            // Also note that MySQL/MariaDB doesn't like table aliases in a delete statement.
+            String sql = "DELETE FROM cp_environment_content " +
+                "WHERE environment_id IN (:env_ids) AND content_id IN (:content_ids)";
+
+            int blockSize = Math.min(this.getQueryParameterLimit() / 2, this.getInBlockSize() / 2);
+            Iterable<List<String>> eidBlocks = this.partition(envIds, blockSize);
+            Iterable<List<String>> cidBlocks = this.partition(contentIds, blockSize);
+
+            List<String> nativeSpaces = List.of(
+                Environment.class.getName(), EnvironmentContent.class.getName());
+
+            Query query = entityManager.createNativeQuery(sql)
+                .setHint(QueryHints.NATIVE_SPACES, nativeSpaces);
+
+            for (List<String> eidBlock : eidBlocks) {
+                query.setParameter("env_ids", eidBlock);
+
+                for (List<String> cidBlock : cidBlocks) {
+                    count += query.setParameter("content_ids", cidBlock)
+                        .executeUpdate();
+                }
+            }
+        }
+
+        log.debug("{} environment content reference(s) removed", count);
+        return count;
     }
 
 }

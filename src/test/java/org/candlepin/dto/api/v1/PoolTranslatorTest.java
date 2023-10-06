@@ -156,7 +156,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         sourceStack.setId("source-stack-id-1");
         sourceStack.setSourceConsumer(sourceConsumer);
         source.setSourceStack(sourceStack);
-        source.setLocked(true);
+        source.setManaged(true);
 
         return source;
     }
@@ -193,7 +193,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
             assertEquals(source.getSourceStackId(), dest.getSourceStackId());
             assertEquals(source.getSubscriptionSubKey(), dest.getSubscriptionSubKey());
             assertEquals(source.getSubscriptionId(), dest.getSubscriptionId());
-            assertEquals(source.isLocked(), dest.getLocked());
+            assertEquals(source.isManaged(), dest.getManaged());
 
             // Check data originating from the product
             Product srcProduct = source.getProduct();
