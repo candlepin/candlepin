@@ -232,6 +232,7 @@ public class DatabaseTestFixture {
 
     public void init(boolean beginTransaction) throws Exception {
         this.config = TestConfig.defaults();
+
         Module testingModule = new TestingModules.StandardTest(this.config);
         this.injector = parentInjector.createChildInjector(
             Modules.override(testingModule).with(getGuiceOverrideModule()));
@@ -245,7 +246,9 @@ public class DatabaseTestFixture {
         annotationLocator = new AnnotationLocator(methodLocator);
         loadFromInjector();
 
-        this.validator = new DTOValidator();
+        this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+
+        this.validator = new DTOValidator(this.i18n);
 
         // Because all candlepin operations are running in the CandlepinRequestScope
         // we'll force the instance creations to be done inside the scope.
@@ -259,8 +262,6 @@ public class DatabaseTestFixture {
 
         HttpServletRequest req = parentInjector.getInstance(HttpServletRequest.class);
         when(req.getAttribute("username")).thenReturn("mock_user");
-
-        this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         if (beginTransaction) {
             this.beginTransaction();
@@ -470,6 +471,8 @@ public class DatabaseTestFixture {
         return this.cdnCurator.create(cdn);
     }
 
+    // TODO: Remove owner parameter from the createContent methods; do not ship without doing so
+
     protected Content createContent(Owner... owners) {
         String contentId = "test-content-" + TestUtil.randomInt();
         return this.createContent(contentId, contentId, owners);
@@ -482,18 +485,12 @@ public class DatabaseTestFixture {
     protected Content createContent(String id, String name, Owner... owners) {
         Content content = TestUtil.createContent(id, name);
         content = this.contentCurator.create(content);
-        this.ownerContentCurator.mapContentToOwners(content, owners);
 
         return content;
     }
 
     protected Content createContent(Content content, Owner... owners) {
         content = this.contentCurator.create(content);
-
-        if (owners != null & owners.length > 0) {
-            this.ownerContentCurator.mapContentToOwners(content, owners);
-        }
-
         return content;
     }
 
@@ -681,6 +678,8 @@ public class DatabaseTestFixture {
             TestUtil.createDate(2100, 1, 1));
     }
 
+    // TODO: Remove owner parameter from the createProduct methods; do not ship without doing so
+
     protected Product createProduct(Owner... owners) {
         String productId = "test_product-" + TestUtil.randomInt();
         return this.createProduct(productId, productId, owners);
@@ -703,11 +702,10 @@ public class DatabaseTestFixture {
         return this.createProduct(product, owners);
     }
 
+    // Remove this method. It doesn't have a whole lot of value now that we don't need to map
+    // products to orgs.
     protected Product createProduct(Product product, Owner... owners) {
-        product = this.productCurator.create(product);
-        this.ownerProductCurator.mapProductToOwners(product, owners);
-
-        return product;
+        return this.productCurator.create(product);
     }
 
     protected Principal setupPrincipal(Owner owner, Access role) {

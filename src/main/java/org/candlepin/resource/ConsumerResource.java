@@ -2101,8 +2101,10 @@ public class ConsumerResource implements ConsumerApi {
      * @return
      *  List of DTOs representing certificates
      */
-    public List<CertificateDTO> getEntitlementCertificates
-    (@Verify({AnonymousCloudConsumer.class, Consumer.class}) String consumerUuid, String serials) {
+    public List<CertificateDTO> getEntitlementCertificates(
+        @Verify({AnonymousCloudConsumer.class, Consumer.class}) String consumerUuid,
+        String serials) {
+
         Principal principal = ResteasyContext.getContextData(Principal.class);
         if (principal instanceof AnonymousCloudConsumerPrincipal anonPrincipal) {
             log.debug("Getting client certificates for anonymous consumer: {}", consumerUuid);
@@ -2145,7 +2147,9 @@ public class ConsumerResource implements ConsumerApi {
 
         Set<Long> serialSet = this.extractSerials(serials);
         List<? extends Certificate> entitlementCerts = this.entCertService.listForConsumer(consumer);
+
         Certificate caCert = this.contentAccessManager.getCertificate(consumer);
+
         Stream<? extends Certificate> certStream = this.buildCertificateStream(entitlementCerts, caCert);
 
         // Check if we should filter certs by the cert serial

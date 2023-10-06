@@ -89,7 +89,7 @@ public class EntitlementCertificateSpecTest {
     public void beforeEach() throws ApiException, JsonProcessingException {
         owner = ownerApi.createOwner(Owners.random());
         monitoring = Products.randomEng();
-        monitoring = ownerProductApi.createProductByOwner(owner.getKey(), monitoring);
+        monitoring = ownerProductApi.createProduct(owner.getKey(), monitoring);
         pool = Pools.random(monitoring);
         pool = ownerApi.createPool(owner.getKey(), pool);
 
@@ -146,7 +146,7 @@ public class EntitlementCertificateSpecTest {
     @Test
     public void shouldBeManuallyRegeneratedForAProduct() throws Exception {
         ProductDTO coolApp = Products.randomSKU();
-        coolApp = ownerProductApi.createProductByOwner(owner.getKey(), coolApp);
+        coolApp = ownerProductApi.createProduct(owner.getKey(), coolApp);
         pool = Pools.random(coolApp);
         pool = ownerApi.createPool(owner.getKey(), pool);
         consumerApi.bindPool(system.getUuid(), pool.getId(), 1);
@@ -181,17 +181,17 @@ public class EntitlementCertificateSpecTest {
         ProductDTO safeProd = Products.randomEng().id(safeProdId);
 
         ownerApi.createPool(owner1.getKey(), Pools.random(
-            ownerProductApi.createProductByOwner(owner1.getKey(), prod)));
+            ownerProductApi.createProduct(owner1.getKey(), prod)));
         ownerApi.createPool(owner2.getKey(), Pools.random(
-            ownerProductApi.createProductByOwner(owner2.getKey(), prod)));
+            ownerProductApi.createProduct(owner2.getKey(), prod)));
         ownerApi.createPool(owner3.getKey(), Pools.random(
-            ownerProductApi.createProductByOwner(owner3.getKey(), prod)));
+            ownerProductApi.createProduct(owner3.getKey(), prod)));
         ownerApi.createPool(owner1.getKey(), Pools.random(
-            ownerProductApi.createProductByOwner(owner1.getKey(), safeProd)));
+            ownerProductApi.createProduct(owner1.getKey(), safeProd)));
         ownerApi.createPool(owner2.getKey(), Pools.random(
-            ownerProductApi.createProductByOwner(owner2.getKey(), safeProd)));
+            ownerProductApi.createProduct(owner2.getKey(), safeProd)));
         ownerApi.createPool(owner3.getKey(), Pools.random(
-            ownerProductApi.createProductByOwner(owner3.getKey(), safeProd)));
+            ownerProductApi.createProduct(owner3.getKey(), safeProd)));
 
         ConsumerDTO system1 = client.consumers().createConsumer(Consumers.random(owner1));
         ApiClient consumerClient1 = ApiClients.ssl(system1);
@@ -256,7 +256,7 @@ public class EntitlementCertificateSpecTest {
 
             ProductDTO prod = Products.randomEng().addAttributesItem(
                 new AttributeDTO().name("multi-entitlement").value("yes"));
-            prod = ownerProductApi.createProductByOwner(owner.getKey(), prod);
+            prod = ownerProductApi.createProduct(owner.getKey(), prod);
             pool = Pools.random(prod);
             pool = ownerApi.createPool(owner.getKey(), pool);
         }

@@ -89,8 +89,6 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
 
     protected String href;
 
-    protected Boolean locked;
-
     /**
      * Initializes a new ProductData instance with null values.
      */
@@ -1006,32 +1004,6 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
         return this;
     }
 
-    /**
-     * Retrieves the lock state of the product represented by this DTO. If the lock state has not
-     * yet been defined, this method returns null.
-     *
-     * @return
-     *  the lock state of the product, or null if the lock state has not yet been defined
-     */
-    @XmlTransient
-    public Boolean isLocked() {
-        return this.locked;
-    }
-
-    /**
-     * Sets the lock state of the product represented by this DTO.
-     *
-     * @param locked
-     *  The lock state of the product represented by this DTO, or null to clear the state
-     *
-     * @return
-     *  a reference to this DTO
-     */
-    public ProductData setLocked(Boolean locked) {
-        this.locked = locked;
-        return this;
-    }
-
     @Override
     public String toString() {
         return String.format("ProductData [id = %s, name = %s]", this.id, this.name);
@@ -1060,8 +1032,7 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
             .append(this.content, that.content)
             .append(this.dependentProductIds, that.dependentProductIds)
             .append(this.branding, that.branding)
-            .append(this.href, that.href)
-            .append(this.locked, that.locked);
+            .append(this.href, that.href);
 
         return super.equals(obj) && builder.isEquals();
     }
@@ -1080,8 +1051,7 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
             .append(this.providedProducts)
             .append(this.content)
             .append(this.dependentProductIds)
-            .append(this.branding)
-            .append(this.locked);
+            .append(this.branding);
 
         return builder.toHashCode();
     }
@@ -1162,7 +1132,6 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
         this.name = source.getName();
         this.multiplier = source.getMultiplier();
         this.href = source.getHref();
-        this.locked = source.isLocked();
 
         this.setAttributes(source.getAttributes());
         this.setDerivedProduct(source.getDerivedProduct());
@@ -1198,7 +1167,6 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
         this.name = source.getName();
         this.multiplier = source.getMultiplier();
         this.href = source.getHref();
-        this.locked = source.isLocked();
 
         this.setAttributes(source.getAttributes());
 

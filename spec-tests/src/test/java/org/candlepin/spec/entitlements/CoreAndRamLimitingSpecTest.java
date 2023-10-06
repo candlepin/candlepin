@@ -298,7 +298,7 @@ public class CoreAndRamLimitingSpecTest {
     }
 
     private ProductDTO createProduct() {
-        return admin.ownerProducts().createProductByOwner(this.owner.getKey(), Products.withAttributes(
+        return admin.ownerProducts().createProduct(this.owner.getKey(), Products.withAttributes(
             ProductAttributes.Version.withValue("1.2"),
             ProductAttributes.Ram.withValue("8"),
             ProductAttributes.Sockets.withValue("4"),
@@ -311,7 +311,7 @@ public class CoreAndRamLimitingSpecTest {
     }
 
     private ProductDTO createStackingProduct() {
-        return admin.ownerProducts().createProductByOwner(this.owner.getKey(), Products.withAttributes(
+        return admin.ownerProducts().createProduct(this.owner.getKey(), Products.withAttributes(
             ProductAttributes.Version.withValue("1.2"),
             ProductAttributes.Ram.withValue("8"),
             ProductAttributes.Sockets.withValue("4"),

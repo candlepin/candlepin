@@ -22,7 +22,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.dto.api.server.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.exceptions.BadRequestException;
@@ -42,7 +41,6 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -102,33 +100,26 @@ public class ProductResource implements ProductsApi {
     }
 
     @Override
+    public Iterable<ProductDTO> getProducts() {
+        return this.translator.translateQuery(this.productCurator.listAll(), ProductDTO.class);
+    }
+
+    @Override
     @SecurityHole
-    public ProductDTO getProduct(String productUuid) {
+    public ProductDTO getProductByUuid(String productUuid) {
         Product product = this.fetchProduct(productUuid);
         return this.translator.translate(product, ProductDTO.class);
     }
 
     @Override
     @SecurityHole
-    public ProductCertificateDTO getProductCertificate(String productUuid) {
+    public ProductCertificateDTO getProductCertificateByUuid(String productUuid) {
         // TODO:
         // Should this be enabled globally? This will create a cert if it hasn't yet been created.
 
         Product product = this.fetchProduct(productUuid);
         ProductCertificate productCertificate = this.productCertCurator.getCertForProduct(product);
         return this.translator.translate(productCertificate, ProductCertificateDTO.class);
-    }
-
-    @Override
-    public Stream<OwnerDTO> getProductOwners(List<String> productIds) {
-        if (productIds.isEmpty()) {
-            throw new BadRequestException(i18n.tr("No product IDs specified"));
-        }
-
-        Set<Owner> owners = this.ownerCurator.getOwnersWithProducts(productIds);
-
-        return owners.stream().map(
-            this.translator.getStreamMapper(Owner.class, OwnerDTO.class));
     }
 
     @Override

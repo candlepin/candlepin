@@ -69,8 +69,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.persistence.PersistenceException;
-
 
 
 /**
@@ -2078,23 +2076,24 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     @Test
     public void testMarkCertificatesDirtyForPoolsWithProvidedProduct() {
         Consumer consumer = this.createConsumer(owner);
-        Set<Product> providedProducts = new HashSet<>();
-        Product providedProduct = new Product(product.getId(), "Test Provided Product");
-        providedProducts.add(providedProduct);
+
+        Product providedProduct = new Product("prov_prod-1", "Test Provided Product");
         productCurator.create(providedProduct);
 
         Product parent = TestUtil.createProduct();
-        parent.setProvidedProducts(providedProducts);
+        parent.setProvidedProducts(Set.of(providedProduct));
         productCurator.create(parent);
 
         Pool pool = TestUtil.createPool(owner, parent, 5);
         poolCurator.create(pool);
+
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
         Entitlement entitlement = createEntitlement(owner, consumer, pool, cert);
         assertFalse(entitlement.isDirty(), "entitlement should not be dirty initially");
 
         entitlementCurator.create(entitlement);
-        poolCurator.markCertificatesDirtyForPoolsWithProducts(owner, Collections.singleton(product.getId()));
+
+        poolCurator.markCertificatesDirtyForPoolsWithProducts(owner, List.of(providedProduct.getId()));
         entitlementCurator.refresh(entitlement);
         assertTrue(entitlement.isDirty(), "entitlement should be marked dirty");
     }
@@ -3012,27 +3011,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testProvidedProductImmutability() {
-        Product parentProduct = TestUtil.createProduct("1", "product-1");
-        Product providedProduct = this.createProduct("provided", "Child 1", owner);
-        parentProduct.setProvidedProducts(Arrays.asList(providedProduct));
-
-        Product childProduct1 = this.createProduct("child1", "child1", owner);
-
-        parentProduct = this.createProduct(parentProduct, owner);
-        Pool pool = TestUtil.createPool(owner, parentProduct, 5);
-        poolCurator.create(pool);
-        pool = poolCurator.get(pool.getId());
-        assertEquals(1, pool.getProduct().getProvidedProducts().size());
-
-        // provided products are immutable set.
-        pool.getProduct().addProvidedProduct(childProduct1);
-        Pool finalPool = pool;
-        poolCurator.merge(finalPool);
-        assertThrows(PersistenceException.class, () -> this.poolCurator.flush());
-    }
-
-    @Test
     public void testLookupPoolsProvidingProduct() {
         Product childProduct = this.createProduct("2", "product-2", owner);
 
@@ -3153,4 +3131,177 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertFalse(actual);
     }
 
+    private Map<String, Set<String>> getEmptySyspurposeAttributeMap() {
+        return Map.of(
+            "usage", new HashSet<>(),
+            "roles", new HashSet<>(),
+            "addons", new HashSet<>(),
+            "support_type", new HashSet<>(),
+            "support_level", new HashSet<>()
+        );
+    }
+
+    @Test
+    public void testGetSyspurposeAttributesByOwner() {
+        Owner owner = this.createOwner();
+
+        Product product1 = new Product()
+            .setId("test-product-" + TestUtil.randomInt())
+            .setName("test-product-" + TestUtil.randomInt())
+            .setAttribute(SystemPurposeAttributeType.USAGE.toString(), "usage1a, usage1b")
+            .setAttribute(SystemPurposeAttributeType.ADDONS.toString(), "addons1a, addons1b")
+            .setAttribute(SystemPurposeAttributeType.ROLES.toString(), "role1a")
+            .setAttribute(SystemPurposeAttributeType.SERVICE_LEVEL.toString(), "Standard");
+        this.createProduct(product1);
+
+        Product product2 = new Product()
+            .setId("test-product-" + TestUtil.randomInt())
+            .setName("test-product-" + TestUtil.randomInt())
+            .setAttribute(SystemPurposeAttributeType.USAGE.toString(), "usage2a, usage2b")
+            .setAttribute(SystemPurposeAttributeType.ADDONS.toString(), "addons2a, addons2b")
+            .setAttribute(SystemPurposeAttributeType.ROLES.toString(), "role2a")
+            .setAttribute(SystemPurposeAttributeType.SERVICE_LEVEL.toString(), "Layered")
+            .setAttribute(Product.Attributes.SUPPORT_LEVEL_EXEMPT, "true");
+        this.createProduct(product2);
+
+        // This will be for a product with an expired pool
+        Product product3 = new Product()
+            .setId("test-product-" + TestUtil.randomInt())
+            .setName("test-product-" + TestUtil.randomInt())
+            .setAttribute(SystemPurposeAttributeType.USAGE.toString(), "usage3a, usage3b")
+            .setAttribute(SystemPurposeAttributeType.ADDONS.toString(), "addons3a, addons3b")
+            .setAttribute(SystemPurposeAttributeType.ROLES.toString(), "role3a");
+        this.createProduct(product3);
+
+        // This will be for product with no pool
+        Product product4 = new Product()
+            .setId("test-product-" + TestUtil.randomInt())
+            .setName("test-product-" + TestUtil.randomInt())
+            .setAttribute(SystemPurposeAttributeType.USAGE.toString(), "usage4a, usage4b")
+            .setAttribute(SystemPurposeAttributeType.ADDONS.toString(), "addons4a, addons4b")
+            .setAttribute(SystemPurposeAttributeType.ROLES.toString(), "role4a");
+        this.createProduct(product4);
+
+        this.createPool(owner, product1, 10L, new Date(), TestUtil.createDate(2100, 1, 1));
+        this.createPool(owner, product2, 10L, new Date(), TestUtil.createDate(2100, 1, 1));
+        this.createPool(owner, product3, 10L, TestUtil.createDate(2000, 1, 1),
+            TestUtil.createDate(2001, 1, 1));
+
+        Set<String> usage = Set.of("usage1a", "usage1b", "usage2a", "usage2b");
+        Set<String> addons = Set.of("addons1a", "addons1b", "addons2a", "addons2b");
+        Set<String> roles = Set.of("role1a", "role2a");
+        Set<String> support = Set.of("Standard");
+
+        Map<String, Set<String>> expected = this.getEmptySyspurposeAttributeMap();
+        expected.get(SystemPurposeAttributeType.USAGE.toString()).addAll(usage);
+        expected.get(SystemPurposeAttributeType.ADDONS.toString()).addAll(addons);
+        expected.get(SystemPurposeAttributeType.ROLES.toString()).addAll(roles);
+        expected.get(SystemPurposeAttributeType.SERVICE_LEVEL.toString()).addAll(support);
+
+        Map<String, Set<String>> result = this.poolCurator.getSyspurposeAttributesByOwner(owner);
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testGetNoSyspurposeAttributesByOwner() {
+        Owner owner = this.createOwner();
+
+        Map<String, Set<String>> result = this.poolCurator.getSyspurposeAttributesByOwner(owner);
+        assertEquals(getEmptySyspurposeAttributeMap(), result);
+    }
+
+    @Test
+    public void testGetSyspurposeAttributesNullOwner() {
+        Owner owner = this.createOwner();
+
+        Map<String, Set<String>> result = this.poolCurator.getSyspurposeAttributesByOwner((Owner) null);
+        assertEquals(getEmptySyspurposeAttributeMap(), result);
+    }
+
+    @Test
+    public void testGetSyspurposeAttributesNullOwnerId() {
+        Owner owner = this.createOwner();
+
+        Map<String, Set<String>> result = this.poolCurator.getSyspurposeAttributesByOwner((String) null);
+        assertEquals(getEmptySyspurposeAttributeMap(), result);
+    }
+
+    @Test
+    public void testGetPoolsReferencingInvalidProducts() {
+        Owner owner = this.createOwner();
+
+        Product globalProduct = TestUtil.createProduct()
+            .setNamespace((Owner) null);
+
+        Product ownerProduct = TestUtil.createProduct()
+            .setNamespace(owner);
+
+        Product otherProduct = TestUtil.createProduct()
+            .setNamespace("other namespace");
+
+        this.productCurator.create(globalProduct);
+        this.productCurator.create(ownerProduct);
+        this.productCurator.create(otherProduct);
+
+        Pool pool1 = this.createPool(owner, globalProduct);
+        Pool pool2 = this.createPool(owner, ownerProduct);
+        Pool pool3 = this.createPool(owner, otherProduct);
+
+        List<Pool> output = this.poolCurator.getPoolsReferencingInvalidProducts(owner.getId());
+
+        assertNotNull(output);
+        assertEquals(1, output.size());
+        assertTrue(output.contains(pool3));
+    }
+
+    @Test
+    public void testGetPoolsReferencingInvalidProductsReturnsEmptyCollectionWithNoResults() {
+        Owner owner = this.createOwner();
+
+        Product globalProduct = TestUtil.createProduct()
+            .setNamespace((Owner) null);
+
+        Product ownerProduct = TestUtil.createProduct()
+            .setNamespace(owner);
+
+        this.productCurator.create(globalProduct);
+        this.productCurator.create(ownerProduct);
+
+        Pool pool1 = this.createPool(owner, globalProduct);
+        Pool pool2 = this.createPool(owner, ownerProduct);
+
+        List<Pool> output = this.poolCurator.getPoolsReferencingInvalidProducts(owner.getId());
+
+        assertNotNull(output);
+        assertTrue(output.isEmpty());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { "bad owner id" })
+    public void testGetPoolsReferencingInvalidProductsReturnsEmptyCollectionWithInvalidOwner(String ownerId) {
+        Owner owner = this.createOwner();
+
+        Product globalProduct = TestUtil.createProduct()
+            .setNamespace((Owner) null);
+
+        Product ownerProduct = TestUtil.createProduct()
+            .setNamespace(owner);
+
+        Product otherProduct = TestUtil.createProduct()
+            .setNamespace("other namespace");
+
+        this.productCurator.create(globalProduct);
+        this.productCurator.create(ownerProduct);
+        this.productCurator.create(otherProduct);
+
+        Pool pool1 = this.createPool(owner, globalProduct);
+        Pool pool2 = this.createPool(owner, ownerProduct);
+        Pool pool3 = this.createPool(owner, otherProduct);
+
+        List<Pool> output = this.poolCurator.getPoolsReferencingInvalidProducts(ownerId);
+
+        assertNotNull(output);
+        assertTrue(output.isEmpty());
+    }
 }

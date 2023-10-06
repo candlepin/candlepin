@@ -15,7 +15,6 @@
 package org.candlepin.model.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -201,31 +200,14 @@ public class ProductContentDataTest {
     @Test
     public void testPopulateWithEntityContent() {
         Content contentEntity = new Content("id1", "name1", "type1", "label1", "vendor1");
-        ContentData contentDTO = contentEntity.toDTO();
+        ContentData contentData = contentEntity.toDTO();
 
         ProductContentData base = new ProductContentData();
-        ProductContent source = new ProductContent();
-
-        source.setContent(contentEntity);
+        ProductContent source = new ProductContent(contentEntity, true);
 
         base.populate(source);
 
-        assertEquals(contentDTO, base.getContent());
-
-        // This will always be set after a populate
-        assertFalse(base.isEnabled());
-    }
-
-    @Test
-    public void testPopulateWithEntityEnabled() {
-        ProductContentData base = new ProductContentData();
-        ProductContent source = new ProductContent();
-
-        source.setEnabled(true);
-
-        base.populate(source);
-
-        assertNull(base.getContent());
+        assertEquals(contentData, base.getContent());
         assertTrue(base.isEnabled());
     }
 }

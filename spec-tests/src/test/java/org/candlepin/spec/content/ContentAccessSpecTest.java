@@ -96,10 +96,10 @@ public class ContentAccessSpecTest {
         // We expect this content to NOT be filtered out due it not specifying an architecture
         ContentDTO content3 = adminClient.ownerContent()
             .createContent(ownerKey, Contents.random().arches(""));
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content1.getId(), true);
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content2.getId(), true);
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content3.getId(), true);
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content1.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content2.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content3.getId(), true);
 
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -242,9 +242,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
 
@@ -281,9 +281,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         ConsumerDTO consumer = adminClient.consumers()
@@ -300,9 +300,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environments.random());
@@ -345,15 +345,15 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
         EnvironmentDTO env1 = adminClient.owners().createEnv(ownerKey, Environments.random());
         EnvironmentDTO env2 = adminClient.owners().createEnv(ownerKey, Environments.random());
         ContentDTO content2 = adminClient.ownerContent()
             .createContent(ownerKey, Contents.random().arches("x86_64"));
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content2.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content2.getId(), true);
         promoteContentToEnvironment(adminClient, env1.getId(), content, true);
         promoteContentToEnvironment(adminClient, env2.getId(), content2, true);
 
@@ -402,9 +402,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
         EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environments.random());
         ConsumerDTO consumer = adminClient.consumers()
@@ -454,9 +454,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
         EnvironmentDTO env1 = adminClient.owners().createEnv(ownerKey, Environments.random());
         promoteContentToEnvironment(adminClient, env1.getId(), content, true);
@@ -510,9 +510,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -561,9 +561,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -589,9 +589,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         owner.contentAccessMode(Owners.ENTITLEMENT_ACCESS_MODE);
@@ -614,9 +614,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
@@ -644,9 +644,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -684,9 +684,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environments.random());
@@ -727,9 +727,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         // Ensure enough time passes from the last content update to the cert fetching
@@ -759,9 +759,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -790,9 +790,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         ConsumerDTO consumer1 = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -842,9 +842,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         // We need to sleep here to ensure enough time has passes from the last content update to when
@@ -880,9 +880,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         // We need to sleep here to ensure enough time has passes from the last content update to when
@@ -910,9 +910,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         ConsumerDTO consumer = adminClient.consumers()
@@ -978,9 +978,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -1002,14 +1002,14 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
-        ProductDTO prod1 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod1 = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         adminClient.owners().createPool(ownerKey, Pools.random(prod1));
-        ProductDTO prod2 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod2 = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
@@ -1040,9 +1040,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environments.random());
@@ -1072,15 +1072,16 @@ public class ContentAccessSpecTest {
         String ownerKey = owner.getKey();
 
         ProductDTO modifiedProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.random());
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+            .createProduct(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO enabledContent = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(modifiedProd.getId())));
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), enabledContent.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), enabledContent.getId(), true);
 
         ContentDTO disabledContent = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(modifiedProd.getId())));
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), disabledContent.getId(), false);
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, prod.getId(), disabledContent.getId(), false);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -1116,11 +1117,13 @@ public class ContentAccessSpecTest {
         assertThat(consumer.getEnvironments()).singleElement().returns(env.getId(), EnvironmentDTO::getId);
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO promotedContent = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         ContentDTO notPromotedContent = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), promotedContent.getId(), true);
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), notPromotedContent.getId(), true);
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, prod.getId(), promotedContent.getId(), true);
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, prod.getId(), notPromotedContent.getId(), true);
         promoteContentToEnvironment(adminClient, env.getId(), promotedContent, false);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -1152,23 +1155,23 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod1 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ProductDTO prod2 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod1 = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ProductDTO prod2 = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO cont1 = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         ContentDTO cont2 = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         ContentDTO cont3 = adminClient.ownerContent().createContent(ownerKey, Contents.random());
 
         // Content enabled in both product
-        adminClient.ownerProducts().addContent(ownerKey, prod1.getId(), cont1.getId(), true);
-        adminClient.ownerProducts().addContent(ownerKey, prod2.getId(), cont1.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod1.getId(), cont1.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod2.getId(), cont1.getId(), true);
 
         // Mixed content enablement in both product
-        adminClient.ownerProducts().addContent(ownerKey, prod1.getId(), cont2.getId(), false);
-        adminClient.ownerProducts().addContent(ownerKey, prod2.getId(), cont2.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod1.getId(), cont2.getId(), false);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod2.getId(), cont2.getId(), true);
 
         // Content disabled in both product
-        adminClient.ownerProducts().addContent(ownerKey, prod1.getId(), cont3.getId(), false);
-        adminClient.ownerProducts().addContent(ownerKey, prod2.getId(), cont3.getId(), false);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod1.getId(), cont3.getId(), false);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod2.getId(), cont3.getId(), false);
 
         adminClient.owners().createPool(ownerKey, Pools.random(prod1));
         adminClient.owners().createPool(ownerKey, Pools.random(prod2));
@@ -1207,16 +1210,16 @@ public class ContentAccessSpecTest {
         String ownerKey = owner.getKey();
 
         ProductDTO modifiedProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.random());
-        ProductDTO prod1 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ProductDTO prod2 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+            .createProduct(ownerKey, Products.random());
+        ProductDTO prod1 = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ProductDTO prod2 = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO cont1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(modifiedProd.getId())));
-        adminClient.ownerProducts().addContent(ownerKey, prod1.getId(), cont1.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod1.getId(), cont1.getId(), true);
         ContentDTO cont2 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(modifiedProd.getId())));
         adminClient.owners().createPool(ownerKey, Pools.random(prod2));
-        adminClient.ownerProducts().addContent(ownerKey, prod2.getId(), cont2.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod2.getId(), cont2.getId(), true);
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
@@ -1240,12 +1243,12 @@ public class ContentAccessSpecTest {
         String ownerKey = owner.getKey();
 
         ProductDTO modifiedProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.random());
-        ProductDTO provProd = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ProductDTO derivedProd = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random()
+            .createProduct(ownerKey, Products.random());
+        ProductDTO provProd = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ProductDTO derivedProd = adminClient.ownerProducts().createProduct(ownerKey, Products.random()
             .providedProducts(Set.of(provProd)));
-        ProductDTO engProd = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.randomEng());
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random()
+        ProductDTO engProd = adminClient.ownerProducts().createProduct(ownerKey, Products.randomEng());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random()
             .providedProducts(Set.of(engProd))
             .derivedProduct(derivedProd));
 
@@ -1258,10 +1261,10 @@ public class ContentAccessSpecTest {
         ContentDTO cont4 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(modifiedProd.getId())));
 
-        adminClient.ownerProducts().addContent(ownerKey, engProd.getId(), cont1.getId(), true);
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), cont2.getId(), true);
-        adminClient.ownerProducts().addContent(ownerKey, derivedProd.getId(), cont3.getId(), true);
-        adminClient.ownerProducts().addContent(ownerKey, provProd.getId(), cont4.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, engProd.getId(), cont1.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), cont2.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, derivedProd.getId(), cont3.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, provProd.getId(), cont4.getId(), true);
 
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -1283,9 +1286,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -1310,9 +1313,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -1321,7 +1324,7 @@ public class ContentAccessSpecTest {
         assertThat(certs).singleElement();
         String initialCert = certs.get(0).getCert();
 
-        adminClient.ownerContent().remove(ownerKey, content.getId());
+        adminClient.ownerContent().removeContent(ownerKey, content.getId());
 
         certs = consumerClient.consumers().fetchCertificates(consumer.getUuid());
         assertThat(certs).singleElement();
@@ -1336,9 +1339,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         PoolDTO pool = adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -1386,9 +1389,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -1415,9 +1418,9 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
 
         EnvironmentDTO env1 = adminClient.owners().createEnv(ownerKey, Environments.random());
         EnvironmentDTO env2 = adminClient.owners().createEnv(ownerKey, Environments.random());

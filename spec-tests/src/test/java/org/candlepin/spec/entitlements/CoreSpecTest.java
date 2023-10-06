@@ -268,7 +268,7 @@ public class CoreSpecTest {
 
     private ProductDTO createCoreProduct() {
         return admin.ownerProducts()
-            .createProductByOwner(this.owner.getKey(), Products.withAttributes(
+            .createProduct(this.owner.getKey(), Products.withAttributes(
                 ProductAttributes.Version.withValue("6.4"),
                 ProductAttributes.Cores.withValue("8"),
                 ProductAttributes.WarningPeriod.withValue("15"),
@@ -280,7 +280,7 @@ public class CoreSpecTest {
 
     private ProductDTO createSocketProduct() {
         return admin.ownerProducts()
-            .createProductByOwner(this.owner.getKey(), Products.withAttributes(
+            .createProduct(this.owner.getKey(), Products.withAttributes(
                 ProductAttributes.Version.withValue("6.4"),
                 ProductAttributes.Cores.withValue("2"),
                 ProductAttributes.Sockets.withValue("1"),
@@ -296,7 +296,7 @@ public class CoreSpecTest {
 
     private ProductDTO createCoreAndSocketProduct() {
         return admin.ownerProducts()
-            .createProductByOwner(this.owner.getKey(), Products.withAttributes(
+            .createProduct(this.owner.getKey(), Products.withAttributes(
                 ProductAttributes.Version.withValue("1.2"),
                 ProductAttributes.Cores.withValue("16"),
                 ProductAttributes.Sockets.withValue("4"),

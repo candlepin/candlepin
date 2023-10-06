@@ -52,14 +52,6 @@ public interface NodeVisitor<E extends AbstractHibernateObject, I extends Servic
     void processNode(EntityNode<E, I> node);
 
     /**
-     * Checks if this node should be pruned and deletes the backing entity as necessary.
-     *
-     * @param node
-     *  the EntityNode instance to process
-     */
-    void pruneNode(EntityNode<E, I> node);
-
-    /**
      * Applies changes that were calculated and queued in the previous processing and pruning steps
      * to the given node. If no changes were prepared for the provided node, this method should
      * silently return.
@@ -68,12 +60,5 @@ public interface NodeVisitor<E extends AbstractHibernateObject, I extends Servic
      *  the EntityNode instance for which to apply pending changes
      */
     void applyChanges(EntityNode<E, I> node);
-
-    /**
-     * Completes any processing operations that may be pending from one or more previous calls to
-     * the <tt>processNode</tt> method. Repeated, sequential calls to this method should have no
-     * further effect on the visitor or the previously processed nodes or data.
-     */
-    void complete();
 
 }

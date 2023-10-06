@@ -64,7 +64,7 @@ public class EntitlementMigrateSpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product1 = Products.random()
             .addAttributesItem(ProductAttributes.Cores.withValue("8"));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(product1).quantity(25L));
 
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
@@ -95,7 +95,7 @@ public class EntitlementMigrateSpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product1 = Products.random()
             .addAttributesItem(ProductAttributes.Cores.withValue("8"));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(product1).quantity(25L));
 
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
@@ -129,7 +129,7 @@ public class EntitlementMigrateSpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product1 = Products.random()
             .addAttributesItem(ProductAttributes.Cores.withValue("8"));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(product1).quantity(25L));
 
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
@@ -155,7 +155,7 @@ public class EntitlementMigrateSpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product1 = Products.random()
             .addAttributesItem(ProductAttributes.Cores.withValue("8"));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(product1).quantity(25L));
 
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));

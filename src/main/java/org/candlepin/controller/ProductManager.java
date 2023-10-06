@@ -16,25 +16,26 @@ package org.candlepin.controller;
 
 import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
-import org.candlepin.model.OwnerProductCurator;
+import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.Util;
 
-import com.google.inject.persist.Transactional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -60,36 +61,37 @@ import javax.persistence.LockModeType;
 public class ProductManager {
     private static final Logger log = LoggerFactory.getLogger(ProductManager.class);
 
-    /** Name of the system lock used by various product operations */
-    public static final String SYSTEM_LOCK = "products";
-
     private final ContentAccessManager contentAccessManager;
-
     private final EntitlementCertificateGenerator entitlementCertGenerator;
-    private final OwnerContentCurator ownerContentCurator;
-    private final OwnerProductCurator ownerProductCurator;
+    private final PoolCurator poolCurator;
     private final ProductCurator productCurator;
+    private final ContentCurator contentCurator;
+    private final ActivationKeyCurator activationKeyCurator;
 
     @Inject
     public ProductManager(ContentAccessManager contentAccessManager,
-        EntitlementCertificateGenerator entitlementCertGenerator, OwnerContentCurator ownerContentCurator,
-        OwnerProductCurator ownerProductCurator, ProductCurator productCurator) {
+        EntitlementCertificateGenerator entitlementCertGenerator, PoolCurator poolCurator,
+        ProductCurator productCurator, ContentCurator contentCurator,
+        ActivationKeyCurator activationKeyCurator) {
 
         this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
-
         this.entitlementCertGenerator = Objects.requireNonNull(entitlementCertGenerator);
-        this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
-        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
+        this.poolCurator = Objects.requireNonNull(poolCurator);
         this.productCurator = Objects.requireNonNull(productCurator);
+        this.contentCurator = Objects.requireNonNull(contentCurator);
+        this.activationKeyCurator = Objects.requireNonNull(activationKeyCurator);
     }
 
-    /**
-     * Resolves all of the products referenced by the given product info, returning a map that
+   /**
+     * Resolves all of the products referenced by the given product data, returning a map that
      * contains all resolved product entities mapped by product ID. If a product reference cannot
      * be resolved, this method throws an exception.
      *
+     * @param namespace
+     *  the namespace in which to resolve the product references
+     *
      * @param pinfo
-     *  the product info for which to resolve product references
+     *  the product data for which to resolve product references
      *
      * @throws IllegalArgumentException
      *  if the product provided references a product which cannot be resolved
@@ -97,7 +99,7 @@ public class ProductManager {
      * @return
      *  a map containing all of the resolved products referenced, mapped by product ID
      */
-    private Map<String, Product> resolveProductRefs(Owner owner, ProductInfo pinfo) {
+    private Map<String, Product> resolveProductRefs(String namespace, ProductInfo pinfo) {
         Set<String> pids = new HashSet<>();
         Map<String, Product> output;
 
@@ -128,8 +130,7 @@ public class ProductManager {
         }
 
         if (!pids.isEmpty()) {
-            output = this.ownerProductCurator.getProductsByIds(owner, pids).list().stream()
-                .collect(Collectors.toMap(Product::getId, Function.identity()));
+            output = this.productCurator.getProductsByIds(namespace, pids, LockModeType.PESSIMISTIC_WRITE);
 
             pids.removeAll(output.keySet());
             if (!pids.isEmpty()) {
@@ -145,23 +146,23 @@ public class ProductManager {
     }
 
     /**
-     * Resolves all of the products referenced by the given product info, returning a map that
-     * contains all resolved product entities mapped by product ID. If a product reference cannot
+     * Resolves all of the contents referenced by the given product data, returning a map that
+     * contains all resolved content entities mapped by content ID. If a content reference cannot
      * be resolved, this method throws an exception.
      *
-     * @param owner
-     *  the owner of the product whose content is being resolved
+     * @param namespace
+     *  the namespace in which to resolve the content references
      *
      * @param pinfo
-     *  the product info for which to resolve product references
+     *  the product data for which to resolve content references
      *
      * @throws IllegalArgumentException
-     *  if the product provided references a product which cannot be resolved
+     *  if the content provided references a content which cannot be resolved
      *
      * @return
-     *  a map containing all of the resolved products referenced, mapped by product ID
+     *  a map containing all of the resolved contents referenced, mapped by content ID
      */
-    private Map<String, Content> resolveContentRefs(Owner owner, ProductInfo pinfo) {
+    private Map<String, Content> resolveContentRefs(String namespace, ProductInfo pinfo) {
         Set<String> cids = new HashSet<>();
         Map<String, Content> output = new HashMap<>();
 
@@ -185,7 +186,7 @@ public class ProductManager {
         }
 
         if (!cids.isEmpty()) {
-            output = this.ownerContentCurator.getContentByIds(owner, cids);
+            output = this.contentCurator.getContentsByIds(namespace, cids, LockModeType.PESSIMISTIC_WRITE);
 
             cids.removeAll(output.keySet());
             if (!cids.isEmpty()) {
@@ -198,95 +199,60 @@ public class ProductManager {
     }
 
     /**
-     * Creates a new Product instance using the given product data.
+     * Creates a new product from the given product data in the namespace of the given organization.
+     * The product data must have all of the required fields set, and must not reference another
+     * entity outside of the organization's namespace.
      *
      * @param owner
-     *  the owner for which to create the new product
+     *  the organization in which to create the new product
      *
-     * @param productData
-     *  a ProductInfo instance containing the data for the new product
+     * @param pinfo
+     *  the product data to use to create the product
      *
      * @throws IllegalArgumentException
-     *  if owner is null, productData is null, or productData lacks required information
+     *  if pinfo is null
      *
      * @throws IllegalStateException
-     *  if a product instance already exists for the product ID specified in productData
+     *  if creating the new product would cause a collision with an existing product
      *
      * @return
-     *  the new created Product instance
+     *  the newly created and persisted product instance
      */
-    @Transactional
-    public Product createProduct(Owner owner, ProductInfo productData) {
+    public Product createProduct(Owner owner, ProductInfo pinfo) {
         if (owner == null) {
             throw new IllegalArgumentException("owner is null");
         }
 
-        if (productData == null) {
-            throw new IllegalArgumentException("productData is null");
+        if (pinfo == null) {
+            throw new IllegalArgumentException("pinfo is null");
         }
 
-        if (productData.getId() == null || productData.getName() == null) {
-            throw new IllegalArgumentException("productData is incomplete");
+        if (pinfo.getId() == null || pinfo.getName() == null) {
+            throw new IllegalArgumentException("product data is incomplete");
         }
 
-        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
+        String namespace = owner.getKey();
 
-        if (this.ownerProductCurator.productExists(owner, productData.getId())) {
-            throw new IllegalStateException("product has already been created: " + productData.getId());
+        if (this.productCurator.resolveProductId(namespace, pinfo.getId()) != null) {
+            String errmsg = String.format("a product with ID \"%s\" already exists within the context of " +
+                "namespace \"%s\"", pinfo.getId(), namespace);
+
+            throw new IllegalStateException(errmsg);
         }
 
-        Map<String, Product> productMap = this.resolveProductRefs(owner, productData);
-        Map<String, Content> contentMap = this.resolveContentRefs(owner, productData);
+        Map<String, Product> productMap = this.resolveProductRefs(namespace, pinfo);
+        Map<String, Content> contentMap = this.resolveContentRefs(namespace, pinfo);
 
-        log.debug("Creating new product for org: {}, {}", productData, owner);
+        log.debug("Creating new product in namespace {}: {}", namespace, pinfo);
 
         Product entity = new Product()
-            .setId(productData.getId());
+            .setNamespace(namespace)
+            .setId(pinfo.getId());
 
-        entity = applyProductChanges(entity, productData, productMap, contentMap);
-
-        // Check if we have an alternate version we can use instead.
-        List<Product> alternateVersions = this.ownerProductCurator
-            .getProductsByVersions(Set.of(entity.getEntityVersion()))
-            .get(entity.getId());
-
-        if (alternateVersions != null) {
-            // Impl note: this should only ever have 1 entry in it due to our implicit limitation
-            // on ID and entity version
-            if (alternateVersions.size() != 1) {
-                log.warn("Unexpected number of alternate versions received for product ID {}: {}",
-                    entity.getId(), alternateVersions.size());
-            }
-            else {
-                log.debug("Checking {} alternate product versions", alternateVersions.size());
-            }
-
-            for (Product candidate : alternateVersions) {
-                if (entity.equals(candidate)) {
-                    // We found a match! Map to the candidate entity
-                    log.debug("Converging with existing product version: {} => {}", entity, candidate);
-
-                    // If we're "creating" a product, we shouldn't have any other object references to
-                    // update for this product. Instead, we'll just add the new owner to the product.
-                    this.ownerProductCurator.mapProductToOwner(candidate, owner);
-                    return candidate;
-                }
-
-                // If we have a version collision, and the entity IDs are the same, there's likely
-                // some shenanigans going on. Rather than halting all behavior, let's just clear
-                // the old entity's version so we start mapping to the new one.
-                // If we have a collision where the products are actually different, we won't
-                // fail at this point (but we *will* fail), and we won't be able to detect it.
-                log.error("Entity version collision detected; attempting resolution... {} != {}",
-                    entity, candidate);
-
-                this.ownerProductCurator.clearProductEntityVersion(candidate);
-            }
-        }
+        entity = applyProductChanges(entity, pinfo, productMap, contentMap);
 
         log.debug("Creating new product instance: {}", entity);
         entity = this.productCurator.create(entity);
-        this.ownerProductCurator.mapProductToOwner(entity, owner);
 
         log.debug("Synchronizing last content update for org: {}", owner);
         this.contentAccessManager.syncOwnerLastContentUpdate(owner);
@@ -295,370 +261,135 @@ public class ProductManager {
     }
 
     /**
-     * Updates product with the ID specified in the given product data, optionally regenerating
-     * certificates of entitlements affected by the product update.
+     * Updates the specified product with the given product data. The product data need not be
+     * complete, but any references to children entities must be valid references to entities
+     * present in the target product's namespace.
+     * <p></p>
+     * Note that this method is not able to update the target product's UUID, ID, or namespace.
      *
      * @param owner
-     *  the owner for which to update the specified product
+     *  the organization making the change to the product
      *
-     * @param productData
-     *  the product data to use to update the specified product
+     * @param product
+     *  the product to update
+     *
+     * @param pinfo
+     *  the product data to use to update the product
      *
      * @param regenCerts
-     *  whether or not certificates for affected entitlements should be regenerated after updating
-     *  the specified product
+     *  whether or not to regenerate certificates for entitlements of pools using the updated
+     *  product
      *
      * @throws IllegalArgumentException
-     *  if owner is null, productData is null, or productData is missing required information
-     *
-     * @throws IllegalStateException
-     *  if the product specified by the product data does not yet exist for the given owner
+     *  if the owner, target product, or product data is null
      *
      * @return
-     *  the updated Product instance
+     *  the updated product instance
      */
-    @Transactional
-    public Product updateProduct(Owner owner, ProductInfo productData, boolean regenCerts) {
-        if (owner == null) {
-            throw new IllegalArgumentException("owner is null");
+    public Product updateProduct(Owner owner, Product product, ProductInfo pinfo, boolean regenCerts) {
+        if (product == null) {
+            throw new IllegalArgumentException("product is null");
         }
 
-        if (productData == null) {
-            throw new IllegalArgumentException("productData is null");
+        if (pinfo == null) {
+            throw new IllegalArgumentException("pinfo is null");
         }
 
-        if (productData.getId() == null) {
-            throw new IllegalArgumentException("productData is incomplete");
+        String namespace = product.getNamespace();
+
+        // If the namespace doesn't match the org's, that's bad; disallow that.
+        if (namespace == null || !namespace.equals(owner.getKey())) {
+            throw new IllegalStateException("product namespace does not match org's namespace");
         }
 
-        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
+        Map<String, Product> productMap = this.resolveProductRefs(namespace, pinfo);
+        Map<String, Content> contentMap = this.resolveContentRefs(namespace, pinfo);
 
-        // Resolve the entity to ensure we're working with the merged entity, and to ensure it's
-        // already been created.
-        Product entity = this.ownerProductCurator.getProductById(owner, productData.getId());
+        if (isChangedBy(product, pinfo)) {
+            product = applyProductChanges(product, pinfo, productMap, contentMap);
 
-        if (entity == null) {
-            // If we're doing an exclusive update, this should be an error condition
-            throw new IllegalStateException("Product has not yet been created");
-        }
+            log.debug("Persisting updated product in namespace {}: {}", namespace, product);
+            product = this.productCurator.merge(product);
 
-        // Make sure we have an actual change to apply
-        if (!isChangedBy(entity, productData)) {
-            return entity;
-        }
+            log.debug("Synchronizing last content update for org: {}", owner);
+            this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
-        Map<String, Product> productMap = this.resolveProductRefs(owner, productData);
-        Map<String, Content> contentMap = this.resolveContentRefs(owner, productData);
-
-        log.debug("Applying product update for org: {} => {}, {}", productData, entity, owner);
-
-        Product updated = applyProductChanges((Product) entity.clone(), productData, productMap, contentMap)
-            .setUuid(null);
-
-        // Grab a list of products that are using this product. Due to versioning restrictions,
-        // we'll need to update these manually as a recursive step. We'll come back to these later.
-        Collection<Product> affectedProducts = this.ownerProductCurator
-            .getProductsReferencingProduct(owner.getId(), entity.getUuid());
-
-        // Check for newer versions of the same product. We want to try to dedupe as much data as we
-        // can, and if we have a newer version of the product (which matches the version provided by
-        // the caller), we can just point the given orgs to the new product instead of giving them
-        // their own version.
-        // This is probably going to be a very expensive operation, though.
-        List<Product> alternateVersions = this.ownerProductCurator
-            .getProductsByVersions(Set.of(updated.getEntityVersion()))
-            .get(updated.getId());
-
-        if (alternateVersions != null) {
-            // Impl note: this should only ever have 1 entry in it due to our implicit limitation
-            // on ID and version
-            if (alternateVersions.size() != 1) {
-                log.warn("Unexpected number of alternate versions received for product ID {}: {}",
-                    entity.getId(), alternateVersions.size());
-            }
-            else {
-                log.debug("Checking {} alternate product versions", alternateVersions.size());
-            }
-
-            for (Product candidate : alternateVersions) {
-                if (updated.equals(candidate)) {
-                    // We found a match! Map to the candidate entity
-                    log.debug("Converging with existing product version: {} => {}", updated, candidate);
-
-                    this.ownerProductCurator.updateOwnerProductReferences(owner,
-                        Map.of(entity.getUuid(), candidate.getUuid()));
-
-                    updated = candidate;
-                    break;
-                }
-
-                // If we have a version collision, and the entity IDs are the same, there's likely
-                // some shenanigans going on. Rather than halting all behavior, let's just clear
-                // the old entity's version so we start mapping to the new one.
-                // If we have a collision where the products are actually different, we won't
-                // fail at this point (but we *will* fail), and we won't be able to detect it.
-                log.error("Entity version collision detected; attempting resolution... {} != {}",
-                    updated, candidate);
-
-                this.ownerProductCurator.clearProductEntityVersion(candidate);
+            if (regenCerts) {
+                log.debug("Flagging entitlement certificates of 1 affected product for regeneration");
+                this.entitlementCertGenerator.regenerateCertificatesOf(owner, product.getId(), true);
             }
         }
 
-        if (updated.getUuid() == null) {
-            log.debug("Creating new product instance and applying update: {}", updated);
-            updated = this.productCurator.create(updated);
-
-            // Flush the newly created object to the db because the native SQL in updateOwnerProductReferences
-            // won't trigger it otherwise
-            this.ownerProductCurator.flush();
-
-            this.ownerProductCurator.updateOwnerProductReferences(owner,
-                Collections.singletonMap(entity.getUuid(), updated.getUuid()));
-        }
-
-        if (regenCerts) {
-            this.entitlementCertGenerator.regenerateCertificatesOf(owner, updated.getId(), true);
-        }
-
-        // Update affected products recursively
-        if (!affectedProducts.isEmpty()) {
-            log.debug("Updating {} products affected by product update", affectedProducts.size());
-
-            for (Product affected : affectedProducts) {
-                this.updateChildrenReferences(owner, affected, regenCerts);
-            }
-        }
-
-        log.debug("Synchronizing last content update for org: {}", owner);
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
-
-        return updated;
+        return product;
     }
 
     /**
-     * Updates product with the ID specified in the given product data, regenerating certificates
-     * of entitlements affected by the product update.
+     * Removes the specified product from its namespace, optionally flagging entitlement
+     * certificates of affected pools for eventual regeneration.
      *
      * @param owner
-     *  the owner for which to update the specified product
+     *  the organization removing the product
      *
-     * @param productData
-     *  the product data to use to update the specified product
-     *
-     * @throws IllegalArgumentException
-     *  if owner is null, productData is null, or productData is missing required information
-     *
-     * @throws IllegalStateException
-     *  if the product specified by the product data does not yet exist for the given owner
-     *
-     * @return
-     *  the updated Product instance
-     */
-    public Product updateProduct(Owner owner, ProductInfo productData) {
-        return this.updateProduct(owner, productData, true);
-    }
-
-    /**
-     * Updates the children references on this product to point to the products and content
-     * currently mapped to the given owner.
-     *
-     * @param owner
-     *  the owner for which to update the product's children references
-     *
-     * @param entity
-     *  the Product entity for which to update children references
+     * @param product
+     *  the product to remove
      *
      * @param regenCerts
-     *  whether or not certificates for affected entitlements should be regenerated after updating
-     *  the specified product
-     *
-     * @return
-     *  the updated Product instance
-     */
-    @Transactional
-    public Product updateChildrenReferences(Owner owner, Product entity, boolean regenCerts) {
-        if (owner == null) {
-            throw new IllegalArgumentException("owner is null");
-        }
-
-        if (entity == null) {
-            throw new IllegalArgumentException("entity is null");
-        }
-
-        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
-
-        Map<String, Product> productMap = this.resolveProductRefs(owner, entity);
-        Map<String, Content> contentMap = this.resolveContentRefs(owner, entity);
-
-        log.debug("Updating children references on product for org: {}, {}", entity, owner);
-
-        Product updated = ((Product) entity.clone())
-            .setUuid(null);
-
-        // Update references using our entity as the update for select fields
-        applyProductContentChanges(updated, entity, contentMap);
-        applyDerivedProductChanges(updated, entity, productMap);
-        applyProvidedProductChanges(updated, entity, productMap);
-
-        // Grab a list of products that are using this product. Due to versioning restrictions,
-        // we'll need to update these manually as a recursive step. We'll come back to these later.
-        Collection<Product> affectedProducts = this.ownerProductCurator
-            .getProductsReferencingProduct(owner.getId(), entity.getUuid());
-
-        // Check for newer versions of the same product. We want to try to dedupe as much data as we
-        // can, and if we have a newer version of the product (which matches the version provided by
-        // the caller), we can just point the given orgs to the new product instead of giving them
-        // their own version.
-        // This is probably going to be a very expensive operation, though.
-        List<Product> alternateVersions = this.ownerProductCurator
-            .getProductsByVersions(Set.of(updated.getEntityVersion()))
-            .get(updated.getId());
-
-        if (alternateVersions != null) {
-            // Impl note: this should only ever have 1 entry in it due to our implicit limitation
-            // on ID and version
-            if (alternateVersions.size() != 1) {
-                log.warn("Unexpected number of alternate versions received for product ID {}: {}",
-                    entity.getId(), alternateVersions.size());
-            }
-            else {
-                log.debug("Checking {} alternate product versions", alternateVersions.size());
-            }
-
-            for (Product candidate : alternateVersions) {
-                if (updated.equals(candidate)) {
-                    // We found a match! Map to the candidate entity
-                    log.debug("Converging with existing product version: {} => {}", updated, candidate);
-
-                    this.ownerProductCurator.updateOwnerProductReferences(owner,
-                        Map.of(entity.getUuid(), candidate.getUuid()));
-
-                    updated = candidate;
-                    break;
-                }
-
-                // If we have a version collision, and the entity IDs are the same, there's likely
-                // some shenanigans going on. Rather than halting all behavior, let's just clear
-                // the old entity's version so we start mapping to the new one.
-                // If we have a collision where the products are actually different, we won't
-                // fail at this point (but we *will* fail), and we won't be able to detect it.
-                log.error("Entity version collision detected; attempting resolution... {} != {}",
-                    updated, candidate);
-
-                this.ownerProductCurator.clearProductEntityVersion(candidate);
-            }
-        }
-
-        if (updated.getUuid() == null) {
-            log.debug("Creating new product instance and updating child references: {}", updated);
-            updated = this.productCurator.create(updated);
-
-            // Flush the newly created object to the db because the native SQL in updateOwnerProductReferences
-            // won't trigger it otherwise
-            this.ownerProductCurator.flush();
-
-            this.ownerProductCurator.updateOwnerProductReferences(owner,
-                Collections.singletonMap(entity.getUuid(), updated.getUuid()));
-        }
-
-        if (regenCerts) {
-            this.entitlementCertGenerator.regenerateCertificatesOf(owner, updated.getId(), true);
-        }
-
-        // Update affected products recursively
-        if (!affectedProducts.isEmpty()) {
-            log.debug("Updating {} products affected by child reference update", affectedProducts.size());
-
-            for (Product affected : affectedProducts) {
-                this.updateChildrenReferences(owner, affected, regenCerts);
-            }
-        }
-
-        return updated;
-    }
-
-    /**
-     * Removes the product specified by the provided product ID from the given owner, optionally
-     * regenerating certificates of affected entitlements.
-     *
-     * @param owner
-     *  the owner for which to remove the specified product
-     *
-     * @param productId
-     *  the Red Hat product ID of the product to remove
+     *  whether or not to flag entitlement certificates of affected pools for regeneration
      *
      * @throws IllegalArgumentException
-     *  if owner is null, or productId is null
+     *  if the owner, or the target product is null
      *
      * @throws IllegalStateException
-     *  if a product with the given ID has not yet been created for the specified owner
+     *  if the product is still referenced by one or more subscriptions or parent products
      *
      * @return
-     *  the Product instance removed from the given owner
+     *  the removed product entity
      */
-    @Transactional
-    public Product removeProduct(Owner owner, String productId) {
+    public Product removeProduct(Owner owner, Product product, boolean regenCerts) {
         if (owner == null) {
             throw new IllegalArgumentException("owner is null");
-        }
-
-        if (productId == null) {
-            throw new IllegalArgumentException("productId is null");
-        }
-
-        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
-
-        // Make sure the entity actually exists to be removed
-        Product entity = this.ownerProductCurator.getProductById(owner, productId);
-        if (entity == null) {
-            throw new IllegalStateException("Product has not yet been created");
         }
 
         // Make sure the product isn't referenced by a pool or other product
-        if (this.productCurator.productHasSubscriptions(owner, entity)) {
-            throw new IllegalStateException("Product is referenced by one or more subscriptions: " + entity);
+        if (this.productCurator.productHasSubscriptions(owner, product)) {
+            throw new IllegalStateException("Product is referenced by one or more subscriptions: " + product);
         }
 
-        if (this.productCurator.productHasParentProducts(owner, entity)) {
-            throw new IllegalStateException("Product is referenced by one or more parent products: " +
-                entity);
+        String namespace = product.getNamespace();
+
+        // If the namespace doesn't match the org's, that's bad; disallow that.
+        if (namespace == null || !namespace.equals(owner.getKey())) {
+            throw new IllegalStateException("product namespace does not match org's namespace");
         }
+
+        // Fetch the affected entitlements if we're going to regenerate certs
+        List<Pool> affectedPools = regenCerts ?
+            this.poolCurator.listAvailableEntitlementPools(null, owner, product.getId(), new Date()) :
+            List.of();
+
+        Set<Entitlement> entitlements = affectedPools.stream()
+            .map(Pool::getEntitlements)
+            .flatMap(Collection::stream)
+            .collect(Collectors.toSet());
+
+        // Future fun time: What happens if namespaces are no longer 1:1 with org? Answer: We'll get
+        // indeterministic behavior with this removal.
+        log.debug("Removing activation key product references from namespace: {}, {}", namespace, product);
+        this.activationKeyCurator.removeActivationKeyProductReferences(owner, List.of(product.getId()));
 
         // Validation checks passed, remove the reference to it
-        log.debug("Removing product for org: {}, {}", entity, owner);
-        this.ownerProductCurator.removeOwnerProductReferences(owner, Collections.singleton(entity.getUuid()));
+        log.debug("Removing product from namespace: {}, {}", namespace, product);
+        this.productCurator.delete(product);
 
         log.debug("Synchronizing last content update for org: {}", owner);
         this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
-        return entity;
-    }
-
-    /**
-     * Removes the product specified by the provided product data from the given owner, optionally
-     * regenerating certificates of affected entitlements.
-     *
-     * @param owner
-     *  the owner for which to remove the specified product
-     *
-     * @param productData
-     *  the product data containing the Red Hat ID of the product to remove
-     *
-     * @throws IllegalArgumentException
-     *  if owner is null, or productData is null
-     *
-     * @throws IllegalStateException
-     *  if a product with the given ID has not yet been created for the specified owner
-     *
-     * @return
-     *  the Product instance removed from the given owner
-     */
-    public Product removeProduct(Owner owner, ProductInfo productData) {
-        if (productData == null) {
-            throw new IllegalArgumentException("productData is null");
+        if (!entitlements.isEmpty()) {
+            log.debug("Flagging {} affected entitlement certificates for regeneration", entitlements.size());
+            this.entitlementCertGenerator.regenerateCertificatesOf(entitlements, true);
         }
 
-        return this.removeProduct(owner, productData.getId());
+        return product;
     }
 
     /**
@@ -724,11 +455,13 @@ public class ProductManager {
         if (update.getProductContent() != null) {
             Map<String, Boolean> entityContentMap = entity.getProductContent().stream()
                 .filter(pc -> pc != null && pc.getContent() != null)
-                .collect(Collectors.toMap(pc -> pc.getContent().getId(), pc -> pc.isEnabled()));
+                .collect(Collectors.toMap(pc -> pc.getContent().getId(), pc -> pc.isEnabled(),
+                    (pc1, pc2) -> pc2));
 
             Map<String, Boolean> updateContentMap = update.getProductContent().stream()
                 .filter(pc -> pc != null && pc.getContent() != null)
-                .collect(Collectors.toMap(pc -> pc.getContent().getId(), pc -> pc.isEnabled()));
+                .collect(Collectors.toMap(pc -> pc.getContent().getId(), pc -> pc.isEnabled(),
+                    (pc1, pc2) -> pc2));
 
             if (!entityContentMap.equals(updateContentMap)) {
                 return true;
@@ -904,8 +637,8 @@ public class ProductManager {
                     throw new IllegalStateException("cannot resolve content reference: " + cinfo);
                 }
 
-                boolean enabled = pcinfo.isEnabled() != null ? pcinfo.isEnabled() : false;
-                productContentMap.put(resolved.getId(), new ProductContent(entity, resolved, enabled));
+                boolean enabled = pcinfo.isEnabled() != null && pcinfo.isEnabled();
+                productContentMap.put(resolved.getId(), new ProductContent(resolved, enabled));
             }
 
             entity.setProductContent(productContentMap.values());

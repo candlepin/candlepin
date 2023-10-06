@@ -369,7 +369,7 @@ public class StackingComplianceReasonsSpecTest {
     }
 
     private ProductDTO createStackableProduct() {
-        return admin.ownerProducts().createProductByOwner(this.owner.getKey(), Products.withAttributes(
+        return admin.ownerProducts().createProduct(this.owner.getKey(), Products.withAttributes(
             ProductAttributes.Version.withValue("1.2"),
             ProductAttributes.Ram.withValue("4"),
             ProductAttributes.Sockets.withValue("2"),
@@ -384,7 +384,7 @@ public class StackingComplianceReasonsSpecTest {
     }
 
     private ProductDTO createNotCoveredProduct() {
-        return admin.ownerProducts().createProductByOwner(this.owner.getKey(), Products.withAttributes(
+        return admin.ownerProducts().createProduct(this.owner.getKey(), Products.withAttributes(
             ProductAttributes.Version.withValue("6.4"),
             ProductAttributes.Sockets.withValue("2"),
             ProductAttributes.WarningPeriod.withValue("15"),

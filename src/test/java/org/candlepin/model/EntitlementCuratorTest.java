@@ -305,8 +305,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void shouldReturnCorrectCertificate() {
-        Entitlement e = entitlementCurator
-            .findByCertificateSerial(secondCertificate.getSerial().getId());
+        Entitlement e = entitlementCurator.findByCertificateSerial(secondCertificate.getSerial().getId());
         assertEquals(secondEntitlement, e);
     }
 

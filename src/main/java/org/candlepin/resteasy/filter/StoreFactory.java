@@ -31,8 +31,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Persisted;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
@@ -70,7 +68,6 @@ public class StoreFactory {
         PoolStore poolStore,
         UserStore userStore,
         ActivationKeyStore activationKeyStore,
-        ProductStore productStore,
         AsyncJobStatusStore asyncJobStatusStore,
         AnonymousCloudConsumerStore anonymousCloudConsumerStore
     ) {
@@ -81,7 +78,6 @@ public class StoreFactory {
         storeMap.put(Pool.class, poolStore);
         storeMap.put(User.class, userStore);
         storeMap.put(ActivationKey.class, activationKeyStore);
-        storeMap.put(Product.class, productStore);
         storeMap.put(AsyncJobStatus.class, asyncJobStatusStore);
         storeMap.put(AnonymousCloudConsumer.class, anonymousCloudConsumerStore);
     }
@@ -301,31 +297,6 @@ public class StoreFactory {
         @Override
         public Owner getOwner(ActivationKey entity) {
             return entity.getOwner();
-        }
-    }
-
-    @Singleton
-    public static class ProductStore implements EntityStore<Product> {
-        private final ProductCurator productCurator;
-
-        @Inject
-        public ProductStore(ProductCurator productCurator) {
-            this.productCurator = Objects.requireNonNull(productCurator);
-        }
-
-        @Override
-        public Product lookup(String key) {
-            return productCurator.get(key);
-        }
-
-        @Override
-        public List<Product> lookup(Collection<String> keys) {
-            return productCurator.listAllByUuids(keys).list();
-        }
-
-        @Override
-        public Owner getOwner(Product entity) {
-            return null;
         }
     }
 

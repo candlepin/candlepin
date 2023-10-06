@@ -18,7 +18,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.doReturn;
@@ -56,32 +55,7 @@ import java.util.stream.Stream;
 public class ContentNodeVisitorTest extends DatabaseTestFixture {
 
     public ContentNodeVisitor buildNodeVisitor() {
-        return new ContentNodeVisitor(this.contentCurator, this.ownerContentCurator);
-    }
-
-    @Test
-    public void testGetEntityClassReturnsProperClass() {
-        ContentNodeVisitor visitor = this.buildNodeVisitor();
-        assertEquals(Content.class, visitor.getEntityClass());
-    }
-
-    @Test
-    public void testProcessNodeFlagsUnchangedNodesCorrectly() {
-        Owner owner = this.createOwner();
-        Content existingEntity = this.createContent("test_content-1", "Test Content", owner);
-        ContentInfo importedEntity = (ContentInfo) existingEntity.clone();
-
-        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, existingEntity.getId())
-            .setExistingEntity(existingEntity)
-            .setImportedEntity(importedEntity);
-
-        assertNull(pnode.getNodeState());
-
-        ContentNodeVisitor visitor = this.buildNodeVisitor();
-
-        visitor.processNode(pnode);
-
-        assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
+        return new ContentNodeVisitor(this.contentCurator);
     }
 
     public static Stream<Arguments> simpleContentDataProvider() {
@@ -154,7 +128,7 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
             .mutate(entity, value);
     }
 
-    private void validateMergedField(Content mergedEntity, String field, Object expected) {
+    private void validateContentField(Content entity, String field, Object expected) {
         Map<String, Accessor<ContentInfo>> accessors = Map.ofEntries(
             Map.entry("type", ContentInfo::getType),
             Map.entry("label", ContentInfo::getLabel),
@@ -173,7 +147,7 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
         }
 
         Object actual = accessors.get(field)
-            .access(mergedEntity);
+            .access(entity);
 
         if (actual instanceof Collection) {
             Collection<Object> expCollection = (Collection<Object>) expected;
@@ -202,27 +176,46 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
         }
     }
 
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @MethodSource("simpleContentDataProvider")
-    public void testProcessNodeFlagsUpdatedNodeCorrectly(String field, Object value) {
-        String id = "test_content-1";
+    @Test
+    public void testGetEntityClassReturnsProperClass() {
+        ContentNodeVisitor visitor = this.buildNodeVisitor();
+        assertEquals(Content.class, visitor.getEntityClass());
+    }
 
+    @Test
+    public void testProcessNodeFlagsCreatedNodeCorrectly() {
         Owner owner = this.createOwner();
-        Content existingEntity = new Content()
-            .setId(id);
+        ContentInfo importedEntity = new Content()
+            .setId("test_content-1")
+            .setName("Test Content");
 
-        ContentInfo importedEntity = this.buildContentInfoMock(id, field, value);
+        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, importedEntity.getId())
+            .setImportedEntity(importedEntity);
+
+        assertNull(pnode.getNodeState());
+
+        ContentNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.CREATED, pnode.getNodeState());
+    }
+
+    @Test
+    public void testProcessNodeFlagsUnchangedNodesCorrectly() {
+        Owner owner = this.createOwner();
+        Content existingEntity = this.createContent("test_content-1", "Test Content", owner);
+        ContentInfo importedEntity = (ContentInfo) existingEntity.clone();
 
         EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, existingEntity.getId())
             .setExistingEntity(existingEntity)
             .setImportedEntity(importedEntity);
 
+        assertNull(pnode.getNodeState());
+
         ContentNodeVisitor visitor = this.buildNodeVisitor();
         visitor.processNode(pnode);
 
-        assertEquals(NodeState.UPDATED, pnode.getNodeState());
-        assertNotNull(pnode.getMergedEntity());
-        this.validateMergedField(pnode.getMergedEntity(), field, value);
+        assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
@@ -249,9 +242,14 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testProcessNodeFlagsCreatedNodeCorrectly() {
+    public void testApplyChangesCreatesNewInstances() {
         Owner owner = this.createOwner();
-        ContentInfo importedEntity = this.createContent("test_content-1", "Test Content", owner);
+        ContentInfo importedEntity = new Content()
+            .setId("test_content")
+            .setName("test content")
+            .setLabel("test content")
+            .setVendor("test vendor")
+            .setType("type");
 
         EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, importedEntity.getId())
             .setImportedEntity(importedEntity);
@@ -260,196 +258,31 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
 
         ContentNodeVisitor visitor = this.buildNodeVisitor();
         visitor.processNode(pnode);
+        visitor.applyChanges(pnode);
 
         assertEquals(NodeState.CREATED, pnode.getNodeState());
-        assertNotNull(pnode.getMergedEntity());
-        assertEquals(importedEntity.getName(), pnode.getMergedEntity().getName());
+        assertNotNull(pnode.getExistingEntity());
+        assertEquals(importedEntity.getName(), pnode.getExistingEntity().getName());
     }
 
-    @Test
-    public void testPruneNodeMarksUnusedRootForDeletion() {
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("simpleContentDataProvider")
+    public void testApplyChangesUpdatedNodeCorrectly(String field, Object value) {
         Owner owner = this.createOwner();
-        Content existingEntity = this.createContent("test_content-1", "Test Content", owner)
-            .setLocked(true);
+        Content existingEntity = this.createContent("test_content-1", "test content");
 
-        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, existingEntity.getId())
-            .setExistingEntity(existingEntity);
-
-        assertNull(pnode.getNodeState());
-
-        ContentNodeVisitor visitor = this.buildNodeVisitor();
-        visitor.pruneNode(pnode);
-
-        assertEquals(NodeState.DELETED, pnode.getNodeState());
-    }
-
-    @Test
-    public void testPruneNodeOmitsActiveRoot() {
-        Owner owner = this.createOwner();
-        Content existingEntity = this.createContent("test_content-1", "Test Content", owner)
-            .setLocked(true);
-        ContentInfo importedEntity = (ContentInfo) existingEntity.clone();
+        ContentInfo importedEntity = this.buildContentInfoMock(existingEntity.getId(), field, value);
 
         EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, existingEntity.getId())
             .setExistingEntity(existingEntity)
             .setImportedEntity(importedEntity);
 
-        assertNull(pnode.getNodeState());
-
-        ContentNodeVisitor visitor = this.buildNodeVisitor();
-        visitor.pruneNode(pnode);
-
-        assertNull(pnode.getNodeState());
-    }
-
-    @Test
-    public void testPruneNodeNeverDeletesCustomContents() {
-        Owner owner = this.createOwner();
-        Content existingEntity = this.createContent("test_content-1", "Test Content", owner)
-            .setLocked(false);
-
-        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, existingEntity.getId())
-            .setExistingEntity(existingEntity);
-
-        assertNull(pnode.getNodeState());
-
-        ContentNodeVisitor visitor = this.buildNodeVisitor();
-        visitor.pruneNode(pnode);
-
-        assertNull(pnode.getNodeState());
-    }
-
-    @Test
-    public void testPruneNodeMarksLeafWithDeletedParentsForDeletion() {
-        Owner owner = this.createOwner();
-        Content existingEntity = this.createContent("test_content-1", "Test Content", owner)
-            .setLocked(true);
-        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, existingEntity.getId())
-            .setExistingEntity(existingEntity);
-
-        Content existingParent = this.createContent("test_content-2", "Test Content", owner);
-        EntityNode<Content, ContentInfo> parentNode = new ContentNode(owner, existingParent.getId())
-            .setExistingEntity(existingParent)
-            .setNodeState(NodeState.DELETED);
-
-        pnode.addParentNode(parentNode);
-
-        assertNull(pnode.getNodeState());
-
-        ContentNodeVisitor visitor = this.buildNodeVisitor();
-        visitor.pruneNode(pnode);
-
-        assertEquals(NodeState.DELETED, pnode.getNodeState());
-    }
-
-    @Test
-    public void testPruneNodeOmitsLeafWithUndeletedParents() {
-        Owner owner = this.createOwner();
-        Content existingEntity = this.createContent("test_content-1", "Test Content", owner)
-            .setLocked(true);
-        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, existingEntity.getId())
-            .setExistingEntity(existingEntity);
-
-        Content existingParent = this.createContent("test_content-2", "Test Content", owner);
-        EntityNode<Content, ContentInfo> parentNode = new ContentNode(owner, existingParent.getId())
-            .setExistingEntity(existingParent)
-            .setNodeState(NodeState.UPDATED);
-
-        pnode.addParentNode(parentNode);
-
-        assertNull(pnode.getNodeState());
-
-        ContentNodeVisitor visitor = this.buildNodeVisitor();
-        visitor.pruneNode(pnode);
-
-        assertNull(pnode.getNodeState());
-    }
-
-    @Test
-    public void testPruneNodeOmitsLeafWithMixedParents() {
-        Owner owner = this.createOwner();
-        Content existingEntity = this.createContent("test_content-1", "Test Content", owner)
-            .setLocked(true);
-        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, existingEntity.getId())
-            .setExistingEntity(existingEntity);
-
-        Content existingParent1 = this.createContent("test_content-2", "Test Content", owner);
-        EntityNode<Content, ContentInfo> parentNode1 = new ContentNode(owner, existingParent1.getId())
-            .setExistingEntity(existingParent1)
-            .setNodeState(NodeState.UPDATED);
-
-        Content existingParent2 = this.createContent("test_content-3", "Test Content", owner);
-        EntityNode<Content, ContentInfo> parentNode2 = new ContentNode(owner, existingParent2.getId())
-            .setExistingEntity(existingParent2)
-            .setNodeState(NodeState.DELETED);
-
-        pnode.addParentNode(parentNode1);
-        pnode.addParentNode(parentNode2);
-
-        assertNull(pnode.getNodeState());
-
-        ContentNodeVisitor visitor = this.buildNodeVisitor();
-        visitor.pruneNode(pnode);
-
-        assertNull(pnode.getNodeState());
-    }
-
-    @Test
-    public void testApplyChangesPerformsVersionResolution() {
-        String id = "test_content-1";
-        String name = "test content 1";
-
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-
-        Content existing1 = this.createContent(id, "old name", owner1);
-        Content existing2 = this.createContent(id, name, owner2);
-
-        Content importedEntity = new Content()
-            .setId(id)
-            .setName(name);
-
-        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner1, existing1.getId())
-            .setExistingEntity(existing1)
-            .setImportedEntity(importedEntity);
-
         ContentNodeVisitor visitor = this.buildNodeVisitor();
         visitor.processNode(pnode);
+        visitor.applyChanges(pnode);
+
         assertEquals(NodeState.UPDATED, pnode.getNodeState());
-
-        visitor.applyChanges(pnode);
-
-        Content mergedEntity = pnode.getMergedEntity();
-        assertNotNull(mergedEntity);
-        assertEquals(existing2.getUuid(), mergedEntity.getUuid());
-    }
-
-    @Test
-    public void testCompleteDoesNotActTwice() {
-        Owner owner = this.createOwner();
-
-        Content content = new Content()
-            .setId("test_content")
-            .setName("test content")
-            .setLabel("test content")
-            .setVendor("test vendor")
-            .setType("type");
-
-        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, content.getId())
-            .setImportedEntity(content);
-
-        ContentNodeVisitor visitor = this.buildNodeVisitor();
-        visitor.processNode(pnode);
-        visitor.applyChanges(pnode);
-        visitor.complete();
-
-        assertEquals(NodeState.CREATED, pnode.getNodeState());
-        assertNotNull(pnode.getMergedEntity());
-        assertNotNull(pnode.getMergedEntity().getUuid());
-
-        // If this executes twice, a cached creation op would try to run twice, which would fail
-        // with a persistence exception of some kind
-        visitor.complete();
+        this.validateContentField(pnode.getExistingEntity(), field, value);
     }
 
     @Test
@@ -466,26 +299,23 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
         EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, content.getId())
             .setImportedEntity(content);
 
-        assertNull(this.ownerContentCurator.getContentById(owner, content.getId()));
+        assertNull(this.contentCurator.getContentById(null, content.getId()));
 
         ContentNodeVisitor visitor = this.buildNodeVisitor();
         visitor.processNode(pnode);
-        visitor.pruneNode(pnode);
         visitor.applyChanges(pnode);
-        visitor.complete();
 
         assertEquals(NodeState.CREATED, pnode.getNodeState());
 
-        Content merged = pnode.getMergedEntity();
-        assertNotNull(merged);
-        assertNotNull(merged.getUuid());
+        Content updatedEntity = pnode.getExistingEntity();
+        assertNotNull(updatedEntity);
+        assertNotNull(updatedEntity.getUuid());
 
         this.contentCurator.flush();
         this.contentCurator.clear();
 
-        Content created = this.ownerContentCurator.getContentById(owner, content.getId());
-        assertNotNull(created);
-        assertEquals(merged.getUuid(), created.getUuid());
+        Content fetchedEntity = this.contentCurator.getContentById(null, content.getId());
+        assertNotNull(fetchedEntity);
     }
 
     @Test
@@ -493,116 +323,32 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
         Owner owner = this.createOwner();
 
         Content existing = this.createContent("test_content", "content name", owner);
-        existing.setLocked(true);
 
-        Content content = new Content()
+        Content imported = new Content()
             .setId(existing.getId())
             .setName("updated content");
 
-        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, content.getId())
+        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, imported.getId())
             .setExistingEntity(existing)
-            .setImportedEntity(content);
+            .setImportedEntity(imported);
 
         ContentNodeVisitor visitor = this.buildNodeVisitor();
         visitor.processNode(pnode);
-        visitor.pruneNode(pnode);
         visitor.applyChanges(pnode);
-        visitor.complete();
 
         assertEquals(NodeState.UPDATED, pnode.getNodeState());
 
-        Content merged = pnode.getMergedEntity();
-        assertNotNull(merged);
-        assertNotNull(merged.getUuid());
-        assertNotEquals(existing.getUuid(), merged.getUuid());
-        assertNotEquals(existing.getName(), merged.getName());
+        Content updatedEntity = pnode.getExistingEntity();
+        assertNotNull(updatedEntity);
+        assertNotNull(updatedEntity.getUuid());
+        assertEquals(imported.getName(), updatedEntity.getName());
 
         this.contentCurator.flush();
         this.contentCurator.clear();
 
-        Content updated = this.ownerContentCurator.getContentById(owner, content.getId());
-        assertNotNull(updated);
-        assertEquals(merged.getUuid(), updated.getUuid());
-        assertEquals(content.getName(), updated.getName());
-    }
-
-    @Test
-    public void testFullCycleDeletesUnusedEntity() {
-        Owner owner = this.createOwner();
-
-        Content existing = this.createContent("test_content", "content name", owner);
-        existing.setLocked(true);
-
-        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, existing.getId())
-            .setExistingEntity(existing);
-
-        ContentNodeVisitor visitor = this.buildNodeVisitor();
-        visitor.processNode(pnode);
-        visitor.pruneNode(pnode);
-        visitor.applyChanges(pnode);
-        visitor.complete();
-
-        assertEquals(NodeState.DELETED, pnode.getNodeState());
-        assertNull(pnode.getMergedEntity());
-
-        this.contentCurator.flush();
-        this.contentCurator.clear();
-
-        Content deleted = this.ownerContentCurator.getContentById(owner, existing.getId());
-        assertNull(deleted);
-    }
-
-    /**
-     * This test verifies that a content version collision on a given content ID can be resolved by
-     * clearing the entity version of the existing content, operating under the assumption that the
-     * current content is broken and the new one is the "correct" entity for the version.
-     */
-    @Test
-    public void testEntityVersionCollisionResolution() {
-        Owner owner2 = this.createOwner();
-        Content collider = this.createContent("test_content", "test content", owner2);
-
-        this.ownerContentCurator.flush();
-        this.ownerContentCurator.clear();
-
-        Owner owner1 = this.createOwner();
-
-        Content imported = collider.clone()
-            .setUuid(null)
-            .setLabel("imported label");
-
-        long entityVersion = imported.getEntityVersion();
-
-        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner1, collider.getId())
-            .setImportedEntity(imported);
-
-        // Forcefully set the entity version
-        int count = this.getEntityManager()
-            .createQuery("UPDATE Content SET entityVersion = :version WHERE uuid = :uuid")
-            .setParameter("version", entityVersion)
-            .setParameter("uuid", collider.getUuid())
-            .executeUpdate();
-
-        assertEquals(1, count);
-
-        ContentNodeVisitor visitor = this.buildNodeVisitor();
-        visitor.processNode(pnode);
-        visitor.pruneNode(pnode);
-        visitor.applyChanges(pnode);
-        visitor.complete();
-
-        assertEquals(NodeState.CREATED, pnode.getNodeState());
-        assertNotNull(pnode.getMergedEntity());
-        assertNotNull(pnode.getMergedEntity().getUuid());
-        assertEquals(entityVersion, pnode.getMergedEntity().getEntityVersion());
-
-        // Query the entity version directly so we avoid the automatic regeneration when it's null
-        Long existingEntityVersion = this.getEntityManager()
-            .createQuery("SELECT entityVersion FROM Content WHERE uuid = :uuid", Long.class)
-            .setParameter("uuid", collider.getUuid())
-            .getSingleResult();
-
-        assertNull(existingEntityVersion);
+        Content fetchedEntity = this.contentCurator.getContentById(null, existing.getId());
+        assertNotNull(fetchedEntity);
+        assertEquals(imported.getName(), fetchedEntity.getName());
     }
 
 }

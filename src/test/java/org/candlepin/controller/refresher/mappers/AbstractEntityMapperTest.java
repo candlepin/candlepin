@@ -46,8 +46,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 
@@ -63,59 +61,64 @@ public abstract class AbstractEntityMapperTest<E extends AbstractHibernateObject
     /**
      * Builds an EntityMapper instance
      *
-     * @return the newly created EntityMapper instance
+     * @return
+     *  the newly created EntityMapper instance
      */
     protected abstract EntityMapper<E, I> buildEntityMapper();
 
     /**
-     * Fetches the ID for the specified entity. If the given entity is null, this method should return
-     * null.
+     * Fetches the ID for the specified entity. If the given entity is null, this method should
+     * return null.
      *
      * @param entity
-     *     the entity for which to fetch the ID
+     *  the entity for which to fetch the ID
      *
-     * @return the ID of the given entity, or null if the entity is null or lacks an ID
+     * @return
+     *  the ID of the given entity, or null if the entity is null or lacks an ID
      */
     protected abstract String getEntityId(E entity);
 
     /**
-     * Fetches the ID for the specified entity. If the given entity is null, this method should return
-     * null.
+     * Fetches the ID for the specified entity. If the given entity is null, this method should
+     * return null.
      *
      * @param entity
-     *     the entity for which to fetch the ID
+     *  the entity for which to fetch the ID
      *
-     * @return the ID of the given entity, or null if the entity is null or lacks an ID
+     * @return
+     *  the ID of the given entity, or null if the entity is null or lacks an ID
      */
     protected abstract String getEntityId(I entity);
 
     /**
-     * Builds a new "local" entity to be used for testing. Each entity should be somewhat randomized or
-     * unique such that two invocations with the same entity ID are likely to produce entities that are
-     * not equal.
+     * Builds a new "local" entity to be used for testing. Each entity should be somewhat randomized
+     * or unique such that two invocations with the same entity ID are likely to produce entities
+     * that are not equal.
      *
      * @param owner
-     *     the owner for the new local entity
+     *  the owner for the new local entity
      *
      * @param entityId
-     *     the ID for the new entity
+     *  the ID for the new entity
      *
-     * @return a new local entity instance
+     * @return
+     *  a new local entity instance
      */
     protected abstract E buildLocalEntity(Owner owner, String entityId);
 
     /**
-     * Builds a new "imported" entity to be used for testing. Each entity should be somewhat randomized
-     * or unique such that two invocations with the same entity ID are likely to produce entities that
-     * are not equal.
+     * Builds a new "imported" entity to be used for testing. Each entity should be somewhat
+     * randomized or unique such that two invocations with the same entity ID are likely to produce
+     * entities that are not equal.
      *
      * @param owner
-     *     the owner for the new imported entity
+     *  the owner for the new imported entity
      *
      * @param entityId
-     *     the ID for the new entity
+     *  the ID for the new entity
      *
-     * @return a new imported entity instance
+     * @return
+     *  a new imported entity instance
      */
     protected abstract I buildImportedEntity(Owner owner, String entityId);
 
@@ -316,6 +319,9 @@ public abstract class AbstractEntityMapperTest<E extends AbstractHibernateObject
             mapped.forEach(expected -> assertThat(output, hasEntry(this.getEntityId(expected), expected)));
         }
     }
+
+
+
 
     @Test
     public void testAddImportedEntity() {
@@ -758,220 +764,4 @@ public abstract class AbstractEntityMapperTest<E extends AbstractHibernateObject
         assertFalse(mapper.hasEntity(importedId));
     }
 
-    @Test
-    public void testMapperFlagsDuplicateExistingEntitiesAsDirty() {
-        Owner owner = TestUtil.createOwner();
-
-        E entity1 = this.buildLocalEntity(owner, "test_entity-1");
-        E entity2a = this.buildLocalEntity(owner, "test_entity-2");
-        E entity2b = this.buildLocalEntity(owner, "test_entity-2");
-        E entity3 = this.buildLocalEntity(owner, "test_entity-3");
-
-        EntityMapper<E, I> mapper = this.buildEntityMapper();
-
-        // Verify that adding the initial set doesn't flip the flag
-        for (E entity : List.of(entity1, entity2a, entity3)) {
-            mapper.addExistingEntity(entity);
-
-            assertFalse(mapper.isDirty());
-            assertFalse(mapper.isDirty(this.getEntityId(entity)));
-        }
-
-        // Add in our alternate version of entity2 and verify the flags are set appropriately
-        mapper.addExistingEntity(entity2b);
-
-        assertTrue(mapper.isDirty());
-        assertFalse(mapper.isDirty(this.getEntityId(entity1)));
-        assertTrue(mapper.isDirty(this.getEntityId(entity2a)));
-        assertTrue(mapper.isDirty(this.getEntityId(entity2b)));
-        assertFalse(mapper.isDirty(this.getEntityId(entity3)));
-    }
-
-    @Test
-    public void testMapperIgnoresDuplicateImportedEntities() {
-        Owner owner = TestUtil.createOwner();
-
-        I entity1 = this.buildImportedEntity(owner, "test_entity-1");
-        I entity2a = this.buildImportedEntity(owner, "test_entity-2");
-        I entity2b = this.buildImportedEntity(owner, "test_entity-2");
-        I entity3 = this.buildImportedEntity(owner, "test_entity-3");
-
-        EntityMapper<E, I> mapper = this.buildEntityMapper();
-
-        // Verify that adding the initial set doesn't flip the flag
-        for (I entity : List.of(entity1, entity2a, entity3)) {
-            mapper.addImportedEntity(entity);
-
-            assertFalse(mapper.isDirty());
-            assertFalse(mapper.isDirty(this.getEntityId(entity)));
-        }
-
-        // Add in our alternate version of entity2 and verify the flags still don't get hit
-        mapper.addImportedEntity(entity2b);
-
-        assertFalse(mapper.isDirty());
-        assertFalse(mapper.isDirty(this.getEntityId(entity1)));
-        assertFalse(mapper.isDirty(this.getEntityId(entity2a)));
-        assertFalse(mapper.isDirty(this.getEntityId(entity2b)));
-        assertFalse(mapper.isDirty(this.getEntityId(entity3)));
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @NullAndEmptySource
-    public void testIsDirtyErrorsOnNullEntityId(String input) {
-        Owner owner = TestUtil.createOwner();
-
-        E entity1a = this.buildLocalEntity(owner, "test_entity-1");
-        E entity1b = this.buildLocalEntity(owner, "test_entity-1");
-
-        EntityMapper<E, I> mapper = this.buildEntityMapper();
-
-        // This should be safe, regardless of the state of the mapper
-        assertFalse(mapper.isDirty(input));
-
-        // Having dirty entities present shouldn't affect how null/empty values are handled
-        mapper.addExistingEntities(List.of(entity1a, entity1b));
-        assertTrue(mapper.isDirty());
-        assertFalse(mapper.isDirty(input));
-    }
-
-    @Test
-    public void testClearResetsDirtyFlag() {
-        Owner owner = TestUtil.createOwner();
-
-        E entity1a = this.buildLocalEntity(owner, "test_entity-1");
-        E entity1b = this.buildLocalEntity(owner, "test_entity-1");
-
-        EntityMapper<E, I> mapper = this.buildEntityMapper();
-
-        assertFalse(mapper.isDirty());
-
-        mapper.addExistingEntities(List.of(entity1a, entity1b));
-        assertTrue(mapper.isDirty());
-        assertTrue(mapper.isDirty(this.getEntityId(entity1a)));
-
-        mapper.clear();
-        assertFalse(mapper.isDirty());
-        assertFalse(mapper.isDirty(this.getEntityId(entity1a)));
-    }
-
-    @Test
-    public void testClearExistingResetsDirtyFlag() {
-        Owner owner = TestUtil.createOwner();
-
-        E entity1a = this.buildLocalEntity(owner, "test_entity-1");
-        E entity1b = this.buildLocalEntity(owner, "test_entity-1");
-
-        EntityMapper<E, I> mapper = this.buildEntityMapper();
-
-        assertFalse(mapper.isDirty());
-
-        mapper.addExistingEntities(List.of(entity1a, entity1b));
-        assertTrue(mapper.isDirty());
-        assertTrue(mapper.isDirty(this.getEntityId(entity1a)));
-
-        mapper.clearExistingEntities();
-        assertFalse(mapper.isDirty());
-        assertFalse(mapper.isDirty(this.getEntityId(entity1a)));
-    }
-
-    @Test
-    public void testContainsOnlyExistingEntityIds() {
-        Owner owner = TestUtil.createOwner();
-
-        E entity1 = this.buildLocalEntity(owner, "test_entity-1");
-        E entity2 = this.buildLocalEntity(owner, "test_entity-2");
-        E entity3 = this.buildLocalEntity(owner, "test_entity-3");
-
-        EntityMapper<E, I> mapper = this.buildEntityMapper();
-
-        List<String> entityIds = Stream.of(entity1, entity2, entity3)
-            .map(this::getEntityId)
-            .collect(Collectors.toList());
-
-        // An empty mapper is still a subset of the expected list
-        assertTrue(mapper.containsOnlyExistingEntityIds(entityIds));
-
-        for (E entity : List.of(entity1, entity2, entity3)) {
-            mapper.addExistingEntity(entity);
-            assertTrue(mapper.containsOnlyExistingEntityIds(entityIds));
-        }
-
-        // Add a new entity and verify the original entityId list is no longer a superset
-        mapper.addExistingEntity(this.buildLocalEntity(owner, "test_entity-4"));
-        assertFalse(mapper.containsOnlyExistingEntityIds(entityIds));
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @NullAndEmptySource
-    public void testContainsOnlyExistingEntityIdsPermitsEmptyCollections(List<String> input) {
-        Owner owner = TestUtil.createOwner();
-
-        E entity1 = this.buildLocalEntity(owner, "test_entity-1");
-        E entity2 = this.buildLocalEntity(owner, "test_entity-2");
-        E entity3 = this.buildLocalEntity(owner, "test_entity-3");
-
-        EntityMapper<E, I> mapper = this.buildEntityMapper();
-
-        // Empty is a subset of empty. Null/empty values should match until the mapper has data
-        assertTrue(mapper.containsOnlyExistingEntityIds(input));
-
-        for (E entity : List.of(entity1, entity2, entity3)) {
-            mapper.addExistingEntity(entity);
-            assertFalse(mapper.containsOnlyExistingEntityIds(input));
-        }
-
-        // Clearing the mapper should bring this back to its original state and return as expected
-        mapper.clear();
-        assertTrue(mapper.containsOnlyExistingEntityIds(input));
-    }
-
-    @Test
-    public void testContainsOnlyExistingEntities() {
-        Owner owner = TestUtil.createOwner();
-
-        E entity1 = this.buildLocalEntity(owner, "test_entity-1");
-        E entity2 = this.buildLocalEntity(owner, "test_entity-2");
-        E entity3 = this.buildLocalEntity(owner, "test_entity-3");
-
-        EntityMapper<E, I> mapper = this.buildEntityMapper();
-
-        List<E> entities = List.of(entity1, entity2, entity3);
-
-        // An empty mapper is still a subset of the expected list
-        assertTrue(mapper.containsOnlyExistingEntities(entities));
-
-        for (E entity : List.of(entity1, entity2, entity3)) {
-            mapper.addExistingEntity(entity);
-            assertTrue(mapper.containsOnlyExistingEntities(entities));
-        }
-
-        // Add a new entity and verify the original entityId list is no longer a superset
-        mapper.addExistingEntity(this.buildLocalEntity(owner, "test_entity-4"));
-        assertFalse(mapper.containsOnlyExistingEntities(entities));
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @NullAndEmptySource
-    public void testContainsOnlyExistingEntitiesPermitsEmptyCollections(List<E> input) {
-        Owner owner = TestUtil.createOwner();
-
-        E entity1 = this.buildLocalEntity(owner, "test_entity-1");
-        E entity2 = this.buildLocalEntity(owner, "test_entity-2");
-        E entity3 = this.buildLocalEntity(owner, "test_entity-3");
-
-        EntityMapper<E, I> mapper = this.buildEntityMapper();
-
-        // Empty is a subset of empty. Null/empty values should match until the mapper has data
-        assertTrue(mapper.containsOnlyExistingEntities(input));
-
-        for (E entity : List.of(entity1, entity2, entity3)) {
-            mapper.addExistingEntity(entity);
-            assertFalse(mapper.containsOnlyExistingEntities(input));
-        }
-
-        // Clearing the mapper should bring this back to its original state and return as expected
-        mapper.clear();
-        assertTrue(mapper.containsOnlyExistingEntities(input));
-    }
 }

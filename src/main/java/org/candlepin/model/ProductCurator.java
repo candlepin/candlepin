@@ -18,26 +18,25 @@ import org.candlepin.util.AttributeValidator;
 
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.persistence.Cache;
+import javax.persistence.LockModeType;
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
@@ -61,90 +60,445 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * Retrieves a Product instance for the product with the specified name. If a matching product
-     * could not be found, this method returns null.
+     * Fetches a list of products with the given product UUIDs. If a given product UUID was not
+     * found, it will not be included in the resultant list.If no products could be found, this
+     * method returns an empty list.
      *
-     * @param owner
-     *  The owner/org in which to search for a product
-     *
-     * @param name
-     *  The name of the product to retrieve
+     * @param uuids
+     *  a collection of product UUIDs to use to fetch products
      *
      * @return
-     *  a Product instance for the product with the specified name, or null if a matching product
-     *  was not found.
+     *  an unordered list of products matching the input UUIDs
      */
-    public Product getByName(Owner owner, String name) {
-        return (Product) this.createSecureCriteria(OwnerProduct.class, null)
-            .createAlias("owner", "owner")
-            .createAlias("product", "product")
-            .setProjection(Projections.property("product"))
-            .add(Restrictions.eq("owner.id", owner.getId()))
-            .add(Restrictions.eq("product.name", name))
-            .uniqueResult();
-    }
+    public List<Product> getProductsByUuids(Collection<String> uuids) {
+        String jpql = "SELECT prod FROM Product prod WHERE prod.uuid IN :product_uuids";
 
-    public CandlepinQuery<Product> listAllByUuids(Collection<? extends Serializable> uuids) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(CPRestrictions.in("uuid", uuids));
+        TypedQuery<Product> query = this.getEntityManager()
+            .createQuery(jpql, Product.class);
 
-        return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
-    }
+        List<Product> output = new ArrayList<>();
 
-    public Set<Product> getPoolDerivedProvidedProductsCached(Pool pool) {
-        return getPoolDerivedProvidedProductsCached(pool.getId());
-    }
+        for (Collection<String> block : this.partition(uuids)) {
+            output.addAll(query.setParameter("product_uuids", block)
+                .getResultList());
+        }
 
-    public Set<Product> getPoolDerivedProvidedProductsCached(String poolId) {
-        Set<String> uuids = getDerivedPoolProvidedProductUuids(poolId);
-        return getProductsByUuidCached(uuids);
-    }
-
-    public Set<Product> getPoolProvidedProductsCached(Pool pool) {
-        return getPoolProvidedProductsCached(pool.getId());
-    }
-
-    public Set<Product> getPoolProvidedProductsCached(String poolId) {
-        Set<String> providedUuids = getPoolProvidedProductUuids(poolId);
-        return getProductsByUuidCached(providedUuids);
+        return output;
     }
 
     /**
-     * Finds all provided products for a given poolId
+     * Fetches the product referenced by the given ID from the specified namespace. If no product
+     * with the given ID exists in the specified namespace, this method returns null.
      *
-     * @param poolId
-     * @return Set of UUIDs
+     * @param namespace
+     *  the target namespace from which to fetch the product
+     *
+     * @param productId
+     *  the ID of the product to fetch
+     *
+     * @param lockModeType
+     *  an optional lock mode to apply to entities fetched by this query. If null, no locking will
+     *  be applied
+     *
+     * @return
+     *  the product with the given ID from the specified namespace, or null if the ID does not exist
+     *  in the namespace
      */
-    public Set<String> getPoolProvidedProductUuids(String poolId) {
-        String jpql = """
-            SELECT product.uuid \
-            FROM Pool p INNER JOIN p.product.providedProducts product \
-            where p.id = :poolid""";
+    public Product getProductById(String namespace, String productId, LockModeType lockModeType) {
+        // Impl note: The global/null namespace is stored as an empty string
+        if (namespace == null) {
+            namespace = "";
+        }
 
-        TypedQuery<String> query = getEntityManager()
-            .createQuery(jpql, String.class)
-            .setParameter("poolid", poolId);
+        String jpql = "SELECT prod FROM Product prod " +
+            "WHERE prod.namespace = :namespace AND prod.id = :product_id";
 
-        return new HashSet<>(query.getResultList());
+        TypedQuery<Product> query = this.getEntityManager()
+            .createQuery(jpql, Product.class)
+            .setParameter("namespace", namespace)
+            .setParameter("product_id", productId);
+
+        if (lockModeType != null) {
+            query.setLockMode(lockModeType);
+        }
+
+        try {
+            return query.getSingleResult();
+        }
+        catch (NoResultException e) {
+            // Intentionally left empty
+        }
+
+        return null;
     }
 
     /**
-     * Finds all derived provided products for a given poolId
+     * Fetches the product referenced by the given ID from the specified namespace. If no product
+     * with the given ID exists in the specified namespace, this method returns null.
      *
-     * @param poolId
-     * @return Set of UUIDs
+     * @param namespace
+     *  the target namespace from which to fetch the product
+     *
+     * @param productId
+     *  the ID of the product to fetch
+     *
+     * @return
+     *  the product with the given ID from the specified namespace, or null if the ID does not exist
+     *  in the namespace
      */
-    public Set<String> getDerivedPoolProvidedProductUuids(String poolId) {
-        String hql = "SELECT dpp.uuid " +
-            "FROM Pool pool " +
-            "JOIN pool.product.derivedProduct.providedProducts dpp " +
-            "WHERE pool.id = :poolid";
+    public Product getProductById(String namespace, String productId) {
+        return this.getProductById(namespace, productId, null);
+    }
 
-        TypedQuery<String> query = getEntityManager()
-            .createQuery(hql, String.class)
-            .setParameter("poolid", poolId);
+    /**
+     * Fetches products for the given collection of product IDs in the specified namespace. The
+     * The products are returned in a map, keyed by their IDs. Product IDs which were not found will
+     * not have an entry in the map. If no products were found in the specified namespace, this
+     * method returns an empty map.
+     *
+     * @param namespace
+     *  the target namespace from which to fetch products
+     *
+     * @param productIds
+     *  a collection of IDs of products to fetch
+     *
+     * @param lockModeType
+     *  an optional lock mode to apply to entities fetched by this query. If null, no locking will
+     *  be applied
+     *
+     * @return
+     *  a mapping of product IDs to product entities from the given namespace
+     */
+    public Map<String, Product> getProductsByIds(String namespace, Collection<String> productIds,
+        LockModeType lockModeType) {
 
-        return new HashSet<>(query.getResultList());
+        if (productIds == null) {
+            return new HashMap<>();
+        }
+
+        // Impl note: The global/null namespace is stored as an empty string
+        if (namespace == null) {
+            namespace = "";
+        }
+
+        // Deduplicate and sort input so we don't have to worry about equality or locking
+        // shenanigans in the output
+        SortedSet<String> input;
+        if (!(productIds instanceof SortedSet)) {
+            input = new TreeSet<>(Comparator.nullsLast(Comparator.naturalOrder()));
+            input.addAll(productIds);
+        }
+        else {
+            input = (SortedSet<String>) productIds;
+        }
+
+        String jpql = "SELECT prod FROM Product prod " +
+            "WHERE prod.namespace = :namespace AND prod.id IN :product_ids " +
+            "ORDER BY prod.id ASC";
+
+        TypedQuery<Product> query = this.getEntityManager()
+            .createQuery(jpql, Product.class)
+            .setParameter("namespace", namespace);
+
+        if (lockModeType != null) {
+            query.setLockMode(lockModeType);
+        }
+
+        Map<String, Product> output = new HashMap<>();
+
+        for (Collection<String> block : this.partition(input)) {
+            query.setParameter("product_ids", block)
+                .getResultList()
+                .forEach(elem -> output.put(elem.getId(), elem));
+        }
+
+        return output;
+    }
+
+    /**
+     * Fetches products for the given collection of product IDs in the specified namespace. The
+     * The products are returned in a map, keyed by their IDs. Product IDs which were not found will
+     * not have an entry in the map. If no products were found in the specified namespace, this
+     * method returns an empty map.
+     *
+     * @param namespace
+     *  the target namespace from which to fetch products
+     *
+     * @param productIds
+     *  a collection of IDs of products to fetch
+     *
+     * @return
+     *  a mapping of product IDs to product entities from the given namespace
+     */
+    public Map<String, Product> getProductsByIds(String namespace, Collection<String> productIds) {
+        return this.getProductsByIds(namespace, productIds, null);
+    }
+
+    /**
+     * Fetches all products in the given namespace. If the namespace does not exist or does not have
+     * any products, this method returns an empty list.
+     *
+     * @param namespace
+     *  the namespace from which to fetch all known products
+     *
+     * @param lockModeType
+     *  the lock mode to apply to entities fetched by this query. If null, no locking will be
+     *  applied
+     *
+     * @return
+     *  a list of products present in the specified namespace
+     */
+    public List<Product> getProductsByNamespace(String namespace, LockModeType lockModeType) {
+        String jpql = "SELECT prod FROM Product prod " +
+            "WHERE prod.namespace = :namespace " +
+            "ORDER BY prod.id ASC";
+
+        // Impl note: The global/null namespace is stored as an empty string
+        if (namespace == null) {
+            namespace = "";
+        }
+
+        TypedQuery<Product> query = this.getEntityManager()
+            .createQuery(jpql, Product.class)
+            .setParameter("namespace", namespace);
+
+        if (lockModeType != null) {
+            query.setLockMode(lockModeType);
+        }
+
+        return query.getResultList();
+    }
+
+    /**
+     * Fetches all products in the given namespace. If the namespace does not exist or does not have
+     * any products, this method returns an empty list.
+     *
+     * @param namespace
+     *  the namespace from which to fetch all known products
+     *
+     * @return
+     *  a list of products present in the specified namespace
+     */
+    public List<Product> getProductsByNamespace(String namespace) {
+        return this.getProductsByNamespace(namespace, null);
+    }
+
+    /**
+     * Resolves a product reference by attempting to use the most specific product available for the
+     * given namespace; first checking for the product in the namespace, and then checking the
+     * global namespace if nothing was found in the specified namespace.
+     *
+     * @param namespace
+     *  the target namespace for which to resolve the product reference
+     *
+     * @param productId
+     *  the product ID reference to resolve
+     *
+     * @param lockModeType
+     *  an optional lock mode to apply to entities fetched by this query. If null, no locking will
+     *  be applied
+     *
+     * @return
+     *  the resolved product for the given namespace, or null if the product reference could not be
+     *  resolved
+     */
+    public Product resolveProductId(String namespace, String productId, LockModeType lockModeType) {
+        String jpql = "SELECT prod FROM Product prod " +
+            "WHERE (prod.namespace = '' OR prod.namespace = :namespace) " +
+            "AND prod.id = :product_id " +
+            "ORDER BY prod.namespace DESC";
+
+        TypedQuery<Product> query = this.getEntityManager()
+            .createQuery(jpql, Product.class)
+            .setParameter("namespace", namespace)
+            .setParameter("product_id", productId)
+            .setMaxResults(1);
+
+        if (lockModeType != null) {
+            query.setLockMode(lockModeType);
+        }
+
+        try {
+            return query.getSingleResult();
+        }
+        catch (NoResultException e) {
+            // Intentionally left empty
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolves a product reference by attempting to use the most specific product available for the
+     * given namespace; first checking for the product in the namespace, and then checking the
+     * global namespace if nothing was found in the specified namespace.
+     *
+     * @param namespace
+     *  the target namespace for which to resolve the product reference
+     *
+     * @param productId
+     *  the product ID reference to resolve
+     *
+     * @return
+     *  the resolved product for the given namespace, or null if the product reference could not be
+     *  resolved
+     */
+    public Product resolveProductId(String namespace, String productId) {
+        return this.resolveProductId(namespace, productId, null);
+    }
+
+    /**
+     * Resolves the product references by attempting to use the most specified products available
+     * for the given namespace; first checking for the products in the namespace, and then falling
+     * back to the global namespace if a given reference is not found in the specified namespace.
+     * The resolved entities are returned in a map, keyed by their IDs. Product IDs which could not
+     * be resolved will not have an entry in the map. If no products could be resolved, this method
+     * returns an empty map.
+     *
+     * @param namespace
+     *  the target namespace for which to resolve product references
+     *
+     * @param productIds
+     *  a collection of product ID references to resolve
+     *
+     * @param lockModeType
+     *  an optional lock mode to apply to entities fetched by this query. If null, no locking will
+     *  be applied
+     *
+     * @return
+     *  a mapping of product IDs to resolved product entities for the given namespace
+     */
+    public Map<String, Product> resolveProductIds(String namespace, Collection<String> productIds,
+        LockModeType lockModeType) {
+
+        if (productIds == null) {
+            return new HashMap<>();
+        }
+
+        // Deduplicate and sort input so we don't have to worry about equality or locking
+        // shenanigans in the output
+        SortedSet<String> input;
+        if (!(productIds instanceof SortedSet)) {
+            input = new TreeSet<>(Comparator.nullsLast(Comparator.naturalOrder()));
+            input.addAll(productIds);
+        }
+        else {
+            input = (SortedSet<String>) productIds;
+        }
+
+        // Impl note:
+        // The ORDER BY bit is *very* important here. The order in which the rows are locked is
+        // influenced by the query result order, so we need to ensure that our locks are applied
+        // deterministically with respect to our input and any query partitioning we do, but we
+        // *also* want namespaced entities to come *after* global entities of the same ID so they
+        // will overwrite the global entry in the output map later.
+        String jpql = "SELECT prod FROM Product prod " +
+            "WHERE (prod.namespace = '' OR prod.namespace = :namespace) " +
+            "AND prod.id IN :product_ids " +
+            "ORDER BY prod.id ASC, prod.namespace ASC";
+
+        TypedQuery<Product> query = this.getEntityManager()
+            .createQuery(jpql, Product.class)
+            .setParameter("namespace", namespace);
+
+        if (lockModeType != null) {
+            query.setLockMode(lockModeType);
+        }
+
+        Map<String, Product> output = new HashMap<>();
+        int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() - 1);
+
+        for (Collection<String> block : this.partition(input, blockSize)) {
+            query.setParameter("product_ids", block)
+                .getResultList()
+                .forEach(elem -> output.put(elem.getId(), elem));
+        }
+
+        return output;
+    }
+
+    /**
+     * Resolves the product references by attempting to use the most specified products available
+     * for the given namespace; first checking for the products in the namespace, and then falling
+     * back to the global namespace if a given reference is not found in the specified namespace.
+     * The resolved entities are returned in a map, keyed by their IDs. Product IDs which could not
+     * be resolved will not have an entry in the map. If no products could be resolved, this method
+     * returns an empty map.
+     *
+     * @param namespace
+     *  the target namespace for which to resolve product references
+     *
+     * @param productIds
+     *  a collection of product ID references to resolve
+     *
+     * @return
+     *  a mapping of product IDs to resolved product entities for the given namespace
+     */
+    public Map<String, Product> resolveProductIds(String namespace, Collection<String> productIds) {
+        return this.resolveProductIds(namespace, productIds, null);
+    }
+
+    /**
+     * Fetches a collection of resolved products that exist within the specified namespace. The
+     * output of this method is effectively a union of the products in the global namespace, and any
+     * products in the specified namespace, using products from the specified namespace in the event
+     * of a conflict on the product ID. If the global namespace has no products and the specified
+     * namespace also has no products, or is null, empty, or otherwise invalid, this method returns
+     * an empty collection.
+     *
+     * @param namespace
+     *  the target namespace for which to fetch resolved product references
+     *
+     * @param lockModeType
+     *  an optional lock mode to apply to entities fetched by this query. If null, no locking will
+     *  be applied
+     *
+     * @return
+     *  a collection of resolved product references for the given namespace
+     */
+    public Collection<Product> resolveProductsByNamespace(String namespace, LockModeType lockModeType) {
+        Map<String, Product> output = new HashMap<>();
+
+        // Impl note:
+        // The ORDER BY bit is *very* important here. The order in which the rows are locked is
+        // influenced by the query result order, so we need to ensure that our locks are applied
+        // deterministically with respect to our input and any query partitioning we do, but we
+        // *also* want namespaced entities to come *after* global entities of the same ID so they
+        // will overwrite the global entry in the output map later.
+        String jpql = "SELECT prod FROM Product prod " +
+            "WHERE (prod.namespace = '' OR prod.namespace = :namespace) " +
+            "ORDER BY prod.id ASC, prod.namespace ASC";
+
+        TypedQuery<Product> query = this.getEntityManager()
+            .createQuery(jpql, Product.class)
+            .setParameter("namespace", namespace);
+
+        if (lockModeType != null) {
+            query.setLockMode(lockModeType);
+        }
+
+        query.getResultList()
+            .forEach(elem -> output.put(elem.getId(), elem));
+
+        return output.values();
+    }
+
+    /**
+     * Fetches a collection of resolved products that exist within the specified namespace. The
+     * output of this method is effectively a union of the products in the global namespace, and any
+     * products in the specified namespace, using products from the specified namespace in the event
+     * of a conflict on the product ID. If the global namespace has no products and the specified
+     * namespace also has no products, or is null, empty, or otherwise invalid, this method returns
+     * an empty collection.
+     *
+     * @param namespace
+     *  the target namespace for which to fetch resolved product references
+     *
+     * @return
+     *  a collection of resolved product references for the given namespace
+     */
+    public Collection<Product> resolveProductsByNamespace(String namespace) {
+        return this.resolveProductsByNamespace(namespace, null);
     }
 
     /**
@@ -183,58 +537,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * Gets products by Id from JCache or database
-     *
-     * The retrieved objects are fully hydrated. If an entity is not present in the cache,
-     * then it is retrieved them from the database and is fully hydrated
-     *
-     * @param productUuids
-     * @return Fully hydrated Product objects
-     */
-    public Set<Product> getProductsByUuidCached(Collection<String> productUuids) {
-        if (productUuids.size() == 0) {
-            return new HashSet<>();
-        }
-
-        // Determine what is already in the L2 cache and load it directly. Multiload the remainder.
-        // This is because of https://hibernate.atlassian.net/browse/HHH-12944 where multiload ignores the
-        // L2 Cache.
-        Set<Product> products = new HashSet<>();
-        Set<String> productsNotInCache = new HashSet<>();
-        Cache cache = currentSession().getSessionFactory().getCache();
-        for (String uuid : productUuids) {
-            if (cache.contains(this.entityType(), uuid)) {
-                products.add(currentSession().get(Product.class, uuid));
-            }
-            else {
-                productsNotInCache.add(uuid);
-            }
-        }
-
-        if (productsNotInCache.size() > 0) {
-            log.debug("Loading objects that were not already in the cache: " + productsNotInCache.size());
-            Session session = this.currentSession();
-            java.util.List entities = session.byMultipleIds(this.entityType())
-                .enableSessionCheck(true)
-                .multiLoad(productsNotInCache.toArray(new String[productsNotInCache.size()]));
-            products.addAll(entities);
-        }
-
-        // Hydrate all the objects fully this is because a lot of serialization happens outside of
-        // the transactional boundry when we do not have a valid session.
-        for (Product product : products) {
-            // Fetching the size on these collections triggers a lazy load of the collections
-            product.getAttributes().size();
-            product.getDependentProductIds().size();
-            for (ProductContent pc : product.getProductContent()) {
-                pc.getContent().getModifiedProductIds().size();
-            }
-        }
-
-        return products;
-    }
-
-    /**
      * Validates and corrects the object references maintained by the given product instance.
      *
      * @param entity
@@ -246,17 +548,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     protected Product validateProductReferences(Product entity) {
         for (Map.Entry<String, String> entry : entity.getAttributes().entrySet()) {
             this.attributeValidator.validate(entry.getKey(), entry.getValue());
-        }
-
-        if (entity.getProductContent() != null) {
-            for (ProductContent pc : entity.getProductContent()) {
-                if (pc.getContent() == null) {
-                    throw new IllegalStateException(
-                        "Product contains a ProductContent with a null content reference");
-                }
-
-                pc.setProduct(entity);
-            }
         }
 
         if (entity.getBranding() != null) {
@@ -400,13 +691,9 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  a list of UUIDs of products no longer used by any organization
      */
     public List<String> getOrphanedProductUuids() {
-        String sql = "SELECT p.uuid " +
-            "FROM cp2_products p LEFT JOIN cp2_owner_products op ON p.uuid = op.product_uuid " +
-            "WHERE op.owner_id IS NULL";
+        // TODO: Remove this method
 
-        return this.getEntityManager()
-            .createNativeQuery(sql)
-            .getResultList();
+        return List.of();
     }
 
     /**
@@ -464,10 +751,10 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             // Impl note:
             // We're using native SQL here as we're needing to use a union to target both fields on
             // the product in a single query.
-            String sql = "SELECT p.derived_product_uuid, p.uuid FROM cp2_products p " +
+            String sql = "SELECT p.derived_product_uuid, p.uuid FROM cp_products p " +
                 "WHERE p.derived_product_uuid IN (:product_uuids) " +
                 "UNION " +
-                "SELECT pp.provided_product_uuid, pp.product_uuid FROM cp2_product_provided_products pp " +
+                "SELECT pp.provided_product_uuid, pp.product_uuid FROM cp_product_provided_products pp " +
                 "WHERE pp.provided_product_uuid IN (:product_uuids)";
 
             // The block has to be included twice, so ensure we don't exceed the parameter limit
@@ -491,98 +778,27 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         return output;
     }
 
-    public CandlepinQuery<Product> getProductsByContent(Owner owner, Collection<String> contentIds) {
-        return this.getProductsByContent(owner, contentIds, null);
+    /**
+     * Fetches a list of products within the given organization which directly reference the
+     * specified content. Indirect references, such as a product which has a derived product that
+     * provides the specified content, are not included in the collection returned by this method.
+     *
+     * @param contentUuid
+     *  the UUID of the content for which to fetch product references
+     *
+     * @return
+     *  a collection of products directly referencing the specified content
+     */
+    public List<Product> getProductsReferencingContent(String contentUuid) {
+        String jpql = "SELECT prod FROM Product prod " +
+            "JOIN prod.productContent pc " +
+            "JOIN pc.content cont " +
+            "WHERE cont.uuid = :content_uuid";
+
+        return this.getEntityManager()
+            .createQuery(jpql, Product.class)
+            .setParameter("content_uuid", contentUuid)
+            .getResultList();
     }
 
-    @SuppressWarnings("unchecked")
-    public CandlepinQuery<Product> getProductsByContent(Owner owner, Collection<String> contentIds,
-        Collection<String> productsToOmit) {
-        if (owner != null && contentIds != null && !contentIds.isEmpty()) {
-            // Impl note:
-            // We have to break this up into two queries for proper cursor and pagination support.
-            // Hibernate currently has two nasty "features" which break these in their own special
-            // way:
-            // - Distinct, when applied in any way outside of direct SQL, happens in Hibernate
-            //   *after* the results are pulled down, if and only if the results are fetched as a
-            //   list. The filtering does not happen when the results are fetched with a cursor.
-            // - Because result limiting (first+last result specifications) happens at the query
-            //   level and distinct filtering does not, cursor-based pagination breaks due to
-            //   potential results being removed after a page of results is fetched.
-            Criteria idCriteria = this.createSecureCriteria(OwnerProduct.class, null)
-                .createAlias("product", "product")
-                .createAlias("product.productContent", "pcontent")
-                .createAlias("pcontent.content", "content")
-                .createAlias("owner", "owner")
-                .add(Restrictions.eq("owner.id", owner.getId()))
-                .add(CPRestrictions.in("content.id", contentIds))
-                .setProjection(Projections.distinct(Projections.property("product.uuid")));
-
-            if (productsToOmit != null && !productsToOmit.isEmpty()) {
-                idCriteria.add(Restrictions.not(CPRestrictions.in("product.id", productsToOmit)));
-            }
-
-            List<String> productUuids = idCriteria.list();
-
-            if (productUuids != null && !productUuids.isEmpty()) {
-                DetachedCriteria criteria = this.createSecureDetachedCriteria()
-                    .add(CPRestrictions.in("uuid", productUuids));
-
-                return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
-            }
-        }
-
-        return this.cpQueryFactory.<Product>buildQuery();
-    }
-
-    @SuppressWarnings("unchecked")
-    public CandlepinQuery<Product> getProductsByContentUuids(Collection<String> contentUuids) {
-        if (contentUuids != null && !contentUuids.isEmpty()) {
-            // See note above in getProductsByContent for details on why we do two queries here
-            // instead of one.
-            Criteria idCriteria = this.createSecureCriteria()
-                .createAlias("productContent", "pcontent")
-                .createAlias("pcontent.content", "content")
-                .add(CPRestrictions.in("content.uuid", contentUuids))
-                .setProjection(Projections.distinct(Projections.id()));
-
-            List<String> productUuids = idCriteria.list();
-
-            if (productUuids != null && !productUuids.isEmpty()) {
-                DetachedCriteria criteria = this.createSecureDetachedCriteria()
-                    .add(CPRestrictions.in("uuid", productUuids));
-
-                return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
-            }
-        }
-
-        return this.cpQueryFactory.<Product>buildQuery();
-    }
-
-    @SuppressWarnings("unchecked")
-    public CandlepinQuery<Product> getProductsByContentUuids(Owner owner, Collection<String> contentUuids) {
-        if (contentUuids != null && !contentUuids.isEmpty()) {
-            // See note above in getProductsByContent for details on why we do two queries here
-            // instead of one.
-            Criteria idCriteria = this.createSecureCriteria(OwnerProduct.class, null)
-                .createAlias("product", "product")
-                .createAlias("product.productContent", "pcontent")
-                .createAlias("pcontent.content", "content")
-                .createAlias("owner", "owner")
-                .add(Restrictions.eq("owner.id", owner.getId()))
-                .add(CPRestrictions.in("content.uuid", contentUuids))
-                .setProjection(Projections.distinct(Projections.property("product.uuid")));
-
-            List<String> productUuids = idCriteria.list();
-
-            if (productUuids != null && !productUuids.isEmpty()) {
-                DetachedCriteria criteria = this.createSecureDetachedCriteria()
-                    .add(CPRestrictions.in("uuid", productUuids));
-
-                return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
-            }
-        }
-
-        return this.cpQueryFactory.<Product>buildQuery();
-    }
 }

@@ -171,12 +171,14 @@ public class EntitlementCertificateV3SpecTest {
             }
         }
         else {
-            product = ownerProductApi.createProductByOwner(owner.getKey(), product);
-            product30 = ownerProductApi.createProductByOwner(owner.getKey(), product30);
+            product = ownerProductApi.createProduct(owner.getKey(), product);
+            product30 = ownerProductApi.createProduct(owner.getKey(), product30);
             content = ownerContentApi.createContent(owner.getKey(), content);
             archContent = ownerContentApi.createContent(owner.getKey(), archContent);
-            product = ownerProductApi.addContent(owner.getKey(), product.getId(), content.getId(), false);
-            product = ownerProductApi.addContent(owner.getKey(), product.getId(), archContent.getId(), false);
+            product = ownerProductApi.addContentToProduct(owner.getKey(), product.getId(),
+                content.getId(), false);
+            product = ownerProductApi.addContentToProduct(owner.getKey(), product.getId(),
+                archContent.getId(), false);
             pool = ownerApi.createPool(owner.getKey(), Pools.random(product)
                 .contractNumber("12345")
                 .accountNumber("6789")
@@ -338,7 +340,7 @@ public class EntitlementCertificateV3SpecTest {
     public void shouldHaveCorrectBrandingInTheBlob() {
         ProductDTO engProduct = Products.randomEng()
             .name("engineering_product_name");
-        engProduct = ownerProductApi.createProductByOwner(owner.getKey(), engProduct);
+        engProduct = ownerProductApi.createProduct(owner.getKey(), engProduct);
         BrandingDTO branding = Branding.random("Super Branded Name")
             .type("Some Type")
             .productId(engProduct.getId());
@@ -346,7 +348,7 @@ public class EntitlementCertificateV3SpecTest {
             .name("marketing_product_name")
             .branding(Set.of(branding))
             .providedProducts(Set.of(engProduct));
-        mktProduct = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct);
+        mktProduct = ownerProductApi.createProduct(owner.getKey(), mktProduct);
         ProvidedProductDTO engProvidedProduct = (new ProvidedProductDTO())
             .productName(engProduct.getName())
             .productId(engProduct.getId());
@@ -371,6 +373,8 @@ public class EntitlementCertificateV3SpecTest {
 
     @Test
     public void shouldEncodeTheContentUrls() {
+        String ownerKey = this.owner.getKey();
+
         ContentDTO content1 = Contents.random();
         content1.setContentUrl("/content/dist/rhel/$releasever/$basearch/debug");
         ContentDTO content2 = Contents.random();
@@ -389,10 +393,10 @@ public class EntitlementCertificateV3SpecTest {
             }
         }
         else {
-            content1 = ownerContentApi.createContent(owner.getKey(), content1);
-            product = ownerProductApi.addContent(owner.getKey(), product.getId(), content1.getId(), true);
-            content2 = ownerContentApi.createContent(owner.getKey(), content2);
-            product = ownerProductApi.addContent(owner.getKey(), product.getId(), content2.getId(), true);
+            content1 = ownerContentApi.createContent(ownerKey, content1);
+            product = ownerProductApi.addContentToProduct(ownerKey, product.getId(), content1.getId(), true);
+            content2 = ownerContentApi.createContent(ownerKey, content2);
+            product = ownerProductApi.addContentToProduct(ownerKey, product.getId(), content2.getId(), true);
             pool = Pools.random();
             pool.setProductId(product.getId());
             pool.setProductName(product.getName());
@@ -428,7 +432,8 @@ public class EntitlementCertificateV3SpecTest {
             }
             else {
                 content = ownerContentApi.createContent(owner.getKey(), content);
-                product = ownerProductApi.addContent(owner.getKey(), product.getId(), content.getId(), true);
+                product = ownerProductApi.addContentToProduct(owner.getKey(), product.getId(),
+                    content.getId(), true);
             }
         }
 

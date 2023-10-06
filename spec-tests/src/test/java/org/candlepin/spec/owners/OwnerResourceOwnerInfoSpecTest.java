@@ -60,7 +60,7 @@ public class OwnerResourceOwnerInfoSpecTest {
             ProductAttributes.Sockets.withValue("2"),
             ProductAttributes.MultiEntitlement.withValue("true")
         );
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(), tmpProduct);
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(), tmpProduct);
         adminClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         createConsumer(userClient, Consumers.random(owner));

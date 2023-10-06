@@ -103,7 +103,7 @@ public class HypervisorCheckInSpecTest {
     private PoolDTO createVirtLimitProductPools(OwnerDTO owner, ConsumerDTO hostConsumer) throws IOException {
         ProductDTO virtLimitProduct = Products.randomSKU()
             .addAttributesItem(new AttributeDTO().name("virt_limit").value("3"));
-        virtLimitProduct = ownerProductApi.createProductByOwner(owner.getKey(), virtLimitProduct);
+        virtLimitProduct = ownerProductApi.createProduct(owner.getKey(), virtLimitProduct);
 
         PoolDTO pool1 = Pools.random(virtLimitProduct);
         pool1 = ownerApi.createPool(owner.getKey(), pool1);
@@ -570,7 +570,7 @@ public class HypervisorCheckInSpecTest {
             .name(StringUtil.random("product"))
             .addAttributesItem(new AttributeDTO().name("virt_limit").value("10"))
             .addAttributesItem(new AttributeDTO().name("host_limited").value("true"));
-        ownerProductApi.createProductByOwner(owner.getKey(), superAwesome);
+        ownerProductApi.createProduct(owner.getKey(), superAwesome);
         PoolDTO pool = Pools.random(superAwesome);
         ownerApi.createPool(owner.getKey(), pool);
 
@@ -872,7 +872,7 @@ public class HypervisorCheckInSpecTest {
         ProductDTO product = Products.randomEng()
             .name(StringUtil.random("name"))
             .attributes(List.of(new AttributeDTO().name("version").value("6.1")));
-        product = ownerProductApi.createProductByOwner(owner.getKey(), product);
+        product = ownerProductApi.createProduct(owner.getKey(), product);
         ProductDTO product1 = Products.random()
             .name(StringUtil.random("name"))
             .attributes(List.of(
@@ -883,7 +883,7 @@ public class HypervisorCheckInSpecTest {
                 new AttributeDTO().name("multi-entitlement").value("yes"),
                 new AttributeDTO().name("host_limited").value("true")))
             .providedProducts(Set.of(product));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         PoolDTO pool = Pools.random()
             .owner(new NestedOwnerDTO().key(owner.getKey()))
             .productId(product1.getId())
@@ -1316,8 +1316,10 @@ public class HypervisorCheckInSpecTest {
         // to be entitled to the consumer already, or otherwise this content will get filtered out
         // during entitlement cert generation)
         ContentDTO rh00271Content = createRH00271Content(owner, rh00051Product);
-        ownerProductApi.addContent(owner.getKey(), rh00051EngProduct.getId(), rh00051Content.getId(), true);
-        ownerProductApi.addContent(owner.getKey(), rh00271EngProduct.getId(), rh00271Content.getId(), true);
+        ownerProductApi.addContentToProduct(owner.getKey(), rh00051EngProduct.getId(),
+            rh00051Content.getId(), true);
+        ownerProductApi.addContentToProduct(owner.getKey(), rh00271EngProduct.getId(),
+            rh00271Content.getId(), true);
         // creating primary pool for the products
         PoolDTO rh00271Pool = createRH00271Pool(owner, rh00271Product, rh00271EngProduct);
         PoolDTO rh00051Pool = createRH00051Pool(owner, rh00051Product, rh00051EngProduct);
@@ -1432,7 +1434,7 @@ public class HypervisorCheckInSpecTest {
         ProductDTO rh00271EngProduct = Products.randomEng()
             .id("204")
             .name("Red Hat Enterprise Linux Server - Extended Life Cycle Support");
-        return ownerProductApi.createProductByOwner(owner.getKey(), rh00271EngProduct);
+        return ownerProductApi.createProduct(owner.getKey(), rh00271EngProduct);
     }
 
     private ProductDTO createRH00271Product(OwnerDTO owner, ProductDTO rh00271EngProduct) {
@@ -1444,14 +1446,14 @@ public class HypervisorCheckInSpecTest {
             .attributes(List.of(new AttributeDTO().name("virt_limit").value("unlimited"),
                 new AttributeDTO().name("stacking_id").value("RH00271"),
                 new AttributeDTO().name("host_limited").value("true")));
-        return ownerProductApi.createProductByOwner(owner.getKey(), rh00271Product);
+        return ownerProductApi.createProduct(owner.getKey(), rh00271Product);
     }
 
     private ProductDTO createRH00051EngProduct(OwnerDTO owner) {
         ProductDTO rh00051EngProduct = Products.randomEng()
             .id("69")
             .name("Red Hat Enterprise Linux Server");
-        return ownerProductApi.createProductByOwner(owner.getKey(), rh00051EngProduct);
+        return ownerProductApi.createProduct(owner.getKey(), rh00051EngProduct);
     }
 
     private ProductDTO createRH00051Product(OwnerDTO owner, ProductDTO rh00051EngProduct) {
@@ -1463,7 +1465,7 @@ public class HypervisorCheckInSpecTest {
             .attributes(List.of(new AttributeDTO().name("virt_limit").value("unlimited"),
                 new AttributeDTO().name("stacking_id").value("RH00051"),
                 new AttributeDTO().name("host_limited").value("true")));
-        return ownerProductApi.createProductByOwner(owner.getKey(), rh00051Product);
+        return ownerProductApi.createProduct(owner.getKey(), rh00051Product);
     }
 
     private ContentDTO createRH00051Content(OwnerDTO owner) {
@@ -1496,8 +1498,8 @@ public class HypervisorCheckInSpecTest {
             .upstreamPoolId(StringUtil.random("id"))
             .providedProducts(Set.of(new ProvidedProductDTO()
             .productId(rh00271EngProduct.getId())
-            .productName(rh00271EngProduct.getId())))
-            .locked(true);
+            .productName(rh00271EngProduct.getId())));
+
         return ownerApi.createPool(owner.getKey(), rh00271Pool);
     }
 
@@ -1508,8 +1510,8 @@ public class HypervisorCheckInSpecTest {
             .upstreamPoolId(StringUtil.random("id"))
             .providedProducts(Set.of(new ProvidedProductDTO()
             .productId(rh00051EngProduct.getId())
-            .productName(rh00051EngProduct.getId())))
-            .locked(true);
+            .productName(rh00051EngProduct.getId())));
+
         return ownerApi.createPool(owner.getKey(), rh00051Pool);
     }
 

@@ -15,9 +15,7 @@
 package org.candlepin.controller.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -32,51 +30,26 @@ import java.util.function.Supplier;
 
 
 
-public class EntityVersioningRetryWrapperTest {
+public class ConstraintViolationRetryWrapperTest {
 
-    private Exception buildConstraintViolation(String constraintName) {
-        return new ConstraintViolationException("test exception", new SQLException(), constraintName);
-    }
-
-    @Test
-    public void testCorrectExceptionCorrectConstraintDetection() {
-        Exception exception = this.buildConstraintViolation(EntityVersioningRetryWrapper.CONSTRAINT_STRING);
-        boolean result = EntityVersioningRetryWrapper.isEntityVersioningConstraintViolation(exception);
-
-        assertTrue(result);
-    }
-
-    @Test
-    public void testCorrectExceptionIncorrectConstraintDetection() {
-        Exception exception = this.buildConstraintViolation("some other constraint");
-        boolean result = EntityVersioningRetryWrapper.isEntityVersioningConstraintViolation(exception);
-
-        assertFalse(result);
-    }
-
-    @Test
-    public void testIncorrectExceptionDetection() {
-        Exception exception = new SQLException();
-
-        boolean result = EntityVersioningRetryWrapper.isEntityVersioningConstraintViolation(exception);
-
-        assertFalse(result);
+    private Exception buildConstraintViolation() {
+        return new ConstraintViolationException("test exception", new SQLException(), null);
     }
 
     @Test
     public void testNegativeRetriesValuesDisallowed() {
-        assertThrows(IllegalArgumentException.class, () -> new EntityVersioningRetryWrapper().retries(-5));
+        assertThrows(IllegalArgumentException.class, () -> new ConstraintViolationRetryWrapper().retries(-5));
     }
 
     @Test
     public void testExecuteSucceedsWithoutRetries() {
         String expected = "success";
-        Exception exception = this.buildConstraintViolation(EntityVersioningRetryWrapper.CONSTRAINT_STRING);
+        Exception exception = this.buildConstraintViolation();
 
         Supplier<String> supplier = mock(Supplier.class);
         doReturn(expected).doThrow(new RuntimeException("fail")).when(supplier).get();
 
-        String output = new EntityVersioningRetryWrapper()
+        String output = new ConstraintViolationRetryWrapper()
             .retries(0)
             .execute(supplier);
 
@@ -87,13 +60,13 @@ public class EntityVersioningRetryWrapperTest {
     @Test
     public void testExecuteWontRetryWithoutRetries() {
         String expected = "success";
-        Exception exception = this.buildConstraintViolation(EntityVersioningRetryWrapper.CONSTRAINT_STRING);
+        Exception exception = this.buildConstraintViolation();
 
         Supplier<String> supplier = mock(Supplier.class);
         doThrow(exception).doReturn(expected).doThrow(new RuntimeException("fail")).when(supplier).get();
 
         Exception actual = assertThrows(ConstraintViolationException.class, () -> {
-            new EntityVersioningRetryWrapper()
+            new ConstraintViolationRetryWrapper()
                 .retries(0)
                 .execute(supplier);
         });
@@ -105,12 +78,12 @@ public class EntityVersioningRetryWrapperTest {
     @Test
     public void testExecuteReturnsUponSuccess() {
         String expected = "success";
-        Exception exception = this.buildConstraintViolation(EntityVersioningRetryWrapper.CONSTRAINT_STRING);
+        Exception exception = this.buildConstraintViolation();
 
         Supplier<String> supplier = mock(Supplier.class);
         doReturn(expected).doThrow(new RuntimeException("fail")).when(supplier).get();
 
-        String output = new EntityVersioningRetryWrapper()
+        String output = new ConstraintViolationRetryWrapper()
             .retries(2)
             .execute(supplier);
 
@@ -119,14 +92,14 @@ public class EntityVersioningRetryWrapperTest {
     }
 
     @Test
-    public void testExecuteRetriesOnVersioningConstraintViolation() {
+    public void testExecuteRetriesOnConstraintViolation() {
         String expected = "success";
-        Exception exception = this.buildConstraintViolation(EntityVersioningRetryWrapper.CONSTRAINT_STRING);
+        Exception exception = this.buildConstraintViolation();
 
         Supplier<String> supplier = mock(Supplier.class);
         doThrow(exception).doReturn(expected).doThrow(new RuntimeException("fail")).when(supplier).get();
 
-        String output = new EntityVersioningRetryWrapper()
+        String output = new ConstraintViolationRetryWrapper()
             .retries(2)
             .execute(supplier);
 
@@ -135,20 +108,53 @@ public class EntityVersioningRetryWrapperTest {
     }
 
     @Test
-    public void testExecuteLimitsRetriesOnVersioningConstraintViolation() {
+    public void testExecuteRetriesOnNestedConstraintViolation() {
         String expected = "success";
-        Exception exception = this.buildConstraintViolation(EntityVersioningRetryWrapper.CONSTRAINT_STRING);
+        Exception exception = new RuntimeException("outer exception", this.buildConstraintViolation());
+
+        Supplier<String> supplier = mock(Supplier.class);
+        doThrow(exception).doReturn(expected).doThrow(new RuntimeException("fail")).when(supplier).get();
+
+        String output = new ConstraintViolationRetryWrapper()
+            .retries(2)
+            .execute(supplier);
+
+        verify(supplier, times(2)).get();
+        assertEquals(expected, output);
+    }
+
+    @Test
+    public void testExecuteLimitsRetriesOnConstraintViolation() {
+        String expected = "success";
+        Exception exception = this.buildConstraintViolation();
 
         Supplier<String> supplier = mock(Supplier.class);
         doThrow(exception).doThrow(exception).doThrow(exception).doReturn(expected).when(supplier).get();
 
         Exception actual = assertThrows(ConstraintViolationException.class, () -> {
-            new EntityVersioningRetryWrapper()
+            new ConstraintViolationRetryWrapper()
                 .retries(2)
                 .execute(supplier);
         });
 
         verify(supplier, times(3)).get();
+        assertEquals(exception, actual);
+    }
+
+    @Test
+    public void testRetryOmittedForNonConstraintViolationExceptions() {
+        Exception exception = new RuntimeException("fail");
+
+        Supplier<String> supplier = mock(Supplier.class);
+        doThrow(exception).when(supplier).get();
+
+        Exception actual = assertThrows(RuntimeException.class, () -> {
+            new ConstraintViolationRetryWrapper()
+                .retries(3)
+                .execute(supplier);
+        });
+
+        verify(supplier, times(1)).get();
         assertEquals(exception, actual);
     }
 

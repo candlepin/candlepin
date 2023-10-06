@@ -22,55 +22,69 @@ import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.paging.PagingUtilFactory;
 import org.candlepin.resource.server.v1.OwnerContentApi;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.UniqueIdGenerator;
+import org.candlepin.service.model.ContentInfo;
 
 import com.google.inject.persist.Transactional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.persistence.LockModeType;
+
+
 
 public class OwnerContentResource implements OwnerContentApi {
-    private DTOValidator validator;
-    private ModelTranslator translator;
-    private ContentAccessManager contentAccessManager;
-    private I18n i18n;
-    private ContentManager contentManager;
-    private OwnerContentCurator ownerContentCurator;
-    private UniqueIdGenerator idGenerator;
-    private OwnerCurator ownerCurator;
+    private static final Logger log = LoggerFactory.getLogger(OwnerContentResource.class);
+
+    private final I18n i18n;
+    private final UniqueIdGenerator idGenerator;
+    private final DTOValidator validator;
+    private final ModelTranslator translator;
+    private final PagingUtilFactory pagingUtilFactory;
+    private final OwnerCurator ownerCurator;
+    private final ContentAccessManager contentAccessManager;
+    private final ContentManager contentManager;
+    private final ContentCurator contentCurator;
 
     @Inject
     @SuppressWarnings("checkstyle:parameternumber")
-    public OwnerContentResource(OwnerCurator ownerCurator,
+    public OwnerContentResource(
         I18n i18n,
-        ModelTranslator translator,
+        UniqueIdGenerator idGenerator,
         DTOValidator validator,
-        OwnerContentCurator ownerContentCurator,
+        ModelTranslator translator,
+        PagingUtilFactory pagingUtilFactory,
+        OwnerCurator ownerCurator,
         ContentAccessManager contentAccessManager,
         ContentManager contentManager,
-        UniqueIdGenerator idGenerator) {
+        ContentCurator contentCurator) {
 
-        this.ownerCurator = ownerCurator;
-        this.i18n = i18n;
-        this.translator = translator;
-        this.validator = validator;
-        this.ownerContentCurator = ownerContentCurator;
-        this.contentAccessManager = contentAccessManager;
-        this.contentManager = contentManager;
-        this.idGenerator = idGenerator;
+        this.i18n = Objects.requireNonNull(i18n);
+        this.idGenerator = Objects.requireNonNull(idGenerator);
+        this.validator = Objects.requireNonNull(validator);
+        this.translator = Objects.requireNonNull(translator);
+        this.pagingUtilFactory = Objects.requireNonNull(pagingUtilFactory);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
+        this.contentManager = Objects.requireNonNull(contentManager);
+        this.contentCurator = Objects.requireNonNull(contentCurator);
     }
 
     /**
@@ -83,134 +97,227 @@ public class OwnerContentResource implements OwnerContentApi {
      *  if the DTO does not pass validation
      */
     private void validateContentForCreation(ContentDTO dto) {
+        if (dto == null) {
+            return;
+        }
+
         this.validator.validateCollectionElementsNotNull(dto::getModifiedProductIds);
 
-        if (dto.getLabel() == null || dto.getLabel().isEmpty()) {
+        if (dto.getLabel() == null || dto.getLabel().isBlank()) {
             throw new BadRequestException(this.i18n.tr("content label cannot be null or empty"));
         }
 
-        if (dto.getName() == null || dto.getName().isEmpty()) {
+        if (dto.getName() == null || dto.getName().isBlank()) {
             throw new BadRequestException(this.i18n.tr("content name cannot be null or empty"));
         }
 
-        if (dto.getType() == null || dto.getType().isEmpty()) {
+        if (dto.getType() == null || dto.getType().isBlank()) {
             throw new BadRequestException(this.i18n.tr("content type cannot be null or empty"));
         }
 
-        if (dto.getVendor() == null || dto.getVendor().isEmpty()) {
+        if (dto.getVendor() == null || dto.getVendor().isBlank()) {
             throw new BadRequestException(this.i18n.tr("content vendor cannot be null or empty"));
         }
     }
 
-    @Override
-    @Transactional
-    public ContentDTO createContent(String ownerKey, ContentDTO content) {
-        Owner owner = this.getOwnerByKey(ownerKey);
+    /**
+     * Validates that the specified entity belongs to the same namespace as the given organization.
+     * If the entity is part of the global namespace, or another organization's namespace, this
+     * method throws a ForbiddenException.
+     *
+     * @param owner
+     *  the org to use to validate the content entity
+     *
+     * @param content
+     *  the content entity to validate
+     *
+     * @throws ForbiddenException
+     *  if the entity is not part of the given organization's namespace
+     */
+    private void validateContentNamespace(Owner owner, Content content) {
+        String namespace = owner != null ? owner.getKey() : "";
 
-        this.validateContentForCreation(content);
-        Content entity = this.createContentImpl(owner, content);
+        if (!namespace.equals(content.getNamespace())) {
+            throw new ForbiddenException(this.i18n.tr(
+                "Cannot modify or remove contents defined outside of the organization's namespace"));
+        }
+    }
 
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
+    /**
+     * Attempts to resolve the given content ID reference to a content for the given organization.
+     * This method will first attempt to resolve the content reference in the org's namespace, but
+     * will fall back to the global namespace if that resolution attempt fails. If the content ID
+     * cannot be resolved, this method throws an exception.
+     *
+     * @param owner
+     *  the organization for which to resolve the content reference
+     *
+     * @param contentId
+     *  the content ID to resolve
+     *
+     * @param lockModeType
+     *  the type of database lock to apply to any content instance returned by this method; if null
+     *  or LockModeType.NONE, no database lock will be applied
+     *
+     * @throws IllegalArgumentException
+     *  if owner is null, or if contentId is null or empty
+     *
+     * @throws NotFoundException
+     *  if a content with the specified ID cannot be found within the context of the given org
+     *
+     * @return
+     *  the content for the specified ID
+     */
+    private Content resolveContentId(Owner owner, String contentId, LockModeType lockModeType) {
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
 
-        return this.translator.translate(entity, ContentDTO.class);
+        if (contentId == null || contentId.isEmpty()) {
+            throw new IllegalArgumentException("contentId is null or empty");
+        }
+
+        Content content = this.contentCurator.resolveContentId(owner.getKey(), contentId, lockModeType);
+
+        if (content == null) {
+            throw new NotFoundException(
+                i18n.tr("Unable to find a content with the ID \"{0}\" for owner \"{1}\"",
+                    contentId, owner.getKey()));
+        }
+
+        return content;
+    }
+
+    /**
+     * Creates or updates content using the content data provided
+     *
+     * @param owner
+     *  The owner for which to create the new content
+     *
+     * @param cdto
+     *  The content data to use to create or update content
+     *
+     * @return
+     *  the updated or newly created content entity
+     */
+    private Content createContentImpl(Owner owner, ContentDTO cdto) {
+        // TODO: check if arches have changed ??
+
+        String cid = cdto.getId();
+
+        // If we don't have an ID, this is a creation request due to ancient convention
+        if (cid == null || cid.isBlank()) {
+            cdto.setId(this.idGenerator.generateId());
+            return this.contentManager.createContent(owner, InfoAdapter.contentInfoAdapter(cdto));
+        }
+
+        ContentInfo cinfo = InfoAdapter.contentInfoAdapter(cdto);
+
+        // We had an ID, so check if this is actually an update masquerading as a create op
+        Content existing = this.contentCurator.getContentById(owner.getKey(), cid);
+        if (existing != null) {
+            return this.contentManager.updateContent(owner, existing, cinfo, true);
+        }
+
+        // It's not, fall back to normal creation
+        return this.contentManager.createContent(owner, cinfo);
     }
 
     @Override
-    public ContentDTO getOwnerContent(
-        @Verify(Owner.class) String ownerKey, String contentId) {
-
+    @Transactional
+    public Stream<ContentDTO> createContentBatch(String ownerKey, List<ContentDTO> contents) {
         Owner owner = this.getOwnerByKey(ownerKey);
-        Content content = this.fetchContent(owner, contentId);
+        String namespace = owner.getKey();
+
+        contents.forEach(this::validateContentForCreation);
+
+        // Ensure that the content IDs are either net-new or only reference content defined in this
+        // org's namespace
+        List<String> cids = contents.stream()
+            .map(ContentDTO::getId)
+            .toList();
+
+        Map<String, Content> conflictingContent = this.contentCurator.getContentsByIds(null, cids);
+        if (!conflictingContent.isEmpty()) {
+            throw new BadRequestException(
+                this.i18n.tr("One or more contents are already defined in the global namespace: {0}",
+                conflictingContent.keySet()));
+        }
+
+        // Create!
+        return contents.stream()
+            .map(cdto -> this.createContentImpl(owner, cdto))
+            .map(this.translator.getStreamMapper(Content.class, ContentDTO.class));
+    }
+
+    @Override
+    public ContentDTO createContent(String ownerKey, ContentDTO content) {
+        return this.createContentBatch(ownerKey, List.of(content))
+            .findAny()
+            .orElse(null);
+    }
+
+    @Override
+    @Transactional
+    public ContentDTO getContentById(@Verify(Owner.class) String ownerKey, String contentId) {
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Content content = this.resolveContentId(owner, contentId, null);
 
         return this.translator.translate(content, ContentDTO.class);
     }
 
     @Override
-    public CandlepinQuery<ContentDTO> listOwnerContent(@Verify(Owner.class) String ownerKey) {
-        Owner owner = this.getOwnerByKey(ownerKey);
-        CandlepinQuery<Content> query = this.ownerContentCurator.getContentByOwnerCPQ(owner);
+    @Transactional
+    public Stream<ContentDTO> getContentsByOwner(@Verify(Owner.class) String ownerKey,
+        List<String> contentIds, Boolean omitGlobalEntities) {
 
-        return this.translator.translateQuery(query, ContentDTO.class);
+        Owner owner = this.getOwnerByKey(ownerKey);
+        String namespace = owner.getKey();
+
+        Collection<Content> contents;
+
+        if (omitGlobalEntities == null || !omitGlobalEntities) {
+            contents = contentIds != null && !contentIds.isEmpty() ?
+                this.contentCurator.resolveContentIds(namespace, contentIds).values() :
+                this.contentCurator.resolveContentsByNamespace(namespace);
+        }
+        else {
+            contents = contentIds != null && !contentIds.isEmpty() ?
+                this.contentCurator.getContentsByIds(namespace, contentIds).values() :
+                this.contentCurator.getContentsByNamespace(namespace);
+        }
+
+        Stream<ContentDTO> stream = contents.stream()
+            .map(this.translator.getStreamMapper(Content.class, ContentDTO.class));
+
+        return this.pagingUtilFactory.forClass(ContentDTO.class)
+            .applyPaging(stream, contents.size());
     }
 
     @Override
     @Transactional
-    public Collection<ContentDTO> createBatchContent(String ownerKey, List<ContentDTO> contents) {
-        for (ContentDTO content : contents) {
-            this.validateContentForCreation(content);
-        }
-
+    public ContentDTO updateContent(String ownerKey, String contentId, ContentDTO cdto) {
         Owner owner = this.getOwnerByKey(ownerKey);
+        Content content = this.resolveContentId(owner, contentId, LockModeType.PESSIMISTIC_WRITE);
 
-        List<ContentDTO> output = contents.stream()
-            .map(content -> this.createContentImpl(owner, content))
-            .map(this.translator.getStreamMapper(Content.class, ContentDTO.class))
-            .collect(Collectors.toList());
+        this.validateContentNamespace(owner, content);
+        this.validator.validateCollectionElementsNotNull(cdto::getModifiedProductIds);
 
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
-
-        return output;
-    }
-
-    @Override
-    @Transactional
-    public ContentDTO updateContent(String ownerKey, String contentId, ContentDTO content) {
-        this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
-
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Content existing = this.fetchContent(owner, contentId);
-
-        if (existing.isLocked()) {
-            throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
-        }
-
-        Content updated = this.contentManager
-            .updateContent(owner, InfoAdapter.contentInfoAdapter(content.id(contentId)), true);
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
+        ContentInfo update = InfoAdapter.contentInfoAdapter(cdto);
+        Content updated = this.contentManager.updateContent(owner, content, update, true);
 
         return this.translator.translate(updated, ContentDTO.class);
     }
 
     @Override
     @Transactional
-    public void remove(String ownerKey, String contentId) {
+    public void removeContent(String ownerKey, String contentId) {
         Owner owner = this.getOwnerByKey(ownerKey);
-        Content content = this.fetchContent(owner, contentId);
+        Content content = this.resolveContentId(owner, contentId, LockModeType.PESSIMISTIC_WRITE);
 
-        if (content.isLocked()) {
-            throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", content.getId()));
-        }
+        this.validateContentNamespace(owner, content);
 
         this.contentManager.removeContent(owner, content, true);
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
-    }
-
-    /**
-     * Retrieves the content entity with the given content ID for the specified owner. If a
-     * matching entity could not be found, this method throws a NotFoundException.
-     *
-     * @param owner
-     *  The owner in which to search for the content
-     *
-     * @param contentId
-     *  The Red Hat ID of the content to retrieve
-     *
-     * @throws NotFoundException
-     *  If a content with the specified Red Hat ID could not be found
-     *
-     * @return
-     *  the content entity with the given owner and content ID
-     */
-    protected Content fetchContent(Owner owner, String contentId) {
-        Content content = this.ownerContentCurator.getContentById(owner, contentId);
-
-        if (content == null) {
-            throw new NotFoundException(
-                i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
-            );
-        }
-
-        return content;
     }
 
     /**
@@ -236,46 +343,5 @@ public class OwnerContentResource implements OwnerContentApi {
         }
 
         return owner;
-    }
-
-    /**
-     * Creates or merges the given Content object.
-     *
-     * @param owner
-     *  The owner for which to create the new content
-     *
-     * @param content
-     *  The content to create or merge
-     *
-     * @return
-     *  the newly created and/or merged Content object.
-     */
-    private Content createContentImpl(Owner owner, ContentDTO content) {
-        // TODO: check if arches have changed ??
-
-        Content entity = null;
-
-        if (content.getId() == null || content.getId().trim().length() == 0) {
-            content.setId(this.idGenerator.generateId());
-
-            entity = this.contentManager.createContent(owner, InfoAdapter.contentInfoAdapter(content));
-        }
-        else {
-            Content existing = this.ownerContentCurator.getContentById(owner, content.getId());
-
-            if (existing != null) {
-                if (existing.isLocked()) {
-                    throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
-                }
-
-                entity = this.contentManager.updateContent(owner, InfoAdapter.contentInfoAdapter(content),
-                    true);
-            }
-            else {
-                entity = this.contentManager.createContent(owner, InfoAdapter.contentInfoAdapter(content));
-            }
-        }
-
-        return entity;
     }
 }

@@ -425,7 +425,7 @@ public class UnmappedGuestSpecTest {
             .addAttributesItem(new AttributeDTO().name("host_limited").value("true"))
             .addAttributesItem(new AttributeDTO().name("physical_only").value("true"))
             .addAttributesItem(new AttributeDTO().name("multi-entitlement").value("yes"));
-        virtLimitProduct = ownerProductApi.createProductByOwner(owner.getKey(), virtLimitProduct);
+        virtLimitProduct = ownerProductApi.createProduct(owner.getKey(), virtLimitProduct);
         PoolDTO pool = Pools.random(virtLimitProduct)
             .subscriptionId(StringUtil.random("sub"))
             .subscriptionSubKey(StringUtil.random("key"))

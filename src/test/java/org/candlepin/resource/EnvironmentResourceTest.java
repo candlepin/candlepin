@@ -49,13 +49,13 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.RdbmsExceptionTranslator;
@@ -91,7 +91,7 @@ class EnvironmentResourceTest {
     @Mock
     private ConsumerCurator consumerCurator;
     @Mock
-    private OwnerContentCurator ownerContentCurator;
+    private ContentCurator contentCurator;
     @Mock
     private RdbmsExceptionTranslator rdbmsExceptionTranslator;
     @Mock
@@ -134,7 +134,7 @@ class EnvironmentResourceTest {
             this.consumerResource,
             this.poolService,
             this.consumerCurator,
-            this.ownerContentCurator,
+            this.contentCurator,
             this.rdbmsExceptionTranslator,
             this.translator,
             this.jobManager,

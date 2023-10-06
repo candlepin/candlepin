@@ -22,9 +22,9 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.service.model.CdnInfo;
@@ -42,19 +42,18 @@ import javax.inject.Inject;
 
 
 public class PoolConverter {
-
     private final OwnerCurator ownerCurator;
-    private final OwnerProductCurator ownerProductCurator;
+    private final ProductCurator productCurator;
     private final CdnCurator cdnCurator;
 
     @Inject
     public PoolConverter(
         OwnerCurator ownerCurator,
-        OwnerProductCurator ownerProductCurator,
+        ProductCurator productCurator,
         CdnCurator cdnCurator) {
 
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
-        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
+        this.productCurator = Objects.requireNonNull(productCurator);
         this.cdnCurator = Objects.requireNonNull(cdnCurator);
     }
 
@@ -91,7 +90,12 @@ public class PoolConverter {
             throw new IllegalStateException("Subscription references an incomplete product: " + pinfo);
         }
 
-        Product product = this.ownerProductCurator.getProductById(owner, pid);
+        // Resolve product ref using the org's namespace
+        Product product = this.productCurator.resolveProductId(owner.getKey(), pid);
+        if (product == null) {
+            throw new IllegalStateException("product reference could not be resolved to a local product: " +
+                pid);
+        }
 
         // Do the actual conversion work & return the result
         return this.convertToPrimaryPool(sub, owner, Collections.singletonMap(pid, product));
@@ -117,8 +121,7 @@ public class PoolConverter {
      * @return primary pool
      */
     @SuppressWarnings("checkstyle:methodlength")
-    public Pool convertToPrimaryPool(
-        SubscriptionInfo sub, Owner owner, Map<String, Product> productMap) {
+    public Pool convertToPrimaryPool(SubscriptionInfo sub, Owner owner, Map<String, Product> productMap) {
         if (sub == null) {
             throw new IllegalArgumentException("subscription is null");
         }

@@ -123,11 +123,11 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
 
         or = new OwnerResource(
             ownerCurator, activationKeyCurator, consumerCurator, i18n, sink, eventFactory,
-            contentAccessManager, manifestManager, poolManager, ownerManager, exportCurator,
-            ownerInfoCurator, importRecordCurator, entitlementCurator, ueberCertCurator, ueberCertGenerator,
-            environmentCurator, calculatedAttributesUtil, contentOverrideValidator, serviceLevelValidator,
-            ownerService, config, consumerTypeValdator, ownerProductCurator, this.modelTranslator,
-            this.jobManager, dtoValidator, this.poolService, this.principalProvider);
+            contentAccessManager, manifestManager, poolManager, poolService, poolCurator, ownerManager,
+            exportCurator, ownerInfoCurator, importRecordCurator, entitlementCurator, ueberCertCurator,
+            ueberCertGenerator, environmentCurator, calculatedAttributesUtil, contentOverrideValidator,
+            serviceLevelValidator, ownerService, config, consumerTypeValdator, productCurator,
+            this.modelTranslator, this.jobManager, dtoValidator, this.principalProvider);
     }
 
     @Test

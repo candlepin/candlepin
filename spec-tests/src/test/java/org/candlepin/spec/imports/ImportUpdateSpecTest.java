@@ -135,7 +135,7 @@ public class ImportUpdateSpecTest {
             .contains("SUCCESS")
             .doesNotContain("_WITH_WARNING");
 
-        ContentDTO existingContent = ownerContentApi.getOwnerContent(owner.getKey(), content.getId());
+        ContentDTO existingContent = ownerContentApi.getContentById(owner.getKey(), content.getId());
         assertThat(existingContent)
             .isNotNull()
             .extracting(ContentDTO::getRequiredTags)
@@ -152,7 +152,7 @@ public class ImportUpdateSpecTest {
             .contains("SUCCESS")
             .doesNotContain("_WITH_WARNING");
 
-        ContentDTO updatedContent = ownerContentApi.getOwnerContent(owner.getKey(), content.getId());
+        ContentDTO updatedContent = ownerContentApi.getContentById(owner.getKey(), content.getId());
         assertThat(updatedContent)
             .isNotNull()
             .extracting(ContentDTO::getRequiredTags)
@@ -185,10 +185,10 @@ public class ImportUpdateSpecTest {
             .getSerial()
             .getId();
 
-        ProductDTO importedProduct = ownerProductApi.getProductByOwner(owner.getKey(), product1.getId());
+        ProductDTO importedProduct = ownerProductApi.getProductById(owner.getKey(), product1.getId());
         assertNotNull(importedProduct);
 
-        ContentDTO importedContent = ownerContentApi.getOwnerContent(owner.getKey(), content1.getId());
+        ContentDTO importedContent = ownerContentApi.getContentById(owner.getKey(), content1.getId());
         assertNotNull(importedContent);
 
         // Make some changes to the original manifest data and then import again
@@ -212,12 +212,12 @@ public class ImportUpdateSpecTest {
             .doesNotContain("_WITH_WARNING");
 
         // Verify some changes were made
-        ProductDTO updatedProduct = ownerProductApi.getProductByOwner(owner.getKey(), product1.getId());
+        ProductDTO updatedProduct = ownerProductApi.getProductById(owner.getKey(), product1.getId());
         assertThat(updatedProduct)
             .isNotNull()
             .isNotEqualTo(importedProduct);
 
-        ContentDTO updatedContent = ownerContentApi.getOwnerContent(owner.getKey(), content1.getId());
+        ContentDTO updatedContent = ownerContentApi.getContentById(owner.getKey(), content1.getId());
         assertThat(updatedContent)
             .isNotNull()
             .isNotEqualTo(importedContent);
@@ -341,7 +341,7 @@ public class ImportUpdateSpecTest {
         List<SubscriptionDTO> updatedSubs = ownerApi.getOwnerSubscriptions(owner.getKey());
         assertThat(updatedSubs)
             .isNotNull()
-            .hasSize(0);
+            .isEmpty();
     }
 
     /**

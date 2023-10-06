@@ -59,9 +59,11 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 
 
@@ -69,7 +71,6 @@ import java.util.Set;
 @OnlyInStandalone
 public class ImportSuccessSpecTest {
     private static final String RECORD_CLEANER_JOB_KEY = "ImportRecordCleanerJob";
-    private static final String EXPECTED_CONTENT_URL = "/path/to/arch/specific/content";
 
     private static ApiClient adminClient;
 
@@ -158,10 +159,8 @@ public class ImportSuccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         // Create some local, custom products and pools
-        ProductDTO product1 = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
-        ProductDTO product2 = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO product1 = adminClient.ownerProducts().createProduct(owner.getKey(), Products.random());
+        ProductDTO product2 = adminClient.ownerProducts().createProduct(owner.getKey(), Products.random());
         PoolDTO pool1 = adminClient.owners().createPool(owner.getKey(), Pools.random(product1));
         PoolDTO pool2 = adminClient.owners().createPool(owner.getKey(), Pools.random(product2));
 
@@ -398,11 +397,10 @@ public class ImportSuccessSpecTest {
 
         this.importAsync(owner, manifest);
 
-        List<ContentDTO> ownerContent = adminClient.ownerContent().listOwnerContent(owner.getKey());
-        assertThat(ownerContent)
-            .filteredOn(content -> EXPECTED_CONTENT_URL.equalsIgnoreCase(content.getContentUrl()))
-            .map(ContentDTO::getArches)
-            .containsExactly("i386,x86_64");
+        ContentDTO cdto = adminClient.ownerContent().getContentById(owner.getKey(), archContent.getId());
+        assertThat(cdto)
+            .isNotNull()
+            .returns("i386,x86_64", ContentDTO::getArches);
     }
 
     @Test
@@ -481,7 +479,7 @@ public class ImportSuccessSpecTest {
     }
 
     @Test
-    public void shouldImportContentWithMetadataExpirationSetTo1() throws Exception {
+    public void shouldImportContentWithMetadataExpirationSetToOne() throws Exception {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         ProductDTO providedProduct = Products.random();
@@ -503,8 +501,23 @@ public class ImportSuccessSpecTest {
 
         this.importAsync(owner, manifest);
 
-        List<ContentDTO> content = adminClient.ownerContent().listOwnerContent(owner.getKey());
-        assertThat(content)
+        // Impl note:
+        // At the time of writing, our spec tests don't perform any clean up of the data after each
+        // test or test run. As a consequence, the global namespace will be polluted with extraneous
+        // products and contents by the other import/export tests, so we'll need to account for
+        // that here by filtering on our expected content IDs.
+        List<String> cids = Stream.of(providedProduct, derivedProvidedProduct, derivedProduct, product)
+            .map(ProductDTO::getProductContent)
+            .flatMap(Collection::stream)
+            .map(ProductContentDTO::getContent)
+            .map(ContentDTO::getId)
+            .toList();
+
+        List<ContentDTO> contents = adminClient.ownerContent()
+            .getContentsByOwner(owner.getKey(), cids, false);
+
+        assertThat(contents)
+            .isNotNull()
             .hasSize(4)
             .map(ContentDTO::getMetadataExpire)
             .containsOnly(1L);

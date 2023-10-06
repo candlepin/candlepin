@@ -59,7 +59,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 
 
@@ -226,11 +225,8 @@ public class PoolRulesStackDerivedTest {
      */
     private Pool copyFromSub(Subscription sub) {
         Pool pool = TestUtil.copyFromSub(sub);
-        pool.setId("" + lastPoolId++);
-        when(productCurator.getPoolProvidedProductsCached(pool))
-            .thenReturn((Set<Product>) pool.getProduct().getProvidedProducts());
-        when(productCurator.getPoolDerivedProvidedProductsCached(pool))
-            .thenReturn((Set<Product>) pool.getProduct().getProvidedProducts());
+        pool.setId(String.valueOf(lastPoolId++));
+
         return pool;
     }
 

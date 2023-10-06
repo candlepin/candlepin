@@ -79,10 +79,10 @@ class EntitlementResourceSpecTest {
     void setUp() throws ApiException {
         owner = ownerClient.createOwner(Owners.random());
 
-        monitoring = ownerProductApi.createProductByOwner(owner.getKey(), Products.random()
+        monitoring = ownerProductApi.createProduct(owner.getKey(), Products.random()
             .name(StringUtil.random("monitoring"))
             .attributes(List.of(new AttributeDTO().name("variant").value("Satellite Starter Pack"))));
-        virtual = ownerProductApi.createProductByOwner(owner.getKey(), Products.random()
+        virtual = ownerProductApi.createProduct(owner.getKey(), Products.random()
             .name(StringUtil.random("virtualization")));
 
         consumer = client.consumers().createConsumer(Consumers.random(owner));
@@ -132,7 +132,7 @@ class EntitlementResourceSpecTest {
 
     @Test
     public void shouldAllowConsumerToChangeQuantity() {
-        ProductDTO product = ownerProductApi.createProductByOwner(owner.getKey(), Products.random()
+        ProductDTO product = ownerProductApi.createProduct(owner.getKey(), Products.random()
             .attributes(List.of(new AttributeDTO().name("multi-entitlement").value("yes"))));
         PoolDTO pool = ownerClient.createPool(owner.getKey(), Pools.random(product));
 
@@ -166,7 +166,7 @@ class EntitlementResourceSpecTest {
     public void shouldNotAllowConsumerToChangeToExcessQuantity() {
         ProductDTO product = Products.random()
             .attributes(List.of(new AttributeDTO().name("multi-entitlement").value("yes")));
-        product = ownerProductApi.createProductByOwner(owner.getKey(), product);
+        product = ownerProductApi.createProduct(owner.getKey(), product);
         PoolDTO pool = Pools.random().productId(product.getId()).quantity(10L);
         pool = ownerClient.createPool(owner.getKey(), pool);
 
@@ -187,7 +187,7 @@ class EntitlementResourceSpecTest {
 
     @Test
     public void shouldNotAllowConsumerToChangeQuantityNonMulti() {
-        ProductDTO product = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO product = ownerProductApi.createProduct(owner.getKey(), Products.random());
         PoolDTO pool = ownerClient.createPool(owner.getKey(), Pools.random(product));
 
         JsonNode ent1 = consumerClient.bindPool(consumer.getUuid(), pool.getId(), 1).get(0);

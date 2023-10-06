@@ -234,7 +234,7 @@ public class DistributorCapabilitySpecTest {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
         ProductDTO product = Products.randomEng()
             .addAttributesItem(ProductAttributes.Cores.withValue("8"));
-        ownerProductApi.createProductByOwner(owner.getKey(), product);
+        ownerProductApi.createProduct(owner.getKey(), product);
         ownerClient.createPool(owner.getKey(), Pools.random(product));
 
         ConsumerDTO consumer = Consumers.random(owner)

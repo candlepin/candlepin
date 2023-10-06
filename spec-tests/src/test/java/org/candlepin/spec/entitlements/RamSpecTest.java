@@ -394,7 +394,7 @@ public class RamSpecTest {
     }
 
     private PoolDTO createRamProductAndPool(OwnerDTO owner) {
-        ProductDTO ramProduct = ownerProductApi.createProductByOwner(owner.getKey(),
+        ProductDTO ramProduct = ownerProductApi.createProduct(owner.getKey(),
             Products.random()
             .addAttributesItem(ProductAttributes.Version.withValue("6.4"))
             .addAttributesItem(ProductAttributes.Ram.withValue("8"))
@@ -407,7 +407,7 @@ public class RamSpecTest {
     }
 
     private PoolDTO createRamSocketProductAndPool(OwnerDTO owner) {
-        ProductDTO ramSocketProduct = ownerProductApi.createProductByOwner(owner.getKey(),
+        ProductDTO ramSocketProduct = ownerProductApi.createProduct(owner.getKey(),
             Products.random()
             .addAttributesItem(ProductAttributes.Version.withValue("1.2"))
             .addAttributesItem(ProductAttributes.Ram.withValue("8"))
@@ -421,7 +421,7 @@ public class RamSpecTest {
     }
 
     private PoolDTO createStackableRamProductAndPool(OwnerDTO owner) {
-        ProductDTO stackableRamProduct = ownerProductApi.createProductByOwner(owner.getKey(),
+        ProductDTO stackableRamProduct = ownerProductApi.createProduct(owner.getKey(),
             Products.random()
             .addAttributesItem(ProductAttributes.Version.withValue("1.2"))
             .addAttributesItem(ProductAttributes.Ram.withValue("2"))
