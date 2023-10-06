@@ -51,7 +51,9 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     /** Max length for a value in the cloud account ID field */
     public static final int CLOUD_ACCOUNT_ID_MAX_LENGTH = 255;
     /** Max length for a value in the cloud instance ID field */
-    public static final int CLOUD_INSTANCE_ID_MAX_LENGTH = 85;
+    public static final int CLOUD_INSTANCE_ID_MAX_LENGTH = 170;
+    /** Max length for a value in the cloud offering ID field */
+    public static final int CLOUD_OFFERING_ID_MAX_LENGTH = 170;
     /** Max length for a value in the cloud provider short name field */
     public static final int CLOUD_PROVIDER_SHORT_NAME_MAX_LENGTH = 15;
 
@@ -72,6 +74,10 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     @Column(name = "cloud_instance_id")
     @NotNull
     private String cloudInstanceId;
+
+    @Column(name = "cloud_offering_id")
+    @NotNull
+    private String cloudOfferingId;
 
     @Column(name = "cloud_provider_short_name")
     @NotNull
@@ -161,6 +167,32 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
         }
 
         this.cloudInstanceId = cloudInstanceId;
+        return this;
+    }
+
+    /**
+     * @return the cloud offering ID for this anonymous cloud consumer
+     */
+    public String getCloudOfferingId() {
+        return this.cloudOfferingId;
+    }
+
+    /**
+     * @param cloudOfferingId
+     *  the cloud offering ID to set
+     *
+     * @return a reference to this AnonymousCloudConsumer instance
+     */
+    public AnonymousCloudConsumer setCloudOfferingId(String cloudOfferingId) {
+        if (cloudOfferingId == null) {
+            throw new IllegalArgumentException("cloudOfferingId is null");
+        }
+
+        if (cloudOfferingId.length() > CLOUD_OFFERING_ID_MAX_LENGTH) {
+            throw new IllegalArgumentException("cloudOfferingId exceeds the max length");
+        }
+
+        this.cloudOfferingId = cloudOfferingId;
         return this;
     }
 
