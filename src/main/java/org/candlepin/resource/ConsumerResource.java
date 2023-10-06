@@ -156,7 +156,6 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -168,6 +167,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -2133,14 +2133,13 @@ public class ConsumerResource implements ConsumerApi {
         }
 
         if (sinceDate != null) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z");
-            ZonedDateTime zonedDateTime = ZonedDateTime.parse(sinceDate, formatter);
-            since = zonedDateTime.toOffsetDateTime();
+            DateTimeFormatter formatter = DateTimeFormatter
+                .ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+            since = Util.parseOffsetDateTime(formatter, sinceDate);
         }
 
-
-        if (!this.contentAccessManager.hasCertChangedSince(consumer, since != null ?
-            Util.toDate(since) : new Date(0))) {
+        Date date = since != null ? Util.toDate(since) : new Date(0);
+        if (!this.contentAccessManager.hasCertChangedSince(consumer, date)) {
 
             return Response.status(Response.Status.NOT_MODIFIED)
                 .entity("Not modified since date supplied.")

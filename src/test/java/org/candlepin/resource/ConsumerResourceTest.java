@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2023 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -15,6 +15,7 @@
 package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -96,6 +97,7 @@ import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.consumer.ConsumerRules;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.resource.dto.ContentAccessListing;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
@@ -114,7 +116,9 @@ import org.candlepin.util.Util;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jboss.resteasy.core.ResteasyContext;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -154,12 +158,11 @@ import javax.ws.rs.core.Response;
 
 
 
-/**
- * ConsumerResourceTest
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ConsumerResourceTest {
+
+    private static Locale defaultLocale;
 
     private I18n i18n;
     private Provider<I18n> i18nProvider = () -> i18n;
@@ -206,6 +209,10 @@ public class ConsumerResourceTest {
     private ConsumerResource consumerResource;
     private ConsumerResource mockedConsumerResource;
 
+    @BeforeAll
+    static void beforeAll() {
+        defaultLocale = Locale.getDefault();
+    }
 
     @BeforeEach
     public void setUp() {
@@ -261,6 +268,11 @@ public class ConsumerResourceTest {
         );
 
         mockedConsumerResource = Mockito.spy(consumerResource);
+    }
+
+    @AfterEach
+    void tearDown() {
+        Locale.setDefault(defaultLocale);
     }
 
     protected ConsumerType buildConsumerType() {
@@ -669,10 +681,12 @@ public class ConsumerResourceTest {
     }
 
     private ContentAccessCertificate createContentAccessCertificate(String key, String cert, long serialId) {
-        ContentAccessCertificate certificate = new ContentAccessCertificate();
         CertificateSerial expectedSerial = new CertificateSerial(serialId, new Date());
+        String certBody = String.format("%s\n-----BEGIN ENTITLEMENT DATA-----\n", cert);
+
+        ContentAccessCertificate certificate = new ContentAccessCertificate();
         certificate.setKeyAsBytes(key.getBytes());
-        certificate.setCertAsBytes(cert.getBytes());
+        certificate.setCertAsBytes(certBody.getBytes());
         certificate.setSerial(expectedSerial);
         return certificate;
     }
@@ -1036,6 +1050,69 @@ public class ConsumerResourceTest {
             .getContentAccessForConsumer("test-uuid");
 
         assertEquals(expectedModeList, contentAccess.getContentAccessModeList());
+    }
+
+    @Test
+    void contentAccessNotModified() {
+        String expectedMode = "owner-ca-mode-list";
+        Owner owner = createOwner();
+        when(ownerCurator.findOwnerById(owner.getOwnerId())).thenReturn(owner);
+        Consumer consumer = createConsumer(owner);
+        consumer.getOwner().setContentAccessModeList(expectedMode);
+        when(consumerCurator.verifyAndLookupConsumer(anyString()))
+            .thenReturn(consumer);
+
+        Response contentAccess = consumerResource
+            .getContentAccessBody("test-uuid", null);
+
+        assertEquals("Not modified since date supplied.", contentAccess.getEntity());
+    }
+
+    @Test
+    void contentAccessGetModified() {
+        String expectedMode = "owner-ca-mode-list";
+        Owner owner = createOwner();
+        when(ownerCurator.findOwnerById(owner.getOwnerId())).thenReturn(owner);
+        Consumer consumer = createConsumer(owner);
+        consumer.getOwner().setContentAccessModeList(expectedMode);
+        when(consumerCurator.verifyAndLookupConsumer(anyString()))
+            .thenReturn(consumer);
+        when(contentAccessManager.hasCertChangedSince(any(Consumer.class), any(Date.class)))
+            .thenReturn(true);
+        ContentAccessCertificate expectedCertificate = createContentAccessCertificate(
+            "expected-key", "expected-cert", 18084729L);
+        when(contentAccessManager.getCertificate(any(Consumer.class))).thenReturn(expectedCertificate);
+
+        Response contentAccess = consumerResource
+            .getContentAccessBody("test-uuid", "Fri, 06 Oct 2023 08:20:51 Z");
+
+        ContentAccessListing listing = (ContentAccessListing) contentAccess.getEntity();
+        Map<Long, List<String>> contentListing = listing.getContentListing();
+        assertFalse(contentListing.isEmpty());
+    }
+
+    @Test
+    void contentAccessIfModifiedSinceLocale() {
+        Locale.setDefault(Locale.FRANCE);
+        String expectedMode = "owner-ca-mode-list";
+        Owner owner = createOwner();
+        when(ownerCurator.findOwnerById(owner.getOwnerId())).thenReturn(owner);
+        Consumer consumer = createConsumer(owner);
+        consumer.getOwner().setContentAccessModeList(expectedMode);
+        when(consumerCurator.verifyAndLookupConsumer(anyString()))
+            .thenReturn(consumer);
+        when(contentAccessManager.hasCertChangedSince(any(Consumer.class), any(Date.class)))
+            .thenReturn(true);
+        ContentAccessCertificate expectedCertificate = createContentAccessCertificate(
+            "expected-key", "expected-cert", 18084729L);
+        when(contentAccessManager.getCertificate(any(Consumer.class))).thenReturn(expectedCertificate);
+
+        Response contentAccess = consumerResource
+            .getContentAccessBody("test-uuid", "Fri, 06 Oct 2023 08:20:51 Z");
+
+        ContentAccessListing listing = (ContentAccessListing) contentAccess.getEntity();
+        Map<Long, List<String>> contentListing = listing.getContentListing();
+        assertFalse(contentListing.isEmpty());
     }
 
     @Test
