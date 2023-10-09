@@ -178,8 +178,8 @@ public class ContentCuratorTest extends DatabaseTestFixture {
 
         this.contentCurator.flush();
 
-        assertThrows(PersistenceException.class, () ->
-            this.contentCurator.bulkDeleteByUuids(Set.of(content.getUuid())));
+        assertThrows(PersistenceException.class,
+            () -> this.contentCurator.bulkDeleteByUuids(Set.of(content.getUuid())));
     }
 
     @Test
@@ -190,8 +190,8 @@ public class ContentCuratorTest extends DatabaseTestFixture {
 
         this.contentCurator.flush();
 
-        assertThrows(PersistenceException.class, () ->
-            this.contentCurator.bulkDeleteByUuids(Set.of(content.getUuid())));
+        assertThrows(PersistenceException.class,
+            () -> this.contentCurator.bulkDeleteByUuids(Set.of(content.getUuid())));
     }
 
     @Test

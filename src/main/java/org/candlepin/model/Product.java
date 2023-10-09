@@ -209,7 +209,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @CollectionTable(name = "cp2_product_attributes", joinColumns = @JoinColumn(name = "product_uuid"))
     @MapKeyColumn(name = "name")
     @Column(name = "value")
-    @Cascade({CascadeType.DELETE, CascadeType.PERSIST})
+    @Cascade({ CascadeType.DELETE, CascadeType.PERSIST })
     @Fetch(FetchMode.SUBSELECT)
     @Immutable
     @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
@@ -217,7 +217,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     @OneToMany(mappedBy = "product")
     @BatchSize(size = 32)
-    @Cascade({CascadeType.DELETE, CascadeType.PERSIST})
+    @Cascade({ CascadeType.DELETE, CascadeType.PERSIST })
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
     @Immutable
     @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
@@ -229,7 +229,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * fetch.
      */
     @ElementCollection
-    @CollectionTable(name = "cp2_product_dependent_products",
+    @CollectionTable(
+        name = "cp2_product_dependent_products",
         joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @BatchSize(size = 32)
@@ -246,17 +247,16 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     private boolean locked;
 
     @OneToMany(mappedBy = "product")
-    @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    @Cascade({ org.hibernate.annotations.CascadeType.ALL })
     @BatchSize(size = 1000)
     @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     @Immutable
     private Set<Branding> branding;
 
     @ManyToMany
-    @JoinTable(
-        name = "cp2_product_provided_products",
-        joinColumns = {@JoinColumn(name = "product_uuid", insertable = false, updatable = false)},
-        inverseJoinColumns = {@JoinColumn(name = "provided_product_uuid")})
+    @JoinTable(name = "cp2_product_provided_products",
+        joinColumns = { @JoinColumn(name = "product_uuid", insertable = false, updatable = false) },
+        inverseJoinColumns = { @JoinColumn(name = "provided_product_uuid") })
     @BatchSize(size = 1000)
     @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     @Immutable

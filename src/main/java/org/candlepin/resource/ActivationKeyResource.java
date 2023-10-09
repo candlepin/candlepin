@@ -16,7 +16,7 @@ package org.candlepin.resource;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Verify;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
@@ -56,9 +56,7 @@ import java.util.regex.Pattern;
 import javax.inject.Inject;
 
 
-/**
- * ActivationKeyResource
- */
+
 public class ActivationKeyResource implements ActivationKeyApi {
     private static final Logger log = LoggerFactory.getLogger(ActivationKeyResource.class);
     private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
@@ -66,7 +64,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     private final ActivationKeyCurator activationKeyCurator;
     private final ActivationKeyContentOverrideCurator contentOverrideCurator;
     private final OwnerProductCurator ownerProductCurator;
-    private final PoolManager poolManager;
+    private final PoolService poolService;
     private final I18n i18n;
     private final ServiceLevelValidator serviceLevelValidator;
     private final ActivationKeyRules activationKeyRules;
@@ -76,14 +74,14 @@ public class ActivationKeyResource implements ActivationKeyApi {
 
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator, I18n i18n,
-        PoolManager poolManager, ServiceLevelValidator serviceLevelValidator,
+        PoolService poolService, ServiceLevelValidator serviceLevelValidator,
         ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator,
         ModelTranslator translator, DTOValidator dtoValidator,
         ActivationKeyContentOverrideCurator contentOverrideCurator, ContentOverrideValidator coValidator) {
 
         this.activationKeyCurator = Objects.requireNonNull(activationKeyCurator);
         this.i18n = Objects.requireNonNull(i18n);
-        this.poolManager = Objects.requireNonNull(poolManager);
+        this.poolService = Objects.requireNonNull(poolService);
         this.serviceLevelValidator = Objects.requireNonNull(serviceLevelValidator);
         this.activationKeyRules = Objects.requireNonNull(activationKeyRules);
         this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
@@ -131,8 +129,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     public Iterable<PoolDTO> getActivationKeyPools(@Verify(ActivationKey.class) String activationKeyId) {
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         return () -> new TransformedIterator<>(key.getPools().iterator(),
-            akp -> translator.translate(akp.getPool(), PoolDTO.class)
-        );
+            akp -> translator.translate(akp.getPool(), PoolDTO.class));
     }
 
     @Override
@@ -210,8 +207,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
         // Make sure we don't try to register the pool twice.
         if (key.hasPool(pool)) {
             throw new BadRequestException(
-                i18n.tr("Pool ID \"{0}\" has already been registered with this activation key", poolId)
-            );
+                i18n.tr("Pool ID \"{0}\" has already been registered with this activation key", poolId));
         }
 
         key.addPool(pool, quantity);
@@ -244,8 +240,8 @@ public class ActivationKeyResource implements ActivationKeyApi {
         // Make sure we don't try to register the product ID twice.
         if (key.hasProduct(product)) {
             throw new BadRequestException(
-                i18n.tr("Product ID \"{0}\" has already been registered with this activation key", productId)
-            );
+                i18n.tr("Product ID \"{0}\" has already been registered with this activation key",
+                    productId));
         }
 
         key.addProduct(product);
@@ -370,7 +366,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     private Pool findPool(String poolId) {
-        Pool pool = poolManager.get(poolId);
+        Pool pool = this.poolService.get(poolId);
 
         if (pool == null) {
             throw new BadRequestException(i18n.tr("Pool with id {0} could not be found.", poolId));

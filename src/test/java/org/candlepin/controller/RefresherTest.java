@@ -15,6 +15,9 @@
 package org.candlepin.controller;
 
 import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyList;
 import static org.mockito.Mockito.anyMap;
@@ -26,7 +29,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.Subscription;
@@ -34,41 +39,49 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.Transactional;
+import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 
 
-/**
- * RefresherTest
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class RefresherTest {
-    private CandlepinPoolManager poolManager;
+    @Mock
+    private PoolManager poolManager;
+    @Mock
     private SubscriptionServiceAdapter subAdapter;
+    @Mock
     private ProductServiceAdapter prodAdapter;
-    private OwnerManager ownerManager;
+    @Mock
+    private OwnerCurator ownerCurator;
+    @Mock
+    private PoolCurator poolCurator;
+    @Mock
+    private PoolConverter poolConverter;
 
     private Refresher refresher;
 
     @BeforeEach
     public void setUp() {
-        poolManager = mock(CandlepinPoolManager.class);
-        subAdapter = mock(SubscriptionServiceAdapter.class);
-        prodAdapter = mock(ProductServiceAdapter.class);
-        ownerManager = mock(OwnerManager.class);
+        Transactional transaction = mock(Transactional.class);
+        when(poolCurator.transactional()).thenReturn(transaction);
+        when(transaction.allowExistingTransactions()).thenReturn(transaction);
 
-        refresher = new Refresher(poolManager, subAdapter, prodAdapter, ownerManager)
+        refresher = new Refresher(
+            poolManager, subAdapter, prodAdapter, ownerCurator, poolCurator, poolConverter)
             .setLazyCertificateRegeneration(false);
     }
 
@@ -81,17 +94,22 @@ public class RefresherTest {
         refresher.run();
 
         verify(poolManager, times(1))
-            .refreshPoolsWithRegeneration(eq(subAdapter), eq(prodAdapter), eq(owner), eq(false));
+            .refreshPoolsWithRegeneration(subAdapter, prodAdapter, owner, false);
     }
 
     @Test
     public void testRefreshDateSet() {
+        Date initial = Util.yesterday();
         Owner owner = TestUtil.createOwner();
 
         refresher.add(owner);
         refresher.run();
 
-        verify(ownerManager).updateRefreshDate(owner);
+        verify(ownerCurator).merge(owner);
+
+        assertNotNull(owner.getLastRefreshed());
+        assertNotEquals(owner.getLastRefreshed(), initial);
+        assertTrue(initial.before(owner.getLastRefreshed()));
     }
 
     @Test
@@ -102,7 +120,7 @@ public class RefresherTest {
         refresher.add(product);
         refresher.run();
 
-        verify(subAdapter, times(1)).getSubscriptionsByProductId(eq(product.getId()));
+        verify(subAdapter, times(1)).getSubscriptionsByProductId(product.getId());
     }
 
     @Test
@@ -118,21 +136,18 @@ public class RefresherTest {
         subscription.setId("subId");
         subscription.setOwner(owner);
 
-        List<Pool> pools = Arrays.asList(pool);
-        List<SubscriptionInfo> subscriptions = Arrays.asList(subscription);
+        List<SubscriptionInfo> subscriptions = List.of(subscription);
 
         this.mockAdapterSubs(owner.getKey(), subscriptions);
         this.mockAdapterProductSubs(product.getId(), subscriptions);
         when(subAdapter.getSubscription("subId")).thenReturn(subscription);
-
-        when(poolManager.getBySubscriptionId(owner, "subId")).thenReturn(pools);
 
         refresher.add(owner);
         refresher.add(product);
         refresher.run();
 
         verify(poolManager, times(1))
-            .refreshPoolsWithRegeneration(eq(subAdapter), eq(prodAdapter), eq(owner), eq(false));
+            .refreshPoolsWithRegeneration(subAdapter, prodAdapter, owner, false);
         verify(poolManager, times(0)).updatePoolsForPrimaryPool(anyList(),
             any(Pool.class), eq(pool.getQuantity()), eq(false), anyMap());
     }
@@ -151,16 +166,14 @@ public class RefresherTest {
         Owner owner = TestUtil.createOwner();
         subscription.setOwner(owner);
 
-        List<Pool> pools = Arrays.asList(pool);
-        List<SubscriptionInfo> subscriptions = Arrays.asList(subscription);
+        List<SubscriptionInfo> subscriptions = List.of(subscription);
 
         this.mockAdapterProductSubs(product.getId(), subscriptions);
         this.mockAdapterProductSubs(product2.getId(), subscriptions);
         when(subAdapter.getSubscription("subId")).thenReturn(subscription);
-        when(poolManager.getBySubscriptionId(owner, "subId")).thenReturn(pools);
 
         Pool mainPool = TestUtil.copyFromSub(subscription);
-        when(poolManager.convertToPrimaryPool(subscription)).thenReturn(mainPool);
+        when(poolConverter.convertToPrimaryPool(subscription)).thenReturn(mainPool);
         refresher.add(product);
         refresher.add(product2);
         refresher.run();
@@ -170,11 +183,11 @@ public class RefresherTest {
     }
 
     protected void mockAdapterSubs(String input, Collection<? extends SubscriptionInfo> output) {
-        doAnswer(iom -> output).when(this.subAdapter).getSubscriptions(eq(input));
+        doAnswer(iom -> output).when(this.subAdapter).getSubscriptions(input);
     }
 
     protected void mockAdapterProductSubs(String input, Collection<? extends SubscriptionInfo> output) {
-        doAnswer(iom -> output).when(this.subAdapter).getSubscriptionsByProductId(eq(input));
+        doAnswer(iom -> output).when(this.subAdapter).getSubscriptionsByProductId(input);
     }
 
 }

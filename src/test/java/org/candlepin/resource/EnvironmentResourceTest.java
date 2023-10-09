@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -29,7 +28,7 @@ import static org.mockito.Mockito.when;
 import org.candlepin.async.JobManager;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.EntitlementCertificateGenerator;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.SimpleModelTranslator;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
@@ -73,6 +72,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+
+
 @ExtendWith(MockitoExtension.class)
 class EnvironmentResourceTest {
 
@@ -86,7 +87,7 @@ class EnvironmentResourceTest {
     @Mock
     private ConsumerResource consumerResource;
     @Mock
-    private PoolManager poolManager;
+    private PoolService poolService;
     @Mock
     private ConsumerCurator consumerCurator;
     @Mock
@@ -131,7 +132,7 @@ class EnvironmentResourceTest {
             this.i18n,
             this.envContentCurator,
             this.consumerResource,
-            this.poolManager,
+            this.poolService,
             this.consumerCurator,
             this.ownerContentCurator,
             this.rdbmsExceptionTranslator,
@@ -143,8 +144,7 @@ class EnvironmentResourceTest {
             this.identityCertificateCurator,
             this.contentAccessCertificateCurator,
             this.entitlementCurator,
-            this.entCertGenerator
-        );
+            this.entCertGenerator);
 
         this.owner = TestUtil.createOwner("owner1");
         this.environment1 = createEnvironment(owner, ENV_ID_1);
@@ -173,17 +173,17 @@ class EnvironmentResourceTest {
     void canDeleteEmptyEnvironment() {
         when(this.envCurator.get(anyString())).thenReturn(this.environment1);
         List<Consumer> mockedQuery = mockedQueryOf().list();
-        when(this.envCurator.getEnvironmentConsumers(eq(this.environment1)))
+        when(this.envCurator.getEnvironmentConsumers(this.environment1))
             .thenReturn(mockedQuery);
 
         this.environmentResource.deleteEnvironment(BAD_ID);
 
-        verifyNoInteractions(this.poolManager);
+        verifyNoInteractions(this.poolService);
         verifyNoInteractions(this.consumerCurator);
         verifyNoInteractions(this.certificateSerialCurator);
         verifyNoInteractions(this.identityCertificateCurator);
         verifyNoInteractions(this.contentAccessCertificateCurator);
-        verify(this.envCurator).delete(eq(this.environment1));
+        verify(this.envCurator).delete(this.environment1);
     }
 
     @Test
@@ -194,7 +194,7 @@ class EnvironmentResourceTest {
         consumer2.setContentAccessCert(null);
         when(this.envCurator.get(anyString())).thenReturn(this.environment1);
         List<Consumer> mockedQuery = mockedQueryOf(consumer1, consumer2).list();
-        when(this.envCurator.getEnvironmentConsumers(eq(this.environment1)))
+        when(this.envCurator.getEnvironmentConsumers(this.environment1))
             .thenReturn(mockedQuery);
 
         this.environmentResource.deleteEnvironment(ENV_ID_1);
@@ -202,7 +202,7 @@ class EnvironmentResourceTest {
         verify(this.identityCertificateCurator).deleteByIds(anyList());
         verify(this.contentAccessCertificateCurator).deleteByIds(anyList());
         verify(this.certificateSerialCurator).revokeByIds(anyList());
-        verify(this.envCurator).delete(eq(this.environment1));
+        verify(this.envCurator).delete(this.environment1);
     }
 
     @Test
@@ -215,13 +215,13 @@ class EnvironmentResourceTest {
         consumer2.addEnvironment(environment2);
         when(this.envCurator.get(anyString())).thenReturn(this.environment1);
         List<Consumer> mockedQuery = mockedQueryOf(consumer1, consumer2).list();
-        when(this.envCurator.getEnvironmentConsumers(eq(this.environment1)))
+        when(this.envCurator.getEnvironmentConsumers(this.environment1))
             .thenReturn(mockedQuery);
 
         this.environmentResource.deleteEnvironment(ENV_ID_1);
 
-        verify(this.consumerCurator).delete(eq(consumer1));
-        verify(this.contentAccessManager).removeContentAccessCert(eq(consumer2));
+        verify(this.consumerCurator).delete(consumer1);
+        verify(this.contentAccessManager).removeContentAccessCert(consumer2);
     }
 
     @Test
@@ -230,7 +230,7 @@ class EnvironmentResourceTest {
 
         assertThrows(NotFoundException.class, () -> this.environmentResource
             .createConsumerInEnvironment("randomEnvId1, randomEnvId2",
-            dto, "userName", null));
+                dto, "userName", null));
     }
 
     @Test
@@ -264,10 +264,10 @@ class EnvironmentResourceTest {
         dto = this.environmentResource.createConsumerInEnvironment(envIds, dto, "userName", null);
 
         assertNotNull(dto.getEnvironments());
-        assertEquals(dto.getEnvironments().size(), 3);
-        assertEquals(dto.getEnvironments().get(0).getId(), "env1");
-        assertEquals(dto.getEnvironments().get(1).getId(), "env3");
-        assertEquals(dto.getEnvironments().get(2).getId(), "env2");
+        assertEquals(3, dto.getEnvironments().size());
+        assertEquals("env1", dto.getEnvironments().get(0).getId());
+        assertEquals("env3", dto.getEnvironments().get(1).getId());
+        assertEquals("env2", dto.getEnvironments().get(2).getId());
     }
 
     @SuppressWarnings("unchecked")

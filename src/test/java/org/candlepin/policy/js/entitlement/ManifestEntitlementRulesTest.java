@@ -14,7 +14,6 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -42,6 +41,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 
 
 public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
@@ -321,7 +321,6 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationError error = results.getErrors().get(0);
         assertEquals("pool.not.available.to.manifest.consumers", error.getResourceKey());
     }
-
 
     @Test
     public void preEntitlementShouldNotAllowOverConsumptionOfEntitlements() {

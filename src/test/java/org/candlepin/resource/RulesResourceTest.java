@@ -25,6 +25,8 @@ import org.apache.commons.codec.binary.Base64;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+
+
 /**
  * RulesResourceTest
  */

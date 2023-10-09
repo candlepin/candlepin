@@ -14,6 +14,7 @@
  */
 package org.candlepin.bind;
 
+import org.candlepin.controller.PoolService;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -22,7 +23,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.pool.PoolRules;
 
 import org.apache.commons.collections.CollectionUtils;
 
@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -43,7 +44,7 @@ import javax.inject.Inject;
  */
 public class PostBindBonusPoolsOp implements BindOperation {
 
-    private final PoolRules poolRules;
+    private final PoolService poolService;
     private final ConsumerTypeCurator consumerTypeCurator;
     private final PoolCurator poolCurator;
     private final Enforcer enforcer;
@@ -52,14 +53,14 @@ public class PostBindBonusPoolsOp implements BindOperation {
     private List<Pool> subPoolsForStackIds = null;
 
     @Inject
-    public PostBindBonusPoolsOp(PoolRules poolRules, ConsumerTypeCurator consumerTypeCurator,
+    public PostBindBonusPoolsOp(PoolService poolService, ConsumerTypeCurator consumerTypeCurator,
         PoolCurator poolCurator, Enforcer enforcer, PoolOpProcessor poolOpProcessor) {
 
-        this.poolRules = poolRules;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.poolCurator = poolCurator;
-        this.enforcer = enforcer;
-        this.poolOpProcessor = poolOpProcessor;
+        this.poolService = Objects.requireNonNull(poolService);
+        this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
+        this.poolCurator = Objects.requireNonNull(poolCurator);
+        this.enforcer = Objects.requireNonNull(enforcer);
+        this.poolOpProcessor = Objects.requireNonNull(poolOpProcessor);
     }
 
     @Override
@@ -91,8 +92,8 @@ public class PostBindBonusPoolsOp implements BindOperation {
         if (!stackIds.isEmpty() && !ctype.isManifest()) {
             subPoolsForStackIds = poolCurator.getSubPoolsForStackIds(consumer, stackIds);
             if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
-                poolRules.updatePoolsFromStack(consumer, subPoolsForStackIds,
-                    entitlements.values(), false);
+                this.poolService.updatePoolsFromStack(
+                    consumer, subPoolsForStackIds, entitlements.values(), false);
             }
         }
         else {

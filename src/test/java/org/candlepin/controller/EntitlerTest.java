@@ -18,10 +18,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.nullable;
@@ -94,34 +94,47 @@ import javax.inject.Provider;
 
 
 
-/**
- * EntitlerTest
- */
 @ExtendWith(MockitoExtension.class)
 public class EntitlerTest {
     private I18n i18n;
     private Entitler entitler;
     private EntitlementRulesTranslator translator;
 
-    @Mock private PoolManager pm;
-    @Mock private EventFactory ef;
-    @Mock private EventSink sink;
-    @Mock private Owner owner;
-    @Mock private Consumer consumer;
-    @Mock private ConsumerCurator cc;
-    @Mock private EntitlementCurator entitlementCurator;
-    @Mock private Configuration config;
-    @Mock private OwnerCurator ownerCurator;
-    @Mock private PoolCurator poolCurator;
-    @Mock private ProductServiceAdapter productAdapter;
-    @Mock private ProductManager productManager;
-    @Mock private ContentManager contentManager;
-    @Mock private ConsumerTypeCurator consumerTypeCurator;
+    @Mock
+    private PoolManager pm;
+    @Mock
+    private EventFactory ef;
+    @Mock
+    private EventSink sink;
+    @Mock
+    private Owner owner;
+    @Mock
+    private Consumer consumer;
+    @Mock
+    private ConsumerCurator cc;
+    @Mock
+    private EntitlementCurator entitlementCurator;
+    @Mock
+    private Configuration config;
+    @Mock
+    private OwnerCurator ownerCurator;
+    @Mock
+    private PoolCurator poolCurator;
+    @Mock
+    private ProductServiceAdapter productAdapter;
+    @Mock
+    private PoolService poolService;
+    @Mock
+    private ConsumerTypeCurator consumerTypeCurator;
 
-    @Mock private ContentCurator mockContentCurator;
-    @Mock private OwnerContentCurator mockOwnerContentCurator;
-    @Mock private ProductCurator mockProductCurator;
-    @Mock private OwnerProductCurator mockOwnerProductCurator;
+    @Mock
+    private ContentCurator mockContentCurator;
+    @Mock
+    private OwnerContentCurator mockOwnerContentCurator;
+    @Mock
+    private ProductCurator mockProductCurator;
+    @Mock
+    private OwnerProductCurator mockOwnerProductCurator;
 
     private RefreshWorker refreshWorker;
     private Provider<RefreshWorker> refreshWorkerProvider;
@@ -138,8 +151,7 @@ public class EntitlerTest {
         i18n = I18nFactory.getI18n(
             getClass(),
             Locale.US,
-            I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
-        );
+            I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK);
         translator = new EntitlementRulesTranslator(i18n);
 
         this.refreshWorker = spy(new RefreshWorker(this.poolCurator, this.mockProductCurator,
@@ -147,7 +159,7 @@ public class EntitlerTest {
 
         this.refreshWorkerProvider = () -> refreshWorker;
 
-        entitler = new Entitler(pm, cc, i18n, ef, sink, translator, entitlementCurator, config,
+        entitler = new Entitler(pm, poolService, cc, i18n, ef, sink, translator, entitlementCurator, config,
             ownerCurator, poolCurator, productAdapter, consumerTypeCurator, this.refreshWorkerProvider);
     }
 
@@ -168,8 +180,7 @@ public class EntitlerTest {
             }
 
             return output;
-        })
-        .when(this.refreshWorker).execute(eq(owner));
+        }).when(this.refreshWorker).execute(owner);
     }
 
     @Test
@@ -178,12 +189,12 @@ public class EntitlerTest {
         Entitlement ent = mock(Entitlement.class);
         List<Entitlement> eList = new ArrayList<>();
         eList.add(ent);
-        when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
+        when(cc.findByUuid("abcd1234")).thenReturn(consumer);
 
         Map<String, Integer> pQs = new HashMap<>();
         pQs.put(poolid, 1);
 
-        when(pm.entitleByPools(eq(consumer), eq(pQs))).thenReturn(eList);
+        when(pm.entitleByPools(consumer, pQs)).thenReturn(eList);
 
         List<Entitlement> ents = entitler.bindByPoolQuantities("abcd1234", pQs);
         assertNotNull(ents);
@@ -199,7 +210,7 @@ public class EntitlerTest {
 
         Map<String, Integer> pQs = new HashMap<>();
         pQs.put(poolid, 1);
-        when(pm.entitleByPools(eq(consumer), eq(pQs))).thenReturn(eList);
+        when(pm.entitleByPools(consumer, pQs)).thenReturn(eList);
 
         List<Entitlement> ents = entitler.bindByPoolQuantity(consumer, poolid, 1);
         assertNotNull(ents);
@@ -215,20 +226,20 @@ public class EntitlerTest {
             .setContentAccessMode("entitlement");
 
         Set<String> pids = Set.of("prod1", "prod2", "prod3");
-        when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
+        when(cc.findByUuid("abcd1234")).thenReturn(consumer);
         when(consumer.getOwnerId()).thenReturn(owner.getOwnerId());
-        when(ownerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
+        when(ownerCurator.findOwnerById(owner.getId())).thenReturn(owner);
 
         entitler.bindByProducts(pids, "abcd1234", null, null);
 
         AutobindData data = new AutobindData(consumer, this.owner)
             .forProducts(pids);
 
-        verify(pm).entitleByProducts(eq(data));
+        verify(pm).entitleByProducts(data);
     }
 
     @Test
-    public void bindByProducts() throws Exception  {
+    public void bindByProducts() throws Exception {
         Set<String> pids = Set.of("prod1", "prod2", "prod3");
         AutobindData data = new AutobindData(consumer, owner)
             .forProducts(pids);
@@ -244,8 +255,8 @@ public class EntitlerTest {
         Consumer c = TestUtil.createConsumer(); // keeps me from casting null
         Map<String, Integer> pQs = new HashMap<>();
         pQs.put(poolid, 1);
-        when(cc.findByUuid(eq(c.getUuid()))).thenReturn(c);
-        when(pm.entitleByPools(eq(c), eq(pQs))).thenThrow(new IllegalArgumentException());
+        when(cc.findByUuid(c.getUuid())).thenReturn(c);
+        when(pm.entitleByPools(c, pQs)).thenThrow(new IllegalArgumentException());
 
         assertThrows(BadRequestException.class, () -> entitler.bindByPoolQuantities(c.getUuid(), pQs));
     }
@@ -317,10 +328,10 @@ public class EntitlerTest {
         EntitlementRefusedException ere = new EntitlementRefusedException(fakeResult);
 
         when(pool.getId()).thenReturn(poolid);
-        when(poolCurator.get(eq(poolid))).thenReturn(pool);
+        when(poolCurator.get(poolid)).thenReturn(pool);
         Map<String, Integer> pQs = new HashMap<>();
         pQs.put(poolid, 1);
-        when(pm.entitleByPools(eq(consumer), eq(pQs))).thenThrow(ere);
+        when(pm.entitleByPools(consumer, pQs)).thenThrow(ere);
         entitler.bindByPoolQuantity(consumer, poolid, 1);
     }
 
@@ -393,8 +404,8 @@ public class EntitlerTest {
             .thenReturn(evt2);
         entitler.sendEvents(ents);
 
-        verify(sink).queueEvent(eq(evt1));
-        verify(sink).queueEvent(eq(evt2));
+        verify(sink).queueEvent(evt1);
+        verify(sink).queueEvent(evt2);
     }
 
     @Test
@@ -417,7 +428,7 @@ public class EntitlerTest {
             .setKey("o1")
             .setDisplayName("o1")
             .setContentAccessMode("entitlement");
-        when(ownerCurator.findOwnerById(eq(owner1.getId()))).thenReturn(owner1);
+        when(ownerCurator.findOwnerById(owner1.getId())).thenReturn(owner1);
 
         Product product = TestUtil.createProduct();
 
@@ -431,7 +442,7 @@ public class EntitlerTest {
         consumer.setCreated(thirtySixHoursAgo);
         consumer.setFact("virt.uuid", "1");
 
-        when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
+        when(cc.findByUuid("abcd1234")).thenReturn(consumer);
 
         Entitlement e1 = TestUtil.createEntitlement(owner1, consumer, p1, null);
         e1.setEndDateOverride(twelveHoursAgo);
@@ -440,7 +451,7 @@ public class EntitlerTest {
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Collections.singletonList(e1).iterator());
-        when(entitlementCurator.findByPoolAttribute(eq(consumer), eq("unmapped_guests_only"), eq("true")))
+        when(entitlementCurator.findByPoolAttribute(consumer, "unmapped_guests_only", "true"))
             .thenReturn(cqmock);
         when(config.getInt(ConfigProperties.ENTITLER_BULK_SIZE)).thenReturn(1000);
 
@@ -450,8 +461,8 @@ public class EntitlerTest {
         AutobindData data = new AutobindData(consumer, owner1)
             .forProducts(pids);
 
-        verify(pm).entitleByProducts(eq(data));
-        verify(pm).revokeEntitlements(Collections.singletonList(e1));
+        verify(pm).entitleByProducts(data);
+        verify(poolService).revokeEntitlements(Collections.singletonList(e1));
     }
 
     @Test
@@ -460,14 +471,14 @@ public class EntitlerTest {
         Pool pool2 = createExpiredPool("2");
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(entsOf(pool1, pool2).iterator());
-        when(entitlementCurator.findByPoolAttribute(eq("unmapped_guests_only"), eq("true")))
+        when(entitlementCurator.findByPoolAttribute("unmapped_guests_only", "true"))
             .thenReturn(cqmock);
         when(config.getInt(ConfigProperties.ENTITLER_BULK_SIZE)).thenReturn(1000);
 
         int total = entitler.revokeUnmappedGuestEntitlements();
 
         assertEquals(1, total);
-        verify(pm).revokeEntitlements(Collections.singletonList(entOf(pool2)));
+        verify(poolService).revokeEntitlements(Collections.singletonList(entOf(pool2)));
     }
 
     @Test
@@ -476,15 +487,15 @@ public class EntitlerTest {
         Pool pool2 = createExpiredPool("2");
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(entsOf(pool1, pool2).iterator());
-        when(entitlementCurator.findByPoolAttribute(eq("unmapped_guests_only"), eq("true")))
+        when(entitlementCurator.findByPoolAttribute("unmapped_guests_only", "true"))
             .thenReturn(cqmock);
         when(config.getInt(ConfigProperties.ENTITLER_BULK_SIZE)).thenReturn(1);
 
         int total = entitler.revokeUnmappedGuestEntitlements();
 
         assertEquals(2, total);
-        verify(pm).revokeEntitlements(Collections.singletonList(entOf(pool1)));
-        verify(pm).revokeEntitlements(Collections.singletonList(entOf(pool2)));
+        verify(poolService).revokeEntitlements(Collections.singletonList(entOf(pool1)));
+        verify(poolService).revokeEntitlements(Collections.singletonList(entOf(pool2)));
     }
 
     @Test
@@ -500,18 +511,18 @@ public class EntitlerTest {
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p.getId());
 
-        when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
+        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
         doReturn(devProdDTOs).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
 
-        this.mockRefresh(owner, Arrays.asList(p), null);
+        this.mockRefresh(owner, List.of(p), null);
 
-        when(pm.createPool(any(Pool.class))).thenReturn(devPool);
+        when(poolService.createPool(any(Pool.class))).thenReturn(devPool);
         when(devPool.getId()).thenReturn("test_pool_id");
 
         AutobindData ad = new AutobindData(devSystem, owner);
         entitler.bindByProducts(ad);
-        verify(pm).createPool(any(Pool.class));
+        verify(poolService).createPool(any(Pool.class));
     }
 
     @Test
@@ -525,7 +536,7 @@ public class EntitlerTest {
             .setProductId(p.getId())
             .setProductName(p.getName()));
 
-        when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(true);
+        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
 
         AutobindData ad = new AutobindData(devSystem, owner);
 
@@ -543,7 +554,7 @@ public class EntitlerTest {
             .setProductId(p.getId())
             .setProductName(p.getName()));
 
-        when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
+        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
 
         AutobindData ad = new AutobindData(devSystem, owner);
 
@@ -564,7 +575,7 @@ public class EntitlerTest {
             .setProductId(ip.getId())
             .setProductName(ip.getName()));
 
-        when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
+        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
         doReturn(devProdDTOs).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
 
@@ -599,14 +610,14 @@ public class EntitlerTest {
             .setProductId(ip2.getId())
             .setProductName(ip2.getName()));
 
-        when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
+        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
         doReturn(devProdDTOs).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
 
         this.mockRefresh(owner, Arrays.asList(p, ip1, ip2), null);
 
         Pool expectedPool = entitler.assembleDevPool(devSystem, owner, p.getId());
-        when(pm.createPool(any(Pool.class))).thenReturn(expectedPool);
+        when(poolService.createPool(any(Pool.class))).thenReturn(expectedPool);
         AutobindData ad = new AutobindData(devSystem, owner);
         entitler.bindByProducts(ad);
     }
@@ -692,7 +703,7 @@ public class EntitlerTest {
         Pool pool = TestUtil.createPool(owner, product);
         pool.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
 
-        Date twelveHoursAgo =  new Date(new Date().getTime() - 12L * 60L * 60L * 1000L);
+        Date twelveHoursAgo = new Date(new Date().getTime() - 12L * 60L * 60L * 1000L);
 
         Consumer c;
         c = TestUtil.createConsumer(owner);

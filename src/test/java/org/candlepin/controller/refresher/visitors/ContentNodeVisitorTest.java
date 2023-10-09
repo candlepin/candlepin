@@ -553,9 +553,9 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
     }
 
     /**
-     * This test verifies that a content version collision on a given content ID can be resolved
-     * by clearing the entity version of the existing content, operating under the assumption that
-     * the current content is broken and the new one is the "correct" entity for the version.
+     * This test verifies that a content version collision on a given content ID can be resolved by
+     * clearing the entity version of the existing content, operating under the assumption that the
+     * current content is broken and the new one is the "correct" entity for the version.
      */
     @Test
     public void testEntityVersionCollisionResolution() {

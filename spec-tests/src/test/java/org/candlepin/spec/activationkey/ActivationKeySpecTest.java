@@ -914,8 +914,8 @@ public class ActivationKeySpecTest {
             createActivationKey(adminClient, owner),
             createActivationKey(adminClient, owner));
 
-        List<ActivationKeyDTO> listOfActivationKeys =
-            adminClient.owners().ownerActivationKeys(owner.getKey(), null);
+        List<ActivationKeyDTO> listOfActivationKeys = adminClient.owners().ownerActivationKeys(owner.getKey(),
+            null);
         assertThat(listOfActivationKeys)
             .hasSize(3)
             .usingRecursiveComparison()
@@ -1036,8 +1036,8 @@ public class ActivationKeySpecTest {
             superadminUser.getPassword());
 
         ActivationKeyDTO activationKey = createActivationKey(superadminClient, owner);
-        List<ActivationKeyDTO> listOfActivationKeys =
-            adminClient.owners().ownerActivationKeys(owner.getKey(), null);
+        List<ActivationKeyDTO> listOfActivationKeys = adminClient.owners().ownerActivationKeys(owner.getKey(),
+            null);
         assertThat(listOfActivationKeys)
             .hasSize(1);
         superadminClient.activationKeys().deleteActivationKey(activationKey.getId());
@@ -1053,8 +1053,8 @@ public class ActivationKeySpecTest {
         ApiClient userClient = createUserClient(adminClient, owner);
 
         ActivationKeyDTO activationKey = createActivationKey(userClient, owner);
-        List<ActivationKeyDTO> listOfActivationKeys =
-            adminClient.owners().ownerActivationKeys(owner.getKey(), null);
+        List<ActivationKeyDTO> listOfActivationKeys = adminClient.owners().ownerActivationKeys(owner.getKey(),
+            null);
         assertThat(listOfActivationKeys)
             .hasSize(1);
         userClient.activationKeys().deleteActivationKey(activationKey.getId());
@@ -1144,8 +1144,8 @@ public class ActivationKeySpecTest {
         OwnerDTO owner = createOwner(adminClient);
         ActivationKeyDTO activationKey = createActivationKey(adminClient, owner);
 
-        ActivationKeyDTO updatedActivationKey =
-            updateActivationKey(adminClient, activationKey.autoAttach(true));
+        ActivationKeyDTO updatedActivationKey = updateActivationKey(adminClient,
+            activationKey.autoAttach(true));
         assertThat(updatedActivationKey)
             .hasFieldOrPropertyWithValue("autoAttach", true);
         updatedActivationKey = updateActivationKey(adminClient, activationKey.autoAttach(false));

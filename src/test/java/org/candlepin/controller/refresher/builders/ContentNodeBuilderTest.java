@@ -201,8 +201,8 @@ public class ContentNodeBuilderTest {
 
         ContentNodeBuilder builder = this.buildNodeBuilder();
 
-        assertThrows(IllegalStateException.class, () ->
-            builder.buildNode(this.mockNodeFactory, this.contentMapper, owner, "invalid_id"));
+        assertThrows(IllegalStateException.class,
+            () -> builder.buildNode(this.mockNodeFactory, this.contentMapper, owner, "invalid_id"));
     }
 
     @Test
@@ -218,8 +218,8 @@ public class ContentNodeBuilderTest {
 
         ContentNodeBuilder builder = this.buildNodeBuilder();
 
-        assertThrows(IllegalStateException.class, () ->
-            builder.buildNode(this.mockNodeFactory, this.contentMapper, owner, ""));
+        assertThrows(IllegalStateException.class,
+            () -> builder.buildNode(this.mockNodeFactory, this.contentMapper, owner, ""));
     }
 
     @Test
@@ -235,8 +235,8 @@ public class ContentNodeBuilderTest {
 
         ContentNodeBuilder builder = this.buildNodeBuilder();
 
-        assertThrows(IllegalStateException.class, () ->
-            builder.buildNode(this.mockNodeFactory, this.contentMapper, owner, null));
+        assertThrows(IllegalStateException.class,
+            () -> builder.buildNode(this.mockNodeFactory, this.contentMapper, owner, null));
     }
 
     @Test
@@ -252,8 +252,8 @@ public class ContentNodeBuilderTest {
 
         ContentNodeBuilder builder = this.buildNodeBuilder();
 
-        assertThrows(IllegalArgumentException.class, () ->
-            builder.buildNode(this.mockNodeFactory, this.contentMapper, null, id));
+        assertThrows(IllegalArgumentException.class,
+            () -> builder.buildNode(this.mockNodeFactory, this.contentMapper, null, id));
     }
 
 }

@@ -51,7 +51,6 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
     private Map<Owner, Set<Long>> ownerEntityVersions;
     private Map<Owner, Map<String, List<Content>>> ownerVersionedEntityMap;
 
-
     /**
      * Creates a new ContentNodeVisitor that uses the provided curators for performing database
      * operations.

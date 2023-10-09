@@ -28,6 +28,8 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+
+
 /**
  * ConsumerTypeResourceTest
  */

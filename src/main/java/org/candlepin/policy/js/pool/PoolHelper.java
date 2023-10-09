@@ -15,7 +15,7 @@
 package org.candlepin.policy.js.pool;
 
 import org.candlepin.bind.PoolOperations;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
@@ -33,6 +33,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+
 
 /**
  * Post Entitlement Helper, and some attribute utility methods.
@@ -70,7 +72,7 @@ public class PoolHelper {
      * @param pools Pools these host restricted pools are being derived from.
      * @return pools the created pools
      */
-    public static PoolOperations createHostRestrictedPools(PoolManager poolManager, Consumer consumer,
+    public static PoolOperations createHostRestrictedPools(PoolService poolService, Consumer consumer,
         List<Pool> pools, Map<String, Entitlement> sourceEntitlements,
         Map<String, Map<String, String>> attributeMaps) {
 
@@ -142,7 +144,7 @@ public class PoolHelper {
         }
 
         if (CollectionUtils.isNotEmpty(poolsToUpdateFromStack)) {
-            poolManager.updatePoolsFromStackWithoutDeletingStack(consumer, poolsToUpdateFromStack, null);
+            poolService.updatePoolsFromStack(consumer, poolsToUpdateFromStack, null, false);
         }
 
         return poolOperations;

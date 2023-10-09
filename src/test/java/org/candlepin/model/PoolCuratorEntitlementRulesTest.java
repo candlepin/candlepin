@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
@@ -35,12 +35,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
+
 /**
  * PoolCuratorEntitlementRulesTest
  */
 public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
-    private CandlepinPoolManager poolManager;
+    private PoolManager poolManager;
 
     private Owner owner;
     private Product product;
@@ -48,7 +50,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
-        poolManager = injector.getInstance(CandlepinPoolManager.class);
+        poolManager = injector.getInstance(PoolManager.class);
 
         owner = this.createOwner();
 
@@ -76,7 +78,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
             TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
-        CandlepinPoolManager anotherEntitler = injector.getInstance(CandlepinPoolManager.class);
+        PoolManager anotherEntitler = injector.getInstance(PoolManager.class);
 
         Map<String, Integer> poolQuantities = new HashMap<>();
         poolQuantities.put(consumerPool.getId(), 1);
@@ -97,7 +99,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
             TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
         poolCurator.create(consumerPool);
 
-        CandlepinPoolManager anotherEntitler = injector.getInstance(CandlepinPoolManager.class);
+        PoolManager anotherEntitler = injector.getInstance(PoolManager.class);
 
         Map<String, Integer> poolQuantities = new HashMap<>();
         poolQuantities.put(consumerPool.getId(), 1);

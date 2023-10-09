@@ -997,9 +997,9 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
     }
 
     /**
-     * This test verifies that a product version collision on a given product ID can be resolved
-     * by clearing the entity version of the existing product, operating under the assumption that
-     * the current product is broken and the new one is the "correct" entity for the version.
+     * This test verifies that a product version collision on a given product ID can be resolved by
+     * clearing the entity version of the existing product, operating under the assumption that the
+     * current product is broken and the new one is the "correct" entity for the version.
      */
     @Test
     public void testEntityVersionCollisionResolution() {

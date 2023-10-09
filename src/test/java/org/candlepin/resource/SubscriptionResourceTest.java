@@ -26,6 +26,7 @@ import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
@@ -51,12 +52,8 @@ import javax.ws.rs.core.Response;
 
 
 
-/**
- * SubscriptionResourceTest
- */
 @ExtendWith(MockitoExtension.class)
 public class SubscriptionResourceTest {
-
     @Mock
     private SubscriptionServiceAdapter subService;
     @Mock
@@ -64,9 +61,11 @@ public class SubscriptionResourceTest {
     @Mock
     private PoolManager poolManager;
     @Mock
+    private PoolService poolService;
+    @Mock
     private ModelTranslator modelTranslator;
     @Mock
-    private ContentAccessManager mockContentAccessManager;
+    private ContentAccessManager contentAccessManager;
 
     private DevConfig config;
     private SubscriptionResource subResource;
@@ -79,7 +78,7 @@ public class SubscriptionResourceTest {
             I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK);
 
         this.subResource = new SubscriptionResource(this.config, this.subService, this.consumerCurator,
-            this.poolManager, i18n, this.modelTranslator, this.mockContentAccessManager);
+            this.poolManager, i18n, this.modelTranslator, this.contentAccessManager, this.poolService);
     }
 
     @Test

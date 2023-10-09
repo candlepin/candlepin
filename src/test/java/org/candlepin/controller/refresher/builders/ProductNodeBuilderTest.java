@@ -797,8 +797,8 @@ public class ProductNodeBuilderTest {
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
-        assertThrows(IllegalStateException.class, () ->
-            builder.buildNode(this.mockNodeFactory, this.productMapper, owner, "invalid_id"));
+        assertThrows(IllegalStateException.class,
+            () -> builder.buildNode(this.mockNodeFactory, this.productMapper, owner, "invalid_id"));
     }
 
     @Test
@@ -814,8 +814,8 @@ public class ProductNodeBuilderTest {
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
-        assertThrows(IllegalStateException.class, () ->
-            builder.buildNode(this.mockNodeFactory, this.productMapper, owner, ""));
+        assertThrows(IllegalStateException.class,
+            () -> builder.buildNode(this.mockNodeFactory, this.productMapper, owner, ""));
     }
 
     @Test
@@ -831,8 +831,8 @@ public class ProductNodeBuilderTest {
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
-        assertThrows(IllegalStateException.class, () ->
-            builder.buildNode(this.mockNodeFactory, this.productMapper, owner, null));
+        assertThrows(IllegalStateException.class,
+            () -> builder.buildNode(this.mockNodeFactory, this.productMapper, owner, null));
     }
 
     @Test
@@ -848,8 +848,8 @@ public class ProductNodeBuilderTest {
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
-        assertThrows(IllegalArgumentException.class, () ->
-            builder.buildNode(this.mockNodeFactory, this.productMapper, null, id));
+        assertThrows(IllegalArgumentException.class,
+            () -> builder.buildNode(this.mockNodeFactory, this.productMapper, null, id));
     }
 
 }

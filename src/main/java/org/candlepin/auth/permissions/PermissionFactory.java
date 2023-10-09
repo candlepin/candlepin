@@ -122,7 +122,6 @@ public class PermissionFactory {
 
     private final Map<String, PermissionBuilder> builders;
 
-
     @Inject
     public PermissionFactory(OwnerCurator ownerCurator) {
         this.ownerCurator = Objects.requireNonNull(ownerCurator);

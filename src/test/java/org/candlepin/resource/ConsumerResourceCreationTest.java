@@ -46,6 +46,7 @@ import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.controller.RefresherFactory;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
@@ -118,6 +119,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+
 
 
 /*
@@ -200,6 +202,8 @@ public class ConsumerResourceCreationTest {
     private EnvironmentContentCurator environmentContentCurator;
     @Mock
     private EntitlementCertificateGenerator entCertGenerator;
+    @Mock
+    private PoolService poolService;
 
     protected ModelTranslator modelTranslator;
 
@@ -260,8 +264,8 @@ public class ConsumerResourceCreationTest {
             this.contentOverrideValidator,
             this.consumerContentOverrideCurator,
             this.entCertGenerator,
-            this.environmentContentCurator
-        );
+            this.poolService,
+            this.environmentContentCurator);
 
         this.system = this.initConsumerType();
         this.mockConsumerType(this.system);
@@ -286,7 +290,6 @@ public class ConsumerResourceCreationTest {
 
         when(consumerCurator.update(any(Consumer.class)))
             .thenAnswer(invocation -> invocation.getArgument(0));
-
 
         when(userService.findByLogin(USER)).thenReturn(user);
         IdentityCertificate cert = new IdentityCertificate();

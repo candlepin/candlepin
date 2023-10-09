@@ -17,7 +17,7 @@ package org.candlepin.policy.js.entitlement;
 import org.candlepin.bind.PoolOperations;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.dto.rules.v1.EntitlementDTO;
@@ -82,13 +82,13 @@ public class EntitlementRules implements Enforcer {
     private final ConsumerTypeCurator consumerTypeCurator;
     private final RulesObjectMapper objectMapper;
     private final ModelTranslator translator;
-    private final PoolManager poolManager;
+    private final PoolService poolService;
 
     @Inject
     public EntitlementRules(DateSource dateSource,
         JsRunner jsRules, I18n i18n, Configuration config, ConsumerCurator consumerCurator,
-        ConsumerTypeCurator consumerTypeCurator, RulesObjectMapper mapper,
-        ModelTranslator translator, PoolManager poolManager) {
+        ConsumerTypeCurator consumerTypeCurator, RulesObjectMapper mapper, ModelTranslator translator,
+        PoolService poolService) {
 
         this.jsRules = Objects.requireNonNull(jsRules);
         this.dateSource = Objects.requireNonNull(dateSource);
@@ -98,7 +98,7 @@ public class EntitlementRules implements Enforcer {
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.objectMapper = Objects.requireNonNull(mapper);
         this.translator = Objects.requireNonNull(translator);
-        this.poolManager = Objects.requireNonNull(poolManager);
+        this.poolService = Objects.requireNonNull(poolService);
 
         jsRules.init("entitlement_name_space");
     }
@@ -452,76 +452,6 @@ public class EntitlementRules implements Enforcer {
         }
     }
 
-    private void postUnbindVirtLimit(Entitlement entitlement, Pool pool,
-        Consumer consumer, Map<String, String> attributes) {
-
-        log.debug("Running virt_limit post unbind.");
-
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
-        boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));
-
-        if (!config.getBoolean(ConfigProperties.STANDALONE) && !hostLimited && ctype.isManifest()) {
-            // We're making an assumption that VIRT_LIMIT is defined the same way in every possible
-            // source for the attributes map.
-            String virtLimit = attributes.get(Product.Attributes.VIRT_LIMIT);
-
-            if (!"unlimited".equals(virtLimit)) {
-                /*
-                 * Case I
-                 * As we have unbound an entitlement from a physical pool that was previously
-                 * exported, we need to add back the reduced bonus pool quantity.
-                 *
-                 * Case II
-                 * If Primary pool quantity is unlimited, with non-zero virt_limit & pool under
-                 * consideration is of type Unmapped guest or Bonus pool, set its quantity to be
-                 * unlimited.
-                 */
-                int virtQuantity = Integer.parseInt(virtLimit) * entitlement.getQuantity();
-                if (virtQuantity > 0) {
-                    List<Pool> pools = this.poolManager.getBySubscriptionId(pool.getOwner(),
-                        pool.getSubscriptionId());
-                    boolean isPrimaryPoolUnlimited = false;
-
-                    for (Pool poolToCheck : pools) {
-                        if (poolToCheck.getQuantity() == UNLIMITED_QUANTITY) {
-                            isPrimaryPoolUnlimited = true;
-                        }
-                    }
-
-                    for (Pool derivedPool : pools) {
-                        if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null) {
-                            if (isPrimaryPoolUnlimited && (derivedPool.getType() == Pool.PoolType.BONUS ||
-                                derivedPool.getType() == Pool.PoolType.UNMAPPED_GUEST)) {
-                                // Set pool quantity to be unlimited.
-                                this.poolManager.setPoolQuantity(derivedPool, UNLIMITED_QUANTITY);
-                            }
-                            else {
-                                this.poolManager.setPoolQuantity(derivedPool,
-                                    derivedPool.adjustQuantity(virtQuantity));
-                            }
-                        }
-                    }
-                }
-            }
-            else {
-                // As we have unbound an entitlement from a physical pool that
-                // was previously
-                // exported, we need to set the unlimited bonus pool quantity to
-                // -1.
-                List<Pool> pools = this.poolManager.getBySubscriptionId(pool.getOwner(),
-                    pool.getSubscriptionId());
-                for (Pool derivedPool : pools) {
-                    if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null &&
-                        derivedPool.getQuantity() == 0) {
-
-                        this.poolManager.setPoolQuantity(derivedPool, -1);
-                    }
-                }
-            }
-        }
-    }
-
     private PoolOperations postBindVirtLimit(Consumer consumer,
         Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps,
         List<Pool> subPoolsForStackIds, boolean isUpdate, Map<String, PoolQuantity> poolQuantityMap) {
@@ -585,7 +515,7 @@ public class EntitlementRules implements Enforcer {
 
         if (CollectionUtils.isNotEmpty(createHostRestrictedPoolFor)) {
             log.debug("creating host restricted pools for: {}", createHostRestrictedPoolFor);
-            poolOperations.append(PoolHelper.createHostRestrictedPools(this.poolManager, consumer,
+            poolOperations.append(PoolHelper.createHostRestrictedPools(this.poolService, consumer,
                 createHostRestrictedPoolFor, entitlementMap, attributeMaps));
         }
 
@@ -609,8 +539,7 @@ public class EntitlementRules implements Enforcer {
 
         ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
 
-        boolean consumerFactExpression = type.isManifest() &&
-            !config.getBoolean(ConfigProperties.STANDALONE);
+        boolean consumerFactExpression = type.isManifest() && !config.getBoolean(ConfigProperties.STANDALONE);
 
         if (!consumerFactExpression) {
             return poolOperations;
@@ -622,7 +551,7 @@ public class EntitlementRules implements Enforcer {
             subscriptionIds.add(poolQuantityMap.get(poolId).getPool().getSubscriptionId());
         }
 
-        List<Pool> subscriptionPools = this.poolManager.getBySubscriptionIds(consumer.getOwnerId(),
+        List<Pool> subscriptionPools = this.poolService.getBySubscriptionIds(consumer.getOwnerId(),
             subscriptionIds);
         Map<String, List<Pool>> subscriptionPoolMap = new HashMap<>();
 
@@ -664,16 +593,9 @@ public class EntitlementRules implements Enforcer {
                     if (virtQuantity != 0) {
                         List<Pool> pools = subscriptionPoolMap.get(pool.getSubscriptionId());
 
-                        boolean isPrimaryPoolUnlimited = false;
+                        boolean isPrimaryPoolUnlimited = isPrimaryPoolUnlimited(pools);
 
-                        for (Pool poolToCheck : pools) {
-                            if (poolToCheck.getQuantity() == UNLIMITED_QUANTITY) {
-                                isPrimaryPoolUnlimited = true;
-                            }
-                        }
-
-                        for (int idex = 0; idex < pools.size(); idex++) {
-                            Pool derivedPool = pools.get(idex);
+                        for (Pool derivedPool : pools) {
                             if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null) {
                                 // If primary pool is of unlimited quantity, set pool quantity as unlimited
                                 // if pool type is bonus or unmapped_guest pool.
@@ -745,7 +667,6 @@ public class EntitlementRules implements Enforcer {
                 us some computation.
              */
             if (!(ctype.isManifest()) || !config.getBoolean(ConfigProperties.STANDALONE)) {
-
                 poolOperations
                     .append(postBindVirtLimit(consumer, virtLimitEntitlements,
                         flatAttributeMaps, subPoolsForStackIds, isUpdate, poolQuantityMap));
@@ -755,17 +676,10 @@ public class EntitlementRules implements Enforcer {
         return poolOperations;
     }
 
-    public void postUnbind(Entitlement ent) {
-        Pool pool = ent.getPool();
-
-        // Can this attribute appear on pools?
-        if (pool.hasAttribute(Product.Attributes.VIRT_LIMIT) ||
-            pool.getProduct().hasAttribute(Product.Attributes.VIRT_LIMIT)) {
-
-            Map<String, String> attributes = PoolHelper.getFlattenedAttributes(pool);
-            Consumer consumer = ent.getConsumer();
-            postUnbindVirtLimit(ent, pool, consumer, attributes);
-        }
+    private boolean isPrimaryPoolUnlimited(List<Pool> pools) {
+        return pools.stream()
+            .map(Pool::getQuantity)
+            .anyMatch(quantity -> quantity == UNLIMITED_QUANTITY);
     }
 
 }

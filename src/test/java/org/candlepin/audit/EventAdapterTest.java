@@ -34,6 +34,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+
+
 public class EventAdapterTest {
     private I18n i18n;
 

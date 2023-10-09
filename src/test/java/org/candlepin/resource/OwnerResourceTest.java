@@ -48,13 +48,13 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerContentAccess;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.server.v1.ActivationKeyPoolDTO;
 import org.candlepin.dto.api.server.v1.ActivationKeyProductDTO;
@@ -99,7 +99,6 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.SystemPurposeAttributeType;
 import org.candlepin.model.UeberCertificate;
@@ -155,15 +154,18 @@ import javax.persistence.PersistenceException;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedMap;
 
+
+
 public class OwnerResourceTest extends DatabaseTestFixture {
     private static final String OWNER_NAME = "Jar Jar Binks";
-    private CandlepinPoolManager poolManager;
+    private PoolManager poolManager;
     private OwnerResource ownerResource;
     private CalculatedAttributesUtil calculatedAttributesUtil;
     private ContentOverrideValidator contentOverrideValidator;
     private UeberCertificateGenerator ueberCertGenerator;
     private DTOValidator dtoValidator;
-    protected ContentAccessManager contentAccessManager;
+    private ContentAccessManager contentAccessManager;
+    private PoolService poolService;
 
     // Mocks used to build the owner resource
     private ActivationKeyCurator mockActivationKeyCurator;
@@ -176,7 +178,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private OwnerCurator mockOwnerCurator;
     private OwnerInfoCurator mockOwnerInfoCurator;
     private OwnerProductCurator mockOwnerProductCurator;
-    private ProductCurator mockProductCurator;
     private PrincipalProvider principalProvider;
     private UeberCertificateCurator mockUeberCertCurator;
     private UeberCertificateGenerator mockUeberCertificateGenerator;
@@ -186,7 +187,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private EventAdapter mockEventAdapter;
 
     private ManifestManager mockManifestManager;
-    private OwnerManager mockOwnerManager;
+    private OwnerManager ownerManager;
     private PoolManager mockPoolManager;
     private JobManager mockJobManager;
 
@@ -204,12 +205,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
-        poolManager = this.injector.getInstance(CandlepinPoolManager.class);
+        poolManager = this.injector.getInstance(PoolManager.class);
+        poolService = this.injector.getInstance(PoolService.class);
         ownerResource = this.injector.getInstance(OwnerResource.class);
         calculatedAttributesUtil = this.injector.getInstance(CalculatedAttributesUtil.class);
         contentOverrideValidator = this.injector.getInstance(ContentOverrideValidator.class);
         ueberCertGenerator = this.injector.getInstance(UeberCertificateGenerator.class);
         dtoValidator = this.injector.getInstance(DTOValidator.class);
+        contentAccessManager = this.injector.getInstance(ContentAccessManager.class);
 
         this.jobManager = mock(JobManager.class);
 
@@ -234,7 +237,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.mockOwnerCurator = mock(OwnerCurator.class);
         this.mockOwnerInfoCurator = mock(OwnerInfoCurator.class);
         this.mockOwnerProductCurator = mock(OwnerProductCurator.class);
-        this.mockProductCurator = mock(ProductCurator.class);
         this.mockUeberCertCurator = mock(UeberCertificateCurator.class);
         this.mockUeberCertificateGenerator = mock(UeberCertificateGenerator.class);
 
@@ -243,7 +245,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.mockEventAdapter = mock(EventAdapter.class);
 
         this.mockManifestManager = mock(ManifestManager.class);
-        this.mockOwnerManager = mock(OwnerManager.class);
+        this.ownerManager = mock(OwnerManager.class);
         this.mockPoolManager = mock(PoolManager.class);
         this.mockJobManager = mock(JobManager.class);
         this.principalProvider = mock(PrincipalProvider.class);
@@ -258,12 +260,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         return new OwnerResource(this.mockOwnerCurator, this.mockActivationKeyCurator,
             this.mockConsumerCurator, this.i18n, this.mockEventSink, this.mockEventFactory,
             this.contentAccessManager, this.mockManifestManager,
-            this.mockPoolManager, this.mockOwnerManager, this.mockExportCurator, this.mockOwnerInfoCurator,
+            this.mockPoolManager, this.ownerManager, this.mockExportCurator, this.mockOwnerInfoCurator,
             this.mockImportRecordCurator, this.mockEntitlementCurator, this.mockUeberCertCurator,
             this.mockUeberCertificateGenerator, this.mockEnvironmentCurator, this.calculatedAttributesUtil,
             this.contentOverrideValidator, this.serviceLevelValidator, this.ownerServiceAdapter, this.config,
             this.consumerTypeValidator, this.mockOwnerProductCurator, this.modelTranslator,
-            this.mockJobManager, this.dtoValidator, this.principalProvider);
+            this.mockJobManager, this.dtoValidator, this.poolService, this.principalProvider);
     }
 
     private ProductDTO buildTestProductDTO() {
@@ -1441,7 +1443,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(this.mockOwnerCurator.getByKey(eq("testOwner"))).thenReturn(o);
         ConstraintViolationException ce = new ConstraintViolationException(null, null, null);
         PersistenceException pe = new PersistenceException(ce);
-        Mockito.doThrow(pe).when(this.mockOwnerManager).cleanupAndDelete(eq(o), eq(true));
+        Mockito.doThrow(pe).when(this.ownerManager).cleanupAndDelete(eq(o), eq(true));
 
         OwnerResource resource = this.buildOwnerResource();
 
@@ -1585,10 +1587,15 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testImportManifestAsyncSuccess() throws IOException, ImporterException, JobException {
         OwnerResource thisOwnerResource = new OwnerResource(
-            this.mockOwnerCurator, null, null, i18n, this.mockEventSink, mockEventFactory, null,
-            this.mockManifestManager, null, null, null, null, importRecordCurator, null, null, null, null,
-            null, contentOverrideValidator, serviceLevelValidator, null, null, null, null,
-            this.modelTranslator, this.mockJobManager, null, null);
+            this.mockOwnerCurator, this.activationKeyCurator, this.consumerCurator, this.i18n,
+            this.mockEventSink, this.mockEventFactory, this.contentAccessManager, this.mockManifestManager,
+            this.poolManager, this.ownerManager, this.mockExportCurator, this.ownerInfoCurator,
+            this.importRecordCurator, this.entitlementCurator, this.ueberCertificateCurator,
+            this.ueberCertGenerator,
+            this.environmentCurator, this.calculatedAttributesUtil, this.contentOverrideValidator,
+            this.serviceLevelValidator, this.ownerServiceAdapter, this.config, this.consumerTypeValidator,
+            this.mockOwnerProductCurator, this.modelTranslator, this.mockJobManager, this.dtoValidator,
+            this.poolService, this.principalProvider);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);

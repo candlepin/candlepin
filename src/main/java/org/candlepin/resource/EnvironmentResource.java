@@ -22,7 +22,7 @@ import org.candlepin.auth.SecurityHole;
 import org.candlepin.auth.Verify;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.EntitlementCertificateGenerator;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
@@ -68,24 +68,24 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BinaryOperator;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 
 
+
 /**
  * REST API for managing Environments.
  */
 public class EnvironmentResource implements EnvironmentApi {
-    private static final Logger log = LoggerFactory.getLogger(AdminResource.class);
+    private static final Logger log = LoggerFactory.getLogger(EnvironmentResource.class);
 
     private final EnvironmentCurator envCurator;
     private final I18n i18n;
     private final EnvironmentContentCurator envContentCurator;
     private final ConsumerResource consumerResource;
-    private final PoolManager poolManager;
+    private final PoolService poolService;
     private final ConsumerCurator consumerCurator;
     private final OwnerContentCurator ownerContentCurator;
     private final RdbmsExceptionTranslator rdbmsExceptionTranslator;
@@ -102,7 +102,7 @@ public class EnvironmentResource implements EnvironmentApi {
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
-        PoolManager poolManager, ConsumerCurator consumerCurator, OwnerContentCurator ownerContentCurator,
+        PoolService poolService, ConsumerCurator consumerCurator, OwnerContentCurator ownerContentCurator,
         RdbmsExceptionTranslator rdbmsExceptionTranslator, ModelTranslator translator,
         JobManager jobManager, DTOValidator validator, ContentAccessManager contentAccessManager,
         CertificateSerialCurator certificateSerialCurator,
@@ -114,7 +114,7 @@ public class EnvironmentResource implements EnvironmentApi {
         this.i18n = Objects.requireNonNull(i18n);
         this.envContentCurator = Objects.requireNonNull(envContentCurator);
         this.consumerResource = Objects.requireNonNull(consumerResource);
-        this.poolManager = Objects.requireNonNull(poolManager);
+        this.poolService = Objects.requireNonNull(poolService);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
         this.rdbmsExceptionTranslator = Objects.requireNonNull(rdbmsExceptionTranslator);
@@ -169,12 +169,12 @@ public class EnvironmentResource implements EnvironmentApi {
         List<Consumer> consumers = this.envCurator.getEnvironmentConsumers(environment);
         List<Consumer> consumersToDelete = consumers.stream()
             .filter(consumer -> consumer.getEnvironmentIds().size() == 1)
-            .collect(Collectors.toList());
+            .toList();
         deleteConsumers(environment, consumersToDelete);
 
         List<Consumer> consumersToKeep = consumers.stream()
             .filter(consumer -> consumer.getEnvironmentIds().size() > 1)
-            .collect(Collectors.toList());
+            .toList();
         removeConsumersFromEnvironment(environment, consumersToKeep);
 
         log.info("Deleting environment: {}", environment);
@@ -189,7 +189,7 @@ public class EnvironmentResource implements EnvironmentApi {
         // No need to delete env from consumers manually. It will be handled by cascading delete.
         List<String> consumerIds = consumers.stream()
             .map(Consumer::getId)
-            .collect(Collectors.toList());
+            .toList();
 
         Set<String> entitlementsToBeRegenerated = this.entitlementEnvironmentFilter
             .filterEntitlements(prepareEnvironmentUpdates(environment, consumerIds));
@@ -206,7 +206,7 @@ public class EnvironmentResource implements EnvironmentApi {
         for (Map.Entry<String, List<String>> consumerEnvs : envsByConsumerId.entrySet()) {
             List<String> updatedEnvs = consumerEnvs.getValue().stream()
                 .filter(s -> !environment.getId().equals(s))
-                .collect(Collectors.toList());
+                .toList();
             environmentUpdate.put(consumerEnvs.getKey(), consumerEnvs.getValue(), updatedEnvs);
         }
         return environmentUpdate;
@@ -240,7 +240,7 @@ public class EnvironmentResource implements EnvironmentApi {
 
             // We're about to delete these consumers; no need to regen/dirty their dependent
             // entitlements or recalculate status.
-            this.poolManager.revokeAllEntitlements(consumer, false);
+            this.poolService.revokeAllEntitlements(consumer, false);
             this.consumerCurator.delete(consumer);
         }
 
@@ -362,7 +362,7 @@ public class EnvironmentResource implements EnvironmentApi {
         List<EnvironmentDTO> environmentDTOs = Arrays.stream(envId.trim().split("\\s*,\\s*"))
             .map(this::lookupEnvironment)
             .map(this.translator.getStreamMapper(Environment.class, EnvironmentDTO.class))
-            .collect(Collectors.toList());
+            .toList();
 
         // Check if all envs belongs to same org
         BinaryOperator<String> unify = (prev, next) -> {
@@ -435,6 +435,7 @@ public class EnvironmentResource implements EnvironmentApi {
 
     /**
      * To make promotion transactional
+     *
      * @param contentToPromote
      * @param env
      * @return contentIds Ids of the promoted content

@@ -21,6 +21,7 @@ import org.candlepin.async.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.auth.Verify;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.server.v1.EntitlementDTO;
@@ -63,6 +64,8 @@ import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+
+
 /**
  * REST api gateway for the User object.
  */
@@ -72,6 +75,7 @@ public class EntitlementResource implements EntitlementsApi {
     private final ConsumerCurator consumerCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
     private final PoolManager poolManager;
+    private final PoolService poolService;
     private final EntitlementCurator entitlementCurator;
     private final I18n i18n;
     private final Entitler entitler;
@@ -90,6 +94,7 @@ public class EntitlementResource implements EntitlementsApi {
         Enforcer enforcer,
         EntitlementRulesTranslator messageTranslator,
         JobManager jobManager,
+        PoolService poolService,
         ModelTranslator translator) {
 
         this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
@@ -102,6 +107,7 @@ public class EntitlementResource implements EntitlementsApi {
         this.messageTranslator = Objects.requireNonNull(messageTranslator);
         this.jobManager = Objects.requireNonNull(jobManager);
         this.translator = Objects.requireNonNull(translator);
+        this.poolService = Objects.requireNonNull(poolService);
     }
 
     private void verifyExistence(Object o, String id) {
@@ -179,8 +185,7 @@ public class EntitlementResource implements EntitlementsApi {
 
         if (entitlement == null) {
             throw new NotFoundException(
-                i18n.tr("Entitlement with ID \"{0}\" could not be found.", entitlementId)
-            );
+                i18n.tr("Entitlement with ID \"{0}\" could not be found.", entitlementId));
         }
 
         // Impl note:
@@ -246,8 +251,7 @@ public class EntitlementResource implements EntitlementsApi {
 
         if (ent == null || ent.getPool() == null || ent.getPool().getCertificate() == null) {
             throw new NotFoundException(
-                i18n.tr("Unable to find upstream certificate for entitlement: {0}", entitlementId)
-            );
+                i18n.tr("Unable to find upstream certificate for entitlement: {0}", entitlementId));
         }
 
         SubscriptionsCertificate cert = ent.getPool().getCertificate();
@@ -258,7 +262,7 @@ public class EntitlementResource implements EntitlementsApi {
     public void unbind(String dbid) {
         Entitlement toDelete = entitlementCurator.get(dbid);
         if (toDelete != null) {
-            poolManager.revokeEntitlement(toDelete);
+            this.poolService.revokeEntitlement(toDelete);
             return;
         }
         throw new NotFoundException(
@@ -345,8 +349,7 @@ public class EntitlementResource implements EntitlementsApi {
                 entitler.sendEvents(entitlements);
             }
             else {
-                throw new BadRequestException(i18n.tr(
-                    "The quantity specified must be greater than zero " +
+                throw new BadRequestException(i18n.tr("The quantity specified must be greater than zero " +
                     "and less than or equal to the total for this entitlement"));
             }
         }
@@ -360,7 +363,7 @@ public class EntitlementResource implements EntitlementsApi {
             entitlementDTOs.add(this.translator.translate(entitlementModel, EntitlementDTO.class));
         }
         return Response.status(Response.Status.OK)
-                .type(MediaType.APPLICATION_JSON).entity(entitlementDTOs).build();
+            .type(MediaType.APPLICATION_JSON).entity(entitlementDTOs).build();
     }
 
 }

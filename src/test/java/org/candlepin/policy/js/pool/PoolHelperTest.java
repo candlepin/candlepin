@@ -18,27 +18,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import org.candlepin.bind.PoolOperations;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,21 +44,17 @@ import java.util.Map;
 
 
 
+@ExtendWith(MockitoExtension.class)
 public class PoolHelperTest {
 
-    private PoolManager pm;
+    @Mock
+    private PoolService poolService;
+    @Mock
     private Entitlement ent;
     private Owner owner;
-    private ProductCurator productCurator;
 
     @BeforeEach
     public void init() {
-        pm = mock(PoolManager.class);
-        ent = mock(Entitlement.class);
-        productCurator = Mockito.mock(ProductCurator.class);
-        Configuration config = mock(Configuration.class);
-        when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
-
         owner = TestUtil.createOwner();
     }
 
@@ -146,9 +137,6 @@ public class PoolHelperTest {
             .setId("jso_speedwagon2")
             .setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
 
-        // when(psa.getProductById(targetProduct.getUuid())).thenReturn(targetProduct);
-        when(ent.getConsumer()).thenReturn(cons);
-
         List<Pool> targetPools = new ArrayList<>();
         targetPools.add(targetPool);
         targetPools.add(targetPool2);
@@ -160,7 +148,7 @@ public class PoolHelperTest {
         attributes.put(targetPool.getId(), PoolHelper.getFlattenedAttributes(targetPool));
         attributes.put(targetPool2.getId(), PoolHelper.getFlattenedAttributes(targetPool2));
 
-        PoolOperations poolOperations = PoolHelper.createHostRestrictedPools(pm,
+        PoolOperations poolOperations = PoolHelper.createHostRestrictedPools(poolService,
             cons, targetPools, entitlements, attributes);
         List<Pool> pools = poolOperations.creations();
 
@@ -206,8 +194,6 @@ public class PoolHelperTest {
             .setId("sub-prod-pool")
             .setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
 
-        doReturn(consumer).when(ent).getConsumer();
-
         List<Pool> targetPools = new ArrayList<>();
         targetPools.add(targetPool);
 
@@ -217,7 +203,7 @@ public class PoolHelperTest {
         Map<String, Map<String, String>> attributes = new HashMap<>();
         attributes.put(targetPool.getId(), PoolHelper.getFlattenedAttributes(targetPool));
 
-        PoolOperations poolOperations = PoolHelper.createHostRestrictedPools(pm,
+        PoolOperations poolOperations = PoolHelper.createHostRestrictedPools(poolService,
             consumer, targetPools, entitlements, attributes);
 
         List<Pool> hostRestrictedPools = poolOperations.creations();

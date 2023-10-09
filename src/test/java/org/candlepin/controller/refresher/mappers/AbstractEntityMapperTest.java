@@ -63,64 +63,59 @@ public abstract class AbstractEntityMapperTest<E extends AbstractHibernateObject
     /**
      * Builds an EntityMapper instance
      *
-     * @return
-     *  the newly created EntityMapper instance
+     * @return the newly created EntityMapper instance
      */
     protected abstract EntityMapper<E, I> buildEntityMapper();
 
     /**
-     * Fetches the ID for the specified entity. If the given entity is null, this method should
-     * return null.
+     * Fetches the ID for the specified entity. If the given entity is null, this method should return
+     * null.
      *
      * @param entity
-     *  the entity for which to fetch the ID
+     *     the entity for which to fetch the ID
      *
-     * @return
-     *  the ID of the given entity, or null if the entity is null or lacks an ID
+     * @return the ID of the given entity, or null if the entity is null or lacks an ID
      */
     protected abstract String getEntityId(E entity);
 
     /**
-     * Fetches the ID for the specified entity. If the given entity is null, this method should
-     * return null.
+     * Fetches the ID for the specified entity. If the given entity is null, this method should return
+     * null.
      *
      * @param entity
-     *  the entity for which to fetch the ID
+     *     the entity for which to fetch the ID
      *
-     * @return
-     *  the ID of the given entity, or null if the entity is null or lacks an ID
+     * @return the ID of the given entity, or null if the entity is null or lacks an ID
      */
     protected abstract String getEntityId(I entity);
 
     /**
-     * Builds a new "local" entity to be used for testing. Each entity should be somewhat randomized
-     * or unique such that two invocations with the same entity ID are likely to produce entities
-     * that are not equal.
+     * Builds a new "local" entity to be used for testing. Each entity should be somewhat randomized or
+     * unique such that two invocations with the same entity ID are likely to produce entities that are
+     * not equal.
      *
      * @param owner
-     *  the owner for the new local entity
+     *     the owner for the new local entity
      *
      * @param entityId
-     *  the ID for the new entity
+     *     the ID for the new entity
      *
-     * @return
-     *  a new local entity instance
+     * @return a new local entity instance
      */
     protected abstract E buildLocalEntity(Owner owner, String entityId);
 
     /**
-     * Builds a new "imported" entity to be used for testing. Each entity should be somewhat
-     * randomized or unique such that two invocations with the same entity ID are likely to produce
-     * entities that are not equal.
+     * Builds a new "imported" entity to be used for testing. Each entity should be somewhat randomized
+     * or unique such that two invocations with the same entity ID are likely to produce entities that
+     * are not equal.
      *
      * @param owner
-     *  the owner for the new imported entity
+     *     the owner for the new imported entity
      *
      * @param entityId
-     *  the ID for the new entity
+     *     the ID for the new entity
      *
-     * @return
-     *  a new imported entity instance
+     * @return a new imported entity instance
      */
     protected abstract I buildImportedEntity(Owner owner, String entityId);
 
@@ -321,9 +316,6 @@ public abstract class AbstractEntityMapperTest<E extends AbstractHibernateObject
             mapped.forEach(expected -> assertThat(output, hasEntry(this.getEntityId(expected), expected)));
         }
     }
-
-
-
 
     @Test
     public void testAddImportedEntity() {

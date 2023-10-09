@@ -14,8 +14,6 @@
  */
 package org.candlepin.service.model;
 
-
-
 /**
  * The PermissionBlueprintInfo represents a minimal set of permission blueprint information used by
  * the service adapters and UAC infrastructure to build proper permissions on demand.

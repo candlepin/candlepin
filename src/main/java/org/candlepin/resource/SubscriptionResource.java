@@ -19,6 +19,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.SubscriptionDTO;
 import org.candlepin.exceptions.BadRequestException;
@@ -50,12 +51,13 @@ import javax.ws.rs.core.Response.Status;
  * SubscriptionResource
  */
 public class SubscriptionResource implements SubscriptionApi {
-    private static Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
+    private static final Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
 
     private final Configuration config;
     private final SubscriptionServiceAdapter subService;
     private final ConsumerCurator consumerCurator;
     private final PoolManager poolManager;
+    private final PoolService poolService;
     private final I18n i18n;
     private final ModelTranslator translator;
     private final ContentAccessManager contentAccessManager;
@@ -63,12 +65,13 @@ public class SubscriptionResource implements SubscriptionApi {
     @Inject
     public SubscriptionResource(Configuration config, SubscriptionServiceAdapter subService,
         ConsumerCurator consumerCurator, PoolManager poolManager, I18n i18n,
-        ModelTranslator translator, ContentAccessManager contentAccessManager) {
+        ModelTranslator translator, ContentAccessManager contentAccessManager, PoolService poolService) {
 
         this.config = Objects.requireNonNull(config);
         this.subService = Objects.requireNonNull(subService);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.poolManager = Objects.requireNonNull(poolManager);
+        this.poolService = Objects.requireNonNull(poolService);
         this.i18n = Objects.requireNonNull(i18n);
         this.translator = Objects.requireNonNull(translator);
         this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
@@ -123,7 +126,7 @@ public class SubscriptionResource implements SubscriptionApi {
             // handle it anyhow.
             owners.add(pool.getOwner());
 
-            this.poolManager.deletePool(pool);
+            this.poolService.deletePool(pool);
             ++count;
         }
 

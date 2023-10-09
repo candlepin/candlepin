@@ -20,6 +20,8 @@ import org.hibernate.criterion.Restrictions;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+
+
 /**
  * RoleCurator
  */

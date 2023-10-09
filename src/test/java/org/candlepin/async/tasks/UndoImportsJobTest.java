@@ -23,14 +23,16 @@ import static org.mockito.Mockito.when;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.controller.CandlepinPoolManager;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.ExporterMetadata;
+import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecord;
+import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.Product;
@@ -50,27 +52,36 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+
+
 public class UndoImportsJobTest extends DatabaseTestFixture {
 
     protected I18n i18n;
-    protected CandlepinPoolManager poolManager;
+    protected ImportRecordCurator importRecordCurator;
     protected UeberCertificateGenerator ueberCertGenerator;
+    protected OwnerCurator ownerCurator;
+    protected ExporterMetadataCurator exportCurator;
+    protected PoolService poolService;
+
     private UndoImportsJob undoImportsJob;
 
     @BeforeEach
     public void setUp() {
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
-        poolManager = (CandlepinPoolManager) this.injector.getInstance(PoolManager.class);
+        poolService = this.injector.getInstance(PoolService.class);
         ueberCertGenerator = this.injector.getInstance(UeberCertificateGenerator.class);
+        ownerCurator = this.injector.getInstance(OwnerCurator.class);
+        exportCurator = this.injector.getInstance(ExporterMetadataCurator.class);
+        importRecordCurator = this.injector.getInstance(ImportRecordCurator.class);
         this.undoImportsJob = new UndoImportsJob(
-            this.i18n, this.ownerCurator, this.poolManager,
-            this.exporterMetadataCurator, this.importRecordCurator, this.config);
+            this.i18n, this.ownerCurator, this.poolService,
+            this.exportCurator, this.importRecordCurator, this.config);
     }
 
     @Test
     public void testUndoImport() throws JobExecutionException {
         this.undoImportsJob = new UndoImportsJob(
-            this.i18n, this.ownerCurator, this.poolManager, this.exporterMetadataCurator,
+            this.i18n, this.ownerCurator, this.poolService, this.exportCurator,
             this.importRecordCurator, this.config);
 
         // Create owner w/upstream consumer
@@ -114,12 +125,10 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         // Verify initial state
         assertEquals(
             Arrays.asList(pool1, pool2, pool3, pool4, pool5, pool6),
-            this.poolManager.listPoolsByOwner(owner1).list());
-        assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolManager.listPoolsByOwner(owner2).list());
-        assertEquals(metadata1, exporterMetadataCurator.getByTypeAndOwner(
-            ExporterMetadata.TYPE_PER_USER, owner1));
-        assertEquals(metadata2, exporterMetadataCurator.getByTypeAndOwner(
-            ExporterMetadata.TYPE_PER_USER, owner2));
+            this.poolService.listPoolsByOwner(owner1).list());
+        assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolService.listPoolsByOwner(owner2).list());
+        assertEquals(metadata1, exportCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner1));
+        assertEquals(metadata2, exportCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner2));
         assertEquals(0, this.importRecordCurator.findRecords(owner1).list().size());
         assertEquals(0, this.importRecordCurator.findRecords(owner2).list().size());
 
@@ -137,12 +146,11 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
 
         // Verify deletions -- Ueber pools should not get deleted.
         assertEquals(List.of(pool3, pool4, pool5, pool6),
-            this.poolManager.listPoolsByOwner(owner1).list());
+            this.poolService.listPoolsByOwner(owner1).list());
 
-        assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolManager.listPoolsByOwner(owner2).list());
-        assertNull(exporterMetadataCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner1));
-        assertEquals(metadata2, exporterMetadataCurator.getByTypeAndOwner(
-            ExporterMetadata.TYPE_PER_USER, owner2));
+        assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolService.listPoolsByOwner(owner2).list());
+        assertNull(exportCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner1));
+        assertEquals(metadata2, exportCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner2));
         assertNull(owner1.getUpstreamConsumer());
 
         List<ImportRecord> records = this.importRecordCurator.findRecords(owner1).list();

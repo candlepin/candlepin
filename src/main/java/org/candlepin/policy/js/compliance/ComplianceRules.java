@@ -62,16 +62,16 @@ import javax.inject.Inject;
  * A class used to check consumer compliance status.
  */
 public class ComplianceRules {
-    private static Logger log = LoggerFactory.getLogger(ComplianceRules.class);
+    private static final Logger log = LoggerFactory.getLogger(ComplianceRules.class);
 
-    private JsRunner jsRules;
-    private EntitlementCurator entCurator;
-    private StatusReasonMessageGenerator generator;
-    private EventSink eventSink;
-    private ConsumerCurator consumerCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private RulesObjectMapper mapper;
-    private ModelTranslator translator;
+    private final JsRunner jsRules;
+    private final EntitlementCurator entCurator;
+    private final StatusReasonMessageGenerator generator;
+    private final EventSink eventSink;
+    private final ConsumerCurator consumerCurator;
+    private final ConsumerTypeCurator consumerTypeCurator;
+    private final RulesObjectMapper mapper;
+    private final ModelTranslator translator;
 
     @Inject
     public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator,
@@ -79,14 +79,14 @@ public class ComplianceRules {
         ConsumerTypeCurator consumerTypeCurator, RulesObjectMapper mapper,
         ModelTranslator translator) {
 
-        this.jsRules = jsRules;
-        this.entCurator = entCurator;
-        this.generator = generator;
-        this.eventSink = eventSink;
-        this.consumerCurator = consumerCurator;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.mapper = mapper;
-        this.translator = translator;
+        this.jsRules = Objects.requireNonNull(jsRules);
+        this.entCurator = Objects.requireNonNull(entCurator);
+        this.generator = Objects.requireNonNull(generator);
+        this.eventSink = Objects.requireNonNull(eventSink);
+        this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
+        this.mapper = Objects.requireNonNull(mapper);
+        this.translator = Objects.requireNonNull(translator);
 
         jsRules.init("compliance_name_space");
     }
