@@ -504,8 +504,8 @@ public class ContentAccessManager {
 
     private Set<X509ExtensionWrapper> prepareV3Extensions(String entType) {
         Set<X509ExtensionWrapper> result = v3extensionUtil.getExtensions();
-        X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_TYPE_KEY), false, entType);
+        X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(
+            OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_TYPE), false, entType);
 
         result.add(typeExtension);
         return result;

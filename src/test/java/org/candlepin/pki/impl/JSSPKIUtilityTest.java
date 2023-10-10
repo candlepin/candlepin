@@ -173,13 +173,11 @@ public class JSSPKIUtilityTest {
         Date start = new Date();
         Date end = Date.from(LocalDate.now().plusDays(365).atStartOfDay(ZoneId.systemDefault()).toInstant());
 
-        String extOid = OIDUtil.REDHAT_OID + "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_TYPE_KEY);
+        String extOid = OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_TYPE);
         X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(extOid, false, "OrgLevel");
         Set<X509ExtensionWrapper> exts = Set.of(typeExtension);
 
-        String byteExtOid = OIDUtil.REDHAT_OID + "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_DATA_KEY);
+        String byteExtOid = OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_DATA);
         byte[] someBytes = new byte[]{0xd, 0xe, 0xf, 0xa, 0xc, 0xe, 0xa, 0xc, 0xe};
         X509ByteExtensionWrapper byteExtension = new X509ByteExtensionWrapper(byteExtOid, false, someBytes);
         Set<X509ByteExtensionWrapper> byteExtensions = Set.of(byteExtension);
