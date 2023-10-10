@@ -87,12 +87,12 @@ public class SSLAuth extends ConsumerAuth {
 
     // Disallow the use of an Entitlement or SCA certificate in place of an Identity certificate
     private void checkForInvalidCertificateType(X509Certificate cert) {
-        byte[] entitlementVersionExtension = cert.getExtensionValue(OIDUtil.REDHAT_OID + "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_VERSION_KEY));
-        byte[] entitlementDataExtension = cert.getExtensionValue(OIDUtil.REDHAT_OID + "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_DATA_KEY));
-        byte[] entitlementTypeExtension = cert.getExtensionValue(OIDUtil.REDHAT_OID + "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_TYPE_KEY));
+        byte[] entitlementVersionExtension = cert.getExtensionValue(
+            OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_VERSION));
+        byte[] entitlementDataExtension = cert.getExtensionValue(
+            OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_DATA));
+        byte[] entitlementTypeExtension = cert.getExtensionValue(
+            OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_TYPE));
 
         if (entitlementVersionExtension != null || entitlementDataExtension != null ||
             entitlementTypeExtension != null) {

@@ -33,7 +33,7 @@ import java.util.Set;
 
 public abstract class X509Util {
 
-    private static Logger log = LoggerFactory.getLogger(X509Util.class);
+    private static final Logger log = LoggerFactory.getLogger(X509Util.class);
 
     public static final Predicate<Product> PROD_FILTER_PREDICATE = new Predicate<>() {
         /**
@@ -118,7 +118,7 @@ public abstract class X509Util {
             }
             else {
                 log.debug("No entitlements found for modified products.");
-                log.debug("Skipping content set: " + pc.getContent());
+                log.debug("Skipping content set: {}", pc.getContent());
             }
         }
         return filtered;
