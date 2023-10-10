@@ -14,6 +14,7 @@
  */
 package org.candlepin.util;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,15 +29,20 @@ public final class OIDUtil {
     private OIDUtil() {
     }
 
-    public static final String REDHAT_OID = "1.3.6.1.4.1.2312.9";
-    public static final String SYSTEM_NAMESPACE_KEY = "System";
-    public static final String ORDER_NAMESPACE_KEY = "Order";
-    public static final String CHANNEL_FAMILY_NAMESPACE_KEY = "Channel Family";
-    public static final String ROLE_ENT_NAMESPACE_KEY = "Role Entitlement";
-    public static final String PRODUCT_CERT_NAMESPACE_KEY = "Product";
-    public static final String ENTITLEMENT_VERSION_KEY = "Entitlement Version";
-    public static final String ENTITLEMENT_DATA_KEY = "Entitlement Data";
-    public static final String ENTITLEMENT_TYPE_KEY = "Entitlement Type";
+    private static final String REDHAT_OID = "1.3.6.1.4.1.2312.9";
+
+    public enum Namespace {
+        CHANNEL_FAMILY,
+        ENTITLEMENT_DATA,
+        ENTITLEMENT_NAMESPACE,
+        ENTITLEMENT_TYPE,
+        ENTITLEMENT_VERSION,
+        ORDER,
+        PRODUCT_CERTIFICATE,
+        ROLE_ENTITLEMENT,
+        SYSTEM,
+    }
+
     public static final String UUID_KEY = "UUID";
     public static final String HOST_UUID_KEY = "Host UUID";
     public static final String ORDER_NAME_KEY = "Name";
@@ -87,7 +93,7 @@ public final class OIDUtil {
     public static final Map<String, String> SYSTEM_OIDS = new HashMap<>();
     public static final Map<String, String> ORDER_OIDS = new HashMap<>();
     public static final Map<String, String> ORDER_PRODUCT_OIDS = new HashMap<>();
-    public static final Map<String, String> TOPLEVEL_NAMESPACES = new HashMap<>();
+    public static final Map<Namespace, String> TOPLEVEL_NAMESPACES = new EnumMap<>(Namespace.class);
     public static final Map<String, String> CONTENT_ENTITLEMENT_OIDS = new HashMap<>();
     public static final Map<String, String> ROLE_ENTITLEMENT_OIDS = new HashMap<>();
     public static final Map<String, String> CONTENT_ENTITLEMENT_NAMESPACES = new HashMap<>();
@@ -99,14 +105,15 @@ public final class OIDUtil {
 
     static {
         // load top level namespaces
-        TOPLEVEL_NAMESPACES.put(PRODUCT_CERT_NAMESPACE_KEY, "1");
-        TOPLEVEL_NAMESPACES.put(CHANNEL_FAMILY_NAMESPACE_KEY, "2");
-        TOPLEVEL_NAMESPACES.put(ROLE_ENT_NAMESPACE_KEY, "3");
-        TOPLEVEL_NAMESPACES.put(ORDER_NAMESPACE_KEY, "4");
-        TOPLEVEL_NAMESPACES.put(SYSTEM_NAMESPACE_KEY, "5");
-        TOPLEVEL_NAMESPACES.put(ENTITLEMENT_VERSION_KEY, "6");
-        TOPLEVEL_NAMESPACES.put(ENTITLEMENT_DATA_KEY, "7");
-        TOPLEVEL_NAMESPACES.put(ENTITLEMENT_TYPE_KEY, "8");
+        TOPLEVEL_NAMESPACES.put(Namespace.PRODUCT_CERTIFICATE, "1");
+        TOPLEVEL_NAMESPACES.put(Namespace.CHANNEL_FAMILY, "2");
+        TOPLEVEL_NAMESPACES.put(Namespace.ROLE_ENTITLEMENT, "3");
+        TOPLEVEL_NAMESPACES.put(Namespace.ORDER, "4");
+        TOPLEVEL_NAMESPACES.put(Namespace.SYSTEM, "5");
+        TOPLEVEL_NAMESPACES.put(Namespace.ENTITLEMENT_VERSION, "6");
+        TOPLEVEL_NAMESPACES.put(Namespace.ENTITLEMENT_DATA, "7");
+        TOPLEVEL_NAMESPACES.put(Namespace.ENTITLEMENT_TYPE, "8");
+        TOPLEVEL_NAMESPACES.put(Namespace.ENTITLEMENT_NAMESPACE, "9");
 
         // system OIDs
         SYSTEM_OIDS.put(UUID_KEY, "1");
@@ -169,6 +176,10 @@ public final class OIDUtil {
         CF_REPO_TYPE.put(CF_REPO_TYPE_YUM_KEY, "1");
         CF_REPO_TYPE.put(CF_REPO_TYPE_FILE_KEY, "2");
         CF_REPO_TYPE.put(CF_REPO_TYPE_KICKSTART_KEY, "3");
+    }
+
+    public static String getOid(Namespace namespace) {
+        return REDHAT_OID + "." + TOPLEVEL_NAMESPACES.get(namespace);
     }
 
 }

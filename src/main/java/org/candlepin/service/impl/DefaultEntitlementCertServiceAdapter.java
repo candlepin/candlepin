@@ -176,7 +176,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         products.add(product);
 
         if (shouldGenerateV3(consumer)) {
-            extensions = prepareV3Extensions();
+            extensions = prepareV3Extensions(pool);
             byteExtensions = this.v3extensionUtil.getByteExtensions(productModels);
         }
         else {
@@ -332,11 +332,15 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         return result;
     }
 
-    public Set<X509ExtensionWrapper> prepareV3Extensions() {
+    public Set<X509ExtensionWrapper> prepareV3Extensions(Pool pool) {
         Set<X509ExtensionWrapper> result = v3extensionUtil.getExtensions();
-        X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_TYPE_KEY), false, "Basic");
+        String entTypeOID = OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_TYPE);
+        String productOID = OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_NAMESPACE);
+        X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(entTypeOID, false, "Basic");
+        X509ExtensionWrapper productExtension = new X509ExtensionWrapper(
+            productOID, false, pool.getProduct().getNamespace());
         result.add(typeExtension);
+        result.add(productExtension);
         return result;
     }
 

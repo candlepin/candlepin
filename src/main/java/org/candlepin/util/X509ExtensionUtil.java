@@ -59,12 +59,9 @@ public class X509ExtensionUtil  extends X509Util{
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<>();
 
         // 1.3.6.1.4.1.2312.9.5.1
-        // REDHAT_OID here seems wrong...
-        String consumerOid = OIDUtil.REDHAT_OID + "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.SYSTEM_NAMESPACE_KEY);
-        toReturn.add(new X509ExtensionWrapper(consumerOid + "." +
-            OIDUtil.SYSTEM_OIDS.get(OIDUtil.UUID_KEY), false, consumer
-            .getUuid()));
+        String consumerOid = OIDUtil.getOid(OIDUtil.Namespace.SYSTEM);
+        toReturn.add(new X509ExtensionWrapper(consumerOid + "." + OIDUtil.SYSTEM_OIDS.get(OIDUtil.UUID_KEY),
+            false, consumer.getUuid()));
 
         return toReturn;
     }
@@ -82,8 +79,7 @@ public class X509ExtensionUtil  extends X509Util{
             throw new IllegalArgumentException("pool lacks a valid product");
         }
 
-        String subscriptionOid = OIDUtil.REDHAT_OID + "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ORDER_NAMESPACE_KEY);
+        String subscriptionOid = OIDUtil.getOid(OIDUtil.Namespace.ORDER);
 
         if (poolProduct.getId() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
@@ -159,8 +155,7 @@ public class X509ExtensionUtil  extends X509Util{
     }
 
     public List<X509ExtensionWrapper> entitlementExtensions(Integer quantity) {
-        String entitlementOid = OIDUtil.REDHAT_OID + "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ORDER_NAMESPACE_KEY);
+        String entitlementOid = OIDUtil.getOid(OIDUtil.Namespace.ORDER);
 
         return Collections.singletonList(new X509ExtensionWrapper(entitlementOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_USED), false, quantity.toString()));
@@ -169,8 +164,7 @@ public class X509ExtensionUtil  extends X509Util{
     public Set<X509ExtensionWrapper> productExtensions(Product product) {
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<>();
 
-        String productCertOid = OIDUtil.REDHAT_OID + "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.PRODUCT_CERT_NAMESPACE_KEY);
+        String productCertOid = OIDUtil.getOid(OIDUtil.Namespace.PRODUCT_CERTIFICATE);
 
         // XXX need to deal with non hash style IDs
         String productOid = productCertOid + "." + product.getId();
@@ -289,10 +283,7 @@ public class X509ExtensionUtil  extends X509Util{
         if (!StringUtils.isNumeric(contentId)) {
             throw new IllegalStateException(String.format("Content id must be numeric: [%s].", contentId));
         }
-        return OIDUtil.REDHAT_OID +
-            "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.CHANNEL_FAMILY_NAMESPACE_KEY) + "." +
-            contentId + "." +
+        return OIDUtil.getOid(OIDUtil.Namespace.CHANNEL_FAMILY) + "." + contentId + "." +
             OIDUtil.CF_REPO_TYPE.get(pc.getContent().getType());
     }
 }
