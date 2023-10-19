@@ -18,7 +18,7 @@ jobs:
           echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
 
       - name: Get PR info
-        uses: 8BitJonny/gh-get-current-pr@fa2160116055f6fe10376375892b255f8b2ed8f6
+        uses: 8BitJonny/gh-get-current-pr@1a191fcc60515c65a9bf978ec1996d2d07f52599
         id: PR
         with:
           github-token: ${{ github.token }}
