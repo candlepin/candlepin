@@ -88,7 +88,7 @@ class DbSetup(object):
             classpath = "%s:%s" % (classpath, JBOSS_CLASSPATH)
 
         liquibase_options = "--driver=%s --classpath=%s --changelog-file=%s --url=\"%s\" --username=$DBUSERNAME \
-            --headless=true --hub-mode=OFF" % (
+            --headless=true" % (
             self.driver_class,
             classpath,
             changelog_path,
