@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9-minimal:9.2-691 as builder
+FROM registry.access.redhat.com/ubi9-minimal:latest as builder
 
 ARG WAR_FILE
 
@@ -30,7 +30,7 @@ RUN ./gen_certs.sh --cert_out ./candlepin-ca.crt --key_out ./candlepin-ca.key --
 
 ################################# Production Image #################################
 
-FROM registry.access.redhat.com/ubi9-minimal:9.2-691 as production
+FROM registry.access.redhat.com/ubi9-minimal:latest as production
 
 ARG BUILD_DATE
 ARG VERSION
