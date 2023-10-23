@@ -27,7 +27,7 @@ ext.plugins = [
     "com.github.ben-manes:gradle-versions-plugin:0.49.0",
     "com.netflix.nebula:gradle-lint-plugin:18.1.0",
     "org.openapitools:openapi-generator-gradle-plugin:6.3.0",
-    "org.owasp:dependency-check-gradle:8.4.0",
+    "org.owasp:dependency-check-gradle:8.4.2",
     "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:4.4.1.3373",
 ]
 
