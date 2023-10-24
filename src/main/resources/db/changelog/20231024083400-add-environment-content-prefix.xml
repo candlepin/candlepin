@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="20231024083400-1" author="ojanus">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="cp_environment" columnName="content_prefix"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="cp_environment">
+            <column name="content_prefix"
+                    type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

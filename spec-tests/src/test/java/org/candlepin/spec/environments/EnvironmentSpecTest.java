@@ -65,7 +65,6 @@ import java.util.stream.Collectors;
 
 
 @SpecTest
-@SuppressWarnings("indentation")
 public class EnvironmentSpecTest {
 
     private static ApiClient admin;
@@ -98,7 +97,8 @@ public class EnvironmentSpecTest {
         List<EnvironmentDTO> environments = ownerClient.owners().listEnvironments(owner);
         assertThat(environments)
             .singleElement()
-            .returns(expectedEnv.getId(), EnvironmentDTO::getId);
+            .returns(expectedEnv.getId(), EnvironmentDTO::getId)
+            .returns(expectedEnv.getContentPrefix(), EnvironmentDTO::getContentPrefix);
     }
 
     @Test
