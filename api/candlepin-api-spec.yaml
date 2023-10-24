@@ -8780,6 +8780,8 @@ components:
               type: string
             description:
               type: string
+            content_prefix:
+              type: string
             owner:
               $ref: "#/components/schemas/NestedOwnerDTO"
             environmentContent:
