@@ -715,6 +715,7 @@ public class OwnerResource implements OwnerApi {
         entity.setId(dto.getId());
         entity.setName(dto.getName());
         entity.setDescription(dto.getDescription());
+        entity.setContentPrefix(dto.getContentPrefix());
         entity.setOwner(lookupOwnerFromDto(dto.getOwner()));
     }
 
