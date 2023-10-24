@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.16
+Version: 4.2.17
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -252,6 +252,10 @@ fi
 
 #raw
 %changelog
+* Tue Oct 24 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.17-1
+- 2242455: Fix date-time parsing for If-Modified-Since header
+  (ojanus@redhat.com)
+
 * Tue Oct 03 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.16-1
 - Add new translations using Weblate (noreply@weblate.org)
 - Remove jenkins pipeline (nmoumoul@redhat.com)
