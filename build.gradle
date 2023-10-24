@@ -223,14 +223,10 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 repositories {
-    mavenLocal()
     mavenCentral()
 
     maven { url "https://repo.jenkins-ci.org/public/" }
     maven { url "https://repository.jboss.org/nexus/content/groups/public/" }
-    maven { url "https://oauth.googlecode.com/svn/code/maven/" }
-    maven { url "https://awood.fedorapeople.org/ivy/candlepin/" }
-    maven { url "https://barnabycourt.fedorapeople.org/repo/candlepin/" }
 }
 
 openApiGenerate {

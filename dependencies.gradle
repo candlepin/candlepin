@@ -6,12 +6,8 @@ buildscript {
     repositories {
         mavenCentral()
         maven { url "https://plugins.gradle.org/m2/" }
-        maven { url "https://packages.confluent.io/maven/" }
         maven { url "https://repo.jenkins-ci.org/public/" }
         maven { url "https://repository.jboss.org/nexus/content/groups/public/" }
-        maven { url "https://oauth.googlecode.com/svn/code/maven/" }
-        maven { url "https://awood.fedorapeople.org/ivy/candlepin/" }
-        maven { url "https://barnabycourt.fedorapeople.org/repo/candlepin/" }
     }
 }
 
