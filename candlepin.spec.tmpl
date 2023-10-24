@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.3.9
+Version: 4.3.10
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -240,6 +240,11 @@ fi
 
 #raw
 %changelog
+* Tue Oct 24 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.10-1
+- Remove deprecated liquibase cli option (ojanus@redhat.com)
+- 2242502: Fix date-time parsing for If-Modified-Since header
+  (ojanus@redhat.com)
+
 * Mon Oct 02 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.9-1
 - Add new translations using Weblate (noreply@weblate.org)
 - CANDLEPIN-683: Fixed missing permission in ak management blueprint
