@@ -31,13 +31,9 @@ import org.candlepin.model.ProductContent;
 import org.candlepin.util.X509V3ExtensionUtil;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
-
 
 
 class PromotedContentTest {
@@ -47,7 +43,7 @@ class PromotedContentTest {
 
     @Test
     void nullProductContent() {
-        PromotedContent promotedContent = new PromotedContent(emptyPrefix());
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder());
 
         String environmentId = promotedContent.environmentIdOf(null);
 
@@ -59,7 +55,7 @@ class PromotedContentTest {
         Content content = this.mockContent();
         Product product = this.mockProduct(content);
         ProductContent pc = new ProductContent(product, content, true);
-        PromotedContent promotedContent = new PromotedContent(emptyPrefix());
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder());
 
         String environmentId = promotedContent.environmentIdOf(pc);
 
@@ -72,7 +68,7 @@ class PromotedContentTest {
         Environment environment = createEnvironment(content);
         Product product = this.mockProduct(content);
         ProductContent pc = new ProductContent(product, content, true);
-        PromotedContent promotedContent = new PromotedContent(emptyPrefix())
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder())
             .with(environment);
 
         String environmentId = promotedContent.environmentIdOf(pc);
@@ -90,7 +86,7 @@ class PromotedContentTest {
         Environment environment1 = createEnvironment(content1);
         Environment environment2 = createEnvironment(content2);
 
-        PromotedContent promotedContent = new PromotedContent(emptyPrefix())
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder())
             .with(environment1)
             .with(environment2);
 
@@ -100,7 +96,7 @@ class PromotedContentTest {
 
     @Test
     void nullIsNotPromoted() {
-        PromotedContent promotedContent = new PromotedContent(emptyPrefix());
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder());
 
         boolean isPromoted = promotedContent.contains(null);
 
@@ -112,7 +108,7 @@ class PromotedContentTest {
         Content content = this.mockContent();
         Product product = this.mockProduct(content);
         ProductContent pc = new ProductContent(product, content, true);
-        PromotedContent promotedContent = new PromotedContent(emptyPrefix());
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder());
 
         boolean isPromoted = promotedContent.contains(pc);
 
@@ -125,7 +121,7 @@ class PromotedContentTest {
         Environment environment = createEnvironment(content);
         Product product = this.mockProduct(content);
         ProductContent pc = new ProductContent(product, content, true);
-        PromotedContent promotedContent = new PromotedContent(emptyPrefix())
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder())
             .with(environment);
 
         boolean isPromoted = promotedContent.contains(pc);
@@ -135,7 +131,7 @@ class PromotedContentTest {
 
     @Test
     void nullIsNotEnabled() {
-        PromotedContent promotedContent = new PromotedContent(emptyPrefix());
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder());
 
         boolean isEnabled = promotedContent.isEnabled(null);
 
@@ -147,7 +143,7 @@ class PromotedContentTest {
         Content content = this.mockContent();
         Product product = this.mockProduct(content);
         ProductContent pc = new ProductContent(product, content, true);
-        PromotedContent promotedContent = new PromotedContent(emptyPrefix());
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder());
 
         boolean isEnabled = promotedContent.isEnabled(pc);
 
@@ -160,7 +156,7 @@ class PromotedContentTest {
         Environment environment = createEnvironment(content);
         Product product = this.mockProduct(content);
         ProductContent pc = new ProductContent(product, content, true);
-        PromotedContent promotedContent = new PromotedContent(emptyPrefix())
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder())
             .with(environment);
 
         boolean isEnabled = promotedContent.isEnabled(pc);
@@ -168,88 +164,19 @@ class PromotedContentTest {
         assertTrue(isEnabled);
     }
 
-    @ParameterizedTest
-    @MethodSource("invalidPrefix")
-    public void invalidPrefixIsOmitted(String prefix) {
-        PromotedContent promotedContent = createPromotedContent(prefix);
+    @Test
+    public void shouldBuildContentPath() {
+        PromotedContent promotedContent = createPromotedContent();
         ProductContent pc = createContent("some/path");
 
         assertEquals("/some/path", promotedContent.getPath(pc));
     }
 
-    public static Stream<Arguments> invalidPrefix() {
-        return Stream.of(
-            Arguments.of((String) null),
-            Arguments.of("")
-        );
-    }
-
-    @ParameterizedTest
-    @MethodSource("endingSlash")
-    public void shouldHandleRepeatedSlashesInPrefix(String prefix) {
-        PromotedContent promotedContent = createPromotedContent(prefix);
-        ProductContent pc = createContent("/some/path");
-
-        assertEquals("/this/is/some/path", promotedContent.getPath(pc));
-    }
-
-    public static Stream<Arguments> endingSlash() {
-        return Stream.of(
-            Arguments.of("/this/is"),
-            Arguments.of("/this/is/"),
-            Arguments.of("/this/is///")
-        );
-    }
-
-    @Test
-    public void missingStartingSlashInContentUrl() {
-        PromotedContent promotedContent = createPromotedContent("/this/is///");
-        ProductContent pc = createContent("some/path");
-
-        assertEquals("/this/is/some/path", promotedContent.getPath(pc));
-    }
-
-    @Test
-    public void repeatedStartingSlashInContentUrl() {
-        PromotedContent promotedContent = createPromotedContent("/this/is///");
-        ProductContent pc = createContent("/////////some/path");
-
-        assertEquals("/this/is/some/path", promotedContent.getPath(pc));
-    }
-
-    @ParameterizedTest
-    @MethodSource("endingSlash")
-    public void shouldHandleStartingSlash(String prefix) {
-        PromotedContent promotedContent = createPromotedContent(prefix);
-        ProductContent pc = createContent("some/path");
-
-        assertEquals("/this/is/some/path", promotedContent.getPath(pc));
-    }
-
-    @ParameterizedTest
-    @MethodSource("urlsWithProtocol")
-    public void urlsWithProtocolShouldNotBePrefixed(String contentUrl) {
-        PromotedContent promotedContent = createPromotedContent("/this/is");
-        ProductContent pc = createContent(contentUrl);
-
-        assertEquals(contentUrl, promotedContent.getPath(pc));
-    }
-
-    public static Stream<Arguments> urlsWithProtocol() {
-        return Stream.of(
-            Arguments.of("http://some/path"),
-            Arguments.of("https://some/path"),
-            Arguments.of("ftp://some/path"),
-            Arguments.of("file://some/path")
-        );
-    }
-
     private Environment createEnvironment(Content content) {
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
-        Environment environment = this.mockEnvironment(owner, consumer, content);
 
-        return environment;
+        return this.mockEnvironment(owner, consumer, content);
     }
 
 
@@ -341,7 +268,7 @@ class PromotedContentTest {
         return productContent;
     }
 
-    private PromotedContent createPromotedContent(String prefix) {
+    private PromotedContent createPromotedContent() {
         Owner owner = new Owner()
             .setId("owner-1");
 
@@ -357,16 +284,12 @@ class PromotedContentTest {
 
         environment.addEnvironmentContent(envcontent);
 
-        return new PromotedContent(prefix(prefix))
+        return new PromotedContent(contentPathBuilder())
             .with(environment);
     }
 
-    private ContentPrefix emptyPrefix() {
-        return envId -> "";
-    }
-
-    private ContentPrefix prefix(String prefix) {
-        return envId -> prefix;
+    private ContentPathBuilder contentPathBuilder() {
+        return ContentPathBuilder.from(new Owner(), List.of());
     }
 
 }

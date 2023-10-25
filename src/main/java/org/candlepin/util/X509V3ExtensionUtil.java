@@ -123,7 +123,7 @@ public class X509V3ExtensionUtil extends X509Util {
         List<Content> contentList = getContentList(eb);
         PathNode treeRoot = makePathTree(contentList, new PathNode());
         List<String> nodeStrings = orderStrings(treeRoot);
-        if (nodeStrings.size() == 0) {
+        if (nodeStrings.isEmpty()) {
             return new byte[0];
         }
         ByteArrayOutputStream data = new ByteArrayOutputStream();
