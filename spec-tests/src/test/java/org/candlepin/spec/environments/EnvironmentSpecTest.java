@@ -498,9 +498,9 @@ public class EnvironmentSpecTest {
             .hasSize(3)
             .map(jsonNode -> jsonNode.get("path").asText())
             .containsOnly(
-                content1.getContentUrl(),
-                content2.getContentUrl(),
-                content3.getContentUrl()
+                env1.getContentPrefix() + content1.getContentUrl(),
+                env2.getContentPrefix() + content2.getContentUrl(),
+                env3.getContentPrefix() + content3.getContentUrl()
             );
     }
 

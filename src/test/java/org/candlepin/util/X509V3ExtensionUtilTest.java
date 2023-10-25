@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.config.Configuration;
-import org.candlepin.controller.util.ContentPrefix;
+import org.candlepin.controller.util.ContentPathBuilder;
 import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
@@ -121,7 +121,7 @@ public class X509V3ExtensionUtilTest {
         consumer.setOwner(owner);
 
         List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd, prods,
-            new PromotedContent(emptyPrefix()), consumer, pool, new HashSet<>());
+            new PromotedContent(contentPathBuilder()), consumer, pool, new HashSet<>());
 
         assertEquals(1, certProds.size());
         assertEquals(brandedName, certProds.get(0).getBrandName());
@@ -237,7 +237,7 @@ public class X509V3ExtensionUtilTest {
         consumer.setOwner(owner);
 
         List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd, prods,
-            new PromotedContent(emptyPrefix()), consumer, pool, new HashSet<>());
+            new PromotedContent(contentPathBuilder()), consumer, pool, new HashSet<>());
 
         assertEquals(1, certProds.size());
         // Should get the first name we encountered
@@ -256,10 +256,12 @@ public class X509V3ExtensionUtilTest {
             .setDisplayName("Test Corporation");
         Content content1 = new Content()
             .setId("cont_id1")
-            .setArches("x86_64");
+            .setArches("x86_64")
+            .setContentUrl("/cont_id1");
         Content content2 = new Content()
             .setId("cont_id2")
-            .setArches("ppc64");
+            .setArches("ppc64")
+            .setContentUrl("/cont_id2");
         Product engProd = new Product()
             .setId("content_access")
             .setName("Content Access");
@@ -274,7 +276,7 @@ public class X509V3ExtensionUtilTest {
             .setFact("uname.machine", "x86_64");
 
         org.candlepin.model.dto.Product certProds = util.mapProduct(engProd, sku,
-            new PromotedContent(emptyPrefix()), consumer, pool,
+            new PromotedContent(contentPathBuilder()), consumer, pool,
             Set.of("content_access"));
 
         assertEquals(1, certProds.getContent().size());
@@ -282,8 +284,8 @@ public class X509V3ExtensionUtilTest {
         assertEquals("x86_64", certProds.getContent().get(0).getArches().get(0));
     }
 
-    private ContentPrefix emptyPrefix() {
-        return envId -> "";
+    private static ContentPathBuilder contentPathBuilder() {
+        return ContentPathBuilder.from(new Owner(), List.of());
     }
 
     @Test

@@ -19,11 +19,8 @@ import org.candlepin.cache.AnonymousCertContent;
 import org.candlepin.cache.AnonymousCertContentCache;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.controller.util.AnonymousContentPrefix;
-import org.candlepin.controller.util.ContentPrefix;
+import org.candlepin.controller.util.ContentPathBuilder;
 import org.candlepin.controller.util.PromotedContent;
-import org.candlepin.controller.util.ScaContainerContentPrefix;
-import org.candlepin.controller.util.ScaContentPrefix;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificate;
@@ -318,8 +315,8 @@ public class ContentAccessManager {
         org.candlepin.model.dto.Product container = createSCAProdContainer(owner, consumer);
 
         List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
-        ContentPrefix contentPrefix = ScaContentPrefix.from(owner, this.standalone, environments);
-        PromotedContent promotedContent = new PromotedContent(contentPrefix).withAll(environments);
+        ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(owner, environments);
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder).withAll(environments);
 
         Map<org.candlepin.model.Content, Boolean> ownerContent = this.contentCurator
             .getActiveContentByOwner(owner.getId());
@@ -365,8 +362,8 @@ public class ContentAccessManager {
         boolean shouldUpdateContent = !contentUpdate.before(existing.getUpdated());
         if (shouldUpdateContent || isX509CertExpired) {
             List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
-            ContentPrefix contentPrefix = ScaContentPrefix.from(owner, this.standalone, environments);
-            PromotedContent promotedContent = new PromotedContent(contentPrefix).withAll(environments);
+            ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(owner, environments);
+            PromotedContent promotedContent = new PromotedContent(contentPathBuilder).withAll(environments);
 
             Map<org.candlepin.model.Content, Boolean> ownerContent = this.contentCurator
                 .getActiveContentByOwner(owner.getId());
@@ -383,13 +380,13 @@ public class ContentAccessManager {
         org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
         List<org.candlepin.model.dto.Content> dtoContents = new ArrayList<>();
         List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
-        ContentPrefix prefix = ScaContainerContentPrefix.from(owner, this.standalone, environments);
+
         for (Environment environment : environments) {
-            dtoContents.add(getContent(prefix, environment.getId()));
+            dtoContents.add(createContent(owner, environment));
         }
 
         if (dtoContents.isEmpty()) {
-            dtoContents.add(getContent(prefix, null));
+            dtoContents.add(createContent(owner, null));
         }
 
         container.setContent(dtoContents);
@@ -434,9 +431,17 @@ public class ContentAccessManager {
         return new String(encodedCert);
     }
 
-    private Content getContent(ContentPrefix prefix, String environmentId) {
+    private Content createContent(Owner owner, Environment environment) {
         Content dContent = new Content();
-        dContent.setPath(prefix.get(environmentId));
+        // TODO What content path do we want for SCA certs? Are we ok with /{ownerKey}/{envName}?
+        String path = "";
+        if (owner != null) {
+            path += "/" + Util.encodeUrl(owner.getKey());
+        }
+        if (environment != null) {
+            path += "/" + Util.encodeUrl(environment.getName());
+        }
+        dContent.setPath(path);
         return dContent;
     }
 
@@ -963,7 +968,7 @@ public class ContentAccessManager {
         List<org.candlepin.model.Content> contents = convertContentInfoToContent(contentInfo);
         Map<org.candlepin.model.Content, Boolean> activeContent = new HashMap<>();
         contents.forEach(content -> activeContent.put(content, true));
-        PromotedContent promotedContent = new PromotedContent(new AnonymousContentPrefix());
+        PromotedContent promotedContent = new PromotedContent(ContentPathBuilder.from(null, null));
         byte[] data = createContentAccessDataPayload(null, activeContent, promotedContent);
 
         return createPayloadAndSignature(data);

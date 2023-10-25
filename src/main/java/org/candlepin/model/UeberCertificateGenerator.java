@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.controller.util.ContentPathBuilder;
 import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
@@ -38,6 +39,7 @@ import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -134,10 +136,11 @@ public class UeberCertificateGenerator {
 
     private X509Certificate createX509Certificate(UeberCertData data, BigInteger serialNumber,
         KeyPair keyPair) throws GeneralSecurityException, IOException {
-        Set<X509ExtensionWrapper> extensions = new LinkedHashSet<>();
-        extensions.addAll(extensionUtil.productExtensions(data.getProduct()));
+        ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(null, List.of());
+        Set<X509ExtensionWrapper> extensions = new LinkedHashSet<>(
+            extensionUtil.productExtensions(data.getProduct()));
         extensions.addAll(extensionUtil.contentExtensions(data.getProduct().getProductContent(),
-            new PromotedContent(envId -> ""), new Consumer(), data.getProduct()));
+            new PromotedContent(contentPathBuilder), new Consumer(), data.getProduct()));
         extensions.addAll(extensionUtil.subscriptionExtensions(data.getEntitlement().getPool()));
         extensions.addAll(extensionUtil.entitlementExtensions(data.getEntitlement().getQuantity()));
         extensions.addAll(extensionUtil.consumerExtensions(data.getConsumer()));

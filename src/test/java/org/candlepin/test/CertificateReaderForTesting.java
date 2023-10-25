@@ -40,8 +40,7 @@ public class CertificateReaderForTesting extends CertificateReader {
     }
 
     @Inject
-    public CertificateReaderForTesting()
-        throws CertificateException, IOException {
+    public CertificateReaderForTesting() throws CertificateException, IOException {
         super(new DevConfig(), new JSSPrivateKeyReader());
     }
 

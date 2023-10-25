@@ -19,8 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.config.Configuration;
+import org.candlepin.controller.util.ContentPathBuilder;
 import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.model.Content;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -48,13 +50,18 @@ public class X509ExtensionUtilTest {
     public void shouldWorkWithValidContentId() {
         X509ExtensionUtil util = new X509ExtensionUtil(config);
 
-        Content content = new Content("123456", "testcontent", "yum", "testlabel", "testvendor");
+        Content content = new Content("123456", "testcontent", "yum", "testlabel", "testvendor")
+            .setContentUrl("/content_path");
         List<ProductContent> contents = List.of(new ProductContent(new Product(), content, true));
-        PromotedContent promotedContent = new PromotedContent(environmentId -> "");
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder());
         Set<X509ExtensionWrapper> extensions = util
             .contentExtensions(contents, promotedContent, null, new Product());
 
         assertFalse(extensions.isEmpty());
+    }
+
+    private static ContentPathBuilder contentPathBuilder() {
+        return ContentPathBuilder.from(new Owner(), List.of());
     }
 
     @ParameterizedTest
@@ -62,11 +69,12 @@ public class X509ExtensionUtilTest {
     public void failsForInvalidContentIds(String contentId) {
         X509ExtensionUtil util = new X509ExtensionUtil(config);
         Content content = new Content(contentId, "testcontent", "yum", "testlabel", "testvendor");
-        List<ProductContent> contents = List.of(new ProductContent(new Product(), content, true));
-        PromotedContent promotedContent = new PromotedContent(environmentId -> "");
+        Product skuProduct = new Product();
+        List<ProductContent> contents = List.of(new ProductContent(skuProduct, content, true));
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder());
 
-        assertThrows(IllegalStateException.class,
-            () -> util.contentExtensions(contents, promotedContent, null, new Product()));
+        assertThrows(IllegalArgumentException.class,
+            () -> util.contentExtensions(contents, promotedContent, null, skuProduct));
     }
 
     public static Stream<Arguments> invalidContentIds() {
