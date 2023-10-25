@@ -17,11 +17,8 @@ package org.candlepin.controller;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.controller.util.AnonymousContentPrefix;
-import org.candlepin.controller.util.ContentPrefix;
+import org.candlepin.controller.util.ContentPathBuilder;
 import org.candlepin.controller.util.PromotedContent;
-import org.candlepin.controller.util.ScaContainerContentPrefix;
-import org.candlepin.controller.util.ScaContentPrefix;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificate;
@@ -313,8 +310,8 @@ public class ContentAccessManager {
         org.candlepin.model.dto.Product container = createSCAProdContainer(owner, consumer);
 
         List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
-        ContentPrefix contentPrefix = ScaContentPrefix.from(owner, this.standalone, environments);
-        PromotedContent promotedContent = new PromotedContent(contentPrefix).withAll(environments);
+        ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(owner, environments);
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder).withAll(environments);
 
         Map<org.candlepin.model.Content, Boolean> ownerContent = this.ownerContentCurator
             .getActiveContentByOwner(owner.getId());
@@ -326,7 +323,7 @@ public class ContentAccessManager {
         existing.setKeyAsBytes(pemEncodedKeyPair);
         existing.setConsumer(consumer);
 
-        existing.setCert(createX509Cert(consumer.getUuid(), owner, serial, keyPair, container,
+        existing.setCert(createX509Cert(consumer, owner, serial, keyPair, container,
             SCA_ENTITLEMENT_TYPE, start, end));
         existing.setContent(this.createPayloadAndSignature(payloadBytes));
         ContentAccessCertificate savedCert = this.contentAccessCertificateCurator.create(existing);
@@ -351,7 +348,7 @@ public class ContentAccessManager {
             org.candlepin.model.dto.Product container = createSCAProdContainer(owner, consumer);
 
             existing.setSerial(serial);
-            existing.setCert(createX509Cert(consumer.getUuid(), owner, serial, keyPair, container,
+            existing.setCert(createX509Cert(consumer, owner, serial, keyPair, container,
                 SCA_ENTITLEMENT_TYPE, start, end));
             this.contentAccessCertificateCurator.saveOrUpdate(existing);
         }
@@ -360,8 +357,8 @@ public class ContentAccessManager {
         boolean shouldUpdateContent = !contentUpdate.before(existing.getUpdated());
         if (shouldUpdateContent || isX509CertExpired) {
             List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
-            ContentPrefix contentPrefix = ScaContentPrefix.from(owner, this.standalone, environments);
-            PromotedContent promotedContent = new PromotedContent(contentPrefix).withAll(environments);
+            ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(owner, environments);
+            PromotedContent promotedContent = new PromotedContent(contentPathBuilder).withAll(environments);
 
             Map<org.candlepin.model.Content, Boolean> ownerContent = this.ownerContentCurator
                 .getActiveContentByOwner(owner.getId());
@@ -378,13 +375,13 @@ public class ContentAccessManager {
         org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
         List<org.candlepin.model.dto.Content> dtoContents = new ArrayList<>();
         List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
-        ContentPrefix prefix = ScaContainerContentPrefix.from(owner, this.standalone, environments);
+
         for (Environment environment : environments) {
-            dtoContents.add(getContent(prefix, environment.getId()));
+            dtoContents.add(createContent(owner, environment));
         }
 
         if (dtoContents.isEmpty()) {
-            dtoContents.add(getContent(prefix, null));
+            dtoContents.add(createContent(owner, null));
         }
 
         container.setContent(dtoContents);
@@ -412,26 +409,49 @@ public class ContentAccessManager {
         return serial;
     }
 
-    private String createX509Cert(String consumerUuid, Owner owner, CertificateSerial serial, KeyPair keyPair,
+    private String createX509Cert(Consumer consumer, Owner owner, CertificateSerial serial, KeyPair keyPair,
         org.candlepin.model.dto.Product product, String entType, OffsetDateTime start, OffsetDateTime end)
         throws GeneralSecurityException, IOException {
 
-        log.info("Generating X509 certificate for consumer \"{}\"...", consumerUuid);
-        Set<X509ExtensionWrapper> extensions = prepareV3Extensions(entType);
-        Set<X509ByteExtensionWrapper> byteExtensions = prepareV3ByteExtensions(product);
         String orgName = owner != null ? owner.getKey() : null;
+        log.info("Generating X509 certificate for consumer \"{}\"...", consumer.getUuid());
+        // fake a product dto as a container for the org content
+        List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
+
+        List<org.candlepin.model.dto.Content> dtoContents = new ArrayList<>();
+        for (Environment environment : environments) {
+            dtoContents.add(createContent(owner, environment));
+        }
+
+        if (dtoContents.isEmpty()) {
+            dtoContents.add(createContent(owner, null));
+        }
+
+        org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
+        container.setContent(dtoContents);
+
+        Set<X509ExtensionWrapper> extensions = prepareV3Extensions(entType);
+        Set<X509ByteExtensionWrapper> byteExtensions = prepareV3ByteExtensions(container);
 
         X509Certificate x509Cert = this.pki.createX509Certificate(
-            createDN(consumerUuid, orgName), extensions, byteExtensions, Date.from(start.toInstant()),
+            createDN(consumer.getUuid(), orgName), extensions, byteExtensions, Date.from(start.toInstant()),
             Date.from(end.toInstant()), keyPair, BigInteger.valueOf(serial.getId()), null);
 
         byte[] encodedCert = this.pki.getPemEncoded(x509Cert);
         return new String(encodedCert);
     }
 
-    private Content getContent(ContentPrefix prefix, String environmentId) {
+    private Content createContent(Owner owner, Environment environment) {
         Content dContent = new Content();
-        dContent.setPath(prefix.get(environmentId));
+        // TODO What content path do we want for SCA certs? Are we ok with /{ownerKey}/{envName}?
+        String path = "";
+        if (owner != null) {
+            path += "/" + Util.encodeUrl(owner.getKey());
+        }
+        if (environment != null) {
+            path += "/" + Util.encodeUrl(environment.getName());
+        }
+        dContent.setPath(path);
         return dContent;
     }
 
@@ -900,14 +920,16 @@ public class ContentAccessManager {
         List<ContentInfo> contentInfo = getContentInfo(products);
         org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
         container.setContent(convertContentInfoToContentDto(contentInfo));
-        String x509Cert = createX509Cert(consumer.getUuid(), null, serial, keyPair, container,
-            BASIC_ENTITLEMENT_TYPE, start, end);
+
+        // This is necessary until we split up the cert generation to separate classes
+        String x509Cert = createX509Cert(new Consumer().setId(consumer.getId()).setUuid(consumer.getUuid()),
+            null, serial, keyPair, container, BASIC_ENTITLEMENT_TYPE, start, end);
 
         List<org.candlepin.model.Content> contents = convertContentInfoToContent(contentInfo);
         Map<org.candlepin.model.Content, Boolean> activeContent = new HashMap<>();
         contents.forEach(content -> activeContent.put(content, true));
 
-        PromotedContent promotedContent = new PromotedContent(new AnonymousContentPrefix());
+        PromotedContent promotedContent = new PromotedContent(ContentPathBuilder.from(null, null));
         byte[] payloadBytes = createContentAccessDataPayload(null, activeContent, promotedContent);
 
         AnonymousContentAccessCertificate caCert = new AnonymousContentAccessCertificate();

@@ -644,6 +644,9 @@ public class Util {
      * @return encoded string
      */
     public static String encodeUrl(String text) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
         return URLEncoder.encode(text, StandardCharsets.UTF_8);
     }
 

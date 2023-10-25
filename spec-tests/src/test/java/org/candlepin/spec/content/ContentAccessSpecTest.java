@@ -43,7 +43,6 @@ import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.client.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.resource.client.v1.ConsumerApi;
-import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -123,10 +122,12 @@ public class ContentAccessSpecTest {
         JsonNode certContent3 = certContentName.equals(content3.getName()) ? content.get(0) : content.get(1);
 
         compareCertContent(content1, certContent1);
-        verifyCertContentPath(ownerKey, content1.getContentUrl(), null, certContent1.get("path").asText());
+        verifyCertContentPath(owner.getContentPrefix(), content1.getContentUrl(), null,
+            certContent1.get("path").asText());
 
         compareCertContent(content3, certContent3);
-        verifyCertContentPath(ownerKey, content3.getContentUrl(), null, certContent3.get("path").asText());
+        verifyCertContentPath(owner.getContentPrefix(), content3.getContentUrl(), null,
+            certContent3.get("path").asText());
     }
 
     @Test
@@ -239,7 +240,8 @@ public class ContentAccessSpecTest {
     @Test
     public void shouldProduceAContentAccessCertificateForTheConsumerOnRegistration() {
         ApiClient adminClient = ApiClients.admin();
-        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        OwnerDTO ownerDTO = Owners.randomSca();
+        OwnerDTO owner = adminClient.owners().createOwner(ownerDTO.contentPrefix("/" + ownerDTO.getKey()));
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
@@ -262,7 +264,8 @@ public class ContentAccessSpecTest {
 
         JsonNode certContent = certs.get(0).get("products").get(0).get("content").get(0);
         compareCertContent(content, certContent);
-        verifyCertContentPath(ownerKey, content.getContentUrl(), null, certContent.get("path").asText());
+        verifyCertContentPath(owner.getContentPrefix(), content.getContentUrl(), null,
+            certContent.get("path").asText());
 
         List<String> payloadCerts = extractCertsFromPayload(export);
         assertThat(payloadCerts).singleElement();
@@ -327,7 +330,7 @@ public class ContentAccessSpecTest {
 
         JsonNode certContent = certs.get(0).get("products").get(0).get("content").get(0);
         assertEquals("false", certContent.get("enabled").asText());
-        verifyCertContentPath(ownerKey, content.getContentUrl(), env.getName(),
+        verifyCertContentPath(owner.getContentPrefix(), content.getContentUrl(), env,
             certContent.get("path").asText());
 
         List<String> payloadCerts = extractCertsFromPayload(export);
@@ -381,9 +384,9 @@ public class ContentAccessSpecTest {
         JsonNode certContent2 = certContentName.equals(content2.getName()) ? certContentNode.get(0) :
             certContentNode.get(1);
 
-        verifyCertContentPath(ownerKey, content.getContentUrl(), env1.getName(),
+        verifyCertContentPath(owner.getContentPrefix(), content.getContentUrl(), env1,
             certContent1.get("path").asText());
-        verifyCertContentPath(ownerKey, content2.getContentUrl(), env2.getName(),
+        verifyCertContentPath(owner.getContentPrefix(), content2.getContentUrl(), env2,
             certContent2.get("path").asText());
 
         List<String> payloadCerts = extractCertsFromPayload(export);
@@ -451,7 +454,8 @@ public class ContentAccessSpecTest {
     @Test
     public void shouldShowEnvironmentChangeInContentAccessCert() {
         ApiClient adminClient = ApiClients.admin();
-        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        OwnerDTO ownerDTO = Owners.randomSca();
+        OwnerDTO owner = adminClient.owners().createOwner(ownerDTO.contentPrefix(ownerDTO.getKey()));
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
@@ -611,7 +615,8 @@ public class ContentAccessSpecTest {
     @Test
     public void shouldRetrieveTheContentAccessCertBodyForTheConsumer() {
         ApiClient adminClient = ApiClients.admin();
-        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        OwnerDTO ownerDTO = Owners.randomSca();
+        OwnerDTO owner = adminClient.owners().createOwner(ownerDTO.contentPrefix("/" + ownerDTO.getKey()));
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
@@ -629,7 +634,8 @@ public class ContentAccessSpecTest {
         JsonNode cert = CertificateUtil
             .decodeAndUncompressCertificate(listings.get(1).toString(), ApiClient.MAPPER);
         JsonNode certContent = cert.get("products").get(0).get("content").get(0);
-        verifyCertContentPath(ownerKey, content.getContentUrl(), null, certContent.get("path").asText());
+        verifyCertContentPath(owner.getContentPrefix(), content.getContentUrl(), null,
+            certContent.get("path").asText());
 
         assertThatCert(listings.get(0).asText())
             .extractingEntitlementPayload()
@@ -1030,8 +1036,8 @@ public class ContentAccessSpecTest {
         JsonNode certContent = certs.get(0).get("products").get(0).get("content");
         assertThat(certContent).singleElement();
         compareCertContent(content, certContent.get(0));
-        verifyCertContentPath(ownerKey, content.getContentUrl(), null, certContent.get(0)
-            .get("path").asText());
+        verifyCertContentPath(owner.getContentPrefix(), content.getContentUrl(), null,
+            certContent.get(0).get("path").asText());
     }
 
     @Test
@@ -1446,11 +1452,11 @@ public class ContentAccessSpecTest {
     }
 
     private String contentUrl(String ownerKey, EnvironmentDTO env) {
-        return CandlepinMode.isStandalone() ? "/" + ownerKey + "/" + env.getName() : "/sca/" + ownerKey;
+        return "/" + ownerKey + "/" + env.getName();
     }
 
     private String contentUrl(String ownerKey) {
-        return CandlepinMode.isStandalone() ? "/" + ownerKey : "/sca/" + ownerKey;
+        return "/" + ownerKey;
     }
 
     private void promoteContentToEnvironment(ApiClient client, String envId, ContentDTO content,
@@ -1484,10 +1490,11 @@ public class ContentAccessSpecTest {
         }
     }
 
-    private void verifyCertContentPath(String ownerKey, String contentUrl, String envName,
+    private void verifyCertContentPath(String ownerKey, String contentUrl, EnvironmentDTO env,
         String cerContentPath) {
-        envName = envName != null ? "/" + envName : "";
-        String expected = CandlepinMode.isStandalone() ? "/" + ownerKey + envName + contentUrl : contentUrl;
+        String ownerPrefix = ownerKey != null ? ownerKey : "";
+        String envPrefix = env != null && env.getContentPrefix() != null ? env.getContentPrefix() : "";
+        String expected = ownerPrefix + envPrefix + contentUrl;
         assertEquals(expected, cerContentPath);
     }
 

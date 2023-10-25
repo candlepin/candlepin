@@ -659,7 +659,7 @@ public class ContentAccessManagerTest {
         when(mockEnvironmentCurator.getConsumerEnvironments(any(Consumer.class)))
             .thenReturn(List.of(environment));
 
-        String expectedPath = "/sca/" + owner.getKey();
+        String expectedPath = "/" + owner.getKey() + "/" + environment.getName();
 
         ContentAccessManager manager = this.createManager();
         ContentAccessCertificate output = manager.getCertificate(consumer);

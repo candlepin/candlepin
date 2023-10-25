@@ -18,7 +18,6 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.ProductContent;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,15 +37,15 @@ public class PromotedContent {
     private static final Logger log = LoggerFactory.getLogger(PromotedContent.class);
 
     private final Map<String, EnvironmentContent> contents;
-    private final ContentPrefix prefix;
+    private final ContentPathBuilder contentPathBuilder;
 
     /**
      * A constructor
      *
-     * @param prefix prefixes to be used in path construction
+     * @param contentPathBuilder builder for the content urls
      */
-    public PromotedContent(ContentPrefix prefix) {
-        this.prefix = Objects.requireNonNull(prefix);
+    public PromotedContent(ContentPathBuilder contentPathBuilder) {
+        this.contentPathBuilder = Objects.requireNonNull(contentPathBuilder);
         this.contents = new HashMap<>();
     }
 
@@ -144,17 +143,12 @@ public class PromotedContent {
     /**
      * Constructs a content path from environment specific prefix and given content.
      *
-     * The format of the resulting content path will depend on the prefix class
-     * used. For the details of prefix construction refer to the {@link ContentPrefix}
-     * and its implementations.
-     *
      * @param pc content for which to create a content path
      * @return full content path
      */
     public String getPath(ProductContent pc) {
         String contentPath = getContentUrl(pc);
-        String contentPrefix = this.prefix.get(this.environmentIdOf(pc));
-        String fullContentPath = createFullContentPath(contentPrefix, contentPath);
+        String fullContentPath = this.contentPathBuilder.build(this.environmentIdOf(pc), contentPath);
         log.trace("Full content path for product content is: {}", fullContentPath);
         return fullContentPath;
     }
@@ -164,28 +158,6 @@ public class PromotedContent {
             return null;
         }
         return pc.getContent().getContentUrl();
-    }
-
-    private String createFullContentPath(String contentPrefix, String contentPath) {
-        // Allow for the case where the content URL is a true URL.
-        // If that is true, then return it as is.
-        if (contentPath != null && (contentPath.startsWith("http://") ||
-            contentPath.startsWith("file://") ||
-            contentPath.startsWith("https://") ||
-            contentPath.startsWith("ftp://"))) {
-
-            return contentPath;
-        }
-
-        String prefix = "/";
-        if (!StringUtils.isEmpty(contentPrefix)) {
-            // Ensure there is no double // in the URL. See BZ952735
-            // remove them all except one.
-            prefix = StringUtils.stripEnd(contentPrefix, "/") + prefix;
-        }
-
-        contentPath = StringUtils.stripStart(contentPath, "/");
-        return prefix + contentPath;
     }
 
 }
