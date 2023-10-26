@@ -52,6 +52,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -758,6 +759,7 @@ class VirtSpecTest {
 
     private PoolDTO findGuestPool(List<PoolDTO> pools) {
         return pools.stream()
+            .sorted(Comparator.comparing(PoolDTO::getId))
             .filter(poolDTO -> poolDTO.getSourceEntitlement() != null)
             .findFirst()
             .orElseThrow();
