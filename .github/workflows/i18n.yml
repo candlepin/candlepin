@@ -36,7 +36,7 @@ jobs:
 
       - name: Install dependencies
         shell: bash
-        run: dnf --setopt install_weak_deps=False install -y gettext jss git
+        run: dnf --setopt install_weak_deps=False install -y gettext git
 
       - name: Check out repository
         uses: actions/checkout@v4

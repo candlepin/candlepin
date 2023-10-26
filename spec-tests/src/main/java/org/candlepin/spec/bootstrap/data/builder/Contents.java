@@ -76,7 +76,8 @@ public final class Contents {
      *  a ContentDTO instance with the required fields populated with semi-random values
      */
     public static ContentDTO random() {
-        String cid = StringUtil.random(18, StringUtil.CHARSET_NUMERIC);
+        // prefix is needed because this id is used in a OID. BC does not allow leading zeros in a segment
+        String cid = StringUtil.random("1", 17, StringUtil.CHARSET_NUMERIC);
 
         return new ContentDTO()
             .id(cid)

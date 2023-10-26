@@ -15,7 +15,7 @@
 package org.candlepin.guice;
 
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
@@ -47,7 +47,7 @@ class DefaultConfig extends AbstractModule {
         bind(HttpServletDispatcher.class).asEagerSingleton();
         bind(ScriptEngineProvider.class);
         bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);
-        bind(SubjectKeyIdentifierWriter.class).to(DefaultSubjectKeyIdentifierWriter.class);
+        bind(SubjectKeyIdentifierWriter.class).to(BouncyCastleSubjectKeyIdentifierWriter.class);
         bind(IdentityCertServiceAdapter.class).to(DefaultIdentityCertServiceAdapter.class);
         bind(EntitlementCertServiceAdapter.class).to(DefaultEntitlementCertServiceAdapter.class);
         bind(UserServiceAdapter.class).to(DefaultUserServiceAdapter.class);

@@ -24,7 +24,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 
 
-public class DefaultSubjectKeyIdentifierWriterTest {
+public class BouncyCastleSubjectKeyIdentifierWriterTest {
 
     private KeyPair keyPair;
 
@@ -37,7 +37,7 @@ public class DefaultSubjectKeyIdentifierWriterTest {
 
     @Test
     public void getSubjectKeyIdentifier() throws Exception {
-        DefaultSubjectKeyIdentifierWriter writer = new DefaultSubjectKeyIdentifierWriter();
+        BouncyCastleSubjectKeyIdentifierWriter writer = new BouncyCastleSubjectKeyIdentifierWriter();
         byte[] actual = writer.getSubjectKeyIdentifier(keyPair, null);
         byte[] expected = new JcaX509ExtensionUtils()
             .createSubjectKeyIdentifier(keyPair.getPublic())

@@ -4,7 +4,7 @@ USER root
 
 # Update and install dependencies
 RUN dnf -y --setopt install_weak_deps=False update && \
-    dnf -y --setopt install_weak_deps=False install java-17-openjdk-devel jss gettext && \
+    dnf -y --setopt install_weak_deps=False install java-17-openjdk-devel gettext && \
     dnf clean all
 
 ENV JAVA_HOME=/usr/lib/jvm/jre-17-openjdk
@@ -19,11 +19,7 @@ WORKDIR /candlepin
 # omitted, several important tests will be skipped (import testing, hosted-specific tests, etc.)
 RUN ./gradlew war -Ptest_extensions=hostedtest,manifestgen && \
     mkdir -p /app/build && \
-    cp $(find ./build/libs -name 'candlepin*.war' | head -n 1) /app/build
-
-WORKDIR /app/build
-RUN jar xf $(find . -name 'candlepin*.war' | head -n 1); \
-    sed -i 's/jss4.jar/jss.jar/g' ./META-INF/context.xml
+    cp $(find ./build/libs -name 'candlepin*.war' | head -n 1) /app/build/candlepin.war
 
 FROM registry.access.redhat.com/ubi9-minimal:9.2-691
 LABEL author="Josh Albrecht <jalbrech@redhat.com>"
@@ -33,7 +29,7 @@ USER root
 # Update and install dependencies
 RUN microdnf -y update && \
     microdnf -y update ca-certificates && \
-    microdnf install -y java-17-openjdk-headless openssl jss initscripts wget tar && \
+    microdnf install -y java-17-openjdk-headless openssl initscripts wget tar && \
     microdnf clean all
 
 ENV JAVA_HOME=/usr/lib/jvm/jre-17-openjdk
@@ -60,7 +56,7 @@ RUN wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.76/bin/apache-tomc
     chmod -R 775 /var/log/;
 
 # Candlepin install
-COPY --from=builder /app/build /opt/tomcat/webapps/candlepin
+COPY --from=builder /app/build /opt/tomcat/webapps
 
 # Setup certificate and key
 WORKDIR /etc/candlepin/certs

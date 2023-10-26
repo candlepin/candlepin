@@ -69,6 +69,10 @@ ext {
 }
 
 dependencies {
+    //  Bouncy Castle
+    implementation(libs.bouncycastle.prov)
+    implementation(libs.bouncycastle.pkix)
+
     // Cache
     implementation(libs.caffeine)
 
@@ -171,9 +175,6 @@ dependencies {
     // OTEL
     implementation(libs.otel.annotation)
 
-    // Use wildcard because this could be called jss4.jar or jss.jar
-    // (depending on if we are before Fedora35/RHEL9 or after)
-    providedCompile fileTree(dir: '/usr/lib64/jss', include: '*.jar')
     providedCompile(libs.javax.servlet)
 
     // DB Drivers
@@ -296,8 +297,6 @@ test {
     // Sometimes causes out of memory on vagrant
     maxHeapSize = "2g"
     jvmArgs = [
-            // We need to load the native jss lib (either libjss4.so or libjss.so) from this directory
-            '-Djava.library.path=/usr/lib64/jss',
             '-XX:+HeapDumpOnOutOfMemoryError'
     ]
 

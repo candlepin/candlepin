@@ -24,7 +24,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.codec.binary.Base64;
-import org.mozilla.jss.netscape.security.util.DerValue;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DERUTF8String;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
@@ -148,34 +150,41 @@ public final class CertificateUtil {
 
     public static byte[] compressedContentExtensionValueFromCert(String certString, String extensionId)
         throws IOException {
-        DerValue value = getDerValueFromExtension(certString, extensionId);
+        DEROctetString value = (DEROctetString) getDerValueFromExtension(certString, extensionId);
 
-        return value != null ? value.getOctetString() : null;
+        return value != null ? value.getOctets() : null;
     }
 
     public static String standardExtensionValueFromCert(String certString, String extensionId) {
-        DerValue value = getDerValueFromExtension(certString, extensionId);
+        DERUTF8String value = (DERUTF8String) getDerValueFromExtension(certString, extensionId);
 
-        return value != null ? value.toString() : null;
+        return value != null ? value.getString() : null;
     }
 
-    public static DerValue getDerValueFromExtension(String certString, String extensionId) {
+    public static ASN1Primitive getDerValueFromExtension(String certString, String extensionId) {
         certString = certString.replace("\"", "")
             .replace("\\n", Character.toString((char) 10));
         X509Certificate cert = X509Cert.parseCertificate(certString);
+
         try {
-            byte[] derOctetValue = cert.getExtensionValue(extensionId);
-            if (derOctetValue == null) {
+            byte[] derValue = cert.getExtensionValue(extensionId);
+            if (derValue == null) {
                 return null;
             }
 
-            DerValue value = new DerValue(derOctetValue);
-            byte[] octetString = value.getOctetString();
-            return new DerValue(octetString);
+            ASN1Primitive value = ASN1Primitive.fromByteArray(derValue);
+            if (value instanceof DEROctetString) {
+                byte[] octetString = ((DEROctetString) value).getOctets();
+                return DEROctetString.fromByteArray(octetString);
+            }
+            else if (value instanceof DERUTF8String) {
+                return value;
+            }
         }
         catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return null;
     }
 
     /**

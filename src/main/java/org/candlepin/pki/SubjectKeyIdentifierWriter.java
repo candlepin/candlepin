@@ -14,9 +14,6 @@
  */
 package org.candlepin.pki;
 
-import org.mozilla.jss.asn1.ASN1Util;
-import org.mozilla.jss.asn1.OCTET_STRING;
-
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -70,8 +67,4 @@ public interface SubjectKeyIdentifierWriter {
      */
     byte[] getSubjectKeyIdentifier(KeyPair clientKeyPair, Set<X509ExtensionWrapper> extensions)
         throws IOException, NoSuchAlgorithmException;
-
-    default byte[] toOctetString(byte[] bytesToEncode) throws IOException {
-        return ASN1Util.encode(new OCTET_STRING(bytesToEncode));
-    }
 }

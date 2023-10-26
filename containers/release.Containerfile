@@ -18,8 +18,6 @@ RUN wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.76/bin/apache-tomc
 RUN mkdir -p /app/build
 WORKDIR /app/build
 COPY ${WAR_FILE} ./candlepin.war
-RUN jar xf $(find . -name 'candlepin*.war' | head -n 1); \
-    sed -i 's/jss4.jar/jss.jar/g' ./META-INF/context.xml
 
 # Prepare development certs
 RUN mkdir -p /app/certs
@@ -49,7 +47,7 @@ USER root
 # Update and install dependencies
 RUN microdnf -y update && \
     microdnf -y update ca-certificates && \
-    microdnf install -y java-17-openjdk-headless jss initscripts && \
+    microdnf install -y java-17-openjdk-headless initscripts && \
     microdnf clean all
 
 ENV JAVA_HOME=/usr/lib/jvm/jre-17-openjdk
@@ -73,7 +71,7 @@ RUN mkdir -p /etc/candlepin/certs; \
     chmod -R 775 /var/log/;
 
 # Candlepin install
-COPY --from=builder /app/build /opt/tomcat/webapps/candlepin
+COPY --from=builder /app/build /opt/tomcat/webapps
 
 WORKDIR /opt/tomcat/bin
 

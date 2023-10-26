@@ -18,8 +18,7 @@ import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PrivateKeyReader;
-import org.candlepin.pki.impl.JSSPrivateKeyReader;
-import org.candlepin.pki.impl.JSSProviderLoader;
+import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 
 import org.junit.jupiter.api.Assertions;
 
@@ -35,13 +34,10 @@ import javax.inject.Inject;
 
 
 public class CertificateReaderForTesting extends CertificateReader {
-    static {
-        JSSProviderLoader.initialize();
-    }
 
     @Inject
     public CertificateReaderForTesting() throws CertificateException, IOException {
-        super(new DevConfig(), new JSSPrivateKeyReader());
+        super(new DevConfig(), new BouncyCastlePrivateKeyReader());
     }
 
     @Override

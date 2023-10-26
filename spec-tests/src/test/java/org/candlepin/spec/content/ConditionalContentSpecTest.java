@@ -75,15 +75,15 @@ public class ConditionalContentSpecTest {
         ProductDTO dependentProvProd = adminClient.ownerProducts()
             .createProduct(ownerKey, Products.randomEng());
         ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(5))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd1.getId())));
         ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(5))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd2.getId())));
         ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(5))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd3.getId())));
         adminClient.ownerProducts()
@@ -139,15 +139,15 @@ public class ConditionalContentSpecTest {
         ProductDTO dependentProvProd = adminClient.ownerProducts()
             .createProduct(ownerKey, Products.randomEng());
         ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(5))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd1.getId())));
         ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(5))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd2.getId())));
         ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(5))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd3.getId())));
         adminClient.ownerProducts()
@@ -241,15 +241,15 @@ public class ConditionalContentSpecTest {
         ProductDTO dependentProvProd = adminClient.ownerProducts()
             .createProduct(ownerKey, Products.randomEng());
         ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(5))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd1.getId())));
         ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(5))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd2.getId())));
         ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(5))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd3.getId())));
         adminClient.ownerProducts()
@@ -330,15 +330,15 @@ public class ConditionalContentSpecTest {
         ProductDTO dependentProvProd = adminClient.ownerProducts()
             .createProduct(ownerKey, Products.randomEng());
         ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(5))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd1.getId())));
         ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(5))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd2.getId())));
         ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(5))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd3.getId())));
         adminClient.ownerProducts()
@@ -451,15 +451,15 @@ public class ConditionalContentSpecTest {
         ProductDTO dependentProvProd = adminClient.ownerProducts()
             .createProduct(ownerKey, Products.randomEng());
         ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(5))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd1.getId())));
         ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(5))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd2.getId())));
         ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(5))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd3.getId())));
         adminClient.ownerProducts()
@@ -653,14 +653,14 @@ public class ConditionalContentSpecTest {
         // Note: for v1 certificates, we only support certain types of content type, like 'yum', so we
         // must set the type to yum here, and also only numeric ids
         ContentDTO engProd2Content = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(6, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(6))
             .type("yum"));
 
         // Content that has a required/modified product 'engProd2' (this eng product needs to be entitled
         // to the consumer already, or otherwise this content will get filtered out during entitlement
         // cert generation)
         ContentDTO engProd1Content = adminClient.ownerContent().createContent(ownerKey, Contents.random()
-            .id(StringUtil.random(6, StringUtil.CHARSET_NUMERIC))
+            .id(randomContentId(6))
             .type("yum")
             .modifiedProductIds(Set.of(engProd2.getId())));
 
@@ -725,4 +725,7 @@ public class ConditionalContentSpecTest {
         return certs.get(0).get("cert").asText();
     }
 
+    private String randomContentId(int length) {
+        return StringUtil.random("1", length - 1, StringUtil.CHARSET_NUMERIC);
+    }
 }

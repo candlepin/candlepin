@@ -21,7 +21,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.impl.JSSPrivateKeyReader;
+import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -61,7 +61,7 @@ public class CloudAuthTokenGeneratorTest {
             this.config.setProperty(ConfigProperties.CA_KEY, caKey);
             this.config.setProperty(ConfigProperties.CA_KEY_PASSWORD, "password");
 
-            certificateReader = new CertificateReader(config, new JSSPrivateKeyReader());
+            certificateReader = new CertificateReader(config, new BouncyCastlePrivateKeyReader());
         }
         catch (Exception e) {
             throw new RuntimeException(e);

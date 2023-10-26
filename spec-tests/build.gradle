@@ -14,6 +14,8 @@ dependencies {
     implementation project(":client")
 
     implementation(libs.assertj)
+    implementation(libs.bouncycastle.prov)
+    implementation(libs.bouncycastle.pkix)
     implementation(libs.commons.codec)
     implementation(libs.commons.io)
     implementation(libs.commons.lang)
@@ -34,7 +36,6 @@ dependencies {
 
     testRuntimeOnly(libs.junit.engine)
 
-    implementation fileTree(dir: '/usr/lib64/jss', include: '*.jar')
 }
 
 testlogger {

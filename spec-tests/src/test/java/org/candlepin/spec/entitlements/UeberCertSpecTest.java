@@ -34,9 +34,10 @@ import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.DEROctetString;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.mozilla.jss.netscape.security.util.DerValue;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
@@ -154,9 +155,10 @@ public class UeberCertSpecTest {
 
     private String getExtensionValue(X509Certificate cert, String extensionId) {
         try {
-            DerValue value = new DerValue(cert.getExtensionValue(extensionId));
-            byte[] octetString = value.getOctetString();
-            return new DerValue(octetString).toString();
+            byte[] derValue = cert.getExtensionValue(extensionId);
+            ASN1Primitive value = ASN1Primitive.fromByteArray(derValue);
+            byte[] octetString = ((DEROctetString) value).getOctets();
+            return DEROctetString.fromByteArray(octetString).toString();
         }
         catch (IOException e) {
             throw new RuntimeException(e);

@@ -31,9 +31,9 @@ import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
-import org.candlepin.pki.impl.JSSPKIUtility;
-import org.candlepin.pki.impl.JSSPrivateKeyReader;
+import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
+import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ObjectMapperFactory;
@@ -71,10 +71,10 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setup() throws Exception {
-        PrivateKeyReader keyReader = new JSSPrivateKeyReader();
+        PrivateKeyReader keyReader = new BouncyCastlePrivateKeyReader();
         CertificateReader certReader = new CertificateReader(this.config, keyReader);
-        SubjectKeyIdentifierWriter keyIdWriter = new DefaultSubjectKeyIdentifierWriter();
-        this.pkiUtility = spy(new JSSPKIUtility(certReader, keyIdWriter, this.config,
+        SubjectKeyIdentifierWriter keyIdWriter = new BouncyCastleSubjectKeyIdentifierWriter();
+        this.pkiUtility = spy(new BouncyCastlePKIUtility(certReader, keyIdWriter, this.config,
             this.keyPairDataCurator));
 
         this.x509V3ExtensionUtil = spy(new X509V3ExtensionUtil(this.config, this.entitlementCurator,

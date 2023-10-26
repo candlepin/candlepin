@@ -73,7 +73,8 @@ public final class Products {
      *  a product DTO with a randomly generated SKU ID and name
      */
     public static ProductDTO randomEng() {
-        String id = StringUtil.random(8, StringUtil.CHARSET_NUMERIC);
+        // prefix is needed because this id is used in a OID. BC does not allow leading zeros in a segment
+        String id = StringUtil.random("1", 7, StringUtil.CHARSET_NUMERIC);
 
         return new ProductDTO()
             .id(id)

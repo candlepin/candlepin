@@ -126,7 +126,7 @@ public class EnvironmentCertV3SpecTest {
 
         assertThat(ents).singleElement();
         String cert = getCertFromEnt(ents.get(0));
-        assertThat(CertificateUtil.getDerValueFromExtension(cert, ENT_VERSION_OID).toString())
+        assertThat(CertificateUtil.standardExtensionValueFromCert(cert, ENT_VERSION_OID))
             .isEqualTo("3.4");
         JsonNode entCert = CertificateUtil.decodeAndUncompressCertificate(cert, ApiClient.MAPPER);
 

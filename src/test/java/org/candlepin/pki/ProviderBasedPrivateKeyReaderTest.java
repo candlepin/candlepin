@@ -16,7 +16,7 @@ package org.candlepin.pki;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.candlepin.pki.impl.JSSPrivateKeyReader;
+import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.ProviderBasedPrivateKeyReader;
 
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
@@ -59,7 +59,7 @@ public class ProviderBasedPrivateKeyReaderTest {
 
     public ProviderBasedPrivateKeyReaderTest()
         throws Exception {
-        this.constructor = JSSPrivateKeyReader.class.getConstructor();
+        this.constructor = BouncyCastlePrivateKeyReader.class.getConstructor();
     }
 
     @Test

@@ -19,7 +19,9 @@ import org.candlepin.dto.api.client.v1.EntitlementDTO;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import org.mozilla.jss.netscape.security.util.DerValue;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DERUTF8String;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -133,25 +135,29 @@ public class X509Cert {
             .collect(Collectors.joining(","));
     }
 
-    public DerValue extensionValue(String extensionId) {
+    public ASN1Primitive extensionValue(String extensionId) {
         try {
-            byte[] derOctetValue = this.certificate.getExtensionValue(extensionId);
-            if (derOctetValue == null) {
+            byte[] derValue = this.certificate.getExtensionValue(extensionId);
+            if (derValue == null) {
                 return null;
             }
-
-            DerValue value = new DerValue(derOctetValue);
-            byte[] octetString = value.getOctetString();
-            return new DerValue(octetString);
+            ASN1Primitive value = ASN1Primitive.fromByteArray(derValue);
+            if (value instanceof DEROctetString) {
+                byte[] octetString = ((DEROctetString) value).getOctets();
+                return DEROctetString.fromByteArray(octetString);
+            }
+            else if (value instanceof DERUTF8String) {
+                return value;
+            }
         }
         catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return null;
     }
 
     public boolean hasExtension(String extensionId) {
-        DerValue extension = this.extensionValue(extensionId);
-        return extension != null;
+        return this.extensionValue(extensionId) != null;
     }
 
     private Collection<List<?>> subjectAlternativeNames() {

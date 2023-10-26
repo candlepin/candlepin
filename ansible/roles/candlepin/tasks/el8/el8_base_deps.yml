@@ -37,7 +37,6 @@
       - java-17-openjdk-devel
       - gettext
       - openssl
-      - jss
       - pki-servlet-engine
       - platform-python
       - python36
