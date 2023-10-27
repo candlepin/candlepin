@@ -71,6 +71,8 @@ import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.exception.product.ProductServiceException;
+import org.candlepin.service.exception.subscription.SubscriptionServiceException;
 import org.candlepin.service.model.CdnInfo;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.CertificateSerialInfo;
@@ -199,7 +201,8 @@ public class CandlepinPoolManager implements PoolManager {
     @Traceable
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter,
         ProductServiceAdapter prodAdapter,
-        @TraceableParam("owner") Owner owner, boolean lazy) {
+        @TraceableParam("owner") Owner owner, boolean lazy) throws SubscriptionServiceException,
+            ProductServiceException {
 
         Date now = new Date();
         Owner resolvedOwner = this.resolveOwner(owner);

@@ -91,6 +91,7 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.user.UserServiceException;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.FactValidator;
@@ -301,7 +302,7 @@ public class ConsumerResourceCreationTest {
             .thenReturn(new ComplianceStatus(new Date()));
     }
 
-    public ConsumerType initConsumerType() {
+    public ConsumerType initConsumerType() throws UserServiceException {
         return new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
     }
 

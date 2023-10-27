@@ -25,6 +25,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
+import org.candlepin.service.exception.user.UserServiceException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,7 +43,7 @@ public class PersonConsumerResourceCreationLiberalNameRules extends
     ConsumerResourceCreationLiberalNameRules {
 
     @Override
-    public ConsumerType initConsumerType() {
+    public ConsumerType initConsumerType() throws UserServiceException {
         ConsumerType systemtype = new ConsumerType(ConsumerType.ConsumerTypeEnum.PERSON);
 
         // create an owner, an ownerperm, and roles for the user we provide

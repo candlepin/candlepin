@@ -15,8 +15,8 @@
 package org.candlepin.hostedtest;
 
 import org.candlepin.service.CloudRegistrationAdapter;
-import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
-import org.candlepin.service.exception.MalformedCloudRegistrationException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationMalformedDataException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationServiceException;
 import org.candlepin.service.model.CloudRegistrationInfo;
 import org.candlepin.service.model.OwnerInfo;
 
@@ -48,14 +48,14 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
      */
     @Override
     public String resolveCloudRegistrationData(CloudRegistrationInfo cloudRegInfo)
-        throws CloudRegistrationAuthorizationException, MalformedCloudRegistrationException {
+        throws CloudRegistrationServiceException {
 
         if (cloudRegInfo == null) {
-            throw new MalformedCloudRegistrationException("No cloud registration information provided");
+            throw new CloudRegistrationMalformedDataException("No cloud registration information provided");
         }
 
         if (cloudRegInfo.getMetadata() == null) {
-            throw new MalformedCloudRegistrationException(
+            throw new CloudRegistrationMalformedDataException(
                 "No metadata provided with the cloud registration info");
 
         }

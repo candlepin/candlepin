@@ -45,6 +45,7 @@ import org.candlepin.model.User;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.user.UserServiceException;
 import org.candlepin.test.DatabaseTestFixture;
 
 import com.google.inject.AbstractModule;
@@ -165,7 +166,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         when(mockInfo.getResourceClass()).thenReturn(resourceClass);
     }
 
-    private void keycloakSetup() {
+    private void keycloakSetup() throws UserServiceException {
         KeycloakOIDCFacade keycloakOIDCFacade = new KeycloakOIDCFacade(mockReq);
         when(usa.findByLogin(eq("qa@redhat.com"))).thenReturn(
             new User("Test", "redhat", true));

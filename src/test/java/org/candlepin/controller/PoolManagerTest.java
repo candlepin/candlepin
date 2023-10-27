@@ -117,6 +117,7 @@ import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.exception.subscription.SubscriptionServiceException;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestUtil;
@@ -455,7 +456,7 @@ public class PoolManagerTest {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
-    public void testRefreshPoolsOnlyRegeneratesFloatingWhenNecessary() {
+    public void testRefreshPoolsOnlyRegeneratesFloatingWhenNecessary() throws SubscriptionServiceException {
         List<Subscription> subscriptions = new ArrayList<>();
 
         Owner owner = this.getOwner();
@@ -495,7 +496,7 @@ public class PoolManagerTest {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
-    public void testRefreshPoolsOnlyRegeneratesWhenNecessary() {
+    public void testRefreshPoolsOnlyRegeneratesWhenNecessary() throws SubscriptionServiceException {
         List<Subscription> subscriptions = new ArrayList<>();
 
         Owner owner = this.getOwner();
@@ -535,7 +536,8 @@ public class PoolManagerTest {
         assertPoolsAreEqual(TestUtil.copyFromSub(sub), argPool.getValue());
     }
 
-    private void mockSubscriptions(Owner owner, Collection<? extends SubscriptionInfo> subscriptions) {
+    private void mockSubscriptions(Owner owner, Collection<? extends SubscriptionInfo> subscriptions)
+        throws SubscriptionServiceException {
         Set<String> sids = new HashSet<>();
 
         for (SubscriptionInfo subscription : subscriptions) {
@@ -768,7 +770,7 @@ public class PoolManagerTest {
     }
 
     @Test
-    public void testRefreshPoolsDeletesOrphanedPools() {
+    public void testRefreshPoolsDeletesOrphanedPools() throws SubscriptionServiceException {
         List<Subscription> subscriptions = new ArrayList<>();
         List<Pool> pools = new ArrayList<>();
         Product product = TestUtil.createProduct();
@@ -795,7 +797,7 @@ public class PoolManagerTest {
     }
 
     @Test
-    public void testRefreshPoolsDeletesOrphanedHostedVirtBonusPool() {
+    public void testRefreshPoolsDeletesOrphanedHostedVirtBonusPool() throws SubscriptionServiceException {
         List<Subscription> subscriptions = new ArrayList<>();
         List<Pool> pools = new ArrayList<>();
         Product product = TestUtil.createProduct();
@@ -828,7 +830,7 @@ public class PoolManagerTest {
     }
 
     @Test
-    public void testRefreshPoolsSkipsOrphanedEntitlementDerivedPools() {
+    public void testRefreshPoolsSkipsOrphanedEntitlementDerivedPools() throws SubscriptionServiceException {
         List<Subscription> subscriptions = new ArrayList<>();
         List<Pool> pools = new ArrayList<>();
         Product product = TestUtil.createProduct();
@@ -856,7 +858,7 @@ public class PoolManagerTest {
     }
 
     @Test
-    public void testRefreshPoolsSkipsOrphanedStackDerivedPools() {
+    public void testRefreshPoolsSkipsOrphanedStackDerivedPools() throws SubscriptionServiceException {
         List<Subscription> subscriptions = new ArrayList<>();
         List<Pool> pools = new ArrayList<>();
         Product product = TestUtil.createProduct();
@@ -883,7 +885,7 @@ public class PoolManagerTest {
     }
 
     @Test
-    public void testRefreshPoolsSkipsDevelopmentPools() {
+    public void testRefreshPoolsSkipsDevelopmentPools() throws SubscriptionServiceException {
         List<Subscription> subscriptions = new ArrayList<>();
         List<Pool> pools = new ArrayList<>();
         Product product = TestUtil.createProduct();
@@ -910,7 +912,7 @@ public class PoolManagerTest {
 
     @SuppressWarnings("rawtypes")
     @Test
-    public void testRefreshPoolsSortsStackDerivedPools() {
+    public void testRefreshPoolsSortsStackDerivedPools() throws SubscriptionServiceException {
         List<Subscription> subscriptions = new ArrayList<>();
         List<Pool> pools = new ArrayList<>();
 
@@ -938,7 +940,7 @@ public class PoolManagerTest {
     }
 
     @Test
-    public void refreshPoolsCreatingPoolsForExistingSubscriptions() {
+    public void refreshPoolsCreatingPoolsForExistingSubscriptions() throws SubscriptionServiceException {
         List<Subscription> subscriptions = new ArrayList<>();
         List<Pool> pools = new ArrayList<>();
 
@@ -981,7 +983,7 @@ public class PoolManagerTest {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
-    public void refreshPoolsCleanupPoolThatLostVirtLimit() {
+    public void refreshPoolsCleanupPoolThatLostVirtLimit() throws SubscriptionServiceException {
         List<Subscription> subscriptions = new ArrayList<>();
         List<Pool> pools = new ArrayList<>();
 
@@ -1249,7 +1251,8 @@ public class PoolManagerTest {
     }
 
     @Test
-    public void testRefreshPoolsRemovesExpiredSubscriptionsAlongWithItsPoolsAndEnts() {
+    public void testRefreshPoolsRemovesExpiredSubscriptionsAlongWithItsPoolsAndEnts()
+        throws SubscriptionServiceException {
         PreUnbindHelper preHelper = mock(PreUnbindHelper.class);
 
         Date expiredStart = TestUtil.createDate(2004, 5, 5);
@@ -1350,7 +1353,7 @@ public class PoolManagerTest {
     }
 
     @Test
-    public void testCleanupExpiredPools() {
+    public void testCleanupExpiredPools() throws SubscriptionServiceException {
         Pool p = createPoolWithEntitlements();
         p.setSubscriptionId("subid");
         List<Pool> pools = new LinkedList<>();
@@ -1374,7 +1377,7 @@ public class PoolManagerTest {
     }
 
     @Test
-    public void testCleanupExpiredPoolsReadOnlySubscriptions() {
+    public void testCleanupExpiredPoolsReadOnlySubscriptions() throws SubscriptionServiceException {
         Pool p = createPoolWithEntitlements();
         p.setSubscriptionId("subid");
         List<Pool> pools = List.of(p);
@@ -1468,7 +1471,7 @@ public class PoolManagerTest {
     }
 
     @Test
-    public void testRefreshPoolsRemovesOtherOwnerPoolsForSameSub() {
+    public void testRefreshPoolsRemovesOtherOwnerPoolsForSameSub() throws SubscriptionServiceException {
         PreUnbindHelper preHelper = mock(PreUnbindHelper.class);
         Owner other = new Owner()
             .setKey("otherkey")
@@ -1584,7 +1587,7 @@ public class PoolManagerTest {
     }
 
     @Test
-    public void createPoolsForExistingSubscriptionsNoneExist() {
+    public void createPoolsForExistingSubscriptionsNoneExist() throws SubscriptionServiceException {
         Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator);
 
@@ -1633,7 +1636,7 @@ public class PoolManagerTest {
     }
 
     @Test
-    public void createPoolsForExistingSubscriptionsPrimaryExist() {
+    public void createPoolsForExistingSubscriptionsPrimaryExist() throws SubscriptionServiceException {
         Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator);
 
@@ -1675,7 +1678,7 @@ public class PoolManagerTest {
     }
 
     @Test
-    public void createPoolsForExistingSubscriptionsBonusExist() {
+    public void createPoolsForExistingSubscriptionsBonusExist() throws SubscriptionServiceException {
         Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator);
 

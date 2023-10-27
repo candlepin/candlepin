@@ -45,6 +45,7 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.exception.product.ProductServiceException;
 import org.candlepin.service.model.ProductInfo;
 
 import com.google.common.collect.Iterables;
@@ -169,7 +170,8 @@ public class Entitler {
 
     public List<Entitlement> bindByProducts(Collection<String> productIds, String consumerUuid,
         Date entitleDate, Collection<String> fromPools)
-        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException,
+        ProductServiceException {
 
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
@@ -195,7 +197,8 @@ public class Entitler {
      *         and the owner has it disabled.
      */
     public List<Entitlement> bindByProducts(AutobindData data)
-        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException,
+        ProductServiceException {
 
         return bindByProducts(data, false);
     }
@@ -214,7 +217,8 @@ public class Entitler {
      */
     @Transactional
     public List<Entitlement> bindByProducts(AutobindData data, boolean force)
-        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException,
+        ProductServiceException {
 
         Consumer consumer = data.getConsumer();
         Owner owner = data.getOwner();
@@ -364,7 +368,8 @@ public class Entitler {
      * @param sku the product id of the developer SKU.
      * @return the newly created developer pool (note: not yet persisted)
      */
-    protected Pool assembleDevPool(Consumer consumer, Owner owner, String sku) {
+    protected Pool assembleDevPool(Consumer consumer, Owner owner, String sku)
+        throws ProductServiceException {
         DeveloperProducts devProducts = getDeveloperPoolProducts(owner, sku);
         Product skuProduct = devProducts.getSku();
         Date startDate = consumer.getCreated();
@@ -383,7 +388,8 @@ public class Entitler {
         return pool;
     }
 
-    private DeveloperProducts getDeveloperPoolProducts(Owner owner, String sku) {
+    private DeveloperProducts getDeveloperPoolProducts(Owner owner, String sku)
+        throws ProductServiceException {
         DeveloperProducts devProducts = getDevProductMap(owner, sku);
         verifyDevProducts(sku, devProducts);
         return devProducts;
@@ -397,7 +403,7 @@ public class Entitler {
      * @return a {@link DeveloperProducts} object that contains the Product objects
      *         from the adapter.
      */
-    private DeveloperProducts getDevProductMap(Owner owner, String sku) {
+    private DeveloperProducts getDevProductMap(Owner owner, String sku) throws ProductServiceException {
         Collection<? extends ProductInfo> productsByIds = this.productAdapter
             .getProductsByIds(owner.getKey(), Arrays.asList(sku));
 
@@ -413,7 +419,7 @@ public class Entitler {
             List<String> devProductIds = new ArrayList<>();
             this.collectDevProductIds(devProductIds, devProduct);
 
-            // Do a refresh so we're all up to date here
+            // Do a refresh, so we're all up to date here
             log.debug("Importing products for dev pool resolution...");
 
             RefreshResult refreshResult = this.refreshWorkerProvider.get()
@@ -492,8 +498,8 @@ public class Entitler {
      * @param consumer The consumer being entitled.
      * @return List of Entitlements
      */
-    public List<PoolQuantity> getDryRun(Consumer consumer, Owner owner,
-        String serviceLevelOverride) {
+    public List<PoolQuantity> getDryRun(Consumer consumer, Owner owner, String serviceLevelOverride)
+        throws ProductServiceException {
 
         List<PoolQuantity> result = new ArrayList<>();
         try {

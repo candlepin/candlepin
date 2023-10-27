@@ -14,8 +14,7 @@
  */
 package org.candlepin.service;
 
-import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
-import org.candlepin.service.exception.MalformedCloudRegistrationException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationServiceException;
 import org.candlepin.service.model.CloudRegistrationInfo;
 
 
@@ -32,16 +31,14 @@ public interface CloudRegistrationAdapter {
      * @param cloudRegInfo
      *  A CloudRegistrationInfo instance which contains the cloud provider details to process
      *
-     * @throws MalformedCloudRegistrationException
-     *  if the cloud registration info is null, incomplete, or invalid
-     *
-     * @throws CloudRegistrationAuthorizationException
-     *  if cloud registration is not permitted for the provider or account holder
+     * @throws CloudRegistrationServiceException
+     *  if there is an exception thrown in the method in the implementation. The subclass of
+     *  the exception will give detail as to the problem
      *
      * @return
      *  the owner key of the owner (organization) to which the cloud user will be registered
      */
     String resolveCloudRegistrationData(CloudRegistrationInfo cloudRegInfo)
-        throws CloudRegistrationAuthorizationException, MalformedCloudRegistrationException;
+        throws CloudRegistrationServiceException;
 
 }

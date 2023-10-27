@@ -24,8 +24,8 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.resteasy.filter.AuthUtil;
 import org.candlepin.service.CloudRegistrationAdapter;
-import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
-import org.candlepin.service.exception.MalformedCloudRegistrationException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationMalformedDataException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationServiceException;
 import org.candlepin.service.model.CloudRegistrationInfo;
 import org.candlepin.util.Util;
 
@@ -232,19 +232,16 @@ public class CloudRegistrationAuth implements AuthProvider {
      * @throws UnsupportedOperationException
      *  if the current Candlepin configuration does not support cloud registration
      *
-     * @throws CloudRegistrationAuthorizationException
-     *  if cloud registration is not permitted for the cloud provider or account holder specified by
-     *  the cloud registration details
-     *
-     * @throws MalformedCloudRegistrationException
-     *  if the cloud registration details are null, incomplete, or malformed
+     * @throws CloudRegistrationServiceException
+     *  if there is an exception thrown in the method in the implementation. The subclass of
+     *  the exception will give detail as to the problem
      *
      * @return
      *  a registration token to be used for completing registration for the client identified by the
      *  specified cloud registration details
      */
     public String generateRegistrationToken(Principal principal, CloudRegistrationInfo cloudRegistrationInfo)
-        throws CloudRegistrationAuthorizationException, MalformedCloudRegistrationException {
+        throws CloudRegistrationServiceException, UnsupportedOperationException {
 
         if (!this.enabled) {
             throw new UnsupportedOperationException(
@@ -264,7 +261,7 @@ public class CloudRegistrationAuth implements AuthProvider {
             String errmsg = this.i18nProvider.get()
                 .tr("cloud provider or account details could not be resolved to an organization");
 
-            throw new CloudRegistrationAuthorizationException(errmsg);
+            throw new CloudRegistrationMalformedDataException(errmsg);
         }
 
         return this.buildRegistrationToken(principal, ownerKey);

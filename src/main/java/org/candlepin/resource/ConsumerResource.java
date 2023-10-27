@@ -66,6 +66,7 @@ import org.candlepin.dto.api.server.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.ConflictException;
+import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.IseException;
@@ -132,6 +133,10 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.product.ProductServiceException;
+import org.candlepin.service.exception.subscription.SubscriptionServiceException;
+import org.candlepin.service.exception.user.UserServiceException;
+import org.candlepin.service.exception.user.UserServiceExceptionMapper;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.UserInfo;
 import org.candlepin.sync.ExportCreationException;
@@ -1310,6 +1315,9 @@ public class ConsumerResource implements ConsumerApi {
         catch (UnsupportedOperationException e) {
             log.warn("User service does not allow user lookups, cannot verify person consumer.", e);
         }
+        catch (UserServiceException e) {
+            UserServiceExceptionMapper.map(e, username, this.i18n);
+        }
 
         if (user == null) {
             throw new NotFoundException(this.i18n.tr("User not found: {0}", username));
@@ -1982,7 +1990,8 @@ public class ConsumerResource implements ConsumerApi {
                     List<Entitlement> ents = entitler.bindByProducts(autobindData);
                     entitler.sendEvents(ents);
                 }
-                catch (AutobindDisabledForOwnerException | AutobindHypervisorDisabledException e) {
+                catch (AutobindDisabledForOwnerException | AutobindHypervisorDisabledException |
+                    ProductServiceException e) {
                     log.warn("Guest auto-attach skipped. {}", e.getMessage(), e);
                 }
             }
@@ -2314,12 +2323,25 @@ public class ConsumerResource implements ConsumerApi {
             // terms, we want comeToTerms to be true.
             long subTermsStart = System.currentTimeMillis();
 
-            if (subAdapter.hasUnacceptedSubscriptionTerms(owner.getKey())) {
-                return Response.serverError().build();
+            ExceptionMessage message;
+            try {
+                if (subAdapter.hasUnacceptedSubscriptionTerms(owner.getKey())) {
+                    message = new ExceptionMessage(
+                        i18n.tr("You must first accept Red Hat''s Terms and conditions. Please visit {0}",
+                        "https://www.redhat.com/wapps/tnc/ackrequired?site=candlepin" +
+                        "&event=attachSubscription"));
+                    return Response.serverError().entity(message).build();
+                }
             }
-
-            log.debug("Checked if consumer has unaccepted subscription terms in {}ms",
-                (System.currentTimeMillis() - subTermsStart));
+            catch (SubscriptionServiceException e) {
+                message = new ExceptionMessage(
+                    i18n.tr("Unable to determine the state of the subscription terms"));
+                return Response.serverError().entity(message).build();
+            }
+            finally {
+                log.debug("Checked if consumer has unaccepted subscription terms in {}ms",
+                    (System.currentTimeMillis() - subTermsStart));
+            }
         }
         catch (CandlepinException e) {
             log.debug(e.getMessage(), e);
@@ -2411,6 +2433,10 @@ public class ConsumerResource implements ConsumerApi {
                         "It is disabled for org \"{0}\" because of the hypervisor autobind setting."
                     , owner.getKey()), e);
             }
+            catch (ProductServiceException e) {
+                throw new BadRequestException(i18n.tr("Unable to auto-attach. The products" +
+                   " are not retrievable by their ID's"));
+            }
         }
 
         List<EntitlementDTO> entitlementDTOs = null;
@@ -2460,7 +2486,7 @@ public class ConsumerResource implements ConsumerApi {
             // consumerBindUtil.validateServiceLevel(consumer.getOwnerId(), serviceLevel);
             dryRunPools = entitler.getDryRun(consumer, owner, serviceLevel);
         }
-        catch (ForbiddenException e) {
+        catch (ForbiddenException | ProductServiceException e) {
             return Collections.emptyList();
         }
         catch (BadRequestException e) {

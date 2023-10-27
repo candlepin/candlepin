@@ -27,11 +27,11 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.dto.api.server.v1.CloudRegistrationDTO;
 import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.NotAuthorizedException;
+import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.NotImplementedException;
 import org.candlepin.resource.validation.DTOValidator;
-import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
-import org.candlepin.service.exception.MalformedCloudRegistrationException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationMalformedDataException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationServiceException;
 import org.candlepin.service.model.CloudRegistrationInfo;
 
 import org.jboss.resteasy.core.ResteasyContext;
@@ -75,7 +75,7 @@ public class CloudRegistrationResourceTest {
     }
 
     @Test
-    public void testAuthorize() {
+    public void testAuthorize() throws CloudRegistrationServiceException {
         String token = "test-token";
 
         CloudRegistrationResource resource = this.buildResource();
@@ -95,32 +95,44 @@ public class CloudRegistrationResourceTest {
     }
 
     @Test
-    public void testAuthorizeFailsGracefullyWhenNotImplemented() {
+    public void testAuthorizeFailsGracefullyWhenNotImplemented() throws CloudRegistrationServiceException {
         CloudRegistrationResource resource = this.buildResource();
 
         doThrow(new UnsupportedOperationException()).when(this.mockCloudRegistrationAuth)
             .generateRegistrationToken(eq(principal), any(CloudRegistrationInfo.class));
 
         assertThrows(NotImplementedException.class,
-            () -> resource.cloudAuthorize(new CloudRegistrationDTO()));
+            () -> resource.cloudAuthorize(new CloudRegistrationDTO().type("test_type")));
     }
 
     @Test
-    public void testAuthorizeFailsGracefullyWhenAuthenticationFails() {
+    public void testAuthorizeFailsGracefullyWhenNoType() throws CloudRegistrationServiceException {
         CloudRegistrationResource resource = this.buildResource();
 
-        doThrow(new CloudRegistrationAuthorizationException()).when(this.mockCloudRegistrationAuth)
+        doThrow(new UnsupportedOperationException()).when(this.mockCloudRegistrationAuth)
+                .generateRegistrationToken(eq(principal), any(CloudRegistrationInfo.class));
+
+        assertThrows(BadRequestException.class,
+                () -> resource.cloudAuthorize(new CloudRegistrationDTO()));
+    }
+
+    @Test
+    public void testAuthorizeFailsGracefullyWhenAuthenticationFails()
+        throws CloudRegistrationServiceException {
+        CloudRegistrationResource resource = this.buildResource();
+
+        doThrow(new CloudRegistrationServiceException()).when(this.mockCloudRegistrationAuth)
             .generateRegistrationToken(eq(principal), any(CloudRegistrationInfo.class));
 
-        assertThrows(NotAuthorizedException.class,
+        assertThrows(CandlepinException.class,
             () -> resource.cloudAuthorize(new CloudRegistrationDTO()));
     }
 
     @Test
-    public void testAuthorizeFailsGracefullyWithMalformedInput() {
+    public void testAuthorizeFailsGracefullyWithMalformedInput() throws CloudRegistrationServiceException {
         CloudRegistrationResource resource = this.buildResource();
 
-        doThrow(new MalformedCloudRegistrationException()).when(this.mockCloudRegistrationAuth)
+        doThrow(new CloudRegistrationMalformedDataException()).when(this.mockCloudRegistrationAuth)
             .generateRegistrationToken(eq(principal), any(CloudRegistrationInfo.class));
 
         assertThrows(BadRequestException.class,

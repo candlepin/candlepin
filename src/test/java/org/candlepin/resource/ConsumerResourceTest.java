@@ -46,6 +46,8 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.TestConfig;
+import org.candlepin.controller.AutobindDisabledForOwnerException;
+import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.controller.EntitlementCertificateGenerator;
@@ -62,6 +64,7 @@ import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.server.v1.ContentAccessDTO;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
@@ -109,6 +112,8 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.product.ProductServiceException;
+import org.candlepin.service.exception.subscription.SubscriptionServiceException;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.FactValidator;
@@ -722,6 +727,100 @@ public class ConsumerResourceTest {
         ConsumerDTO c = consumerResource.getConsumer(consumer.getUuid());
 
         assertNull(c.getIdCert());
+    }
+
+    @Test
+    public void testUnacceptedSubscriptionTerms() throws Exception {
+        Owner o = createOwner();
+        Consumer c = createConsumer(o);
+        String[] prodIds = { "notthere" };
+
+        when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(o.getKey())).thenReturn(true);
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements("fakeConsumer")).thenReturn(c);
+        when(entitler.bindByProducts(any(AutobindData.class))).thenReturn(null);
+        when(ownerCurator.findOwnerById(o.getId())).thenReturn(o);
+
+        Response r = consumerResource.bind("fakeConsumer", null, Arrays.asList(prodIds),
+            null, null, null, false, null, null);
+        assertEquals(i18n.tr("You must first accept Red Hat''s Terms and conditions. Please visit {0}",
+            "https://www.redhat.com/wapps/tnc/ackrequired?site=candlepin&event=attachSubscription"),
+            ((ExceptionMessage) r.getEntity()).getDisplayMessage());
+    }
+
+    @Test
+    public void testUnknownSubscriptionTerms() throws Exception {
+        Owner o = createOwner();
+        Consumer c = createConsumer(o);
+        String[] prodIds = { "notthere" };
+
+        when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(o.getKey()))
+            .thenThrow(SubscriptionServiceException.class);
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements("fakeConsumer")).thenReturn(c);
+        when(entitler.bindByProducts(any(AutobindData.class))).thenReturn(null);
+        when(ownerCurator.findOwnerById(o.getId())).thenReturn(o);
+
+        Response r = consumerResource.bind("fakeConsumer", null, Arrays.asList(prodIds),
+            null, null, null, false, null, null);
+        assertEquals(i18n.tr("Unable to determine the state of the subscription terms"),
+            ((ExceptionMessage) r.getEntity()).getDisplayMessage());
+    }
+
+    @Test
+    public void testUnknownProductRetrieval() throws Exception {
+        Owner o = createOwner();
+        Consumer c = createConsumer(o);
+        String[] prodIds = { "notthere" };
+
+        when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(o.getKey())).thenReturn(false);
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements("fakeConsumer")).thenReturn(c);
+        when(entitler.bindByProducts(any(AutobindData.class)))
+            .thenThrow(ProductServiceException.class);
+        when(ownerCurator.findOwnerById(o.getId())).thenReturn(o);
+
+        assertEquals(i18n.tr("Unable to auto-attach. The products are not retrievable by their ID's"),
+            assertThrows(BadRequestException.class, () -> consumerResource.bind("fakeConsumer", null,
+            Arrays.asList(prodIds), null, null, null, false, null, null)).getMessage());
+    }
+
+    @Test
+    public void testAutobindHypervisorDisabled() throws Exception {
+        Owner o = createOwner();
+        Consumer c = createConsumer(o);
+        String[] prodIds = { "notthere" };
+
+        when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(o.getKey())).thenReturn(false);
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements("fakeConsumer")).thenReturn(c);
+        when(entitler.bindByProducts(any(AutobindData.class)))
+            .thenThrow(AutobindHypervisorDisabledException.class);
+        when(ownerCurator.findOwnerById(o.getId())).thenReturn(o);
+
+        assertEquals(i18n.tr("Ignoring request to auto-attach. " +
+            "It is disabled for org \"{0}\" because of the hypervisor autobind setting.", o.getKey()),
+            assertThrows(BadRequestException.class, () -> consumerResource.bind("fakeConsumer", null,
+            Arrays.asList(prodIds), null, null, null, false, null, null)).getMessage());
+    }
+
+    @Test
+    public void testAutobindDisabledForOwner() throws Exception {
+        Owner o = createOwner();
+        Consumer c = createConsumer(o);
+        String[] prodIds = { "notthere" };
+
+        when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(o.getKey())).thenReturn(false);
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements("fakeConsumer")).thenReturn(c);
+        when(entitler.bindByProducts(any(AutobindData.class)))
+            .thenThrow(AutobindDisabledForOwnerException.class);
+        when(ownerCurator.findOwnerById(o.getId())).thenReturn(o);
+
+        o.setContentAccessMode("org_environment");
+        assertEquals(Response.Status.OK.getStatusCode(), consumerResource.bind("fakeConsumer", null,
+            Arrays.asList(prodIds), null, null, null, false, null, null).getStatus());
+
+        o.setContentAccessMode("entitlement");
+        assertEquals(i18n.tr("Ignoring request to auto-attach. " +
+            "It is disabled for org \"{0}\".", o.getKey()),
+            assertThrows(BadRequestException.class, () -> consumerResource.bind("fakeConsumer", null,
+            Arrays.asList(prodIds), null, null, null, false, null, null)).getMessage());
     }
 
     @Test

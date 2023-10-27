@@ -32,6 +32,8 @@ import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.exception.product.ProductServiceException;
+import org.candlepin.service.exception.subscription.SubscriptionServiceException;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.test.TestUtil;
 
@@ -73,7 +75,7 @@ public class RefresherTest {
     }
 
     @Test
-    public void testOwnerOnlyExaminedOnce() {
+    public void testOwnerOnlyExaminedOnce() throws SubscriptionServiceException, ProductServiceException {
         Owner owner = TestUtil.createOwner();
 
         refresher.add(owner);
@@ -95,7 +97,7 @@ public class RefresherTest {
     }
 
     @Test
-    public void testProductOnlyExaminedOnce() {
+    public void testProductOnlyExaminedOnce() throws SubscriptionServiceException {
         Product product = TestUtil.createProduct();
 
         refresher.add(product);
@@ -106,7 +108,8 @@ public class RefresherTest {
     }
 
     @Test
-    public void testPoolOnlyExaminedOnceProductAndOwner() {
+    public void testPoolOnlyExaminedOnceProductAndOwner() throws SubscriptionServiceException,
+        ProductServiceException {
         Owner owner = TestUtil.createOwner();
         Product product = TestUtil.createProduct();
         product.setUuid("product uuid");
@@ -138,7 +141,7 @@ public class RefresherTest {
     }
 
     @Test
-    public void testPoolOnlyExaminedOnceTwoProducts() {
+    public void testPoolOnlyExaminedOnceTwoProducts() throws SubscriptionServiceException {
         Product product = TestUtil.createProduct();
         Product product2 = TestUtil.createProduct();
         product.setUuid("product id");
@@ -169,11 +172,13 @@ public class RefresherTest {
             anyMap());
     }
 
-    protected void mockAdapterSubs(String input, Collection<? extends SubscriptionInfo> output) {
+    protected void mockAdapterSubs(String input, Collection<? extends SubscriptionInfo> output)
+        throws SubscriptionServiceException {
         doAnswer(iom -> output).when(this.subAdapter).getSubscriptions(eq(input));
     }
 
-    protected void mockAdapterProductSubs(String input, Collection<? extends SubscriptionInfo> output) {
+    protected void mockAdapterProductSubs(String input, Collection<? extends SubscriptionInfo> output)
+        throws SubscriptionServiceException {
         doAnswer(iom -> output).when(this.subAdapter).getSubscriptionsByProductId(eq(input));
     }
 

@@ -63,6 +63,7 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.exception.product.ProductServiceException;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -366,7 +367,7 @@ public class EntitlerTest {
     }
 
     private void bindByProductErrorTest(String msg) throws EntitlementRefusedException,
-        AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
+        AutobindDisabledForOwnerException, AutobindHypervisorDisabledException, ProductServiceException {
 
         Set<String> pids = Set.of("prod1", "prod2", "prod3");
         Map<String, ValidationResult> fakeResult = new HashMap<>();
@@ -612,7 +613,7 @@ public class EntitlerTest {
     }
 
     @Test
-    public void testCreatedDevPoolAttributes() {
+    public void testCreatedDevPoolAttributes() throws ProductServiceException {
         Owner owner = TestUtil.createOwner("o");
 
         Product p1 = TestUtil.createProduct("dev-product", "Dev Product");

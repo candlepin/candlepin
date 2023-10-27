@@ -35,6 +35,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.exception.subscription.SubscriptionServiceException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -83,7 +84,7 @@ public class SubscriptionResourceTest {
     }
 
     @Test
-    public void testInvalidIdOnDelete() throws Exception {
+    public void testInvalidIdOnDelete() {
         CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Collections.emptyIterator());
         when(poolManager.getPoolsBySubscriptionId(anyString())).thenReturn(cqmock);
@@ -117,7 +118,7 @@ public class SubscriptionResourceTest {
     }
 
     @Test
-    public void activateSubServiceCalled() {
+    public void activateSubServiceCalled() throws SubscriptionServiceException {
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         Consumer consumer = new Consumer()

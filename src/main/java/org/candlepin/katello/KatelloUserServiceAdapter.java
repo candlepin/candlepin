@@ -35,7 +35,7 @@ import java.util.Collection;
 public class KatelloUserServiceAdapter implements UserServiceAdapter {
 
     @Override
-    public boolean validateUser(String username, String password) throws Exception {
+    public boolean validateUser(String username, String password) {
         throw new UnsupportedOperationException();
     }
 

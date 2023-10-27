@@ -28,6 +28,8 @@ import org.candlepin.model.User;
 import org.candlepin.resource.server.v1.UsersApi;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.user.UserServiceException;
+import org.candlepin.service.exception.user.UserServiceExceptionMapper;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
@@ -85,9 +87,15 @@ public class UserResource implements UsersApi {
             throw new BadRequestException(this.i18n.tr("username is null or empty"));
         }
 
-        UserInfo user = this.userService.findByLogin(username);
-        if (user == null) {
-            throw new NotFoundException(this.i18n.tr("User not found: {0}", username));
+        UserInfo user = null;
+        try {
+            user = this.userService.findByLogin(username);
+            if (user == null) {
+                throw new NotFoundException(this.i18n.tr("User not found: {0}", username));
+            }
+        }
+        catch (UserServiceException e) {
+            UserServiceExceptionMapper.map(e, username, this.i18n);
         }
 
         return user;
@@ -115,7 +123,7 @@ public class UserResource implements UsersApi {
     public Stream<RoleDTO> getUserRoles(@Verify(User.class) String username) {
         UserInfo user = this.fetchUserByUsername(username);
 
-        Collection<? extends RoleInfo> roles = user.getRoles();
+        Collection<? extends RoleInfo> roles = user == null ? null : user.getRoles();
         if (roles != null) {
             UserDTO udto = this.modelTranslator.translate(user, UserDTO.class);
             Set<UserDTO> users = Collections.singleton(udto);
@@ -140,8 +148,13 @@ public class UserResource implements UsersApi {
             throw new BadRequestException(this.i18n.tr("Username not specified"));
         }
 
-        if (this.userService.findByLogin(dto.getUsername()) != null) {
-            throw new ConflictException(this.i18n.tr("User already exists: {0}", dto.getUsername()));
+        try {
+            if (this.userService.findByLogin(dto.getUsername()) != null) {
+                throw new ConflictException(this.i18n.tr("User already exists: {0}", dto.getUsername()));
+            }
+        }
+        catch (UserServiceException e) {
+            UserServiceExceptionMapper.map(e, dto.getUsername(), this.i18n);
         }
 
         return this.modelTranslator.translate(
@@ -184,7 +197,13 @@ public class UserResource implements UsersApi {
         // Fetch the user for a simple existence check. We don't actually need it.
         UserInfo user = this.fetchUserByUsername(username);
 
-        Collection<? extends OwnerInfo> owners = this.userService.getAccessibleOwners(username);
+        Collection<? extends OwnerInfo> owners = null;
+        try {
+            owners = this.userService.getAccessibleOwners(username);
+        }
+        catch (UserServiceException e) {
+            UserServiceExceptionMapper.map(e, username, this.i18n);
+        }
 
         if (owners != null) {
             // If this ends up being a bottleneck, change this to do a bulk owner lookup
