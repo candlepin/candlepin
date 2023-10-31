@@ -14,19 +14,20 @@
  */
 package org.candlepin.service.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.anyCollection;
-import static org.mockito.Mockito.anyInt;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.nullable;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,6 +45,7 @@ import org.candlepin.model.ResultIterator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.model.CertificateInfo;
+import org.candlepin.service.model.ProductInfo;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.X509ExtensionUtil;
 
@@ -129,6 +131,15 @@ public class DefaultProductServiceAdapterTest {
 
         CertificateInfo result = dpsa.getProductCertificate(owner.getKey(), product.getId());
         assertNotNull(result);
+    }
+
+    @Test
+    public void testGetChildrenByProductIdsSkuIds() {
+        List<ProductInfo> actual = dpsa.getChildrenByProductIds(List.of("sku-id"));
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
     }
 
     // can't mock a final class, so create a dummy one

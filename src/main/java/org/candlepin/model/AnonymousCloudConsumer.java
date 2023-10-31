@@ -19,15 +19,17 @@ import org.candlepin.util.Util;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
@@ -87,6 +89,10 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     @NotNull
     private String productIds;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cont_acc_cert_id")
+    private AnonymousContentAccessCertificate contentAccessCert;
+
     public AnonymousCloudConsumer() {
         this.uuid = Util.generateUUID();
     }
@@ -101,7 +107,7 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
 
     /**
      * @param id
-     *     the database ID
+     *  the database ID
      *
      * @return a reference to this AnonymousCloudConsumer instance
      */
@@ -127,7 +133,7 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
 
     /**
      * @param uuid
-     *     the UUID to set
+     *  the UUID to set
      *
      * @return a reference to this AnonymousCloudConsumer instance
      */
@@ -153,7 +159,7 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
 
     /**
      * @param cloudInstanceId
-     *     the cloud instance ID to set
+     *  the cloud instance ID to set
      *
      * @return a reference to this AnonymousCloudConsumer instance
      */
@@ -205,7 +211,7 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
 
     /**
      * @param cloudAccountId
-     *     the cloud account ID to set
+     *  the cloud account ID to set
      *
      * @return a reference to this AnonymousCloudConsumer instance
      */
@@ -231,7 +237,7 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
 
     /**
      * @param cloudProviderShortName
-     *     the cloud provider short name to set
+     *  the cloud provider short name to set
      *
      * @return a reference to this AnonymousCloudConsumer instance
      */
@@ -252,19 +258,18 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
      * @return the product IDs for this anonymous cloud consumer
      */
     public Set<String> getProductIds() {
-        Set<String> productIds = new HashSet<>();
-        productIds = Set.copyOf(Util.toList(this.productIds));
+        Set<String> productIdsSet = Set.copyOf(Util.toList(this.productIds));
 
-        productIds = productIds.stream()
+        productIdsSet = productIdsSet.stream()
             .filter(str -> str != null && !str.isBlank())
             .collect(Collectors.toSet());
 
-        return productIds;
+        return productIdsSet;
     }
 
     /**
      * @param productIds
-     *     the product IDs to set for this anonymous cloud consumer
+     *  the product IDs to set for this anonymous cloud consumer
      *
      * @return a reference to this AnonymousCloudConsumer instance
      */
@@ -287,6 +292,24 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
         }
 
         this.productIds = String.join(",", productSet);
+        return this;
+    }
+
+    /**
+     * @return the anonymous content access certificate for this anonymous cloud consumer
+     */
+    public AnonymousContentAccessCertificate getContentAccessCert() {
+        return contentAccessCert;
+    }
+
+    /**
+     * @param contentAccessCert
+     *  the anonymous content access certificate to set for this anonymous cloud consumer
+     *
+     * @return a reference to this AnonymousCloudConsumer instance
+     */
+    public AnonymousCloudConsumer setContentAccessCert(AnonymousContentAccessCertificate contentAccessCert) {
+        this.contentAccessCert = contentAccessCert;
         return this;
     }
 

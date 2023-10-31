@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.reset;
 
@@ -93,6 +94,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private static final String PRODUCT_VIRT_GUEST = "virt_guest";
 
     private PoolManager poolManager;
+
     private EntitlementCertificateGenerator certGenerator;
     private RefresherFactory refresherFactory;
 

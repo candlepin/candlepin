@@ -31,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -675,7 +676,6 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "DELETE", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-
     public ProductDTO removeContentFromProduct(String productId, String contentId) {
         okhttp3.Call localVarCall = removeContentFromProductCall(productId, contentId);
         Type localVarReturnType = new TypeToken<ProductDTO>() {}.getType();
@@ -703,6 +703,84 @@ public class HostedTestApi {
 
         String[] auth = new String[]{};
         return localVarApiClient.buildCall(basePath, localVarPath, "DELETE", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
+    }
+
+    /**
+     * Associates a cloud offering ID to a product ID in the hosted test adapters.
+     *
+     * @param cloudOfferId
+     *     the offering ID to associate to a product ID
+     *
+     * @param productIds
+     *     the product IDs to associate to an offering ID
+     */
+    public void associateProductIdsToCloudOffer(String cloudOfferId, Collection<String> productIds) {
+        okhttp3.Call localVarCall = associateProductIdsToCloudOfferCall(cloudOfferId, productIds);
+        localVarApiClient.execute(localVarCall);
+    }
+
+    public okhttp3.Call associateProductIdsToCloudOfferCall(String cloudOfferId, Collection<String> productIds) {
+        String basePath = getBasePath();
+
+        Map<String, Object> bodyMap = new HashMap<>();
+        bodyMap.put("cloudOfferId", cloudOfferId);
+        bodyMap.put("productIds", productIds);
+
+        Object body = bodyMap;
+
+        // create path and map variables
+        String localVarPath = buildPath("/hostedtest/cloud/offers");
+
+        List<Pair> queryParams = new ArrayList<>();
+        List<Pair> collectionQueryParams = new ArrayList<>();
+        Map<String, String> headers = new HashMap<>();
+        Map<String, String> cookies = new HashMap<>();
+        Map<String, Object> form = new HashMap<>();
+
+        headers.put(ACCEPT_HEADER, APPLICATION_JSON);
+        headers.put(CONTENT_TYPE_HEADER, APPLICATION_JSON);
+
+        String[] auth = new String[]{};
+        return localVarApiClient.buildCall(basePath, localVarPath, "POST", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
+    }
+
+    /**
+     * Associates a cloud account ID to an owner ID in the hosted test adapters.
+     *
+     * @param cloudAccountId
+     *     the cloud account ID to associate to an owner ID
+     *
+     * @param ownerId
+     *     the owner ID to associate to a cloud account ID
+     */
+    public void associateOwnerToCloudAccount(String cloudAccountId, String ownerId) {
+        okhttp3.Call localVarCall = associateOwnerToCloudAccountCall(cloudAccountId, ownerId);
+        localVarApiClient.execute(localVarCall);
+    }
+
+    public okhttp3.Call associateOwnerToCloudAccountCall(String cloudAccountId, String ownerId) {
+        String basePath = getBasePath();
+
+        Map<String, String> bodyMap = new HashMap<>();
+        bodyMap.put("cloudAccountId", cloudAccountId);
+        bodyMap.put("ownerId", ownerId);
+
+        Object body = bodyMap;
+
+        // create path and map variables
+        String localVarPath = buildPath("/hostedtest/cloud/accounts");
+
+        List<Pair> queryParams = new ArrayList<>();
+        List<Pair> collectionQueryParams = new ArrayList<>();
+        Map<String, String> headers = new HashMap<>();
+        Map<String, String> cookies = new HashMap<>();
+        Map<String, Object> form = new HashMap<>();
+
+        headers.put(ACCEPT_HEADER, APPLICATION_JSON);
+        headers.put(CONTENT_TYPE_HEADER, APPLICATION_JSON);
+
+        String[] auth = new String[]{};
+        return localVarApiClient.buildCall(basePath, localVarPath, "POST", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
     @NotNull

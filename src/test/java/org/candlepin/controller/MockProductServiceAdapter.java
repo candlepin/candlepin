@@ -18,6 +18,7 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.ProductInfo;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,22 @@ class MockProductServiceAdapter implements ProductServiceAdapter {
             .map(this.pmap::get)
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ProductInfo> getChildrenByProductIds(Collection<String> skuIds) {
+        List<ProductInfo> prods = new ArrayList<>();
+        if (skuIds == null || skuIds.isEmpty()) {
+            return prods;
+        }
+
+        skuIds.stream()
+            .filter(Objects::nonNull)
+            .map(sku -> pmap.get(sku))
+            .filter(Objects::nonNull)
+            .map(prod -> prods.add(prod));
+
+        return prods;
     }
 
     @Override

@@ -33,6 +33,7 @@ import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.JSSPKIUtility;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
@@ -41,6 +42,7 @@ import org.candlepin.util.X509V3ExtensionUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -62,6 +64,9 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
 
     private EventSink mockEventSink;
 
+    @Mock
+    private ProductServiceAdapter mockProdAdapter;
+
     @BeforeEach
     public void setup() throws Exception {
         PrivateKeyReader keyReader = new JSSPrivateKeyReader();
@@ -80,7 +85,8 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
         return new ContentAccessManager(this.config, this.pkiUtility, this.x509V3ExtensionUtil,
             this.caCertCurator, this.certSerialCurator, this.ownerCurator, this.ownerContentCurator,
             this.consumerCurator, this.consumerTypeCurator, this.environmentCurator, this.caCertCurator,
-            this.mockEventSink);
+            this.mockEventSink, this.anonymousCloudConsumerCurator, this.anonymousContentAccessCertCurator,
+            this.mockProdAdapter);
     }
 
     private Owner createSCAOwner() {
