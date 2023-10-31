@@ -18,8 +18,10 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.ProductInfo;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -80,6 +82,22 @@ public class ImportProductServiceAdapter implements ProductServiceAdapter {
         }
 
         return new LinkedList<>();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<ProductInfo> getChildrenByProductIds(Collection<String> skuIds) {
+        List<ProductInfo> prods = new ArrayList<>();
+        if (skuIds == null || skuIds.isEmpty()) {
+            return prods;
+        }
+
+        return skuIds.stream()
+            .map(skuId -> this.productMap.get(skuId))
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
     }
 
 }

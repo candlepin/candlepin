@@ -415,7 +415,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 log.debug("Generating v3 entitlement data");
 
                 byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(productModels,
-                    consumer, pool, ent.getQuantity());
+                    consumer.getUuid(), pool, ent.getQuantity());
 
                 String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
                 payload += Util.toBase64(payloadBytes);

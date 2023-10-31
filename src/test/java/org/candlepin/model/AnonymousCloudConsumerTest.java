@@ -444,6 +444,52 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
             .containsExactly(expectedProductId);
     }
 
+    @Test
+    public void testUpdateToAnonymousContentAccessCertificate() {
+        AnonymousContentAccessCertificate certificate = new AnonymousContentAccessCertificate();
+        certificate.setCert("cert-1");
+        certificate.setKey("key-1");
+        certificate.setSerial(new CertificateSerial(12345L));
+
+        certificate = anonymousContentAccessCertCurator.create(certificate);
+
+        String expectedCloudAccountId = "cloud-account-id";
+        String expectedInstanceId = "instance-id";
+        String expectedOfferId = "offer-id";
+        String expectedProductId = "product-id";
+        String expectedCloudProviderShortName = "AWS";
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setCloudAccountId(expectedCloudAccountId)
+            .setCloudInstanceId(expectedInstanceId)
+            .setCloudOfferingId(expectedOfferId)
+            .setProductIds(List.of(expectedProductId))
+            .setCloudProviderShortName(expectedCloudProviderShortName)
+            .setContentAccessCert(certificate);
+
+        consumer = anonymousCloudConsumerCurator.create(consumer);
+
+        AnonymousContentAccessCertificate expectedCert = new AnonymousContentAccessCertificate();
+        expectedCert.setCert("cert-2");
+        expectedCert.setKey("key-2");
+        expectedCert.setSerial(new CertificateSerial(678910L));
+        expectedCert = anonymousContentAccessCertCurator.create(expectedCert);
+        consumer.setContentAccessCert(expectedCert);
+
+        AnonymousCloudConsumer actual = anonymousCloudConsumerCurator.merge(consumer);
+
+        assertThat(actual)
+            .isNotNull()
+            .doesNotReturn(null, AnonymousCloudConsumer::getId)
+            .returns(consumer.getUuid(), AnonymousCloudConsumer::getUuid)
+            .returns(expectedCloudAccountId, AnonymousCloudConsumer::getCloudAccountId)
+            .returns(expectedInstanceId, AnonymousCloudConsumer::getCloudInstanceId)
+            .returns(expectedOfferId, AnonymousCloudConsumer::getCloudOfferingId)
+            .returns(expectedCloudProviderShortName, AnonymousCloudConsumer::getCloudProviderShortName)
+            .returns(expectedCert, AnonymousCloudConsumer::getContentAccessCert)
+            .extracting(AnonymousCloudConsumer::getProductIds, as(collection(String.class)))
+            .containsExactly(expectedProductId);
+    }
+
     private String generateString(int length) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < length; i++) {

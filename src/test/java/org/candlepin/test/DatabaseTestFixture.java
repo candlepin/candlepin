@@ -35,6 +35,7 @@ import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
 import org.candlepin.junit.LiquibaseExtension;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
+import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
@@ -144,6 +145,7 @@ public class DatabaseTestFixture {
     protected ActivationKeyCurator activationKeyCurator;
     protected ActivationKeyContentOverrideCurator activationKeyContentOverrideCurator;
     protected AnonymousCloudConsumerCurator anonymousCloudConsumerCurator;
+    protected AnonymousContentAccessCertificateCurator anonymousContentAccessCertCurator;
     protected AsyncJobStatusCurator asyncJobCurator;
     protected CdnCurator cdnCurator;
     protected CertificateSerialCurator certSerialCurator;
@@ -275,6 +277,8 @@ public class DatabaseTestFixture {
             .getInstance(ActivationKeyContentOverrideCurator.class);
         anonymousCloudConsumerCurator = this.injector
             .getInstance(AnonymousCloudConsumerCurator.class);
+        anonymousContentAccessCertCurator = this.injector
+            .getInstance(AnonymousContentAccessCertificateCurator.class);
         asyncJobCurator = this.injector.getInstance(AsyncJobStatusCurator.class);
         cdnCurator = this.injector.getInstance(CdnCurator.class);
         certSerialCurator = this.injector.getInstance(CertificateSerialCurator.class);

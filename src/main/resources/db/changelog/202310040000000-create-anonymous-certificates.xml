@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="202310040000000-1" author="jalbrech">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cp_anonymous_certificates"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="cp_anonymous_certificates">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="cert" type="${cert.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="${cert.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="serial_id" type="BIGINT"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="cp_anonymous_cloud_consumers"
+            baseColumnNames="cont_acc_cert_id"
+            referencedTableName="cp_anonymous_certificates"
+            referencedColumnNames="id"
+            constraintName="fk_cp_anonymous_cloud_consumers_cert"
+            onDelete="CASCADE" />
+    </changeSet>
+
+    <changeSet id="202310040000000-2" author="jalbrech">
+        <createIndex tableName="cp_anonymous_certificates" indexName="cp_anonymous_certificates_idx1">
+            <column name="serial_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

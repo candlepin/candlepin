@@ -14,6 +14,7 @@
  */
 package org.candlepin.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -21,12 +22,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.any;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -40,6 +41,10 @@ import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.model.AbstractHibernateObject;
+import org.candlepin.model.AnonymousCloudConsumer;
+import org.candlepin.model.AnonymousCloudConsumerCurator;
+import org.candlepin.model.AnonymousContentAccessCertificate;
+import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -69,6 +74,10 @@ import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.JSSPKIUtility;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
+import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.model.ContentInfo;
+import org.candlepin.service.model.ProductContentInfo;
+import org.candlepin.service.model.ProductInfo;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
@@ -84,6 +93,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
@@ -132,6 +143,13 @@ public class ContentAccessManagerTest {
     private EnvironmentCurator mockEnvironmentCurator;
     @Mock
     private EntitlementCurator mockEntitlementCurator;
+    @Mock
+    private AnonymousCloudConsumerCurator mockAnonCloudConsumerCurator;
+    @Mock
+    private AnonymousContentAccessCertificateCurator mockAnonContentAccessCertCurator;
+    @Mock
+    private ProductServiceAdapter mockProdAdapter;
+
     private ObjectMapper objectMapper;
     private PKIUtility pkiUtility;
     private X509V3ExtensionUtil x509V3ExtensionUtil;
@@ -192,7 +210,8 @@ public class ContentAccessManagerTest {
         }).when(this.mockCertSerialCurator).create(any(CertificateSerial.class));
 
         EntityManager entityManager = mock(EntityManager.class);
-        TestUtil.mockTransactionalFunctionality(entityManager, this.mockConsumerCurator);
+        TestUtil.mockTransactionalFunctionality(entityManager, this.mockConsumerCurator,
+            this.mockAnonCloudConsumerCurator);
     }
 
     public static class PersistSimulator<T extends AbstractHibernateObject> implements Answer<T> {
@@ -218,7 +237,8 @@ public class ContentAccessManagerTest {
             this.config, pkiUtil, this.x509V3ExtensionUtil, this.mockContentAccessCertCurator,
             this.mockCertSerialCurator, this.mockOwnerCurator, this.mockOwnerContentCurator,
             this.mockConsumerCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
-            this.mockContentAccessCertCurator, this.mockEventSink);
+            this.mockContentAccessCertCurator, this.mockEventSink, this.mockAnonCloudConsumerCurator,
+            this.mockAnonContentAccessCertCurator, this.mockProdAdapter);
     }
 
     private ContentAccessManager createManager() {
@@ -878,4 +898,203 @@ public class ContentAccessManagerTest {
 
         assertThrows(IllegalArgumentException.class, () -> manager.syncOwnerLastContentUpdate(null));
     }
+
+    @Test
+    public void testGetCertificateWithNullAnonymousCloudConsumer() {
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
+        ContentAccessManager manager = this.createManager();
+        AnonymousCloudConsumer consumer = null;
+
+        assertThrows(IllegalArgumentException.class, () ->
+            manager.getCertificate(consumer));
+    }
+
+    @Test
+    public void testGetCertificateWithStandaloneMode() {
+        this.config.setProperty(ConfigProperties.STANDALONE, "true");
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+        consumer.setId("id");
+        consumer.setUuid("uuid");
+        consumer.setCloudAccountId("account-id");
+        consumer.setCloudInstanceId("instance-id");
+        consumer.setCloudProviderShortName("short-name");
+
+        ContentAccessManager manager = this.createManager();
+
+        assertThrows(RuntimeException.class, () -> manager.getCertificate(consumer));
+    }
+
+    @Test
+    public void testGetCertificateWithExistingCertificate() throws Exception {
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        CertificateSerial serial = new CertificateSerial(12345L);
+        serial.setExpiration(Util.tomorrow());
+
+        AnonymousContentAccessCertificate expected = new AnonymousContentAccessCertificate();
+        expected.setId("id");
+        expected.setKey("key");
+        expected.setCert("cert");
+        expected.setSerial(serial);
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+        consumer.setId("id");
+        consumer.setUuid("uuid");
+        consumer.setCloudAccountId("account-id");
+        consumer.setCloudInstanceId("instance-id");
+        consumer.setCloudProviderShortName("short-name");
+        consumer.setContentAccessCert(expected);
+
+        ContentAccessManager manager = this.createManager();
+
+        AnonymousContentAccessCertificate actual = manager.getCertificate(consumer);
+
+        assertThat(actual)
+            .isNotNull()
+            .returns(expected.getId(), AnonymousContentAccessCertificate::getId)
+            .returns(expected.getCert(), AnonymousContentAccessCertificate::getCert)
+            .returns(expected.getCreated(), AnonymousContentAccessCertificate::getCreated)
+            .returns(expected.getUpdated(), AnonymousContentAccessCertificate::getUpdated)
+            .returns(expected.getAnonymousCloudConsumer(),
+                AnonymousContentAccessCertificate::getAnonymousCloudConsumer)
+            .returns(expected.getKey(), AnonymousContentAccessCertificate::getKey)
+            .returns(expected.getSerial(), AnonymousContentAccessCertificate::getSerial);
+    }
+
+    @Test
+    public void testGetCertificateWithNoExistingCertificate() throws Exception {
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+        consumer.setId("id");
+        consumer.setUuid("uuid");
+        consumer.setCloudAccountId("account-id");
+        consumer.setCloudInstanceId("instance-id");
+        consumer.setCloudProviderShortName("short-name");
+        consumer.setContentAccessCert(null);
+
+        CertificateSerial expectedSerial = new CertificateSerial(678910L);
+        expectedSerial.setExpiration(Util.tomorrow());
+        AnonymousContentAccessCertificate expected = new AnonymousContentAccessCertificate();
+        expected.setId("id-2");
+        expected.setKey("key-2");
+        expected.setCert("cert-2");
+        expected.setSerial(expectedSerial);
+
+        doReturn(expected).when(this.mockAnonContentAccessCertCurator)
+            .create(any(AnonymousContentAccessCertificate.class));
+
+        doReturn(List.of(createProductInfo())).when(this.mockProdAdapter)
+            .getChildrenByProductIds(consumer.getProductIds());
+
+        ContentAccessManager manager = this.createManager();
+        AnonymousContentAccessCertificate actual = manager.getCertificate(consumer);
+
+        assertThat(actual)
+            .isNotNull()
+            .returns(expected.getId(), AnonymousContentAccessCertificate::getId)
+            .returns(expected.getCert(), AnonymousContentAccessCertificate::getCert)
+            .returns(expected.getCreated(), AnonymousContentAccessCertificate::getCreated)
+            .returns(expected.getUpdated(), AnonymousContentAccessCertificate::getUpdated)
+            .returns(expected.getAnonymousCloudConsumer(),
+                AnonymousContentAccessCertificate::getAnonymousCloudConsumer)
+            .returns(expected.getKey(), AnonymousContentAccessCertificate::getKey)
+            .returns(expected.getSerial(), AnonymousContentAccessCertificate::getSerial);
+    }
+
+    @Test
+    public void testGetCertificateWithExpiredCertificate() throws Exception {
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        CertificateSerial expiredSerial = new CertificateSerial(12345L);
+        expiredSerial.setExpiration(TestUtil.createDateOffset(0, 0, -7));
+
+        AnonymousContentAccessCertificate cert = new AnonymousContentAccessCertificate();
+        cert.setId("id");
+        cert.setKey("key");
+        cert.setCert("cert");
+        cert.setSerial(expiredSerial);
+
+        List<String> prodIds = List.of("prod-id");
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+        consumer.setId("id");
+        consumer.setUuid("uuid");
+        consumer.setCloudAccountId("account-id");
+        consumer.setCloudInstanceId("instance-id");
+        consumer.setCloudProviderShortName("short-name");
+        consumer.setProductIds(prodIds);
+        consumer.setContentAccessCert(cert);
+
+        CertificateSerial expectedSerial = new CertificateSerial(678910L);
+        expectedSerial.setExpiration(Util.tomorrow());
+        AnonymousContentAccessCertificate expected = new AnonymousContentAccessCertificate();
+        expected.setId("id-2");
+        expected.setKey("key-2");
+        expected.setCert("cert-2");
+        expected.setSerial(expectedSerial);
+
+        doReturn(expected).when(this.mockAnonContentAccessCertCurator)
+            .create(any(AnonymousContentAccessCertificate.class));
+
+        doReturn(List.of(createProductInfo())).when(this.mockProdAdapter)
+            .getChildrenByProductIds(consumer.getProductIds());
+
+        ContentAccessManager manager = this.createManager();
+        AnonymousContentAccessCertificate actual = manager.getCertificate(consumer);
+
+        assertThat(actual)
+            .isNotNull()
+            .returns(expected.getId(), AnonymousContentAccessCertificate::getId)
+            .returns(expected.getCert(), AnonymousContentAccessCertificate::getCert)
+            .returns(expected.getCreated(), AnonymousContentAccessCertificate::getCreated)
+            .returns(expected.getUpdated(), AnonymousContentAccessCertificate::getUpdated)
+            .returns(expected.getAnonymousCloudConsumer(),
+                AnonymousContentAccessCertificate::getAnonymousCloudConsumer)
+            .returns(expected.getKey(), AnonymousContentAccessCertificate::getKey)
+            .returns(expected.getSerial(), AnonymousContentAccessCertificate::getSerial);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testGetCertificateWithInvalidProductInfoFromAdapter(List<String> prods) throws Exception {
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+        consumer.setId("id");
+        consumer.setUuid("uuid");
+        consumer.setCloudAccountId("account-id");
+        consumer.setCloudInstanceId("instance-id");
+        consumer.setCloudProviderShortName("short-name");
+        consumer.setContentAccessCert(null);
+
+        doReturn(prods).when(this.mockProdAdapter).getChildrenByProductIds(consumer.getProductIds());
+
+        ContentAccessManager manager = this.createManager();
+        assertThrows(RuntimeException.class, () -> manager.getCertificate(consumer));
+    }
+
+    private ProductInfo createProductInfo() {
+        ContentInfo content = mock(ContentInfo.class);
+        doReturn("content-id").when(content).getId();
+        doReturn("content-name").when(content).getName();
+        doReturn("type").when(content).getType();
+        doReturn("label").when(content).getLabel();
+        doReturn("vendor").when(content).getVendor();
+        doReturn("gpg-url").when(content).getGpgUrl();
+        doReturn(12345L).when(content).getMetadataExpiration();
+        doReturn("required-tags").when(content).getRequiredTags();
+        doReturn("arches").when(content).getArches();
+        doReturn("url").when(content).getContentUrl();
+        doReturn("release-version").when(content).getReleaseVersion();
+
+        ProductContentInfo prodContent = mock(ProductContentInfo.class);
+        doReturn(content).when(prodContent).getContent();
+
+        ProductInfo prodInfo = mock(ProductInfo.class);
+        doReturn(List.of(prodContent)).when(prodInfo).getProductContent();
+
+        return prodInfo;
+    }
+
 }

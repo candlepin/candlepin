@@ -7,6 +7,12 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
     <changeSet id="20230803000000-1" author="jalbrech">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cp_anonymous_cloud_consumers"/>
+            </not>
+        </preConditions>
+
         <createTable tableName="cp_anonymous_cloud_consumers">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" />
@@ -15,6 +21,9 @@
             <column name="updated" type="DATETIME"/>
             <column name="uuid" type="varchar(36)">
                 <constraints nullable="false"/>
+            </column>
+            <column name="cont_acc_cert_id" type="varchar(32)">
+                <constraints nullable="true"/>
             </column>
             <column name="cloud_account_id" type="varchar(255)">
                 <constraints nullable="false"/>

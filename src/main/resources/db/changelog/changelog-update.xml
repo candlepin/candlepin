@@ -189,4 +189,5 @@
     <include file="db/changelog/20230725171517-add-anonymous-claimed_column.xml"/>
     <include file="db/changelog/20230803000000-create-anonymous-consumers.xml" />
     <include file="db/changelog/20230921144200-add_reg_auth_method_to_cp_consumers.xml"/>
+    <include file="db/changelog/202310040000000-create-anonymous-certificates.xml" />
 </databaseChangeLog>

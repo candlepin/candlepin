@@ -111,9 +111,9 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public byte[] createEntitlementDataPayload(List<org.candlepin.model.dto.Product> productModels,
-        Consumer consumer, Pool pool, Integer quantity) throws IOException {
+        String consumerUuid, Pool pool, Integer quantity) throws IOException {
 
-        EntitlementBody map = createEntitlementBody(productModels, consumer, pool, quantity);
+        EntitlementBody map = createEntitlementBody(productModels, consumerUuid, pool, quantity);
 
         String json = toJson(map);
         return processPayload(json);
@@ -141,10 +141,10 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public EntitlementBody createEntitlementBody(List<org.candlepin.model.dto.Product> productModels,
-        Consumer consumer, Pool pool, Integer quantity) {
+        String consumerUuid, Pool pool, Integer quantity) {
 
         EntitlementBody toReturn = new EntitlementBody();
-        toReturn.setConsumer(consumer.getUuid());
+        toReturn.setConsumer(consumerUuid);
         toReturn.setQuantity(quantity);
         toReturn.setSubscription(createSubscription(pool));
         toReturn.setOrder(createOrder(pool));
@@ -310,8 +310,9 @@ public class X509V3ExtensionUtil extends X509Util {
         List<String> archList = new ArrayList<>(productArchSet);
         toReturn.setArchitectures(archList);
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
+        boolean isUsingSCA = consumer == null ? true : consumer.getOwner().isUsingSimpleContentAccess();
         Set<ProductContent> filteredContent = filterProductContent(engProduct, consumer, promotedContent,
-            enableEnvironmentFiltering, entitledProductIds, consumer.getOwner().isUsingSimpleContentAccess());
+            enableEnvironmentFiltering, entitledProductIds, isUsingSCA);
         List<Content> content = createContent(filteredContent, sku, promotedContent,
             consumer, engProduct);
         toReturn.setContent(content);
@@ -376,7 +377,6 @@ public class X509V3ExtensionUtil extends X509Util {
             content.setPath(contentPath);
             content.setGpgUrl(pc.getContent().getGpgUrl());
 
-
             // Set content model's arches here, inheriting from the product if
             // they are not set on the content.
             List<String> archesList = new ArrayList<>();
@@ -404,7 +404,7 @@ public class X509V3ExtensionUtil extends X509Util {
             }
 
             // Check if we should override the enabled flag due to setting on promoted content
-            if (enableEnvironmentFiltering && !consumer.getEnvironmentIds().isEmpty()) {
+            if (enableEnvironmentFiltering && consumer != null && !consumer.getEnvironmentIds().isEmpty()) {
                 // we know content has been promoted at this point
                 Boolean enabledOverride = promotedContent.isEnabled(pc);
                 if (enabledOverride != null) {
