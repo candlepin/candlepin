@@ -1241,7 +1241,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         PromotedContent promotedContent = new PromotedContent(prefix("prefix"));
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
             getProductModels(product, products, promotedContent, entitlement),
-            consumer, pool, entitlement.getQuantity());
+            consumer.getUuid(), pool, entitlement.getQuantity());
         String stringValue;
         try {
             stringValue = processPayload(payload);
@@ -1358,7 +1358,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         PromotedContent promotedContent = new PromotedContent(prefix("prefix"));
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
             getProductModels(product, products, promotedContent, entitlement),
-            consumer, pool, entitlement.getQuantity());
+            consumer.getUuid(), pool, entitlement.getQuantity());
         String stringValue;
         try {
             stringValue = processPayload(payload);
@@ -1420,7 +1420,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
             getProductModels(product, products, promotedContent, entitlement),
-            consumer, pool, entitlement.getQuantity());
+            consumer.getUuid(), pool, entitlement.getQuantity());
         String stringValue;
         try {
             stringValue = processPayload(payload);
@@ -1489,7 +1489,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
             getProductModels(product, products, promotedContent, entitlement),
-            consumer, pool, entitlement.getQuantity());
+            consumer.getUuid(), pool, entitlement.getQuantity());
         String stringValue;
         try {
             stringValue = processPayload(payload);
@@ -1543,7 +1543,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
             getProductModels(product, products, promotedContent, entitlement),
-            consumer, pool, entitlement.getQuantity());
+            consumer.getUuid(), pool, entitlement.getQuantity());
         String stringValue;
         try {
             stringValue = processPayload(payload);
@@ -1592,7 +1592,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
             getProductModels(product, products, promotedContent, entitlement),
-            consumer, pool, entitlement.getQuantity());
+            consumer.getUuid(), pool, entitlement.getQuantity());
         String stringValue;
         try {
             stringValue = processPayload(payload);

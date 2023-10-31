@@ -33,6 +33,7 @@ import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.JSSPKIUtility;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
@@ -42,6 +43,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -59,10 +61,12 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
     private static final String ORG_ENVIRONMENT_MODE = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
     private PKIUtility pkiUtility;
-    private ObjectMapper objectMapper;
     private X509V3ExtensionUtil x509V3ExtensionUtil;
 
     private EventSink mockEventSink;
+
+    @Mock
+    private ProductServiceAdapter mockProdAdapter;
 
     @BeforeEach
     public void setup() throws Exception {
@@ -82,7 +86,8 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
         return new ContentAccessManager(this.config, this.pkiUtility, this.x509V3ExtensionUtil,
             this.caCertCurator, this.certSerialCurator, this.ownerCurator, this.ownerContentCurator,
             this.consumerCurator, this.consumerTypeCurator, this.environmentCurator, this.caCertCurator,
-            this.mockEventSink);
+            this.mockEventSink, this.anonymousCloudConsumerCurator, this.anonymousContentAccessCertCurator,
+            this.mockProdAdapter);
     }
 
     private Owner createSCAOwner() {

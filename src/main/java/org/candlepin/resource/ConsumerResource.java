@@ -26,6 +26,7 @@ import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
+import org.candlepin.auth.AnonymousCloudConsumerPrincipal;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SecurityHole;
@@ -72,6 +73,7 @@ import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
+import org.candlepin.model.AnonymousContentAccessCertificate;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Certificate;
@@ -2067,21 +2069,43 @@ public class ConsumerResource implements ConsumerApi {
      * @return
      *  List of DTOs representing certificates
      */
-    public List<CertificateDTO> getEntitlementCertificates(@Verify(Consumer.class) String consumerUuid,
-        String serials) {
-        log.debug("Getting client certificates for consumer: {}", consumerUuid);
+    public List<CertificateDTO> getEntitlementCertificates
+    (@Verify({AnonymousCloudConsumer.class, Consumer.class}) String consumerUuid, String serials) {
+        Principal principal = ResteasyContext.getContextData(Principal.class);
+        if (principal instanceof AnonymousCloudConsumerPrincipal anonPrincipal) {
+            log.debug("Getting client certificates for anonymous consumer: {}", consumerUuid);
+            AnonymousCloudConsumer consumer = anonPrincipal.getAnonymousCloudConsumer();
+            CertificateDTO cert = getCertForAnonCloudConsumer(consumer, serials);
+
+            return cert == null ? List.of() : List.of(cert);
+        }
 
         // UpdateConsumerCheckIn
         // Explicitly updating consumer check-in,
         // as we merged getEntitlementCertificates & exportCertificates methods due to OpenAPI
         // constraint which doesn't allow more than one HTTP method key under same URL pattern.
 
-        Principal principal = ResteasyContext.getContextData(Principal.class);
+        log.debug("Getting client certificates for consumer: {}", consumerUuid);
         if (principal instanceof ConsumerPrincipal) {
             ConsumerPrincipal p = (ConsumerPrincipal) principal;
             consumerCurator.updateLastCheckin(p.getConsumer());
         }
 
+        return getEntitlementCertificatesForConsumer(consumerUuid, serials);
+    }
+
+    /**
+     * Retrieves entitlement certificates for a specific consumer
+     *
+     * @param consumerUuid
+     *  the UUID of the consumer to retrieve entitlement certificate for
+     *
+     * @param serials
+     *  the serial IDs used to filter out entitlement certificates
+     *
+     * @return a list of entitlement certificates for the consumer
+     */
+    private List<CertificateDTO> getEntitlementCertificatesForConsumer(String consumerUuid, String serials) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
         revokeOnGuestMigration(consumer);
@@ -2100,6 +2124,43 @@ public class ConsumerResource implements ConsumerApi {
 
         return certStream.map(this.translator.getStreamMapper(Certificate.class, CertificateDTO.class))
             .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieves a {@link AnonymousContentAccessCertificate} for the anonymous cloud consumer. If there
+     * if no existing certificate, a new one will be created.
+     *
+     * @param consumer
+     *  the anonymous cloud consumer to retrieve a certificate for
+     *
+     * @param serials
+     *  certificate serials used to filter out a certificate
+     *
+     * @throws IseException
+     *  if unable to retrieve or create an {@link AnonymousContentAccessCertificate}
+     *
+     * @return a {@link AnonymousContentAccessCertificate}, or null if a certificate was not able to be
+     *  retrieved, created, or filtered by the serial IDs
+     */
+    private CertificateDTO getCertForAnonCloudConsumer(AnonymousCloudConsumer consumer, String serials) {
+        Certificate caCert;
+        try {
+            caCert = this.contentAccessManager.getCertificate(consumer);
+        }
+        catch (Exception e) {
+            throw new IseException(i18n.tr("Unable to retrieve or create anonymous content access" +
+            "certificate for consumer"), e);
+        }
+
+        // Filter the certificate if we need to
+        Set<Long> serialSet = this.extractSerials(serials);
+        if (caCert.getSerial() != null && serialSet.contains(caCert.getSerial().getId())) {
+            log.debug("Anonymous content access certificate serial {} has been filtered",
+                caCert.getSerial().getId());
+            return null;
+        }
+
+        return this.translator.translate(caCert, CertificateDTO.class);
     }
 
     /**
@@ -2182,13 +2243,16 @@ public class ConsumerResource implements ConsumerApi {
         @Verify({AnonymousCloudConsumer.class, Consumer.class}) String consumerUuid,
         String serials) {
         HttpRequest httpRequest = ResteasyContext.getContextData(HttpRequest.class);
-
         if (httpRequest.getHttpHeaders().getRequestHeader("accept").contains("application/json")) {
             return getEntitlementCertificates(consumerUuid, serials);
         }
 
+        Principal principal = ResteasyContext.getContextData(Principal.class);
+        if (principal instanceof AnonymousCloudConsumerPrincipal) {
+            throw new BadRequestException(i18n.tr("Cannot create export for anonymous cloud consumer"));
+        }
+
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
         HttpServletResponse response = ResteasyContext.getContextData(HttpServletResponse.class);
         revokeOnGuestMigration(consumer);
 
