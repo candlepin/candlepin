@@ -15,7 +15,7 @@ public class AnonymousContentAccessCertificateCuratorTest extends DatabaseTestFi
     public void testListAllExpiredWithExpiredCert() {
         CertificateSerial expiredSerial = new CertificateSerial();
         expiredSerial.setExpiration(TestUtil.createDateOffset(0, 0, -7));
-        this.certSerialCurator.save(expiredSerial);
+        certSerialCurator.save(expiredSerial);
 
         AnonymousContentAccessCertificate expiredCert = new AnonymousContentAccessCertificate();
         expiredCert.setKey("key-1");
@@ -26,7 +26,7 @@ public class AnonymousContentAccessCertificateCuratorTest extends DatabaseTestFi
 
         CertificateSerial serial = new CertificateSerial();
         serial.setExpiration(TestUtil.createDateOffset(0, 0, 7));
-        this.certSerialCurator.save(serial);
+        certSerialCurator.save(serial);
 
         AnonymousContentAccessCertificate cert = new AnonymousContentAccessCertificate();
         cert.setKey("key-2");
@@ -48,7 +48,7 @@ public class AnonymousContentAccessCertificateCuratorTest extends DatabaseTestFi
     public void testDeleteByIds() {
         CertificateSerial serial1 = new CertificateSerial();
         serial1.setExpiration(TestUtil.createDateOffset(0, 0, 7));
-        this.certSerialCurator.save(serial1);
+        certSerialCurator.save(serial1);
 
         AnonymousContentAccessCertificate cert1 = new AnonymousContentAccessCertificate();
         cert1.setKey("key-1");
@@ -59,7 +59,7 @@ public class AnonymousContentAccessCertificateCuratorTest extends DatabaseTestFi
 
         CertificateSerial serial2 = new CertificateSerial();
         serial2.setExpiration(TestUtil.createDateOffset(0, 0, 7));
-        this.certSerialCurator.save(serial2);
+        certSerialCurator.save(serial2);
 
         AnonymousContentAccessCertificate cert2 = new AnonymousContentAccessCertificate();
         cert2.setKey("key-2");
@@ -78,8 +78,9 @@ public class AnonymousContentAccessCertificateCuratorTest extends DatabaseTestFi
     }
 
     private List<AnonymousContentAccessCertificate> getAnonymousCertsFromDB() {
-        return this.getEntityManager()
-            .createQuery("select c from AnonymousContentAccessCertificate c", AnonymousContentAccessCertificate.class)
+        String query = "select c from AnonymousContentAccessCertificate c";
+        return getEntityManager()
+            .createQuery(query, AnonymousContentAccessCertificate.class)
             .getResultList();
     }
 
