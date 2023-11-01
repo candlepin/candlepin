@@ -14,7 +14,13 @@
  */
 package org.candlepin.model;
 
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+
 import javax.inject.Singleton;
+
+import com.google.inject.persist.Transactional;
 
 
 
@@ -24,6 +30,36 @@ public class AnonymousContentAccessCertificateCurator
 
     public AnonymousContentAccessCertificateCurator() {
         super(AnonymousContentAccessCertificate.class);
+    }
+
+    public List<ExpiredCertificate> listAllExpired() {
+        String hql = "SELECT new org.candlepin.model.ExpiredCertificate(c.id, s.id)" +
+            " FROM AnonymousContentAccessCertificate c" +
+            " INNER JOIN c.serial s " +
+            " WHERE s.expiration < :nowDate";
+
+        return this.getEntityManager()
+            .createQuery(hql, ExpiredCertificate.class)
+            .setParameter("nowDate", new Date())
+            .getResultList();
+    }
+
+    @Transactional
+    public int deleteByIds(Collection<String> idsToDelete) {
+        if (idsToDelete == null || idsToDelete.isEmpty()) {
+            return 0;
+        }
+
+        String query = "DELETE FROM AnonymousContentAccessCertificate c WHERE c.id IN (:idsToDelete)";
+
+        int deleted = 0;
+        for (Collection<String> idsToDeleteBlock : this.partition(idsToDelete)) {
+            deleted += this.currentSession().createQuery(query)
+                .setParameter("idsToDelete", idsToDeleteBlock)
+                .executeUpdate();
+        }
+
+        return deleted;
     }
 
 }
