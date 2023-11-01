@@ -112,10 +112,19 @@ class CertificateCleanupJobTest extends DatabaseTestFixture {
         cert = anonymousContentAccessCertCurator.create(cert);
 
         job.execute(null);
+        certSerialCurator.flush();
+        certSerialCurator.clear();
 
         assertThat(getAnonymousCertsFromDB())
             .singleElement()
             .isEqualTo(cert);
+
+        assertThat(certSerialCurator.get(expiredSerial.getId()))
+            .isNull();
+        
+        assertThat(certSerialCurator.get(serial.getId()))
+            .isNotNull()
+            .returns(serial.getId(), CertificateSerial::getId);
     }
 
     private Consumer findConsumer(Consumer consumer) {
