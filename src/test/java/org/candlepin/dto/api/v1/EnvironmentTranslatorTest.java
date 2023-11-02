@@ -66,6 +66,7 @@ public class EnvironmentTranslatorTest extends
 
         source.setId("test_id");
         source.setName("test_name");
+        source.setType("custom");
         source.setDescription("test_description");
         source.setContentPrefix("/test/prefix");
         source.setOwner(ownerTranslatorTest.initSourceObject());
@@ -91,6 +92,7 @@ public class EnvironmentTranslatorTest extends
         if (source != null) {
             assertEquals(source.getId(), dto.getId());
             assertEquals(source.getName(), dto.getName());
+            assertEquals(source.getType(), dto.getType());
             assertEquals(source.getDescription(), dto.getDescription());
             assertEquals(source.getContentPrefix(), dto.getContentPrefix());
 
