@@ -21,6 +21,7 @@ import org.candlepin.resource.client.v1.CloudRegistrationApi;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 
 
@@ -40,27 +41,46 @@ public class CloudRegistrationClient extends CloudRegistrationApi {
     /**
      * Verifies provided cloud registration data and returns an authentication token.
      *
-     * @param registration
-     *     the registration information that needs to be authenticated
+     * @param metadata
+     *  metadata provided by a cloud provider
+     *
+     * @param type
+     *  the cloud provider's type
+     *
+     * @param signature
+     *  the signature provided by a cloud provider used for authentication
      *
      * @return the authentication token
      */
-    public String cloudAuthorize(CloudRegistrationDTO registration) {
-        return super.cloudAuthorize(registration, 1);
+    public String cloudAuthorize(String metadata, String type, String signature) {
+        return super.cloudAuthorize(generateToken(metadata, type, signature), 1);
     }
 
     /**
      * Verifies provided cloud registration data and returns an authentication token using version two
      * logic.
      *
-     * @param registration
-     *     the registration information that needs to be authenticated
+     * @param accountId
+     *  the cloud account ID to authenticate
      *
-     * @return the cloud authentication results which includes the authentication token,
-     * or null if the authentication results can not be created
+     * @param instanceId
+     *  the instance ID of the system to authenticate
+     *
+     * @param offeringId
+     *  the offering ID of the cloud offering used to create the system
+     *
+     * @param type
+     *  the cloud provider's type
+     *
+     * @param signature
+     *  the signature provided by a cloud provider used for authentication
+     *
+     * @return the authentication token
      */
-    public CloudAuthenticationResultDTO cloudAuthorizeV2(CloudRegistrationDTO registration) {
-        String jsonString = super.cloudAuthorize(registration, 2);
+    public CloudAuthenticationResultDTO cloudAuthorizeV2(String accountId, String instanceId,
+        String offeringId, String type, String signature) {
+        String metadata = buildMetadataJson(accountId, instanceId, offeringId);
+        String jsonString = super.cloudAuthorize(generateToken(metadata, type, signature), 2);
         if (jsonString == null || jsonString.isBlank()) {
             return null;
         }
@@ -71,6 +91,30 @@ public class CloudRegistrationClient extends CloudRegistrationApi {
         catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String buildMetadataJson(String accountId, String instanceId, String offeringId) {
+        ObjectNode objectNode = mapper.createObjectNode();
+        if (accountId != null) {
+            objectNode.put("accountId", accountId);
+        }
+
+        if (instanceId != null) {
+            objectNode.put("instanceId", instanceId);
+        }
+
+        if (offeringId != null) {
+            objectNode.put("cloudOfferingId", offeringId);
+        }
+
+        return objectNode.toString();
+    }
+
+    private CloudRegistrationDTO generateToken(String metadata, String type, String signature) {
+        return new CloudRegistrationDTO()
+            .type(type)
+            .metadata(metadata)
+            .signature(signature);
     }
 
 }

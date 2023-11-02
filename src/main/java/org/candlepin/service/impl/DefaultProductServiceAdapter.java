@@ -25,7 +25,9 @@ import org.candlepin.service.model.ProductInfo;
 
 import com.google.inject.persist.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -55,6 +57,11 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
         Product entity = this.ownerProductCurator.getProductByIdUsingOwnerKey(ownerKey, productId);
         return entity != null ? this.prodCertCurator.getCertForProduct(entity) : null;
+    }
+
+    @Override
+    public List<ProductInfo> getChildrenByProductIds(Collection<String> skuId) {
+        return new ArrayList<>();
     }
 
     @Override

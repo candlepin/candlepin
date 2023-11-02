@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.reset;
 
@@ -208,9 +209,26 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         }
 
         @Override
+        public List<ProductInfo> getChildrenByProductIds(Collection<String> skuIds) {
+            List<ProductInfo> prods = new ArrayList<>();
+            if (skuIds == null || skuIds.isEmpty()) {
+                return prods;
+            }
+
+            skuIds.stream()
+                .filter(Objects::nonNull)
+                .map(sku -> pmap.get(sku))
+                .filter(Objects::nonNull)
+                .map(prod -> prods.add(prod));
+
+            return prods;
+        }
+
+        @Override
         public CertificateInfo getProductCertificate(String ownerKey, String productId) {
             return null;
         }
+
     }
 
     private CandlepinPoolManager poolManager;

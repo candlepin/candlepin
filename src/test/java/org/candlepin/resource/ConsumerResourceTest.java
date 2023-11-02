@@ -22,6 +22,11 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anySet;
@@ -42,6 +47,9 @@ import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
+import org.candlepin.auth.AnonymousCloudConsumerPrincipal;
+import org.candlepin.auth.ConsumerPrincipal;
+import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.Configuration;
@@ -63,8 +71,11 @@ import org.candlepin.dto.api.server.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.server.v1.ContentAccessDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.GoneException;
+import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.AnonymousCloudConsumer;
+import org.candlepin.model.AnonymousContentAccessCertificate;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -109,6 +120,7 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.model.ProductInfo;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.FactValidator;
@@ -116,6 +128,8 @@ import org.candlepin.util.Util;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jboss.resteasy.core.ResteasyContext;
+import org.jboss.resteasy.mock.MockHttpRequest;
+import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -134,6 +148,7 @@ import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -155,6 +170,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Provider;
 import javax.persistence.OptimisticLockException;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
 
@@ -838,6 +854,20 @@ public class ConsumerResourceTest {
         return certificate;
     }
 
+    private AnonymousContentAccessCertificate createAnonContentAccessCert(String key, String cert,
+        long serial) {
+        Date now = new Date();
+        AnonymousContentAccessCertificate certificate = new AnonymousContentAccessCertificate();
+        certificate.setCreated(now);
+        certificate.setUpdated(now);
+        CertificateSerial expectedSerial = new CertificateSerial(serial, new Date());
+        certificate.setKeyAsBytes(key.getBytes());
+        certificate.setCertAsBytes(cert.getBytes());
+        certificate.setSerial(expectedSerial);
+
+        return certificate;
+    }
+
     @Test
     public void testNullPerson() {
         Owner owner = this.createOwner();
@@ -969,6 +999,9 @@ public class ConsumerResourceTest {
     @Test
     public void testCheckForGuestsMigrationCertList() {
         Consumer consumer = createConsumer(createOwner());
+        Owner owner = new Owner();
+        ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
+        ResteasyContext.pushContext(Principal.class, principal);
         List<EntitlementCertificate> certificates = createEntitlementCertificates();
 
         when(entitlementCertServiceAdapter.listForConsumer(consumer)) .thenReturn(certificates);
@@ -1044,7 +1077,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void deleteConsuemrReThrowsOLEWhenLockAquisitionFailsWithoutConsumerHavingBeenDeleted() {
+    public void deleteConsumerReThrowsOLEWhenLockAquisitionFailsWithoutConsumerHavingBeenDeleted() {
         Consumer consumer = createConsumer();
         when(consumerCurator.findByUuid(eq(consumer.getUuid()))).thenReturn(consumer);
         when(consumerCurator.lock(eq(consumer))).thenThrow(OptimisticLockException.class);
@@ -1062,6 +1095,10 @@ public class ConsumerResourceTest {
     @Test
     public void testGetEntitlementCertificatesWithExistingSerialIdForEntitlementCertificate() {
         Consumer consumer = createConsumer();
+        Owner owner = new Owner();
+        ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
+        ResteasyContext.pushContext(Principal.class, principal);
+
         doReturn(consumer).when(consumerCurator).verifyAndLookupConsumer(consumer.getId());
 
         EntitlementCertificate expectedCertificate = createEntitlementCertificate("expected-key",
@@ -1082,13 +1119,15 @@ public class ConsumerResourceTest {
         assertEquals(expectedCertificate.getCert(), actualCertificate.getCert());
         assertEquals(expectedCertificate.getCreated(), actualCertificate.getCreated());
         assertEquals(expectedCertificate.getUpdated(), actualCertificate.getUpdated());
-
         assertEquals(expectedCertificate.getSerial().getId(), actualCertificate.getSerial().getId());
     }
 
     @Test
     public void testGetEntitlementCertificatesWithExistingSerialIdForSimpleContentAccessCert() {
         Consumer consumer = createConsumer();
+        Owner owner = new Owner();
+        ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
+        ResteasyContext.pushContext(Principal.class, principal);
         doReturn(consumer).when(consumerCurator).verifyAndLookupConsumer(consumer.getId());
 
         List<EntitlementCertificate> certificates = new ArrayList<>();
@@ -1110,8 +1149,113 @@ public class ConsumerResourceTest {
         assertEquals(expectedCertificate.getCert(), actualCertificate.getCert());
         assertEquals(expectedCertificate.getCreated(), actualCertificate.getCreated());
         assertEquals(expectedCertificate.getUpdated(), actualCertificate.getUpdated());
-
         assertEquals(expectedCertificate.getSerial().getId(), actualCertificate.getSerial().getId());
+    }
+
+    @Test
+    public void testGetEntitlementCertificatesWithExistingAnonymousCloudConsumer() throws Exception {
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+        consumer.setUuid("uuid");
+        consumer.setProductIds(List.of("product-id"));
+        AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
+        ResteasyContext.pushContext(Principal.class, principal);
+
+        ProductInfo mockProdInfo = mock(ProductInfo.class);
+        doReturn(List.of(mockProdInfo)).when(mockProductServiceAdapter)
+            .getChildrenByProductIds(consumer.getProductIds());
+
+        AnonymousContentAccessCertificate expectedCert = createAnonContentAccessCert("expected-key",
+            "expected-cert", 18084729L);
+        doReturn(expectedCert).when(contentAccessManager).getCertificate(consumer);
+
+        List<CertificateDTO> actual = consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
+
+        assertEquals(1, actual.size());
+        CertificateDTO actualCert = actual.get(0);
+        assertEquals(expectedCert.getId(), actualCert.getId());
+        assertEquals(expectedCert.getKey(), actualCert.getKey());
+        assertEquals(expectedCert.getCert(), actualCert.getCert());
+        assertEquals(expectedCert.getCreated(), Date.from(actualCert.getCreated().toInstant()));
+        assertEquals(expectedCert.getUpdated(), Date.from(actualCert.getUpdated().toInstant()));
+        assertEquals(expectedCert.getSerial().getId(), actualCert.getSerial().getId());
+    }
+
+    @Test
+    public void testGetEntitlementCertificatesWithFilteringExistingAnonymousCloudConsumer() throws Exception {
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+        consumer.setUuid("uuid");
+        consumer.setProductIds(List.of("product-id"));
+        AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
+        ResteasyContext.pushContext(Principal.class, principal);
+
+        ProductInfo mockProdInfo = mock(ProductInfo.class);
+        doReturn(List.of(mockProdInfo)).when(mockProductServiceAdapter)
+            .getChildrenByProductIds(consumer.getProductIds());
+
+        AnonymousContentAccessCertificate expectedCertificate = createAnonContentAccessCert("expected-key",
+            "expected-cert", 18084729L);
+        doReturn(expectedCertificate).when(contentAccessManager).getCertificate(consumer);
+        String serials = Long.toString(expectedCertificate.getSerial().getId());
+
+        List<CertificateDTO> actual = consumerResource
+            .getEntitlementCertificates(consumer.getUuid(), serials);
+
+        assertEquals(0, actual.size());
+    }
+
+    @Test
+    public void testGetEntitlementCertificatesWithAnonymousConsumerAndUnableToGetCertificate()
+        throws Exception {
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+        consumer.setUuid("uuid");
+        consumer.setProductIds(List.of("product-id"));
+        AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
+        ResteasyContext.pushContext(Principal.class, principal);
+
+        ProductInfo mockProdInfo = mock(ProductInfo.class);
+        doReturn(List.of(mockProdInfo)).when(mockProductServiceAdapter)
+            .getChildrenByProductIds(consumer.getProductIds());
+
+        doThrow(new RuntimeException()).when(contentAccessManager)
+            .getCertificate(any(AnonymousCloudConsumer.class));
+
+        assertThrows(IseException.class, () -> consumerResource
+            .getEntitlementCertificates(consumer.getUuid(), null));
+    }
+
+    @Test
+    public void testExportCertificatesWithAnonymousConsumer() throws Exception {
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+        consumer.setUuid("uuid");
+        consumer.setProductIds(List.of("product-id"));
+
+        AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
+        ResteasyContext.pushContext(Principal.class, principal);
+        MockHttpRequest mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/fake");
+        ResteasyContext.pushContext(HttpRequest.class, mockReq);
+        ResteasyContext.pushContext(HttpServletResponse.class, mock(HttpServletResponse.class));
+
+        assertThrows(BadRequestException.class, () -> consumerResource
+            .exportCertificates(consumer.getUuid(), "1234L"));
+    }
+
+    @Test
+    public void testExportCertificatesWithConsumer() throws Exception {
+        Consumer consumer = createConsumer();
+        Owner owner = new Owner();
+        ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
+        ResteasyContext.pushContext(Principal.class, principal);
+        MockHttpRequest mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/fake");
+        ResteasyContext.pushContext(HttpRequest.class, mockReq);
+        ResteasyContext.pushContext(HttpServletResponse.class, mock(HttpServletResponse.class));
+
+        Long serial = 123456L;
+        File mockFile = mock(File.class);
+        doReturn(mockFile).when(manifestManager).generateEntitlementArchive(consumer, Set.of(serial));
+
+        Object actual = consumerResource.exportCertificates(consumer.getUuid(), Long.toString(serial));
+
+        assertEquals(mockFile, actual);
     }
 
     @Test
