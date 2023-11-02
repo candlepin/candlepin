@@ -8814,6 +8814,8 @@ components:
               type: string
             name:
               type: string
+            type:
+              type: string
             description:
               type: string
             content_prefix:

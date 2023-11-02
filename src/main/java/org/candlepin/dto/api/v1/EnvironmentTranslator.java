@@ -77,6 +77,7 @@ public class EnvironmentTranslator implements ObjectTranslator<Environment, Envi
             .updated(Util.toDateTime(source.getUpdated()))
             .id(source.getId())
             .name(source.getName())
+            .type(source.getType())
             .description(source.getDescription())
             .contentPrefix(source.getContentPrefix());
 
