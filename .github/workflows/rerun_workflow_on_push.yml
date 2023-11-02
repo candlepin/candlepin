@@ -6,7 +6,7 @@ on:
     branches:
       - main
       - candlepin-*-HOTFIX
-      - feature/autoreg_v2
+      - feature/*
 
 jobs:
   rerun-workflows:
@@ -28,7 +28,7 @@ jobs:
         shell: bash
         run: |
           base_branch="${GITHUB_REF#refs/heads/}"
-          if [ $base_branch = main ] || [ $base_branch = feature/autoreg_v2 ]; then
+          if [[ $base_branch == "main" ]] || [[ $base_branch == "feature/"* ]]; then
             pr_workflows=("bugzilla_check.yml" "checkstyle.yml" "spec_tests.yml" "unit_tests.yml" "woke.yml" "validate_translations.yml")
           else
             pr_workflows=("pr_verification.yml")
