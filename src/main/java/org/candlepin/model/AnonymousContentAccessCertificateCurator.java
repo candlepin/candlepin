@@ -14,6 +14,12 @@
  */
 package org.candlepin.model;
 
+import com.google.inject.persist.Transactional;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+
 import javax.inject.Singleton;
 
 
@@ -24,6 +30,51 @@ public class AnonymousContentAccessCertificateCurator
 
     public AnonymousContentAccessCertificateCurator() {
         super(AnonymousContentAccessCertificate.class);
+    }
+
+    /**
+     * Retrieves all of the expired anonymous content access certificates.
+     *
+     * @return all of the expired anonymous content access certificates
+     */
+    public List<ExpiredCertificate> listAllExpired() {
+        String hql = "SELECT new org.candlepin.model.ExpiredCertificate(c.id, s.id)" +
+            " FROM AnonymousContentAccessCertificate c" +
+            " INNER JOIN c.serial s " +
+            " WHERE s.expiration < :nowDate";
+
+        return this.getEntityManager()
+            .createQuery(hql, ExpiredCertificate.class)
+            .setParameter("nowDate", new Date())
+            .getResultList();
+    }
+
+    /**
+     * Deletes anonymous content access certificates based on the provided IDs.
+     *
+     * @param ids
+     *  the IDs of anonymous content access certificates to delete
+     *
+     * @return
+     *  the number of deleted records
+     */
+    @Transactional
+    public int deleteByIds(Collection<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+
+        String query = "DELETE FROM AnonymousContentAccessCertificate c WHERE c.id IN (:ids)";
+
+        int deleted = 0;
+        for (Collection<String> idsToDeleteBlock : this.partition(ids)) {
+            deleted += this.currentSession()
+                .createQuery(query)
+                .setParameter("ids", idsToDeleteBlock)
+                .executeUpdate();
+        }
+
+        return deleted;
     }
 
 }
