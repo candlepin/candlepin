@@ -17,6 +17,7 @@ package org.candlepin.async.tasks;
 import org.candlepin.async.AsyncJob;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
+import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
@@ -51,17 +52,20 @@ public class CertificateCleanupJob implements AsyncJob {
     private final IdentityCertificateCurator identCertCurator;
     private final ContentAccessCertificateCurator caCertCurator;
     private final CertificateSerialCurator serialCurator;
+    private final AnonymousContentAccessCertificateCurator anonCertCurator;
 
     @Inject
     public CertificateCleanupJob(
         ConsumerCurator consumers,
         IdentityCertificateCurator identCerts,
         ContentAccessCertificateCurator contentAccessCerts,
-        CertificateSerialCurator serialCurator) {
+        CertificateSerialCurator serialCurator,
+        AnonymousContentAccessCertificateCurator anonCertCurator) {
         this.consumerCurator = Objects.requireNonNull(consumers);
         this.identCertCurator = Objects.requireNonNull(identCerts);
         this.caCertCurator = Objects.requireNonNull(contentAccessCerts);
         this.serialCurator = Objects.requireNonNull(serialCurator);
+        this.anonCertCurator = Objects.requireNonNull(anonCertCurator);
     }
 
     @Override
@@ -71,6 +75,7 @@ public class CertificateCleanupJob implements AsyncJob {
         // Skipping entitlement certificates as those are handled by ExpiredPoolsCleanupJob
         cleanupExpiredIdentityCerts();
         cleanupExpiredContentAccessCerts();
+        cleanupExpiredAnonymousContentAccessCerts();
         cleanupCertificateSerials();
         log.debug("Certificate cleanup successfully completed.");
     }
@@ -119,6 +124,25 @@ public class CertificateCleanupJob implements AsyncJob {
         List<Long> expiredSerials = serialsOf(allExpiredCaCertificates);
         int revokedSerials = this.serialCurator.revokeByIds(expiredSerials);
         log.debug("Revoked {} content access certificate serials.", revokedSerials);
+    }
+
+    private void cleanupExpiredAnonymousContentAccessCerts() {
+        List<ExpiredCertificate> expiredCerts = this.anonCertCurator.listAllExpired();
+        if (expiredCerts == null || expiredCerts.isEmpty()) {
+            log.info("No expired anonymous content access certificates to clean up.");
+            return;
+        }
+        else {
+            log.info("Cleaning up {} expired anonymous content access certificates.", expiredCerts.size());
+        }
+
+        List<String> expiredCertIds = certIdsOf(expiredCerts);
+        int certsDeleted = this.anonCertCurator.deleteByIds(expiredCertIds);
+        log.debug("Deleted {} anonymous content access certificates.", certsDeleted);
+
+        List<Long> expiredSerials = serialsOf(expiredCerts);
+        int revokedSerials = this.serialCurator.revokeByIds(expiredSerials);
+        log.debug("Revoked {} anonymous content access certificate serials.", revokedSerials);
     }
 
     private void cleanupCertificateSerials() {
