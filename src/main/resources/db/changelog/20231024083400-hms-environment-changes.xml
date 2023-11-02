@@ -18,4 +18,16 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="20231024083400-2" author="ojanus">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="cp_environment" columnName="type"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="cp_environment">
+            <column name="type"
+                    type="varchar(32)"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>
