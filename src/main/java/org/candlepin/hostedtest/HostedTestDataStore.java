@@ -84,6 +84,7 @@ public class HostedTestDataStore {
     protected Map<String, Set<String>> productSubscriptionMap;
 
     protected Map<String, Set<String>> cloudOfferIdToProductIds;
+    protected Map<String, String> cloudOfferIdToOfferType;
     protected Map<String, String> cloudAccountIdToOwnerKey;
 
     /**
@@ -103,6 +104,7 @@ public class HostedTestDataStore {
         this.productSubscriptionMap = new ConcurrentHashMap<>();
 
         this.cloudOfferIdToProductIds = new ConcurrentHashMap<>();
+        this.cloudOfferIdToOfferType = new ConcurrentHashMap<>();
         this.cloudAccountIdToOwnerKey = new ConcurrentHashMap<>();
     }
 
@@ -978,6 +980,14 @@ public class HostedTestDataStore {
 
     protected Set<String> getProductIdsForOfferId(String cloudOfferId) {
         return cloudOfferIdToProductIds.get(cloudOfferId);
+    }
+
+    protected void setOfferTypeForCloudOfferId(String cloudOfferId, String cloudOfferType) {
+        cloudOfferIdToOfferType.put(cloudOfferId, cloudOfferType);
+    }
+
+    protected String getOfferTypeForOfferId(String cloudOfferId) {
+        return cloudOfferIdToOfferType.get(cloudOfferId);
     }
 
     protected void setCloudAccountIdForOwnerKey(String cloudAccountId,

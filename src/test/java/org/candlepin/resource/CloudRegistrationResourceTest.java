@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -43,6 +44,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
+import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingException;
 import org.candlepin.service.model.CloudAuthenticationResult;
 
 import org.jboss.resteasy.core.ResteasyContext;
@@ -529,6 +531,19 @@ public class CloudRegistrationResourceTest {
     public void testAuthorizeWithUnknownVersion() {
         assertThrows(BadRequestException.class,
             () -> cloudRegResource.cloudAuthorize(new CloudRegistrationDTO(), 100));
+    }
+
+    @Test
+    public void testCloudAuthorizeV2For1POfferingNotSupported() {
+        CloudRegistrationDTO dto = new CloudRegistrationDTO()
+            .type("test-type")
+            .metadata("test-metadata")
+            .signature("test-signature");
+
+        doThrow(new CloudRegistrationNotSupportedForOfferingException()).when(mockCloudRegistrationAdapter)
+            .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
+
+        assertThrows(NotImplementedException.class, () -> cloudRegResource.cloudAuthorize(dto, 2));
     }
 
     private CloudRegistrationData getCloudRegistrationData(CloudRegistrationDTO cloudRegistrationDTO) {

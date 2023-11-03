@@ -17,6 +17,7 @@ package org.candlepin.hostedtest;
 import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
+import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingException;
 import org.candlepin.service.exception.CouldNotAcquireCloudAccountLockException;
 import org.candlepin.service.exception.CouldNotEntitleOrganizationException;
 import org.candlepin.service.exception.MalformedCloudRegistrationException;
@@ -52,6 +53,7 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
     private static final String ACCOUNT_ID_FIELD_NAME = "accountId";
     private static final String INSTANCE_ID_FIELD_NAME = "instanceId";
     private static final String OFFERING_ID_FIELD_NAME = "cloudOfferingId";
+    private static final String OFFERING_TYPE_1P = "1P";
     private static final ObjectMapper OBJ_MAPPER = ObjectMapperFactory.getObjectMapper();
 
     private final HostedTestDataStore datastore;
@@ -128,6 +130,12 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
         if (offerId == null || offerId.isBlank()) {
             throw new MalformedCloudRegistrationException(
                 "missing offer ID in registration information metadata");
+        }
+
+        String offerType = this.datastore.getOfferTypeForOfferId(offerId);
+        if (OFFERING_TYPE_1P.equals(offerType)) {
+            throw new CloudRegistrationNotSupportedForOfferingException(
+                "cloud registration v2 is not supported for 1P offerings");
         }
 
         String ownerKey = this.datastore.getOwnerKeyForCloudAccountId(accountId);

@@ -15,6 +15,7 @@
 package org.candlepin.service;
 
 import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
+import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingException;
 import org.candlepin.service.exception.CouldNotAcquireCloudAccountLockException;
 import org.candlepin.service.exception.CouldNotEntitleOrganizationException;
 import org.candlepin.service.exception.MalformedCloudRegistrationException;
@@ -59,11 +60,15 @@ public interface CloudRegistrationAdapter {
      * @throws CloudRegistrationAuthorizationException
      *     if cloud registration is not permitted for the provider or account holder
      *
+     * @throws CloudRegistrationNotSupportedForOfferingException
+     *     if cloud registration is not supported for the type of offering the client is using
+     *
      * @return the cloud authentication result which contains the owner key, cloud account ID, and
      * product ID
      */
     CloudAuthenticationResult resolveCloudRegistrationDataV2(CloudRegistrationInfo cloudRegInfo)
-        throws CloudRegistrationAuthorizationException, MalformedCloudRegistrationException;
+        throws CloudRegistrationAuthorizationException, MalformedCloudRegistrationException,
+            CloudRegistrationNotSupportedForOfferingException;
 
     /**
      * Create (if one does not already exist) and entitle an owner upstream of Candlepin, for the given
