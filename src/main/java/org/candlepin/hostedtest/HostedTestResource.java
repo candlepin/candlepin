@@ -767,6 +767,15 @@ public class HostedTestResource {
         productIdsNode.elements().forEachRemaining(prod -> productIds.add(prod.asText()));
 
         this.datastore.setProductIdsForCloudOfferId(offerId, productIds);
+
+        JsonNode cloudOfferTypeNode = root.get("cloudOfferType");
+        if (cloudOfferTypeNode != null) {
+            String cloudOfferType = cloudOfferTypeNode.asText();
+            if (cloudOfferType != null && !cloudOfferType.isBlank()) {
+                this.datastore.setOfferTypeForCloudOfferId(offerId, cloudOfferType);
+            }
+        }
+
     }
 
     @POST
