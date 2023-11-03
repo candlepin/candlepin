@@ -123,7 +123,7 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
 
         public CloudAccountOrgSetupJobConfig() {
             this.setJobKey(JOB_KEY).setJobName(JOB_NAME).addConstraint(
-                JobConstraints.uniqueByArguments(CLOUD_ACCOUNT_ID, OFFERING_ID)).setRetryCount(5);
+                JobConstraints.uniqueByArguments(CLOUD_ACCOUNT_ID, OFFERING_ID)).setRetryCount(20000);
         }
 
         /**
