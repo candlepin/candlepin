@@ -145,6 +145,18 @@ public class EnvironmentSpecTest {
     }
 
     @Test
+    public void shouldLowerCaseEnvironmentType() {
+        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(),
+            Environments.random().type("mY_TypE"));
+
+        List<EnvironmentDTO> foundEnv = ownerClient.owners().listEnvironments(owner, env.getName());
+
+        assertThat(foundEnv)
+            .singleElement()
+            .returns("my_type", EnvironmentDTO::getType);
+    }
+
+    @Test
     public void shouldDefaultContentEnabledToNull() {
         EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
         ContentDTO content = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());

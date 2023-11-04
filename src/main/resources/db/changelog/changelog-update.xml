@@ -186,5 +186,5 @@
     <include file="db/changelog/20230220150433-drop-act-key-env-tables.xml"/>
     <include file="db/changelog/20230322103117-reduce-consumer-name.xml"/>
     <include file="db/changelog/20230811183400-add-indexes-certificate-cleanup.xml"/>
-    <include file="db/changelog/20231024083400-add-environment-content-prefix.xml"/>
+    <include file="db/changelog/20231024083400-hms-environment-changes.xml"/>
 </databaseChangeLog>

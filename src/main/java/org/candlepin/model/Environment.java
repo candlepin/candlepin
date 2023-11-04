@@ -66,6 +66,10 @@ public class Environment extends AbstractHibernateObject implements Serializable
     @NotNull
     private String name;
 
+    @Column
+    @Size(max = 32)
+    private String type;
+
     @Column(nullable = true)
     @Size(max = 255)
     private String description;
@@ -186,6 +190,17 @@ public class Environment extends AbstractHibernateObject implements Serializable
 
     public Environment setName(String name) {
         this.name = name;
+        return this;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public Environment setType(String type) {
+        if (type != null) {
+            this.type = type.toLowerCase();
+        }
         return this;
     }
 
