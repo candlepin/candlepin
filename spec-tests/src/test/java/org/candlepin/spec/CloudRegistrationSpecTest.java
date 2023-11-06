@@ -17,6 +17,7 @@ package org.candlepin.spec;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotImplemented;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertUnauthorized;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -362,6 +363,21 @@ class CloudRegistrationSpecTest {
         adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
 
         assertUnauthorized(() -> adminClient.cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", ""));
+    }
+
+    @Test
+    public void shouldThrowNotImplementedExceptionWith1POfferingForV2Auth()
+        throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        ProductDTO product = adminClient.hosted().createProduct(Products.random());
+        adminClient.hosted().associateProductIdsToCloudOffer(offerId, "1P", List.of(product.getId()));
+
+        assertNotImplemented(() -> adminClient.cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", ""));
     }
 

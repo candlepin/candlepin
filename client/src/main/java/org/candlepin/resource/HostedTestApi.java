@@ -715,16 +715,34 @@ public class HostedTestApi {
      *     the product IDs to associate to an offering ID
      */
     public void associateProductIdsToCloudOffer(String cloudOfferId, Collection<String> productIds) {
-        okhttp3.Call localVarCall = associateProductIdsToCloudOfferCall(cloudOfferId, productIds);
+        okhttp3.Call localVarCall = associateProductIdsToCloudOfferCall(cloudOfferId, null, productIds);
         localVarApiClient.execute(localVarCall);
     }
 
-    public okhttp3.Call associateProductIdsToCloudOfferCall(String cloudOfferId, Collection<String> productIds) {
+    /**
+     * Associates a cloud offering ID to an offering type and a product ID in the hosted test adapters.
+     *
+     * @param cloudOfferId
+     *     the offering ID to associate to a product ID
+     *
+     * @param cloudOfferType
+     *     the offering type to associate to the cloud offering ID
+     *
+     * @param productIds
+     *     the product IDs to associate to an offering ID
+     */
+    public void associateProductIdsToCloudOffer(String cloudOfferId, String cloudOfferType, Collection<String> productIds) {
+        okhttp3.Call localVarCall = associateProductIdsToCloudOfferCall(cloudOfferId, cloudOfferType, productIds);
+        localVarApiClient.execute(localVarCall);
+    }
+
+    public okhttp3.Call associateProductIdsToCloudOfferCall(String cloudOfferId, String cloudOfferType, Collection<String> productIds) {
         String basePath = getBasePath();
 
         Map<String, Object> bodyMap = new HashMap<>();
         bodyMap.put("cloudOfferId", cloudOfferId);
         bodyMap.put("productIds", productIds);
+        bodyMap.put("cloudOfferType", cloudOfferType);
 
         Object body = bodyMap;
 

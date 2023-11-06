@@ -39,6 +39,7 @@ import org.candlepin.resource.server.v1.CloudRegistrationApi;
 import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
+import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingException;
 import org.candlepin.service.exception.MalformedCloudRegistrationException;
 import org.candlepin.service.model.CloudAuthenticationResult;
 
@@ -139,6 +140,11 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
         }
         catch (UnsupportedOperationException e) {
             String errmsg = this.i18n.tr("Cloud registration is not supported by this Candlepin instance");
+            throw new NotImplementedException(errmsg, e);
+        }
+        catch (CloudRegistrationNotSupportedForOfferingException e) {
+            String errmsg = this.i18n.tr("Cloud registration is not supported for the type of " +
+                "offering the client is using");
             throw new NotImplementedException(errmsg, e);
         }
         catch (CloudRegistrationAuthorizationException e) {
