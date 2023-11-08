@@ -26,6 +26,7 @@ import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
+import org.candlepin.service.exception.CloudAccountOrgMismatchException;
 import org.candlepin.service.exception.CouldNotAcquireCloudAccountLockException;
 import org.candlepin.service.exception.CouldNotEntitleOrganizationException;
 import org.candlepin.service.model.CloudAccountData;
@@ -179,6 +180,28 @@ class CloudAccountOrgSetupJobTest {
             .setCloudProvider(CloudProvider.AZURE)
             .setOwnerKey(TestUtil.randomString());
 
+
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = spy(new JobExecutionContext(status));
+        when(status.getJobArguments()).thenReturn(jobConfig.getJobArguments());
+
+        assertThrows(JobExecutionException.class, () -> regJob.execute(context));
+    }
+
+    @Test
+    void shouldThrowJobExceptionWhenCloudAccountOrgMismatchHappens()
+        throws CouldNotAcquireCloudAccountLockException {
+        when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any(), anyString())).thenThrow(
+            CloudAccountOrgMismatchException.class);
+
+        CloudAccountOrgSetupJob regJob = new CloudAccountOrgSetupJob(cloudReg, ownerCurator);
+
+        CloudAccountOrgSetupJob.CloudAccountOrgSetupJobConfig jobConfig =
+            CloudAccountOrgSetupJob.createJobConfig()
+            .setCloudAccountId(TestUtil.randomString())
+            .setCloudOfferingId(TestUtil.randomString())
+            .setCloudProvider(CloudProvider.AZURE)
+            .setOwnerKey(TestUtil.randomString());
 
         AsyncJobStatus status = mock(AsyncJobStatus.class);
         JobExecutionContext context = spy(new JobExecutionContext(status));

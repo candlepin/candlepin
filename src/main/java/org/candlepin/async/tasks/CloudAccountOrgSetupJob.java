@@ -26,6 +26,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
+import org.candlepin.service.exception.CloudAccountOrgMismatchException;
 import org.candlepin.service.exception.CouldNotAcquireCloudAccountLockException;
 import org.candlepin.service.exception.CouldNotEntitleOrganizationException;
 import org.candlepin.service.model.CloudAccountData;
@@ -101,7 +102,8 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
             log.info("Entitled offering {} to owner {} (anonymous: {}).", offeringId,
                 accountData.ownerKey(), accountData.isAnonymous());
         }
-        catch (CouldNotEntitleOrganizationException | CouldNotAcquireCloudAccountLockException e) {
+        catch (CouldNotEntitleOrganizationException | CouldNotAcquireCloudAccountLockException |
+            CloudAccountOrgMismatchException e) {
             throw new JobExecutionException(e.getMessage(), e, false);
         }
     }
