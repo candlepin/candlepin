@@ -14,6 +14,7 @@
  */
 package org.candlepin.service;
 
+import org.candlepin.service.exception.CloudAccountOrgMismatchException;
 import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
 import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingException;
 import org.candlepin.service.exception.CouldNotAcquireCloudAccountLockException;
@@ -96,6 +97,7 @@ public interface CloudRegistrationAdapter {
      */
     CloudAccountData setupCloudAccountOrg(String cloudAccountID, String cloudOfferingID,
         CloudProvider cloudProviderShortName, String ownerKey)
-        throws CouldNotAcquireCloudAccountLockException, CouldNotEntitleOrganizationException;
+        throws CouldNotAcquireCloudAccountLockException, CouldNotEntitleOrganizationException,
+            CloudAccountOrgMismatchException;
 
 }
