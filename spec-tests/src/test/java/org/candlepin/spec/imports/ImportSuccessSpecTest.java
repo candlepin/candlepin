@@ -16,6 +16,7 @@ package org.candlepin.spec.imports;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.data.builder.Pools.PRIMARY_POOL_SUB_KEY;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.AttributeDTO;
@@ -37,6 +38,8 @@ import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
+import org.candlepin.spec.bootstrap.client.api.JobsClient;
+import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.data.builder.Branding;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
@@ -64,7 +67,7 @@ import java.util.stream.Collectors;
 @SpecTest
 @OnlyInStandalone
 public class ImportSuccessSpecTest {
-
+    private static final String RECORD_CLEANER_JOB_KEY = "ImportRecordCleanerJob";
     private static final String EXPECTED_CONTENT_URL = "/path/to/arch/specific/content";
 
     private ApiClient admin;
@@ -158,6 +161,45 @@ public class ImportSuccessSpecTest {
         assertThat(imports)
             .map(ImportRecordDTO::getStatus)
             .containsOnly("SUCCESS");
+    }
+
+    @Test
+    public void shouldPurgeImportRecords() throws Exception {
+        OwnerClient ownerApi = this.userClient.owners();
+        JobsClient jobsApi = this.admin.jobs();
+
+        String ownerKey = this.owner.getKey();
+
+        try {
+            Export manifest = generateWith(generator -> generator.withProduct(Products.random()));
+
+            // This value comes from the default configuration of the cleaner job, which keeps the
+            // latest 10 records by default. If the Candlepin instance under test is running with a
+            // different configuration, this test will fail.
+            int recordsRetained = 10;
+
+            int importRecords = 12;
+            for (int i = 0; i < importRecords; i++) {
+                List<String> force = List.of("SIGNATURE_CONFLICT", "MANIFEST_SAME");
+                AsyncJobStatusDTO status = ownerApi.importManifestAsync(ownerKey, force, manifest.file());
+                status = userClient.jobs().waitForJob(status.getId());
+                assertEquals("FINISHED", status.getState());
+            }
+
+            List<ImportRecordDTO> records = ownerApi.getImports(ownerKey);
+            assertEquals(importRecords, records.size());
+
+            AsyncJobStatusDTO cleanerJob = jobsApi.scheduleJob(RECORD_CLEANER_JOB_KEY);
+            cleanerJob = jobsApi.waitForJob(cleanerJob.getId());
+            assertEquals("FINISHED", cleanerJob.getState());
+
+            records = ownerApi.getImports(ownerKey);
+            assertEquals(recordsRetained, records.size());
+        }
+        finally {
+            // Cleanup rules that have been created.
+            this.admin.rules().deleteRules();
+        }
     }
 
     @Test
