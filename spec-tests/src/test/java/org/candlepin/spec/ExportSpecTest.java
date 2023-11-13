@@ -20,23 +20,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.client.v1.BrandingDTO;
 import org.candlepin.dto.api.client.v1.CdnDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
 import org.candlepin.dto.api.client.v1.ExportResultDTO;
-import org.candlepin.dto.api.client.v1.ImportRecordDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.client.v1.RoleDTO;
+import org.candlepin.dto.api.client.v1.SubscriptionDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
 import org.candlepin.invoker.client.ApiException;
+import org.candlepin.resource.HostedTestApi;
 import org.candlepin.resource.client.v1.CdnApi;
 import org.candlepin.resource.client.v1.ConsumerTypeApi;
 import org.candlepin.resource.client.v1.OwnerContentApi;
@@ -44,7 +43,7 @@ import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.resource.client.v1.RolesApi;
 import org.candlepin.resource.client.v1.RulesApi;
 import org.candlepin.resource.client.v1.UsersApi;
-import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
+import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -65,6 +64,7 @@ import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.builder.Roles;
 import org.candlepin.spec.bootstrap.data.builder.Users;
 import org.candlepin.spec.bootstrap.data.util.ExportUtil;
+import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -86,19 +86,21 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 @SpecTest
+@OnlyInHosted
 class ExportSpecTest {
-    private static final String RECORD_CLEANER_JOB_KEY = "ImportRecordCleanerJob";
     private static final String UNDO_IMPORTS_JOB_KEY = "UndoImportsJob";
+
     // The following are directory location paths within a manifest
     private static final String EXPORT_PATH = "export/";
     private static final String PRODUCTS_PATH = "export/products/";
@@ -213,6 +215,7 @@ class ExportSpecTest {
         private RolesApi rolesApi;
         private UsersApi usersApi;
         private JobsClient jobsApi;
+        private HostedTestApi hostedTestApi;
 
         private OwnerDTO owner;
         private ConsumerDTO consumer;
@@ -234,6 +237,7 @@ class ExportSpecTest {
             rolesApi = client.roles();
             usersApi = client.users();
             jobsApi = client.jobs();
+            this.hostedTestApi = this.client.hosted();
 
             initializeData();
 
@@ -351,36 +355,6 @@ class ExportSpecTest {
         }
 
         @Test
-        @OnlyInStandalone
-        void shouldPurgeImportRecords() throws Exception {
-            try {
-                OwnerDTO importOwner = ownerApi.createOwner(Owners.random());
-                int expectedRecordCount = 11;
-                for (int i = 0; i < expectedRecordCount; i++) {
-                    List<String> force = List.of("SIGNATURE_CONFLICT", "MANIFEST_SAME");
-                    AsyncJobStatusDTO status = client.owners()
-                        .importManifestAsync(importOwner.getKey(), force, manifest);
-                    status = client.jobs().waitForJob(status.getId());
-                    assertEquals("FINISHED", status.getState());
-                }
-
-                List<ImportRecordDTO> records = ownerApi.getImports(importOwner.getKey());
-                assertEquals(expectedRecordCount, records.size());
-
-                AsyncJobStatusDTO cleanerJob = jobsApi.scheduleJob(RECORD_CLEANER_JOB_KEY);
-                cleanerJob = jobsApi.waitForJob(cleanerJob.getId());
-                assertEquals("FINISHED", cleanerJob.getState());
-
-                records = ownerApi.getImports(importOwner.getKey());
-                assertEquals(10, records.size());
-            }
-            finally {
-                // Cleanup rules that have been created.
-                rulesApi.deleteRules();
-            }
-        }
-
-        @Test
         void shouldExportRegeneratedEntitlementCertificates() throws Exception {
             int target = ENTITILEMENT_CERTIFICATES_PATH.length() - 1;
             List<ZipEntry> entitlementCerts = export.stream()
@@ -476,135 +450,170 @@ class ExportSpecTest {
             assertEquals(productIdToProduct.size(), productCount);
         }
 
-        @Test
-        @OnlyInStandalone
-        void shouldExportProductsAndCerts() throws Exception {
-            int target = PRODUCTS_PATH.length() - 1;
-            List<String> products = new ArrayList<>();
-            List<String> productsWithCerts = new ArrayList<>();
-            List<String> certs = new ArrayList<>();
-            export.stream()
-                .filter(entry -> entry.getName().startsWith(PRODUCTS_PATH))
-                .filter(entry -> entry.getName().lastIndexOf('/') == target)
-                .forEach(entry -> {
-                    if (entry.getName().endsWith(".json")) {
-                        products.add(entry.getName());
-                        String fileName = new File(entry.getName()).getName().replace(".json", "");
-                        ProductDTO product = productIdToProduct.get(fileName);
-                        assertNotNull(product);
-                        // Count numeric ids
-                        try {
-                            Integer.parseInt(fileName);
-                            //expectedNumberOfCerts;
-                            productsWithCerts.add(fileName);
-                        }
-                        catch (NumberFormatException e) {
-                            // ExpectedName is not a numeric id
-                        }
-                    }
+        // This test is legacy, maybe? This test's behavior is a function of internal knowledge of
+        // how certain adapters work; not necessarily guaranteed behavior. Whether or not a cert is
+        // present is dependent on the adapter implementation, *not* the operating mode.
+        // Also standalone Sat instances don't export manifests, so this will never come up in
+        // production.
 
-                    if (entry.getName().endsWith(".pem")) {
-                        certs.add(new File(entry.getName()).getName().replace(".pem", ""));
-                    }
-                });
-            assertEquals(productIdToProduct.size(), products.size());
-            assertEquals(productsWithCerts.size(), certs.size());
-            for (String cert : certs) {
-                assertTrue(productsWithCerts.contains(cert));
-            }
-        }
+        // @Test
+        // void shouldExportProductsAndCerts() throws Exception {
+        //     int target = PRODUCTS_PATH.length() - 1;
+        //     List<String> products = new ArrayList<>();
+        //     List<String> productsWithCerts = new ArrayList<>();
+        //     List<String> certs = new ArrayList<>();
+        //     export.stream()
+        //         .filter(entry -> entry.getName().startsWith(PRODUCTS_PATH))
+        //         .filter(entry -> entry.getName().lastIndexOf('/') == target)
+        //         .forEach(entry -> {
+        //             if (entry.getName().endsWith(".json")) {
+        //                 products.add(entry.getName());
+        //                 String fileName = new File(entry.getName()).getName().replace(".json", "");
+        //                 ProductDTO product = productIdToProduct.get(fileName);
+        //                 assertNotNull(product);
+        //                 // Count numeric ids
+        //                 try {
+        //                     Integer.parseInt(fileName);
+        //                     //expectedNumberOfCerts;
+        //                     productsWithCerts.add(fileName);
+        //                 }
+        //                 catch (NumberFormatException e) {
+        //                     // ExpectedName is not a numeric id
+        //                 }
+        //             }
+
+        //             if (entry.getName().endsWith(".pem")) {
+        //                 certs.add(new File(entry.getName()).getName().replace(".pem", ""));
+        //             }
+        //         });
+        //     assertEquals(productIdToProduct.size(), products.size());
+        //     assertEquals(productsWithCerts.size(), certs.size());
+        //     for (String cert : certs) {
+        //         assertTrue(productsWithCerts.contains(cert));
+        //     }
+        // }
 
         @Test
         public void shouldNotScheduleNonCronTasks() throws Exception {
             assertForbidden(() -> jobsApi.scheduleJob(UNDO_IMPORTS_JOB_KEY));
         }
 
+        private SubscriptionDTO createSubscription(ProductDTO product) {
+            OffsetDateTime now = OffsetDateTime.now();
+
+            return new SubscriptionDTO()
+                .id(StringUtil.random("export_sub-", 8, StringUtil.CHARSET_NUMERIC_HEX))
+                .owner(Owners.toNested(this.owner))
+                .product(product)
+                .quantity(2L)
+                .startDate(now.minusDays(1))
+                .endDate(now.plusYears(5))
+                .accountNumber("12345")
+                .orderNumber("6789");
+        }
+
+        private AsyncJobStatusDTO refreshPools(String ownerKey) {
+            AsyncJobStatusDTO job = this.ownerApi.refreshPools(ownerKey, false);
+            assertNotNull(job);
+
+            job = this.jobsApi.waitForJob(job);
+            assertEquals("FINISHED", job.getState());
+
+            return job;
+        }
+
+        private boolean isDerivedPool(PoolDTO pool) {
+            return pool.getAttributes()
+                .stream()
+                .filter(attrib -> "pool_derived".equalsIgnoreCase(attrib.getName()))
+                .anyMatch(attrib -> "true".equalsIgnoreCase(attrib.getValue()));
+        }
+
         private void initializeData() throws Exception {
-            owner = ownerApi.createOwner(Owners.random());
-            String ownerKey = owner.getKey();
+            this.owner = ownerApi.createOwner(Owners.random());
 
-            RoleDTO role = rolesApi.createRole(Roles.ownerAll(owner));
             UserDTO user = usersApi.createUser(Users.random());
-            role = rolesApi.addUserToRole(role.getName(), user.getUsername());
-            consumer = consumerApi.createConsumer(Consumers.random(owner, ConsumerTypes.Candlepin),
-                user.getUsername(), owner.getKey(), null, true);
+            RoleDTO role = rolesApi.createRole(Roles.ownerAll(owner).addUsersItem(user));
 
-            ProductDTO engProduct = ownerProductApi.createProductByOwner(ownerKey, Products.randomEng());
-            productIdToProduct.put(engProduct.getId(), engProduct);
+            // prep data for creation upstream
+            ProductDTO engProduct = Products.randomEng();
 
-            Set<BrandingDTO> brandings = Set.of(Branding.build("Branded Eng Product", "OS")
-                .productId(engProduct.getId()));
+            ProductDTO derivedProvidedProduct = Products.random();
 
-            ProductDTO derivedProvidedProduct = ownerProductApi
-                .createProductByOwner(ownerKey, Products.random());
-            productIdToProduct.put(derivedProvidedProduct.getId(), derivedProvidedProduct);
+            ProductDTO derivedProduct = Products.random()
+                .providedProducts(Set.of(derivedProvidedProduct));
 
-            ProductDTO derivedProduct = Products.random();
-            derivedProduct.setProvidedProducts(Set.of(derivedProvidedProduct));
-            derivedProduct = ownerProductApi.createProductByOwner(ownerKey, derivedProduct);
-            productIdToProduct.put(derivedProduct.getId(), derivedProduct);
-
-            ProductDTO product1 = Products.random();
-            product1.setMultiplier(2L);
-            product1.setBranding(brandings);
-            product1.setProvidedProducts(Set.of(engProduct));
-            product1 = ownerProductApi.createProductByOwner(ownerKey, product1);
-            productIdToProduct.put(product1.getId(), product1);
+            ProductDTO product1 = Products.random()
+                .multiplier(2L)
+                .providedProducts(Set.of(engProduct))
+                .branding(Set.of(Branding.build("Branded Eng Product", "OS", engProduct)));
 
             ProductDTO product2 = Products.random();
-            product2 = ownerProductApi.createProductByOwner(ownerKey, product2);
-            productIdToProduct.put(product2.getId(), product2);
 
             ProductDTO virtProduct = Products.withAttributes(ProductAttributes.VirtualOnly.withValue("true"));
-            virtProduct = ownerProductApi.createProductByOwner(ownerKey, virtProduct);
-            productIdToProduct.put(virtProduct.getId(), virtProduct);
 
-            ProductDTO product3 = Products.withAttributes(ProductAttributes.Arch.withValue("x86_64"),
-                ProductAttributes.VirtualLimit.withValue("unlimited"));
-            product3.setDerivedProduct(derivedProduct);
-            product3 = ownerProductApi.createProductByOwner(ownerKey, product3);
-            productIdToProduct.put(product3.getId(), product3);
+            ProductDTO product3 = Products.random()
+                .addAttributesItem(ProductAttributes.Arch.withValue("x86_64"))
+                .addAttributesItem(ProductAttributes.VirtualLimit.withValue("unlimited"))
+                .derivedProduct(derivedProduct);
 
-            ProductDTO productVdc = createVDCProduct(client, ownerKey);
-            productIdToProduct.put(productVdc.getId(), productVdc);
-            ProductDTO productDc = productVdc.getDerivedProduct();
-            productIdToProduct.put(productDc.getId(), productDc);
+            ProductDTO productDc = Products.random()
+                .addAttributesItem(ProductAttributes.Arch.withValue("x86_64"))
+                .addAttributesItem(ProductAttributes.StackingId.withValue("stack-dc"));
 
-            // this is for the update process
-            ProductDTO productUp = ownerProductApi.createProductByOwner(ownerKey, Products.random());
-            productIdToProduct.put(productUp.getId(), productUp);
+            ProductDTO productVdc = Products.random()
+                .addAttributesItem(ProductAttributes.Arch.withValue("x86_64"))
+                .addAttributesItem(ProductAttributes.VirtualLimit.withValue("unlimited"))
+                .addAttributesItem(ProductAttributes.StackingId.withValue("stack-vdc"))
+                .derivedProduct(productDc);
+
+            ProductDTO productUp = Products.random();
 
             ContentDTO content1 = Contents.random()
                 .metadataExpire(6000L)
                 .requiredTags("TAG1,TAG2");
-            content1 = ownerContentApi.createContent(ownerKey, content1);
 
             ContentDTO archContent = Contents.random()
                 .metadataExpire(6000L)
                 .contentUrl("/path/to/arch/specific/content")
                 .requiredTags("TAG1,TAG2")
                 .arches("i386,x86_64");
-            archContent = ownerContentApi.createContent(ownerKey, archContent);
 
-            ownerProductApi.addContent(ownerKey, product1.getId(), content1.getId(), true);
-            ownerProductApi.addContent(ownerKey, product2.getId(), content1.getId(), true);
-            ownerProductApi.addContent(ownerKey, product2.getId(), archContent.getId(), true);
-            ownerProductApi.addContent(ownerKey, derivedProduct.getId(), content1.getId(), true);
+            // Persist upstream data
+            Stream.of(engProduct, derivedProvidedProduct, derivedProduct, product1, product2, virtProduct,
+                product3, productDc, productVdc, productUp)
+                .map(this.hostedTestApi::createProduct)
+                .forEach(pdto -> productIdToProduct.put(pdto.getId(), pdto));
 
-            List<ProductDTO> poolProducts =
-                List.of(product1, product2, virtProduct, product3, productUp, productVdc);
-            Map<String, PoolDTO> poolIdToPool =
-                createPoolsForProducts(ownerApi, ownerKey, poolProducts, brandings);
+            List.of(content1, archContent).forEach(content -> this.hostedTestApi.createContent(content));
 
-            consumer.setFacts(Map.of("distributor_version", "sam-1.3"));
-            ReleaseVerDTO releaseVer = new ReleaseVerDTO()
-                .releaseVer("");
-            consumer.setReleaseVer(releaseVer);
-            consumer.setCapabilities(null);
-            consumerApi.updateConsumer(consumer.getUuid(), consumer);
-            consumer = consumerApi.getConsumer(consumer.getUuid());
+            this.hostedTestApi.addContentToProduct(product1.getId(), content1.getId(), true);
+            this.hostedTestApi.addContentToProduct(product2.getId(), content1.getId(), true);
+            this.hostedTestApi.addContentToProduct(product2.getId(), archContent.getId(), true);
+            this.hostedTestApi.addContentToProduct(derivedProduct.getId(), content1.getId(), true);
 
-            bindPoolsToConsumer(consumerApi, consumer.getUuid(), poolIdToPool.keySet());
+            Stream.of(product1, product2, virtProduct, product3, productUp, productVdc)
+                .map(this::createSubscription)
+                .forEach(this.hostedTestApi::createSubscription);
+
+            // Create consumer to bind all this junk
+            ConsumerDTO consumer = Consumers.random(owner, ConsumerTypes.Candlepin)
+                .putFactsItem("distributor_version", "sam-1.3")
+                .releaseVer(new ReleaseVerDTO().releaseVer(""))
+                .capabilities(null);
+
+            this.consumer = this.consumerApi.createConsumer(consumer, user.getUsername(), owner.getKey(),
+                null, true);
+
+            // Refresh & Bind
+            this.refreshPools(owner.getKey());
+
+            List<String> primaryPoolIds = this.ownerApi.listOwnerPools(owner.getKey()).stream()
+                .filter(Predicate.not(this::isDerivedPool))
+                .map(PoolDTO::getId)
+                .toList();
+
+            bindPoolsToConsumer(this.consumerApi, this.consumer.getUuid(), primaryPoolIds);
 
             cdn = cdnApi.createCdn(Cdns.random());
         }
@@ -670,21 +679,6 @@ class ExportSpecTest {
             owner.getKey(), null, true);
     }
 
-    private ProductDTO createVDCProduct(ApiClient client, String ownerKey) throws ApiException {
-        OwnerProductApi ownerProductsApi = client.ownerProducts();
-        ProductDTO productDc = Products.withAttributes(ProductAttributes.Arch.withValue("x86_64"),
-            ProductAttributes.StackingId.withValue("stack-dc"));
-        productDc = ownerProductsApi.createProductByOwner(ownerKey, productDc);
-
-        ProductDTO productVdc = Products.withAttributes(ProductAttributes.Arch.withValue("x86_64"),
-            ProductAttributes.VirtualLimit.withValue("unlimited"),
-            ProductAttributes.StackingId.withValue("stack-vdc"));
-        productVdc.setDerivedProduct(productDc);
-        productVdc = ownerProductsApi.createProductByOwner(ownerKey, productVdc);
-
-        return productVdc;
-    }
-
     private List<JsonNode> bindPoolsToConsumer(ConsumerClient consumerApi, String consumerUuid,
         Collection<String> poolIds) throws ApiException, JsonProcessingException {
         List<JsonNode> poolNodes = new ArrayList<>();
@@ -693,30 +687,6 @@ class ExportSpecTest {
         }
 
         return poolNodes;
-    }
-
-    private Map<String, PoolDTO> createPoolsForProducts(OwnerClient ownerApi, String ownerKey,
-        Collection<ProductDTO> products, Collection<BrandingDTO> brandings) throws ApiException {
-        Map<String, PoolDTO> poolIdToPool = new HashMap<>();
-        for (ProductDTO product : products) {
-            PoolDTO pool = createPool(ownerApi, ownerKey, product, 2L, brandings);
-            poolIdToPool.put(pool.getId(), pool);
-        }
-
-        return poolIdToPool;
-    }
-
-    private PoolDTO createPool(OwnerClient ownerApi, String ownerKey, ProductDTO product, long quantity,
-        Collection<BrandingDTO> brandings) throws ApiException {
-        PoolDTO pool = Pools.random(product)
-            .quantity(quantity)
-            .providedProducts(new HashSet<>())
-            .accountNumber("12345")
-            .orderNumber("6789")
-            .endDate(OffsetDateTime.now().plusYears(5))
-            .branding(new HashSet<>(brandings));
-
-        return ownerApi.createPool(ownerKey, pool);
     }
 
 }

@@ -1,0 +1,122 @@
+{
+    "contents": [
+        {
+            "id": "12355",
+            "type": "yum",
+            "label": "mirror-registry-1-for-rhel-8-x86_64-debug-rpms",
+            "name": "mirror registry for Red Hat OpenShift (Debug RPMs)",
+            "vendor": "Red Hat",
+            "contentUrl": "/content/dist/layered/rhel8/x86_64/mirror-registry/1/debug",
+            "requiredTags": "rhel-8-x86_64",
+            "gpgUrl": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
+            "modifiedProductIds": [],
+            "arches": "x86_64",
+            "metadataExpiration": 86400,
+            "requiredProductIds": []
+        },
+        {
+            "id": "12356",
+            "type": "file",
+            "label": "mirror-registry-1-for-rhel-8-x86_64-files",
+            "name": "mirror registry for Red Hat OpenShift (Files)",
+            "vendor": "Red Hat",
+            "contentUrl": "/content/dist/layered/rhel8/x86_64/mirror-registry/1/files",
+            "requiredTags": "rhel-8-x86_64",
+            "gpgUrl": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
+            "modifiedProductIds": [],
+            "arches": "x86_64",
+            "metadataExpiration": 86400,
+            "requiredProductIds": []
+        },
+        {
+            "id": "12353",
+            "type": "yum",
+            "label": "mirror-registry-1-for-rhel-8-x86_64-rpms",
+            "name": "mirror registry for Red Hat OpenShift (RPMs)",
+            "vendor": "Red Hat",
+            "contentUrl": "/content/dist/layered/rhel8/x86_64/mirror-registry/1/os",
+            "requiredTags": "rhel-8-x86_64",
+            "gpgUrl": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
+            "modifiedProductIds": [],
+            "arches": "x86_64",
+            "metadataExpiration": 86400,
+            "requiredProductIds": []
+        }
+    ],
+
+    "products": [
+        {
+            "id": "686",
+            "name": "Mirror registry for Red Hat OpenShift (mirror registry)",
+            "multiplier": 1,
+            "attributes": [
+                {
+                    "name": "name",
+                    "value": "mirror registry for Red Hat OpenShift (mirror registry)"
+                },
+                {
+                    "name": "arch",
+                    "value": "x86_64"
+                },
+                {
+                    "name": "type",
+                    "value": "SVC"
+                }
+            ],
+            "dependentProductIds": [],
+            "branding": [],
+            "productContent": [
+                {
+                    "content": { "id": "12355" },
+                    "enabled": "false"
+                },
+                {
+                    "content": { "id": "12356" },
+                    "enabled": "false"
+                },
+                {
+                    "content": { "id": "12353" },
+                    "enabled": "false"
+                }
+            ]
+        },
+        {
+            "id": "MW00700",
+            "name": "Red Hat OpenShift Container Platform Broker/Master Infrastructure for IBM Cloud Pak (1 Core, Business Partner Supported)",
+            "multiplier": 10,
+            "attributes": {
+                "product_family": "openshift enterprise",
+                "enabled_consumer_types": "sam",
+                "ph_product_line": "openshift",
+                "roles": "",
+                "support_level_exempt": "true",
+                "description": "openshift enterprise",
+                "ph_category": "subscriptions",
+                "support_level": "layered",
+                "stacking_id": "mw00700",
+                "type": "mkt",
+                "cloud_access_enabled": "true",
+                "ph_product_name": "openshift infrastructure",
+                "service_type": "layered",
+                "cores": "1",
+                "multi-entitlement": "yes",
+                "subtype": "layered",
+                "expires_after": "365",
+                "variant": "broker infrastructure",
+                "name": "red hat openshift container platform BrokEr/mAsteR infrAstructure for ibm Cloud pAk (1 cOre, business partnER sUpportEd)",
+                "support_type": "l3",
+                "arch": "aarch64,ia64,ppc,ppc64,ppc64le,s390,s390x,x86,x86_64"
+            },
+            "providedProducts": [
+                { "id": "686" }
+            ]
+        }
+    ],
+
+    "subscriptions": [
+        {
+            "id": "11368446",
+            "product": { "id": "MW00700" }
+        }
+    ]
+}

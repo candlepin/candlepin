@@ -63,7 +63,7 @@ public final class Branding {
      * Builds a random BrandingDTO instance using the provided product's id.
      *
      * @param product
-     *  the product to use for populating BrandingDTO's product Id.
+     *  the product to use for populating BrandingDTO's product id
      *
      * @return a BrandingDTO instance with a randomly generated name and type using the product's id.
      */
@@ -89,5 +89,26 @@ public final class Branding {
             .name(name)
             .type(type);
     }
+
+    /**
+     * Builds a BrandingDTO instance using the given name and type.
+     *
+     * @param name
+     *  the name to assign to the branding object
+     *
+     * @param type
+     *  the type to assign to the branding object
+     *
+     * @param product
+     *  the product to use for populating BrandingDTO's product id
+     *
+     * @return
+     *  a BrandingDTO instance with the given name and type
+     */
+    public static BrandingDTO build(String name, String type, ProductDTO product) {
+        return build(name, type)
+            .productId(product != null ? product.getId() : null);
+    }
+
 
 }
