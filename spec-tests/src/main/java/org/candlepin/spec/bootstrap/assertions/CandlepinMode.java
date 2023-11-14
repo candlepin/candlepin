@@ -14,9 +14,12 @@
  */
 package org.candlepin.spec.bootstrap.assertions;
 
-import org.candlepin.dto.api.client.v1.StatusDTO;
 import org.candlepin.invoker.client.ApiException;
 import org.candlepin.spec.bootstrap.client.ApiClients;
+import org.candlepin.spec.bootstrap.client.request.Request;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Condition used to determine the mode in which Candlepin is running.
@@ -31,28 +34,56 @@ public final class CandlepinMode {
     }
 
     private static final boolean IS_STANDALONE;
+    private static final Map<String, Boolean> EXTENSION_MAP = new HashMap<>();
 
     static {
-        StatusDTO status;
         try {
-            status = ApiClients.admin().status().status();
+            Boolean standalone = ApiClients.admin()
+                .status()
+                .status()
+                .getStandalone();
+
+            if (standalone == null) {
+                throw new ApiException("Standalone flag not set in the status output");
+            }
+
+            IS_STANDALONE = standalone;
         }
         catch (ApiException e) {
             throw new IllegalStateException("Unable to determine Candlepin's deployment mode!", e);
         }
-        Boolean standalone = status.getStandalone();
-        if (standalone == null) {
-            throw new IllegalStateException("Unable to determine Candlepin's deployment mode!");
-        }
-        IS_STANDALONE = standalone;
+    }
+
+    public static boolean isStandalone() {
+        return IS_STANDALONE;
     }
 
     public static boolean isHosted() {
         return !IS_STANDALONE;
     }
 
-    public static boolean isStandalone() {
-        return IS_STANDALONE;
+    public static boolean hasTestExtension(String extension) {
+        return EXTENSION_MAP.computeIfAbsent(extension, (ext) -> {
+            // Impl note: hostedtest predates the "testext" prefix, so we handle it differently here
+            String endpoint = "hostedtest".equals(extension) ?
+                "/hostedtest/alive" :
+                "/testext/" + extension + "/alive";
+
+            int code = Request.from(ApiClients.admin())
+                .setPath(endpoint)
+                .execute()
+                .getCode();
+
+            return code == 200;
+        });
+    }
+
+    public static boolean hasHostedTestExtension() {
+        return hasTestExtension("hostedtest");
+    }
+
+    public static boolean hasManifestGenTestExtension() {
+        return hasTestExtension("manifestgen");
     }
 
 }

@@ -119,10 +119,11 @@ public class UndoImportsJob implements AsyncJob {
                 .filter(pool -> pool.isManaged(this.isStandalone))
                 .toList());
 
-        // Clear out upstream ID so owner can import from other distributors:
+        // Clear out upstream consumer UUID so owner can import from other distributors:
         UpstreamConsumer uc = owner.getUpstreamConsumer();
         owner.setUpstreamConsumer(null);
         owner.syncLastContentUpdate();
+
         owner = this.ownerCurator.merge(owner);
         this.ownerCurator.flush();
 

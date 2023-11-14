@@ -151,6 +151,7 @@ public class Util {
         if (dateTime == null) {
             return null;
         }
+
         return Date.from(dateTime.toInstant());
     }
 

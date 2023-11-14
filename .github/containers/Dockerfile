@@ -15,9 +15,9 @@ COPY . ./candlepin
 WORKDIR /candlepin
 
 # Build the Candlpepin WAR file.
-# Note: we need to includes -Phostedtest=true so that we can run spec tests
-# using our hosted test endpoints.
-RUN ./gradlew war -Phostedtest=true && \
+# Note: we need to include our test extensions so we can run all of our spec tests. If these are
+# omitted, several important tests will be skipped (import testing, hosted-specific tests, etc.)
+RUN ./gradlew war -Ptest_extensions=hostedtest,manifestgen && \
     mkdir -p /app/build && \
     cp $(find ./build/libs -name 'candlepin*.war' | head -n 1) /app/build
 

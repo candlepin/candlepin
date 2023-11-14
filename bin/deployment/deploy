@@ -184,8 +184,19 @@ create_var_cache_candlepin() {
 
 autoconf() {
   printf "\nGenerating candlepin.conf\n"
-  echo $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $HOSTEDTEST $EXTERNAL_BROKER -Pdb_host=${DBHOSTNAME:-localhost}
-  $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $HOSTEDTEST $EXTERNAL_BROKER  -Pdb_host=${DBHOSTNAME:-localhost}
+
+  local CONF_ARGS=""
+
+  if [ "$HOSTEDTEST" == "1" ]; then
+    CONF_ARGS="${CONF_ARGS} -Phostedtest=true"
+  fi
+
+  if [ "$MANIFESTGEN" == "1" ]; then
+    CONF_ARGS="${CONF_ARGS} -Pmanifestgen=true"
+  fi
+
+  echo $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $CONF_ARGS $EXTERNAL_BROKER -Pdb_host=${DBHOSTNAME:-localhost}
+  $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $CONF_ARGS $EXTERNAL_BROKER -Pdb_host=${DBHOSTNAME:-localhost}
 
   if [ "$?" -ne "0" ]; then
     err_msg "ERROR: candlepin.conf generation failed!"
@@ -211,7 +222,8 @@ OPTIONS:
   -r          generate test repositories
   -t          import test data
   -T          import minimal test data, some owners, users, and roles
-  -H          include test resources for hosted mode
+  -H          include test extension for hosted-mode simulation
+  -M          include test extension for manifest generation
   -m          use MySQL
   -a          auto-deploy a generated candlepin.conf
   -v          verbose output
@@ -261,11 +273,12 @@ init
 
 DBUSER="candlepin"
 
-while getopts ":fgtTrHolmavbd:" opt; do
+while getopts ":fgtTrHMolmavbd:" opt; do
     case $opt in
         f  ) FORCECERT="1" ;;
         g  ) GENDB="1";;
-        H  ) HOSTEDTEST="hostedtest";;
+        H  ) HOSTEDTEST="1";;
+        M  ) MANIFESTGEN="1";;
         t  ) TESTDATA="1";;
         T  ) TESTDATA="MIN";;
         r  ) TESTREPO="1";;
@@ -344,12 +357,23 @@ else
     EXTERNAL_BROKER=""
 fi
 
-if [ "$HOSTEDTEST" == "hostedtest" ]; then
-    info_msg "Including hostedtest resources"
-    info_msg "WARNING: DO NOT SPEC TEST IN PARALLEL MODE"
-    HOSTEDTEST="-Phostedtest=true"
-else
-    HOSTEDTEST=""
+# An array of testext subpackage names to include in the generated candlepin.war file.
+TEST_EXTS=()
+WAR_ARGS=''
+
+if [ "$HOSTEDTEST" == "1" ]; then
+    info_msg "Including hosted-test test extension"
+    TEST_EXTS+=("hostedtest")
+fi
+
+if [ "$MANIFESTGEN" == "1" ]; then
+    info_msg "Including manifest generation test extension"
+    TEST_EXTS+=("manifestgen")
+fi
+
+if [ ${#TEST_EXTS[*]} -gt 0 ]; then
+    EXT_STR=$(IFS=, ; echo "${TEST_EXTS[*]}")
+    WAR_ARGS="-Ptest_extensions=${EXT_STR}"
 fi
 
 if [ "$USE_MYSQL" == "1" ]; then
@@ -359,8 +383,8 @@ else
 fi
 
 printf "\nBuilding Candlepin\n"
-echo $(checkout_directory)/gradlew war $DATABASE_SERVER $HOSTEDTEST
-$(checkout_directory)/gradlew war $DATABASE_SERVER $HOSTEDTEST
+echo $(checkout_directory)/gradlew war $DATABASE_SERVER $WAR_ARGS
+$(checkout_directory)/gradlew war $DATABASE_SERVER $WAR_ARGS
 
 if [ "$?" -ne "0" ]; then
   err_msg "ERROR: Compile failed."

@@ -304,8 +304,8 @@ public class Importer {
      * @throws IOException thrown if there's a problem reading the file
      * @throws ImporterException thrown if the metadata is invalid.
      */
-    protected void validateMetadata(String type, Owner owner, File meta, ConflictOverrides forcedConflicts)
-        throws IOException, ImporterException {
+    protected ExporterMetadata validateMetadata(String type, Owner owner, File meta,
+        ConflictOverrides forcedConflicts) throws IOException, ImporterException {
 
         Meta m = mapper.readValue(meta, Meta.class);
         if (type == null) {
@@ -320,13 +320,13 @@ public class Importer {
             if (owner == null) {
                 throw new ImporterException(i18n.tr("Invalid owner"));
             }
+
             lastrun = expMetaCurator.getByTypeAndOwner(type, owner);
         }
 
         if (lastrun == null) {
             // this is our first import, let's create a new entry
             lastrun = new ExporterMetadata(type, m.getCreated(), owner);
-            lastrun = expMetaCurator.create(lastrun);
         }
         else {
             if (lastrun.getExported().after(m.getCreated())) {
@@ -360,8 +360,9 @@ public class Importer {
             }
 
             lastrun.setExported(m.getCreated());
-            expMetaCurator.merge(lastrun);
         }
+
+        return lastrun;
     }
 
     private ImportRecord doExport(Owner owner, File exportDir, ConflictOverrides overrides,
@@ -464,6 +465,7 @@ public class Importer {
     // WARNING: Keep this method public, otherwise @Transactional is ignored:
     public List<SubscriptionDTO> importObjects(Owner owner, Map<String, File> importFiles,
         ConflictOverrides overrides) throws IOException, ImporterException {
+
         ownerCurator.lock(owner);
 
         log.debug("Importing objects for owner: {}", owner);
@@ -489,13 +491,16 @@ public class Importer {
                 i18n.tr("The archive does not contain the required entitlements directory"));
         }
 
+        // Exporter metadata we need to persist after we validate everything
+        List<ExporterMetadata> exporterMetadata = new ArrayList<>();
+
         // system level elements
         /*
          * Checking a system wide last import date breaks multi-tenant deployments whenever
          * one org imports a manifest slightly older than another org who has already
          * imported. Disabled for now. See bz #769644.
          */
-        // validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force);
+        // exporterMetadata.add(this.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force));
 
         // If any calls find conflicts we'll assemble them into one exception detailing all
         // the conflicts which occurred, so the caller can override them all at once
@@ -519,7 +524,8 @@ public class Importer {
 
         // per user elements
         try {
-            validateMetadata(ExporterMetadata.TYPE_PER_USER, owner, metadata, overrides);
+            exporterMetadata.add(
+                this.validateMetadata(ExporterMetadata.TYPE_PER_USER, owner, metadata, overrides));
         }
         catch (ImportConflictException e) {
             conflictExceptions.add(e);
@@ -554,6 +560,10 @@ public class Importer {
         if (consumer == null) {
             throw new IllegalStateException("No consumer found during import");
         }
+
+        // Persist the exporter metadata now that we're validated and at the point where we can
+        // commit data
+        this.expMetaCurator.saveOrUpdateAll(exporterMetadata, true, false);
 
         // If the consumer has no entitlements, this products directory will end up empty.
         // This also implies there will be no entitlements to import.

@@ -61,7 +61,15 @@ org.quartz.dataSource.myDS.maxConnections=5
 #overriding custom.yaml settings to ensure hostedtest resources are available
 candlepin.standalone=false
 candlepin.refresh.orphan_entity_grace_period=0
-module.config.hosted.configuration.module=org.candlepin.hostedtest.AdapterOverrideModule
+module.config.hostedtest.configuration.module=org.candlepin.testext.hostedtest.HostedTestModule
 candlepin.auth.cloud.enable=<%= candlepin.auth_cloud_enable || false %>
 <% } %>\
+
+<% if (candlepin.manifestgen) { %>\
+# custom module to enable the manifest generator extension
+module.config.manifestgen.configuration.module=org.candlepin.testext.manifestgen.ManifestGeneratorModule
+<% } %>\
+
+<% if (candlepin.additional_properties) { %>\
 <%= candlepin.additional_properties %>
+<% } %>\

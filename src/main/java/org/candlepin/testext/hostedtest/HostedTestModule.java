@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.hostedtest;
+package org.candlepin.testext.hostedtest;
 
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -21,13 +21,12 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import com.google.inject.AbstractModule;
 
 
+
 /**
- * SubserviceModule class is used to provide an
- * in-memory upstream source for subscriptions when candlepin is run in hosted
- * mode, while it is built with candlepin, it is not packaged in candlepin.war,
- * as the only purpose of this class is to support spec tests.
+ * Custom Guice module to inject the hosted-test resources and adapters for simulating upstream
+ * services and adapters for hosted-mode spec tests.
  */
-public class AdapterOverrideModule extends AbstractModule {
+public class HostedTestModule extends AbstractModule {
 
     /**
      * {@inheritDoc}

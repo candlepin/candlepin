@@ -15,131 +15,260 @@
 package org.candlepin.spec.imports;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.ImportRecordDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
-import org.candlepin.dto.api.client.v1.UserDTO;
-import org.candlepin.invoker.client.ApiException;
+import org.candlepin.dto.api.client.v1.UpstreamConsumerDTO;
+import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
 import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
-import org.candlepin.spec.bootstrap.data.builder.Export;
 import org.candlepin.spec.bootstrap.data.builder.ExportGenerator;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
-import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
+
+
 
 @SpecTest
 @OnlyInStandalone
 public class ImportUndoSpecTest {
 
-    private ApiClient admin;
-    private OwnerDTO owner;
-    private ApiClient userClient;
-    private PoolDTO customPool;
+    private static ApiClient adminClient;
 
-    @BeforeEach
-    public void beforeAll() {
-        admin = ApiClients.admin();
-        owner = admin.owners().createOwner(Owners.random());
-        UserDTO user = UserUtil.createUser(admin, owner);
-        userClient = ApiClients.basic(user);
-        ProductDTO product = admin.ownerProducts().createProductByOwner(owner.getKey(), Products.random());
-        // Custom pool to verify that imports are not affecting unrelated pools
-        customPool = admin.owners().createPool(owner.getKey(), Pools.random(product));
+    @BeforeAll
+    public static void beforeAll() {
+        assumeTrue(CandlepinMode::hasManifestGenTestExtension);
+
+        adminClient = ApiClients.admin();
+    }
+
+    private AsyncJobStatusDTO importAsync(OwnerDTO owner, File manifest, String... force) {
+        List<String> forced = force != null ? Arrays.asList(force) : List.of();
+
+        AsyncJobStatusDTO importJob = adminClient.owners()
+            .importManifestAsync(owner.getKey(), forced, manifest);
+
+        return adminClient.jobs().waitForJob(importJob);
+    }
+
+    private AsyncJobStatusDTO undoImport(OwnerDTO owner) {
+        AsyncJobStatusDTO job = adminClient.owners().undoImports(owner.getKey());
+        return adminClient.jobs().waitForJob(job);
     }
 
     @Test
-    public void shouldUnlinkUpstreamConsumer() {
-        Export export = createMinimalExport();
-        doImport(owner.getKey(), export.file());
-        undoImport(owner);
+    public void shouldNotRemoveCustomPools() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-        OwnerDTO updatedOwner = admin.owners().getOwner(owner.getKey());
+        // Create a custom pool in the org
+        ProductDTO product = adminClient.ownerProducts()
+            .createProductByOwner(owner.getKey(), Products.random());
+        PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
 
-        assertThat(updatedOwner.getUpstreamConsumer()).isNull();
-        assertOnlyCustomPoolPresent(customPool);
+        // Create a basic manifest & import
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
+
+        AsyncJobStatusDTO importJob1 = this.importAsync(owner, manifest);
+        assertThatJob(importJob1)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
+
+        // We should have two pools after importing
+        List<PoolDTO> pools1 = adminClient.pools().listPoolsByOwner(owner.getId());
+        assertThat(pools1)
+            .isNotNull()
+            .hasSize(2);
+
+        // Undo the import
+        AsyncJobStatusDTO undoImportJob1 = this.undoImport(owner);
+        assertThatJob(undoImportJob1)
+            .isFinished()
+            .contains("Imported pools removed");
+
+        // Verify that our custom pool was not removed
+        List<PoolDTO> pools2 = adminClient.pools().listPoolsByOwner(owner.getId());
+        assertThat(pools2)
+            .isNotNull()
+            .singleElement()
+            .extracting(PoolDTO::getId)
+            .isEqualTo(pool.getId());
     }
 
     @Test
-    public void shouldCreateADeleteRecordOnADeletedImport() {
-        Export export = createMinimalExport();
-        doImport(owner.getKey(), export.file());
-        undoImport(owner);
+    public void shouldUnlinkUpstreamConsumer() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-        List<ImportRecordDTO> pools = userClient.owners().getImports(owner.getKey());
+        // Create a basic manifest & import
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
 
-        assertThat(pools)
+        AsyncJobStatusDTO importJob1 = this.importAsync(owner, manifest);
+        assertThatJob(importJob1)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
+
+        // The upstream consumer will be set on the owner after a successful import
+        OwnerDTO updatedOwner1 = adminClient.owners().getOwner(owner.getKey());
+        assertThat(updatedOwner1)
+            .isNotNull()
+            .extracting(OwnerDTO::getUpstreamConsumer)
+            .isNotNull();
+
+        AsyncJobStatusDTO undoImportJob1 = this.undoImport(owner);
+        assertThatJob(undoImportJob1)
+            .isFinished()
+            .contains("Imported pools removed");
+
+        // After undoing an import, the owner's upstream consumer should be reverted
+        OwnerDTO updatedOwner2 = adminClient.owners().getOwner(owner.getKey());
+        assertThat(updatedOwner2)
+            .isNotNull()
+            .extracting(OwnerDTO::getUpstreamConsumer)
+            .isNull();
+    }
+
+    @Test
+    public void shouldCreateADeleteRecordOnADeletedImport() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
+
+        AsyncJobStatusDTO importJob1 = this.importAsync(owner, manifest);
+        assertThatJob(importJob1)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
+
+        // Before undoing, we should not have an import deletion record
+        List<ImportRecordDTO> importRecords1 = adminClient.owners().getImports(owner.getKey());
+        assertThat(importRecords1)
+            .map(ImportRecordDTO::getStatus)
+            .filteredOn("DELETE"::equals)
+            .isEmpty();
+
+        AsyncJobStatusDTO undoImportJob1 = this.undoImport(owner);
+        assertThatJob(undoImportJob1)
+            .isFinished()
+            .contains("Imported pools removed");
+
+        // After undoing an import, the import records should contain a deletion record
+        List<ImportRecordDTO> importRecords2 = adminClient.owners().getImports(owner.getKey());
+        assertThat(importRecords2)
             .map(ImportRecordDTO::getStatus)
             .filteredOn("DELETE"::equals)
             .isNotEmpty();
-        assertOnlyCustomPoolPresent(customPool);
     }
 
     @Test
-    public void shouldBeAbleToReimportWithoutError() {
-        Export export = createMinimalExport();
-        doImport(owner.getKey(), export.file());
-        undoImport(owner);
+    public void shouldBeAbleToReimportWithoutError() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-        doImport(owner.getKey(), export.file());
-        OwnerDTO updatedOwner = admin.owners().getOwner(owner.getKey());
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
 
-        assertThat(updatedOwner.getUpstreamConsumer())
-            .hasFieldOrPropertyWithValue("uuid", export.consumer().getUuid());
-        undoImport(owner);
-        assertOnlyCustomPoolPresent(customPool);
+        AsyncJobStatusDTO importJob1 = this.importAsync(owner, manifest);
+        assertThatJob(importJob1)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
+
+        OwnerDTO updatedOwner1 = adminClient.owners().getOwner(owner.getKey());
+        assertThat(updatedOwner1)
+            .isNotNull()
+            .extracting(OwnerDTO::getUpstreamConsumer)
+            .isNotNull()
+            .extracting(UpstreamConsumerDTO::getUuid)
+            .isNotNull();
+
+        String upstreamConsumerUuid = updatedOwner1.getUpstreamConsumer()
+            .getUuid();
+
+        AsyncJobStatusDTO undoImportJob1 = this.undoImport(owner);
+        assertThatJob(undoImportJob1)
+            .isFinished()
+            .contains("Imported pools removed");
+
+        OwnerDTO updatedOwner2 = adminClient.owners().getOwner(owner.getKey());
+        assertThat(updatedOwner2)
+            .isNotNull()
+            .extracting(OwnerDTO::getUpstreamConsumer)
+            .isNull();
+
+        // After undoing the imports, we should be able to reimport it into the same org without
+        // forcing any restrictions, and without any warnings or errors
+        AsyncJobStatusDTO importJob2 = this.importAsync(owner, manifest);
+        assertThatJob(importJob2)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
+
+        // The upstream consumer UUID should match what it was the first time we imported this
+        // manifest
+        OwnerDTO updatedOwner3 = adminClient.owners().getOwner(owner.getKey());
+        assertThat(updatedOwner3)
+            .isNotNull()
+            .extracting(OwnerDTO::getUpstreamConsumer)
+            .isNotNull()
+            .extracting(UpstreamConsumerDTO::getUuid)
+            .isEqualTo(upstreamConsumerUuid);
     }
 
     @Test
-    public void shouldAllowAnotherOrgToImportTheSameManifest() {
-        Export export = createMinimalExport();
-        doImport(owner.getKey(), export.file());
-        undoImport(owner);
-        OwnerDTO otherOrg = admin.owners().createOwner(Owners.random());
+    public void shouldAllowAnotherOrgToImportTheSameManifest() throws Exception {
+        OwnerDTO owner1 = adminClient.owners().createOwner(Owners.random());
+        OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
 
-        assertThatNoException().isThrownBy(() -> doImport(otherOrg.getKey(), export.file()));
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
 
-        admin.owners().deleteOwner(otherOrg.getKey(), true, true);
-        assertOnlyCustomPoolPresent(customPool);
-    }
+        AsyncJobStatusDTO importJob1 = this.importAsync(owner1, manifest);
+        assertThatJob(importJob1)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
 
-    private void assertOnlyCustomPoolPresent(PoolDTO customPool) {
-        List<PoolDTO> pools = userClient.pools().listPoolsByOwner(owner.getId());
-        assertThat(pools)
-            .hasSize(1)
-            .map(PoolDTO::getId)
-            .containsExactly(customPool.getId());
-    }
+        // The second org should be rejected, as the manifest is already in use by another org on
+        // this Candlepin instance
+        AsyncJobStatusDTO importJob2 = this.importAsync(owner2, manifest);
+        assertThatJob(importJob2)
+            .isFailed()
+            .contains("This subscription management application has already been imported by another owner");
 
-    private Export createMinimalExport() {
-        return new ExportGenerator(admin).minimal().export();
-    }
+        AsyncJobStatusDTO undoImportJob1 = this.undoImport(owner1);
+        assertThatJob(undoImportJob1)
+            .isFinished()
+            .contains("Imported pools removed");
 
-    private void undoImport(OwnerDTO owner) {
-        AsyncJobStatusDTO job = admin.owners().undoImports(owner.getKey());
-        admin.jobs().waitForJob(job);
-    }
-
-    private void doImport(String ownerKey, File export) {
-        importAsync(ownerKey, export, List.of());
-    }
-
-    private void importAsync(String ownerKey, File export, List<String> force) throws ApiException {
-        AsyncJobStatusDTO importJob = admin.owners().importManifestAsync(ownerKey, force, export);
-        admin.jobs().waitForJob(importJob);
+        // The second attempt at importing the manifest into org2 should succeed after
+        // undoing/removing it from org1
+        AsyncJobStatusDTO importJob3 = this.importAsync(owner2, manifest);
+        assertThatJob(importJob3)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
     }
 
 }

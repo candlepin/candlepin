@@ -326,15 +326,22 @@ public class ImporterTest {
 
     @Test
     public void firstRun() throws Exception {
-        File file = createFile("meta", "0.0.3", new Date(), "test_user", "prefix");
-        File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
+        Date now = new Date();
+
+        File file = createFile("meta", "0.0.3", now, "test_user", "prefix");
+        File actualmeta = createFile("meta.json", "0.0.3", now, "test_user", "prefix");
 
         Importer importer = this.buildImporter();
-        importer.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta, new ConflictOverrides());
+        ExporterMetadata metadata = importer.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
+            new ConflictOverrides());
+
+        assertNotNull(metadata);
+        assertEquals(ExporterMetadata.TYPE_SYSTEM, metadata.getType());
+        assertEquals(now, metadata.getExported());
+        assertNull(metadata.getOwner());
 
         assertTrue(file.delete());
         assertTrue(actualmeta.delete());
-        verify(this.mockExporterMetadataCurator).create(any(ExporterMetadata.class));
     }
 
     @Test
@@ -354,8 +361,8 @@ public class ImporterTest {
         Importer importer = this.buildImporter();
 
         try {
-            importer.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
-                new ConflictOverrides());
+            ExporterMetadata metadata = importer.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null,
+                actualmeta, new ConflictOverrides());
 
             fail("Expected an ImportConflictException, but no exception was thrown");
         }
@@ -432,7 +439,13 @@ public class ImporterTest {
             .getByType(ExporterMetadata.TYPE_SYSTEM);
 
         Importer importer = this.buildImporter();
-        importer.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta, new ConflictOverrides());
+        ExporterMetadata metadata = importer.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
+            new ConflictOverrides());
+
+        assertNotNull(metadata);
+        assertEquals(ExporterMetadata.TYPE_SYSTEM, metadata.getType());
+        assertEquals(importDate, metadata.getExported());
+        assertNull(metadata.getOwner());
 
         assertEquals(em.getExported(), importDate);
     }
