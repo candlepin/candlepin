@@ -33,7 +33,6 @@ import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.exceptions.NotImplementedException;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.resource.server.v1.CloudRegistrationApi;
 import org.candlepin.service.CloudProvider;
@@ -76,7 +75,7 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
     @Inject
     public CloudRegistrationResource(Configuration config, I18n i18n,
         CloudRegistrationAdapter cloudRegistrationAdapter,
-        OwnerCurator ownerCurator, AnonymousCloudConsumerCurator anonymousCloudConsumerCurator,
+        AnonymousCloudConsumerCurator anonymousCloudConsumerCurator,
         PoolCurator poolCurator, JobManager jobManager, CloudAuthTokenGenerator tokenGenerator) {
 
         this.config = Objects.requireNonNull(config);
@@ -224,7 +223,7 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
                 .setCloudInstanceId(authResult.getCloudInstanceId())
                 .setCloudOfferingId(authResult.getOfferId())
                 .setProductIds(authResult.getProductIds())
-                .setCloudProviderShortName(authResult.getCloudProvider().shortName());
+                .setCloudProviderShortName(authResult.getCloudProvider());
 
             createdAnonConsumer = anonymousCloudConsumerCurator.create(createdAnonConsumer);
             anonymousConsumerUuid = createdAnonConsumer.getUuid();
@@ -298,7 +297,5 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
 
             throw new CloudRegistrationAuthorizationException(errmsg);
         }
-
     }
-
 }

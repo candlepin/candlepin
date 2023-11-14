@@ -66,6 +66,7 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerContentOverrideCurator;
@@ -86,6 +87,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
@@ -101,6 +103,7 @@ import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
+import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -183,6 +186,9 @@ public class ConsumerResourceUpdateTest {
     @Mock private ContentOverrideValidator contentOverrideValidator;
     @Mock private EnvironmentContentCurator environmentContentCurator;
     @Mock private EntitlementCertificateGenerator entCertGenerator;
+    @Mock private PoolCurator poolCurator;
+    @Mock private CloudRegistrationAdapter cloudRegistrationAdapter;
+    @Mock private AnonymousCloudConsumerCurator anonymousConsumerCurator;
 
     private ModelTranslator translator;
 
@@ -241,7 +247,10 @@ public class ConsumerResourceUpdateTest {
             this.contentOverrideValidator,
             this.consumerContentOverrideCurator,
             this.entCertGenerator,
-            this.environmentContentCurator
+            this.environmentContentCurator,
+            this.cloudRegistrationAdapter,
+            this.poolCurator,
+            this.anonymousConsumerCurator
         );
 
         when(this.complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),

@@ -14,6 +14,8 @@
  */
 package org.candlepin.spec.bootstrap.assertions;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.candlepin.invoker.client.ApiException;
 
 import org.assertj.core.api.ThrowableAssert;
@@ -45,6 +47,23 @@ public class CandlepinStatusAssert extends ThrowableAssert<ApiException> {
 
     public CandlepinStatusAssert isGone() {
         this.hasFieldOrPropertyWithValue("code", 410);
+        return this;
+    }
+
+    public CandlepinStatusAssert isTooMany() {
+        this.hasFieldOrPropertyWithValue("code", 429);
+        return this;
+    }
+
+    public CandlepinStatusAssert hasHeaderWithValue(String name, String value) {
+        String time = this.actual.getResponseHeaders().get(name).get(0);
+        assertEquals(value, time);
+        return this;
+    }
+
+    public CandlepinStatusAssert hasHeaderWithValue(String name, int value) {
+        String time = this.actual.getResponseHeaders().get(name).get(0);
+        assertEquals(String.valueOf(value), time);
         return this;
     }
 }

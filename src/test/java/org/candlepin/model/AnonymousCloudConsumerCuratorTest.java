@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import org.candlepin.service.CloudProvider;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.Util;
 
@@ -46,7 +47,7 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
             .setCloudInstanceId("instanceId")
             .setCloudOfferingId("offeringId")
             .setProductIds(List.of(expectedProductId))
-            .setCloudProviderShortName("shortName");
+            .setCloudProviderShortName(CloudProvider.AWS);
 
         this.anonymousCloudConsumerCurator.create(expected);
 
@@ -71,7 +72,7 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
             .setCloudInstanceId("instanceId")
             .setCloudOfferingId("offeringId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName("shortName");
+            .setCloudProviderShortName(CloudProvider.AWS);
 
         this.anonymousCloudConsumerCurator.create(expected);
 
@@ -87,7 +88,7 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
             .setCloudInstanceId("instanceId")
             .setCloudOfferingId("offeringId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName("shortName");
+            .setCloudProviderShortName(CloudProvider.AWS);
         this.anonymousCloudConsumerCurator.create(expected);
 
         AnonymousCloudConsumer actual = this.anonymousCloudConsumerCurator.getByUuid(Util.generateUUID());
@@ -103,7 +104,7 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
             .setCloudInstanceId("instanceId")
             .setCloudOfferingId("offeringId")
             .setProductIds(List.of(expectedProductId))
-            .setCloudProviderShortName("shortName");
+            .setCloudProviderShortName(CloudProvider.AWS);
         this.anonymousCloudConsumerCurator.create(expected);
 
         AnonymousCloudConsumer actual = this.anonymousCloudConsumerCurator.getByUuid(expected.getUuid());
@@ -145,7 +146,8 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
             .setCloudInstanceId("instanceId")
             .setCloudOfferingId("offeringId")
             .setProductIds(List.of(expectedProductId))
-            .setCloudProviderShortName("shortName");
+            .setProductIds(List.of("productId"))
+            .setCloudProviderShortName(CloudProvider.AWS);
         expected = this.anonymousCloudConsumerCurator.create(expected);
 
         AnonymousCloudConsumer other = new AnonymousCloudConsumer()
@@ -153,7 +155,8 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
             .setCloudInstanceId("otherInstanceId")
             .setCloudOfferingId("otherOfferingId")
             .setProductIds(List.of("otherProductId"))
-            .setCloudProviderShortName("shortName");
+            .setProductIds(List.of("productId"))
+            .setCloudProviderShortName(CloudProvider.AWS);
         other = this.anonymousCloudConsumerCurator.create(other);
 
         List<AnonymousCloudConsumer> actual = this.anonymousCloudConsumerCurator
@@ -180,7 +183,7 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
             .setCloudInstanceId("instanceId")
             .setCloudOfferingId("offeringId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName("shortName");
+            .setCloudProviderShortName(CloudProvider.AWS);
 
         this.anonymousCloudConsumerCurator.create(expected);
 
@@ -198,7 +201,7 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
             .setCloudInstanceId("instanceId")
             .setCloudOfferingId("offeringId")
             .setProductIds(List.of(expectedProductId))
-            .setCloudProviderShortName("shortName");
+            .setCloudProviderShortName(CloudProvider.AWS);
         this.anonymousCloudConsumerCurator.create(expected);
 
         AnonymousCloudConsumer actual = this.anonymousCloudConsumerCurator
@@ -222,7 +225,7 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
             .setCloudInstanceId("instanceId")
             .setCloudOfferingId("offeringId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName("shortName");
+            .setCloudProviderShortName(CloudProvider.AWS);
         this.anonymousCloudConsumerCurator.create(expected);
 
         AnonymousCloudConsumer actual = this.anonymousCloudConsumerCurator

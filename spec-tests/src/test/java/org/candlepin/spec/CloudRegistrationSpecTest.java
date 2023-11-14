@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotImplemented;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertThatStatus;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertUnauthorized;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -445,6 +446,95 @@ class CloudRegistrationSpecTest {
 
         assertNotFound(() -> ApiClients.bearerToken(result.getToken()).consumers()
             .exportCertificates(StringUtil.random("unknown-"), null));
+    }
+
+    @Test
+    public void shouldCreateConsumerWhenUsingStandardToken() throws JsonProcessingException {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        adminClient.hosted().createOwner(owner);
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(owner.getKey(), Products.random());
+        adminClient.hosted().createProduct(prod);
+        adminClient.owners().createPool(owner.getKey(), Pools.random(prod));
+        adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
+
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(prod.getId()));
+        adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
+
+        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+
+        assertTokenType(ApiClient.MAPPER, result.getToken(), STANDARD_TOKEN_TYPE);
+
+        ConsumerDTO consumer = ApiClients.bearerToken(result.getToken()).consumers()
+            .createConsumer(Consumers.random(owner));
+
+        assertNotNull(consumer);
+    }
+
+    @Test
+    public void shouldVerifyAnonymousTokenRegistration() throws JsonProcessingException {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO ownerDTO = Owners.random();
+        ProductDTO productDTO = Products.random();
+
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        adminClient.hosted().createProduct(productDTO);
+        adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(productDTO.getId()));
+
+        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+
+        assertTokenType(ApiClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+
+        // The Org does not exist at all in the backend services upstream of Candlepin yet
+        assertThatStatus(() -> ApiClients.bearerToken(result.getToken()).consumers()
+            .createConsumer(Consumers.random(ownerDTO)))
+            .isTooMany()
+            .hasHeaderWithValue("retry-after", 300);
+
+        adminClient.hosted().createOwner(ownerDTO);
+        adminClient.hosted().associateOwnerToCloudAccount(accountId, ownerDTO.getKey());
+
+        // The Org exists upstream of Candlepin, but does not have SKU(s) subscribed to it yet
+        assertThatStatus(() -> ApiClients.bearerToken(result.getToken()).consumers()
+            .createConsumer(Consumers.random(ownerDTO)))
+            .isTooMany()
+            .hasHeaderWithValue("retry-after", 180);
+
+        adminClient.hosted().createSubscription(Subscriptions.random(ownerDTO, productDTO));
+
+        // No product and no owner exist in Candlepin
+        assertThatStatus(() -> ApiClients.bearerToken(result.getToken()).consumers()
+            .createConsumer(Consumers.random(ownerDTO)))
+            .isTooMany()
+            .hasHeaderWithValue("retry-after", 60);
+
+
+        // Just owner exist in Candlepin
+        adminClient.owners().createOwner(ownerDTO);
+        assertThatStatus(() -> ApiClients.bearerToken(result.getToken()).consumers()
+            .createConsumer(Consumers.random(ownerDTO)))
+            .isTooMany()
+            .hasHeaderWithValue("retry-after", 30);
+
+        // Product and owner exist in Candlepin
+        adminClient.ownerProducts().createProductByOwner(ownerDTO.getKey(), productDTO);
+        adminClient.owners().createPool(ownerDTO.getKey(), Pools.random(productDTO));
+        ConsumerDTO consumer = ApiClients.bearerToken(result.getToken()).consumers()
+            .createConsumer(Consumers.random(ownerDTO));
+
+        assertThat(consumer)
+            .isNotNull()
+            .extracting(ConsumerDTO::getIdCert)
+            .isNotNull();
     }
 
     private void assertTokenType(ObjectMapper mapper, String token, String expectedTokenType)

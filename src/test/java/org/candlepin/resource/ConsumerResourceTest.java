@@ -27,18 +27,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.anySet;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.Event.Target;
@@ -75,6 +64,7 @@ import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
+import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificate;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
@@ -100,6 +90,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
@@ -115,6 +106,7 @@ import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
+import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -223,6 +215,9 @@ public class ConsumerResourceTest {
     @Mock private ContentOverrideValidator contentOverrideValidator;
     @Mock private EnvironmentContentCurator environmentContentCurator;
     @Mock private EntitlementCertificateGenerator entCertGenerator;
+    @Mock private PoolCurator poolCurator;
+    @Mock private CloudRegistrationAdapter cloudRegistrationAdapter;
+    @Mock private AnonymousCloudConsumerCurator anonymousConsumerCurator;
 
     private ModelTranslator translator;
     private ConsumerResource consumerResource;
@@ -285,7 +280,10 @@ public class ConsumerResourceTest {
             this.contentOverrideValidator,
             this.consumerContentOverrideCurator,
             this.entCertGenerator,
-            this.environmentContentCurator
+            this.environmentContentCurator,
+            this.cloudRegistrationAdapter,
+            this.poolCurator,
+            this.anonymousConsumerCurator
         );
     }
 
@@ -487,7 +485,11 @@ public class ConsumerResourceTest {
             this.contentOverrideValidator,
             this.consumerContentOverrideCurator,
             this.entCertGenerator,
-            this.environmentContentCurator
+            this.environmentContentCurator,
+            this.cloudRegistrationAdapter,
+            this.poolCurator,
+            this.anonymousConsumerCurator
+
         );
 
         // Fixme throw custom exception from generator instead of generic RuntimeException

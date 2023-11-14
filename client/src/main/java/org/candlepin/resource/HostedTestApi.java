@@ -768,11 +768,11 @@ public class HostedTestApi {
      * @param cloudAccountId
      *     the cloud account ID to associate to an owner ID
      *
-     * @param ownerId
-     *     the owner ID to associate to a cloud account ID
+     * @param ownerKey
+     *     the owner key to associate to a cloud account ID
      */
-    public void associateOwnerToCloudAccount(String cloudAccountId, String ownerId) {
-        okhttp3.Call localVarCall = associateOwnerToCloudAccountCall(cloudAccountId, ownerId);
+    public void associateOwnerToCloudAccount(String cloudAccountId, String ownerKey) {
+        okhttp3.Call localVarCall = associateOwnerToCloudAccountCall(cloudAccountId, ownerKey);
         localVarApiClient.execute(localVarCall);
     }
 

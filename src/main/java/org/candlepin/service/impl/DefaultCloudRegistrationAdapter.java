@@ -16,11 +16,10 @@ package org.candlepin.service.impl;
 
 import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
+import org.candlepin.service.exception.OrgForCloudAccountNotCreatedYetException;
 import org.candlepin.service.model.CloudAccountData;
 import org.candlepin.service.model.CloudAuthenticationResult;
 import org.candlepin.service.model.CloudRegistrationInfo;
-
-
 
 /**
  * The default implementation of the {@link CloudRegistrationAdapter}.
@@ -42,6 +41,12 @@ public class DefaultCloudRegistrationAdapter implements CloudRegistrationAdapter
     @Override
     public CloudAccountData setupCloudAccountOrg(String cloudAccountID, String cloudOfferingID,
         CloudProvider cloudProviderShortName, String ownerKey) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String checkCloudAccountOrgIsReady(String cloudAccountID, CloudProvider cloudProviderShortName,
+        String cloudOfferingID) throws OrgForCloudAccountNotCreatedYetException {
         throw new UnsupportedOperationException();
     }
 

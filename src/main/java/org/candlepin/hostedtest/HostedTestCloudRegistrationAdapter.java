@@ -21,6 +21,8 @@ import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingE
 import org.candlepin.service.exception.CouldNotAcquireCloudAccountLockException;
 import org.candlepin.service.exception.CouldNotEntitleOrganizationException;
 import org.candlepin.service.exception.MalformedCloudRegistrationException;
+import org.candlepin.service.exception.OrgForCloudAccountNotCreatedYetException;
+import org.candlepin.service.exception.OrgForCloudAccountNotEntitledYetException;
 import org.candlepin.service.model.CloudAccountData;
 import org.candlepin.service.model.CloudAuthenticationResult;
 import org.candlepin.service.model.CloudRegistrationInfo;
@@ -191,6 +193,27 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String checkCloudAccountOrgIsReady(String cloudAccountID, CloudProvider cloudProviderShortName,
+        String cloudOfferingID)
+        throws OrgForCloudAccountNotCreatedYetException, OrgForCloudAccountNotEntitledYetException {
+        String ownerKey = this.datastore.getOwnerKeyForCloudAccountId(cloudAccountID);
+
+        if (ownerKey == null || ownerKey.isBlank()) {
+            throw new OrgForCloudAccountNotCreatedYetException();
+        }
+
+        Set<String> productIdsForOfferId = this.datastore.getProductIdsForOfferId(cloudOfferingID);
+        if (!isOwnerEntitledToProducts(ownerKey, productIdsForOfferId)) {
+            throw new OrgForCloudAccountNotEntitledYetException();
+        }
+
+        return ownerKey;
+    }
+
+    /**
      * Determines if the owner is entitled to all of the provided product IDs by verifying
      * that the owner has a subscription for each product.
      *
@@ -229,5 +252,4 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
 
         return true;
     }
-
 }
