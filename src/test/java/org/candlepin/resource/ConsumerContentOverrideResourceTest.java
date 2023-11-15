@@ -36,6 +36,7 @@ import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
+import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerCurator;
@@ -166,6 +167,8 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     private PoolCurator poolCurator;
     @Mock
     private AnonymousCloudConsumerCurator anonymousConsumerCurator;
+    @Mock
+    private AnonymousContentAccessCertificateCurator anonymousCertCurator;
 
     private Consumer consumer;
     private ContentOverrideValidator contentOverrideValidator;
@@ -227,7 +230,8 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             this.environmentContentCurator,
             this.cloudAdapter,
             this.poolCurator,
-            this.anonymousConsumerCurator
+            this.anonymousConsumerCurator,
+            this.anonymousCertCurator
         );
     }
 

@@ -21,7 +21,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventFactory;
@@ -48,6 +50,8 @@ import org.candlepin.dto.api.server.v1.ConsumerTypeDTO;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
+import org.candlepin.model.AnonymousContentAccessCertificate;
+import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
@@ -97,8 +101,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -108,8 +110,6 @@ import java.util.Locale;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class AnonymousConsumerResourceCreationTest {
-
-    private static final Logger log = LoggerFactory.getLogger(ConsumerResourceCreationTest.class);
 
     private static final String USER = "testuser";
 
@@ -187,6 +187,8 @@ public class AnonymousConsumerResourceCreationTest {
     private CloudRegistrationAdapter cloudRegistrationAdapter;
     @Mock
     private AnonymousCloudConsumerCurator anonymousConsumerCurator;
+    @Mock
+    private AnonymousContentAccessCertificateCurator anonymousCertCurator;
 
     protected ModelTranslator modelTranslator;
 
@@ -221,7 +223,7 @@ public class AnonymousConsumerResourceCreationTest {
             this.dtoValidator, this.principalProvider, this.contentOverrideValidator,
             this.consumerContentOverrideCurator, this.entCertGenerator, this.poolService,
             this.environmentContentCurator, this.cloudRegistrationAdapter, this.poolCurator,
-            this.anonymousConsumerCurator
+            this.anonymousConsumerCurator, this.anonymousCertCurator
 
         );
 
@@ -309,8 +311,14 @@ public class AnonymousConsumerResourceCreationTest {
 
     @Test
     public void testSupportAnonymousCloudRegistrationV2() {
-        AnonymousCloudConsumer cloudConsumer = new AnonymousCloudConsumer().setCloudAccountId("account_id")
-            .setCloudOfferingId("cloud_offering");
+        AnonymousContentAccessCertificate expectedCert = new AnonymousContentAccessCertificate();
+        CertificateSerial expectedSerial = new CertificateSerial(1234L);
+        expectedCert.setSerial(expectedSerial);
+
+        AnonymousCloudConsumer cloudConsumer = new AnonymousCloudConsumer()
+            .setCloudAccountId("account_id")
+            .setCloudOfferingId("cloud_offering")
+            .setContentAccessCert(expectedCert);
         Principal p = new AnonymousCloudConsumerPrincipal(cloudConsumer);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
@@ -321,12 +329,21 @@ public class AnonymousConsumerResourceCreationTest {
         when(this.poolCurator.hasPoolsForProducts(anyString(), any())).thenReturn(true);
         resource.createConsumer(consumer, USER, owner.getKey(), null, true);
         assertEquals(AuthenticationMethod.ANONYMOUS_CLOUD, p.getAuthenticationMethod());
+
+        verify(anonymousCertCurator).delete(expectedCert);
+        verify(anonymousConsumerCurator).delete(cloudConsumer);
     }
 
     @Test
     public void testAnonymousConsumerRegistrationV2() {
-        AnonymousCloudConsumer cloudConsumer = new AnonymousCloudConsumer().setCloudAccountId("account_id")
-            .setCloudOfferingId("cloud_offering");
+        AnonymousContentAccessCertificate expectedCert = new AnonymousContentAccessCertificate();
+        CertificateSerial expectedSerial = new CertificateSerial(1234L);
+        expectedCert.setSerial(expectedSerial);
+
+        AnonymousCloudConsumer cloudConsumer = new AnonymousCloudConsumer()
+            .setCloudAccountId("account_id")
+            .setCloudOfferingId("cloud_offering")
+            .setContentAccessCert(expectedCert);
         Principal p = new AnonymousCloudConsumerPrincipal(cloudConsumer);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
@@ -338,5 +355,9 @@ public class AnonymousConsumerResourceCreationTest {
         ConsumerDTO createdConsumer = resource.createConsumer(consumer, null, owner.getKey(), null, true);
         assertNotNull(createdConsumer.getIdCert());
         verify(this.anonymousConsumerCurator).delete(any());
+
+        verify(anonymousCertCurator).delete(expectedCert);
+        verify(anonymousConsumerCurator).delete(cloudConsumer);
     }
+
 }

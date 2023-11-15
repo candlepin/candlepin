@@ -74,6 +74,7 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificate;
+import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -269,6 +270,8 @@ public class ConsumerResourceTest {
     private CloudRegistrationAdapter cloudRegistrationAdapter;
     @Mock
     private AnonymousCloudConsumerCurator anonymousConsumerCurator;
+    @Mock
+    private AnonymousContentAccessCertificateCurator anonymousCertCurator;
 
     private ModelTranslator translator;
     private ConsumerResource consumerResource;
@@ -344,7 +347,8 @@ public class ConsumerResourceTest {
             this.environmentContentCurator,
             this.cloudRegistrationAdapter,
             this.poolCurator,
-            this.anonymousConsumerCurator
+            this.anonymousConsumerCurator,
+            this.anonymousCertCurator
         );
     }
 
@@ -550,8 +554,8 @@ public class ConsumerResourceTest {
             this.environmentContentCurator,
             this.cloudRegistrationAdapter,
             this.poolCurator,
-            this.anonymousConsumerCurator
-
+            this.anonymousConsumerCurator,
+            this.anonymousCertCurator
         );
 
         // Fixme throw custom exception from generator instead of generic RuntimeException
