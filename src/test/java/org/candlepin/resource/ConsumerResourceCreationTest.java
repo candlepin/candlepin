@@ -49,6 +49,7 @@ import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
+import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
@@ -200,6 +201,8 @@ public class ConsumerResourceCreationTest {
     private CloudRegistrationAdapter cloudRegistrationAdapter;
     @Mock
     private AnonymousCloudConsumerCurator anonymousConsumerCurator;
+    @Mock
+    private AnonymousContentAccessCertificateCurator anonymousCertCurator;
 
     protected ModelTranslator modelTranslator;
 
@@ -263,8 +266,8 @@ public class ConsumerResourceCreationTest {
             this.environmentContentCurator,
             this.cloudRegistrationAdapter,
             this.poolCurator,
-            this.anonymousConsumerCurator
-
+            this.anonymousConsumerCurator,
+            this.anonymousCertCurator
         );
 
         this.system = this.initConsumerType();
