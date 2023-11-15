@@ -20,8 +20,10 @@ services:
       retries: 10
 
   candlepin:
-    image: ${CANDLEPIN_IMAGE}
     container_name: candlepin
+    build:
+      context: ${GITHUB_WORKSPACE}
+      dockerfile: ./.github/containers/Dockerfile
     environment:
       JPA_CONFIG_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQL92Dialect
       JPA_CONFIG_HIBERNATE_CONNECTION_DRIVER_CLASS: org.postgresql.Driver
