@@ -21,9 +21,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.atMost;
@@ -67,6 +71,7 @@ import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
+import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerContentOverrideCurator;
@@ -189,6 +194,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private PoolCurator poolCurator;
     @Mock private CloudRegistrationAdapter cloudRegistrationAdapter;
     @Mock private AnonymousCloudConsumerCurator anonymousConsumerCurator;
+    @Mock private AnonymousContentAccessCertificateCurator anonymousCertCurator;
 
     private ModelTranslator translator;
 
@@ -250,8 +256,8 @@ public class ConsumerResourceUpdateTest {
             this.environmentContentCurator,
             this.cloudRegistrationAdapter,
             this.poolCurator,
-            this.anonymousConsumerCurator
-        );
+            this.anonymousConsumerCurator,
+            this.anonymousCertCurator);
 
         when(this.complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),
             any(Boolean.class))).thenReturn(new ComplianceStatus(new Date()));

@@ -75,6 +75,7 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificate;
+import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Certificate;
@@ -241,6 +242,7 @@ public class ConsumerResource implements ConsumerApi {
     private final CloudRegistrationAdapter cloudAdapter;
     private final PoolCurator poolCurator;
     private final AnonymousCloudConsumerCurator anonymousConsumerCurator;
+    private final AnonymousContentAccessCertificateCurator anonymousCertCurator;
 
 
     private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
@@ -290,7 +292,8 @@ public class ConsumerResource implements ConsumerApi {
         EnvironmentContentCurator environmentContentCurator,
         CloudRegistrationAdapter cloudAdapter,
         PoolCurator poolCurator,
-        AnonymousCloudConsumerCurator anonymousConsumerCurator) {
+        AnonymousCloudConsumerCurator anonymousConsumerCurator,
+        AnonymousContentAccessCertificateCurator anonymousCertCurator) {
 
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
@@ -333,6 +336,7 @@ public class ConsumerResource implements ConsumerApi {
         this.cloudAdapter = Objects.requireNonNull(cloudAdapter);
         this.poolCurator = Objects.requireNonNull(poolCurator);
         this.anonymousConsumerCurator = Objects.requireNonNull(anonymousConsumerCurator);
+        this.anonymousCertCurator = Objects.requireNonNull(anonymousCertCurator);
 
         this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(
             entitlementCurator, environmentContentCurator);
@@ -949,8 +953,9 @@ public class ConsumerResource implements ConsumerApi {
         Consumer created = createConsumerFromDTO(dto, ctype, principal, userName, owner, activationKeys,
             identityCertCreation);
         if (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal) {
-            // TODO: Revoke anonymous cert
-            anonymousConsumerCurator.delete(anonymPrincipal.getAnonymousCloudConsumer());
+            AnonymousCloudConsumer anonCloudConsumer = anonymPrincipal.getAnonymousCloudConsumer();
+            anonymousCertCurator.delete(anonCloudConsumer.getContentAccessCert());
+            anonymousConsumerCurator.delete(anonCloudConsumer);
         }
 
         return this.translator.translate(created, ConsumerDTO.class);
