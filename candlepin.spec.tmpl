@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.3.9
+Version: 4.4.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -240,6 +240,151 @@ fi
 
 #raw
 %changelog
+* Fri Nov 17 2023 Nikos Moumoulidis <nmoumoul@redhat.com> 4.4.0-1
+- Bump com.github.ben-manes:gradle-versions-plugin from 0.49.0 to 0.50.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-684: Revoke anonymous certificate (joshmalbrecht@gmail.com)
+- Update GH action to include feature branches (sbakaj@redhat.com)
+- CANDLEPIN-630: Implement Eventual Registration using an Anonymous Bearer
+  Token (sbakaj@redhat.com)
+- Add CloudAccountOrgSetupJob org mismatch case exception (nmoumoul@redhat.com)
+- Make CloudAccountOrgSetupJob retries indefinite (nmoumoul@redhat.com)
+- CANDLEPIN-707: Handle rejection for 1P offering systems (nmoumoul@redhat.com)
+- CANDLEPIN-697: Update CertificateCleanupJob to cleanup anonymous certs
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-626: Added anonymous content access certificate - added support for
+  fetching anonymous content access certificates (joshmalbrecht@gmail.com)
+- CANDLEPIN-686: Add cloud offering ID to anonymous cloud consumer - fix
+  anonymous cloud consumer instance ID max length (joshmalbrecht@gmail.com)
+- CANDLEPIN-657: Update authentication method strings (wpoteat@redhat.com)
+- CANDLEPIN-657: Record authentication method on consumer registration
+  (wpoteat@redhat.com)
+- CANDLEPIN-675: Update anon cloud consumers to store multiple SKUs - updated
+  cloud offering hosted test endpoint to use multiple products -
+  PoolCurator.hasPoolForProduct updated to check pools for multiple products
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-625: Added anonymous bearer token authentication
+  (sbakaj@redhat.com)
+- CANDLEPIN-621: Added auto reg 2.0 instance metadata authentication
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-646: Add anonymous and claimed fields on Owner API
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-623: Implement Anonymous Org Creation & Entitlement Job
+  (sbakaj@redhat.com)
+- Bump org.owasp:dependency-check-gradle from 8.4.2 to 8.4.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.15 to 10.1.16
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.12.4 to 10.12.5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Build Github actions spec test containers using docker compose build -
+  Removed the Github actions build_image job - Added build section to spec
+  Github actions docker-compose files (joshmalbrecht@gmail.com)
+- Updated manifest export testing to better production usage (crog@redhat.com)
+- Bump io.smallrye.config:smallrye-config from 3.4.3 to 3.4.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mariadb.jdbc:mariadb-java-client from 3.2.0 to 3.3.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.4.1 to 3.4.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Enable sonar scan for feature branches (sbakaj@redhat.com)
+- Bump com.github.spotbugs:spotbugs-annotations from 4.8.0 to 4.8.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.gsonfire:gson-fire from 1.8.5 to 1.9.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.junit.jupiter:junit-jupiter from 5.10.0 to 5.10.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.6.0 to 5.7.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Enable sonar base scan for all feature branches (sbakaj@redhat.com)
+- Bump org.apache.activemq:artemis-stomp-protocol from 2.31.1 to 2.31.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.activemq:artemis-server from 2.31.1 to 2.31.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-693: Fix flaky VirtSpecTest (wpoteat@redhat.com)
+- Bump org.apache.activemq:artemis-stomp-protocol from 2.31.0 to 2.31.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump commons-io:commons-io from 2.14.0 to 2.15.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.activemq:artemis-server from 2.31.0 to 2.31.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Use the 'latest' libvirt images from cloud.centos.org (nmoumoul@redhat.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 22.0.4 to 22.0.5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- Remove unused/obsolete maven repos (nmoumoul@redhat.com)
+- Updated release.Containerfile to use latest ubi9 as base image
+  (joshmalbrecht@gmail.com)
+- Bump org.owasp:dependency-check-gradle from 8.4.0 to 8.4.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-692: Remove Jenkins container setup (ojanus@redhat.com)
+- Bump com.sun.xml.bind:jaxb-core from 4.0.3 to 4.0.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.sun.xml.bind:jaxb-impl from 4.0.3 to 4.0.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Remove deprecated liquibase cli option (ojanus@redhat.com)
+- Bump 8BitJonny/gh-get-current-pr
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.squareup.okhttp3:okhttp from 4.11.0 to 4.12.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.14 to 10.1.15
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.module:jackson-module-jsonSchema
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.swagger:swagger-annotations from 1.6.11 to 1.6.12
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.dataformat:jackson-dataformat-xml
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-jdk8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.core:jackson-databind from 2.15.2 to 2.15.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.dataformat:jackson-dataformat-yaml
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-hibernate5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-jsr310
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.spotbugs:spotbugs-annotations from 4.7.3 to 4.8.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.adarshr:gradle-test-logger-plugin from 3.2.0 to 4.0.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Bump com.google.guava:guava from 32.1.2-jre to 32.1.3-jre
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.13 to 10.1.14
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-600: Resolve PoolRules dependency cycle (ojanus@redhat.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.5.0 to 5.6.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.ben-manes:gradle-versions-plugin from 0.48.0 to 0.49.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- 2242299: Fix date-time parsing for If-Modified-Since header
+  (ojanus@redhat.com)
+- Bump com.gradle.enterprise from 3.15 to 3.15.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Update Gradle Wrapper from 8.3 to 8.4. (gradle-update-robot@regolo.cc)
+- Enable i18n job for new candlepin-4.3-HOTFIX branch (nmoumoul@redhat.com)
+- Bump org.liquibase:liquibase-core from 4.23.2 to 4.24.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 22.0.3 to 22.0.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.sonarsource.scanner.gradle:sonarqube-gradle-plugin
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Update Gradle Wrapper from 8.2.1 to 8.3. (gradle-update-robot@regolo.cc)
+- Bump actions/checkout from 3 to 4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Gradle Wrapper auto-update workflow (ojanus@redhat.com)
+- Bump commons-io:commons-io from 2.13.0 to 2.14.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.12.3 to 10.12.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.4.0 to 3.4.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-599: Remove Guice Injector (ojanus@redhat.com)
+
 * Mon Oct 02 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.9-1
 - Add new translations using Weblate (noreply@weblate.org)
 - CANDLEPIN-683: Fixed missing permission in ak management blueprint
