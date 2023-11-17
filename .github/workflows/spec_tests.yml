@@ -106,6 +106,38 @@ jobs:
         with:
           arguments: spec -Dspec.test.client.host=candlepin
 
+      - name: Collect docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@4599896f4f5414b2444c1512096809da191c9e81
+        with:
+          dest: './logs-${{ matrix.database }}-${{ matrix.mode }}'
+
+      - name: Collect candlepin and Tomcat logs on failure
+        if: failure()
+        shell: bash
+        run: | 
+          docker cp candlepin:/var/log/candlepin/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/candlepin/
+          docker cp candlepin:/opt/tomcat/logs/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/tomcat/
+          
+      - name: Collect postgress logs on failure
+        if: failure() && matrix.database == 'postgres'
+        run:  docker cp postgres:/var/log/postgresql/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/postgresql/
+
+      - name: Collect mariadb logs on failure
+        if: failure() && matrix.database == 'mariadb'
+        run:  docker cp mariadb:/var/log/mysql/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/mysql/
+
+      - name: Tar logs
+        if: failure()
+        run: sudo tar cvzf ./logs-${{ matrix.database }}-${{ matrix.mode }}.tgz ./logs-${{ matrix.database }}-${{ matrix.mode }}
+
+      - name: Upload logs to GitHub
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: logs-${{ matrix.database }}-${{ matrix.mode }}.tgz
+          path: ./logs-${{ matrix.database }}-${{ matrix.mode }}.tgz
+
       - if: always()
         name: Stop containers
         shell: bash
