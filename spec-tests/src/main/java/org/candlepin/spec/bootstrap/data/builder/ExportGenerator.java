@@ -14,171 +14,291 @@
  */
 package org.candlepin.spec.bootstrap.data.builder;
 
-import org.candlepin.dto.api.client.v1.CdnDTO;
-import org.candlepin.dto.api.client.v1.ConsumerDTO;
-import org.candlepin.dto.api.client.v1.ContentDTO;
-import org.candlepin.dto.api.client.v1.OwnerDTO;
-import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
-import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
-import org.candlepin.dto.api.client.v1.RoleDTO;
-import org.candlepin.dto.api.client.v1.UserDTO;
-import org.candlepin.invoker.client.ApiException;
-import org.candlepin.resource.client.v1.CdnApi;
-import org.candlepin.resource.client.v1.OwnerContentApi;
-import org.candlepin.resource.client.v1.OwnerProductApi;
-import org.candlepin.resource.client.v1.RolesApi;
-import org.candlepin.resource.client.v1.UsersApi;
+import org.candlepin.dto.api.client.v1.SubscriptionDTO;
 import org.candlepin.spec.bootstrap.client.ApiClient;
-import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
-import org.candlepin.spec.bootstrap.client.api.OwnerClient;
+import org.candlepin.spec.bootstrap.client.ApiClients;
+import org.candlepin.spec.bootstrap.client.request.Request;
+import org.candlepin.spec.bootstrap.client.request.Response;
+import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 import java.io.File;
-import java.time.OffsetDateTime;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Objects;
 
+
+
+/**
+ * The ExportGenerator provides a fluent interface for generating manifests using the manifest
+ * generator test extension.
+ * <p></p>
+ * Repeated calls to .export will generate new manifests that appear to come from the same consumer
+ * and organization unless the underlying UUID is modified using the .usingConsumerUuid method.
+ */
 public class ExportGenerator {
 
+    private static final String MANIFEST_GENERATOR_ENDPOINT = "/testext/manifestgen/export";
+
     private final ApiClient client;
-    private final OwnerClient ownerApi;
-    private final OwnerContentApi ownerContentApi;
-    private final OwnerProductApi ownerProductApi;
-    private final CdnApi cdnApi;
-    private final ConsumerClient consumerApi;
-    private final RolesApi rolesApi;
-    private final UsersApi usersApi;
+    private final List<SubscriptionDTO> subscriptions;
+    private String consumerUuid;
 
-    private OwnerDTO owner;
-    private ConsumerDTO consumer;
-    private ExportCdn cdn;
+    public ExportGenerator() {
+        this.client = ApiClients.admin();
 
-    public ExportGenerator(ApiClient adminClient) {
-        client = adminClient;
-        ownerApi = client.owners();
-        ownerContentApi = client.ownerContent();
-        ownerProductApi = client.ownerProducts();
-        cdnApi = client.cdns();
-        consumerApi = client.consumers();
-        rolesApi = client.roles();
-        usersApi = client.users();
+        this.subscriptions = new ArrayList<>();
+        this.consumerUuid = StringUtil.random("manifest-", 16, StringUtil.CHARSET_NUMERIC_HEX);
     }
 
     /**
-     * Creates an export of currently initialized org data.
+     * Generates a random subscription for the given product.
      *
-     * @return export info
+     * @param product
+     *  the product for which to generate a subscription
+     *
+     * @return
+     *  a randomly generated subscription using the given product
      */
-    public Export export() {
-        File manifest = createExport(consumer.getUuid(), cdn);
-
-        return new Export(manifest, consumer, cdn, owner);
+    private SubscriptionDTO createSubscriptionForProduct(ProductDTO product) {
+        return Subscriptions.random()
+            .product(product);
     }
 
     /**
-     * Initializes org with a minimal set of data. Single product, no branding.
+     * Ensures the given subscription has an ID set. While not technically necessary, it provides
+     * run-to-run consistency for reconciling subscriptions to pools during import.
      *
-     * @return minimal export
+     * @param subscription
+     *  the subscription to verify
      */
-    public ExportGenerator minimal() {
-        initializeMinimalExport();
+    private void ensureSubscriptionHasId(SubscriptionDTO subscription) {
+        if (subscription != null && subscription.getId() == null) {
+            subscription.setId(StringUtil.random("test_sub-", 8, StringUtil.CHARSET_NUMERIC_HEX));
+        }
+    }
+
+    /**
+     * Clears all subscription data from this generator.
+     *
+     * @return
+     *  a reference to this generator
+     */
+    public ExportGenerator clear() {
+        this.subscriptions.clear();
+        return this;
+    }
+
+    /**
+     * Sets the UUID to assign to the consumer used to generate the manifest. If null, the UUID will
+     * be randomly generated every time the manifest is exported. If non-null, the given UUID must
+     * not collide with an existing UUID already assigned to another consumer.
+     * <p></p>
+     * Generally this isn't necessary, but could be used to make the manifest appear to come from a
+     * new consumer or organization without rebuilding the entire export generator.
+     *
+     * @param uuid
+     *  the UUID to assign to consumers used for manifest generation
+     *
+     * @return
+     *  a reference to this generator
+     */
+    public ExportGenerator usingConsumerUuid(String uuid) {
+        this.consumerUuid = uuid;
+        return this;
+    }
+
+    /**
+     * Adds the given subscriptions to this manifest generator. Null collections and elements will
+     * be silently ignored.
+     *
+     * @param subscriptions
+     *  a collection of subscriptions to add to this generator
+     *
+     * @return
+     *  a reference to this generator
+     */
+    public ExportGenerator addSubscriptions(Collection<SubscriptionDTO> subscriptions) {
+        if (subscriptions == null) {
+            return this;
+        }
+
+        subscriptions.stream()
+            .filter(Objects::nonNull)
+            .peek(this::ensureSubscriptionHasId)
+            .forEach(this.subscriptions::add);
 
         return this;
     }
 
-    private void initializeMinimalExport() {
-        owner = ownerApi.createOwner(Owners.random());
+    /**
+     * Adds the given subscriptions to this manifest generator. Null collections and elements will
+     * be silently ignored.
+     *
+     * @param subscriptions
+     *  a collection of subscriptions to add to this generator
+     *
+     * @return
+     *  a reference to this generator
+     */
+    public ExportGenerator addSubscriptions(SubscriptionDTO... subscriptions) {
+        if (subscriptions == null) {
+            return this;
+        }
 
-        RoleDTO role = rolesApi.createRole(Roles.ownerAll(owner));
-        UserDTO user = usersApi.createUser(Users.random());
-        rolesApi.addUserToRole(role.getName(), user.getUsername());
-        consumer = consumerApi.createConsumer(Consumers.random(owner, ConsumerTypes.Candlepin),
-            user.getUsername(), owner.getKey(), null, true);
-
-        consumer.putFactsItem("distributor_version", "sam-1.3")
-            .releaseVer(new ReleaseVerDTO().releaseVer(""))
-            .capabilities(null);
-
-        consumerApi.updateConsumer(consumer.getUuid(), consumer);
-        consumer = consumerApi.getConsumer(consumer.getUuid());
-
-        CdnDTO cdnDto = cdnApi.createCdn(Cdns.random());
-        cdn = Cdns.toExport(cdnDto);
+        return this.addSubscriptions(Arrays.asList(subscriptions));
     }
 
-    public ExportGenerator withProduct(ProductDTO product) {
-        return withProduct(product, Contents.random()
-            .metadataExpire(6000L)
-            .requiredTags("TAG1,TAG2"));
+    /**
+     * Adds the given subscription to this manifest generator. If the subscription is null, it will
+     * be silently ignored.
+     *
+     * @param subscription
+     *  the subscription to add to this generator
+     *
+     * @return
+     *  a reference to this generator
+     */
+    public ExportGenerator addSubscription(SubscriptionDTO subscription) {
+        if (subscription == null) {
+            return this;
+        }
+
+        return this.addSubscriptions(List.of(subscription));
     }
 
-    public ExportGenerator withProduct(ProductDTO product, ContentDTO content) {
-        String ownerKey = owner.getKey();
-        ProductDTO createdProduct = ownerProductApi.createProductByOwner(ownerKey, product);
-        ContentDTO createdContent = ownerContentApi.createContent(ownerKey, content);
-        ownerProductApi.addContent(ownerKey, createdProduct.getId(), createdContent.getId(), true);
+    /**
+     * Adds the given products to this manifest generator, using a randomly generated subscription
+     * for each product. Null collections and elements will be silently ignored.
+     *
+     * @param products
+     *  a collection of products to add to this generator
+     *
+     * @return
+     *  a reference to this generator
+     */
+    public ExportGenerator addProducts(Collection<ProductDTO> products) {
+        if (products == null) {
+            return this;
+        }
 
-        Map<String, PoolDTO> poolIdToPool = createPoolsForProducts(ownerKey, createdProduct);
-
-        Set<String> poolIds = poolIdToPool.values().stream()
-            .map(PoolDTO::getId)
-            .collect(Collectors.toSet());
-        bindPoolsToConsumer(consumerApi, consumer.getUuid(), poolIds);
+        products.stream()
+            .filter(Objects::nonNull)
+            .map(this::createSubscriptionForProduct)
+            .peek(this::ensureSubscriptionHasId)
+            .forEach(this.subscriptions::add);
 
         return this;
     }
 
-    private File createExport(String consumerUuid, ExportCdn cdn) {
-        String cdnLabel = cdn == null ? null : cdn.label();
-        String cdnWebUrl = cdn == null ? null : cdn.webUrl();
-        String cdnApiUrl = cdn == null ? null : cdn.apiUrl();
-        File export = client.consumers().exportData(consumerUuid, cdnLabel, cdnWebUrl, cdnApiUrl);
-        export.deleteOnExit();
-
-        return export;
-    }
-
-    private void bindPoolsToConsumer(ConsumerClient consumerApi, String consumerUuid,
-        Collection<String> poolIds) throws ApiException {
-        for (String poolId : poolIds) {
-            consumerApi.bindPool(consumerUuid, poolId, 1);
-        }
-    }
-
-    private Map<String, PoolDTO> createPoolsForProducts(String ownerKey, ProductDTO... products) {
-        Set<PoolDTO> collect = Arrays.stream(products)
-            .map(product -> createPool(ownerKey, product))
-            .collect(Collectors.toSet());
-
-        return collect.stream()
-            .collect(Collectors.toMap(PoolDTO::getProductId, Function.identity()));
-    }
-
-    private PoolDTO createPool(String ownerKey, ProductDTO product) throws ApiException {
-        PoolDTO pool = Pools.random(product)
-            .providedProducts(new HashSet<>())
-            .contractNumber("")
-            .accountNumber("12345")
-            .orderNumber("6789")
-            .endDate(OffsetDateTime.now().plusYears(5));
-
-        if (product.getBranding() == null || product.getBranding().isEmpty()) {
-            pool.setBranding(null);
-        }
-        else {
-            pool.setBranding(new HashSet<>(product.getBranding()));
+    /**
+     * Adds the given products to this manifest generator, using a randomly generated subscription
+     * for each product. Null collections and elements will be silently ignored.
+     *
+     * @param products
+     *  a collection of products to add to this generator
+     *
+     * @return
+     *  a reference to this generator
+     */
+    public ExportGenerator addProducts(ProductDTO... products) {
+        if (products == null) {
+            return this;
         }
 
-        return ownerApi.createPool(ownerKey, pool);
+        return this.addProducts(Arrays.asList(products));
     }
 
-    public ConsumerDTO getExportConsumer() {
-        return consumer;
+    /**
+     * Adds the given product to this manifest generator using a randomly generated subscription for
+     * the product. If the product is null, it will be silently ignored.
+     *
+     * @param product
+     *  the product to add to this generator
+     *
+     * @return
+     *  a reference to this generator
+     */
+    public ExportGenerator addProduct(ProductDTO product) {
+        if (product == null) {
+            return this;
+        }
+
+        return this.addProducts(List.of(product));
+    }
+
+    /**
+     * Generates a manifest by exporting the previously provided subscription data from the target
+     * Candlepin instance using the manifest generator test extension. The manifest data is written
+     * to a temporary file which will be deleted on exit.
+     *
+     * @param cdn
+     *  cdn information to include with the export request
+     *
+     * @return
+     *  a reference to the temporary file containing the exported manifest
+     */
+    public File export(ExportCdn cdn) throws IOException {
+        String cdnLabel = cdn != null ? cdn.label() : null;
+        String webAppPrefix = cdn != null ? cdn.webUrl() : null;
+        String apiUrl = cdn != null ? cdn.apiUrl() : null;
+
+        Request request = Request.from(this.client)
+            .setPath(MANIFEST_GENERATOR_ENDPOINT)
+            .setMethod("POST")
+            .setBody(this.subscriptions);
+
+        // Add in optional query bits
+        if (this.consumerUuid != null && !consumerUuid.isBlank()) {
+            request.addQueryParam("consumer_uuid", this.consumerUuid);
+        }
+
+        if (cdnLabel != null && !cdnLabel.isBlank()) {
+            request.addQueryParam("cdn_label", cdnLabel);
+        }
+
+        if (webAppPrefix != null && !webAppPrefix.isBlank()) {
+            request.addQueryParam("webapp_prefix", webAppPrefix);
+        }
+
+        if (apiUrl != null && !apiUrl.isBlank()) {
+            request.addQueryParam("api_url", apiUrl);
+        }
+
+        // Execute request & output
+        Response response = request.execute();
+        if (response.getCode() != 200) {
+            String errmsg = String.format("manifest generation request failed with HTTP response code %d: %s",
+                response.getCode(), response.getBodyAsString());
+            throw new IllegalStateException(errmsg);
+        }
+
+        File manifest = File.createTempFile("manifest", ".zip");
+        manifest.deleteOnExit();
+
+        try (OutputStream ostream = new FileOutputStream(manifest)) {
+            ostream.write(response.getBody());
+            ostream.flush();
+        }
+
+        return manifest;
+    }
+
+    /**
+     * Generates a manifest by exporting the previously provided subscription data from the target
+     * Candlepin instance using the manifest generator test extension. The manifest data is written
+     * to a temporary file which will be deleted on exit.
+     *
+     * @return
+     *  a reference to the temporary file containing the exported manifest
+     */
+    public File export() throws IOException {
+        return this.export(null);
     }
 
 }

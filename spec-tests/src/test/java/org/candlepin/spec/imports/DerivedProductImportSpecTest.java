@@ -16,142 +16,145 @@ package org.candlepin.spec.imports;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
-import org.candlepin.dto.api.client.v1.DistributorVersionCapabilityDTO;
-import org.candlepin.dto.api.client.v1.DistributorVersionDTO;
 import org.candlepin.dto.api.client.v1.EntitlementDTO;
 import org.candlepin.dto.api.client.v1.GuestIdDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
-import org.candlepin.resource.client.v1.OwnerProductApi;
+import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
 import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
-import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
+import org.candlepin.spec.bootstrap.data.builder.ExportGenerator;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
-import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
-import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+
 
 
 @SpecTest
 @OnlyInStandalone
 public class DerivedProductImportSpecTest {
-
     private static final String EXPECTED_CONTENT_URL = "/path/to/arch/specific/content";
 
-    private static ApiClient client;
+    private static ApiClient adminClient;
     private static OwnerClient ownerApi;
-    private static OwnerProductApi ownerProductApi;
 
     @BeforeAll
     public static void beforeAll() {
-        client = ApiClients.admin();
-        ownerApi = client.owners();
-        ownerProductApi = client.ownerProducts();
+        assumeTrue(CandlepinMode::hasManifestGenTestExtension);
+
+        adminClient = ApiClients.admin();
+        ownerApi = adminClient.owners();
     }
 
+    private AsyncJobStatusDTO importAsync(OwnerDTO owner, File manifest, String... force) {
+        List<String> forced = force != null ? Arrays.asList(force) : List.of();
+
+        AsyncJobStatusDTO importJob = adminClient.owners()
+            .importManifestAsync(owner.getKey(), forced, manifest);
+
+        return adminClient.jobs().waitForJob(importJob);
+    }
+
+    // TODO: FIXME: What does test have to do with importing? All of the critical logic surrounds
+    // the creation of bonus pools and guest/host virt mapping junk. The import operation is just
+    // a means to getting the initial pool into place. Move this to somewhere more meaningful.
+
     @Test
-    public void shouldRetrieveSubscriptonCertificateFromDerivedPoolEntitlement() {
+    public void shouldRetrieveSubscriptonCertificateFromDerivedPoolEntitlement() throws Exception {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        OwnerDTO distOwner = ownerApi.createOwner(Owners.random());
-        ApiClient distUserClient = ApiClients.basic(UserUtil.createUser(client, distOwner));
 
-        ProductDTO derivedProduct = ownerProductApi.createProductByOwner(owner.getKey(),
-            Products.random()
-            .attributes(List.of(
-            ProductAttributes.Cores.withValue("6"),
-            ProductAttributes.Sockets.withValue("8"))));
+        ProductDTO derivedProduct = Products.random()
+            .addAttributesItem(ProductAttributes.Cores.withValue("6"))
+            .addAttributesItem(ProductAttributes.Sockets.withValue("8"));
 
-        ProductDTO stackedDatacenterProduct = ownerProductApi.createProductByOwner(owner.getKey(),
-            Products.random()
-            .attributes(List.of(
-            ProductAttributes.VirtualLimit.withValue("unlimited"),
-            ProductAttributes.StackingId.withValue("mixed-stack"),
-            ProductAttributes.Sockets.withValue("2"),
-            ProductAttributes.MultiEntitlement.withValue("yes")))
-            .derivedProduct(derivedProduct));
+        ProductDTO sdcProduct = Products.random() // sdc = stacked datacenter
+            .addAttributesItem(ProductAttributes.VirtualLimit.withValue("unlimited"))
+            .addAttributesItem(ProductAttributes.StackingId.withValue("mixed-stack"))
+            .addAttributesItem(ProductAttributes.Sockets.withValue("2"))
+            .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"))
+            .derivedProduct(derivedProduct);
 
-        PoolDTO datacenterPool = ownerApi.createPool(owner.getKey(),
-            Pools.random(stackedDatacenterProduct)
-            .contractNumber("222")
-            .accountNumber("")
-            .orderNumber(""));
+        ExportGenerator exportGenerator = new ExportGenerator()
+            .addProduct(sdcProduct);
 
-        // create the distributor consumer
-        ConsumerDTO distributor = userClient.consumers().createConsumer(
-            Consumers.random(owner)
-            .type(ConsumerTypes.Candlepin.value())
-            .facts(Map.of("distributorVersion", "sam-1.3")));
-        ApiClient distributorClient = ApiClients.ssl(distributor);
-        String distVersion = StringUtil.random("version");
-        client.distributorVersions().create(new DistributorVersionDTO()
-            .name(distVersion)
-            .displayName("SAM")
-            .capabilities(Set.of(new DistributorVersionCapabilityDTO().name("cert_v3"),
-                new DistributorVersionCapabilityDTO().name("derived_product"))));
-        distributorClient.consumers().updateConsumer(distributor.getUuid(),
-            new ConsumerDTO().facts(Map.of("distributor_version", distVersion)));
-        // entitlements from data center pool
-        distributorClient.consumers().bindPool(distributor.getUuid(), datacenterPool.getId(), 10);
+        AsyncJobStatusDTO importJob1 = this.importAsync(owner, exportGenerator.export());
+        assertThatJob(importJob1)
+            .isNotNull()
+            .isFinished();
 
-        // make manifest
-        File export = client.consumers().exportData(distributor.getUuid(), null, null, null);
-        export.deleteOnExit();
-        // remove client at 'host'
-        userClient.consumers().deleteConsumer(distributor.getUuid());
-        client.pools().deletePool(datacenterPool.getId());
-        // import to make org at 'distributor'
-        AsyncJobStatusDTO importJob = client.owners().importManifestAsync(distOwner.getKey(), List.of(), export);
-        assertThatJob(client.jobs().waitForJob(importJob)).isFinished();
+        // Verify the target pool exists
+        List<PoolDTO> pools1 = ownerApi.listOwnerPoolsByProduct(owner.getKey(), sdcProduct.getId());
+        assertThat(pools1)
+            .singleElement()
+            .extracting(PoolDTO::getProductId)
+            .isEqualTo(sdcProduct.getId());
 
-        List<PoolDTO> pools = ownerApi.listOwnerPoolsByProduct(distOwner.getKey(),
-            stackedDatacenterProduct.getId());
-        assertThat(pools).singleElement();
-        PoolDTO distPool = pools.get(0);
+        PoolDTO sdcPool = pools1.get(0);
 
-        // make host client to get entitlement from distributor
-        ConsumerDTO distConsumer1 = distUserClient.consumers().createConsumer(Consumers.random(distOwner));
-        ApiClient distConsumerClient1 = ApiClients.ssl(distConsumer1);
-        String guestUuid = StringUtil.random("uuid");
-        distConsumerClient1.consumers().updateConsumer(distConsumer1.getUuid(),
-            new ConsumerDTO().guestIds(List.of(new GuestIdDTO().guestId(guestUuid))));
+        // Everything from this point on has nothing to do with import or manifests! Why is it here?
 
-        // spawn pool for derived product
-        distConsumerClient1.consumers().bindPool(distConsumer1.getUuid(), distPool.getId(), 1);
-        // make guest client
-        ConsumerDTO distConsumer2 = distUserClient.consumers().createConsumer(
-            Consumers.random(distOwner)
-            .facts(Map.of("virt.uuid", guestUuid, "virt.is_guest", "true")));
-        ApiClient distConsumerClient2 = ApiClients.ssl(distConsumer2);
-        // entitle from derived pool
-        Optional<PoolDTO> poolToBind = ownerApi.listOwnerPools(distOwner.getKey()).stream()
-            .filter(x -> "STACK_DERIVED".equals(x.getType()))
-            .findFirst();
-        assertThat(poolToBind).isPresent();
-        EntitlementDTO distEnt = ApiClient.MAPPER.convertValue(distConsumerClient2.consumers().bindPool(
-            distConsumer2.getUuid(), poolToBind.get().getId(), 1).get(0), EntitlementDTO.class);
+        // Note: this is *not* a Candlepin UUID, this is simulating the UUID assigned to a given
+        // system by its hypervisor.
+        String guestSystemUuid = StringUtil.random("uuid");
 
-        // use entitlement to get subscription cert back at primary pool
-        assertThat(client.entitlements().getUpstreamCert(distEnt.getId()))
+        ConsumerDTO guestConsumer = Consumers.random(owner)
+            .putFactsItem("virt.uuid", guestSystemUuid)
+            .putFactsItem("virt.is_guest", "true");
+
+        ConsumerDTO hypervisorConsumer = Consumers.random(owner)
+            .addGuestIdsItem(new GuestIdDTO().guestId(guestSystemUuid));
+
+        guestConsumer = adminClient.consumers().createConsumer(guestConsumer);
+        hypervisorConsumer = adminClient.consumers().createConsumer(hypervisorConsumer);
+
+        ApiClient hypervisorClient = ApiClients.ssl(hypervisorConsumer);
+        ApiClient guestClient = ApiClients.ssl(guestConsumer);
+
+        // Have the hypervisor consume our sdc pool so it generates the guest-specific bonus pool(s)
+        List<EntitlementDTO> hypervisorEnts = hypervisorClient.consumers()
+            .bindPoolSync(hypervisorConsumer.getUuid(), sdcPool.getId(), 1);
+
+        assertThat(hypervisorEnts)
+            .isNotNull()
+            .hasSize(1);
+
+        // Verify our bonus pool exists and fetch its ID for later binding
+        List<PoolDTO> pools2 = ownerApi.listOwnerPools(owner.getKey());
+        assertThat(pools2)
+            .isNotNull()
+            .hasSizeGreaterThan(1);
+
+        PoolDTO guestOnlyPool = pools2.stream()
+            .filter(pool -> "STACK_DERIVED".equals(pool.getType()))
+            .findAny()
+            .orElseThrow();
+
+        // Consume the bonus pool with our guest and verify we can get the upstream cert
+        List<EntitlementDTO> guestEnts = guestClient.consumers()
+            .bindPoolSync(guestConsumer.getUuid(), guestOnlyPool.getId(), 1);
+
+        assertThat(guestEnts)
+            .isNotNull()
+            .hasSize(1);
+
+        assertThat(adminClient.entitlements().getUpstreamCert(guestEnts.get(0).getId()))
             .startsWith("-----BEGIN CERTIFICATE-----");
     }
 }

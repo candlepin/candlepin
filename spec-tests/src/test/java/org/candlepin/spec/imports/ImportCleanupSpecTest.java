@@ -16,6 +16,7 @@ package org.candlepin.spec.imports;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
@@ -23,125 +24,110 @@ import org.candlepin.dto.api.client.v1.EntitlementDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
-import org.candlepin.invoker.client.ApiException;
+import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
 import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
-import org.candlepin.spec.bootstrap.data.builder.Export;
 import org.candlepin.spec.bootstrap.data.builder.ExportGenerator;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
+
+
 
 @SpecTest
 @OnlyInStandalone
 public class ImportCleanupSpecTest {
 
-    private ApiClient admin;
-    private OwnerDTO owner;
+    private static ApiClient adminClient;
 
-    @BeforeEach
-    public void beforeAll() {
-        admin = ApiClients.admin();
-        owner = admin.owners().createOwner(Owners.random());
+    @BeforeAll
+    public static void beforeAll() {
+        assumeTrue(CandlepinMode::hasManifestGenTestExtension);
+
+        adminClient = ApiClients.admin();
+    }
+
+    private AsyncJobStatusDTO importAsync(OwnerDTO owner, File manifest, String... force) {
+        List<String> forced = force != null ? Arrays.asList(force) : List.of();
+
+        AsyncJobStatusDTO importJob = adminClient.owners()
+            .importManifestAsync(owner.getKey(), forced, manifest);
+
+        importJob = adminClient.jobs().waitForJob(importJob);
+        assertThatJob(importJob)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
+
+        return importJob;
     }
 
     @Test
-    @SuppressWarnings("checkstyle:indentation")
-    public void shouldRemoveStackDerivedPoolWhenParentEntIsGone() throws InterruptedException {
+    public void shouldRemoveStackDerivedPoolWhenParentPoolIsAbsentFromManifest() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+
+        // Create and import a manifest that has a VDC (virtual datacenter) subscription
         ProductDTO productDc = Products.random()
-            .attributes(List.of(
-                ProductAttributes.Arch.withValue("x86_64"),
-                ProductAttributes.StackingId.withValue("stack-dc")));
+            .addAttributesItem(ProductAttributes.Arch.withValue("x86_64"))
+            .addAttributesItem(ProductAttributes.StackingId.withValue("stack-dc"));
+
         ProductDTO productVdc = Products.random()
-            .attributes(List.of(
-                ProductAttributes.Arch.withValue("x86_64"),
-                ProductAttributes.StackingId.withValue("stack-vdc"),
-                ProductAttributes.VirtualLimit.withValue("unlimited")))
-            .derivedProduct(productDc);
-        ExportGenerator exportGenerator = generateWith(generator -> generator
-            .withProduct(productDc)
-            .withProduct(productVdc));
+            .derivedProduct(productDc)
+            .addAttributesItem(ProductAttributes.Arch.withValue("x86_64"))
+            .addAttributesItem(ProductAttributes.StackingId.withValue("stack-vdc"))
+            .addAttributesItem(ProductAttributes.VirtualLimit.withValue("unlimited"));
 
-        Export export = exportGenerator.export();
-        List<EntitlementDTO> ents = admin.entitlements()
-            .listAllForConsumer(export.consumer().getUuid(), null, null, null, null, null, null);
-        for (EntitlementDTO ent : ents) {
-            admin.entitlements().unbind(ent.getId());
-        }
-        // We need to wait here for unbind to finish
-        Thread.sleep(1000L);
-        Export updatedExport = exportGenerator.export();
+        ExportGenerator exportGenerator = new ExportGenerator()
+            .addProduct(productVdc);
 
-        AsyncJobStatusDTO importJob = doImport(owner.getKey(), export.file());
-        assertThat(importJob)
-            .isNotNull()
-            .hasFieldOrPropertyWithValue("state", "FINISHED")
-            .extracting(AsyncJobStatusDTO::getResultData)
-            .isNotNull()
-            .hasFieldOrPropertyWithValue("status", "SUCCESS")
-            .hasFieldOrPropertyWithValue("statusMessage", owner.getKey() + " file imported successfully.");
+        this.importAsync(owner, exportGenerator.export());
 
-        // NORMAL pool
-        List<PoolDTO> normalPools = admin.pools()
-            .listPools(owner.getId(), null, productVdc.getId(), null, null, null, null, null, null);
-        assertThat(normalPools)
+        List<PoolDTO> basePools = adminClient.pools().listPoolsByProduct(owner.getId(), productVdc.getId());
+        assertThat(basePools)
             .hasSize(1);
 
-        // UNMAPPED GUEST POOL
-        List<PoolDTO> unmappedPools = admin.pools()
-            .listPools(owner.getId(), null, productDc.getId(), true, null, null, null, null, null)
-            .stream()
-            .filter(pool -> pool.getType().equals("UNMAPPED_GUEST")).collect(Collectors.toList());
-        assertThat(unmappedPools)
+        List<PoolDTO> guestPools = adminClient.pools().listPoolsByProduct(owner.getId(), productDc.getId());
+        assertThat(guestPools)
             .hasSize(1);
 
-        // Consume NORMAL Pool
-        ConsumerDTO consumer = admin.consumers().createConsumer(Consumers.random(owner));
-        JsonNode jsonNode = admin.consumers().bindPool(consumer.getUuid(), normalPools.get(0).getId(), 1);
-        assertThat(jsonNode)
+        // Consume the VDC pool
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+
+        List<EntitlementDTO> entitlements = adminClient.consumers()
+            .bindPoolSync(consumer.getUuid(), basePools.get(0).getId(), 1);
+        assertThat(entitlements)
             .hasSize(1);
 
-        // STACK DERIVED POOL is created
-        List<PoolDTO> stack = admin.pools()
-            .listPools(owner.getId(), null, productDc.getId(), null, null, null, null, null, null)
-            .stream()
-            .filter(pool -> pool.getType().equals("STACK_DERIVED")).collect(Collectors.toList());
-        assertThat(stack)
-            .hasSize(1);
+        // Verify a STACK_DERIVED pool is created
+        List<PoolDTO> dcpools = adminClient.pools().listPoolsByProduct(owner.getId(), productDc.getId());
+        assertThat(dcpools)
+            .hasSize(2)
+            .map(PoolDTO::getType)
+            .containsExactlyInAnyOrder("UNMAPPED_GUEST", "STACK_DERIVED");
 
-        importJob = doImport(owner.getKey(), updatedExport.file());
-        assertThatJob(importJob)
-            .isFinished();
-        normalPools = admin.pools().listPools(owner.getId(), null, null, null, null, null, null, null, null);
-        assertThat(normalPools)
-            .hasSize(0);
+        // Import a new manifest that does not have a subscription for the VDC product, which should
+        // trigger the removal of not only the VDC pool, but its derived pools as well.
+        ProductDTO simpleProduct = Products.random();
+
+        exportGenerator.clear()
+            .addProduct(simpleProduct);
+
+        this.importAsync(owner, exportGenerator.export());
+
+        List<PoolDTO> pools = adminClient.pools().listPoolsByOwner(owner.getId());
+        assertThat(pools)
+            .singleElement()
+            .returns(simpleProduct.getId(), PoolDTO::getProductId);
     }
 
-    public ExportGenerator generateWith(Consumer<ExportGenerator> setup) {
-        ExportGenerator exportGenerator = new ExportGenerator(admin);
-        setup.accept(exportGenerator.minimal());
-        return exportGenerator;
-    }
-
-    private AsyncJobStatusDTO doImport(String ownerKey, File export) {
-        return importAsync(ownerKey, export, List.of());
-    }
-
-    private AsyncJobStatusDTO importAsync(String ownerKey, File export, List<String> force) throws ApiException {
-        AsyncJobStatusDTO importJob = admin.owners().importManifestAsync(ownerKey, force, export);
-        return admin.jobs().waitForJob(importJob);
-    }
 }

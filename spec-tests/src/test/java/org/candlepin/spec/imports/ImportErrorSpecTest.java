@@ -16,57 +16,74 @@ package org.candlepin.spec.imports;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.ImportRecordDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
-import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.UpstreamConsumerDTO;
-import org.candlepin.dto.api.client.v1.UserDTO;
-import org.candlepin.invoker.client.ApiException;
+import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
 import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
-import org.candlepin.spec.bootstrap.data.builder.Export;
 import org.candlepin.spec.bootstrap.data.builder.ExportGenerator;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
-import org.candlepin.spec.bootstrap.data.util.UserUtil;
+import org.candlepin.spec.bootstrap.data.builder.Products;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+
+
 
 @SpecTest
 @OnlyInStandalone
 public class ImportErrorSpecTest {
 
-    private ApiClient admin;
-    private OwnerDTO owner;
-    private ApiClient userClient;
+    private static ApiClient adminClient;
 
-    @BeforeEach
-    public void beforeEach() {
-        admin = ApiClients.admin();
-        owner = admin.owners().createOwner(Owners.random());
-        UserDTO user = UserUtil.createUser(admin, owner);
-        userClient = ApiClients.basic(user);
+    @BeforeAll
+    public static void beforeAll() {
+        assumeTrue(CandlepinMode::hasManifestGenTestExtension);
+
+        adminClient = ApiClients.admin();
+    }
+
+    private AsyncJobStatusDTO importAsync(OwnerDTO owner, File manifest, String... force) {
+        List<String> forced = force != null ? Arrays.asList(force) : List.of();
+
+        AsyncJobStatusDTO importJob = adminClient.owners()
+            .importManifestAsync(owner.getKey(), forced, manifest);
+
+        return adminClient.jobs().waitForJob(importJob);
     }
 
     @Test
-    public void shouldReturnCorrectErrorStatusMessageOnADuplicateImport() {
-        Export export = createMinimalExport();
-        doImport(owner.getKey(), export.file());
-        assertThatJob(doImport(owner.getKey(), export.file()))
+    public void shouldReturnCorrectErrorStatusMessageOnADuplicateImport() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+
+        // Create a simple manifest to throw at the server twice
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
+
+        AsyncJobStatusDTO importJob1 = this.importAsync(owner, manifest);
+        assertThatJob(importJob1)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
+
+        AsyncJobStatusDTO importJob2 = this.importAsync(owner, manifest);
+        assertThatJob(importJob2)
             .isFailed()
             .contains("MANIFEST_SAME");
 
-        List<ImportRecordDTO> importRecords = userClient.owners().getImports(owner.getKey());
+        List<ImportRecordDTO> importRecords = adminClient.owners().getImports(owner.getKey());
 
         assertThat(importRecords)
             .filteredOn(record -> "FAILURE".equalsIgnoreCase(record.getStatus()))
@@ -75,63 +92,124 @@ public class ImportErrorSpecTest {
     }
 
     @Test
-    public void shouldNotAllowImportingAnOldManifest() {
-        ExportGenerator exportGenerator = new ExportGenerator(admin).minimal();
-        Export exportOld = exportGenerator.export();
-        sleepForMs(1000);
-        Export export = exportGenerator.export();
-        doImport(owner.getKey(), export.file());
+    public void shouldAllowForcingTheSameManifest() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-        assertThatJob(doImport(owner.getKey(), exportOld.file()))
+        // Create a simple manifest to throw at the server twice
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
+
+        AsyncJobStatusDTO importJob1 = this.importAsync(owner, manifest);
+        assertThatJob(importJob1)
+            .isFinished()
+            .contains("SUCCESS");
+
+        // Attempting to import this manifest again should fail with "MANIFEST_SAME"
+        AsyncJobStatusDTO importJob2 = this.importAsync(owner, manifest);
+        assertThatJob(importJob2)
+            .isFailed()
+            .contains("MANIFEST_SAME");
+
+        // ...but forcing it should succeed
+        AsyncJobStatusDTO importJob3 = this.importAsync(owner, manifest, "MANIFEST_SAME");
+        assertThatJob(importJob3)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
+    }
+
+    @Test
+    public void shouldNotAllowImportingAnOldManifest() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+
+        ExportGenerator exportGenerator = new ExportGenerator();
+
+        // Impl note: it's probably not strictly necessary to add or modify the subscription data
+        // for this test, but it helps ensure we don't hit a "MANIFEST_SAME" error when we're not
+        // looking for it.
+        File oldManifest = exportGenerator.addProduct(Products.random())
+            .export();
+
+        Thread.sleep(1500);
+
+        File newManifest = exportGenerator.addProduct(Products.random())
+            .export();
+
+        // Import the new manifest first
+        AsyncJobStatusDTO importJob1 = this.importAsync(owner, newManifest);
+        assertThatJob(importJob1)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
+
+        // Import the old manifest, which should be rejected for being older than the last manifest
+        // we've imported.
+        AsyncJobStatusDTO importJob2 = this.importAsync(owner, oldManifest);
+        assertThatJob(importJob2)
             .isFailed()
             .contains("MANIFEST_OLD");
     }
 
     @Test
-    public void shouldAllowForcingTheSameManifest() {
-        Export export = createMinimalExport();
-        doImport(owner.getKey(), export.file());
+    public void shouldAllowImportingOlderManifestsIntoAnotherOwner() throws Exception {
+        OwnerDTO owner1 = adminClient.owners().createOwner(Owners.random());
+        OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
 
-        assertThatJob(doImport(owner.getKey(), export.file(), "MANIFEST_SAME", "DISTRIBUTOR_CONFLICT"))
-            .isFinished();
-    }
+        // Impl note: We cannot reuse the same generator here; the manifests must come from
+        // different upstream orgs or we'll get a different, unrecoverable failure.
+        File oldManifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
 
-    @Test
-    public void shouldAllowImportingOlderManifestsIntoAnotherOwner() {
-        Export otherExportOld = createMinimalExport();
-        Export export = createMinimalExport();
-        doImport(owner.getKey(), export.file());
+        Thread.sleep(1500);
+
+        File newManifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
+
+        // Import the new manifest to the first org
+        AsyncJobStatusDTO importJob1 = this.importAsync(owner1, newManifest);
+        assertThatJob(importJob1)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
+
         // Old Candlepin was blocking imports in multi-tenant deployments if one org imports
         // a manifest, and then another tries with a manifest that is even slightly
         // older. This tests that this restriction no longer applies.
-        OwnerDTO otherOwner = admin.owners().createOwner(Owners.random());
-
-        assertThatJob(doImport(otherOwner.getKey(), otherExportOld.file(),
-            "MANIFEST_SAME", "DISTRIBUTOR_CONFLICT"))
-            .isFinished();
+        AsyncJobStatusDTO importJob2 = this.importAsync(owner2, oldManifest);
+        assertThatJob(importJob2)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
     }
 
     @Test
-    public void shouldReturnConflictWhenImportingManifestFromDifferentSubscriptionManagementApplication() {
-        Export export = createMinimalExport();
-        doImport(owner.getKey(), export.file());
-        OwnerDTO updatedOwner = admin.owners().getOwner(owner.getKey());
-        String expected = "Owner has already imported from another subscription management application.";
-        Export otherExport = createMinimalExport();
+    public void shouldReturnConflictWhenImportingManifestFromDifferentSubscriptionManagementApplication()
+        throws Exception {
 
-        assertThatJob(doImport(updatedOwner.getKey(), otherExport.file()))
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+
+        File manifest1 = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
+
+        AsyncJobStatusDTO importJob1 = this.importAsync(owner, manifest1);
+        assertThatJob(importJob1)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
+
+        // Impl note: we want the manifest to come from different upstream sources, so we can't
+        // reuse the generator
+        File manifest2 = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
+
+        AsyncJobStatusDTO importJob2 = this.importAsync(owner, manifest2);
+        assertThatJob(importJob2)
             .isFailed()
-            .contains("DISTRIBUTOR_CONFLICT")
-            .contains(expected);
-
-        assertThat(updatedOwner.getUpstreamConsumer())
-            .extracting(UpstreamConsumerDTO::getUuid)
-            .isEqualTo(export.consumer().getUuid());
-
-        // Try again and make sure we don't see MANIFEST_SAME appear: (this was a bug)
-        assertThatJob(doImport(updatedOwner.getKey(), otherExport.file()))
-            .isFailed()
-            .doesNotContain("MANIFEST_SAME")
             .contains("DISTRIBUTOR_CONFLICT");
     }
 
@@ -139,72 +217,88 @@ public class ImportErrorSpecTest {
      * Test is run sequentially to avoid conflicts with other tests during forced reimport.
      */
     @Test
-    public void shouldAllowForcingManifestFromDifferentSubscriptionManagementApplication() {
-        Export export = createMinimalExport();
-        doImport(owner.getKey(), export.file());
-        OwnerDTO otherOwner = admin.owners().createOwner(Owners.random());
-        OwnerDTO ownerBefore = admin.owners().getOwner(owner.getKey());
-        Set<String> poolsBefore = listPoolIds(owner);
-        Export anotherExport = createMinimalExport();
-        doImport(otherOwner.getKey(), anotherExport.file(), "DISTRIBUTOR_CONFLICT");
+    public void shouldAllowForcingManifestFromDifferentSubscriptionManagementApplication() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-        OwnerDTO ownerAfter = admin.owners().getOwner(owner.getKey());
-        Set<String> poolsAfter = listPoolIds(owner);
+        File manifest1 = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
 
-        assertSameUuid(ownerBefore.getUpstreamConsumer(), ownerAfter.getUpstreamConsumer());
-        assertThat(poolsBefore)
-            .containsAll(poolsAfter);
+        AsyncJobStatusDTO importJob1 = this.importAsync(owner, manifest1);
+        assertThatJob(importJob1)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
+
+        OwnerDTO ownerRefresh1 = adminClient.owners().getOwner(owner.getKey());
+        assertThat(ownerRefresh1)
+            .isNotNull()
+            .extracting(OwnerDTO::getUpstreamConsumer)
+            .isNotNull()
+            .extracting(UpstreamConsumerDTO::getUuid)
+            .isNotNull();
+
+        String upstreamConsumerUuid1 = ownerRefresh1.getUpstreamConsumer()
+            .getUuid();
+
+        // Impl note: we want the manifest to come from different upstream sources, so we can't
+        // reuse the generator
+        File manifest2 = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
+
+        // Importing manifest2 should fail since it has a different upstream source
+        AsyncJobStatusDTO importJob2 = this.importAsync(owner, manifest2);
+        assertThatJob(importJob2)
+            .isFailed()
+            .contains("DISTRIBUTOR_CONFLICT");
+
+        // ...but forcing the distributor conflict should allow it to succeed without other issues
+        AsyncJobStatusDTO importJob3 = this.importAsync(owner, manifest2, "DISTRIBUTOR_CONFLICT");
+        assertThatJob(importJob3)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING")
+            .contains("file imported forcibly");
+
+        OwnerDTO ownerRefresh2 = adminClient.owners().getOwner(owner.getKey());
+        assertThat(ownerRefresh2)
+            .isNotNull()
+            .extracting(OwnerDTO::getUpstreamConsumer)
+            .isNotNull()
+            .extracting(UpstreamConsumerDTO::getUuid)
+            .isNotNull();
+
+        String upstreamConsumerUuid2 = ownerRefresh2.getUpstreamConsumer()
+            .getUuid();
+
+        // The upstream consumer UUID after importing the second manifest should no longer match the
+        // upstream consumer UUID of the first manifest.
+        assertNotEquals(upstreamConsumerUuid1, upstreamConsumerUuid2);
     }
 
     @Test
-    public void shouldReturnBadRequestWhenImportingManifestInUseByAnotherOwner() {
-        Export export = createMinimalExport();
-        doImport(owner.getKey(), export.file());
-        String msg = "This subscription management application has already been imported by another owner.";
-        OwnerDTO otherOwner = admin.owners().createOwner(Owners.random());
+    public void shouldReturnBadRequestWhenImportingManifestInUseByAnotherOwner() throws Exception {
+        OwnerDTO owner1 = adminClient.owners().createOwner(Owners.random());
+        OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
 
-        assertThatJob(doImport(otherOwner.getKey(), export.file()))
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
+
+        // The first org should be able to import this manifest without issue
+        AsyncJobStatusDTO importJob1 = this.importAsync(owner1, manifest);
+        assertThatJob(importJob1)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
+
+        // The second org should be rejected, as the manifest is already in use by another org on
+        // this Candlepin instance
+        AsyncJobStatusDTO importJob2 = this.importAsync(owner2, manifest);
+        assertThatJob(importJob2)
             .isFailed()
-            .contains(msg);
-    }
-
-    private Export createMinimalExport() {
-        return new ExportGenerator(admin).minimal().export();
-    }
-
-    private Set<String> listPoolIds(OwnerDTO owner) {
-        return userClient.pools().listPoolsByOwner(owner.getId()).stream()
-            .map(PoolDTO::getId)
-            .collect(Collectors.toSet());
-    }
-
-    private void assertSameUuid(UpstreamConsumerDTO consumer, UpstreamConsumerDTO other) {
-        assertThat(consumer).isNotNull();
-        assertThat(other).isNotNull();
-        assertThat(consumer.getUuid())
-            .isEqualTo(other.getUuid());
-    }
-
-    private void sleepForMs(int millis) {
-        try {
-            Thread.sleep(millis);
-        }
-        catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private AsyncJobStatusDTO doImport(String ownerKey, File export) {
-        return importAsync(ownerKey, export, List.of());
-    }
-
-    private AsyncJobStatusDTO doImport(String ownerKey, File export, String... force) {
-        return importAsync(ownerKey, export, Arrays.asList(force));
-    }
-
-    private AsyncJobStatusDTO importAsync(String ownerKey, File export, List<String> force) throws ApiException {
-        AsyncJobStatusDTO importJob = admin.owners().importManifestAsync(ownerKey, force, export);
-        return admin.jobs().waitForJob(importJob);
+            .contains("This subscription management application has already been imported by another owner");
     }
 
 }

@@ -32,16 +32,20 @@ public final class Subscriptions {
         throw new UnsupportedOperationException();
     }
 
-    public static SubscriptionDTO random(OwnerDTO owner, ProductDTO product) {
+    public static SubscriptionDTO random() {
         OffsetDateTime startDate = OffsetDateTime.now();
 
         return new SubscriptionDTO()
             .id(StringUtil.random("test_sub-", 8, StringUtil.CHARSET_NUMERIC_HEX))
-            .owner(Owners.toNested(owner))
-            .product(product)
             .quantity(10L)
             .startDate(startDate)
             .endDate(startDate.plusYears(1));
+    }
+
+    public static SubscriptionDTO random(OwnerDTO owner, ProductDTO product) {
+        return random()
+            .owner(Owners.toNested(owner))
+            .product(product);
     }
 
 }

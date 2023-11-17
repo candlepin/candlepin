@@ -74,6 +74,7 @@ jobs:
         run: |
           echo "CANDLEPIN_STANDALONE=true" > .env
           echo "CANDLEPIN_AUTH_CLOUD_ENABLE=false" >> .env
+          echo "MODULE_CONFIG_MANIFESTGEN_CONFIGURATION_MODULE=org.candlepin.testext.manifestgen.ManifestGeneratorModule" >> .env
 
       - if: matrix.mode == 'hosted'
         name: Add hosted env variables
@@ -81,8 +82,9 @@ jobs:
         shell: bash
         run: |
           echo "CANDLEPIN_STANDALONE=false" > .env
-          echo "MODULE_CONFIG_HOSTED_CONFIGURATION_MODULE=org.candlepin.hostedtest.AdapterOverrideModule" >> .env
+          echo "MODULE_CONFIG_HOSTEDTEST_CONFIGURATION_MODULE=org.candlepin.testext.hostedtest.HostedTestModule" >> .env
           echo "CANDLEPIN_AUTH_CLOUD_ENABLE=true" >> .env
+          echo "MODULE_CONFIG_MANIFESTGEN_CONFIGURATION_MODULE=org.candlepin.testext.manifestgen.ManifestGeneratorModule" >> .env
 
       - name: Create Candlepin and database containers
         shell: bash

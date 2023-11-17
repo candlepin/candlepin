@@ -66,9 +66,8 @@ ext {
     }
 
     external_broker = "true".equals(project.findProperty("external_broker"))
-    hostedtest = "true".equals(project.findProperty("hostedtest"))
     async_scheduler_enabled = !project.findProperty("async_scheduler_enabled") ||
-            "true".equals(project.findProperty("async_scheduler_enabled"))
+        "true".equals(project.findProperty("async_scheduler_enabled"))
 }
 
 dependencies {
@@ -400,15 +399,39 @@ tasks.register('apiJar', Jar) {
 }
 
 war {
-    if (!hostedtest) {
-        rootSpec.exclude("**/hostedtest/**")
+    // This is a bit wonky and has potential to miss stuff, but we don't really have a much nicer
+    // way of doing this, outside the real correct answer of converting them to subprojects like
+    // they probably should be.
+    if (project.hasProperty('test_extensions')) {
+        List<String> testexts = test_extensions.tokenize(',');
+
+        // If we've defined one or more test extensions, selectively exclude subpackages that are
+        // not in the list of test extensions
+        String testExtRootPath = "${buildDir}/classes/java/main/org/candlepin/testext/";
+        File[] packages = new File(testExtRootPath)
+            .listFiles((FileFilter) File::isDirectory);
+
+        packages.each { pkg ->
+            if (!testexts.contains(pkg.getName())) {
+                rootSpec.exclude("**/testext/${pkg.getName()}/**");
+            }
+            else {
+                println("Including test extension: ${pkg.getName()}")
+            }
+        }
     }
+    else {
+        // Building with no test extensions; exclude the whole package
+        rootSpec.exclude("**/testext/**");
+    }
+
     manifest {
         attributes(
-                "Implementation-Title": "The Candlepin Project",
-                "Copyright": "Red Hat, Inc. 2009-" + new Date().format("y")
+            "Implementation-Title": "The Candlepin Project",
+            "Copyright": "Red Hat, Inc. 2009-" + new Date().format("y")
         )
     }
+
     // Copy the license file into place in the final manifest
     from(projectDir) {
         include "LICENSE"

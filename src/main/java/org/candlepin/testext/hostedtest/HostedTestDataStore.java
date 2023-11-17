@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.hostedtest;
+package org.candlepin.testext.hostedtest;
 
 import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
@@ -56,7 +56,6 @@ import javax.inject.Singleton;
  * The HostedTestDataStore class is used to provide an in-memory upstream source for subscription
  * data to properly simulate hosted mode.
  * <p>
- * </p>
  * While it is built with Candlepin, it is not packaged in candlepin.war, as the only purpose of
  * this class is to support spec tests.
  */

@@ -14,12 +14,14 @@
  */
 package org.candlepin.spec.imports;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.candlepin.spec.bootstrap.data.builder.Pools.PRIMARY_POOL_SUB_KEY;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.InstanceOfAssertFactories.collection;
+import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.client.v1.AttributeDTO;
 import org.candlepin.dto.api.client.v1.BrandingDTO;
 import org.candlepin.dto.api.client.v1.CdnDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
@@ -28,41 +30,40 @@ import org.candlepin.dto.api.client.v1.ImportRecordDTO;
 import org.candlepin.dto.api.client.v1.ImportUpstreamConsumerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
+import org.candlepin.dto.api.client.v1.ProductContentDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ProvidedProductDTO;
 import org.candlepin.dto.api.client.v1.SubscriptionDTO;
 import org.candlepin.dto.api.client.v1.UpstreamConsumerDTO;
-import org.candlepin.dto.api.client.v1.UserDTO;
-import org.candlepin.invoker.client.ApiException;
+import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
 import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
-import org.candlepin.spec.bootstrap.client.api.JobsClient;
-import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.data.builder.Branding;
+import org.candlepin.spec.bootstrap.data.builder.Cdns;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
-import org.candlepin.spec.bootstrap.data.builder.Export;
+import org.candlepin.spec.bootstrap.data.builder.ExportCdn;
 import org.candlepin.spec.bootstrap.data.builder.ExportGenerator;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
-import org.candlepin.spec.bootstrap.data.builder.PoolAttributes;
+import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
-import org.candlepin.spec.bootstrap.data.util.UserUtil;
+import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+
+
 
 @SpecTest
 @OnlyInStandalone
@@ -70,108 +71,280 @@ public class ImportSuccessSpecTest {
     private static final String RECORD_CLEANER_JOB_KEY = "ImportRecordCleanerJob";
     private static final String EXPECTED_CONTENT_URL = "/path/to/arch/specific/content";
 
-    private ApiClient admin;
-    private OwnerDTO owner;
-    private ApiClient userClient;
+    private static ApiClient adminClient;
 
-    @BeforeEach
-    public void beforeAll() {
-        admin = ApiClients.admin();
-        owner = admin.owners().createOwner(Owners.random());
-        UserDTO user = UserUtil.createUser(admin, owner);
-        userClient = ApiClients.basic(user);
+    @BeforeAll
+    public static void beforeAll() {
+        assumeTrue(CandlepinMode::hasManifestGenTestExtension);
+
+        adminClient = ApiClients.admin();
+    }
+
+    private AsyncJobStatusDTO importAsync(OwnerDTO owner, File manifest, String... force) {
+        List<String> forced = force != null ? Arrays.asList(force) : List.of();
+
+        AsyncJobStatusDTO importJob = adminClient.owners()
+            .importManifestAsync(owner.getKey(), forced, manifest);
+
+        importJob = adminClient.jobs().waitForJob(importJob);
+        assertThatJob(importJob)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
+
+        return importJob;
+    }
+
+    private ProductDTO addContentToProduct(ProductDTO product, ContentDTO... contents) {
+        for (ContentDTO content : contents) {
+            ProductContentDTO pcdto = new ProductContentDTO()
+                .content(content)
+                .enabled(true);
+
+            product.addProductContentItem(pcdto);
+        }
+
+        return product;
     }
 
     @Test
-    public void shouldCreatePools() {
+    public void shouldCreatePools() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+
         ProductDTO derivedProvidedProduct = Products.random();
         ProductDTO derivedProduct = Products.random()
             .providedProducts(Set.of(derivedProvidedProduct));
+
+        ProductDTO providedProduct = Products.random();
+
         ProductDTO product = Products.random()
-            .derivedProduct(derivedProduct);
-        Export export = generateWith(generator -> generator
-            .withProduct(derivedProvidedProduct)
-            .withProduct(derivedProduct)
-            .withProduct(product));
-        doImport(owner.getKey(), export.file());
+            .derivedProduct(derivedProduct)
+            .providedProducts(Set.of(providedProduct));
 
-        List<PoolDTO> pools = userClient.pools().listPoolsByOwner(owner.getId());
+        File manifest = new ExportGenerator()
+            .addProduct(product)
+            .export();
 
-        assertAnyNonEmpty(pools, PoolDTO::getProvidedProducts);
-        assertAnyNonEmpty(pools, PoolDTO::getDerivedProvidedProducts);
+        this.importAsync(owner, manifest);
+
+        // Verify the pool we created has the correct mappings
+        List<PoolDTO> pools = adminClient.pools().listPoolsByOwner(owner.getId());
+        assertThat(pools)
+            .isNotNull()
+            .hasSize(1);
+
+        assertThat(pools)
+            .singleElement()
+            .extracting(PoolDTO::getProvidedProducts, as(collection(ProvidedProductDTO.class)))
+            .singleElement()
+            .extracting(ProvidedProductDTO::getProductId)
+            .isEqualTo(providedProduct.getId());
+
+        assertThat(pools)
+            .singleElement()
+            .extracting(PoolDTO::getDerivedProductId)
+            .isEqualTo(derivedProduct.getId());
+
+        assertThat(pools)
+            .singleElement()
+            .extracting(PoolDTO::getDerivedProvidedProducts, as(collection(ProvidedProductDTO.class)))
+            .singleElement()
+            .extracting(ProvidedProductDTO::getProductId)
+            .isEqualTo(derivedProvidedProduct.getId());
     }
 
     @Test
-    public void shouldIgnoreMultiplierForPoolQuantity() {
-        ProductDTO virtProduct = Products
-            .withAttributes(ProductAttributes.VirtualOnly.withValue("true"));
-        Export export = generateWith(generator -> generator
-            .withProduct(virtProduct));
-        doImport(owner.getKey(), export.file());
+    public void shouldNotRemoveCustomPoolsDuringImport() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-        List<PoolDTO> pools = userClient.pools().listPoolsByOwner(owner.getId());
+        // Create some local, custom products and pools
+        ProductDTO product1 = adminClient.ownerProducts()
+            .createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO product2 = adminClient.ownerProducts()
+            .createProductByOwner(owner.getKey(), Products.random());
+        PoolDTO pool1 = adminClient.owners().createPool(owner.getKey(), Pools.random(product1));
+        PoolDTO pool2 = adminClient.owners().createPool(owner.getKey(), Pools.random(product2));
 
-        Set<PoolDTO> mappedPools = filterMappedPools(pools);
+        // Create a basic manifest for import
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
 
-        assertThat(mappedPools)
-            .map(PoolDTO::getQuantity)
-            .containsOnly(1L);
+        this.importAsync(owner, manifest);
+
+        // After import, our custom pools should still exist, along with whatever else got created
+        // by the manifest
+        List<PoolDTO> poolsAfterImport = adminClient.pools().listPoolsByOwner(owner.getId());
+        assertThat(poolsAfterImport)
+            .isNotNull()
+            .hasSizeGreaterThan(2)
+            .map(PoolDTO::getId)
+            .contains(pool1.getId(), pool2.getId());
     }
 
     @Test
-    public void shouldModifyTheOwnerToReferenceUpstreamConsumer() {
-        Export export = generateWith(generator -> generator
-            .withProduct(Products.random()));
-        doImport(owner.getKey(), export.file());
+    public void shouldIgnoreMultiplierForPoolQuantity() throws Exception {
+        // This test is weird. We're verifying that the quantity of the pools we get in the manifest
+        // aren't affected by multipliers and junk on the given source pool/product. While that's
+        // fine and all, that's not an import test; it's an *exporter* test. Once the pools are
+        // exported, importing it is simply a means of examining the entitlements in the manifest.
 
-        OwnerDTO updatedOwner = userClient.owners().getOwner(owner.getKey());
-        userClient.pools().listPoolsByOwner(owner.getId());
+        // TODO: Move this test to the exporter test suite and adjust it accordingly.
 
-        assertThat(updatedOwner.getUpstreamConsumer().getUuid()).isEqualTo(export.consumer().getUuid());
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+
+        ProductDTO virtProduct = Products.random()
+            .multiplier(2L)
+            .addAttributesItem(ProductAttributes.VirtualOnly.withValue("true"));
+
+        SubscriptionDTO virtSub = Subscriptions.random()
+            .product(virtProduct)
+            .quantity(10L);
+
+        File manifest = new ExportGenerator()
+            .addSubscription(virtSub)
+            .export();
+
+        this.importAsync(owner, manifest);
+
+        // Verify the import created pools, and the pools don't have their quantities affected by
+        // the product multiplier
+        List<PoolDTO> pools = adminClient.pools().listPoolsByOwner(owner.getId());
+        assertThat(pools)
+            .isNotNull()
+            .singleElement()
+            .returns(virtSub.getQuantity(), PoolDTO::getQuantity);
     }
 
     @Test
-    public void shouldPopulateOriginInfoOfTheImportRecord() {
-        Export export = generateWith(generator -> generator
-            .withProduct(Products.random()));
-        doImport(owner.getKey(), export.file());
+    public void shouldSetUpstreamConsumerAfterSuccessfulImport() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        assertThat(owner)
+            .extracting(OwnerDTO::getUpstreamConsumer)
+            .isNull();
 
-        List<ImportRecordDTO> imports = userClient.owners().getImports(owner.getKey());
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
 
-        for (ImportRecordDTO anImport : imports) {
-            assertThat(anImport.getGeneratedBy()).isEqualTo("admin");
-            assertThat(anImport.getGeneratedDate()).isNotNull();
-            assertThat(anImport.getFileName()).isEqualTo(export.file().getName());
+        this.importAsync(owner, manifest);
 
-            ImportUpstreamConsumerDTO upstreamConsumer = anImport.getUpstreamConsumer();
-            assertThat(upstreamConsumer.getUuid()).isEqualTo(export.consumer().getUuid());
-            assertThat(upstreamConsumer.getName()).isEqualTo(export.consumer().getName());
-            assertThat(upstreamConsumer.getOwnerId()).isEqualTo(owner.getId());
-        }
+        OwnerDTO updatedOwner = adminClient.owners().getOwner(owner.getKey());
+        assertThat(updatedOwner)
+            .isNotNull()
+            .extracting(OwnerDTO::getUpstreamConsumer)
+            .isNotNull()
+            .extracting(UpstreamConsumerDTO::getUuid)
+            .isNotNull();
     }
 
     @Test
-    public void shouldCreateSuccessRecordOfTheImport() {
-        Export export = generateWith(generator -> generator
-            .withProduct(Products.random()));
-        doImport(owner.getKey(), export.file());
+    public void shouldPopulateUpstreamConsumerWithCdnDetails() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-        List<ImportRecordDTO> imports = userClient.owners().getImports(owner.getKey());
+        CdnDTO cdn = adminClient.cdns().createCdn(Cdns.random());
+        ExportCdn exportCdn = Cdns.toExport(cdn);
 
-        assertThat(imports)
+        assertThat(owner)
+            .extracting(OwnerDTO::getUpstreamConsumer)
+            .isNull();
+
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export(exportCdn);
+
+        this.importAsync(owner, manifest);
+
+        OwnerDTO updatedOwner = adminClient.owners().getOwner(owner.getKey());
+        assertThat(updatedOwner)
+            .isNotNull()
+            .extracting(OwnerDTO::getUpstreamConsumer)
+            .returns(exportCdn.apiUrl(), UpstreamConsumerDTO::getApiUrl)
+            .returns(exportCdn.webUrl(), UpstreamConsumerDTO::getWebUrl)
+            .extracting(UpstreamConsumerDTO::getIdCert)
+            .isNotNull();
+    }
+
+    @Test
+    public void shouldPopulateSubscriptionsWithCdnDetails() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        CdnDTO cdn = adminClient.cdns().createCdn(Cdns.random());
+
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export(Cdns.toExport(cdn));
+
+        this.importAsync(owner, manifest);
+
+        List<SubscriptionDTO> subscriptions = adminClient.owners().getOwnerSubscriptions(owner.getKey());
+        assertThat(subscriptions)
+            .singleElement()
+            .extracting(SubscriptionDTO::getCdn)
+            .isEqualTo(cdn);
+    }
+
+
+    @Test
+    public void shouldCreateSuccessRecordOfTheImport() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
+
+        this.importAsync(owner, manifest);
+
+        List<ImportRecordDTO> importRecords = adminClient.owners().getImports(owner.getKey());
+        assertThat(importRecords)
+            .isNotNull()
+            .isNotEmpty()
             .map(ImportRecordDTO::getStatus)
             .containsOnly("SUCCESS");
     }
 
     @Test
-    public void shouldPurgeImportRecords() throws Exception {
-        OwnerClient ownerApi = this.userClient.owners();
-        JobsClient jobsApi = this.admin.jobs();
+    public void shouldPopulateOriginInfoOfTheImportRecord() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-        String ownerKey = this.owner.getKey();
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
+
+        this.importAsync(owner, manifest);
+
+        OwnerDTO updatedOwner = adminClient.owners().getOwner(owner.getKey());
+        UpstreamConsumerDTO upstreamConsumer = updatedOwner.getUpstreamConsumer();
+        assertNotNull(upstreamConsumer);
+
+        List<ImportRecordDTO> importRecords = adminClient.owners().getImports(owner.getKey());
+        assertThat(importRecords)
+            .isNotNull()
+            .isNotEmpty();
+
+        for (ImportRecordDTO importRecord : importRecords) {
+            assertThat(importRecord)
+                .isNotNull()
+                .returns("admin", ImportRecordDTO::getGeneratedBy)
+                .returns(manifest.getName(), ImportRecordDTO::getFileName)
+                .extracting(ImportRecordDTO::getGeneratedDate)
+                .isNotNull();
+
+            assertThat(importRecord.getUpstreamConsumer())
+                .isNotNull()
+                .returns(upstreamConsumer.getUuid(), ImportUpstreamConsumerDTO::getUuid)
+                .returns(upstreamConsumer.getName(), ImportUpstreamConsumerDTO::getName)
+                .returns(owner.getId(), ImportUpstreamConsumerDTO::getOwnerId);
+        }
+    }
+
+    @Test
+    public void shouldPurgeImportRecords() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         try {
-            Export manifest = generateWith(generator -> generator.withProduct(Products.random()));
+            File manifest = new ExportGenerator()
+                .addProduct(Products.random())
+                .export();
 
             // This value comes from the default configuration of the cleaner job, which keeps the
             // latest 10 records by default. If the Candlepin instance under test is running with a
@@ -180,44 +353,52 @@ public class ImportSuccessSpecTest {
 
             int importRecords = 12;
             for (int i = 0; i < importRecords; i++) {
-                List<String> force = List.of("SIGNATURE_CONFLICT", "MANIFEST_SAME");
-                AsyncJobStatusDTO status = ownerApi.importManifestAsync(ownerKey, force, manifest.file());
-                status = userClient.jobs().waitForJob(status.getId());
-                assertEquals("FINISHED", status.getState());
+                this.importAsync(owner, manifest, "MANIFEST_SAME");
             }
 
-            List<ImportRecordDTO> records = ownerApi.getImports(ownerKey);
-            assertEquals(importRecords, records.size());
+            List<ImportRecordDTO> importRecords1 = adminClient.owners().getImports(owner.getKey());
+            assertThat(importRecords1)
+                .isNotNull()
+                .hasSize(importRecords);
 
-            AsyncJobStatusDTO cleanerJob = jobsApi.scheduleJob(RECORD_CLEANER_JOB_KEY);
-            cleanerJob = jobsApi.waitForJob(cleanerJob.getId());
-            assertEquals("FINISHED", cleanerJob.getState());
+            AsyncJobStatusDTO cleanerJob = adminClient.jobs().scheduleJob(RECORD_CLEANER_JOB_KEY);
+            cleanerJob = adminClient.jobs().waitForJob(cleanerJob.getId());
+            assertThatJob(cleanerJob)
+                .isFinished();
 
-            records = ownerApi.getImports(ownerKey);
-            assertEquals(recordsRetained, records.size());
+            List<ImportRecordDTO> importRecords2 = adminClient.owners().getImports(owner.getKey());
+            assertThat(importRecords2)
+                .isNotNull()
+                .hasSize(recordsRetained);
         }
         finally {
             // Cleanup rules that have been created.
-            this.admin.rules().deleteRules();
+            adminClient.rules().deleteRules();
         }
     }
 
     @Test
-    public void shouldImportArchContentCorrectly() {
-        ProductDTO archProduct = Products.withAttributes(
-            ProductAttributes.Arch.withValue("x86_64")
-        );
+    public void shouldImportArchContentCorrectly() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+
         ContentDTO archContent = Contents.random()
             .metadataExpire(6000L)
             .contentUrl("/path/to/arch/specific/content")
             .requiredTags("TAG1,TAG2")
             .arches("i386,x86_64");
-        Export export = generateWith(generator -> generator
-            .withProduct(archProduct, archContent));
-        doImport(owner.getKey(), export.file());
 
-        List<ContentDTO> ownerContent = userClient.ownerContent().listOwnerContent(owner.getKey());
+        ProductDTO archProduct = Products.random()
+            .addAttributesItem(ProductAttributes.Arch.withValue("x86_64"));
 
+        this.addContentToProduct(archProduct, archContent);
+
+        File manifest = new ExportGenerator()
+            .addProduct(archProduct)
+            .export();
+
+        this.importAsync(owner, manifest);
+
+        List<ContentDTO> ownerContent = adminClient.ownerContent().listOwnerContent(owner.getKey());
         assertThat(ownerContent)
             .filteredOn(content -> EXPECTED_CONTENT_URL.equalsIgnoreCase(content.getContentUrl()))
             .map(ContentDTO::getArches)
@@ -225,110 +406,74 @@ public class ImportSuccessSpecTest {
     }
 
     @Test
-    public void shouldContainsUpstreamConsumer() {
-        Export export = generateWith(generator -> generator
-            .withProduct(Products.random()));
-        doImport(owner.getKey(), export.file());
+    public void shouldContainBrandingInfo() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-        OwnerDTO importOwner = admin.owners().getOwner(owner.getKey());
-        UpstreamConsumerDTO upstreamConsumer = importOwner.getUpstreamConsumer();
-
-        assertThat(upstreamConsumer)
-            .isNotNull()
-            .hasFieldOrPropertyWithValue("uuid", export.consumer().getUuid())
-            .hasFieldOrPropertyWithValue("name", export.consumer().getName())
-            .hasFieldOrPropertyWithValue("apiUrl", export.cdn().apiUrl())
-            .hasFieldOrPropertyWithValue("webUrl", export.cdn().webUrl());
-        assertThat(upstreamConsumer.getId()).isNotNull();
-        assertThat(upstreamConsumer.getIdCert()).isNotNull();
-        assertThat(upstreamConsumer.getType()).isEqualTo(export.consumer().getType());
-    }
-
-    @Test
-    public void shouldContainAllDerivedProductData() {
-        ProductDTO derivedProvidedProduct = Products.random();
-        ProductDTO derivedProduct = Products.random()
-            .providedProducts(Set.of(derivedProvidedProduct));
-        ProductDTO product = Products.random()
-            .derivedProduct(derivedProduct);
-        Export export = generateWith(generator -> generator
-            .withProduct(derivedProvidedProduct)
-            .withProduct(derivedProduct)
-            .withProduct(product));
-        doImport(owner.getKey(), export.file());
-
-        List<PoolDTO> pools = userClient.pools().listPoolsByProduct(owner.getId(), product.getId());
-        PoolDTO pool = pools.stream().findFirst().orElseThrow();
-
-        assertThat(pool.getDerivedProductId()).isEqualTo(derivedProduct.getId());
-        assertThat(pool.getDerivedProvidedProducts())
-            .hasSize(1)
-            .map(ProvidedProductDTO::getProductId)
-            .allSatisfy(productId -> assertThat(productId).isEqualTo(derivedProvidedProduct.getId()));
-    }
-
-    @Test
-    public void shouldContainBrandingInfo() {
         ProductDTO engProduct = Products.randomEng();
         BrandingDTO branding = Branding.random(engProduct);
-        ProductDTO brandedProduct = Products.random().branding(Set.of(branding));
-        Export export = generateWith(generator -> generator
-            .withProduct(engProduct)
-            .withProduct(brandedProduct));
-        doImport(owner.getKey(), export.file());
+        ProductDTO brandedProduct = Products.random()
+            .branding(Set.of(branding));
 
-        List<PoolDTO> pools = userClient.pools().listPoolsByProduct(owner.getId(), brandedProduct.getId());
+        File manifest = new ExportGenerator()
+            .addProduct(engProduct)
+            .addProduct(brandedProduct)
+            .export();
+
+        this.importAsync(owner, manifest);
+
+        List<PoolDTO> pools = adminClient.pools().listPoolsByProduct(owner.getId(), brandedProduct.getId());
 
         assertThat(pools)
-            .hasSize(1)
-            .map(PoolDTO::getBranding)
-            .first()
-            .satisfies(brandings -> {
-                assertThat(brandings)
-                    .map(BrandingDTO::getName)
-                    .containsOnly(branding.getName());
-            });
+            .singleElement()
+            .extracting(PoolDTO::getBranding, as(collection(BrandingDTO.class)))
+            .singleElement()
+            .isNotNull()
+            .returns(branding.getName(), BrandingDTO::getName)
+            .returns(branding.getProductId(), BrandingDTO::getProductId)
+            .returns(branding.getType(), BrandingDTO::getType);
     }
 
     @Test
-    public void shouldNotContainBrandingInfo() {
-        Export export = generateWith(generator -> generator.withProduct(Products.random()));
-        doImport(owner.getKey(), export.file());
+    public void shouldNotContainBrandingWhenNoBrandingProvided() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-        List<PoolDTO> pools = userClient.pools().listPoolsByOwner(owner.getId());
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
 
+        this.importAsync(owner, manifest);
+
+        List<PoolDTO> pools = adminClient.pools().listPoolsByOwner(owner.getId());
         assertThat(pools)
-            .hasSize(1)
-            .map(PoolDTO::getBranding)
-            .allSatisfy(brandings -> assertThat(brandings).isEmpty());
+            .singleElement()
+            .extracting(PoolDTO::getBranding, as(collection(BrandingDTO.class)))
+            .isEmpty();
     }
 
     @Test
-    public void shouldStoreTheSubscriptionUpstreamEntitlementCert() {
-        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
-        Export export = generateWith(generator -> generator.withProduct(Products.random()));
-        doImport(owner.getKey(), export.file());
+    public void shouldStoreTheSubscriptionUpstreamEntitlementCert() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
 
-        // we only want the product that maps to a normal pool
-        // i.e. no virt, no multipliers, etc.
-        // this is to fix a intermittent test failures when trying
-        // to bind to a virt_only or other weird pool
-        List<PoolDTO> pools = userClient.pools().listPoolsByOwner(owner.getId());
-        PoolDTO pool = pools.stream()
-            .filter(dto -> PRIMARY_POOL_SUB_KEY.equalsIgnoreCase(dto.getSubscriptionSubKey()))
-            .filter(dto -> !isVirtOnly(dto))
-            .findFirst()
-            .orElseThrow();
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
 
-        Map<String, String> subCert = admin.pools().getCert(pool.getId());
+        this.importAsync(owner, manifest);
 
+        List<PoolDTO> pools = adminClient.pools().listPoolsByOwner(owner.getId());
+        assertThat(pools).singleElement();
+
+        PoolDTO pool = pools.get(0);
+
+        Map<String, String> subCert = adminClient.pools().getCert(pool.getId());
         assertThat(subCert.get("key"))
             .startsWith("-----BEGIN PRIVATE KEY-----");
         assertThat(subCert.get("cert"))
             .startsWith("-----BEGIN CERTIFICATE-----");
 
-        JsonNode jsonNode = userClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
-        String ent = admin.entitlements().getUpstreamCert(jsonNode.get(0).get("id").asText());
+        JsonNode jsonNode = adminClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
+        String ent = adminClient.entitlements().getUpstreamCert(jsonNode.get(0).get("id").asText());
 
         assertThat(ent)
             .contains(subCert.get("key"))
@@ -336,20 +481,9 @@ public class ImportSuccessSpecTest {
     }
 
     @Test
-    public void shouldPutTheCdnFromTheManifestIntoTheCreatedSubscriptions() {
-        Export export = generateWith(generator -> generator.withProduct(Products.random()));
-        doImport(owner.getKey(), export.file());
+    public void shouldImportContentWithMetadataExpirationSetTo1() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-        List<SubscriptionDTO> subscriptions = admin.owners().getOwnerSubscriptions(owner.getKey());
-
-        assertThat(subscriptions)
-            .map(SubscriptionDTO::getCdn)
-            .map(CdnDTO::getLabel)
-            .containsOnly(export.cdn().label());
-    }
-
-    @Test
-    public void shouldImportContentWithMetadataExpirationSetTo1() {
         ProductDTO providedProduct = Products.random();
         ProductDTO derivedProvidedProduct = Products.random();
         ProductDTO derivedProduct = Products.random()
@@ -357,15 +491,19 @@ public class ImportSuccessSpecTest {
         ProductDTO product = Products.random()
             .addProvidedProductsItem(providedProduct)
             .derivedProduct(derivedProduct);
-        Export export = generateWith(generator -> generator
-            .withProduct(providedProduct, createContent())
-            .withProduct(derivedProvidedProduct, createContent())
-            .withProduct(derivedProduct, createContent())
-            .withProduct(product, createContent()));
 
-        doImport(owner.getKey(), export.file());
+        this.addContentToProduct(providedProduct, this.createContent());
+        this.addContentToProduct(derivedProvidedProduct, this.createContent());
+        this.addContentToProduct(derivedProduct, this.createContent());
+        this.addContentToProduct(product, this.createContent());
 
-        List<ContentDTO> content = userClient.ownerContent().listOwnerContent(owner.getKey());
+        File manifest = new ExportGenerator()
+            .addProduct(product)
+            .export();
+
+        this.importAsync(owner, manifest);
+
+        List<ContentDTO> content = adminClient.ownerContent().listOwnerContent(owner.getKey());
         assertThat(content)
             .hasSize(4)
             .map(ContentDTO::getMetadataExpire)
@@ -378,53 +516,6 @@ public class ImportSuccessSpecTest {
             .contentUrl("/path/to/arch/specific/content")
             .requiredTags("TAG1,TAG2")
             .arches("i386,x86_64");
-    }
-
-    public Export generateWith(Consumer<ExportGenerator> setup) {
-        ExportGenerator exportGenerator = new ExportGenerator(admin);
-        setup.accept(exportGenerator.minimal());
-        return exportGenerator.export();
-    }
-
-    private boolean isVirtOnly(PoolDTO pool) {
-        return pool.getAttributes().stream()
-            .anyMatch(ProductAttributes.VirtualOnly::isKeyOf);
-    }
-
-    private Set<PoolDTO> filterMappedPools(List<PoolDTO> pools) {
-        return pools.stream()
-            .filter(this::isMapped)
-            .collect(Collectors.toSet());
-    }
-
-    private boolean isMapped(PoolDTO pool) {
-        if (pool == null || pool.getAttributes() == null || pool.getAttributes().isEmpty()) {
-            return false;
-        }
-
-        boolean isUnmapped = pool.getAttributes().stream()
-            .filter(PoolAttributes.UnmappedGuestsOnly::isKeyOf)
-            .map(AttributeDTO::getValue)
-            .anyMatch(Boolean::parseBoolean);
-
-        return !isUnmapped;
-    }
-
-    private void assertAnyNonEmpty(List<PoolDTO> pools,
-        Function<PoolDTO, Set<ProvidedProductDTO>> getDerivedProvidedProducts) {
-        assertThat(pools)
-            .map(getDerivedProvidedProducts)
-            .filteredOn(products -> !products.isEmpty())
-            .isNotEmpty();
-    }
-
-    private void doImport(String ownerKey, File export) {
-        importAsync(ownerKey, export, List.of());
-    }
-
-    private void importAsync(String ownerKey, File export, List<String> force) throws ApiException {
-        AsyncJobStatusDTO importJob = admin.owners().importManifestAsync(ownerKey, force, export);
-        admin.jobs().waitForJob(importJob);
     }
 
 }

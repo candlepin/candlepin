@@ -14,195 +14,105 @@
  */
 package org.candlepin.spec.imports;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.client.v1.EntitlementDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
-import org.candlepin.dto.api.client.v1.PoolDTO;
+import org.candlepin.dto.api.client.v1.SubscriptionDTO;
+import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
 import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
-import org.candlepin.spec.bootstrap.data.builder.Export;
+import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.data.builder.ExportGenerator;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Products;
-import org.candlepin.spec.bootstrap.data.util.ExportUtil;
+import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
 
 
 
+@SpecTest
 @OnlyInStandalone
 public class ImportWarningSpecTest {
 
-    private static final String ENTITLEMENTS_PATH = "export/entitlements/";
+    private static ApiClient adminClient;
 
-    @Test
-    public void shouldWarnAboutInactiveSubscriptions() throws Exception, IOException {
-        ApiClient adminClient = ApiClients.admin();
-        // We need two subscriptions for this test cast. One active and one inactive.
-        Export export = new ExportGenerator(adminClient)
-            .minimal()
-            .withProduct(Products.random())
-            .withProduct(Products.random())
-            .export();
+    @BeforeAll
+    public static void beforeAll() {
+        assumeTrue(CandlepinMode::hasManifestGenTestExtension);
 
-        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        adminClient = ApiClients.admin();
+    }
 
-        AsyncJobStatusDTO importJob = adminClient.owners().importManifestAsync(owner.getKey(), List.of(),
-            export.file());
-        importJob = adminClient.jobs().waitForJob(importJob);
-        assertThatJob(importJob).isFinished();
+    private AsyncJobStatusDTO importAsync(OwnerDTO owner, File manifest, String... force) {
+        List<String> forced = force != null ? Arrays.asList(force) : List.of();
 
-        File exportFile = export.file();
-        List<EntitlementDTO> ents = adminClient.consumers().listEntitlements(export.consumer().getUuid());
+        AsyncJobStatusDTO importJob = adminClient.owners()
+            .importManifestAsync(owner.getKey(), forced, manifest);
 
-        // Expire both the pool and the entitlement
-        EntitlementDTO expiredEnt = ents.get(0);
-        OffsetDateTime endDate = OffsetDateTime.now().minusDays(10L);
-        expiredEnt.setEndDate(endDate);
-        PoolDTO pool = expiredEnt.getPool();
-        pool.setEndDate(endDate);
-        expiredEnt.setPool(pool);
-
-        File modifiedExport = File.createTempFile(export.file().getName().replace(".zip", ""), ".zip");
-        modifiedExport.deleteOnExit();
-
-        // Create a copy of the export to replace the existing entitlement with the expired one.
-        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(modifiedExport))) {
-            try (ZipFile exportZip = new ZipFile(exportFile)) {
-                exportZip.stream().forEach(entry -> {
-                    if (entry.getName().equals("consumer_export.zip")) {
-                        File modifiedConsumerExport = copyConsumerExportAndReplaceEnt(export, expiredEnt);
-
-                        // Copy over the modified consumer_export.zip
-                        transfer(entry, modifiedConsumerExport, zos);
-                    }
-                    else {
-                        // Copy the signature file
-                        transfer(exportZip, entry, zos);
-                    }
-                });
-            }
-        }
-
-        // verify we get a warning
-        importJob = adminClient.owners().importManifestAsync(owner.getKey(),
-            List.of("SIGNATURE_CONFLICT", "MANIFEST_SAME"), modifiedExport);
-        importJob = adminClient.jobs().waitForJob(importJob);
-
-        assertThat(importJob)
-            .returns("FINISHED", AsyncJobStatusDTO::getState)
-            .extracting(AsyncJobStatusDTO::getResultData)
-            .asString()
-            .contains("SUCCESS_WITH_WARNING")
-            .contains("%s file imported forcibly. One or more inactive subscriptions found in the file."
-                .formatted(owner.getKey()));
+        return adminClient.jobs().waitForJob(importJob);
     }
 
     @Test
-    public void shouldWarnAboutNoActiveSubscriptions() {
-        ApiClient adminClient = ApiClients.admin();
-        Export export = new ExportGenerator(adminClient)
-            .minimal()
+    public void shouldWarnAboutInactiveSubscriptions() throws Exception {
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+
+        OffsetDateTime now = OffsetDateTime.now();
+
+        OffsetDateTime startDate = now.minusDays(30);
+        OffsetDateTime validEndDate = now.plusDays(30);
+
+        // This needs to be far enough for our slow CI infrastructure to be able to successfully
+        // bind it, but near enough to not drive us insane during manual testing.
+        OffsetDateTime expiredEndDate = now.plusSeconds(10);
+
+        SubscriptionDTO validSubscription = Subscriptions.random()
+            .product(Products.random())
+            .startDate(startDate)
+            .endDate(validEndDate);
+
+        SubscriptionDTO expiredSubscription = Subscriptions.random()
+            .product(Products.random())
+            .startDate(startDate)
+            .endDate(expiredEndDate);
+
+        File manifest = new ExportGenerator()
+            .addSubscriptions(validSubscription, expiredSubscription)
             .export();
+
+        // Sleep until just after the target subscription actually expires
+        long duration = 1000 + (expiredEndDate.toInstant().toEpochMilli() - Instant.now().toEpochMilli());
+        Thread.sleep(duration);
+
+        AsyncJobStatusDTO importJob = this.importAsync(owner, manifest);
+        assertThatJob(importJob)
+            .isFinished()
+            .contains("SUCCESS_WITH_WARNING")
+            .contains("One or more inactive subscriptions found in the file");
+    }
+
+    @Test
+    public void shouldWarnAboutNoActiveSubscriptions() throws Exception {
+        // Empty manifest with no subscriptions
+        File manifest = new ExportGenerator().export();
 
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-        AsyncJobStatusDTO importJob = adminClient.owners().importManifestAsync(owner.getKey(), List.of(),
-            export.file());
-        importJob = adminClient.jobs().waitForJob(importJob);
-        assertThat(importJob)
-            .returns("FINISHED", AsyncJobStatusDTO::getState)
-            .extracting(AsyncJobStatusDTO::getResultData)
-            .asString()
+        AsyncJobStatusDTO importJob = this.importAsync(owner, manifest);
+        assertThatJob(importJob)
+            .isFinished()
             .contains("SUCCESS_WITH_WARNING")
-            .contains("%s file imported successfully. No active subscriptions found in the file."
-                .formatted(owner.getKey()));
+            .contains("No active subscriptions found in the file");
     }
 
-    private void transfer(ZipFile zipFile, ZipEntry entry, ZipOutputStream os) {
-        try (InputStream istream = zipFile.getInputStream(entry)) {
-            os.putNextEntry(new ZipEntry(entry.getName()));
-            istream.transferTo(os);
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void transfer(ZipEntry entry, File file, ZipOutputStream os) {
-        try (InputStream istream = new FileInputStream(file)) {
-            os.putNextEntry(new ZipEntry(entry.getName()));
-            istream.transferTo(os);
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Creates a copy of the consumer_export.zip file in the provided export and replaces
-     * the provided entitlement in the copy.
-     *
-     * @param export
-     *  that contains the consumer_export.zip to copy and modify
-     *
-     * @param ent
-     *  the entitlement to replace in the modified consumer_export.zip
-     *
-     * @return
-     *  a modified copy of the consumer_export.zip
-     */
-    private File copyConsumerExportAndReplaceEnt(Export export, EntitlementDTO ent) {
-        File temp = null;
-        try {
-            temp = File.createTempFile("consumer_export", ".zip");
-            temp.deleteOnExit();
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        // Create a copy of the consumer_export.zip with the modified entitlement
-        String entToModify = ENTITLEMENTS_PATH + ent.getId() + ".json";
-        try (ZipOutputStream zosTemp = new ZipOutputStream(new FileOutputStream(temp))) {
-            ZipFile originalConsumerExport = ExportUtil.getExportArchive(export.file());
-            originalConsumerExport.stream().forEach(archiveEntry -> {
-                if (archiveEntry.getName().equals(entToModify)) {
-                    // Change the entitlement to the modified entitlement
-                    try (InputStream istream = originalConsumerExport.getInputStream(archiveEntry)) {
-                        byte[] entBytes = ApiClient.MAPPER.writeValueAsBytes(ent);
-                        zosTemp.putNextEntry(new ZipEntry(entToModify));
-                        zosTemp.write(entBytes, 0, entBytes.length);
-                    }
-                    catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-                else {
-                    // Copy over entries we are not modifying
-                    transfer(originalConsumerExport, archiveEntry, zosTemp);
-                }
-            });
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return temp;
-    }
 }
