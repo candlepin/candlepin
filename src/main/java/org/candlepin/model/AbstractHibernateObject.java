@@ -69,17 +69,6 @@ public abstract class AbstractHibernateObject<T extends AbstractHibernateObject>
 
     private static final long serialVersionUID = 6677558844288404862L;
 
-    /**
-     * The name of the field to sort by when no sort field is specified by the client.
-     *
-     * @deprecated
-     *  Declared as part of the v1 paging framework. This field will be moved to the paging
-     *  interfaces once implemented.
-     */
-    @Deprecated
-    public static final String DEFAULT_SORT_FIELD = "created";
-
-
     private Date created;
     private Date updated;
 

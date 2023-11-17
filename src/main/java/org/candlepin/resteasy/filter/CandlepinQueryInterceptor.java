@@ -14,7 +14,6 @@
  */
 package org.candlepin.resteasy.filter;
 
-import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ResultIterator;
 import org.candlepin.paging.Page;
@@ -126,7 +125,7 @@ public class CandlepinQueryInterceptor implements ContainerResponseFilter {
         // present -- either isPaging() will be true, or we'll have ordering config.
         final String sortField = pageRequest.getSortBy() != null ?
             pageRequest.getSortBy() :
-            AbstractHibernateObject.DEFAULT_SORT_FIELD;
+            PageRequest.DEFAULT_SORT_FIELD;
 
         final PageRequest.Order order = pageRequest.getOrder() != null ?
             pageRequest.getOrder() :

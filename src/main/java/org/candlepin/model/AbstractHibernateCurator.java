@@ -339,7 +339,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     private Order createPagingOrder(PageRequest p) {
-        String sortBy = (p.getSortBy() == null) ? AbstractHibernateObject.DEFAULT_SORT_FIELD : p.getSortBy();
+        String sortBy = (p.getSortBy() == null) ? PageRequest.DEFAULT_SORT_FIELD : p.getSortBy();
         PageRequest.Order order = (p.getOrder() == null) ? PageRequest.DEFAULT_ORDER : p.getOrder();
 
         switch (order) {
@@ -353,7 +353,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     private javax.persistence.criteria.Order createPagingOrder(Root<?> root, PageRequest p) {
-        String sortBy = (p.getSortBy() == null) ? AbstractHibernateObject.DEFAULT_SORT_FIELD : p.getSortBy();
+        String sortBy = (p.getSortBy() == null) ? PageRequest.DEFAULT_SORT_FIELD : p.getSortBy();
         PageRequest.Order order = (p.getOrder() == null) ? PageRequest.DEFAULT_ORDER : p.getOrder();
         CriteriaBuilder criteriaBuilder = this.entityManager.get().getCriteriaBuilder();
 

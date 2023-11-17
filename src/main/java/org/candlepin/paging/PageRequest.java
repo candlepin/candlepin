@@ -34,6 +34,7 @@ public class PageRequest {
     public static final Integer DEFAULT_PAGE = 1;
     public static final Integer DEFAULT_PER_PAGE = 10;
     public static final Order DEFAULT_ORDER = Order.DESCENDING;
+    public static final String DEFAULT_SORT_FIELD = "created";
 
     private Integer page;
     private Integer perPage;
@@ -44,32 +45,36 @@ public class PageRequest {
         return page;
     }
 
-    public void setPage(Integer page) {
+    public PageRequest setPage(Integer page) {
         this.page = page;
+        return this;
     }
 
     public Integer getPerPage() {
         return perPage;
     }
 
-    public void setPerPage(Integer perPage) {
+    public PageRequest setPerPage(Integer perPage) {
         this.perPage = perPage;
+        return this;
     }
 
     public String getSortBy() {
         return sortBy;
     }
 
-    public void setSortBy(String sortBy) {
+    public PageRequest setSortBy(String sortBy) {
         this.sortBy = sortBy;
+        return this;
     }
 
     public Order getOrder() {
         return order;
     }
 
-    public void setOrder(Order order) {
+    public PageRequest setOrder(Order order) {
         this.order = order;
+        return this;
     }
 
     public boolean isPaging() {
