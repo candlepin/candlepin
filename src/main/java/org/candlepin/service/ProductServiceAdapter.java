@@ -18,6 +18,7 @@ import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.ProductInfo;
 
 import java.util.Collection;
+import java.util.List;
 
 
 
@@ -49,6 +50,17 @@ public interface ProductServiceAdapter {
      *         empty list if none were found.
      */
     Collection<? extends ProductInfo> getProductsByIds(String ownerKey, Collection<String> ids);
+
+    /**
+     * Retrieves the engineering products matching the provided top level SKU IDs. Only the found products
+     * will be returned. When no matching products are found, an empty list will be returned.
+     *
+     * @param skuIds
+     *  the top level SKU IDs to fetch products for
+     *
+     * @return the products that match the provided SKU IDs
+     */
+    List<ProductInfo> getChildrenByProductIds(Collection<String> skuIds);
 
     /**
      * Gets the certificate that defines the given product, creating one

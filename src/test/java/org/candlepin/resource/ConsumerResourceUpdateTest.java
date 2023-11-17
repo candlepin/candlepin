@@ -21,9 +21,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.atMost;
@@ -67,6 +71,8 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.AnonymousCloudConsumerCurator;
+import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerContentOverrideCurator;
@@ -86,6 +92,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
@@ -101,6 +108,7 @@ import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
+import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -219,6 +227,14 @@ public class ConsumerResourceUpdateTest {
     private EnvironmentContentCurator environmentContentCurator;
     @Mock
     private EntitlementCertificateGenerator entCertGenerator;
+    @Mock
+    private PoolCurator poolCurator;
+    @Mock
+    private CloudRegistrationAdapter cloudRegistrationAdapter;
+    @Mock
+    private AnonymousCloudConsumerCurator anonymousConsumerCurator;
+    @Mock
+    private AnonymousContentAccessCertificateCurator anonymousCertCurator;
 
     private ModelTranslator translator;
 
@@ -278,7 +294,11 @@ public class ConsumerResourceUpdateTest {
             this.consumerContentOverrideCurator,
             this.entCertGenerator,
             this.poolService,
-            this.environmentContentCurator);
+            this.environmentContentCurator,
+            this.cloudRegistrationAdapter,
+            this.poolCurator,
+            this.anonymousConsumerCurator,
+            this.anonymousCertCurator);
 
         when(this.complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),
             any(Boolean.class))).thenReturn(new ComplianceStatus(new Date()));

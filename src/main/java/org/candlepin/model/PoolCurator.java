@@ -67,6 +67,7 @@ import javax.inject.Singleton;
 import javax.persistence.TypedQuery;
 
 
+
 /**
  * PoolCurator
  */
@@ -343,6 +344,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .setProjection(Projections.property("consumer.uuid"))
             .list();
     }
+
     /**
      * List entitlement pools.
      *
@@ -359,7 +361,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return List of entitlement pools.
      */
     @Transactional
-    @SuppressWarnings({"unchecked", "checkstyle:indentation", "checkstyle:methodlength"})
+    @SuppressWarnings({ "unchecked", "checkstyle:indentation", "checkstyle:methodlength" })
     // TODO: Remove the methodlength suppression once this method is cleaned up
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer, String ownerId,
         Collection<String> productIds, String subscriptionId, Date activeOn, PoolFilterBuilder filters,
@@ -410,8 +412,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             }
             else if (!consumer.isGuest()) {
                 criteria.add(Restrictions.not(
-                    this.addAttributeFilterSubquery(Pool.Attributes.VIRT_ONLY, Arrays.asList("true"))
-                ));
+                    this.addAttributeFilterSubquery(Pool.Attributes.VIRT_ONLY, Arrays.asList("true"))));
             }
             else if (consumer.hasFact(Consumer.Facts.VIRT_UUID)) {
                 String uuidFact = consumer.getFact(Consumer.Facts.VIRT_UUID);
@@ -462,11 +463,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             criteria.add(Restrictions.gt("Pool.startDate", after));
         }
 
-
         // TODO: This section is sloppy. If we're going to clobber the bits in the filter with our own input
         // parameters, why bother accepting a filter to begin with? Similarly, why bother accepting a filter
         // if the method takes the arguments directly? If we're going to abstract out the filtering bits, we
-        // should go all-in, cut down on the massive argument list and simply take a single filter object. -C
+        // should go all-in, cut down on the massive argument list and simply take a single filter object.
+        // -C
 
         // Subscription ID filter
         String value = subscriptionId == null && filters != null ?
@@ -491,8 +492,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
             criteria.add(Restrictions.or(
                 CPRestrictions.in("Product.id", values),
-                CPRestrictions.in("Provided.id", values)
-            ));
+                CPRestrictions.in("Provided.id", values)));
         }
 
         if (filters != null) {
@@ -632,9 +632,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .add(Restrictions.eq("attrib.indices", key))
             .add(Restrictions.sqlRestriction(
                 "NOT EXISTS (SELECT poolattr.pool_id FROM cp_pool_attribute poolattr " +
-                "WHERE poolattr.pool_id = this_.id AND poolattr.name = ?)",
-                key, StringType.INSTANCE
-            ));
+                    "WHERE poolattr.pool_id = this_.id AND poolattr.name = ?)",
+                key, StringType.INSTANCE));
 
         if (values != null && !values.isEmpty()) {
             Disjunction poolAttrValueDisjunction = Restrictions.disjunction();
@@ -661,8 +660,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         return Restrictions.or(
             Subqueries.exists(poolAttrSubquery),
-            Subqueries.exists(prodAttrSubquery)
-        );
+            Subqueries.exists(prodAttrSubquery));
     }
 
     @SuppressWarnings("checkstyle:indentation")
@@ -684,9 +682,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .add(Restrictions.eq("attrib.indices", key))
             .add(Restrictions.sqlRestriction(
                 "NOT EXISTS (SELECT poolattr.pool_id FROM cp_pool_attribute poolattr " +
-                "WHERE poolattr.pool_id = this_.id AND poolattr.name = ?)",
-                key, StringType.INSTANCE
-            ));
+                    "WHERE poolattr.pool_id = this_.id AND poolattr.name = ?)",
+                key, StringType.INSTANCE));
 
         if (values != null && !values.isEmpty()) {
             Disjunction prodAttrValueDisjunction = Restrictions.disjunction();
@@ -777,6 +774,43 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return count > 0;
     }
 
+    /**
+     * Determines if the owner has pools for all of the products that are provided
+     *
+     * @param ownerKey
+     *  the key to the owner who owns the pools
+     *
+     * @param productIds
+     *   the IDs of the products to check for existing pools
+     *
+     * @throws IllegalArgumentException
+     *  if the owner key is null or blank or if the product IDs are null or empty
+     *
+     * @return true if the owner has pools for all of the products,
+     *  or false if there is a missing pool for any of the products
+     */
+    public boolean hasPoolsForProducts(String ownerKey, Collection<String> productIds) {
+        if (ownerKey == null || ownerKey.isBlank()) {
+            throw new IllegalArgumentException("Owner key cannot be null or blank");
+        }
+
+        if (productIds == null || productIds.isEmpty()) {
+            throw new IllegalArgumentException("Product IDs cannot be null or empty");
+        }
+
+        String jpql = "SELECT prod.id " +
+            "FROM Pool pool JOIN pool.owner owner JOIN pool.product prod " +
+            "WHERE owner.key = :owner_key AND prod.id IN (:product_ids)";
+
+        List<String> productsWithPools = this.getEntityManager()
+            .createQuery(jpql)
+            .setParameter("owner_key", ownerKey)
+            .setParameter("product_ids", productIds)
+            .getResultList();
+
+        return productsWithPools.containsAll(productIds);
+    }
+
     @Transactional
     public List<Pool> listPoolsRestrictedToUser(String username) {
         return listByCriteria(
@@ -814,7 +848,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private Criteria criteriaToSelectEntitlementForPools(Collection<Pool> entitlementPools) {
         return this.currentSession().createCriteria(Entitlement.class)
-                .add(CPRestrictions.in("pool", entitlementPools));
+            .add(CPRestrictions.in("pool", entitlementPools));
     }
 
     /**
@@ -899,10 +933,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Criterion[] exampleCriteria = new Criterion[0];
         for (Entry<String, Entitlement> entry : subIdMap.entrySet()) {
             SimpleExpression subscriptionExpr = Restrictions.eq("sourceSub.subscriptionId", entry.getKey());
+            Criterion srcEntIsNull = Restrictions.isNull("sourceEntitlement");
+            Criterion srcEntEquals = Restrictions.eq("sourceEntitlement", entry.getValue());
 
-            Junction subscriptionJunction = Restrictions.and(subscriptionExpr).add(
-                Restrictions.or(Restrictions.isNull("sourceEntitlement"),
-                Restrictions.eqOrIsNull("sourceEntitlement", entry.getValue())));
+            Junction subscriptionJunction = Restrictions.and(subscriptionExpr)
+                .add(Restrictions.or(srcEntIsNull, srcEntEquals));
 
             subIdMapCriteria.add(subscriptionJunction);
         }
@@ -1234,8 +1269,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             crit.createAlias("sourceSubscription", "sourceSub");
             crit.add(Restrictions.and(
                 Restrictions.not(Restrictions.in("sourceSub.subscriptionId", expectedSubIds)),
-                Restrictions.isNotNull("sourceSub.subscriptionId")
-            ));
+                Restrictions.isNotNull("sourceSub.subscriptionId")));
         }
 
         crit.addOrder(Order.asc("id"));
@@ -1620,7 +1654,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         return ppMap;
     }
-
 
     /**
      * Fetches a mapping of pool IDs to sets of product IDs representing the provided products of

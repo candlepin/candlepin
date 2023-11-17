@@ -78,4 +78,9 @@ public class TrustedUserPrincipal extends Principal {
         return true;
     }
 
+    @Override
+    public AuthenticationMethod getAuthenticationMethod() {
+        return AuthenticationMethod.TRUSTED_USER;
+    }
+
 }

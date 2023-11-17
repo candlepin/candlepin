@@ -208,6 +208,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test
     public void testGetSerialFiltering() {
+        ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
+        ResteasyContext.pushContext(Principal.class, principal);
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
@@ -472,6 +474,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test
     public void unbindBySerialWithExistingCertificateShouldPass() {
+        ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
+        ResteasyContext.pushContext(Principal.class, principal);
         consumerResource.bind(consumer.getUuid(), pool.getId(),
             null, 1, null, null, false, null, null);
         List<CertificateDTO> serials = consumerResource
@@ -485,6 +489,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test
     public void testCannotGetAnotherConsumersCerts() {
+        ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
+        ResteasyContext.pushContext(Principal.class, principal);
         consumerResource.bind(consumer.getUuid(), pool.getId(),
             null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(),
@@ -504,6 +510,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test
     public void testCanGetOwnedConsumersCerts() {
+        ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
+        ResteasyContext.pushContext(Principal.class, principal);
         consumerResource.bind(consumer.getUuid(), pool.getId(),
             null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(),
@@ -572,7 +580,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertThrows(ForbiddenException.class, () -> consumerResource
-            .searchConsumers(null, null, null, new ArrayList<>(), null, null, null, null, null, null));
+            .searchConsumers(null, null, null, new ArrayList<>(), null, null, null, null, null, null, null));
     }
 
     @Test
@@ -688,6 +696,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @SuppressWarnings("unchecked")
     @Test
     public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() {
+        ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
+        ResteasyContext.pushContext(Principal.class, principal);
         Response rsp = consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null,
             null, false, null, null);
 
@@ -723,6 +733,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test
     public void testContentAccessExpireRegen() {
+        ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
+        ResteasyContext.pushContext(Principal.class, principal);
         owner.setContentAccessModeList(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
         owner.setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
         ownerCurator.merge(owner);

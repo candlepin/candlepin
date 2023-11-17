@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.CdnDTO;
+import org.candlepin.dto.api.client.v1.CloudAuthenticationResultDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
@@ -199,6 +200,42 @@ class ExportSpecTest {
             .collect(Collectors.toList());
 
         assertThat(entitlementCerts).singleElement();
+    }
+
+    @Test
+    @OnlyInHosted
+    public void shouldNotExportAnonymousManifestWithAnonymousToken() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        adminClient.hosted().createOwner(owner);
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        ProductDTO product1 = adminClient.hosted().createProduct(Products.random());
+        ContentDTO content1 = adminClient.hosted().createContent(Contents.random());
+        ContentDTO content2 = adminClient.hosted().createContent(Contents.random());
+        adminClient.hosted().addContentToProduct(product1.getId(), content1.getId(), true);
+        adminClient.hosted().addContentToProduct(product1.getId(), content2.getId(), true);
+
+        ProductDTO product2 = adminClient.hosted().createProduct(Products.random());
+        ContentDTO content3 = adminClient.hosted().createContent(Contents.random());
+        adminClient.hosted().addContentToProduct(product2.getId(), content3.getId(), true);
+
+        adminClient.hosted()
+            .associateProductIdsToCloudOffer(offerId, List.of(product1.getId(), product2.getId()));
+        adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
+
+        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+
+        Response response = Request.from(ApiClients.bearerToken(result.getToken()))
+            .setPath("/consumers/{consumer_uuid}/certificates")
+            .setPathParam("consumer_uuid",  result.getAnonymousConsumerUuid())
+            .addHeader("accept", "application/zip")
+            .execute();
+
+        assertEquals(400, response.getCode());
     }
 
     @Nested

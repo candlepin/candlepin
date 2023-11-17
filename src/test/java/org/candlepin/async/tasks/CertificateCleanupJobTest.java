@@ -14,10 +14,12 @@
  */
 package org.candlepin.async.tasks;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.async.JobExecutionException;
+import org.candlepin.model.AnonymousContentAccessCertificate;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -32,6 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
+import java.util.List;
 
 
 
@@ -86,6 +89,46 @@ class CertificateCleanupJobTest extends DatabaseTestFixture {
         assertNull(consumer4.getContentAccessCert());
     }
 
+    @Test
+    public void shouldCleanExpiredAnonymousCertificates() throws JobExecutionException {
+        CertificateSerial expiredSerial = new CertificateSerial();
+        expiredSerial.setExpiration(TestUtil.createDateOffset(0, 0, -7));
+        certSerialCurator.create(expiredSerial);
+
+        AnonymousContentAccessCertificate expiredCert = new AnonymousContentAccessCertificate();
+        expiredCert.setKey("key-1");
+        expiredCert.setCert("cert-1");
+        expiredCert.setSerial(expiredSerial);
+
+        expiredCert = anonymousContentAccessCertCurator.create(expiredCert);
+
+        CertificateSerial serial = new CertificateSerial();
+        serial.setExpiration(TestUtil.createDateOffset(0, 0, 7));
+        certSerialCurator.create(serial);
+
+        AnonymousContentAccessCertificate cert = new AnonymousContentAccessCertificate();
+        cert.setKey("key-2");
+        cert.setCert("cert-2");
+        cert.setSerial(serial);
+
+        cert = anonymousContentAccessCertCurator.create(cert);
+
+        job.execute(null);
+        certSerialCurator.flush();
+        certSerialCurator.clear();
+
+        assertThat(getAnonymousCertsFromDB())
+            .singleElement()
+            .isEqualTo(cert);
+
+        assertThat(certSerialCurator.get(expiredSerial.getId()))
+            .isNull();
+
+        assertThat(certSerialCurator.get(serial.getId()))
+            .isNotNull()
+            .returns(serial.getId(), CertificateSerial::getId);
+    }
+
     private Consumer findConsumer(Consumer consumer) {
         return this.consumerCurator.getConsumer(consumer.getUuid());
     }
@@ -126,6 +169,13 @@ class CertificateCleanupJobTest extends DatabaseTestFixture {
         cert.setId(null);
         certSerialCurator.create(cert.getSerial());
         return caCertCurator.create(cert);
+    }
+
+    private List<AnonymousContentAccessCertificate> getAnonymousCertsFromDB() {
+        String query = "select c from AnonymousContentAccessCertificate c";
+        return getEntityManager()
+            .createQuery(query, AnonymousContentAccessCertificate.class)
+            .getResultList();
     }
 
 }

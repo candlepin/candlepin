@@ -14,23 +14,16 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
+import org.candlepin.auth.ActivationKeyPrincipal;
+import org.candlepin.auth.AuthenticationMethod;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.TrustedUserPrincipal;
@@ -56,6 +49,8 @@ import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.AnonymousCloudConsumerCurator;
+import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
@@ -73,6 +68,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PermissionBlueprint;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -87,6 +83,7 @@ import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
+import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -155,8 +152,6 @@ public class ConsumerResourceCreationTest {
     @Mock
     protected EventSink sink;
     @Mock
-    protected EventFactory factory;
-    @Mock
     protected ActivationKeyCurator activationKeyCurator;
     @Mock
     protected ComplianceRules complianceRules;
@@ -204,6 +199,14 @@ public class ConsumerResourceCreationTest {
     private EntitlementCertificateGenerator entCertGenerator;
     @Mock
     private PoolService poolService;
+    @Mock
+    private PoolCurator poolCurator;
+    @Mock
+    private CloudRegistrationAdapter cloudRegistrationAdapter;
+    @Mock
+    private AnonymousCloudConsumerCurator anonymousConsumerCurator;
+    @Mock
+    private AnonymousContentAccessCertificateCurator anonymousCertCurator;
 
     protected ModelTranslator modelTranslator;
 
@@ -265,7 +268,12 @@ public class ConsumerResourceCreationTest {
             this.consumerContentOverrideCurator,
             this.entCertGenerator,
             this.poolService,
-            this.environmentContentCurator);
+            this.environmentContentCurator,
+            this.cloudRegistrationAdapter,
+            this.poolCurator,
+            this.anonymousConsumerCurator,
+            this.anonymousCertCurator
+        );
 
         this.system = this.initConsumerType();
         this.mockConsumerType(this.system);
@@ -470,23 +478,25 @@ public class ConsumerResourceCreationTest {
     @Test
     public void oauthRegistrationSupported() {
         // Should be able to register successfully with as a trusted user principal:
-        Principal p = new TrustedUserPrincipal("anyuser");
+        Principal p = new TrustedUserPrincipal(USER);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
         resource.createConsumer(consumer, null, owner.getKey(), null, true);
+        assertEquals(AuthenticationMethod.TRUSTED_USER, p.getAuthenticationMethod());
     }
 
     @Test
     public void registerWithKeys() {
-        // No auth should be required for registering with keys:
-        Principal p = new NoAuthPrincipal();
         Set<String> keys = mockActivationKeys();
+        Principal p = new ActivationKeyPrincipal(createKeysString(keys));
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
 
-        resource.createConsumer(consumer, null, owner.getKey(), createKeysString(keys), true);
+        consumer = resource.createConsumer(consumer, null, owner.getKey(), createKeysString(keys), true);
 
         verify(activationKeyCurator).findByKeyNames(owner.getKey(), keys);
+        assertEquals(AuthenticationMethod.ACTIVATION_KEY.getDescription(),
+            consumer.getRegistrationAuthenticationMethod());
     }
 
     @Test
@@ -512,8 +522,8 @@ public class ConsumerResourceCreationTest {
 
     @Test
     public void orgRequiredWithActivationKeys() {
-        Principal p = new NoAuthPrincipal();
         Set<String> keys = mockActivationKeys();
+        Principal p = new ActivationKeyPrincipal(createKeysString(keys));
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
 
@@ -523,8 +533,8 @@ public class ConsumerResourceCreationTest {
 
     @Test
     public void cannotMixUsernameWithActivationKeys() {
-        Principal p = new NoAuthPrincipal();
         Set<String> keys = mockActivationKeys();
+        Principal p = new ActivationKeyPrincipal(createKeysString(keys));
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
 
@@ -534,8 +544,8 @@ public class ConsumerResourceCreationTest {
 
     @Test
     public void passIfOnlyOneActivationKeyDoesNotExistForOrg() {
-        Principal p = new NoAuthPrincipal();
         Set<String> keys = mockActivationKeys();
+        Principal p = new ActivationKeyPrincipal(createKeysString(keys));
         keys.add("NoSuchKey");
         when(this.principalProvider.get()).thenReturn(p);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
@@ -655,5 +665,16 @@ public class ConsumerResourceCreationTest {
 
         consumer = resource.createConsumer(consumer, USER, owner.getKey(), null, true);
         assertEquals(2, consumer.getEnvironments().size());
+    }
+
+    @Test
+    public void registerWithTrustedUserAuthMethod() {
+        Principal p = new TrustedUserPrincipal("anyuser");
+        when(this.principalProvider.get()).thenReturn(p);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("consumerName", null, null, systemDto);
+        consumer = resource.createConsumer(consumer, USER, owner.getKey(), null, true);
+        assertNull(consumer.getEnvironments());
+        assertEquals(AuthenticationMethod.TRUSTED_USER.getDescription(),
+            consumer.getRegistrationAuthenticationMethod());
     }
 }

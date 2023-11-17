@@ -617,7 +617,7 @@ public class OwnerResource implements OwnerApi {
                     if (overrideDTO != null) {
                         entity.addContentOverride(
                             new ActivationKeyContentOverride(entity, overrideDTO.getContentLabel(),
-                            overrideDTO.getName(), overrideDTO.getValue()));
+                                overrideDTO.getName(), overrideDTO.getValue()));
                     }
                 }
             }
@@ -777,12 +777,10 @@ public class OwnerResource implements OwnerApi {
             OwnerContentAccess owner = this.ownerCurator.getOwnerContentAccess(ownerKey);
             String caMode = Util.firstOf(
                 owner.getContentAccessMode(),
-                ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue()
-            );
+                ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue());
             String caList = Util.firstOf(
                 owner.getContentAccessModeList(),
-                ContentAccessManager.getListDefaultDatabaseValue()
-            );
+                ContentAccessManager.getListDefaultDatabaseValue());
             return new ContentAccessDTO()
                 .contentAccessMode(caMode)
                 .contentAccessModeList(Util.toList(caList));
@@ -1544,9 +1542,8 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public SystemPurposeAttributesDTO getSyspurpose(
-        @Verify(value = Owner.class, subResource = SubResource.POOLS, require = Access.READ_ONLY)
-        String ownerKey) {
+    public SystemPurposeAttributesDTO getSyspurpose(@Verify(value = Owner.class,
+        subResource = SubResource.POOLS, require = Access.READ_ONLY) String ownerKey) {
 
         Owner owner = findOwnerByKey(ownerKey);
         Map<String, Set<String>> attributeMap = ownerProductCurator.getSyspurposeAttributesByOwner(owner);
@@ -1613,8 +1610,8 @@ public class OwnerResource implements OwnerApi {
 
         Owner owner = this.findOwnerByKey(ownerKey);
         UpstreamConsumer consumer = owner.getUpstreamConsumer();
-        UpstreamConsumerDTOArrayElement dto =
-            this.translator.translate(consumer, UpstreamConsumerDTOArrayElement.class);
+        UpstreamConsumerDTOArrayElement dto = this.translator.translate(consumer,
+            UpstreamConsumerDTOArrayElement.class);
 
         // returning as a list for future proofing. today we support one, but
         // users of this api want to protect against having to change their code
@@ -1673,6 +1670,7 @@ public class OwnerResource implements OwnerApi {
 
         return originalSize != updatedContents.size();
     }
+
     private Owner createOwnerFromDTO(OwnerDTO ownerDTO) {
         // Verify that we have an owner key (as required)
         if (StringUtils.isBlank(ownerDTO.getKey())) {
@@ -1717,6 +1715,8 @@ public class OwnerResource implements OwnerApi {
         this.populateEntity(owner, ownerDTO);
         owner.setContentAccessModeList(contentAccessModeList);
         owner.setContentAccessMode(contentAccessMode);
+        owner.setAnonymous(ownerDTO.getAnonymous());
+        owner.setClaimed(owner.getClaimed());
 
         // Try to persist the owner
         try {

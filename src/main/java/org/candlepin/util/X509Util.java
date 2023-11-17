@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -89,10 +90,11 @@ public abstract class X509Util {
         Set<String> entitledProductIds, boolean contentAccessMode) {
 
         Set<ProductContent> filtered = new HashSet<>();
+        List<String> envIds = consumer == null ? List.of() : consumer.getEnvironmentIds();
 
         for (ProductContent pc : prod.getProductContent()) {
             // Filter any content not promoted to environment.
-            if (filterEnvironment && !consumer.getEnvironmentIds().isEmpty() &&
+            if (filterEnvironment && !envIds.isEmpty() &&
                 !promotedContent.contains(pc)) {
 
                 log.debug("Skipping content not promoted to environment: {}", pc.getContent());
@@ -142,8 +144,9 @@ public abstract class X509Util {
         Set<String> consumerArches = archesOf(consumer);
 
         if (consumerArches.isEmpty()) {
+            String consumerId = consumer == null ? "null" : consumer.getId();
             log.debug("consumer: {} has no {} / {} attribute",
-                consumer.getId(), ARCH_FACT, SUPPORTED_ARCH_FACT);
+                consumerId, ARCH_FACT, SUPPORTED_ARCH_FACT);
             log.debug("Not filtering by arch");
             return pcSet;
         }
@@ -165,6 +168,9 @@ public abstract class X509Util {
 
     private Set<String> archesOf(Consumer consumer) {
         Set<String> consumerArches = new HashSet<>();
+        if (consumer == null) {
+            return consumerArches;
+        }
 
         String supportedArches = consumer.getFact(SUPPORTED_ARCH_FACT);
 

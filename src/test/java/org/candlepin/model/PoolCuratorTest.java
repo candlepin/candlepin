@@ -50,6 +50,7 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
@@ -69,6 +70,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.PersistenceException;
+
+
 
 /**
  * Test suite for the PoolCurator object
@@ -3045,6 +3048,109 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         assertEquals(1, results.size());
         assertEquals(pool.getId(), results.get(0).getId());
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    @ValueSource(strings = { "  " })
+    public void testHasPoolsForProductsWithInvalidOwnerKey(String ownerKey) {
+        assertThrows(IllegalArgumentException.class, () ->  {
+            this.poolCurator.hasPoolsForProducts(ownerKey, List.of("prod-id"));
+        });
+    }
+
+    @Test
+    public void testHasPoolsForProductsWithNullProductIds() {
+        assertThrows(IllegalArgumentException.class, () ->  {
+            this.poolCurator.hasPoolsForProducts("owner-key", null);
+        });
+    }
+
+    @Test
+    public void testHasPoolsForProductsWithEmptyProductIds() {
+        assertThrows(IllegalArgumentException.class, () ->  {
+            this.poolCurator.hasPoolsForProducts("owner-key", List.of());
+        });
+    }
+
+    @Test
+    public void testHasPoolsForProductsWithNonExistingOwner() {
+        boolean actual = this.poolCurator.hasPoolsForProducts("unknown-owner", List.of(pool.getProductId()));
+
+        assertFalse(actual);
+    }
+
+    @Test
+    public void testHasPoolsForProductsWithExistingPool() {
+        boolean actual = this.poolCurator.hasPoolsForProducts(owner.getKey(), List.of(pool.getProductId()));
+
+        assertTrue(actual);
+    }
+
+    @Test
+    public void testHasPoolsForProductsWithMultipleExistingPools() {
+        Product product2 = TestUtil.createProduct();
+        product2 = this.createProduct(product2, owner);
+        Pool pool2 = this.poolCurator.create(new Pool()
+            .setOwner(owner)
+            .setProduct(product2)
+            .setQuantity(20L)
+            .setStartDate(TestUtil.createDate(2015, 10, 21))
+            .setEndDate(TestUtil.createDate(2025, 1, 1))
+            .setContractNumber("1")
+            .setAccountNumber("2")
+            .setOrderNumber("3"));
+
+        Product product3 = TestUtil.createProduct();
+        product3 = this.createProduct(product3, owner);
+        this.poolCurator.create(new Pool()
+            .setOwner(owner)
+            .setProduct(product3)
+            .setQuantity(20L)
+            .setStartDate(TestUtil.createDate(2015, 10, 21))
+            .setEndDate(TestUtil.createDate(2025, 1, 1))
+            .setContractNumber("1")
+            .setAccountNumber("2")
+            .setOrderNumber("3"));
+
+        boolean actual = this.poolCurator
+            .hasPoolsForProducts(owner.getKey(), List.of(pool.getProductId(), pool2.getProductId()));
+
+        assertTrue(actual);
+    }
+
+    @Test
+    public void testHasPoolsForProductsWithNonExistingProduct() {
+        Owner owner2 = createOwner();
+        owner2 = ownerCurator.create(owner2);
+
+        Product product2 = TestUtil.createProduct();
+        product2 = this.createProduct(product2, owner2);
+        this.poolCurator.create(new Pool()
+            .setOwner(owner2)
+            .setProduct(product2)
+            .setQuantity(20L)
+            .setStartDate(TestUtil.createDate(2015, 10, 21))
+            .setEndDate(TestUtil.createDate(2025, 1, 1))
+            .setContractNumber("1")
+            .setAccountNumber("2")
+            .setOrderNumber("3"));
+
+        boolean actual = this.poolCurator
+            .hasPoolsForProducts(owner.getKey(), List.of(pool.getProductId(), product2.getId()));
+
+        assertFalse(actual);
+    }
+
+    @Test
+    public void testHasPoolsForProductsWithNonExistingPool() {
+        Product product2 = TestUtil.createProduct();
+        product2 = this.createProduct(product2, owner);
+
+        boolean actual = this.poolCurator
+            .hasPoolsForProducts(owner.getKey(), List.of(pool.getProductId(), product2.getId()));
+
+        assertFalse(actual);
     }
 
 }

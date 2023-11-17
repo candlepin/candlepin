@@ -26,6 +26,7 @@ import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
+import org.candlepin.auth.AnonymousCloudConsumerPrincipal;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SecurityHole;
@@ -72,6 +73,10 @@ import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.AnonymousCloudConsumer;
+import org.candlepin.model.AnonymousCloudConsumerCurator;
+import org.candlepin.model.AnonymousContentAccessCertificate;
+import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Certificate;
@@ -104,6 +109,7 @@ import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -128,6 +134,7 @@ import org.candlepin.resource.util.EnvironmentUpdates;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.KeyValueStringParser;
 import org.candlepin.resource.validation.DTOValidator;
+import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -189,6 +196,7 @@ import javax.ws.rs.core.Response;
  * API Gateway for Consumers
  */
 public class ConsumerResource implements ConsumerApi {
+
     private static final Logger log = LoggerFactory.getLogger(ConsumerResource.class);
 
     /** The maximum number of consumers to return per list or find request */
@@ -233,6 +241,11 @@ public class ConsumerResource implements ConsumerApi {
     private final ContentOverrideValidator coValidator;
     private final ConsumerContentOverrideCurator ccoCurator;
     private final EntitlementCertificateGenerator entCertGenerator;
+    private final CloudRegistrationAdapter cloudAdapter;
+    private final PoolCurator poolCurator;
+    private final AnonymousCloudConsumerCurator anonymousConsumerCurator;
+    private final AnonymousContentAccessCertificateCurator anonymousCertCurator;
+
 
     private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
     private final Pattern consumerSystemNamePattern;
@@ -279,7 +292,11 @@ public class ConsumerResource implements ConsumerApi {
         ConsumerContentOverrideCurator ccoCurator,
         EntitlementCertificateGenerator entCertGenerator,
         PoolService poolService,
-        EnvironmentContentCurator environmentContentCurator) {
+        EnvironmentContentCurator environmentContentCurator,
+        CloudRegistrationAdapter cloudAdapter,
+        PoolCurator poolCurator,
+        AnonymousCloudConsumerCurator anonymousConsumerCurator,
+        AnonymousContentAccessCertificateCurator anonymousCertCurator) {
 
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
@@ -320,6 +337,10 @@ public class ConsumerResource implements ConsumerApi {
         this.ccoCurator = Objects.requireNonNull(ccoCurator);
         this.entCertGenerator = Objects.requireNonNull(entCertGenerator);
         this.poolService = Objects.requireNonNull(poolService);
+        this.cloudAdapter = Objects.requireNonNull(cloudAdapter);
+        this.poolCurator = Objects.requireNonNull(poolCurator);
+        this.anonymousConsumerCurator = Objects.requireNonNull(anonymousConsumerCurator);
+        this.anonymousCertCurator = Objects.requireNonNull(anonymousCertCurator);
 
         this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(
             entitlementCurator, environmentContentCurator);
@@ -570,6 +591,7 @@ public class ConsumerResource implements ConsumerApi {
         String ownerKey,
         List<String> uuids,
         List<String> hypervisorIds,
+        String registrationAuthenticationMethod,
         List<String> facts,
         Integer page, Integer perPage, String order, String sortBy) {
 
@@ -897,7 +919,7 @@ public class ConsumerResource implements ConsumerApi {
 
     @Override
     @Transactional
-    @SecurityHole(activationKey = true)
+    @SecurityHole(activationKey = true, anonConsumer = true)
     public ConsumerDTO createConsumer(ConsumerDTO dto, String userName, String ownerKey,
         String activationKeys, Boolean identityCertCreation) {
 
@@ -934,6 +956,11 @@ public class ConsumerResource implements ConsumerApi {
 
         Consumer created = createConsumerFromDTO(dto, ctype, principal, userName, owner, activationKeys,
             identityCertCreation);
+        if (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal) {
+            AnonymousCloudConsumer anonCloudConsumer = anonymPrincipal.getAnonymousCloudConsumer();
+            anonymousCertCurator.delete(anonCloudConsumer.getContentAccessCert());
+            anonymousConsumerCurator.delete(anonCloudConsumer);
+        }
 
         return this.translator.translate(created, ConsumerDTO.class);
     }
@@ -963,6 +990,10 @@ public class ConsumerResource implements ConsumerApi {
         Consumer consumerToCreate = new Consumer();
 
         consumerToCreate.setOwner(owner);
+        consumerToCreate.setRegistrationAuthenticationMethod(
+            principal.getAuthenticationMethod() == null ?
+                null :
+                principal.getAuthenticationMethod().getDescription());
 
         populateEntity(consumerToCreate, consumer);
         consumerToCreate.setType(type);
@@ -1352,7 +1383,8 @@ public class ConsumerResource implements ConsumerApi {
         // If no owner was specified, try to assume based on which owners the principal has admin rights for.
         // If more than one, we have to error out.
 
-        if (ownerKey == null && !(principal instanceof UserPrincipal)) {
+        if (ownerKey == null && !(principal instanceof UserPrincipal) &&
+            !(principal instanceof AnonymousCloudConsumerPrincipal)) {
             // There's no resolution we can perform here.
             log.warn("Cannot determine organization with which to register client: {}", principal);
             String errmsg = i18n.tr("Client is not authorized to register with any organization");
@@ -1374,6 +1406,10 @@ public class ConsumerResource implements ConsumerApi {
             else {
                 ownerKey = ownerKeys.get(0);
             }
+        }
+
+        if (ownerKey == null && (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal)) {
+            ownerKey = anonymPrincipal.getAnonymousCloudConsumer().getOwnerKey();
         }
 
         createOwnerIfNeeded(principal);
@@ -2065,21 +2101,43 @@ public class ConsumerResource implements ConsumerApi {
      * @return
      *  List of DTOs representing certificates
      */
-    public List<CertificateDTO> getEntitlementCertificates(@Verify(Consumer.class) String consumerUuid,
-        String serials) {
-        log.debug("Getting client certificates for consumer: {}", consumerUuid);
+    public List<CertificateDTO> getEntitlementCertificates
+    (@Verify({AnonymousCloudConsumer.class, Consumer.class}) String consumerUuid, String serials) {
+        Principal principal = ResteasyContext.getContextData(Principal.class);
+        if (principal instanceof AnonymousCloudConsumerPrincipal anonPrincipal) {
+            log.debug("Getting client certificates for anonymous consumer: {}", consumerUuid);
+            AnonymousCloudConsumer consumer = anonPrincipal.getAnonymousCloudConsumer();
+            CertificateDTO cert = getCertForAnonCloudConsumer(consumer, serials);
+
+            return cert == null ? List.of() : List.of(cert);
+        }
 
         // UpdateConsumerCheckIn
         // Explicitly updating consumer check-in,
         // as we merged getEntitlementCertificates & exportCertificates methods due to OpenAPI
         // constraint which doesn't allow more than one HTTP method key under same URL pattern.
 
-        Principal principal = ResteasyContext.getContextData(Principal.class);
+        log.debug("Getting client certificates for consumer: {}", consumerUuid);
         if (principal instanceof ConsumerPrincipal) {
             ConsumerPrincipal p = (ConsumerPrincipal) principal;
             consumerCurator.updateLastCheckin(p.getConsumer());
         }
 
+        return getEntitlementCertificatesForConsumer(consumerUuid, serials);
+    }
+
+    /**
+     * Retrieves entitlement certificates for a specific consumer
+     *
+     * @param consumerUuid
+     *  the UUID of the consumer to retrieve entitlement certificate for
+     *
+     * @param serials
+     *  the serial IDs used to filter out entitlement certificates
+     *
+     * @return a list of entitlement certificates for the consumer
+     */
+    private List<CertificateDTO> getEntitlementCertificatesForConsumer(String consumerUuid, String serials) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
         revokeOnGuestMigration(consumer);
@@ -2098,6 +2156,43 @@ public class ConsumerResource implements ConsumerApi {
 
         return certStream.map(this.translator.getStreamMapper(Certificate.class, CertificateDTO.class))
             .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieves a {@link AnonymousContentAccessCertificate} for the anonymous cloud consumer. If there
+     * if no existing certificate, a new one will be created.
+     *
+     * @param consumer
+     *  the anonymous cloud consumer to retrieve a certificate for
+     *
+     * @param serials
+     *  certificate serials used to filter out a certificate
+     *
+     * @throws IseException
+     *  if unable to retrieve or create an {@link AnonymousContentAccessCertificate}
+     *
+     * @return a {@link AnonymousContentAccessCertificate}, or null if a certificate was not able to be
+     *  retrieved, created, or filtered by the serial IDs
+     */
+    private CertificateDTO getCertForAnonCloudConsumer(AnonymousCloudConsumer consumer, String serials) {
+        Certificate caCert;
+        try {
+            caCert = this.contentAccessManager.getCertificate(consumer);
+        }
+        catch (Exception e) {
+            throw new IseException(i18n.tr("Unable to retrieve or create anonymous content access" +
+            "certificate for consumer"), e);
+        }
+
+        // Filter the certificate if we need to
+        Set<Long> serialSet = this.extractSerials(serials);
+        if (caCert.getSerial() != null && serialSet.contains(caCert.getSerial().getId())) {
+            log.debug("Anonymous content access certificate serial {} has been filtered",
+                caCert.getSerial().getId());
+            return null;
+        }
+
+        return this.translator.translate(caCert, CertificateDTO.class);
     }
 
     /**
@@ -2175,15 +2270,20 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
-    public Object exportCertificates(@Verify(Consumer.class) String consumerUuid, String serials) {
+    public Object exportCertificates(
+        @Verify({AnonymousCloudConsumer.class, Consumer.class}) String consumerUuid,
+        String serials) {
         HttpRequest httpRequest = ResteasyContext.getContextData(HttpRequest.class);
-
         if (httpRequest.getHttpHeaders().getRequestHeader("accept").contains("application/json")) {
             return getEntitlementCertificates(consumerUuid, serials);
         }
 
+        Principal principal = ResteasyContext.getContextData(Principal.class);
+        if (principal instanceof AnonymousCloudConsumerPrincipal) {
+            throw new BadRequestException(i18n.tr("Cannot create export for anonymous cloud consumer"));
+        }
+
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
         HttpServletResponse response = ResteasyContext.getContextData(HttpServletResponse.class);
         revokeOnGuestMigration(consumer);
 
@@ -2283,8 +2383,7 @@ public class ConsumerResource implements ConsumerApi {
     @SuppressWarnings({ "checkstyle:indentation", "checkstyle:methodlength" })
     public Response bind(
         @Verify(Consumer.class) String consumerUuid,
-        @Verify(value = Pool.class, nullable = true,
-            subResource = SubResource.ENTITLEMENTS) String poolIdString,
+        @Verify(value = Pool.class, nullable = true, subResource = SubResource.ENTITLEMENTS) String poolId,
         List<String> productIds,
         Integer quantity,
         String email,
@@ -2307,7 +2406,7 @@ public class ConsumerResource implements ConsumerApi {
         log.debug("Consumer (post verify): {}", consumer);
 
         // Check that only one query param was set, and some other validations
-        validateBindArguments(poolIdString, quantity, productIds, fromPools,
+        validateBindArguments(poolId, quantity, productIds, fromPools,
             entitleDate, consumer, async);
 
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
@@ -2329,8 +2428,8 @@ public class ConsumerResource implements ConsumerApi {
             throw e;
         }
 
-        if (poolIdString != null && quantity == null) {
-            Pool pool = this.poolService.get(poolIdString);
+        if (poolId != null && quantity == null) {
+            Pool pool = poolService.get(poolId);
             quantity = pool != null ? consumerBindUtil.getQuantityToBind(pool, consumer) : 1;
         }
 
@@ -2340,14 +2439,14 @@ public class ConsumerResource implements ConsumerApi {
         if (async) {
             JobConfig jobConfig;
 
-            if (poolIdString != null) {
+            if (poolId != null) {
                 String cfg = ConfigProperties.jobConfig(EntitlerJob.JOB_KEY, EntitlerJob.CFG_JOB_THROTTLE);
                 int throttle = config.getInt(cfg);
 
                 jobConfig = EntitlerJob.createConfig(throttle)
                     .setOwner(owner)
                     .setConsumer(consumer)
-                    .setPoolQuantity(poolIdString, quantity);
+                    .setPoolQuantity(poolId, quantity);
             }
             else {
                 jobConfig = EntitleByProductsJob.createConfig()
@@ -2383,8 +2482,9 @@ public class ConsumerResource implements ConsumerApi {
         //
         List<Entitlement> entitlements = null;
 
-        if (poolIdString != null) {
-            entitlements = entitler.bindByPoolQuantity(consumer, poolIdString, quantity);
+        if (poolId != null) {
+            entitlements = entitler.bindByPoolQuantity(consumer, poolId,
+                quantity);
         }
         else {
             try {

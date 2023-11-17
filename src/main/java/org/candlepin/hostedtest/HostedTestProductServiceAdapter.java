@@ -20,6 +20,7 @@ import org.candlepin.service.model.ProductInfo;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -58,6 +59,21 @@ public class HostedTestProductServiceAdapter implements ProductServiceAdapter {
         }
 
         return Collections.emptyList();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<ProductInfo> getChildrenByProductIds(Collection<String> skuIds) {
+        if (skuIds == null || skuIds.isEmpty()) {
+            return null;
+        }
+
+        return this.datastore.listProducts()
+            .stream()
+            .filter(prod -> prod != null && skuIds.contains(prod.getId()))
+            .collect(Collectors.toList());
     }
 
     /**

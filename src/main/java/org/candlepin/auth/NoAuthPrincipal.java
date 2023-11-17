@@ -34,4 +34,9 @@ public class NoAuthPrincipal extends Principal {
         return false;
     }
 
+    @Override
+    public AuthenticationMethod getAuthenticationMethod() {
+        return AuthenticationMethod.NO_AUTH;
+    }
+
 }
