@@ -30,24 +30,27 @@ public class Page<T> {
         return pageData;
     }
 
-    public void setPageData(T pageData) {
+    public Page<T> setPageData(T pageData) {
         this.pageData = pageData;
+        return this;
     }
 
     public Integer getMaxRecords() {
         return maxRecords;
     }
 
-    public void setMaxRecords(Integer maxRecords) {
+    public Page<T> setMaxRecords(Integer maxRecords) {
         this.maxRecords = maxRecords;
+        return this;
     }
 
     public PageRequest getPageRequest() {
         return pageRequest;
     }
 
-    public void setPageRequest(PageRequest pageRequest) {
+    public Page<T> setPageRequest(PageRequest pageRequest) {
         this.pageRequest = pageRequest;
+        return this;
     }
 
 }
