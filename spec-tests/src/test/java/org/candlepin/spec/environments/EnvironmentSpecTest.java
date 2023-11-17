@@ -16,6 +16,7 @@ package org.candlepin.spec.environments;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.CertificateAssert.assertThatCert;
+import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertConflict;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertGone;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
@@ -733,7 +734,8 @@ public class EnvironmentSpecTest {
     private void demoteContent(EnvironmentDTO env, List<String> contentIds) {
         AsyncJobStatusDTO job = ownerClient.environments()
             .demoteContent(env.getId(), contentIds, null);
-        ownerClient.jobs().waitForJob(job);
+        job = ownerClient.jobs().waitForJob(job);
+        assertThatJob(job).isFinished();
     }
 
     private void promoteContent(EnvironmentDTO env, ContentDTO... content) {
@@ -747,7 +749,8 @@ public class EnvironmentSpecTest {
     private void promoteContent(EnvironmentDTO env, List<ContentToPromoteDTO> contentToPromote) {
         AsyncJobStatusDTO job = ownerClient.environments()
             .promoteContent(env.getId(), contentToPromote, null);
-        ownerClient.jobs().waitForJob(job);
+        job = ownerClient.jobs().waitForJob(job);
+        assertThatJob(job).isFinished();
     }
 
     private void promoteContentDisabled(EnvironmentDTO env, ContentDTO... content) {

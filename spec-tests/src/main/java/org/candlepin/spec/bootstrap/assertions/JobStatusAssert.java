@@ -57,6 +57,16 @@ public class JobStatusAssert extends AbstractAssert<JobStatusAssert, AsyncJobSta
     }
 
     /**
+     * Verifies whether the job is in the canceled state.
+     *
+     * @return this instance
+     */
+    public JobStatusAssert isCanceled() {
+        isInState("CANCELED");
+        return this;
+    }
+
+    /**
      * Verifies whether the job result contains the given text.
      *
      * @return this instance

@@ -16,6 +16,7 @@ package org.candlepin.spec.environments;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.CertificateAssert.assertThatCert;
+import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.CertificateDTO;
@@ -584,7 +585,8 @@ public class EnvironmentPrioritySpecTest {
     private void promoteContent(EnvironmentDTO env, List<ContentToPromoteDTO> contentToPromote) {
         AsyncJobStatusDTO job = ownerClient.environments()
             .promoteContent(env.getId(), contentToPromote, null);
-        ownerClient.jobs().waitForJob(job);
+        job = ownerClient.jobs().waitForJob(job);
+        assertThatJob(job).isFinished();
     }
 
     private ContentToPromoteDTO toPromote(ContentDTO content) {

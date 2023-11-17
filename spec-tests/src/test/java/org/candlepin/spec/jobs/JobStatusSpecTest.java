@@ -16,6 +16,7 @@ package org.candlepin.spec.jobs;
 
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -142,7 +143,8 @@ class JobStatusSpecTest {
     @Test
     public void shouldAllowAdminToViewJobStatus() {
         AsyncJobStatusDTO jobStatus = ownerApi.healEntire(owner.getKey());
-        jobsClient.waitForJob(jobStatus.getId());
+        AsyncJobStatusDTO checkStatus = jobsClient.waitForJob(jobStatus.getId());
+        assertThatJob(checkStatus).isFinished();
 
         AsyncJobStatusDTO newStatus = jobsClient.getJobStatus(jobStatus.getId());
         assertEquals(jobStatus.getId(), newStatus.getId());
@@ -186,7 +188,8 @@ class JobStatusSpecTest {
         OwnerApi ownerApi1 = userClient.owners();
 
         AsyncJobStatusDTO jobStatus = ownerApi1.healEntire(owner.getKey());
-        jobsClient.waitForJob(jobStatus);
+        AsyncJobStatusDTO checkStatus = jobsClient.waitForJob(jobStatus);
+        assertThatJob(checkStatus).isFinished();
 
         AsyncJobStatusDTO newStatus = jobsApi.getJobStatus(jobStatus.getId());
         assertEquals(jobStatus.getId(), newStatus.getId());
@@ -275,7 +278,7 @@ class JobStatusSpecTest {
         finally {
             jobsClient.setSchedulerStatus(true);
             AsyncJobStatusDTO statusDTO = jobsClient.waitForJob(jobId);
-            assertEquals("FINISHED", statusDTO.getState());
+            assertThatJob(statusDTO).isFinished();
         }
     }
 
@@ -289,7 +292,9 @@ class JobStatusSpecTest {
                 Set.of(jobStatus.getId()), "CREATED");
             assertThat(statuses).hasSize(1);
 
-            userClient.jobs().cancelJob(jobStatus.getId());
+            AsyncJobStatusDTO job = userClient.jobs().cancelJob(jobStatus.getId());
+            AsyncJobStatusDTO checkStatus = jobsClient.waitForJob(job);
+            assertThatJob(checkStatus).isCanceled();
             // make sure we see a job canceled
             statuses = jobsClient.listMatchingJobStatusForOrg(owner.getKey(),
                 Set.of(jobStatus.getId()), "CANCELED");
@@ -337,9 +342,10 @@ class JobStatusSpecTest {
         consumerApi = consumerClient.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
             null, List.of(product.getId()), null, null, null, true, null, null));
-        jobsClient.waitForJob(bindStatus);
+        final AsyncJobStatusDTO finalStatus = jobsClient.waitForJob(bindStatus);
+        assertThatJob(finalStatus).isFinished();
 
-        assertForbidden(() -> userClient.jobs().getJobStatus(bindStatus.getId()));
+        assertForbidden(() -> userClient.jobs().getJobStatus(finalStatus.getId()));
     }
 
     @Test
