@@ -226,7 +226,7 @@ class ExportSpecTest {
             .associateProductIdsToCloudOffer(offerId, List.of(product1.getId(), product2.getId()));
         adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
 
-        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
         Response response = Request.from(ApiClients.bearerToken(result.getToken()))

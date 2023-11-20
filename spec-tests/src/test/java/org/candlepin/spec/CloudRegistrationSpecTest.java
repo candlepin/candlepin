@@ -15,6 +15,7 @@
 package org.candlepin.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotImplemented;
@@ -23,6 +24,7 @@ import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.asser
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.CloudAuthenticationResultDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
@@ -50,15 +52,19 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
@@ -75,7 +81,7 @@ class CloudRegistrationSpecTest {
     public void shouldGenerateValidTokenWithValidMetadata() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         HostedTestApi upstreamClient = adminClient.hosted();
-        CloudRegistrationClient cloudRegistration = adminClient.cloudAuthorization();
+        CloudRegistrationClient cloudRegistration = ApiClients.noAuth().cloudAuthorization();
         OwnerDTO owner = upstreamClient.createOwner(Owners.random());
         String token = cloudRegistration.cloudAuthorize(owner.getKey(), "test-type", "test_signature");
 
@@ -87,7 +93,7 @@ class CloudRegistrationSpecTest {
     public void shouldAllowRegistrationWithValidToken() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         HostedTestApi upstreamClient = adminClient.hosted();
-        CloudRegistrationClient cloudRegistration = adminClient.cloudAuthorization();
+        CloudRegistrationClient cloudRegistration = ApiClients.noAuth().cloudAuthorization();
         OwnerDTO owner = upstreamClient.createOwner(Owners.random());
         String token = cloudRegistration.cloudAuthorize(owner.getKey(), "test-type", "test_signature");
         ConsumerDTO consumer = ApiClients.bearerToken(token).consumers()
@@ -101,7 +107,7 @@ class CloudRegistrationSpecTest {
     @MethodSource("tokenVariation")
     public void shouldFailCloudRegistration(String owner, String type, String signature) {
         ApiClient adminClient = ApiClients.admin();
-        CloudRegistrationClient cloudRegistration = adminClient.cloudAuthorization();
+        CloudRegistrationClient cloudRegistration = ApiClients.noAuth().cloudAuthorization();
         assertBadRequest(() -> cloudRegistration.cloudAuthorize(owner, type, signature));
     }
 
@@ -109,7 +115,7 @@ class CloudRegistrationSpecTest {
     public void shouldAllowRegistrationWithEmptySignature() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         HostedTestApi upstreamClient = adminClient.hosted();
-        CloudRegistrationClient cloudRegistration = adminClient.cloudAuthorization();
+        CloudRegistrationClient cloudRegistration = ApiClients.noAuth().cloudAuthorization();
         OwnerDTO owner = upstreamClient.createOwner(Owners.random());
         String token = cloudRegistration.cloudAuthorize(owner.getKey(), "test-type", "");
         ConsumerDTO consumer = ApiClients.bearerToken(token).consumers()
@@ -135,7 +141,7 @@ class CloudRegistrationSpecTest {
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(prod.getId()));
         adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
 
-        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
         assertTokenType(adminClient.MAPPER, result.getToken(), STANDARD_TOKEN_TYPE);
@@ -162,7 +168,7 @@ class CloudRegistrationSpecTest {
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(prod.getId()));
         adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
 
-        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
         assertTokenType(adminClient.MAPPER, result.getToken(), STANDARD_TOKEN_TYPE);
@@ -186,7 +192,7 @@ class CloudRegistrationSpecTest {
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(StringUtil.random("prod-")));
         adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
 
-        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
         assertTokenType(adminClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
@@ -206,7 +212,7 @@ class CloudRegistrationSpecTest {
 
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(StringUtil.random("prod-")));
 
-        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
         assertTokenType(adminClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
@@ -231,7 +237,7 @@ class CloudRegistrationSpecTest {
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(prod.getId()));
         adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
 
-        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
         assertTokenType(adminClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
@@ -264,7 +270,7 @@ class CloudRegistrationSpecTest {
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(prod.getId()));
         adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
 
-        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
         assertTokenType(adminClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
@@ -287,11 +293,11 @@ class CloudRegistrationSpecTest {
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(StringUtil.random("prod-")));
         adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
 
-        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
         String expectedAnonConsumerUuid = result.getAnonymousConsumerUuid();
 
-        CloudAuthenticationResultDTO actual = adminClient.cloudAuthorization()
+        CloudAuthenticationResultDTO actual = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
         assertTokenType(adminClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
@@ -313,7 +319,7 @@ class CloudRegistrationSpecTest {
 
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(prod.getId()));
 
-        assertBadRequest(() -> adminClient.cloudAuthorization()
+        assertBadRequest(() -> ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(null, instanceId, offerId, "test-type", ""));
     }
 
@@ -328,7 +334,7 @@ class CloudRegistrationSpecTest {
 
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(prod.getId()));
 
-        assertBadRequest(() -> adminClient.cloudAuthorization()
+        assertBadRequest(() -> ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(cloudAccountId, null, offerId, "test-type", ""));
     }
 
@@ -343,7 +349,7 @@ class CloudRegistrationSpecTest {
 
         adminClient.hosted().associateOwnerToCloudAccount(cloudAccountId, owner.getKey());
 
-        assertBadRequest(() -> adminClient.cloudAuthorization()
+        assertBadRequest(() -> ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(cloudAccountId, instanceId, null, "test-type", ""));
     }
 
@@ -363,7 +369,7 @@ class CloudRegistrationSpecTest {
 
         adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
 
-        assertUnauthorized(() -> adminClient.cloudAuthorization()
+        assertUnauthorized(() -> ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", ""));
     }
 
@@ -378,7 +384,7 @@ class CloudRegistrationSpecTest {
         ProductDTO product = adminClient.hosted().createProduct(Products.random());
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, "1P", List.of(product.getId()));
 
-        assertNotImplemented(() -> adminClient.cloudAuthorization()
+        assertNotImplemented(() -> ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", ""));
     }
 
@@ -400,7 +406,7 @@ class CloudRegistrationSpecTest {
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(product.getId()));
         adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
 
-        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
         assertTokenType(adminClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
@@ -434,7 +440,7 @@ class CloudRegistrationSpecTest {
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(StringUtil.random("prod-")));
         adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
 
-        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
         assertTokenType(adminClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
@@ -465,7 +471,7 @@ class CloudRegistrationSpecTest {
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(prod.getId()));
         adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
 
-        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
         assertTokenType(ApiClient.MAPPER, result.getToken(), STANDARD_TOKEN_TYPE);
@@ -477,7 +483,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldVerifyAnonymousTokenRegistration() throws JsonProcessingException {
+    public void shouldCreateConsumerWhenUsingAnonymousToken() throws JsonProcessingException {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO ownerDTO = Owners.random();
         ProductDTO productDTO = Products.random();
@@ -489,7 +495,7 @@ class CloudRegistrationSpecTest {
         adminClient.hosted().createProduct(productDTO);
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(productDTO.getId()));
 
-        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
         assertTokenType(ApiClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
@@ -534,6 +540,59 @@ class CloudRegistrationSpecTest {
         assertThat(consumer)
             .isNotNull()
             .extracting(ConsumerDTO::getIdCert)
+            .isNotNull();
+    }
+
+    @Test
+    public void shouldCreateOwnerWhenNoOwnerExistsForCloudAccountDuringV2Auth()
+        throws JsonProcessingException {
+
+        ApiClient adminClient = ApiClients.admin();
+        ProductDTO productDTO = Products.random();
+
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        adminClient.hosted().createProduct(productDTO);
+        adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(productDTO.getId()));
+
+        OffsetDateTime timeBeforeJobStarts = OffsetDateTime.now();
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+
+        assertTokenType(ApiClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+
+        // Find all CloudAccountOrgSetup jobs based on the principal, job key, start date, and wait for them
+        // to finish. Then find the one we're looking for by filtering the result data based on
+        // the offering id.
+        //
+        // Unfortunately, we have no easy traceability for CloudAccountOrgSetupJob jobs because they don't
+        // run in the context of an org or anything else we can directly query for in the API, so this
+        // fetches the 'latest' jobs of this type using the 'startDate', which hopefully will not return
+        // a whole lot of jobs, and then filters on the client side on the result data.
+        List<AsyncJobStatusDTO> jobs = adminClient.jobs().listJobStatuses(null,
+            Set.of("CloudAccountOrgSetupJob"), null, null, Set.of("Anonymous"), null, null,
+            timeBeforeJobStarts, null, null, null, null, null);
+        jobs.forEach(job -> {
+            job = adminClient.jobs().waitForJob(job);
+            assertThatJob(job).isFinished();
+        });
+
+        // Now that all jobs are done, fetch them again (the FINISHED ones) to filter on their result data
+        jobs = adminClient.jobs().listJobStatuses(null, Set.of("CloudAccountOrgSetupJob"),
+            Set.of("FINISHED"), null, Set.of("Anonymous"), null, null, timeBeforeJobStarts, null, null,
+            null, null, null);
+
+        jobs = jobs.stream()
+            .filter(job -> ((String) job.getResultData()).contains(offerId))
+            .collect(Collectors.toList());
+        assertThat(jobs.size()).isEqualTo(1);
+
+        // Extract the owner key from the job's result data, and make sure the owner exists
+        String ownerKey = StringUtils.substringBetween((String) jobs.get(0).getResultData(),
+            "owner ", " (anonymous");
+        assertThat(adminClient.owners().getOwner(ownerKey))
             .isNotNull();
     }
 
