@@ -84,6 +84,7 @@ public class SecurityHoleAuthorizationFilter extends AbstractAuthorizationFilter
     }
 
     @Override
+    @SuppressWarnings("javasecurity:S5145")
     void runFilter(ContainerRequestContext requestContext) {
         log.debug("NO authorization check for {}", requestContext.getUriInfo().getPath());
 

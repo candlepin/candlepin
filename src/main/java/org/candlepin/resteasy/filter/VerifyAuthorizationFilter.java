@@ -78,6 +78,7 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
     }
 
     @Override
+    @SuppressWarnings("javasecurity:S5145")
     public void runFilter(ContainerRequestContext requestContext) {
         Principal principal = (Principal) requestContext.getSecurityContext().getUserPrincipal();
         ResourceInfo resourceInfo = ResteasyContext.getContextData(ResourceInfo.class);

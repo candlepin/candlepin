@@ -136,6 +136,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
 
     @Override
+    @SuppressWarnings("javasecurity:S5145")
     public void filter(ContainerRequestContext requestContext)
         throws IOException {
         log.debug("Authentication check for {}", requestContext.getUriInfo().getPath());

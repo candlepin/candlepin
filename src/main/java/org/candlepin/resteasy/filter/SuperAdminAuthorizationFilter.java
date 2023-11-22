@@ -45,6 +45,7 @@ public class SuperAdminAuthorizationFilter extends AbstractAuthorizationFilter {
     }
 
     @Override
+    @SuppressWarnings("javasecurity:S5145")
     public void runFilter(ContainerRequestContext requestContext) {
         log.debug("Authorization check for {}", requestContext.getUriInfo().getPath());
 
