@@ -14,8 +14,8 @@
  */
 package org.candlepin.spec.jobs;
 
-import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,9 +40,14 @@ import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.Isolated;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,34 +100,6 @@ class JobStatusSpecTest {
         List<AsyncJobStatusDTO> jobs = jobsClient.listMatchingJobStatusForOrg("totally-made-up",
             null, null);
         assertThat(jobs).isEmpty();
-    }
-
-    @Test
-    public void shouldCancelAJob() throws Exception {
-        jobsClient.setSchedulerStatus(false);
-        try {
-            AsyncJobStatusDTO jobStatus = ownerApi.healEntire(owner.getKey());
-            // make sure we see a job waiting to go
-            List<AsyncJobStatusDTO> statuses = jobsClient.listMatchingJobStatusForOrg(owner.getKey(),
-                Set.of(jobStatus.getId()), "CREATED");
-            assertThat(statuses).hasSize(1);
-
-            jobsClient.cancelJob(jobStatus.getId());
-            // make sure we see a job canceled
-            statuses = jobsClient.listMatchingJobStatusForOrg(owner.getKey(),
-                Set.of(jobStatus.getId()), "CANCELED");
-            assertThat(statuses).hasSize(1);
-
-            jobsClient.setSchedulerStatus(true);
-            sleep(1); // let the job queue drain..
-            // make sure job didn't flip to FINISHED
-            statuses = jobsClient.listMatchingJobStatusForOrg(owner.getKey(),
-                Set.of(jobStatus.getId()), "CANCELED");
-            assertThat(statuses).hasSize(1);
-        }
-        finally {
-            jobsClient.setSchedulerStatus(true);
-        }
     }
 
     @Test
@@ -260,75 +237,10 @@ class JobStatusSpecTest {
     }
 
     @Test
-    public void shouldNotAllowUserToCancelJobFromAnotherUser() {
-        jobsClient.setSchedulerStatus(false);
-        String jobId = null;
-
-        try {
-            AsyncJobStatusDTO job = userClient.owners().healEntire(owner.getKey());
-            UserDTO otherUser = UserUtil.createUser(client, owner);
-            ApiClient otherUserClient = ApiClients.basic(otherUser.getUsername(), otherUser.getPassword());
-
-            assertForbidden(() -> otherUserClient.jobs().cancelJob(job.getId()));
-            jobId = job.getId();
-        }
-        finally {
-            jobsClient.setSchedulerStatus(true);
-            AsyncJobStatusDTO statusDTO = jobsClient.waitForJob(jobId);
-            assertEquals("FINISHED", statusDTO.getState());
-        }
-    }
-
-    @Test
-    public void shouldAllowUserToCancelJobItInitiated() throws Exception {
-        jobsClient.setSchedulerStatus(false);
-        try {
-            AsyncJobStatusDTO jobStatus = userClient.owners().healEntire(owner.getKey());
-            // make sure we see a job waiting to go
-            List<AsyncJobStatusDTO> statuses = jobsClient.listMatchingJobStatusForOrg(owner.getKey(),
-                Set.of(jobStatus.getId()), "CREATED");
-            assertThat(statuses).hasSize(1);
-
-            userClient.jobs().cancelJob(jobStatus.getId());
-            // make sure we see a job canceled
-            statuses = jobsClient.listMatchingJobStatusForOrg(owner.getKey(),
-                Set.of(jobStatus.getId()), "CANCELED");
-            assertThat(statuses).hasSize(1);
-
-            jobsClient.setSchedulerStatus(true);
-            sleep(1); // let the job queue drain..
-            // make sure job didn't flip to FINISHED
-            statuses = jobsClient.listMatchingJobStatusForOrg(owner.getKey(),
-                Set.of(jobStatus.getId()), "CANCELED");
-            assertThat(statuses).hasSize(1);
-        }
-        finally {
-            jobsClient.setSchedulerStatus(true);
-        }
-    }
-
-    @Test
-    public void shouldNotAllowUserToCancelJobItDidNotInitiate() throws Exception {
-        jobsClient.setSchedulerStatus(false);
-        try {
-            ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
-            ApiClient consumerClient = ApiClients.ssl(consumer);
-            consumerApi = consumerClient.consumers();
-            AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
-                null, List.of(product.getId()), null, null, null, true, null, null));
-
-            assertForbidden(() -> userClient.jobs().cancelJob(bindStatus.getId()));
-        }
-        finally {
-            jobsClient.setSchedulerStatus(true);
-        }
-    }
-
-    @Test
     public void shouldNotAllowUserToViewJobStatusOutsideManagedOrg() throws Exception {
         OwnerDTO otherOwner = ownerApi.createOwner(Owners.random());
         UserDTO otherUser = UserUtil.createUser(client, otherOwner);
-        ApiClient otherUserClient = ApiClients.basic(otherUser.getUsername(), otherUser.getPassword());
+        ApiClients.basic(otherUser.getUsername(), otherUser.getPassword());
 
         ConsumerDTO consumer = Consumers.random(otherOwner);
         consumer = consumerApi.createConsumer(consumer, otherUser.getUsername(), otherOwner.getKey(), null,
@@ -374,23 +286,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    public void shouldAllowConsumerToCancelOwnJob() throws Exception {
-        jobsClient.setSchedulerStatus(false);
-        try {
-            ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
-            ApiClient consumerClient = ApiClients.ssl(consumer);
-            consumerApi = consumerClient.consumers();
-            AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
-                null, List.of(product.getId()), null, null, null, true, null, null));
-
-            consumerClient.jobs().cancelJob(bindStatus.getId());
-        }
-        finally {
-            jobsClient.setSchedulerStatus(true);
-        }
-    }
-
-    @Test
     public void shouldFailToCancelTerminalJob() throws Exception {
         ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
@@ -418,4 +313,90 @@ class JobStatusSpecTest {
 
         assertForbidden(() -> consumerClient2.jobs().cancelJob(bindStatus.getId()));
     }
+
+    @Nested
+    @Isolated
+    @Execution(ExecutionMode.SAME_THREAD)
+    class WithScheduler {
+
+        @AfterEach
+        void tearDown() {
+            jobsClient.setSchedulerStatus(true);
+        }
+
+        @Test
+        public void shouldCancelAJob() throws Exception {
+            jobsClient.setSchedulerStatus(false);
+            AsyncJobStatusDTO jobStatus = ownerApi.healEntire(owner.getKey());
+            // make sure we see a job waiting to go
+            List<AsyncJobStatusDTO> statuses = jobsClient.listMatchingJobStatusForOrg(owner.getKey(),
+                Set.of(jobStatus.getId()), "CREATED");
+            assertThat(statuses).hasSize(1);
+
+            jobsClient.cancelJob(jobStatus.getId());
+            // make sure we see a job canceled
+            assertThatJob(jobsClient.waitForJob(jobStatus.getId())).isCanceled();
+
+            jobsClient.setSchedulerStatus(true);
+            // make sure job didn't flip to FINISHED
+            assertThatJob(jobsClient.waitForJob(jobStatus.getId())).isCanceled();
+        }
+
+        @Test
+        public void shouldNotAllowUserToCancelJobFromAnotherUser() {
+            jobsClient.setSchedulerStatus(false);
+
+            AsyncJobStatusDTO job = userClient.owners().healEntire(owner.getKey());
+            UserDTO otherUser = UserUtil.createUser(client, owner);
+            ApiClient otherUserClient = ApiClients.basic(otherUser.getUsername(), otherUser.getPassword());
+
+            jobsClient.setSchedulerStatus(true);
+            assertForbidden(() -> otherUserClient.jobs().cancelJob(job.getId()));
+            assertThatJob(jobsClient.waitForJob(job)).isFinished();
+        }
+
+        @Test
+        public void shouldAllowUserToCancelJobItInitiated() throws Exception {
+            jobsClient.setSchedulerStatus(false);
+            AsyncJobStatusDTO jobStatus = userClient.owners().healEntire(owner.getKey());
+            // make sure we see a job waiting to go
+            List<AsyncJobStatusDTO> statuses = jobsClient.listMatchingJobStatusForOrg(owner.getKey(),
+                Set.of(jobStatus.getId()), "CREATED");
+            assertThat(statuses).hasSize(1);
+
+            userClient.jobs().cancelJob(jobStatus.getId());
+            // make sure we see a job canceled
+            assertThatJob(jobsClient.waitForJob(jobStatus.getId())).isCanceled();
+
+            jobsClient.setSchedulerStatus(true);
+            // make sure job didn't flip to FINISHED
+            assertThatJob(jobsClient.waitForJob(jobStatus.getId())).isCanceled();
+        }
+
+        @Test
+        public void shouldNotAllowUserToCancelJobItDidNotInitiate() throws Exception {
+            jobsClient.setSchedulerStatus(false);
+            ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
+            ApiClient consumerClient = ApiClients.ssl(consumer);
+            consumerApi = consumerClient.consumers();
+            AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
+                null, List.of(product.getId()), null, null, null, true, null, null));
+
+            assertForbidden(() -> userClient.jobs().cancelJob(bindStatus.getId()));
+        }
+
+        @Test
+        public void shouldAllowConsumerToCancelOwnJob() throws Exception {
+            jobsClient.setSchedulerStatus(false);
+            ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
+            ApiClient consumerClient = ApiClients.ssl(consumer);
+            consumerApi = consumerClient.consumers();
+            AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
+                null, List.of(product.getId()), null, null, null, true, null, null));
+
+            assertThatJob(consumerClient.jobs().cancelJob(bindStatus.getId()))
+                .isCanceled();
+        }
+    }
+
 }
