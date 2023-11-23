@@ -29,6 +29,7 @@ import org.candlepin.service.model.CloudRegistrationInfo;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.util.ObjectMapperFactory;
+import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -189,7 +190,12 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
     public CloudAccountData setupCloudAccountOrg(String cloudAccountID, String cloudOfferingID,
         CloudProvider cloudProviderShortName, String ownerKey)
         throws CouldNotAcquireCloudAccountLockException, CouldNotEntitleOrganizationException {
-        return new CloudAccountData("owner_key", false);
+
+        if (ownerKey == null) {
+            ownerKey = Util.generateUUID();
+        }
+
+        return new CloudAccountData(ownerKey, false);
     }
 
     /**

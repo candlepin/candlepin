@@ -27,6 +27,7 @@ dependencies {
     implementation libraries["commonsCodec"]
     implementation libraries["guava"]
     implementation libraries["commonsIo"]
+    implementation libraries["commonsLang"]
     implementation libraries["oauth"]
 
     testImplementation libraries["jimfs"]

@@ -91,6 +91,7 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
                 else {
                     Owner newOwner = new Owner()
                         .setKey(accountData.ownerKey())
+                        .setDisplayName(accountData.ownerKey())
                         .setAnonymous(accountData.isAnonymous())
                         .setClaimed(false);
                     ownerCurator.create(newOwner);
