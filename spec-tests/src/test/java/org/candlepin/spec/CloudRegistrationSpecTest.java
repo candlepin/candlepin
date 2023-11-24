@@ -558,6 +558,10 @@ class CloudRegistrationSpecTest {
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(productDTO.getId()));
 
         OffsetDateTime timeBeforeJobStarts = OffsetDateTime.now();
+        // Because MySQL/Mariadb versions before 5.6.4 truncate milliseconds, lets remove a couple seconds
+        // to ensure we will not miss the job we need in the job query results later on.
+        timeBeforeJobStarts = timeBeforeJobStarts.minusSeconds(2);
+
         CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
