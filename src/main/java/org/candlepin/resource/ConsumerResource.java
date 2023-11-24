@@ -2180,7 +2180,7 @@ public class ConsumerResource implements ConsumerApi {
             caCert = this.contentAccessManager.getCertificate(consumer);
         }
         catch (Exception e) {
-            throw new IseException(i18n.tr("Unable to retrieve or create anonymous content access" +
+            throw new IseException(i18n.tr("Unable to retrieve or create anonymous content access " +
             "certificate for consumer"), e);
         }
 
