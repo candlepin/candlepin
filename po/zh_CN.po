@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-19 07:05+0000\n"
+"POT-Creation-Date: 2023-11-26 07:05+0000\n"
 "PO-Revision-Date: 2023-04-21 10:20+0000\n"
 "Last-Translator: Charles Lee <lchopn@gmail.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
@@ -1029,7 +1029,8 @@ msgstr "无法取消 {0} {1} 中的注册，因为：{2}"
 #, fuzzy
 #| msgid "Cannot retrieve content access certificate"
 msgid ""
-"Unable to retrieve or create anonymous content accesscertificate for consumer"
+"Unable to retrieve or create anonymous content access certificate for "
+"consumer"
 msgstr "无法获取内容访问证书"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2235

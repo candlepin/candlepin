@@ -11,8 +11,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-19 07:05+0000\n"
-"PO-Revision-Date: 2023-11-21 14:32+0000\n"
+"POT-Creation-Date: 2023-11-26 07:05+0000\n"
+"PO-Revision-Date: 2023-11-26 14:01+0000\n"
 "Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ko/>\n"
@@ -21,7 +21,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.2\n"
+"X-Generator: Weblate 5.2.1\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -833,7 +833,8 @@ msgstr "이 Candlepin 인스턴스는 클라우드 등록을 지원하지 않습
 msgid ""
 "Cloud registration is not supported for the type of offering the client is "
 "using"
-msgstr "클라우드 등록은 클라이언트가 사용하는 제공 유형을 위해 지원되지 않습니다"
+msgstr ""
+"클라우드 등록은 클라이언트가 사용하는 제공 유형을 위해 지원되지 않습니다"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:191
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2467
@@ -1037,7 +1038,8 @@ msgstr "다음과 같은 이유로 {0} {1}을 등록 취소할 수 없음: {2}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2183
 msgid ""
-"Unable to retrieve or create anonymous content accesscertificate for consumer"
+"Unable to retrieve or create anonymous content access certificate for "
+"consumer"
 msgstr "사용자를 위해 익명 내용 접근 인증서를 검색하거나 생성 할 수 없습니다"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2235

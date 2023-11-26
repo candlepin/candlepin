@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-19 07:05+0000\n"
+"POT-Creation-Date: 2023-11-26 07:05+0000\n"
 "PO-Revision-Date: 2023-07-21 17:21+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://translate.fedoraproject.org/projects/"
@@ -1021,7 +1021,8 @@ msgstr "Не вдалося скасувати реєстрацію {0} {1}, о�
 #, fuzzy
 #| msgid "Cannot retrieve content access certificate"
 msgid ""
-"Unable to retrieve or create anonymous content accesscertificate for consumer"
+"Unable to retrieve or create anonymous content access certificate for "
+"consumer"
 msgstr "Не вдалося отримати сертифікат доступу до даних"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2235

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-19 07:05+0000\n"
+"POT-Creation-Date: 2023-11-26 07:05+0000\n"
 "PO-Revision-Date: 2017-10-18 11:52-0400\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Oriya\n"
@@ -1021,7 +1021,8 @@ msgstr "{0} {1} କୁ ପଞ୍ଜିକରଣହୀନ କରିପାରି�
 #, fuzzy
 #| msgid "Unable to create entitlement certificate archive"
 msgid ""
-"Unable to retrieve or create anonymous content accesscertificate for consumer"
+"Unable to retrieve or create anonymous content access certificate for "
+"consumer"
 msgstr "ଅଧିକାର ପ୍ରମାଣପତ୍ର ଅଭିଲେଖ ନିର୍ମାଣ କରିବାରେ ଅସମର୍ଥ"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2235

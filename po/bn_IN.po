@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-19 07:05+0000\n"
+"POT-Creation-Date: 2023-11-26 07:05+0000\n"
 "PO-Revision-Date: 2023-01-25 19:52+0000\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Bengali (India) <https://translate.fedoraproject.org/projects/"
@@ -1023,7 +1023,8 @@ msgstr "{0} নিবন্ধন {1} এর জন্য বাতিল কর
 #, fuzzy
 #| msgid "Unable to create entitlement certificate archive"
 msgid ""
-"Unable to retrieve or create anonymous content accesscertificate for consumer"
+"Unable to retrieve or create anonymous content access certificate for "
+"consumer"
 msgstr "এনটাইটেলমেন্ট সার্টিফিকেটের সংরক্ষণাগার তৈরি করা গেল না"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2235

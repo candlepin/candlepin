@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-19 07:05+0000\n"
+"POT-Creation-Date: 2023-11-26 07:05+0000\n"
 "PO-Revision-Date: 2022-08-05 15:19+0000\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Spanish <https://translate.fedoraproject.org/projects/"
@@ -1034,7 +1034,8 @@ msgstr "No puede cancelar registro {0} {1} porque: {2}"
 #, fuzzy
 #| msgid "Unable to create entitlement certificate archive"
 msgid ""
-"Unable to retrieve or create anonymous content accesscertificate for consumer"
+"Unable to retrieve or create anonymous content access certificate for "
+"consumer"
 msgstr "No se pudo crear archivo de certificado de derechos"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2235
