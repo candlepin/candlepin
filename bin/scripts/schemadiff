@@ -1,5 +1,7 @@
 #!/bin/bash
 #
+# FIXME/TODO: This seems like a useful script. We should get it up to date.
+#
 # Generate a diff file of the candlepin schema between two points in history.
 #
 # Useage:

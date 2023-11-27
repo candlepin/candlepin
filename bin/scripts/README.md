@@ -1,31 +1,5 @@
 # Utility Scripts for Candlepin
 
-## Refresh Data Extractor - refresh_data_extractor.sh
-
-### Purpose
-
-This script is for creating a facade in the locally running Candlepin that facilitates refreshes for an organization.  
-It typically gets used in conjunction with the org_migrator application so that orgs can be examined independently  
-of the running portal system.  
-
-### Usage
-
-`refresh_data_extractor.sh <input_file>`
-
-The input for this script is made by running an organization refresh in the portal with TRACE logging on. It is  
-usually compressed [.gz] , which the script is capable of handling.  
-The resulting output contains a JSON representation of the upstream data for the org. To use this data, it must be  
-redirected to a file then input through the API to the local Candlepin in hosted mode.  
-
-`curl -k -u admin:admin -X POST -F 'data=@[filename]' -H 'Content-Type: multipart/form-data'`  
-`https://[hostname]:[port]/candlepin/hostedtest/import/subscriptions`  
-
-The data instance will remain in memory until tomcat is restarted.  
-
-### Output
-
-The JSON parsed from the log file.
-
 ## Organization Migrator - org_migrator/org_migrator.py
 
 ### Purpose
