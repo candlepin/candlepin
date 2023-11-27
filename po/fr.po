@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-19 07:05+0000\n"
+"POT-Creation-Date: 2023-11-26 07:05+0000\n"
 "PO-Revision-Date: 2023-03-24 19:47+0000\n"
 "Last-Translator: grimst <grimaitres@gmail.com>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
@@ -1114,7 +1114,8 @@ msgstr "Impossible d’annuler l’enregistrement {0} {1} car : {2}"
 #, fuzzy
 #| msgid "Cannot retrieve content access certificate"
 msgid ""
-"Unable to retrieve or create anonymous content accesscertificate for consumer"
+"Unable to retrieve or create anonymous content access certificate for "
+"consumer"
 msgstr "Impossible d’extraire le certificat de droit d’accès au contenu"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2235

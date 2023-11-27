@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-19 07:05+0000\n"
+"POT-Creation-Date: 2023-11-26 07:05+0000\n"
 "PO-Revision-Date: 2016-03-02 04:38-0500\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Telugu <kde-i18n-doc@kde.org>\n"
@@ -1024,7 +1024,8 @@ msgstr "{0} {1} నమోదు తీసివేయలేదు యెంచ�
 #, fuzzy
 #| msgid "Unable to create entitlement certificate archive"
 msgid ""
-"Unable to retrieve or create anonymous content accesscertificate for consumer"
+"Unable to retrieve or create anonymous content access certificate for "
+"consumer"
 msgstr "ఎన్టైటిల్మెంట్ ధృవీకరణపత్రం ఆర్కైవ్ సృష్టించలేక పోయింది"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2235
