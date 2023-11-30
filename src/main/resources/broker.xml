@@ -21,6 +21,9 @@
     <core xmlns="urn:activemq:core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="urn:activemq:core ">
 
+        <!-- Disable 'hot reloading' this broker.xml file; we are not making changes at runtime -->
+        <configuration-file-refresh-period>-1</configuration-file-refresh-period>
+
         <!--
             By default, Candlepin only enables the in-vm connection with no security manager, but
             supports adding additional acceptors which can then be secured using JAAS modules.
