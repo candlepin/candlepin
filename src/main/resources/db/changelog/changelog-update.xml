@@ -183,5 +183,4 @@
     <include file="db/changelog/20221003160623-remove_direct_env_content_reference.xml"/>
     <include file="db/changelog/20221212140215-remove_prodcont_fk_delete_cascade.xml"/>
     <include file="db/changelog/20230207161633-clear_entity_versions-1.xml"/>
-    <include file="db/changelog/20230811183400-add-indexes-certificate-cleanup.xml"/>
 </databaseChangeLog>
