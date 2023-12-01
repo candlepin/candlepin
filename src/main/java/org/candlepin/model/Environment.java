@@ -217,8 +217,9 @@ public class Environment extends AbstractHibernateObject implements Serializable
         return contentPrefix;
     }
 
-    public void setContentPrefix(String contentPrefix) {
+    public Environment setContentPrefix(String contentPrefix) {
         this.contentPrefix = contentPrefix;
+        return this;
     }
 
     @Override

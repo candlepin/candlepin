@@ -94,6 +94,7 @@ public class ImportUpdateSpecTest {
             .id(fromExport.getId())
             .label(fromExport.getLabel())
             .type(fromExport.getType())
+            .contentUrl("content_path")
             .vendor(fromExport.getVendor())
             .requiredTags("dummy tags");
         preexistingContent =  ownerContentApi.createContent(importOwner.getKey(), preexistingContent);
@@ -240,6 +241,7 @@ public class ImportUpdateSpecTest {
             .type(StringUtil.random("type"))
             .name(StringUtil.random("name"))
             .label(StringUtil.random("label"))
+            .contentUrl("content_path")
             .vendor(StringUtil.random("vendor"))
             .metadataExpire(6000L)
             .requiredTags("TAG1,TAG2");
@@ -249,6 +251,7 @@ public class ImportUpdateSpecTest {
             .type(StringUtil.random("type"))
             .name(StringUtil.random("name"))
             .label(StringUtil.random("label"))
+            .contentUrl("content_path")
             .vendor(StringUtil.random("vendor"))
             .metadataExpire(6000L)
             .requiredTags("TAG3")

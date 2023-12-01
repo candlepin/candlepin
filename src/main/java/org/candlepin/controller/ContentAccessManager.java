@@ -17,10 +17,8 @@ package org.candlepin.controller;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.controller.util.ContentPrefix;
+import org.candlepin.controller.util.ContentPathBuilder;
 import org.candlepin.controller.util.PromotedContent;
-import org.candlepin.controller.util.ScaContainerContentPrefix;
-import org.candlepin.controller.util.ScaContentPrefix;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -383,20 +381,18 @@ public class ContentAccessManager {
 
         log.info("Generating X509 certificate for consumer \"{}\"...", consumer.getUuid());
         // fake a product dto as a container for the org content
-        org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
-        List<org.candlepin.model.dto.Content> dtoContents = new ArrayList<>();
         List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
 
-        ContentPrefix prefix = ScaContainerContentPrefix.from(owner, this.standalone, environments);
-
+        List<org.candlepin.model.dto.Content> dtoContents = new ArrayList<>();
         for (Environment environment : environments) {
-            dtoContents.add(getContent(prefix, environment.getId()));
+            dtoContents.add(createContent(owner, environment));
         }
 
         if (dtoContents.isEmpty()) {
-            dtoContents.add(getContent(prefix, null));
+            dtoContents.add(createContent(owner, null));
         }
 
+        org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
         container.setContent(dtoContents);
 
         Set<X509ExtensionWrapper> extensions = prepareV3Extensions();
@@ -409,9 +405,17 @@ public class ContentAccessManager {
         return new String(encodedCert);
     }
 
-    private Content getContent(ContentPrefix prefix, String environmentId) {
+    private Content createContent(Owner owner, Environment environment) {
         Content dContent = new Content();
-        dContent.setPath(prefix.get(environmentId));
+        // TODO What content path do we want for SCA certs? Are we ok with /{ownerKey}/{envName}?
+        String path = "";
+        if (owner != null) {
+            path += "/" + Util.encodeUrl(owner.getKey());
+        }
+        if (environment != null) {
+            path += "/" + Util.encodeUrl(environment.getName());
+        }
+        dContent.setPath(path);
         return dContent;
     }
 
@@ -512,8 +516,8 @@ public class ContentAccessManager {
         entitledProductIds.add("content-access");
 
         List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
-        ContentPrefix contentPrefix = ScaContentPrefix.from(owner, this.standalone, environments);
-        PromotedContent promotedContent = new PromotedContent(contentPrefix).withAll(environments);
+        ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(owner, environments);
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder).withAll(environments);
 
         org.candlepin.model.dto.Product productModel = v3extensionUtil.mapProduct(engProduct, skuProduct,
             promotedContent, consumer, emptyPool, entitledProductIds);
