@@ -18,8 +18,8 @@ import org.candlepin.invoker.client.ApiException;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.request.Request;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Condition used to determine the mode in which Candlepin is running.
@@ -34,7 +34,7 @@ public final class CandlepinMode {
     }
 
     private static final boolean IS_STANDALONE;
-    private static final Map<String, Boolean> EXTENSION_MAP = new HashMap<>();
+    private static final Map<String, Boolean> EXTENSION_MAP = new ConcurrentHashMap<>();
 
     static {
         try {
