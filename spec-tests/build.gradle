@@ -30,7 +30,6 @@ dependencies {
     implementation libraries["oauth"]
 
     testImplementation libraries["jimfs"]
-    testImplementation libraries["awaitility"]
 
     testRuntimeOnly libraries["junitEngine"]
 

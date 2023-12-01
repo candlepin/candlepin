@@ -219,8 +219,6 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: spec -Dspec.test.client.host=candlepin
-        env:
-          MYSQL_IN_USE: ${{ matrix.database == 'mariadb' }}
           
       - name: Collect docker logs on failure
         if: failure()
