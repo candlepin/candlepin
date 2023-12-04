@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.3.10
+Version: 4.3.11
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -240,6 +240,14 @@ fi
 
 #raw
 %changelog
+* Mon Dec 04 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.11-1
+- Revert "2231503: CertificateCleanupJob execution takes a very long time"
+  (nmoumoul@redhat.com)
+- Revert "2231503: Add condition for index creation" (nmoumoul@redhat.com)
+- Revert "2213261: Ensure pool lock order for activation keys"
+  (nmoumoul@redhat.com)
+- Revert "CP-571: Update cpdb to reflect current use" (nmoumoul@redhat.com)
+
 * Tue Oct 24 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.10-1
 - Remove deprecated liquibase cli option (ojanus@redhat.com)
 - 2242502: Fix date-time parsing for If-Modified-Since header
