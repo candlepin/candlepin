@@ -12,6 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
+
 package org.candlepin.bind;
 
 import org.candlepin.audit.EventSink;
@@ -28,10 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-
 
 
 /**
@@ -81,6 +80,7 @@ public class PoolOpProcessor {
         }
     }
 
+
     /**
      * Set the count of pools. The caller sets the absolute quantity.
      *   Current use is setting unlimited bonus pool to -1 or 0.
@@ -90,9 +90,7 @@ public class PoolOpProcessor {
             return;
         }
 
-        poolCurator.lock(poolQuantities.keySet().stream()
-            .filter(x -> !x.isLocked())
-            .collect(Collectors.toSet()));
+        poolCurator.lock(poolQuantities.keySet());
         for (Map.Entry<Pool, Long> entry : poolQuantities.entrySet()) {
             entry.getKey().setQuantity(entry.getValue());
         }
