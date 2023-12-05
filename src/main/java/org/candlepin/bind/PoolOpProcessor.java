@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -90,12 +89,12 @@ public class PoolOpProcessor {
             return;
         }
 
-        poolCurator.lock(poolQuantities.keySet().stream()
-            .filter(x -> !x.isLocked())
-            .collect(Collectors.toSet()));
+        poolCurator.lock(poolQuantities.keySet());
+
         for (Map.Entry<Pool, Long> entry : poolQuantities.entrySet()) {
             entry.getKey().setQuantity(entry.getValue());
         }
+
         poolCurator.mergeAll(poolQuantities.keySet(), false);
     }
 

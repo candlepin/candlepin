@@ -60,20 +60,20 @@ public class ConditionalContentSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
         ProductDTO reqProd1 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO reqProd2 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO reqProd3 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO bundledProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng()
+            .createProduct(ownerKey, Products.randomEng()
             .providedProducts(Set.of(reqProd1, reqProd2, reqProd3)));
         adminClient.owners().createPool(ownerKey, Pools.random(bundledProd));
 
         // Create our dependent provided product, which carries content sets -- each of which of which
         // requires one of the provided products above
         ProductDTO dependentProvProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
@@ -87,14 +87,14 @@ public class ConditionalContentSpecTest {
             .type("yum")
             .modifiedProductIds(Set.of(reqProd3.getId())));
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent1.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent1.getId(), true);
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent2.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent2.getId(), true);
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent3.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent3.getId(), true);
 
         ProductDTO dependentProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng()
+            .createProduct(ownerKey, Products.randomEng()
             .providedProducts(Set.of(dependentProvProd)));
         adminClient.owners().createPool(ownerKey, Pools.random(dependentProd));
 
@@ -120,24 +120,24 @@ public class ConditionalContentSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
         ProductDTO reqProd1 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO reqProd2 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO reqProd3 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO bundledProd1 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng()
+            .createProduct(ownerKey, Products.randomEng()
             .providedProducts(Set.of(reqProd1, reqProd2, reqProd3)));
         adminClient.owners().createPool(ownerKey, Pools.random(bundledProd1));
         ProductDTO bundledProd2 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng()
+            .createProduct(ownerKey, Products.randomEng()
             .providedProducts(Set.of(reqProd1, reqProd2)));
         adminClient.owners().createPool(ownerKey, Pools.random(bundledProd2));
 
         // Create our dependent provided product, which carries content sets -- each of which of which
         // requires one of the provided products above
         ProductDTO dependentProvProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
@@ -151,14 +151,14 @@ public class ConditionalContentSpecTest {
             .type("yum")
             .modifiedProductIds(Set.of(reqProd3.getId())));
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent1.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent1.getId(), true);
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent2.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent2.getId(), true);
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent3.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent3.getId(), true);
 
         ProductDTO dependentProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.random()
+            .createProduct(ownerKey, Products.random()
             .providedProducts(Set.of(dependentProvProd)));
         adminClient.owners().createPool(ownerKey, Pools.random(dependentProd));
 
@@ -183,16 +183,16 @@ public class ConditionalContentSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
         ProductDTO reqProd1 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO reqProd2 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO reqProd3 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
 
         // Create our dependent provided product, which carries content sets -- each of which of which
         // requires one of the provided products above
         ProductDTO dependentProvProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.random());
+            .createProduct(ownerKey, Products.random());
         ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(reqProd1.getId())));
         ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
@@ -200,14 +200,14 @@ public class ConditionalContentSpecTest {
         ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(reqProd3.getId())));
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent1.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent1.getId(), true);
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent2.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent2.getId(), true);
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent3.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent3.getId(), true);
 
         ProductDTO dependentProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.random()
+            .createProduct(ownerKey, Products.random()
             .providedProducts(Set.of(dependentProvProd)));
         adminClient.owners().createPool(ownerKey, Pools.random(dependentProd));
 
@@ -228,18 +228,18 @@ public class ConditionalContentSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
         ProductDTO reqProd1 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO reqProd2 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO reqProd3 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO bundledProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng()
+            .createProduct(ownerKey, Products.randomEng()
             .providedProducts(Set.of(reqProd1, reqProd2, reqProd3)));
         adminClient.owners().createPool(ownerKey, Pools.random(bundledProd));
 
         ProductDTO dependentProvProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
@@ -253,14 +253,14 @@ public class ConditionalContentSpecTest {
             .type("yum")
             .modifiedProductIds(Set.of(reqProd3.getId())));
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent1.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent1.getId(), true);
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent2.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent2.getId(), true);
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent3.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent3.getId(), true);
 
         ProductDTO dependentProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng()
+            .createProduct(ownerKey, Products.randomEng()
             .providedProducts(Set.of(dependentProvProd)));
         adminClient.owners().createPool(ownerKey, Pools.random(dependentProd));
 
@@ -311,24 +311,24 @@ public class ConditionalContentSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
         ProductDTO reqProd1 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO reqProd2 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO reqProd3 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO bundledProd1 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng()
+            .createProduct(ownerKey, Products.randomEng()
             .providedProducts(Set.of(reqProd1, reqProd2, reqProd3)));
         adminClient.owners().createPool(ownerKey, Pools.random(bundledProd1));
         ProductDTO bundledProd2 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng()
+            .createProduct(ownerKey, Products.randomEng()
             .providedProducts(Set.of(reqProd1, reqProd2)));
         adminClient.owners().createPool(ownerKey, Pools.random(bundledProd2));
 
         // Create our dependent provided product, which carries content sets -- each of which of which
         // requires one of the provided products above
         ProductDTO dependentProvProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
@@ -342,14 +342,14 @@ public class ConditionalContentSpecTest {
             .type("yum")
             .modifiedProductIds(Set.of(reqProd3.getId())));
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent1.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent1.getId(), true);
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent2.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent2.getId(), true);
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent3.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent3.getId(), true);
 
         ProductDTO dependentProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng()
+            .createProduct(ownerKey, Products.randomEng()
             .providedProducts(Set.of(dependentProvProd)));
         adminClient.owners().createPool(ownerKey, Pools.random(dependentProd));
 
@@ -432,24 +432,24 @@ public class ConditionalContentSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
         ProductDTO reqProd1 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO reqProd2 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO reqProd3 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO bundledProd1 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng()
+            .createProduct(ownerKey, Products.randomEng()
             .providedProducts(Set.of(reqProd1, reqProd2, reqProd3)));
         PoolDTO bundledPool1 = adminClient.owners().createPool(ownerKey, Pools.random(bundledProd1));
         ProductDTO bundledProd2 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng()
+            .createProduct(ownerKey, Products.randomEng()
             .providedProducts(Set.of(reqProd1, reqProd2)));
         PoolDTO bundledPool2 = adminClient.owners().createPool(ownerKey, Pools.random(bundledProd2));
 
         // Create our dependent provided product, which carries content sets -- each of which of which
         // requires one of the provided products above
         ProductDTO dependentProvProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
@@ -463,14 +463,14 @@ public class ConditionalContentSpecTest {
             .type("yum")
             .modifiedProductIds(Set.of(reqProd3.getId())));
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent1.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent1.getId(), true);
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent2.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent2.getId(), true);
         adminClient.ownerProducts()
-            .addContent(ownerKey, dependentProvProd.getId(), conditionalContent3.getId(), true);
+            .addContentToProduct(ownerKey, dependentProvProd.getId(), conditionalContent3.getId(), true);
 
         ProductDTO dependentProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng()
+            .createProduct(ownerKey, Products.randomEng()
             .providedProducts(Set.of(dependentProvProd)));
         adminClient.owners().createPool(ownerKey, Pools.random(dependentProd));
 
@@ -555,18 +555,18 @@ public class ConditionalContentSpecTest {
         String ownerKey = owner.getKey();
 
         ProductDTO engProd1 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         String prod1Id = StringUtil.random("id-");
-        ProductDTO prod1 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random()
+        ProductDTO prod1 = adminClient.ownerProducts().createProduct(ownerKey, Products.random()
             .id(prod1Id)
             .providedProducts(Set.of(engProd1))
             .multiplier(1L)
             .attributes(List.of(ProductAttributes.StackingId.withValue(prod1Id))));
 
         ProductDTO engProd2 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         String prod2Id = StringUtil.random("id-");
-        ProductDTO prod2 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random()
+        ProductDTO prod2 = adminClient.ownerProducts().createProduct(ownerKey, Products.random()
             .id(prod2Id)
             .providedProducts(Set.of(engProd2))
             .multiplier(1L)
@@ -580,18 +580,18 @@ public class ConditionalContentSpecTest {
         ContentDTO engProd1Content = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(engProd2.getId())));
 
-        adminClient.ownerProducts().addContent(ownerKey, engProd2.getId(), engProd2Content.getId(), true);
-        adminClient.ownerProducts().addContent(ownerKey, engProd1.getId(), engProd1Content.getId(), true);
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, engProd2.getId(), engProd2Content.getId(), true);
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, engProd1.getId(), engProd1Content.getId(), true);
 
         // Creating primary pool for prod2
         PoolDTO prod2Pool = adminClient.owners().createPool(ownerKey, Pools.random(prod2)
-            .providedProducts(Set.of(Products.toProvidedProduct(engProd2)))
-            .locked(true));
+            .providedProducts(Set.of(Products.toProvidedProduct(engProd2))));
 
         // Create primary pool for prod1
         PoolDTO prod1Pool = adminClient.owners().createPool(ownerKey, Pools.random(prod1)
-            .providedProducts(Set.of(Products.toProvidedProduct(engProd1)))
-            .locked(true));
+            .providedProducts(Set.of(Products.toProvidedProduct(engProd1))));
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner)
             .installedProducts(Set.of(Products.toInstalled(engProd1), Products.toInstalled(engProd2))));
@@ -631,20 +631,20 @@ public class ConditionalContentSpecTest {
         String ownerKey = owner.getKey();
 
         ProductDTO engProd1 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         String prod1Id = StringUtil.random("id-");
         ProductDTO prod1 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.random()
+            .createProduct(ownerKey, Products.random()
             .id(prod1Id)
             .providedProducts(Set.of(engProd1))
             .multiplier(1L)
             .attributes(List.of(ProductAttributes.StackingId.withValue(prod1Id))));
 
         ProductDTO engProd2 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         String prod2Id = StringUtil.random("id-");
         ProductDTO prod2 = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.random()
+            .createProduct(ownerKey, Products.random()
             .id(prod2Id)
             .providedProducts(Set.of(engProd2))
             .multiplier(1L)
@@ -664,18 +664,18 @@ public class ConditionalContentSpecTest {
             .type("yum")
             .modifiedProductIds(Set.of(engProd2.getId())));
 
-        adminClient.ownerProducts().addContent(ownerKey, engProd2.getId(), engProd2Content.getId(), true);
-        adminClient.ownerProducts().addContent(ownerKey, engProd1.getId(), engProd1Content.getId(), true);
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, engProd2.getId(), engProd2Content.getId(), true);
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, engProd1.getId(), engProd1Content.getId(), true);
 
         // Creating primary pool for prod2
         PoolDTO prod2Pool = adminClient.owners().createPool(ownerKey, Pools.random(prod2)
-            .providedProducts(Set.of(Products.toProvidedProduct(engProd2)))
-            .locked(true));
+            .providedProducts(Set.of(Products.toProvidedProduct(engProd2))));
 
         // Create primary pool for prod1
         PoolDTO prod1Pool = adminClient.owners().createPool(ownerKey, Pools.random(prod1)
-            .providedProducts(Set.of(Products.toProvidedProduct(engProd1)))
-            .locked(true));
+            .providedProducts(Set.of(Products.toProvidedProduct(engProd1))));
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner)
             .facts(Map.of("system.certificate_version", "1.0"))

@@ -16,25 +16,19 @@ package org.candlepin.model;
 
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.model.ContentInfo;
-import org.candlepin.util.LongHashCodeBuilder;
 import org.candlepin.util.Util;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Type;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -43,8 +37,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -55,13 +47,11 @@ import javax.validation.constraints.Size;
  * ProductContent
  */
 @Entity
-@Immutable
-@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 @Table(name = Content.DB_TABLE)
 public class Content extends AbstractHibernateObject implements SharedEntity, Cloneable, ContentInfo {
 
     /** Name of the table backing this object in the database */
-    public static final String DB_TABLE = "cp2_content";
+    public static final String DB_TABLE = "cp_contents";
 
     // Object ID
     @Id
@@ -69,6 +59,18 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @NotNull
     private String uuid;
+
+    // TODO: FIXME: This field uses the NullAsEmptyStringType to silently convert any null types we
+    // provide at runtime to empty strings in the DB. Not because we *want* empty strings, but
+    // because nulls aren't distinct in constraints. PostgreSQL can work around it using partial
+    // indexes, but MariaDB has much more trouble with it and requires extra work (generated
+    // columns). If we drop support for MariaDB, we can also drop the conversion and go to straight
+    // nulls + partial indexes to retain uniqueness on (namespace, id). If we do so,
+    // any namespace-aware queries will need to be updated to change the global namespace lookup
+    // from "namespace = ''" to "namespace IS NULL".
+    @Column(name = "namespace")
+    @Type(type = "org.candlepin.hibernate.NullAsEmptyStringType")
+    private String namespace;
 
     // Internal RH content ID
     @Column(name = "content_id")
@@ -96,25 +98,25 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @NotNull
     private String vendor;
 
-    @Column(nullable = true)
+    @Column(name = "content_url", nullable = true)
     @Size(max = 255)
     private String contentUrl;
 
-    @Column(nullable = true)
+    @Column(name = "required_tags", nullable = true)
     @Size(max = 255)
     private String requiredTags;
 
     // for selecting Y/Z stream
-    @Column(nullable = true)
+    @Column(name = "release_ver", nullable = true)
     @Size(max = 255)
     private String releaseVer;
 
     // attribute?
-    @Column(nullable = true)
+    @Column(name = "gpg_url", nullable = true)
     @Size(max = 255)
     private String gpgUrl;
 
-    @Column(nullable = true)
+    @Column(name = "metadata_expire", nullable = true)
     private Long metadataExpire;
 
     // Impl note:
@@ -123,23 +125,14 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     // JPA spec level.
     @BatchSize(size = 128)
     @ElementCollection
-    @CollectionTable(name = "cp2_content_modified_products", joinColumns = @JoinColumn(name = "content_uuid"))
-    @Column(name = "element")
+    @CollectionTable(name = "cp_content_required_products", joinColumns = @JoinColumn(name = "content_uuid"))
+    @Column(name = "product_id")
     @Size(max = 255)
-    @Immutable
-    @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     private Set<String> modifiedProductIds;
 
     @Column(nullable = true)
     @Size(max = 255)
     private String arches;
-
-    @Column(name = "entity_version")
-    private Long entityVersion;
-
-    @Column
-    @Type(type = "org.hibernate.type.NumericBooleanType")
-    private boolean locked;
 
     /**
      * Default constructor
@@ -213,7 +206,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         this.setMetadataExpiration(source.getMetadataExpiration());
         this.setArches(source.getArches());
         this.setModifiedProductIds(source.getModifiedProductIds());
-        this.entityVersion = null;
 
         return this;
     }
@@ -239,8 +231,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
         copy.setCreated(this.getCreated() != null ? (Date) this.getCreated().clone() : null);
         copy.setUpdated(this.getUpdated() != null ? (Date) this.getUpdated().clone() : null);
-
-        copy.entityVersion = null;
 
         return copy;
     }
@@ -283,6 +273,47 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     }
 
     /**
+     * Fetches the namespace that contains this entity. If this entity exists in the global
+     * namespace, this method returns null.
+     *
+     * @return
+     *  the namespace this entity exists in, or null if the entity is part of the global namespace
+     */
+    public String getNamespace() {
+        return this.namespace;
+    }
+
+    /**
+     * Sets the namespace for this entity to the provided owner. If the owner is null, or lacks an
+     * org key, this entity will be assigned to the global namespace.
+     *
+     * @param owner
+     *  the organization to use as this entity's namespace
+     *
+     * @return
+     *  a reference to this content instance
+     */
+    public Content setNamespace(Owner owner) {
+        this.namespace = owner != null ? owner.getKey() : null;
+        return this;
+    }
+
+    /**
+     * Sets the namespace for this entity. If the provided namespace is null or empty, this entity
+     * will be assigned to the global namespace.
+     *
+     * @param namespace
+     *  the namespace to assign to this entity
+     *
+     * @return
+     *  a reference to this content instance
+     */
+    public Content setNamespace(String namespace) {
+        this.namespace = namespace;
+        return this;
+    }
+
+    /**
      * Retrieves this content's ID. Assigned by the content provider, and may exist in
      * multiple owners, thus may not be unique in itself.
      *
@@ -306,8 +337,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      */
     public Content setId(String id) {
         this.id = id;
-        this.entityVersion = null;
-
         return this;
     }
 
@@ -318,8 +347,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setType(String type) {
         this.type = type;
-        this.entityVersion = null;
-
         return this;
     }
 
@@ -330,8 +357,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setLabel(String label) {
         this.label = label;
-        this.entityVersion = null;
-
         return this;
     }
 
@@ -342,8 +367,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setName(String name) {
         this.name = name;
-        this.entityVersion = null;
-
         return this;
     }
 
@@ -354,8 +377,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setVendor(String vendor) {
         this.vendor = vendor;
-        this.entityVersion = null;
-
         return this;
     }
 
@@ -366,8 +387,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setContentUrl(String contentUrl) {
         this.contentUrl = contentUrl;
-        this.entityVersion = null;
-
         return this;
     }
 
@@ -389,8 +408,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      */
     public Content setRequiredTags(String requiredTags) {
         this.requiredTags = requiredTags;
-        this.entityVersion = null;
-
         return this;
     }
 
@@ -410,8 +427,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      */
     public Content setReleaseVersion(String releaseVer) {
         this.releaseVer = releaseVer;
-        this.entityVersion = null;
-
         return this;
     }
 
@@ -422,8 +437,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setGpgUrl(String gpgUrl) {
         this.gpgUrl = gpgUrl;
-        this.entityVersion = null;
-
         return this;
     }
 
@@ -434,8 +447,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setMetadataExpiration(Long metadataExpire) {
         this.metadataExpire = metadataExpire;
-        this.entityVersion = null;
-
         return this;
     }
 
@@ -478,7 +489,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             throw new IllegalArgumentException("productId is null");
         }
 
-        this.entityVersion = null;
         return this.modifiedProductIds.add(productId);
     }
 
@@ -500,7 +510,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             throw new IllegalArgumentException("productId is null");
         }
 
-        this.entityVersion = null;
         return this.modifiedProductIds != null ? this.modifiedProductIds.remove(productId) : false;
     }
 
@@ -522,7 +531,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         }
         this.modifiedProductIds.clear();
 
-        this.entityVersion = null;
         if (requiredProductIds != null) {
             this.modifiedProductIds.addAll(requiredProductIds);
         }
@@ -532,23 +540,12 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setArches(String arches) {
         this.arches = arches;
-        this.entityVersion = null;
-
         return this;
     }
 
     @Override
     public String getArches() {
         return this.arches != null && !this.arches.isEmpty() ? this.arches : null;
-    }
-
-    public Content setLocked(boolean locked) {
-        this.locked = locked;
-        return this;
-    }
-
-    public boolean isLocked() {
-        return this.locked;
     }
 
     @Override
@@ -569,10 +566,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         //   avoid collisions
         if (this.getUuid() != null && this.getUuid().equals(that.getUuid())) {
             return true;
-        }
-
-        if (this.getEntityVersion() != that.getEntityVersion()) {
-            return false;
         }
 
         boolean equals = new EqualsBuilder()
@@ -606,59 +599,10 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             .toHashCode();
     }
 
-    /**
-     * Calculates and returns a version hash for this entity. This method operates much like the
-     * hashCode method, except that it is more accurate and should have fewer collisions.
-     *
-     * @return
-     *  a version hash for this entity
-     */
-    public long getEntityVersion() {
-        if (this.entityVersion == null) {
-            // initialValue and multiplier choosen fairly arbitrarily from a list of prime numbers
-            // These should be unique per versioned entity.
-            LongHashCodeBuilder builder = new LongHashCodeBuilder(419, 433)
-                .append(this.getId())
-                .append(this.getType())
-                .append(this.getLabel())
-                .append(this.getName())
-                .append(this.getVendor())
-                .append(this.getContentUrl())
-                .append(this.getRequiredTags())
-                .append(this.getReleaseVersion())
-                .append(this.getGpgUrl())
-                .append(this.getMetadataExpiration())
-                .append(this.getArches());
-
-            // Impl note:
-            // We need to be certain that the hash code is calculated in a way that's order
-            // independent and not subject to Hibernate's poor hashCode implementation on proxy
-            // collections.
-            builder.append("modified_product_ids");
-            Collection<String> modifiedProductIds = this.getModifiedProductIds();
-            Stream<String> mpistream = modifiedProductIds != null && !modifiedProductIds.isEmpty() ?
-                modifiedProductIds.stream() :
-                Stream.empty();
-
-            mpistream.filter(Objects::nonNull)
-                .sorted()
-                .forEach(builder::append);
-
-            this.entityVersion = builder.toHashCode();
-        }
-
-        return this.entityVersion;
-    }
-
     @Override
     public String toString() {
-        return String.format("Content [uuid: %s, id: %s, name: %s, label: %s, entity_version: %s]",
-            this.getUuid(), this.getId(), this.getName(), this.getLabel(), this.getEntityVersion());
+        return String.format("Content [uuid: %s, id: %s, name: %s, label: %s]",
+            this.getUuid(), this.getId(), this.getName(), this.getLabel());
     }
 
-    @PrePersist
-    @PreUpdate
-    public void updateEntityVersion() {
-        this.entityVersion = this.getEntityVersion();
-    }
 }

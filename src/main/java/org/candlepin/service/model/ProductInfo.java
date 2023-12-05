@@ -30,11 +30,10 @@ import java.util.Map;
 public interface ProductInfo extends ServiceAdapterModel {
 
     /**
-     * Fetches the Red Hat ID of this product. If the ID has not yet been set, this method returns
-     * null.
+     * Fetches the Red Hat ID of this product. This method should not return a null or empty value.
      *
      * @return
-     *  the Red Hat ID of this product, or null if the ID has not been set
+     *  the Red Hat ID of this product
      */
     String getId();
 

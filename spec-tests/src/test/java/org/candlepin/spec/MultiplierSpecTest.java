@@ -52,7 +52,7 @@ public class MultiplierSpecTest {
     public void shouldHaveTheCorrectQuantity() {
         long multiplier = 25L;
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.random().multiplier(multiplier));
+            .createProduct(ownerKey, Products.random().multiplier(multiplier));
 
         long quantity = 4L;
         PoolDTO pool = adminClient.owners().createPool(ownerKey, Pools.random(product).quantity(quantity));
@@ -67,7 +67,7 @@ public class MultiplierSpecTest {
     @Test
     public void shouldDefaultTheMultiplierIfItIsNegative() {
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.random().multiplier(-10L));
+            .createProduct(ownerKey, Products.random().multiplier(-10L));
         assertEquals(DEFAULT_MULTIPLIER, product.getMultiplier());
 
         long quantity = 34L;
@@ -83,7 +83,7 @@ public class MultiplierSpecTest {
     @Test
     public void shouldDefaultTheMultiplierIfItIsZero() {
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.random().multiplier(0L));
+            .createProduct(ownerKey, Products.random().multiplier(0L));
         assertEquals(DEFAULT_MULTIPLIER, product.getMultiplier());
 
         long quantity = 34L;
@@ -101,7 +101,7 @@ public class MultiplierSpecTest {
     public void shouldHaveTheCorrectQuantityAfterARefresh() {
         long multiplier = 100L;
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.random().multiplier(multiplier));
+            .createProduct(ownerKey, Products.random().multiplier(multiplier));
 
         long quantity = 5L;
         PoolDTO pool = adminClient.owners().createPool(ownerKey, Pools.random(product).quantity(quantity));

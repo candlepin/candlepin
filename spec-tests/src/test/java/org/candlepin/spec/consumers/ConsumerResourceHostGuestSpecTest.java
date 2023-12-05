@@ -287,20 +287,20 @@ public class ConsumerResourceHostGuestSpecTest {
         List<GuestIdDTO> guests = List.of(new GuestIdDTO().guestId(uuid1), new GuestIdDTO().guestId(uuid2),
             new GuestIdDTO().guestId(uuid3));
 
-        ProductDTO providedProduct = ownerProductApi.createProductByOwner(owner.getKey(),
+        ProductDTO providedProduct = ownerProductApi.createProduct(owner.getKey(),
             Products.randomEng());
         ProductDTO vipProduct = Products.random()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("VIP"))
             .addAttributesItem(ProductAttributes.VirtualLimit.withValue("5"))
             .addAttributesItem(ProductAttributes.HostLimited.withValue("true"))
             .providedProducts(Set.of(providedProduct));
-        vipProduct = ownerProductApi.createProductByOwner(owner.getKey(), vipProduct);
+        vipProduct = ownerProductApi.createProduct(owner.getKey(), vipProduct);
         ProductDTO standardProduct = Products.random()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("Standard"))
             .addAttributesItem(ProductAttributes.VirtualLimit.withValue("5"))
             .addAttributesItem(ProductAttributes.HostLimited.withValue("true"))
             .providedProducts(Set.of(providedProduct));
-        standardProduct = ownerProductApi.createProductByOwner(owner.getKey(), standardProduct);
+        standardProduct = ownerProductApi.createProduct(owner.getKey(), standardProduct);
 
         ownerApi.createPool(owner.getKey(), Pools.random(vipProduct)
             .subscriptionSubKey(StringUtil.random("source_sub"))

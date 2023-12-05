@@ -57,7 +57,7 @@ public class OwnerResourceEntitlementListSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         ProductDTO monitoringProduct =
             createProduct(adminClient, owner, ProductAttributes.Variant.withValue("Satellite Starter Pack"));
-        ProductDTO virtualProduct = adminClient.ownerProducts().createProductByOwner(
+        ProductDTO virtualProduct = adminClient.ownerProducts().createProduct(
             owner.getKey(), Products.random());
 
         // entitle owner for the virtual and monitoring products
@@ -98,7 +98,7 @@ public class OwnerResourceEntitlementListSpecTest {
 
     private static ProductDTO createProduct(ApiClient client, OwnerDTO owner, AttributeDTO... attributes)
         throws ApiException {
-        return client.ownerProducts().createProductByOwner(
+        return client.ownerProducts().createProduct(
             owner.getKey(), Products.withAttributes(attributes));
     }
 }

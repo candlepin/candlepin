@@ -14,9 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.model.Pool.PoolType;
-import org.candlepin.util.Util;
-
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Session;
@@ -375,83 +372,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         return this.cpQueryFactory.<Product>buildQuery();
     }
 
-    /**
-     * Builds a query for fetching the system purpose attributes mapped to the given owner's products
-     *  Will only return attributes for products that are related to unexpired pools.
-     *
-     *
-     * @param owner
-     *  The owner for which to fetch system purpose attributes
-     *
-     * @return
-     *  a map of attributes belonging to the given owner
-     */
-    public Map<String, Set<String>> getSyspurposeAttributesByOwner(Owner owner) {
-        if (owner == null) {
-            return getBaseSyspurposeMap();
-        }
-        return this.getSyspurposeAttributesByOwner(owner.getId());
-    }
-
-    /**
-     * Builds a query for fetching the system purpose attributes mapped to the given owner's products
-     *  Will only return attributes for products that are related to unexpired pools.
-     *
-     *
-     * @param ownerId
-     *  The owner ID for which to fetch system purpose attributes
-     *
-     * @return
-     *  a map of attributes belonging to the given owner
-     */
-    public Map<String, Set<String>> getSyspurposeAttributesByOwner(String ownerId) {
-        if (ownerId == null) {
-            return getBaseSyspurposeMap();
-        }
-
-        String sql = "SELECT DISTINCT a.name, a.value  " +
-            "FROM cp2_product_attributes a " +
-            "JOIN cp_pool b ON a.product_uuid=b.product_uuid " +
-            "AND a.name IN ('usage','roles','addons','support_type') " +
-            "AND b.owner_id=:owner_id " +
-            "AND b.endDate > CURRENT_TIMESTAMP ";
-
-        List<Object[]> result = this.getEntityManager()
-            .createNativeQuery(sql)
-            .setParameter("owner_id", ownerId)
-            .getResultList();
-
-        sql = "SELECT DISTINCT a.name, a.value " +
-            "FROM cp2_product_attributes a " +
-            "JOIN cp_pool b ON a.product_uuid=b.product_uuid " +
-            "AND name = 'support_level' " +
-            "AND b.owner_id=:owner_id " +
-            "AND b.endDate > CURRENT_TIMESTAMP " +
-            "LEFT OUTER join cp2_product_attributes c ON a.product_uuid=c.product_uuid " +
-            "AND c.name='support_level_exempt' " +
-            "WHERE c.value IS NULL or c.value != 'true'";
-
-        result.addAll(this.getEntityManager()
-            .createNativeQuery(sql)
-            .setParameter("owner_id", ownerId)
-            .getResultList());
-
-        Map<String, Set<String>> attributeMap = getBaseSyspurposeMap();
-        for (Object[] attMap : result) {
-            attributeMap.get(attMap[0]).addAll(Util.toList((String) attMap[1]));
-        }
-        return attributeMap;
-    }
-
-    private Map<String, Set<String>> getBaseSyspurposeMap() {
-        return Map.of(
-            "usage", new HashSet<>(),
-            "roles", new HashSet<>(),
-            "addons", new HashSet<>(),
-            "support_type", new HashSet<>(),
-            "support_level", new HashSet<>());
-    }
-
     @Transactional
     public long getOwnerCount(Product product) {
         String jpql = "SELECT count(op) FROM OwnerProduct op WHERE op.product.uuid = :product_uuid";
@@ -615,27 +535,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .createQuery(jpql)
             .setParameter("owner_id", owner.getId())
             .executeUpdate();
-    }
-
-    /**
-     * Fetches a list of product IDs currently used by development pools for the specified owner.
-     * If no such pools exist, or the owner has no pools, this method returns an empty list.
-     *
-     * @param ownerId
-     *  the ID of the owner for which to look up development product IDs
-     *
-     * @return
-     *  a list of development product IDs for the given owner
-     */
-    public List<String> getDevProductIds(String ownerId) {
-        String jpql = "SELECT prod.id FROM Pool pool JOIN pool.product prod " +
-            "WHERE pool.owner.id = :owner_id AND pool.type = :pool_type";
-
-        return this.getEntityManager()
-            .createQuery(jpql, String.class)
-            .setParameter("owner_id", ownerId)
-            .setParameter("pool_type", PoolType.DEVELOPMENT)
-            .getResultList();
     }
 
     /**

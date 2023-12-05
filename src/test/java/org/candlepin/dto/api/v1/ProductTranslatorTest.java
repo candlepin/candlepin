@@ -86,7 +86,6 @@ public class ProductTranslatorTest extends
         source.setMultiplier(10L);
         source.setAttributes(attributes);
         source.setDependentProductIds(Arrays.asList("dep_prod-1", "dep_prod-2", "dep_prod-3"));
-        source.setLocked(true);
 
         for (int i = 0; i < 3; ++i) {
             Content content = TestUtil.createContent("content-" + i);

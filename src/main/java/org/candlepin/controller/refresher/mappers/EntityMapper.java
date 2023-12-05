@@ -179,64 +179,6 @@ public interface EntityMapper<E extends AbstractHibernateObject, I extends Servi
     EntityMapper<E, I> addImportedEntities(Collection<? extends I> entities);
 
     /**
-     * Checks if any existing entity mapped by this mapper is "dirty," indicating it has been given
-     * two or more different versions of the same entity, or it contains a reference to an entity
-     * which is not mapped to the owning organization.
-     *
-     * @return
-     *  true if any mapped existing entities have dirty references
-     */
-    boolean isDirty();
-
-    /**
-     * Checks if the existing entity mapped to the given ID is "dirty," indicating it has been
-     * mapped to two or more different versions of the entity, or is mapped to an entity which
-     * is not mapped to the owning organization. If the given ID is null or empty, this method
-     * returns false.
-     *
-     * @param id
-     *  the ID of the entity to check
-     *
-     * @return
-     *  true if the existing entity mapped to the given ID is dirty; false otherwise
-     */
-    boolean isDirty(String id);
-
-    /**
-     * Checks that this mapper only contains only existing entity mappings for entities with the
-     * given IDs. If the given collection is null or empty, this method will return true if, and
-     * only if, the mapper contains no existing entity mappings.
-     * <p></p>
-     * <strong>Note:</strong> This method has no effect on the state of the dirty flag for any
-     * mapped existing entity.
-     *
-     * @param ids
-     *  a collection of entity IDs representing the superset of expected mapped existing entities
-     *
-     * @return
-     *  true if this mapper contains only existing entities with IDs that are not present in the
-     *  provided collection of IDs; false otherwise
-     */
-    boolean containsOnlyExistingEntityIds(Collection<String> ids);
-
-    /**
-     * Checks that this mapper only contains only existing entity mappings for entities contained in
-     * the given collection of entities. If the given collection is null or empty, this method will
-     * return true if, and only if, the mapper contains no existing entity mappings.
-     * <p></p>
-     * <strong>Note:</strong> This method has no effect on the state of the dirty flag for any
-     * mapped existing entity.
-     *
-     * @param entities
-     *  a collection of entities representing the superset of expected mapped existing entities
-     *
-     * @return
-     *  true if this mapper contains only existing entities that are not present in the
-     *  provided entity collection; false otherwise
-     */
-    boolean containsOnlyExistingEntities(Collection<? extends E> entities);
-
-    /**
      * Clears this entity mapper, removing all known existing and imported entities
      */
     void clear();

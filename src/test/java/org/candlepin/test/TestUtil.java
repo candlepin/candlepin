@@ -377,7 +377,6 @@ public class TestUtil {
             content.setMetadataExpiration(cdata.getMetadataExpiration());
             content.setModifiedProductIds(cdata.getModifiedProductIds());
             content.setArches(cdata.getArches());
-            content.setLocked(cdata.isLocked());
         }
 
         return content;
@@ -466,7 +465,6 @@ public class TestUtil {
             }
 
             product.setDependentProductIds(pdata.getDependentProductIds());
-            product.setLocked(pdata.isLocked() != null ? pdata.isLocked() : false);
         }
 
         return product;

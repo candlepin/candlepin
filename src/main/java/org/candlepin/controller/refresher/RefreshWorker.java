@@ -14,9 +14,6 @@
  */
 package org.candlepin.controller.refresher;
 
-import org.candlepin.controller.ContentManager;
-import org.candlepin.controller.ProductManager;
-import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.builders.ContentNodeBuilder;
 import org.candlepin.controller.refresher.builders.NodeFactory;
 import org.candlepin.controller.refresher.builders.PoolNodeBuilder;
@@ -29,12 +26,10 @@ import org.candlepin.controller.refresher.visitors.ContentNodeVisitor;
 import org.candlepin.controller.refresher.visitors.NodeProcessor;
 import org.candlepin.controller.refresher.visitors.PoolNodeVisitor;
 import org.candlepin.controller.refresher.visitors.ProductNodeVisitor;
-import org.candlepin.controller.util.EntityVersioningRetryWrapper;
+import org.candlepin.controller.util.ConstraintViolationRetryWrapper;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
@@ -59,7 +54,6 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.persistence.EntityTransaction;
-import javax.persistence.LockModeType;
 
 
 
@@ -68,48 +62,37 @@ import javax.persistence.LockModeType;
  * update their local representations.
  */
 public class RefreshWorker {
-    private static Logger log = LoggerFactory.getLogger(RefreshWorker.class);
+    private static final Logger log = LoggerFactory.getLogger(RefreshWorker.class);
 
     /**
-     * The number of times to retry certain CRUD operations which may fail as a result of
-     * entity versioning constraints
+     * The number of times to retry the refresh operation if it fails as a result of a constraint
+     * violation.
      */
-    private static final int VERSIONING_CONSTRAINT_VIOLATION_RETRIES = 4;
-
-    /** Default grace period for orphaned entities */
-    private static final int ORPHANED_ENTITY_DEFAULT_GRACE_PERIOD = -1;
+    private static final int CONSTRAINT_VIOLATION_RETRIES = 4;
 
     private final PoolCurator poolCurator;
     private final ContentCurator contentCurator;
-    private final OwnerContentCurator ownerContentCurator;
-    private final OwnerProductCurator ownerProductCurator;
     private final ProductCurator productCurator;
 
     private PoolMapper poolMapper;
     private ProductMapper productMapper;
     private ContentMapper contentMapper;
 
-    private int orphanedEntityGracePeriod;
 
     /**
      * Creates a new RefreshWorker
      */
     @Inject
     public RefreshWorker(PoolCurator poolCurator, ProductCurator productCurator,
-        OwnerProductCurator ownerProductCurator, ContentCurator contentCurator,
-        OwnerContentCurator ownerContentCurator) {
+        ContentCurator contentCurator) {
 
         this.poolCurator = Objects.requireNonNull(poolCurator);
         this.productCurator = Objects.requireNonNull(productCurator);
-        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
         this.contentCurator = Objects.requireNonNull(contentCurator);
-        this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
 
         this.poolMapper = new PoolMapper();
         this.productMapper = new ProductMapper();
         this.contentMapper = new ContentMapper();
-
-        this.orphanedEntityGracePeriod = ORPHANED_ENTITY_DEFAULT_GRACE_PERIOD;
     }
 
     /**
@@ -119,35 +102,6 @@ public class RefreshWorker {
         this.poolMapper.clear();
         this.productMapper.clear();
         this.contentMapper.clear();
-    }
-
-    /**
-     * Sets the orphaned entity grace period, which determines how long a given entity must be
-     * orphaned before it will be deleted as part of the cleanup step. The behavior of entity
-     * cleanup will differ depending on this value:
-     * <ul>
-     *  <li>
-     *  If the grace period is a positive integer, entities which have been orphaned for more
-     *  than the number of days will be removed
-     *  </li>
-     *  <li>
-     *  If the grace period is zero, entities which are orphaned will be cleaned up immediately
-     *  </li>
-     *  <li>
-     *  If the grace period is a negative integer, orphaned entities will not be removed at all
-     *  </li>
-     * </ul>
-     *
-     * @param period
-     *  the orphaned entity grace period in days, or a negative value to disable orphaned entity
-     *  cleanup
-     *
-     * @return
-     *  a reference to this refresh worker
-     */
-    public RefreshWorker setOrphanedEntityGracePeriod(int period) {
-        this.orphanedEntityGracePeriod = period;
-        return this;
     }
 
     /**
@@ -331,18 +285,6 @@ public class RefreshWorker {
     }
 
     /**
-     * Fetches the current orphaned entity grace period for this refresher. See the documentation
-     * associated with the setOrphanedEntityGracePeriod method for details on the meaning of
-     * specific values.
-     *
-     * @return
-     *  the current orphaned entity grace period for this refresher
-     */
-    public int getOrphanedEntityGracePeriod() {
-        return this.orphanedEntityGracePeriod;
-    }
-
-    /**
      * Fetches the compiled set of subscriptions to import, mapped by subscription ID. If no subscriptions
      * have been added, this method returns an empty map.
      *
@@ -392,10 +334,7 @@ public class RefreshWorker {
             .map(Pool::getProductUuid)
             .collect(Collectors.toSet());
 
-        // TODO: This lookup may not be necessary once the native query cache invalidation issue
-        // is resolved.
-
-        Set<Product> products = this.productCurator.getProductsByUuidCached(productUuids);
+        List<Product> products = this.productCurator.getProductsByUuids(productUuids);
 
         this.mapExistingProducts(products);
     }
@@ -416,9 +355,6 @@ public class RefreshWorker {
         Set<String> productUuids = products.stream()
             .map(Product::getUuid)
             .collect(Collectors.toSet());
-
-        // TODO: These lookups may not be necessary once the native query cache invalidation issue
-        // is resolved.
 
         Set<Product> childrenProducts = this.productCurator
             .getChildrenProductsOfProductsByUuids(productUuids);
@@ -445,44 +381,6 @@ public class RefreshWorker {
     }
 
     /**
-     * Collects and builds a mapping of products that should exist in the org as a result of the
-     * refresh operation, and recreates the org-product mappings for those products.
-     *
-     * @param owner
-     *  the org for which the refresh was performed
-     *
-     * @param result
-     *  a RefreshResult instance containing the products to map to the org
-     */
-    private void rebuildOwnerProductMapping(Owner owner, RefreshResult result) {
-        Set<EntityState> states = Set.of(EntityState.CREATED, EntityState.UPDATED, EntityState.UNCHANGED);
-
-        Map<String, String> entityIdMap = result.streamEntities(Product.class, states)
-            .collect(Collectors.toMap(Product::getId, Product::getUuid));
-
-        this.ownerProductCurator.rebuildOwnerProductMapping(owner, entityIdMap);
-    }
-
-    /**
-     * Collects and builds a mapping of content that should exist in the org as a result of the
-     * refresh operation, and recreates the org-product mappings for those content.
-     *
-     * @param owner
-     *  the org for which the refresh was performed
-     *
-     * @param result
-     *  a RefreshResult instance containing the content to map to the org
-     */
-    private void rebuildOwnerContentMapping(Owner owner, RefreshResult result) {
-        Set<EntityState> states = Set.of(EntityState.CREATED, EntityState.UPDATED, EntityState.UNCHANGED);
-
-        Map<String, String> entityIdMap = result.streamEntities(Content.class, states)
-            .collect(Collectors.toMap(Content::getId, Content::getUuid));
-
-        this.ownerContentCurator.rebuildOwnerContentMapping(owner, entityIdMap);
-    }
-
-    /**
      * Performs the import operation on the currently compiled objects
      *
      * @return
@@ -505,14 +403,20 @@ public class RefreshWorker {
             NodeProcessor nodeProcessor = new NodeProcessor()
                 .setNodeMapper(nodeMapper)
                 .addVisitor(new PoolNodeVisitor(this.poolCurator))
-                .addVisitor(new ProductNodeVisitor(this.productCurator, this.ownerProductCurator,
-                    this.orphanedEntityGracePeriod))
-                .addVisitor(new ContentNodeVisitor(this.contentCurator, this.ownerContentCurator));
+                .addVisitor(new ProductNodeVisitor(this.productCurator))
+                .addVisitor(new ContentNodeVisitor(this.contentCurator));
 
-            // Obtain system locks on products and content so we don't need to worry about
-            // orphan cleanup deleting stuff out from under us
-            this.ownerContentCurator.getSystemLock(ContentManager.SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
-            this.ownerProductCurator.getSystemLock(ProductManager.SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
+            // We shouldn't need these locks anymore. Simultaneous creations may cause one job to
+            // fail and retry when its transaction commits (and fails), but simultaneous updates
+            // will just clobber each other in a way that doesn't matter anymore with refresh only
+            // affecting the global namespace.
+
+            // // Obtain system locks on products and content so we don't need to worry about
+            // // orphan cleanup deleting stuff out from under us
+            // this.ownerContentCurator.getSystemLock(ContentManager.SYSTEM_LOCK,
+            //    LockModeType.PESSIMISTIC_READ);
+            // this.ownerProductCurator.getSystemLock(ProductManager.SYSTEM_LOCK,
+            //    LockModeType.PESSIMISTIC_READ);
 
             // Clear existing entities in the event this isn't the first run of this refresher
             this.poolMapper.clearExistingEntities();
@@ -520,40 +424,38 @@ public class RefreshWorker {
             this.contentMapper.clearExistingEntities();
 
             // Add in our existing entities
+            Collection<String> importedProductIds = this.productMapper.getImportedEntities().keySet();
+            Collection<String> importedContentIds = this.contentMapper.getImportedEntities().keySet();
+
+            log.debug("Adding existing subscriptions to mapper...");
             List<Pool> pools = this.poolCurator
                 .listByOwnerAndTypes(owner.getId(), PoolType.NORMAL, PoolType.DEVELOPMENT);
             this.mapExistingPools(pools);
 
-            // Add in the org-mapped entities to ensure we catch everything for this org, as well
-            // verifying there aren't any dangling references to out-of-org entities
-            Collection<Product> ownerProducts = this.ownerProductCurator.getProductsByOwner(owner);
-            this.mapExistingProducts(ownerProducts);
+            // Add globally namespaced products and content to refresh.
+            // TODO: FIXME: We don't need to do this on a per-org basis anymore (kind of)!
+            log.debug("Adding affected products to mapper for {} product IDs: {}", importedProductIds.size(),
+                importedProductIds);
+            Collection<Product> products = this.productCurator.getProductsByIds(null, importedProductIds)
+                .values();
+            this.mapExistingProducts(products);
 
-            Collection<Content> ownerContent = this.ownerContentCurator.getContentByOwner(owner);
-            this.mapExistingContent(ownerContent);
+            log.debug("Adding affected contents to mapper for {} product IDs: {}", importedContentIds.size(),
+                importedContentIds);
+            Collection<Content> contents = this.contentCurator.getContentsByIds(null, importedContentIds)
+                .values();
+            this.mapExistingContent(contents);
 
             // Have our node factory build the node trees
+            log.debug("Building entity nodes...");
             nodeFactory.buildNodes(owner);
 
             // Process our nodes, starting at the roots, letting the processors build up any persistence
             // state necessary to finalize everything
+            log.debug("Processing entity nodes...");
             RefreshResult result = nodeProcessor.processNodes();
 
-            // If we had any dirty mappings, rebuild the org's mappings to ensure no leftover shenanigans
-            if (this.productMapper.isDirty() ||
-                !this.productMapper.containsOnlyExistingEntities(ownerProducts)) {
-
-                log.warn("Found one or more dirty product mappings for org {}; remapping products", owner);
-                this.rebuildOwnerProductMapping(owner, result);
-            }
-
-            if (this.contentMapper.isDirty() ||
-                !this.contentMapper.containsOnlyExistingEntities(ownerContent)) {
-
-                log.warn("Found one or more dirty content mappings for org {}; remapping content", owner);
-                this.rebuildOwnerContentMapping(owner, result);
-            }
-
+            log.debug("Done. Returning refresh worker result");
             return result;
         });
 
@@ -562,8 +464,8 @@ public class RefreshWorker {
         EntityTransaction transaction = this.poolCurator.getTransaction();
         if (transaction == null || !transaction.isActive()) {
             // Retry this operation if we hit a constraint violation on the entity version constraint
-            return new EntityVersioningRetryWrapper()
-                .retries(VERSIONING_CONSTRAINT_VIOLATION_RETRIES)
+            return new ConstraintViolationRetryWrapper()
+                .retries(CONSTRAINT_VIOLATION_RETRIES)
                 .execute(() -> block.execute());
         }
         else {

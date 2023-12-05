@@ -14,8 +14,8 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -26,14 +26,22 @@ import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
 
 
@@ -42,12 +50,6 @@ import javax.persistence.PersistenceException;
  * ContentCuratorTest
  */
 public class ContentCuratorTest extends DatabaseTestFixture {
-
-    private Content createOrphanedContent() {
-        String contentId = "test-content-" + TestUtil.randomInt();
-        Content content = TestUtil.createContent(contentId, contentId);
-        return this.contentCurator.create(content);
-    }
 
     private Product createProductWithContent(Owner owner, Content... contents) {
         String productId = "test-product-" + TestUtil.randomInt();
@@ -84,32 +86,508 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         assertThrows(PersistenceException.class, () -> this.contentCurator.create(c2, true));
     }
 
-    @Test
-    public void testDeleteCannotDeleteContentReferencedByProducts() {
-        Owner owner = this.createOwner();
-        Content content = this.createContent(owner);
-        Product product = this.createProductWithContent(owner, content);
+    /**
+     * Creates and persists a very basic content using the given content ID and namespace. If the
+     * namespace is null or empty, the content will be created in the global namespace.
+     *
+     * @param contentId
+     *  the string to use for the content ID and name
+     *
+     * @param namespace
+     *  the namespace in which to create the content
+     *
+     * @return
+     *  the newly created content
+     */
+    private Content createNamespacedContent(String contentId, String namespace) {
+        Content content = new Content()
+            .setId(contentId)
+            .setName(contentId)
+            .setLabel(contentId + "-label")
+            .setType(contentId + "-type")
+            .setVendor(contentId + "-vendor")
+            .setNamespace(namespace);
 
-        this.contentCurator.flush();
+        return this.createContent(content);
+    }
 
-        assertThrows(PersistenceException.class, () -> {
-            this.contentCurator.delete(content);
-            this.contentCurator.flush();
-        });
+    private static Stream<Arguments> lockModeTypeSource() {
+        return Stream.of(
+            Arguments.of((LockModeType) null),
+            Arguments.of(LockModeType.NONE),
+            Arguments.of(LockModeType.OPTIMISTIC),
+            Arguments.of(LockModeType.PESSIMISTIC_READ),
+            Arguments.of(LockModeType.PESSIMISTIC_WRITE),
+            Arguments.of(LockModeType.READ),
+            Arguments.of(LockModeType.WRITE));
     }
 
     @Test
-    public void testDeleteCannotDeleteOrphanedContentReferencedByProducts() {
-        Owner owner = this.createOwner();
-        Content content = this.createOrphanedContent();
-        Product product = this.createProductWithContent(owner, content);
+    public void testGetContentById() {
+        Content content1 = this.createNamespacedContent("test_content-1", null); // global namespace
+        Content content2 = this.createNamespacedContent("test_content-2", "namespace-1");
+        Content content3 = this.createNamespacedContent("test_content-3", "namespace-2");
 
-        this.contentCurator.flush();
+        Content output = this.contentCurator.getContentById(content2.getNamespace(), content2.getId());
+        assertEquals(content2, output);
+    }
 
-        assertThrows(PersistenceException.class, () -> {
-            this.contentCurator.delete(content);
-            this.contentCurator.flush();
-        });
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = "namespace-1")
+    public void testGetContentByIdRestrictsLookupToNamespace(String namespace) {
+        String id = "test_content-1";
+
+        Content content1 = this.createNamespacedContent(id, namespace);
+        Content content2 = this.createNamespacedContent(id, "namespace-2");
+
+        if (namespace != null && !namespace.isEmpty()) {
+            Content content3 = this.createNamespacedContent(id, null);
+        }
+
+        Content output = this.contentCurator.getContentById(namespace, id);
+        assertEquals(content1, output);
+    }
+
+    @Test
+    public void testGetContentByIdDoesNotFallBackToGlobalNamespace() {
+        Content content1 = this.createNamespacedContent("test_content-1", null);
+
+        Content output = this.contentCurator.getContentById("namespace-1", content1.getId());
+        assertNull(output);
+    }
+
+    @Test
+    public void testGetContentByIdHandlesNullContentId() {
+        Content content1 = this.createNamespacedContent("test_content-1", null);
+        Content content2 = this.createNamespacedContent("test_content-1", "namespace-1");
+
+        Content output = this.contentCurator.getContentById("namespace-1", null);
+        assertNull(output);
+    }
+
+    @ParameterizedTest
+    @MethodSource("lockModeTypeSource")
+    public void testGetContentByIdWithLockMode(LockModeType lockMode) {
+        String id = "test_content-1";
+
+        Content content1 = this.createNamespacedContent(id, null); // global namespace
+        Content content2 = this.createNamespacedContent(id, "namespace-1");
+        Content content3 = this.createNamespacedContent("test_content-2", "namespace-1");
+        Content content4 = this.createNamespacedContent(id, "namespace-2");
+
+        Content output = this.contentCurator.getContentById(content2.getNamespace(), id, lockMode);
+        assertEquals(content2, output);
+    }
+
+    @Test
+    public void testGetContentsByIds() {
+        Content content1 = this.createNamespacedContent("test_content-1", null); // global namespace
+        Content content2 = this.createNamespacedContent("test_content-2", "namespace-1");
+        Content content3 = this.createNamespacedContent("test_content-3", "namespace-1");
+        Content content4 = this.createNamespacedContent("test_content-4", "namespace-2");
+
+        String namespace = "namespace-1";
+        List<String> ids = List.of(content2.getId(), content3.getId(), content4.getId());
+
+        Map<String, Content> expected = Map.of(
+            content2.getId(), content2,
+            content3.getId(), content3);
+
+        Map<String, Content> output = this.contentCurator.getContentsByIds(namespace, ids);
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderEntriesOf(expected);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = "namespace-1")
+    public void testGetContentsByIdsRestrictsLookupToNamespace(String namespace) {
+        Map<String, List<Content>> contentMap = new HashMap<>();
+
+        for (String ns : List.of("", "namespace-1", "namespace-2")) {
+            Content content1 = this.createNamespacedContent("test_content-1", ns);
+            Content content2 = this.createNamespacedContent("test_content-2", ns);
+            Content content3 = this.createNamespacedContent("test_content-3", ns);
+
+            contentMap.put(ns, List.of(content1, content2, content3));
+        }
+
+        List<String> ids = List.of("test_content-1", "test_content-3", "test_content-404");
+
+        Map<String, Content> expected = contentMap.get(namespace != null ? namespace : "")
+            .stream()
+            .filter(entity -> ids.contains(entity.getId()))
+            .collect(Collectors.toMap(Content::getId, Function.identity()));
+
+        Map<String, Content> output = this.contentCurator.getContentsByIds(namespace, ids);
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderEntriesOf(expected);
+    }
+
+    @Test
+    public void testGetContentsByIdsDoesNotFallBackToGlobalNamespace() {
+        Content content1 = this.createNamespacedContent("test_content-1", null);
+        Content content2 = this.createNamespacedContent("test_content-2", "namespace-1");
+
+        Map<String, Content> output = this.contentCurator.getContentsByIds("namespace-1",
+            List.of(content1.getId()));
+
+        assertThat(output)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetContentsByIdsHandlesNullCollection() {
+        Content content1 = this.createNamespacedContent("test_content-1", null);
+        Content content2 = this.createNamespacedContent("test_content-1", "namespace-1");
+
+        Map<String, Content> output = this.contentCurator.getContentsByIds("namespace-1", null);
+
+        assertThat(output)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetContentsByIdsHandlesNullElements() {
+        Content content1 = this.createNamespacedContent("test_content-1", null);
+        Content content2 = this.createNamespacedContent("test_content-1", "namespace-1");
+
+        List<String> ids = Arrays.asList("test_content-1", null);
+
+        Map<String, Content> output = this.contentCurator.getContentsByIds("namespace-1", ids);
+
+        assertThat(output)
+            .isNotNull()
+            .hasSize(1)
+            .containsEntry(content2.getId(), content2);
+    }
+
+    @ParameterizedTest
+    @MethodSource("lockModeTypeSource")
+    public void testGetContentsByIdsWithLockMode(LockModeType lockMode) {
+        Content content1nsG = this.createNamespacedContent("test_content-1", null);
+        Content content1ns1 = this.createNamespacedContent("test_content-1", "namespace-1");
+        Content content1ns2 = this.createNamespacedContent("test_content-1", "namespace-2");
+        Content content2nsG = this.createNamespacedContent("test_content-2", null);
+        Content content2ns1 = this.createNamespacedContent("test_content-2", "namespace-1");
+        Content content2ns2 = this.createNamespacedContent("test_content-2", "namespace-2");
+        Content content3nsG = this.createNamespacedContent("test_content-3", null);
+        Content content3ns1 = this.createNamespacedContent("test_content-3", "namespace-1");
+        Content content3ns2 = this.createNamespacedContent("test_content-3", "namespace-2");
+
+        List<String> ids = List.of("test_content-1", "test_content-2", "test_content-404");
+        Map<String, Content> expected = Map.of(
+            content1ns1.getId(), content1ns1,
+            content2ns1.getId(), content2ns1);
+
+        Map<String, Content> output = this.contentCurator.getContentsByIds("namespace-1", ids, lockMode);
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderEntriesOf(expected);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { "namespace-1", "bad_namespace" })
+    public void testGetContentsByNamespaceRestrictsLookupToNamespace(String namespace) {
+        Map<String, List<Content>> contentMap = new HashMap<>();
+
+        for (String ns : List.of("", "namespace-1", "namespace-2")) {
+            Content content1 = this.createNamespacedContent("test_content-1", ns);
+            Content content2 = this.createNamespacedContent("test_content-2", ns);
+            Content content3 = this.createNamespacedContent("test_content-3", ns);
+
+            contentMap.put(ns, List.of(content1, content2, content3));
+        }
+
+        List<Content> expected = contentMap.getOrDefault(namespace != null ? namespace : "", List.of());
+
+        List<Content> output = this.contentCurator.getContentsByNamespace(namespace);
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @ParameterizedTest
+    @MethodSource("lockModeTypeSource")
+    public void testGetContentsByNamespaceWithLockMode(LockModeType lockMode) {
+        Content content1nsG = this.createNamespacedContent("test_content-1", null);
+        Content content1ns1 = this.createNamespacedContent("test_content-1", "namespace-1");
+        Content content1ns2 = this.createNamespacedContent("test_content-1", "namespace-2");
+        Content content2nsG = this.createNamespacedContent("test_content-2", null);
+        Content content2ns2 = this.createNamespacedContent("test_content-2", "namespace-2");
+        Content content3nsG = this.createNamespacedContent("test_content-3", null);
+        Content content3ns1 = this.createNamespacedContent("test_content-3", "namespace-1");
+        Content content3ns2 = this.createNamespacedContent("test_content-3", "namespace-2");
+
+        List<Content> expected = List.of(content1ns1, content3ns1);
+
+        List<Content> output = this.contentCurator.getContentsByNamespace("namespace-1", lockMode);
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    public void testResolveContentId() {
+        Content content1nsG = this.createNamespacedContent("test_content-1", null);
+        Content content1ns1 = this.createNamespacedContent("test_content-1", "namespace-1");
+        Content content1ns2 = this.createNamespacedContent("test_content-1", "namespace-2");
+        Content content2nsG = this.createNamespacedContent("test_content-2", null);
+        Content content2ns1 = this.createNamespacedContent("test_content-2", "namespace-1");
+        Content content2ns2 = this.createNamespacedContent("test_content-2", "namespace-2");
+
+        Content output = this.contentCurator.resolveContentId(content1ns1.getNamespace(),
+            content2ns1.getId());
+
+        assertEquals(content2ns1, output);
+    }
+
+    @Test
+    public void testResolveContentIdFallsBackToGlobalNamespace() {
+        Content content1nsG = this.createNamespacedContent("test_content-1", null);
+        Content content1ns2 = this.createNamespacedContent("test_content-1", "namespace-2");
+
+        Content output = this.contentCurator.resolveContentId("namespace-1", content1nsG.getId());
+        assertEquals(content1nsG, output);
+    }
+
+    @Test
+    public void testResolveContentIdDoesNotFallbackFromGlobalNamespace() {
+        Content content1nsG = this.createNamespacedContent("test_content-1", null);
+        Content content1ns1 = this.createNamespacedContent("test_content-1", "namespace-1");
+        Content content1ns2 = this.createNamespacedContent("test_content-1", "namespace-2");
+
+        Content output = this.contentCurator.resolveContentId(null, content1nsG.getId());
+        assertEquals(content1nsG, output);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { "test_content-404" })
+    public void testResolveContentIdHandlesInvalidContentIds(String id) {
+        Content content1nsG = this.createNamespacedContent("test_content-1", null);
+        Content content1ns1 = this.createNamespacedContent("test_content-1", "namespace-1");
+        Content content1ns2 = this.createNamespacedContent("test_content-1", "namespace-2");
+
+        Content output = this.contentCurator.resolveContentId("namespace-1", id);
+        assertNull(output);
+    }
+
+    @ParameterizedTest
+    @MethodSource("lockModeTypeSource")
+    public void testResolveContentIdWithLockMode(LockModeType lockMode) {
+        Content content1nsG = this.createNamespacedContent("test_content-1", null);
+        Content content1ns1 = this.createNamespacedContent("test_content-1", "namespace-1");
+        Content content1ns2 = this.createNamespacedContent("test_content-1", "namespace-2");
+        Content content2nsG = this.createNamespacedContent("test_content-2", null);
+        Content content2ns1 = this.createNamespacedContent("test_content-2", "namespace-1");
+        Content content2ns2 = this.createNamespacedContent("test_content-2", "namespace-2");
+
+        Content output = this.contentCurator.resolveContentId("namespace-1", "test_content-1", lockMode);
+
+        assertEquals(content1ns1, output);
+    }
+
+    @Test
+    public void testResolveContentIds() {
+        Content content1 = this.createNamespacedContent("test_content-1", null); // global namespace
+        Content content2 = this.createNamespacedContent("test_content-2", "namespace-1");
+        Content content3 = this.createNamespacedContent("test_content-3", "namespace-1");
+        Content content4 = this.createNamespacedContent("test_content-4", "namespace-2");
+
+        String namespace = "namespace-1";
+        List<String> ids = List.of(content2.getId(), content3.getId(), content4.getId());
+
+        Map<String, Content> expected = Map.of(
+            content2.getId(), content2,
+            content3.getId(), content3);
+
+        Map<String, Content> output = this.contentCurator.resolveContentIds(namespace, ids);
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderEntriesOf(expected);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { "namespace-1", "namespace-404" })
+    public void testResolveContentIdsPrefersSpecifiedNamespaceOverGlobal(String namespace) {
+        Map<String, List<Content>> contentMap = new HashMap<>();
+
+        for (String ns : List.of("", "namespace-1", "namespace-2")) {
+            Content content1 = this.createNamespacedContent("test_content-1", ns);
+            Content content2 = this.createNamespacedContent("test_content-2", ns);
+            Content content3 = this.createNamespacedContent("test_content-3", ns);
+
+            contentMap.put(ns, List.of(content1, content2, content3));
+        }
+
+        List<String> ids = List.of("test_content-1", "test_content-3", "test_content-404");
+
+        List<Content> expectedContents = contentMap.get(namespace != null ? namespace : "");
+        if (expectedContents == null) {
+            expectedContents = contentMap.get("");
+        }
+
+        Map<String, Content> expected = expectedContents.stream()
+            .filter(entity -> ids.contains(entity.getId()))
+            .collect(Collectors.toMap(Content::getId, Function.identity()));
+
+        Map<String, Content> output = this.contentCurator.resolveContentIds(namespace, ids);
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderEntriesOf(expected);
+    }
+
+    @Test
+    public void testResolveContentIdsCanFallBackToGlobalNamespace() {
+        Content content1 = this.createNamespacedContent("test_content-1", null);
+        Content content2 = this.createNamespacedContent("test_content-2", "namespace-1");
+
+        Map<String, Content> output = this.contentCurator.resolveContentIds("namespace-1",
+            List.of(content1.getId(), content2.getId()));
+
+        assertThat(output)
+            .isNotNull()
+            .hasSize(2)
+            .containsEntry(content1.getId(), content1)
+            .containsEntry(content2.getId(), content2);
+    }
+
+    @Test
+    public void testResolveContentIdsHandlesNullCollection() {
+        Content content1 = this.createNamespacedContent("test_content-1", null);
+        Content content2 = this.createNamespacedContent("test_content-1", "namespace-1");
+
+        Map<String, Content> output = this.contentCurator.resolveContentIds("namespace-1", null);
+
+        assertThat(output)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testResolveContentIdsHandlesNullElements() {
+        Content content1 = this.createNamespacedContent("test_content-1", null);
+        Content content2 = this.createNamespacedContent("test_content-1", "namespace-1");
+
+        List<String> ids = Arrays.asList("test_content-1", null);
+
+        Map<String, Content> output = this.contentCurator.resolveContentIds("namespace-1", ids);
+
+        assertThat(output)
+            .isNotNull()
+            .hasSize(1)
+            .containsEntry(content2.getId(), content2);
+    }
+
+    @ParameterizedTest
+    @MethodSource("lockModeTypeSource")
+    public void testResolveContentIdsWithLockMode(LockModeType lockMode) {
+        Content content1nsG = this.createNamespacedContent("test_content-1", null);
+        Content content1ns1 = this.createNamespacedContent("test_content-1", "namespace-1");
+        Content content1ns2 = this.createNamespacedContent("test_content-1", "namespace-2");
+        Content content2nsG = this.createNamespacedContent("test_content-2", null);
+        Content content2ns2 = this.createNamespacedContent("test_content-2", "namespace-2");
+        Content content3nsG = this.createNamespacedContent("test_content-3", null);
+        Content content3ns1 = this.createNamespacedContent("test_content-3", "namespace-1");
+        Content content3ns2 = this.createNamespacedContent("test_content-3", "namespace-2");
+
+        List<String> ids = List.of("test_content-1", "test_content-2", "test_content-404");
+        Map<String, Content> expected = Map.of(
+            content1ns1.getId(), content1ns1,
+            content2nsG.getId(), content2nsG);
+
+        Map<String, Content> output = this.contentCurator.resolveContentIds("namespace-1", ids, lockMode);
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderEntriesOf(expected);
+    }
+
+    @Test
+    public void testResolveContentsByNamespaceRestrictsLookupToNamespace() {
+        Content content1nsG = this.createNamespacedContent("test_content-1", null);
+        Content content1ns1 = this.createNamespacedContent("test_content-1", "namespace-1");
+        Content content1ns2 = this.createNamespacedContent("test_content-1", "namespace-2");
+        Content content2nsG = this.createNamespacedContent("test_content-2", null);
+        Content content2ns1 = this.createNamespacedContent("test_content-2", "namespace-1");
+        Content content2ns2 = this.createNamespacedContent("test_content-2", "namespace-2");
+        Content content3nsG = this.createNamespacedContent("test_content-3", null);
+        Content content3ns1 = this.createNamespacedContent("test_content-3", "namespace-1");
+        Content content3ns2 = this.createNamespacedContent("test_content-3", "namespace-2");
+
+        List<Content> expected = List.of(content1ns1, content2ns1, content3ns1);
+
+        Collection<Content> output = this.contentCurator.resolveContentsByNamespace("namespace-1");
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    public void testResolveContentsByNamespaceFallsBackToGlobalNamespace() {
+        Content content1nsG = this.createNamespacedContent("test_content-1", null);
+        Content content1ns1 = this.createNamespacedContent("test_content-1", "namespace-1");
+        Content content2nsG = this.createNamespacedContent("test_content-2", null);
+        Content content3nsG = this.createNamespacedContent("test_content-3", null);
+        Content content3ns1 = this.createNamespacedContent("test_content-3", "namespace-1");
+
+        List<Content> expected = List.of(content1ns1, content2nsG, content3ns1);
+
+        Collection<Content> output = this.contentCurator.resolveContentsByNamespace("namespace-1");
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    public void testResolveContentsByNamespaceWithGlobalNamespaceHasNoFallback() {
+        Content content1nsG = this.createNamespacedContent("test_content-1", null);
+        Content content1ns1 = this.createNamespacedContent("test_content-1", "namespace-1");
+        Content content2nsG = this.createNamespacedContent("test_content-2", null);
+        Content content3nsG = this.createNamespacedContent("test_content-3", null);
+        Content content3ns1 = this.createNamespacedContent("test_content-3", "namespace-1");
+
+        List<Content> expected = List.of(content1nsG, content2nsG, content3nsG);
+
+        Collection<Content> output = this.contentCurator.resolveContentsByNamespace(null);
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @ParameterizedTest
+    @MethodSource("lockModeTypeSource")
+    public void testResolveContentsByNamespaceWithLockMode(LockModeType lockMode) {
+        Content content1nsG = this.createNamespacedContent("test_content-1", null);
+        Content content1ns1 = this.createNamespacedContent("test_content-1", "namespace-1");
+        Content content1ns2 = this.createNamespacedContent("test_content-1", "namespace-2");
+        Content content2nsG = this.createNamespacedContent("test_content-2", null);
+        Content content2ns2 = this.createNamespacedContent("test_content-2", "namespace-2");
+        Content content3ns1 = this.createNamespacedContent("test_content-3", "namespace-1");
+
+        List<Content> expected = List.of(content1ns1, content2nsG, content3ns1);
+
+        Collection<Content> output = this.contentCurator.resolveContentsByNamespace("namespace-1", lockMode);
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
@@ -171,30 +649,6 @@ public class ContentCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testBulkDeleteByUuidsCannotDeleteContentReferencedByProducts() {
-        Owner owner = this.createOwner();
-        Content content = this.createContent(owner);
-        Product product = this.createProductWithContent(owner, content);
-
-        this.contentCurator.flush();
-
-        assertThrows(PersistenceException.class,
-            () -> this.contentCurator.bulkDeleteByUuids(Set.of(content.getUuid())));
-    }
-
-    @Test
-    public void testBulkDeleteByUuidsCannotDeleteOrphanedContentReferencedByProducts() {
-        Owner owner = this.createOwner();
-        Content content = this.createOrphanedContent();
-        Product product = this.createProductWithContent(owner, content);
-
-        this.contentCurator.flush();
-
-        assertThrows(PersistenceException.class,
-            () -> this.contentCurator.bulkDeleteByUuids(Set.of(content.getUuid())));
-    }
-
-    @Test
     public void testBulkDeleteByUuidsHandlesEmptyInput() {
         int output = this.contentCurator.bulkDeleteByUuids(Set.of());
         assertEquals(0, output);
@@ -204,41 +658,6 @@ public class ContentCuratorTest extends DatabaseTestFixture {
     public void testBulkDeleteByUuidsHandlesNullInput() {
         int output = this.contentCurator.bulkDeleteByUuids(null);
         assertEquals(0, output);
-    }
-
-    @Test
-    public void testGetOrphanedContentUuids() {
-        Owner owner = this.createOwner();
-        Content content1 = this.createContent(owner);
-        Content orphanedContent1 = this.createOrphanedContent();
-        Content orphanedContent2 = this.createOrphanedContent();
-
-        List<String> output = this.contentCurator.getOrphanedContentUuids();
-        assertNotNull(output);
-        assertEquals(2, output.size());
-
-        assertFalse(output.contains(content1.getUuid()));
-        assertTrue(output.contains(orphanedContent1.getUuid()));
-        assertTrue(output.contains(orphanedContent2.getUuid()));
-    }
-
-    @Test
-    public void testGetOrphanedContentUuidsWithNoContent() {
-        List<String> output = this.contentCurator.getOrphanedContentUuids();
-        assertNotNull(output);
-        assertTrue(output.isEmpty());
-    }
-
-    @Test
-    public void testGetOrphanedContentUuidsWithNoOrphans() {
-        Owner owner = this.createOwner();
-        Content content1 = this.createContent(owner);
-        Content content2 = this.createContent(owner);
-        Content content3 = this.createContent(owner);
-
-        List<String> output = this.contentCurator.getOrphanedContentUuids();
-        assertNotNull(output);
-        assertTrue(output.isEmpty());
     }
 
     @Test

@@ -41,12 +41,12 @@ public class ContentResource implements ContentApi {
     }
 
     @Override
-    public Iterable<ContentDTO> listContent() {
+    public Iterable<ContentDTO> getContents() {
         return this.modelTranslator.translateQuery(this.contentCurator.listAll(), ContentDTO.class);
     }
 
     @Override
-    public ContentDTO getContent(String contentUuid) {
+    public ContentDTO getContentByUuid(String contentUuid) {
         Content content = this.contentCurator.getByUuid(contentUuid);
 
         if (content == null) {

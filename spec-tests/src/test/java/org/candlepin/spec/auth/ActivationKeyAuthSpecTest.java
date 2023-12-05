@@ -70,7 +70,7 @@ class ActivationKeyAuthSpecTest {
     void shouldRejectActivationKeyAuthForSecurityHoleEndpoints() {
         ProductsApi client = ApiClients.activationKey(owner.getKey(), activationKey.getName()).products();
 
-        assertForbidden(() -> client.getProduct("some_uuid"));
+        assertForbidden(() -> client.getProductByUuid("some_uuid"));
     }
 
     @Test

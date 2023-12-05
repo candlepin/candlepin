@@ -89,7 +89,7 @@ class JobStatusSpecTest {
         userClient = ApiClients.basic(user.getUsername(), user.getPassword());
 
         product = Products.random();
-        product = ownerProductApi.createProductByOwner(owner.getKey(), product);
+        product = ownerProductApi.createProduct(owner.getKey(), product);
 
         pool = Pools.random().quantity(4L).productId(product.getId());
         pool = ownerApi.createPool(owner.getKey(), pool);

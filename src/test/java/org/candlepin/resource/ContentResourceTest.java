@@ -61,17 +61,17 @@ public class ContentResourceTest {
     }
 
     @Test
-    public void listContent() {
+    public void testGetContents() {
         when(cc.listAll()).thenReturn(new EmptyCandlepinQuery<>());
 
-        resource.listContent();
+        resource.getContents();
         verify(cc, atLeastOnce()).listAll();
     }
 
     @Test
     public void getContentNull() {
         when(cc.get(anyLong())).thenReturn(null);
-        assertThrows(NotFoundException.class, () -> resource.getContent("10"));
+        assertThrows(NotFoundException.class, () -> resource.getContentByUuid("10"));
     }
 
     @Test
@@ -80,7 +80,7 @@ public class ContentResourceTest {
         ContentDTO expected = this.modelTranslator.translate(content, ContentDTO.class);
         when(cc.getByUuid(eq("10"))).thenReturn(content);
 
-        ContentDTO output = resource.getContent("10");
+        ContentDTO output = resource.getContentByUuid("10");
 
         assertEquals(expected, output);
     }

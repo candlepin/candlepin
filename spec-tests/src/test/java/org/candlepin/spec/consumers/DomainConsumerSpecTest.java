@@ -104,12 +104,12 @@ public class DomainConsumerSpecTest {
     private ProductDTO createDomainProduct() {
         ProductDTO product = Products.withAttributes(
             ProductAttributes.RequiresConsumer.withValue(ConsumerTypes.Domain.name().toLowerCase()));
-        return admin.ownerProducts().createProductByOwner(this.owner.getKey(), product);
+        return admin.ownerProducts().createProduct(this.owner.getKey(), product);
     }
 
     private ProductDTO createProduct() {
         return admin.ownerProducts()
-            .createProductByOwner(this.owner.getKey(), Products.random());
+            .createProduct(this.owner.getKey(), Products.random());
     }
 
 }

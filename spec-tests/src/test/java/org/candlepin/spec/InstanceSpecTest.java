@@ -57,7 +57,7 @@ public class InstanceSpecTest {
     @Test
     public void shouldAutoSubscribePhysicalSystemsWithQuantity2PerSocketPair() {
         ProductDTO engProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
 
         Set<ConsumerInstalledProductDTO> installedProds = Set.of(new ConsumerInstalledProductDTO()
             .productId(engProd.getId())
@@ -120,7 +120,7 @@ public class InstanceSpecTest {
     @Test
     public void shouldAutoSubscribeGuestSystemsWithQuantity1() {
         ProductDTO engProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
 
         Set<ConsumerInstalledProductDTO> installedProds = Set.of(new ConsumerInstalledProductDTO()
             .productId(engProd.getId())
@@ -198,7 +198,7 @@ public class InstanceSpecTest {
             ProductAttributes.MultiEntitlement.withValue("yes")));
         instanceProduct.providedProducts(Set.of(providedProduct));
 
-        return client.ownerProducts().createProductByOwner(ownerKey, instanceProduct);
+        return client.ownerProducts().createProduct(ownerKey, instanceProduct);
     }
 
 }

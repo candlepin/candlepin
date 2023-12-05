@@ -143,11 +143,11 @@ public class ConsumerResourceSystemPurposeSpecTest {
         String serviceLevel = StringUtil.random("vIp");
         ProductDTO product1 = Products.random()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue(serviceLevel));
-        product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product1);
+        product1 = adminClient.ownerProducts().createProduct(owner.getKey(), product1);
         ProductDTO product2 = Products.random()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("Layered"))
             .addAttributesItem(ProductAttributes.SupportLevelExempt.withValue("true"));
-        product2 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product2);
+        product2 = adminClient.ownerProducts().createProduct(owner.getKey(), product2);
         adminClient.owners().createPool(owner.getKey(), Pools.random(product1).quantity(1L));
         adminClient.owners().createPool(owner.getKey(), Pools.random(product2));
 
@@ -185,7 +185,7 @@ public class ConsumerResourceSystemPurposeSpecTest {
         String serviceLevel = "Expired";
         ProductDTO product = Products.random()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue(serviceLevel));
-        product = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product);
+        product = adminClient.ownerProducts().createProduct(owner.getKey(), product);
         OffsetDateTime now = OffsetDateTime.now();
         PoolDTO pool = Pools.random(product)
             .startDate(now.minusDays(2L))

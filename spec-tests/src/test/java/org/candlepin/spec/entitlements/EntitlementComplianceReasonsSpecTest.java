@@ -358,7 +358,7 @@ public class EntitlementComplianceReasonsSpecTest {
     }
 
     private ProductDTO createCoreProduct() {
-        return admin.ownerProducts().createProductByOwner(this.owner.getKey(), Products.withAttributes(
+        return admin.ownerProducts().createProduct(this.owner.getKey(), Products.withAttributes(
             ProductAttributes.Version.withValue("6.4"),
             ProductAttributes.Ram.withValue("8"),
             ProductAttributes.Sockets.withValue("2"),
@@ -372,7 +372,7 @@ public class EntitlementComplianceReasonsSpecTest {
     }
 
     private ProductDTO createSocketProduct() {
-        return admin.ownerProducts().createProductByOwner(this.owner.getKey(), Products.withAttributes(
+        return admin.ownerProducts().createProduct(this.owner.getKey(), Products.withAttributes(
             ProductAttributes.Version.withValue("6.4"),
             ProductAttributes.Cores.withValue("2"),
             ProductAttributes.Sockets.withValue("1"),

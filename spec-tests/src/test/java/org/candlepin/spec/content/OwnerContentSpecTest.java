@@ -142,7 +142,7 @@ class OwnerContentSpecTest {
 
         assertEquals(content, created);
 
-        ContentDTO fetched = adminClient.ownerContent().getOwnerContent(owner.getKey(), content.getId());
+        ContentDTO fetched = adminClient.ownerContent().getContentById(owner.getKey(), content.getId());
         assertNotNull(fetched);
 
         // Same deal here, but we've already set the fields to what they should be upstream
@@ -262,7 +262,7 @@ class OwnerContentSpecTest {
         ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
         assertNotNull(created);
 
-        ContentDTO fetched = adminClient.ownerContent().getOwnerContent(owner.getKey(), created.getId());
+        ContentDTO fetched = adminClient.ownerContent().getContentById(owner.getKey(), created.getId());
         assertNotNull(fetched);
         assertEquals(created, fetched);
     }
@@ -276,7 +276,7 @@ class OwnerContentSpecTest {
         assertNotNull(created);
 
         ApiClient orgAdminClient = this.createOrgAdminClient(adminClient, owner);
-        ContentDTO fetched = orgAdminClient.ownerContent().getOwnerContent(owner.getKey(), created.getId());
+        ContentDTO fetched = orgAdminClient.ownerContent().getContentById(owner.getKey(), created.getId());
         assertNotNull(fetched);
         assertEquals(created, fetched);
     }
@@ -290,7 +290,47 @@ class OwnerContentSpecTest {
         assertNotNull(created);
 
         ApiClient consumerClient = this.createConsumerClient(adminClient, owner);
-        assertForbidden(() -> consumerClient.ownerContent().getOwnerContent(owner.getKey(), created.getId()));
+        assertForbidden(() -> consumerClient.ownerContent().getContentById(owner.getKey(), created.getId()));
+    }
+
+    @Test
+    public void shouldListAllContentsInBulkFetch() {
+        ApiClient adminClient = ApiClients.admin();
+
+        OwnerDTO owner = this.createOwner(adminClient);
+        String ownerKey = owner.getKey();
+
+        ContentDTO content1 = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        ContentDTO content2 = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        ContentDTO content3 = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+
+        // Note: We must account for other globals that may have been created as well
+        List<ContentDTO> contents = adminClient.ownerContent().getContentsByOwner(ownerKey, List.of(), false);
+        assertThat(contents)
+            .isNotNull()
+            .hasSizeGreaterThanOrEqualTo(3)
+            .contains(content1, content2, content3);
+    }
+
+    @Test
+    public void shouldListsAllSpecifiedContentsInBulkFetch() {
+        ApiClient adminClient = ApiClients.admin();
+
+        OwnerDTO owner = this.createOwner(adminClient);
+        String ownerKey = owner.getKey();
+
+        ContentDTO content1 = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        ContentDTO content2 = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        ContentDTO content3 = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+
+        // Pick two contents to use in a bulk get
+        List<ContentDTO> contents = adminClient.ownerContent()
+            .getContentsByOwner(ownerKey, List.of(content1.getId(), content3.getId()), false);
+
+        assertThat(contents)
+            .isNotNull()
+            .hasSize(2)
+            .containsOnly(content1, content3);
     }
 
     @Test
@@ -314,6 +354,7 @@ class OwnerContentSpecTest {
             .setPathParam("owner_key", owner.getKey())
             .addQueryParam("page", "1")
             .addQueryParam("per_page", "1")
+            .addQueryParam("omit_global", "true")
             .execute();
 
         assertNotNull(response);
@@ -334,6 +375,7 @@ class OwnerContentSpecTest {
             .setPathParam("owner_key", owner.getKey())
             .addQueryParam("page", "2")
             .addQueryParam("per_page", "1")
+            .addQueryParam("omit_global", "true")
             .execute();
 
         assertNotNull(response);
@@ -351,6 +393,7 @@ class OwnerContentSpecTest {
             .setPathParam("owner_key", owner.getKey())
             .addQueryParam("page", "3")
             .addQueryParam("per_page", "1")
+            .addQueryParam("omit_global", "true")
             .execute();
 
         assertNotNull(response);
@@ -369,6 +412,7 @@ class OwnerContentSpecTest {
             .setPathParam("owner_key", owner.getKey())
             .addQueryParam("page", "4")
             .addQueryParam("per_page", "1")
+            .addQueryParam("omit_global", "true")
             .execute();
 
         List<ContentDTO> c4set = response.deserialize(new TypeReference<>() {});
@@ -398,6 +442,7 @@ class OwnerContentSpecTest {
             .addQueryParam("per_page", "1")
             .addQueryParam("order_by", "id")
             .addQueryParam("sort_order", "asc")
+            .addQueryParam("omit_global", "true")
             .execute();
 
         assertNotNull(response);
@@ -415,6 +460,7 @@ class OwnerContentSpecTest {
             .addQueryParam("per_page", "1")
             .addQueryParam("order_by", "id")
             .addQueryParam("sort_order", "asc")
+            .addQueryParam("omit_global", "true")
             .execute();
 
         assertNotNull(response);
@@ -432,6 +478,7 @@ class OwnerContentSpecTest {
             .addQueryParam("per_page", "1")
             .addQueryParam("order_by", "id")
             .addQueryParam("sort_order", "asc")
+            .addQueryParam("omit_global", "true")
             .execute();
 
         assertNotNull(response);
@@ -449,6 +496,7 @@ class OwnerContentSpecTest {
             .addQueryParam("per_page", "1")
             .addQueryParam("order_by", "id")
             .addQueryParam("sort_order", "asc")
+            .addQueryParam("omit_global", "true")
             .execute();
 
         assertNotNull(response);
@@ -528,7 +576,7 @@ class OwnerContentSpecTest {
         assertEquals(contentUpdate, updated);
         assertNotEquals(created, updated);
 
-        ContentDTO fetched = adminClient.ownerContent().getOwnerContent(owner.getKey(), updated.getId());
+        ContentDTO fetched = adminClient.ownerContent().getContentById(owner.getKey(), updated.getId());
         assertNotNull(fetched);
 
         // Same deal here, but we've already set the fields to what they should be upstream
@@ -557,7 +605,7 @@ class OwnerContentSpecTest {
         // Both DTOs should be identical yet, since the fields changed aren't changeable
         assertEquals(created, updated);
 
-        ContentDTO fetched = adminClient.ownerContent().getOwnerContent(owner.getKey(), id);
+        ContentDTO fetched = adminClient.ownerContent().getContentById(owner.getKey(), id);
         assertNotNull(fetched);
 
         // Same here; should still be identical
@@ -574,11 +622,11 @@ class OwnerContentSpecTest {
         assertNotNull(content);
 
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         assertNotNull(product);
 
         product = adminClient.ownerProducts()
-            .addContent(owner.getKey(), product.getId(), content.getId(), true);
+            .addContentToProduct(owner.getKey(), product.getId(), content.getId(), true);
         assertNotNull(product);
 
         assertThat(product.getProductContent())
@@ -597,13 +645,10 @@ class OwnerContentSpecTest {
         assertNotEquals(content, updatedContent);
 
         ProductDTO updatedProduct = adminClient.ownerProducts()
-            .getProductByOwner(owner.getKey(), product.getId());
+            .getProductById(owner.getKey(), product.getId());
 
         assertNotNull(updatedProduct);
         assertNotEquals(product, updatedProduct);
-
-        // Specifically, the UUID should have changed
-        assertNotEquals(product.getUuid(), updatedProduct.getUuid());
 
         assertThat(updatedProduct.getProductContent())
             .isNotNull()
@@ -650,13 +695,13 @@ class OwnerContentSpecTest {
         ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
         assertNotNull(created);
 
-        ContentDTO fetched = adminClient.ownerContent().getOwnerContent(owner.getKey(), created.getId());
+        ContentDTO fetched = adminClient.ownerContent().getContentById(owner.getKey(), created.getId());
         assertNotNull(fetched);
         assertEquals(created, fetched);
 
-        adminClient.ownerContent().remove(owner.getKey(), created.getId());
+        adminClient.ownerContent().removeContent(owner.getKey(), created.getId());
 
-        assertNotFound(() -> adminClient.ownerContent().getOwnerContent(owner.getKey(), created.getId()));
+        assertNotFound(() -> adminClient.ownerContent().getContentById(owner.getKey(), created.getId()));
     }
 
     @Test
@@ -668,7 +713,7 @@ class OwnerContentSpecTest {
         assertNotNull(created);
 
         ApiClient orgAdminClient = this.createOrgAdminClient(adminClient, owner);
-        assertForbidden(() -> orgAdminClient.ownerContent().remove(owner.getKey(), created.getId()));
+        assertForbidden(() -> orgAdminClient.ownerContent().removeContent(owner.getKey(), created.getId()));
     }
 
     @Test
@@ -680,7 +725,7 @@ class OwnerContentSpecTest {
         assertNotNull(created);
 
         ApiClient consumerClient = this.createConsumerClient(adminClient, owner);
-        assertForbidden(() -> consumerClient.ownerContent().remove(owner.getKey(), created.getId()));
+        assertForbidden(() -> consumerClient.ownerContent().removeContent(owner.getKey(), created.getId()));
     }
 
     @Test
@@ -692,11 +737,11 @@ class OwnerContentSpecTest {
         assertNotNull(content);
 
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         assertNotNull(product);
 
         product = adminClient.ownerProducts()
-            .addContent(owner.getKey(), product.getId(), content.getId(), true);
+            .addContentToProduct(owner.getKey(), product.getId(), content.getId(), true);
         assertNotNull(product);
 
         assertThat(product.getProductContent())
@@ -705,17 +750,14 @@ class OwnerContentSpecTest {
             .map(ProductContentDTO::getContent)
             .contains(content);
 
-        adminClient.ownerContent().remove(owner.getKey(), content.getId());
-        assertNotFound(() -> adminClient.ownerContent().getOwnerContent(owner.getKey(), content.getId()));
+        adminClient.ownerContent().removeContent(owner.getKey(), content.getId());
+        assertNotFound(() -> adminClient.ownerContent().getContentById(owner.getKey(), content.getId()));
 
         ProductDTO updatedProduct = adminClient.ownerProducts()
-            .getProductByOwner(owner.getKey(), product.getId());
+            .getProductById(owner.getKey(), product.getId());
 
         assertNotNull(updatedProduct);
         assertNotEquals(product, updatedProduct);
-
-        // Specifically, the UUID should have changed
-        assertNotEquals(product.getUuid(), updatedProduct.getUuid());
 
         assertThat(updatedProduct.getProductContent())
             .isNotNull()
@@ -732,11 +774,11 @@ class OwnerContentSpecTest {
         assertNotNull(content);
 
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         assertNotNull(product);
 
         product = adminClient.ownerProducts()
-            .addContent(owner.getKey(), product.getId(), content.getId(), true);
+            .addContentToProduct(owner.getKey(), product.getId(), content.getId(), true);
         assertNotNull(product);
 
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.randomUpstream(product));
@@ -820,7 +862,7 @@ class OwnerContentSpecTest {
             job = adminClient.jobs().waitForJob(job);
             assertEquals("FINISHED", job.getState());
 
-            this.targetEntity = adminClient.ownerContent().getOwnerContent(owner.getKey(), content.getId());
+            this.targetEntity = adminClient.ownerContent().getContentById(owner.getKey(), content.getId());
             assertNotNull(this.targetEntity);
             assertEquals(content.getId(), this.targetEntity.getId());
         }
@@ -842,7 +884,7 @@ class OwnerContentSpecTest {
             ApiClient adminClient = ApiClients.admin();
 
             assertForbidden(() -> adminClient.ownerContent()
-                .remove(this.owner.getKey(), this.targetEntity.getId()));
+                .removeContent(this.owner.getKey(), this.targetEntity.getId()));
         }
     }
 
@@ -874,7 +916,7 @@ class OwnerContentSpecTest {
             ProductDTO pdto = Products.randomSKU()
                 .id(String.format("prod_%d", pcount));
 
-            pdto = adminClient.ownerProducts().createProductByOwner(owner.getKey(), pdto);
+            pdto = adminClient.ownerProducts().createProduct(owner.getKey(), pdto);
             assertNotNull(pdto);
 
             for (int ccount = 0; ccount < content; ++ccount) {
@@ -894,7 +936,8 @@ class OwnerContentSpecTest {
                 adminClient.environments().promoteContent(env.getId(), List.of(promotion), null);
 
                 // Attach it to the product
-                adminClient.ownerProducts().addContent(owner.getKey(), pdto.getId(), cdto.getId(), true);
+                adminClient.ownerProducts()
+                    .addContentToProduct(owner.getKey(), pdto.getId(), cdto.getId(), true);
 
                 // Store the mapping so we can reference this relationship later (maybe?)
                 contentMap.put(cdto.getId(), cdto);
@@ -1002,7 +1045,7 @@ class OwnerContentSpecTest {
             String pid = entry.getKey();
             Set<String> cids = entry.getValue();
 
-            ProductDTO pdto = adminClient.ownerProducts().getProductByOwner(owner.getKey(), pid);
+            ProductDTO pdto = adminClient.ownerProducts().getProductById(owner.getKey(), pid);
             assertNotNull(pdto);
 
             assertThat(pdto.getProductContent())

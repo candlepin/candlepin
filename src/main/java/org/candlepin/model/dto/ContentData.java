@@ -28,7 +28,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 
 
@@ -84,8 +83,6 @@ public class ContentData extends CandlepinDTO implements ContentInfo {
     protected Set<String> modifiedProductIds;
 
     protected String arches;
-
-    protected Boolean locked;
 
     /**
      * Initializes a new ContentData instance with null values.
@@ -580,32 +577,6 @@ public class ContentData extends CandlepinDTO implements ContentInfo {
         return this;
     }
 
-    /**
-     * Retrieves the lock state of the content represented by this DTO. If the lock state has not
-     * yet been defined, this method returns null.
-     *
-     * @return
-     *  the lock state of the content, or null if the lock state has not yet been defined
-     */
-    @XmlTransient
-    public Boolean isLocked() {
-        return this.locked;
-    }
-
-    /**
-     * Sets the lock state of the content represented by this DTO.
-     *
-     * @param locked
-     *  The lock state of the content represented by this DTO, or null to clear the state
-     *
-     * @return
-     *  a reference to this DTO
-     */
-    public ContentData setLocked(Boolean locked) {
-        this.locked = locked;
-        return this;
-    }
-
     @Override
     public String toString() {
         return String.format("ContentData [id: %s, name: %s, label: %s]", this.id, this.name, this.label);
@@ -636,8 +607,7 @@ public class ContentData extends CandlepinDTO implements ContentInfo {
             .append(this.gpgUrl, that.gpgUrl)
             .append(this.metadataExpire, that.metadataExpire)
             .append(this.modifiedProductIds, that.modifiedProductIds)
-            .append(this.arches, that.arches)
-            .append(this.locked, that.locked);
+            .append(this.arches, that.arches);
 
         return super.equals(obj) && builder.isEquals();
     }
@@ -658,8 +628,7 @@ public class ContentData extends CandlepinDTO implements ContentInfo {
             .append(this.gpgUrl)
             .append(this.metadataExpire)
             .append(this.modifiedProductIds)
-            .append(this.arches)
-            .append(this.locked);
+            .append(this.arches);
 
         return builder.toHashCode();
     }
@@ -704,7 +673,6 @@ public class ContentData extends CandlepinDTO implements ContentInfo {
         this.gpgUrl = source.getGpgUrl();
         this.metadataExpire = source.getMetadataExpiration();
         this.arches = source.getArches();
-        this.locked = source.isLocked();
 
         this.setModifiedProductIds(source.getModifiedProductIds());
 
@@ -742,7 +710,6 @@ public class ContentData extends CandlepinDTO implements ContentInfo {
         this.gpgUrl = source.getGpgUrl();
         this.metadataExpire = source.getMetadataExpiration();
         this.arches = source.getArches();
-        this.locked = source.isLocked();
 
         this.setModifiedProductIds(source.getModifiedProductIds());
 

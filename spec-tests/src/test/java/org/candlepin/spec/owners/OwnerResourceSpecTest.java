@@ -80,7 +80,7 @@ public class OwnerResourceSpecTest {
     }
 
     private ProductDTO createProduct(OwnerDTO owner, AttributeDTO... attributes) throws ApiException {
-        return ownerProducts.createProductByOwner(owner.getKey(), Products.withAttributes(attributes));
+        return ownerProducts.createProduct(owner.getKey(), Products.withAttributes(attributes));
     }
 
     @Test
@@ -333,7 +333,7 @@ public class OwnerResourceSpecTest {
 
         ProductDTO product = Products.random();
 
-        admin.ownerProducts().createProductByOwner(owner.getKey(), product);
+        admin.ownerProducts().createProduct(owner.getKey(), product);
         owners.createPool(owner.getKey(), Pools.random(product));
 
         assertForbidden(() -> readOnlyClient.owners().refreshPools(owner.getKey(), false));
@@ -527,8 +527,8 @@ public class OwnerResourceSpecTest {
         ProductDTO provided2 = createProduct(owner);
         ProductDTO derivedProvided = createProduct(owner);
         ProductDTO derivedProduct = ownerProducts
-            .createProductByOwner(owner.getKey(), Products.random().addProvidedProductsItem(derivedProvided));
-        ProductDTO product = ownerProducts.createProductByOwner(owner.getKey(), Products.random()
+            .createProduct(owner.getKey(), Products.random().addProvidedProductsItem(derivedProvided));
+        ProductDTO product = ownerProducts.createProduct(owner.getKey(), Products.random()
             .derivedProduct(derivedProduct)
             .addProvidedProductsItem(provided1)
             .addProvidedProductsItem(provided2));

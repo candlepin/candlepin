@@ -19,6 +19,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
+import org.candlepin.util.Util;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
@@ -1634,8 +1635,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         // FIXME: This does not properly handle true N-tier; update as necessary
         String sql = "SELECT pool.id, prod.product_id FROM cp_pool pool " +
-            "JOIN cp2_product_provided_products ppp ON pool.product_uuid = ppp.product_uuid " +
-            "JOIN cp2_products prod ON prod.uuid = ppp.provided_product_uuid " +
+            "JOIN cp_product_provided_products ppp ON pool.product_uuid = ppp.product_uuid " +
+            "JOIN cp_products prod ON prod.uuid = ppp.provided_product_uuid " +
             "WHERE pool.id IN (:pool_ids)";
 
         if (poolIds != null && !poolIds.isEmpty()) {
@@ -1695,9 +1696,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         // FIXME: This does not properly handle true N-tier; update as necessary
         String sql = "SELECT pool.id, dprod.product_id FROM cp_pool pool " +
-            "JOIN cp2_products prod ON prod.uuid = pool.product_uuid " +
-            "JOIN cp2_product_provided_products ppp ON prod.derived_product_uuid = ppp.product_uuid " +
-            "JOIN cp2_products dprod ON dprod.uuid = ppp.provided_product_uuid " +
+            "JOIN cp_products prod ON prod.uuid = pool.product_uuid " +
+            "JOIN cp_product_provided_products ppp ON prod.derived_product_uuid = ppp.product_uuid " +
+            "JOIN cp_products dprod ON dprod.uuid = ppp.provided_product_uuid " +
             "WHERE pool.id IN (:pool_ids)";
 
         if (poolIds != null && !poolIds.isEmpty()) {
@@ -1848,7 +1849,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             "LEFT JOIN (SELECT e.consumer_id, ppa.value AS stack_id, e.id AS entitlement_id " +
             "    FROM cp_entitlement e " +
             "    JOIN cp_pool p ON p.id = e.pool_id " +
-            "    JOIN cp2_product_attributes ppa ON ppa.product_uuid = p.product_uuid " +
+            "    JOIN cp_product_attributes ppa ON ppa.product_uuid = p.product_uuid " +
             "    LEFT JOIN cp_pool_source_stack ss ON ss.derivedpool_id = p.id " +
             "    WHERE ss.id IS NULL " +
             "        AND p.sourceentitlement_id IS NULL " +
@@ -1886,30 +1887,120 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return output;
     }
 
+    private Map<String, Set<String>> getBaseSyspurposeMap() {
+        return Map.of(
+            "usage", new HashSet<>(),
+            "roles", new HashSet<>(),
+            "addons", new HashSet<>(),
+            "support_type", new HashSet<>(),
+            "support_level", new HashSet<>());
+    }
+
     /**
-     * Fetches a list of pool IDs for pools that are referencing products which are no longer linked
-     * to the pool's owning organization. If no such pools exist, this method returns an empty list.
+     * Builds a query for fetching the system purpose attributes mapped to the given owner's
+     * products. Will only return attributes for products that are related to unexpired pools.
      *
      * @param ownerId
-     *  the ID of the organization owning the pools to check.
+     *  The owner ID for which to fetch system purpose attributes
      *
      * @return
-     *  a list of pools using products which are not owned by the owning organization.
+     *  a map of attributes belonging to the given owner
      */
-    public List<String> getPoolsUsingOrphanedProducts(String ownerId) {
-        if (ownerId == null || ownerId.isEmpty()) {
-            return new ArrayList<>();
+    public Map<String, Set<String>> getSyspurposeAttributesByOwner(String ownerId) {
+        Map<String, Set<String>> output = this.getBaseSyspurposeMap();
+
+        if (ownerId == null) {
+            return output;
         }
 
-        // We use native SQL here since we do a multi-field join
-        String sql = "SELECT p.id FROM cp_pool p " +
-            "LEFT JOIN cp2_owner_products op1 ON op1.owner_id = p.owner_id " +
-            "  AND p.product_uuid = op1.product_uuid " +
-            "WHERE p.owner_id = :owner_id AND " +
-            "  (p.product_uuid IS NOT NULL AND op1.product_uuid IS NULL)";
+        // FIXME: This will also include future-dated subscriptions
+
+        String sql = "SELECT DISTINCT attr.name, attr.value " +
+            "FROM cp_product_attributes attr " +
+            "JOIN cp_pool pool ON attr.product_uuid = pool.product_uuid " +
+            "WHERE pool.owner_id = :owner_id " +
+            "AND pool.endDate > CURRENT_TIMESTAMP " +
+            "AND attr.name IN ('usage', 'roles', 'addons', 'support_type')" +
+            "UNION " +
+            "SELECT DISTINCT attr.name, attr.value " +
+            "FROM cp_product_attributes attr " +
+            "JOIN cp_pool pool ON attr.product_uuid = pool.product_uuid " +
+            "WHERE pool.owner_id = :owner_id " +
+            "AND pool.endDate > CURRENT_TIMESTAMP " +
+            "AND attr.name = 'support_level' " +
+            "AND NOT EXISTS (" +
+            "  SELECT * FROM cp_product_attributes sle_attr " +
+            "  WHERE sle_attr.product_uuid = attr.product_uuid " +
+            "  AND sle_attr.name = 'support_level_exempt' " +
+            "  AND sle_attr.value = 'true')";
+
+        ((List<Object[]>) this.getEntityManager()
+            .createNativeQuery(sql)
+            .setParameter("owner_id", ownerId)
+            .getResultList())
+            .forEach(pair -> output.get((String) pair[0]).addAll(Util.toList((String) pair[1])));
+
+        return output;
+    }
+
+    /**
+     * Builds a query for fetching the system purpose attributes mapped to the given owner's
+     * products. Will only return attributes for products that are related to unexpired pools.
+     *
+     * @param owner
+     *  The owner for which to fetch system purpose attributes
+     *
+     * @return
+     *  a map of attributes belonging to the given owner
+     */
+    public Map<String, Set<String>> getSyspurposeAttributesByOwner(Owner owner) {
+        if (owner == null) {
+            return getBaseSyspurposeMap();
+        }
+
+        return this.getSyspurposeAttributesByOwner(owner.getId());
+    }
+
+    /**
+     * Fetches a list of product IDs currently used by development pools for the specified owner.
+     * If no such pools exist, or the owner has no pools, this method returns an empty list.
+     *
+     * @param ownerId
+     *  the ID of the owner for which to look up development product IDs
+     *
+     * @return
+     *  a list of development product IDs for the given owner
+     */
+    public List<String> getDevPoolProductIds(String ownerId) {
+        String jpql = "SELECT prod.id FROM Pool pool JOIN pool.product prod " +
+            "WHERE pool.owner.id = :owner_id AND pool.type = :pool_type";
 
         return this.getEntityManager()
-            .createNativeQuery(sql)
+            .createQuery(jpql, String.class)
+            .setParameter("owner_id", ownerId)
+            .setParameter("pool_type", PoolType.DEVELOPMENT)
+            .getResultList();
+    }
+
+    /**
+     * Fetches a list of IDs of pools referencing a product that exists in another org's namespace.
+     * That is, a product not in the global namespace or the namespace of the pool's owner. If the
+     * org has no pools with invalid product references, this method returns an empty list.
+     *
+     * @param ownerId
+     *  the ID of the owner for which to fetch pools
+     *
+     * @return
+     *  a list of IDs of pools referencing invalid products
+     */
+    public List<Pool> getPoolsReferencingInvalidProducts(String ownerId) {
+        String jpql = "SELECT pool FROM Pool pool " +
+            "JOIN pool.product prod " +
+            "JOIN pool.owner owner " +
+            "WHERE owner.id = :owner_id AND prod.namespace != '' AND prod.namespace != owner.key";
+
+        return this.getEntityManager()
+            .createQuery(jpql, Pool.class)
             .setParameter("owner_id", ownerId)
             .getResultList();
     }

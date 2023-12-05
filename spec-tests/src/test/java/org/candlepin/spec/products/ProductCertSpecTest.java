@@ -50,9 +50,9 @@ public class ProductCertSpecTest {
     @BeforeEach
     public void beforeEach() {
         owner = adminClient.owners().createOwner(Owners.random());
-        product = adminClient.ownerProducts().createProductByOwner(owner.getKey(), Products.randomEng());
-        ProductCertificateDTO productCertificate = adminClient.ownerProducts().getProductCertificateByOwner(
-            owner.getKey(), product.getId());
+        product = adminClient.ownerProducts().createProduct(owner.getKey(), Products.randomEng());
+        ProductCertificateDTO productCertificate = adminClient.ownerProducts()
+            .getProductCertificateById(owner.getKey(), product.getId());
         certificate = X509Cert.parseCertificate(productCertificate.getCert());
     }
 

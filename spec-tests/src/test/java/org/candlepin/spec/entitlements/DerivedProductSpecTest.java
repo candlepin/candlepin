@@ -14,7 +14,9 @@
  */
 package org.candlepin.spec.entitlements;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
@@ -28,6 +30,7 @@ import org.candlepin.dto.api.client.v1.EntitlementDTO;
 import org.candlepin.dto.api.client.v1.GuestIdDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
+import org.candlepin.dto.api.client.v1.ProductContentDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.SubscriptionDTO;
 import org.candlepin.resource.HostedTestApi;
@@ -89,7 +92,7 @@ public class DerivedProductSpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
         PoolDTO mainPool = createDatacenterPool1(owner);
-        ProductDTO engProduct1 = ownerProductApi.getProductByOwner(owner.getKey(),
+        ProductDTO engProduct1 = ownerProductApi.getProductById(owner.getKey(),
             mainPool.getDerivedProvidedProducts().iterator().next().getProductId());
         ProductDTO instanceProduct = Products.randomEng()
             .addAttributesItem(ProductAttributes.InstanceMultiplier.withValue("2"))
@@ -98,7 +101,7 @@ public class DerivedProductSpecTest {
             .addAttributesItem(ProductAttributes.HostLimited.withValue("true"))
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"))
             .providedProducts(Set.of(engProduct1));
-        instanceProduct = ownerProductApi.createProductByOwner(owner.getKey(), instanceProduct);
+        instanceProduct = ownerProductApi.createProduct(owner.getKey(), instanceProduct);
 
         String guestUuid = StringUtil.random("uuid");
         ConsumerDTO physicalSystem = userClient.consumers().createConsumer(
@@ -133,7 +136,7 @@ public class DerivedProductSpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
         PoolDTO mainPool = createDatacenterPool1(owner);
-        ProductDTO engProduct1 = ownerProductApi.getProductByOwner(owner.getKey(),
+        ProductDTO engProduct1 = ownerProductApi.getProductById(owner.getKey(),
             mainPool.getDerivedProvidedProducts().iterator().next().getProductId());
 
         String guestUuid = StringUtil.random("uuid");
@@ -176,7 +179,7 @@ public class DerivedProductSpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
         PoolDTO mainPool = createDatacenterPool1(owner);
-        ProductDTO engProduct1 = ownerProductApi.getProductByOwner(owner.getKey(),
+        ProductDTO engProduct1 = ownerProductApi.getProductById(owner.getKey(),
             mainPool.getDerivedProvidedProducts().iterator().next().getProductId());
 
         String guestUuid = StringUtil.random("uuid");
@@ -261,9 +264,9 @@ public class DerivedProductSpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
         PoolDTO mainPool = createDatacenterPool1(owner);
-        ProductDTO engProduct1 = ownerProductApi.getProductByOwner(owner.getKey(),
+        ProductDTO engProduct1 = ownerProductApi.getProductById(owner.getKey(),
             mainPool.getDerivedProvidedProducts().iterator().next().getProductId());
-        ContentDTO engProductContent1 = ownerContentApi.getOwnerContent(owner.getKey(),
+        ContentDTO engProductContent1 = ownerContentApi.getContentById(owner.getKey(),
             engProduct1.getProductContent().iterator().next().getContent().getId());
         ConsumerDTO distributor = userClient.consumers().createConsumer(
             Consumers.random(owner, ConsumerTypes.Candlepin));
@@ -304,8 +307,8 @@ public class DerivedProductSpecTest {
         String engProductId2 = modifiedPool.getDerivedProvidedProducts().stream()
             .filter(x -> x.getProductName().startsWith("eng"))
             .findFirst().get().getProductId();
-        ProductDTO engProduct2 = ownerProductApi.getProductByOwner(owner.getKey(), engProductId2);
-        ContentDTO productModifierContent = ownerContentApi.getOwnerContent(owner.getKey(),
+        ProductDTO engProduct2 = ownerProductApi.getProductById(owner.getKey(), engProductId2);
+        ContentDTO productModifierContent = ownerContentApi.getContentById(owner.getKey(),
             engProduct2.getProductContent().iterator().next().getContent().getId());
 
         String distVersion = StringUtil.random("version");
@@ -372,7 +375,7 @@ public class DerivedProductSpecTest {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
         PoolDTO mainPool = createDatacenterPool1(owner);
-        ProductDTO engProduct1 = ownerProductApi.getProductByOwner(owner.getKey(),
+        ProductDTO engProduct1 = ownerProductApi.getProductById(owner.getKey(),
             mainPool.getDerivedProvidedProducts().iterator().next().getProductId());
 
         ConsumerDTO physicalSystem = userClient.consumers().createConsumer(
@@ -392,19 +395,59 @@ public class DerivedProductSpecTest {
             .returns(0, x -> x.get("content").size());
     }
 
+    /**
+     * Builds a consumer capable of generating manifests and exporting certificate bundles via
+     * export APIs
+     *
+     * @param owner
+     *  the owner for which to build a manifest consumer
+     *
+     * @return
+     *  a consumer capable of creating manifests within the given owner
+     */
+    private ConsumerDTO buildDistributorConsumer(OwnerDTO owner) {
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
+
+        // Gather capabilities from the status endpoint
+        Set<DistributorVersionCapabilityDTO> capabilities = client.status().status()
+            .getManagerCapabilities()
+            .stream()
+            .map(capability -> new DistributorVersionCapabilityDTO().name(capability))
+            .collect(Collectors.toSet());
+
+        DistributorVersionDTO distver = new DistributorVersionDTO()
+            .name(StringUtil.random("manifest_dist"))
+            .displayName("SAM")
+            .capabilities(capabilities);
+
+        distver = client.distributorVersions().create(distver);
+
+        // Create the consumer
+        ConsumerDTO consumer = new ConsumerDTO()
+            .name(StringUtil.random("distributor-", 8, StringUtil.CHARSET_NUMERIC_HEX))
+            .type(ConsumerTypes.Candlepin.value())
+            .owner(Owners.toNested(owner))
+            .putFactsItem("system.certificate_version", "3.3")
+            .putFactsItem("distributor_version", distver.getName());
+
+        return client.consumers().createConsumer(consumer);
+    }
+
     @Test
     @OnlyInHosted
     public void shouldRegenerateEntitlementsWhenUpdatingDerivedContent() {
         HostedTestApi hostedTestApi = client.hosted();
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ConsumerDTO distributor = userClient.consumers().createConsumer(
-            Consumers.random(owner, ConsumerTypes.Candlepin));
+
+        ConsumerDTO distributor = this.buildDistributorConsumer(owner);
         ApiClient distributorClient = ApiClients.ssl(distributor);
 
-        ContentDTO derivedContent = hostedTestApi.createContent(Contents.random());
+        ContentDTO derivedContent = hostedTestApi.createContent(Contents.random().name("dcont-1"));
         ProductDTO derivedEngProduct = hostedTestApi.createProduct(Products.randomEng());
         hostedTestApi.addContentToProduct(derivedEngProduct.getId(), derivedContent.getId(), true);
+
         ProductDTO derivedProduct = Products.random()
             .addAttributesItem(ProductAttributes.Cores.withValue("2"))
             .addAttributesItem(ProductAttributes.Sockets.withValue("4"))
@@ -424,51 +467,74 @@ public class DerivedProductSpecTest {
             Subscriptions.random(owner, datacenterProduct));
 
         AsyncJobStatusDTO refresh = ownerApi.refreshPools(owner.getKey(), false);
-        assertThatJob(client.jobs().waitForJob(refresh.getId())).isFinished();
+        assertThatJob(client.jobs().waitForJob(refresh.getId()))
+            .isFinished();
 
-        assertThat(ownerProductApi.getProductByOwner(
-            owner.getKey(), derivedEngProduct.getId()).getProductContent()).hasSize(1);
+        ProductDTO fetched = ownerProductApi.getProductById(owner.getKey(), derivedEngProduct.getId());
+        assertThat(fetched)
+            .isNotNull()
+            .extracting(ProductDTO::getProductContent, as(collection(ProductContentDTO.class)))
+            .isNotNull()
+            .map(ProductContentDTO::getContent)
+            .map(ContentDTO::getId)
+            .containsExactlyInAnyOrder(derivedContent.getId());
+
         List<PoolDTO> mainPools = client.pools().listPoolsByOwnerAndProduct(
             owner.getId(), datacenterProduct.getId());
         assertThat(mainPools).singleElement(); // We're expecting the base pool
 
-        String distVersion = StringUtil.random("version");
-        client.distributorVersions().create(new DistributorVersionDTO()
-            .name(distVersion)
-            .displayName("SAM")
-            .capabilities(Set.of(new DistributorVersionCapabilityDTO().name("cert_v3"),
-                new DistributorVersionCapabilityDTO().name("derived_product"))));
-        distributorClient.consumers().updateConsumer(distributor.getUuid(), new ConsumerDTO()
-            .facts(Map.of("distributor_version", distVersion)));
+        EntitlementDTO ent = distributorClient.consumers()
+            .bindPoolSync(distributor.getUuid(), mainPools.get(0).getId(), 1)
+            .get(0);
 
-        JsonNode ent = distributorClient.consumers().bindPool(distributor.getUuid(),
-            mainPools.get(0).getId(), 1).get(0);
         List<JsonNode> certs = distributorClient.consumers().exportCertificates(distributor.getUuid(), null);
-        assertThat(certs).singleElement().returns(1, x -> x.get("products").size());
+        assertThat(certs)
+            .singleElement()
+            .extracting(node -> node.get("products"))
+            .returns(1, JsonNode::size);
 
         assertProductContent(certs.get(0).get("products"), derivedEngProduct, derivedContent);
 
         // Add content to the derived product upstream
-        ContentDTO newDerivedContent = hostedTestApi.createContent(Contents.random());
+        ContentDTO newDerivedContent = hostedTestApi.createContent(Contents.random().name("dcont-2"));
         hostedTestApi.addContentToProduct(derivedEngProduct.getId(), newDerivedContent.getId(), true);
 
-        // Refresh the account
+        // Refresh the account & verify the product reflects the upstream changes
         refresh = ownerApi.refreshPools(owner.getKey(), false);
-        assertThatJob(client.jobs().waitForJob(refresh.getId())).isFinished();
+        assertThatJob(client.jobs().waitForJob(refresh.getId()))
+            .isFinished();
 
-        assertThat(ownerProductApi.getProductByOwner(
-            owner.getKey(), derivedEngProduct.getId()).getProductContent()).hasSize(2);
+        assertThat(ownerProductApi.getProductById(owner.getKey(), derivedEngProduct.getId()))
+            .isNotNull()
+            .extracting(ProductDTO::getProductContent, as(collection(ProductContentDTO.class)))
+            .isNotNull()
+            .map(ProductContentDTO::getContent)
+            .map(ContentDTO::getId)
+            .containsExactlyInAnyOrder(derivedContent.getId(), newDerivedContent.getId());
+
+        // Export the certs again and verify the product on the certificate has changed to reflect
+        // the new content
         certs = distributorClient.consumers().exportCertificates(distributor.getUuid(), null);
-        assertThat(certs).singleElement().returns(1, x -> x.get("products").size());
+        assertThat(certs)
+            .singleElement()
+            .extracting(node -> node.get("products"))
+            .returns(1, JsonNode::size);
 
         assertProductContent(certs.get(0).get("products"), derivedEngProduct, derivedContent,
             newDerivedContent);
 
-        distributorClient.consumers().unbindByEntitlementId(distributor.getUuid(), ent.get("id").asText());
-        ent = distributorClient.consumers().bindPool(
-            distributor.getUuid(), mainPools.get(0).getId(), 1).get(0);
+        // FIXME: What is being tested beyond this point?
+        distributorClient.consumers().unbindByEntitlementId(distributor.getUuid(), ent.getId());
+
+        ent = distributorClient.consumers()
+            .bindPoolSync(distributor.getUuid(), mainPools.get(0).getId(), 1)
+            .get(0);
+
         certs = distributorClient.consumers().exportCertificates(distributor.getUuid(), null);
-        assertThat(certs).singleElement().returns(1, x -> x.get("products").size());
+        assertThat(certs)
+            .singleElement()
+            .extracting(node -> node.get("products"))
+            .returns(1, JsonNode::size);
 
         assertProductContent(certs.get(0).get("products"), derivedEngProduct, derivedContent,
             newDerivedContent);
@@ -480,16 +546,16 @@ public class DerivedProductSpecTest {
         //  through derived provided products, provided products, or through another entitlement.
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
         PoolDTO modifiedContentPool = createDatacenterPool2(owner);
-        ProductDTO engProduct2 = ownerProductApi.getProductByOwner(owner.getKey(),
+        ProductDTO engProduct2 = ownerProductApi.getProductById(owner.getKey(),
             modifiedContentPool.getDerivedProvidedProducts()
             .stream()
             .filter(x -> x.getProductName().startsWith("eng"))
             .findFirst().get()
             .getProductId());
-        ProductDTO modifiedProduct = ownerProductApi.getProductByOwner(owner.getKey(),
+        ProductDTO modifiedProduct = ownerProductApi.getProductById(owner.getKey(),
             engProduct2.getProductContent().iterator().next().getContent()
             .getModifiedProductIds().iterator().next());
-        ContentDTO productModifierContent = ownerContentApi.getOwnerContent(owner.getKey(),
+        ContentDTO productModifierContent = ownerContentApi.getContentById(owner.getKey(),
             engProduct2.getProductContent().iterator().next().getContent().getId());
         ProductDTO derivedProduct2 = createDerivedProduct2(owner, modifiedProduct);
 
@@ -508,12 +574,12 @@ public class DerivedProductSpecTest {
         ProductDTO vdcProduct = Products.randomEng()
             .derivedProduct(derivedProduct2)
             .providedProducts(Set.of(modifiedProduct));
-        vdcProduct = ownerProductApi.createProductByOwner(owner.getKey(), vdcProduct);
+        vdcProduct = ownerProductApi.createProduct(owner.getKey(), vdcProduct);
 
         PoolDTO vdcPool = ownerApi.createPool(owner.getKey(), Pools.random(vdcProduct));
         ProductDTO modifierEntitlementProduct = Products.randomEng()
             .providedProducts(Set.of(engProduct2));
-        modifierEntitlementProduct = ownerProductApi.createProductByOwner(owner.getKey(),
+        modifierEntitlementProduct = ownerProductApi.createProduct(owner.getKey(),
             modifierEntitlementProduct);
         PoolDTO modifierPool = ownerApi.createPool(owner.getKey(), Pools.random(modifierEntitlementProduct));
 
@@ -559,27 +625,27 @@ public class DerivedProductSpecTest {
     }
 
     private ProductDTO createEngProduct1(OwnerDTO owner) {
-        ProductDTO engProduct1 = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO engProduct1 = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ContentDTO engProductContent = Contents.random()
             .gpgUrl("gpgUrl")
             .contentUrl("/content/dist/rhel/$releasever/$basearch/os")
             .metadataExpire(6400L);
         engProductContent = ownerContentApi.createContent(owner.getKey(), engProductContent);
-        return ownerProductApi.addContent(owner.getKey(), engProduct1.getId(),
+        return ownerProductApi.addContentToProduct(owner.getKey(), engProduct1.getId(),
             engProductContent.getId(), true);
     }
 
     private ProductDTO createEngProduct2(OwnerDTO owner, ProductDTO modifiedProduct) {
         ProductDTO engProduct2 = Products.randomEng()
             .name(StringUtil.random("eng"));
-        engProduct2 = ownerProductApi.createProductByOwner(owner.getKey(), engProduct2);
+        engProduct2 = ownerProductApi.createProduct(owner.getKey(), engProduct2);
         ContentDTO productModifierContent = Contents.random()
             .gpgUrl("gpgUrl")
             .contentUrl("/this/modifies/product")
             .metadataExpire(6400L)
             .modifiedProductIds(Set.of(modifiedProduct.getId()));
         productModifierContent = ownerContentApi.createContent(owner.getKey(), productModifierContent);
-        return ownerProductApi.addContent(owner.getKey(), engProduct2.getId(),
+        return ownerProductApi.addContentToProduct(owner.getKey(), engProduct2.getId(),
             productModifierContent.getId(), true);
     }
 
@@ -588,23 +654,23 @@ public class DerivedProductSpecTest {
             .addAttributesItem(ProductAttributes.Cores.withValue("2"))
             .addAttributesItem(ProductAttributes.Sockets.withValue("4"))
             .providedProducts(Set.of(createEngProduct1(owner)));
-        return ownerProductApi.createProductByOwner(owner.getKey(), product);
+        return ownerProductApi.createProduct(owner.getKey(), product);
     }
 
     private ProductDTO createDerivedProduct2(OwnerDTO owner, ProductDTO modifiedProduct) {
         ProductDTO product = Products.randomEng()
             .addAttributesItem(ProductAttributes.Cores.withValue("2"))
             .providedProducts(Set.of(modifiedProduct));
-        return ownerProductApi.createProductByOwner(owner.getKey(), product);
+        return ownerProductApi.createProduct(owner.getKey(), product);
     }
 
     private ProductDTO createDerivedProduct3(OwnerDTO owner) {
-        ProductDTO modifiedProduct = ownerProductApi.createProductByOwner(owner.getKey(),
+        ProductDTO modifiedProduct = ownerProductApi.createProduct(owner.getKey(),
             Products.randomEng());
         ProductDTO product = Products.randomEng()
             .addAttributesItem(ProductAttributes.Cores.withValue("2"))
             .providedProducts(Set.of(createEngProduct2(owner, modifiedProduct), modifiedProduct));
-        return ownerProductApi.createProductByOwner(owner.getKey(), product);
+        return ownerProductApi.createProduct(owner.getKey(), product);
     }
 
     private PoolDTO createDatacenterPool1(OwnerDTO owner) {
@@ -615,7 +681,7 @@ public class DerivedProductSpecTest {
             .addAttributesItem(ProductAttributes.HostLimited.withValue("true"))
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"))
             .derivedProduct(createDerivedProduct1(owner));
-        datacenterProduct = ownerProductApi.createProductByOwner(owner.getKey(), datacenterProduct);
+        datacenterProduct = ownerProductApi.createProduct(owner.getKey(), datacenterProduct);
         return ownerApi.createPool(owner.getKey(), Pools.random(datacenterProduct));
     }
 
@@ -624,7 +690,7 @@ public class DerivedProductSpecTest {
             .addAttributesItem(ProductAttributes.VirtualLimit.withValue("unlimited"))
             .addAttributesItem(ProductAttributes.HostLimited.withValue("true"))
             .derivedProduct(createDerivedProduct3(owner));
-        datacenterProduct = ownerProductApi.createProductByOwner(owner.getKey(), datacenterProduct);
+        datacenterProduct = ownerProductApi.createProduct(owner.getKey(), datacenterProduct);
         return ownerApi.createPool(owner.getKey(), Pools.random(datacenterProduct));
     }
 
@@ -646,9 +712,11 @@ public class DerivedProductSpecTest {
 
     private void assertProductContent(JsonNode products, ProductDTO derivedEngProduct,
         ContentDTO... contents) {
+
         List<String> expectedIds = Arrays.stream(contents)
             .map(ContentDTO::getId)
-            .collect(Collectors.toList());
+            .toList();
+
         assertThat(products)
             .filteredOn(product -> derivedEngProduct.getId().equals(product.get("id").asText()))
             .flatMap(product -> getContentNodes(product))

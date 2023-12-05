@@ -55,6 +55,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
@@ -62,7 +63,6 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -137,7 +137,7 @@ public class ContentAccessManagerTest {
     @Mock
     private OwnerCurator mockOwnerCurator;
     @Mock
-    private OwnerContentCurator mockOwnerContentCurator;
+    private ContentCurator mockContentCurator;
     @Mock
     private EnvironmentCurator mockEnvironmentCurator;
     @Mock
@@ -230,7 +230,7 @@ public class ContentAccessManagerTest {
     private ContentAccessManager createManager(PKIUtility pkiUtil) {
         return new ContentAccessManager(
             this.config, pkiUtil, this.x509V3ExtensionUtil, this.mockContentAccessCertCurator,
-            this.mockCertSerialCurator, this.mockOwnerCurator, this.mockOwnerContentCurator,
+            this.mockCertSerialCurator, this.mockOwnerCurator, this.mockContentCurator,
             this.mockConsumerCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
             this.mockContentAccessCertCurator, this.mockEventSink, this.mockAnonCloudConsumerCurator,
             this.mockAnonContentAccessCertCurator, this.mockProdAdapter);

@@ -66,6 +66,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @SpecTest
 public class RefreshPoolsSpecTest {
@@ -183,10 +184,10 @@ public class RefreshPoolsSpecTest {
         compareBrandings(brand1, pools.get(0).getBranding().stream().iterator().next());
 
         // Check the branding set is visible on the product.
-        List<ProductDTO> products = adminClient.ownerProducts().getProductsByOwner(ownerKey, List.of());
-        assertEquals(1, products.size());
-        assertEquals(1, products.get(0).getBranding().size());
-        compareBrandings(brand1, products.get(0).getBranding().stream().iterator().next());
+        ProductDTO actualProduct = adminClient.ownerProducts().getProductById(ownerKey, product.getId());
+        assertNotNull(actualProduct);
+        assertEquals(1, actualProduct.getBranding().size());
+        compareBrandings(brand1, actualProduct.getBranding().stream().iterator().next());
 
         // Add an additional branding to the upstream product than the one we had initially...
         BrandingDTO brand2 = Branding.random();
@@ -201,9 +202,9 @@ public class RefreshPoolsSpecTest {
         compareBrandings(expectedBranding, pools.get(0).getBranding());
 
         // Check the updated branding set is visible on the product.
-        products = adminClient.ownerProducts().getProductsByOwner(ownerKey, List.of());
-        assertEquals(1, products.size());
-        Set<BrandingDTO> actualBranding = products.get(0).getBranding();
+        actualProduct = adminClient.ownerProducts().getProductById(ownerKey, product.getId());
+        assertNotNull(actualProduct);
+        Set<BrandingDTO> actualBranding = actualProduct.getBranding();
         compareBrandings(expectedBranding, actualBranding);
     }
 
@@ -421,7 +422,7 @@ public class RefreshPoolsSpecTest {
         assertEquals(1, pools.size());
 
         // Verify the content exists in its initial state
-        ContentDTO actualContent = adminClient.ownerContent().getOwnerContent(ownerKey, content.getId());
+        ContentDTO actualContent = adminClient.ownerContent().getContentById(ownerKey, content.getId());
         assertNotNull(actualContent);
         assertEquals(content.getId(), actualContent.getId());
         assertEquals(content.getType(), actualContent.getType());
@@ -456,7 +457,7 @@ public class RefreshPoolsSpecTest {
         assertEquals(1, pools.size());
 
         // Verify the content change has been pulled down
-        content = adminClient.ownerContent().getOwnerContent(ownerKey, content.getId());
+        content = adminClient.ownerContent().getContentById(ownerKey, content.getId());
         assertEquals(expectedLabelUpdated, content.getLabel());
 
         // Verify the entitlement cert has changed as a result
@@ -485,7 +486,7 @@ public class RefreshPoolsSpecTest {
         assertEquals(1, pools.size());
 
         // Verify the content exists in its initial state
-        ContentDTO actualContent = adminClient.ownerContent().getOwnerContent(scaOwnerKey, content.getId());
+        ContentDTO actualContent = adminClient.ownerContent().getContentById(scaOwnerKey, content.getId());
         assertNotNull(actualContent);
         assertEquals(content.getLabel(), actualContent.getLabel());
         assertEquals(content.getContentUrl(), actualContent.getContentUrl());
@@ -522,7 +523,7 @@ public class RefreshPoolsSpecTest {
         assertEquals(1, pools.size());
 
         // Verify the content change has been pulled down
-        actualContent = adminClient.ownerContent().getOwnerContent(scaOwnerKey, updatedContent.getId());
+        actualContent = adminClient.ownerContent().getContentById(scaOwnerKey, updatedContent.getId());
         assertNotNull(actualContent);
         assertEquals(updatedContent.getLabel(), actualContent.getLabel());
         assertEquals(updatedContent.getContentUrl(), actualContent.getContentUrl());
@@ -554,7 +555,7 @@ public class RefreshPoolsSpecTest {
         assertEquals(1, pools.size());
 
         // Verify the product exists in its initial state
-        ProductDTO actualProd = adminClient.ownerProducts().getProductByOwner(ownerKey, prod.getId());
+        ProductDTO actualProd = adminClient.ownerProducts().getProductById(ownerKey, prod.getId());
         assertEquals(prod.getId(), actualProd.getId());
         assertEquals(prod.getName(), actualProd.getName());
 
@@ -584,7 +585,7 @@ public class RefreshPoolsSpecTest {
         assertEquals(1, pools.size());
 
         // Verify the product change has been pulled down
-        actualProd = adminClient.ownerProducts().getProductByOwner(ownerKey, prod.getId());
+        actualProd = adminClient.ownerProducts().getProductById(ownerKey, prod.getId());
         assertNotNull(actualProd);
         assertEquals(updatedName, actualProd.getName());
 
@@ -598,6 +599,7 @@ public class RefreshPoolsSpecTest {
 
     @Test
     @OnlyInHosted
+    @SuppressWarnings("methodlength")
     public void shouldRegenEntitlementsWhenRequiredProductsChanges() throws Exception {
         ProductDTO engProd1 = adminClient.hosted().createProduct(Products.randomEng());
         ProductDTO engProd2 = adminClient.hosted().createProduct(Products.randomEng());
@@ -624,16 +626,24 @@ public class RefreshPoolsSpecTest {
         PoolDTO pool1 = pools.get(0).getSubscriptionId().equals(sub1.getId()) ? pools.get(0) : pools.get(1);
         PoolDTO pool2 = pools.get(0).getSubscriptionId().equals(sub2.getId()) ? pools.get(0) : pools.get(1);
 
-        List<ProductDTO> actualProducts = adminClient.ownerProducts().getProductsByOwner(ownerKey, List.of());
+        List<String> pids = Stream.of(engProd1, engProd2, skuProd1, skuProd2)
+            .map(ProductDTO::getId)
+            .toList();
+
+        List<ProductDTO> actualProducts = adminClient.ownerProducts()
+            .getProductsByOwner(ownerKey, pids, false);
         assertThat(actualProducts)
             .map(ProductDTO::getId)
-            .containsExactlyInAnyOrder(engProd1.getId(), engProd2.getId(), skuProd1.getId(),
-            skuProd2.getId());
+            .containsAll(pids);
 
-        List<ContentDTO> actualContent = adminClient.ownerContent().listOwnerContent(ownerKey);
+        List<String> cids = Stream.of(content1, content2, content3)
+            .map(ContentDTO::getId)
+            .toList();
+
+        List<ContentDTO> actualContent = adminClient.ownerContent().getContentsByOwner(ownerKey, cids, false);
         assertThat(actualContent)
             .map(ContentDTO::getId)
-            .containsExactlyInAnyOrder(content1.getId(), content2.getId(), content3.getId());
+            .containsAll(cids);
 
         // Consume both pools
         ConsumerDTO user = adminClient.consumers().createConsumer(Consumers
@@ -680,7 +690,7 @@ public class RefreshPoolsSpecTest {
 
         // Verify the content change has been pulled down
         assertEquals(Set.of(engProd1.getId()), adminClient.ownerContent()
-            .getOwnerContent(ownerKey, content2.getId()).getModifiedProductIds());
+            .getContentById(ownerKey, content2.getId()).getModifiedProductIds());
 
         // Verify the entitlement has been regenerated
         EntitlementDTO updatedEnt = adminClient.entitlements().getEntitlement(bindEnt2.get("id").asText());
@@ -710,7 +720,7 @@ public class RefreshPoolsSpecTest {
 
         // Verify the content change has been pulled down
         assertEquals(Set.of(unknownProdId), adminClient.ownerContent()
-            .getOwnerContent(ownerKey, content3.getId()).getModifiedProductIds());
+            .getContentById(ownerKey, content3.getId()).getModifiedProductIds());
 
         // Verify the entitlement has been regenerated
         updatedEnt = adminClient.entitlements().getEntitlement(bindEnt2.get("id").asText());
@@ -742,7 +752,7 @@ public class RefreshPoolsSpecTest {
         PoolDTO pool = pools.get(0);
 
         // Verify the product exists in its initial state
-        ProductDTO actualProd = adminClient.ownerProducts().getProductByOwner(ownerKey, prod.getId());
+        ProductDTO actualProd = adminClient.ownerProducts().getProductById(ownerKey, prod.getId());
         assertNotNull(actualProd);
         compareProducts(prod, actualProd);
         compareBrandings(prod.getBranding(), actualProd.getBranding());
@@ -773,7 +783,7 @@ public class RefreshPoolsSpecTest {
         assertEquals(1, pools.size());
 
         // Verify the branding change on the product has been pulled down
-        actualProd = adminClient.ownerProducts().getProductByOwner(ownerKey, prod.getId());
+        actualProd = adminClient.ownerProducts().getProductById(ownerKey, prod.getId());
         assertNotNull(actualProd);
         compareProducts(prod, actualProd);
         compareBrandings(prod.getBranding(), actualProd.getBranding());
@@ -802,7 +812,7 @@ public class RefreshPoolsSpecTest {
         PoolDTO pool = pools.get(0);
 
         // Verify the product exists in its initial state
-        ProductDTO fetchedProd = adminClient.ownerProducts().getProductByOwner(ownerKey, prod.getId());
+        ProductDTO fetchedProd = adminClient.ownerProducts().getProductById(ownerKey, prod.getId());
         compareProducts(prod, fetchedProd);
 
         // Consume the pool multiple times so we have entitlements to revoke

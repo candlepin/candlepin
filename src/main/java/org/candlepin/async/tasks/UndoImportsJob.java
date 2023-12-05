@@ -22,7 +22,6 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.PoolService;
 import org.candlepin.model.ExporterMetadata;
@@ -67,7 +66,6 @@ public class UndoImportsJob implements AsyncJob {
     private final PoolService poolService;
     private final ExporterMetadataCurator exportCurator;
     private final ImportRecordCurator importRecordCurator;
-    private final boolean isStandalone;
 
     @Inject
     public UndoImportsJob(I18n i18n,
@@ -82,7 +80,6 @@ public class UndoImportsJob implements AsyncJob {
         this.poolService = Objects.requireNonNull(poolService);
         this.exportCurator = Objects.requireNonNull(exportCurator);
         this.importRecordCurator = Objects.requireNonNull(importRecordCurator);
-        this.isStandalone = Objects.requireNonNull(config).getBoolean(ConfigProperties.STANDALONE);
     }
 
     @Override
@@ -113,11 +110,15 @@ public class UndoImportsJob implements AsyncJob {
 
         log.info("Deleting all pools originating from manifests for owner/org: {}", displayName);
 
-        List<Pool> pools = this.poolService.listPoolsByOwner(owner).list();
-        this.poolService.deletePools(
-            pools.stream()
-                .filter(pool -> pool.isManaged(this.isStandalone))
-                .toList());
+        // We want to delete any pools which are managed, but *aren't* derived. Derived pools that
+        // should be deleted here will be deleted by the cascading effect of deleting their parents
+        List<Pool> pools = this.poolService.listPoolsByOwner(owner).list()
+            .stream()
+            .filter(pool -> pool.isManaged())
+            .filter(pool -> !pool.getType().isDerivedType())
+            .toList();
+
+        this.poolService.deletePools(pools);
 
         // Clear out upstream consumer UUID so owner can import from other distributors:
         UpstreamConsumer uc = owner.getUpstreamConsumer();

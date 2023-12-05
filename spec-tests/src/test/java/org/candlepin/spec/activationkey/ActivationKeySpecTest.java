@@ -127,12 +127,12 @@ public class ActivationKeySpecTest {
 
     private static ProductDTO createProduct(ApiClient client, OwnerDTO owner, AttributeDTO... attributes) {
         return client.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.withAttributes(attributes));
+            .createProduct(owner.getKey(), Products.withAttributes(attributes));
     }
 
     private static ProductDTO createProduct(ApiClient client, OwnerDTO owner) {
         return client.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
     }
 
     /**

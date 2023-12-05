@@ -77,30 +77,6 @@ public class ContentTest extends DatabaseTestFixture {
         assertEquals(lookedUp.getArches(), arches);
     }
 
-    @Test
-    public void testCreateOrUpdateWithNewLabel() {
-        // TODO:
-        // This test may no longer have meaning with the addition of the content manager
-
-        Owner owner = this.createOwner("Example-Corporation");
-        Content content = this.createContent("test_content", "test_content", owner);
-
-        // Same ID, but label changed:
-        String newLabel = "test-content-label-new";
-        String newName = "Test Content Updated";
-        Content modifiedContent = TestUtil.createContent("test_content");
-        modifiedContent.setName(newName);
-        modifiedContent.setLabel(newLabel);
-
-        modifiedContent.setUuid(content.getUuid());
-
-        contentCurator.merge(modifiedContent);
-
-        content = this.ownerContentCurator.getContentById(owner, content.getId());
-        assertEquals(newLabel, content.getLabel());
-        assertEquals(newName, content.getName());
-    }
-
     protected static Stream<Arguments> getValuesForEqualityAndReplication() {
         return Stream.of(
             Arguments.of("Id", "test_value", "alt_value"),
@@ -188,36 +164,6 @@ public class ContentTest extends DatabaseTestFixture {
         assertTrue(rhs.equals(rhs));
     }
 
-    @Test
-    public void testBaseEntityVersion() {
-        Content lhs = new Content();
-        Content rhs = new Content();
-
-        assertEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @MethodSource("getValuesForEqualityAndReplication")
-    public void testEntityVersion(String valueName, Object value1, Object value2) throws Exception {
-        Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
-        Method accessor = methods[0];
-        Method mutator = methods[1];
-
-        Content lhs = new Content();
-        Content rhs = new Content();
-
-        mutator.invoke(lhs, value1);
-        mutator.invoke(rhs, value1);
-
-        assertEquals(accessor.invoke(lhs), accessor.invoke(rhs));
-        assertEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
-
-        mutator.invoke(rhs, value2);
-
-        assertNotEquals(accessor.invoke(lhs), accessor.invoke(rhs));
-        assertNotEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
-    }
-
     protected static Stream<Arguments> getValueNamesForNullConversion() {
         return Stream.of(
             Arguments.of("ContentUrl"),
@@ -253,7 +199,6 @@ public class ContentTest extends DatabaseTestFixture {
 
         assertEquals(lhs, rhs);
         assertEquals(lhs.hashCode(), rhs.hashCode());
-        assertEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
 
         // Put an empty value in the rhs and verify that the conversion to null maintains
         // equality with the unmodified lhs (which should default to nulls)
@@ -261,6 +206,5 @@ public class ContentTest extends DatabaseTestFixture {
 
         assertEquals(lhs, rhs);
         assertEquals(lhs.hashCode(), rhs.hashCode());
-        assertEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
     }
 }

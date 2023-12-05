@@ -77,14 +77,14 @@ public class SkuLevelEnableOverrideSpecTest {
             .facts(Map.of("system.certificate_version", "3.2")));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        ProductDTO providedProduct = ownerProductApi.createProductByOwner(owner.getKey(),
+        ProductDTO providedProduct = ownerProductApi.createProduct(owner.getKey(),
             Products.randomEng());
         ContentDTO content1 = ownerContentApi.createContent(owner.getKey(), Contents.random());
-        ownerProductApi.addContent(owner.getKey(), providedProduct.getId(), content1.getId(), true);
+        ownerProductApi.addContentToProduct(owner.getKey(), providedProduct.getId(), content1.getId(), true);
         ProductDTO product = Products.randomEng()
             .addAttributesItem(ProductAttributes.ContentOverrideEnabled.withValue(content1.getId()))
             .providedProducts(Set.of(providedProduct));
-        product = ownerProductApi.createProductByOwner(owner.getKey(), product);
+        product = ownerProductApi.createProduct(owner.getKey(), product);
 
         PoolDTO pool = ownerClient.createPool(owner.getKey(), Pools.random(product));
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
@@ -108,14 +108,14 @@ public class SkuLevelEnableOverrideSpecTest {
             .facts(Map.of("system.certificate_version", "3.2")));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        ProductDTO providedProduct = ownerProductApi.createProductByOwner(owner.getKey(),
+        ProductDTO providedProduct = ownerProductApi.createProduct(owner.getKey(),
             Products.randomEng());
         ContentDTO content1 = ownerContentApi.createContent(owner.getKey(), Contents.random());
-        ownerProductApi.addContent(owner.getKey(), providedProduct.getId(), content1.getId(), true);
+        ownerProductApi.addContentToProduct(owner.getKey(), providedProduct.getId(), content1.getId(), true);
         ProductDTO product = Products.randomEng()
             .addAttributesItem(ProductAttributes.ContentOverrideDisabled.withValue(content1.getId()))
             .providedProducts(Set.of(providedProduct));
-        product = ownerProductApi.createProductByOwner(owner.getKey(), product);
+        product = ownerProductApi.createProduct(owner.getKey(), product);
 
         PoolDTO pool = ownerClient.createPool(owner.getKey(), Pools.random(product));
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
@@ -144,14 +144,14 @@ public class SkuLevelEnableOverrideSpecTest {
             .hasAtLeastOneElementOfType(EnvironmentDTO.class);
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        ProductDTO providedProduct = ownerProductApi.createProductByOwner(owner.getKey(),
+        ProductDTO providedProduct = ownerProductApi.createProduct(owner.getKey(),
             Products.randomEng());
         ContentDTO content1 = ownerContentApi.createContent(owner.getKey(), Contents.random());
-        ownerProductApi.addContent(owner.getKey(), providedProduct.getId(), content1.getId(), true);
+        ownerProductApi.addContentToProduct(owner.getKey(), providedProduct.getId(), content1.getId(), true);
         ProductDTO product = Products.randomEng()
             .addAttributesItem(ProductAttributes.ContentOverrideDisabled.withValue(content1.getId()))
             .providedProducts(Set.of(providedProduct));
-        product = ownerProductApi.createProductByOwner(owner.getKey(), product);
+        product = ownerProductApi.createProduct(owner.getKey(), product);
 
         PoolDTO pool = ownerClient.createPool(owner.getKey(), Pools.random(product));
 
@@ -185,14 +185,14 @@ public class SkuLevelEnableOverrideSpecTest {
         consumer = consumerClient.createConsumer(consumer);
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        ProductDTO providedProduct = ownerProductApi.createProductByOwner(owner.getKey(),
+        ProductDTO providedProduct = ownerProductApi.createProduct(owner.getKey(),
             Products.randomEng());
         ContentDTO content1 = ownerContentApi.createContent(owner.getKey(), Contents.random());
-        ownerProductApi.addContent(owner.getKey(), providedProduct.getId(), content1.getId(), false);
+        ownerProductApi.addContentToProduct(owner.getKey(), providedProduct.getId(), content1.getId(), false);
         ProductDTO product = Products.randomEng()
             .addAttributesItem(ProductAttributes.ContentOverrideEnabled.withValue(content1.getId()))
             .providedProducts(Set.of(providedProduct));
-        product = ownerProductApi.createProductByOwner(owner.getKey(), product);
+        product = ownerProductApi.createProduct(owner.getKey(), product);
 
         PoolDTO pool = ownerClient.createPool(owner.getKey(), Pools.random(product));
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
@@ -210,14 +210,14 @@ public class SkuLevelEnableOverrideSpecTest {
         consumer = consumerClient.createConsumer(consumer);
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        ProductDTO providedProduct = ownerProductApi.createProductByOwner(owner.getKey(),
+        ProductDTO providedProduct = ownerProductApi.createProduct(owner.getKey(),
             Products.randomEng());
         ContentDTO content1 = ownerContentApi.createContent(owner.getKey(), Contents.random());
-        ownerProductApi.addContent(owner.getKey(), providedProduct.getId(), content1.getId(), true);
+        ownerProductApi.addContentToProduct(owner.getKey(), providedProduct.getId(), content1.getId(), true);
         ProductDTO product = Products.randomEng()
             .addAttributesItem(ProductAttributes.ContentOverrideDisabled.withValue(content1.getId()))
             .providedProducts(Set.of(providedProduct));
-        product = ownerProductApi.createProductByOwner(owner.getKey(), product);
+        product = ownerProductApi.createProduct(owner.getKey(), product);
 
         PoolDTO pool = ownerClient.createPool(owner.getKey(), Pools.random(product));
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
@@ -239,14 +239,14 @@ public class SkuLevelEnableOverrideSpecTest {
             .hasAtLeastOneElementOfType(EnvironmentDTO.class);
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        ProductDTO providedProduct = ownerProductApi.createProductByOwner(owner.getKey(),
+        ProductDTO providedProduct = ownerProductApi.createProduct(owner.getKey(),
             Products.randomEng());
         ContentDTO content1 = ownerContentApi.createContent(owner.getKey(), Contents.random());
-        ownerProductApi.addContent(owner.getKey(), providedProduct.getId(), content1.getId(), false);
+        ownerProductApi.addContentToProduct(owner.getKey(), providedProduct.getId(), content1.getId(), false);
         ProductDTO product = Products.randomEng()
             .addAttributesItem(ProductAttributes.ContentOverrideDisabled.withValue(content1.getId()))
             .providedProducts(Set.of(providedProduct));
-        product = ownerProductApi.createProductByOwner(owner.getKey(), product);
+        product = ownerProductApi.createProduct(owner.getKey(), product);
 
         PoolDTO pool = ownerClient.createPool(owner.getKey(), Pools.random(product));
 

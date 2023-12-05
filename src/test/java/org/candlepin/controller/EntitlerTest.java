@@ -155,7 +155,7 @@ public class EntitlerTest {
         translator = new EntitlementRulesTranslator(i18n);
 
         this.refreshWorker = spy(new RefreshWorker(this.poolCurator, this.mockProductCurator,
-            this.mockOwnerProductCurator, this.mockContentCurator, this.mockOwnerContentCurator));
+            this.mockContentCurator));
 
         this.refreshWorkerProvider = () -> refreshWorker;
 

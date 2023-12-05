@@ -113,7 +113,7 @@ public class SubscriptionResourceSpecTest {
     public void shouldSubscriptionsDerivedProvidedProductsReturnEmptyArrayWhenNull() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         // Product does not have derived/provided products
-        ProductDTO prod = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO prod = ownerProductApi.createProduct(owner.getKey(), Products.random());
         PoolDTO pool = Pools.random()
             .productId(prod.getId())
             .quantity(2L)
@@ -127,9 +127,9 @@ public class SubscriptionResourceSpecTest {
         client.pools().deletePool(pool.getId());
 
         //  Product provided products only
-        ProductDTO providedProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO providedProduct = ownerProductApi.createProduct(owner.getKey(), Products.random());
         prod = Products.random().providedProducts(Set.of(providedProduct));
-        prod = ownerProductApi.createProductByOwner(owner.getKey(), prod);
+        prod = ownerProductApi.createProduct(owner.getKey(), prod);
         pool = Pools.random()
             .productId(prod.getId())
             .quantity(2L)
@@ -143,10 +143,10 @@ public class SubscriptionResourceSpecTest {
         client.pools().deletePool(pool.getId());
 
         //  Product derived provided products only
-        ProductDTO derivedProduct = ownerProductApi.createProductByOwner(
+        ProductDTO derivedProduct = ownerProductApi.createProduct(
             owner.getKey(), Products.random().providedProducts(Set.of(providedProduct)));
         prod = Products.random().derivedProduct(derivedProduct);
-        prod = ownerProductApi.createProductByOwner(owner.getKey(), prod);
+        prod = ownerProductApi.createProduct(owner.getKey(), prod);
         pool = Pools.random()
             .productId(prod.getId())
             .quantity(2L)
@@ -163,7 +163,7 @@ public class SubscriptionResourceSpecTest {
     // TODO: Remove this. The old sub-or-pool creation was very bad for maintenance and test logic
     private PoolDTO createSubscriptionOrPool(OwnerDTO owner) {
         if (CandlepinMode.isStandalone()) {
-            ProductDTO prod = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+            ProductDTO prod = ownerProductApi.createProduct(owner.getKey(), Products.random());
 
             PoolDTO pool = Pools.random(prod)
                 .subscriptionId(StringUtil.random("id"))

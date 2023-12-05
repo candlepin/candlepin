@@ -86,11 +86,12 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.OwnerNotFoundException;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.SystemPurposeAttributeType;
@@ -180,6 +181,8 @@ public class OwnerResource implements OwnerApi {
     private final ImportRecordCurator importRecordCurator;
     private final ContentAccessManager contentAccessManager;
     private final PoolManager poolManager;
+    private final PoolService poolService;
+    private final PoolCurator poolCurator;
     private final OwnerManager ownerManager;
     private final EntitlementCurator entitlementCurator;
     private final UeberCertificateCurator ueberCertCurator;
@@ -190,12 +193,11 @@ public class OwnerResource implements OwnerApi {
     private final ServiceLevelValidator serviceLevelValidator;
     private final Configuration config;
     private final ConsumerTypeValidator consumerTypeValidator;
-    private final OwnerProductCurator ownerProductCurator;
+    private final ProductCurator productCurator;
     private final ModelTranslator translator;
     private final JobManager jobManager;
     private final DTOValidator validator;
     private final PrincipalProvider principalProvider;
-    private final PoolService poolService;
 
     @Inject
     @SuppressWarnings("checkstyle:parameternumber")
@@ -208,6 +210,8 @@ public class OwnerResource implements OwnerApi {
         ContentAccessManager contentAccessManager,
         ManifestManager manifestManager,
         PoolManager poolManager,
+        PoolService poolService,
+        PoolCurator poolCurator,
         OwnerManager ownerManager,
         ExporterMetadataCurator exportCurator,
         OwnerInfoCurator ownerInfoCurator,
@@ -222,11 +226,10 @@ public class OwnerResource implements OwnerApi {
         OwnerServiceAdapter ownerService,
         Configuration config,
         ConsumerTypeValidator consumerTypeValidator,
-        OwnerProductCurator ownerProductCurator,
+        ProductCurator productCurator,
         ModelTranslator translator,
         JobManager jobManager,
         DTOValidator validator,
-        PoolService poolService,
         PrincipalProvider principalProvider) {
 
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
@@ -240,6 +243,8 @@ public class OwnerResource implements OwnerApi {
         this.importRecordCurator = Objects.requireNonNull(importRecordCurator);
         this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
         this.poolManager = Objects.requireNonNull(poolManager);
+        this.poolService = Objects.requireNonNull(poolService);
+        this.poolCurator = Objects.requireNonNull(poolCurator);
         this.manifestManager = Objects.requireNonNull(manifestManager);
         this.ownerManager = Objects.requireNonNull(ownerManager);
         this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
@@ -252,12 +257,11 @@ public class OwnerResource implements OwnerApi {
         this.ownerService = Objects.requireNonNull(ownerService);
         this.config = Objects.requireNonNull(config);
         this.consumerTypeValidator = Objects.requireNonNull(consumerTypeValidator);
-        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
+        this.productCurator = Objects.requireNonNull(productCurator);
         this.translator = Objects.requireNonNull(translator);
         this.jobManager = Objects.requireNonNull(jobManager);
         this.validator = Objects.requireNonNull(validator);
         this.principalProvider = Objects.requireNonNull(principalProvider);
-        this.poolService = Objects.requireNonNull(poolService);
     }
 
     /**
@@ -439,25 +443,27 @@ public class OwnerResource implements OwnerApi {
     }
 
     /**
-     * Returns the product object that is identified by the given product id and owner object,
-     * if it is found in the system. Otherwise, it throws a NotFoundException.
+     * Attempts to resolve the given product ID reference to a product for the given organization.
+     * This method will first attempt to resolve the product reference in the org's namespace, but
+     * will fall back to the global namespace if that resolution attempt fails. If the product ID
+     * cannot be resolved, this method throws an exception.
      *
      * @param owner
-     *  The owner of the product we are searching for
+     *  the organization for which to resolve the product reference
      *
      * @param productId
-     *  The ID of the product to lookup
+     *  the product ID to resolve
      *
      * @throws IllegalArgumentException
      *  if owner is null, or if productId is null or empty
      *
-     * @throws BadRequestException
-     *  if a product with the specified ID cannot be found within the context of the given owner
+     * @throws NotFoundException
+     *  if a product with the specified ID cannot be found within the context of the given org
      *
      * @return
-     *  the product with the specified product ID and owner
+     *  the product for the specified ID
      */
-    private Product findProduct(Owner owner, String productId) {
+    private Product resolveProductId(Owner owner, String productId) {
         if (owner == null) {
             throw new IllegalArgumentException("owner is null");
         }
@@ -466,10 +472,10 @@ public class OwnerResource implements OwnerApi {
             throw new IllegalArgumentException("productId is null or empty");
         }
 
-        Product product = this.ownerProductCurator.getProductById(owner, productId);
+        Product product = this.productCurator.resolveProductId(owner.getKey(), productId);
 
         if (product == null) {
-            throw new BadRequestException(
+            throw new NotFoundException(
                 i18n.tr("Unable to find a product with the ID \"{0}\" for owner \"{1}\"",
                     product, owner.getKey()));
         }
@@ -656,8 +662,11 @@ public class OwnerResource implements OwnerApi {
         if (dto.getProducts() != null) {
             Set<String> pids = new HashSet<>();
 
+            // We need to resolve the product references here, and due to how activation key
+            // products work, we need not limit them to the org's namespace.
             dto.getProducts().stream()
-                .map(keyprod -> this.findProduct(entity.getOwner(), keyprod.getProductId()).getId())
+                .map(keyprod -> this.resolveProductId(entity.getOwner(), keyprod.getProductId()))
+                .map(Product::getId)
                 .forEach(pids::add);
 
             entity.setProductIds(pids);
@@ -1341,7 +1350,16 @@ public class OwnerResource implements OwnerApi {
             throw new BadRequestException(i18n.tr("Pool product ID not specified"));
         }
 
-        pool.setProduct(findProduct(pool.getOwner(), inputPoolDTO.getProductId()));
+        // API-created pools can only create pools referencing products from the org's namespace
+        Product product = this.resolveProductId(pool.getOwner(), inputPoolDTO.getProductId());
+
+        if (!owner.getKey().equals(product.getNamespace())) {
+            throw new ForbiddenException(this.i18n.tr(
+                "Cannot create pools using products defined outside of the organization's namespace"));
+        }
+
+        // Product is cleared, use it.
+        pool.setProduct(product);
 
         if (inputPoolDTO.getSourceEntitlement() != null) {
             pool.setSourceEntitlement(findEntitlement(inputPoolDTO.getSourceEntitlement().getId()));
@@ -1546,7 +1564,7 @@ public class OwnerResource implements OwnerApi {
         subResource = SubResource.POOLS, require = Access.READ_ONLY) String ownerKey) {
 
         Owner owner = findOwnerByKey(ownerKey);
-        Map<String, Set<String>> attributeMap = ownerProductCurator.getSyspurposeAttributesByOwner(owner);
+        Map<String, Set<String>> attributeMap = this.poolCurator.getSyspurposeAttributesByOwner(owner);
 
         SystemPurposeAttributesDTO dto = new SystemPurposeAttributesDTO();
         dto.setOwner(translator.translate(owner, NestedOwnerDTO.class));

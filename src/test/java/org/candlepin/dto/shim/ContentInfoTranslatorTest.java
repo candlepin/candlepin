@@ -62,7 +62,6 @@ public class ContentInfoTranslatorTest extends
         source.setMetadataExpiration(1234L);
         source.setModifiedProductIds(Arrays.asList("1", "2", "3"));
         source.setArches("test_value");
-        source.setLocked(Boolean.TRUE);
 
         return source;
     }

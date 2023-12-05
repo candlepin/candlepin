@@ -550,12 +550,12 @@ public class OneSubPoolPerStackSpecTest {
     }
 
     private ProductDTO createVirtLimitProduct1(OwnerDTO owner, String stackId) {
-        return ownerProductApi.createProductByOwner(owner.getKey(), Products.random()
+        return ownerProductApi.createProduct(owner.getKey(), Products.random()
             .attributes(List.of(
                 ProductAttributes.VirtualLimit.withValue("3"),
                 ProductAttributes.StackingId.withValue(stackId),
                 ProductAttributes.MultiEntitlement.withValue("yes")))
-            .providedProducts(Set.of(ownerProductApi.createProductByOwner(
+            .providedProducts(Set.of(ownerProductApi.createProduct(
                 owner.getKey(), Products.randomEng()))));
     }
 
@@ -579,12 +579,12 @@ public class OneSubPoolPerStackSpecTest {
     }
 
     private ProductDTO createVirtLimitProduct2(OwnerDTO owner, String stackId) {
-        return ownerProductApi.createProductByOwner(owner.getKey(), Products.random()
+        return ownerProductApi.createProduct(owner.getKey(), Products.random()
             .attributes(List.of(
                 ProductAttributes.VirtualLimit.withValue("6"),
                 ProductAttributes.StackingId.withValue(stackId),
                 ProductAttributes.MultiEntitlement.withValue("yes")))
-            .providedProducts(Set.of(ownerProductApi.createProductByOwner(
+            .providedProducts(Set.of(ownerProductApi.createProduct(
                 owner.getKey(), Products.randomEng()))));
     }
 
@@ -599,12 +599,12 @@ public class OneSubPoolPerStackSpecTest {
     }
 
     private ProductDTO createRegularStackedProduct(OwnerDTO owner, String stackId) {
-        return ownerProductApi.createProductByOwner(owner.getKey(), Products.random()
+        return ownerProductApi.createProduct(owner.getKey(), Products.random()
             .attributes(List.of(
                 ProductAttributes.StackingId.withValue(stackId),
                 ProductAttributes.MultiEntitlement.withValue("yes"),
                 ProductAttributes.Sockets.withValue("6")))
-            .providedProducts(Set.of(ownerProductApi.createProductByOwner(owner.getKey(),
+            .providedProducts(Set.of(ownerProductApi.createProduct(owner.getKey(),
                 Products.randomEng()))));
     }
 
@@ -620,7 +620,7 @@ public class OneSubPoolPerStackSpecTest {
     }
 
     private ProductDTO createNonStackedProduct(OwnerDTO owner) {
-        return ownerProductApi.createProductByOwner(owner.getKey(), Products.random()
+        return ownerProductApi.createProduct(owner.getKey(), Products.random()
             .attributes(List.of(
                 ProductAttributes.Sockets.withValue("2"),
                 ProductAttributes.Cores.withValue("4"))));
@@ -637,7 +637,7 @@ public class OneSubPoolPerStackSpecTest {
     }
 
     private ProductDTO createDerivedProduct(OwnerDTO owner, ProductDTO derivedProvidedProduct) {
-        return ownerProductApi.createProductByOwner(owner.getKey(), Products.random()
+        return ownerProductApi.createProduct(owner.getKey(), Products.random()
             .attributes(List.of(
                 ProductAttributes.Sockets.withValue("8"),
                 ProductAttributes.Cores.withValue("6")))
@@ -646,7 +646,7 @@ public class OneSubPoolPerStackSpecTest {
 
     private ProductDTO createStackedDatacenterProduct(OwnerDTO owner, ProductDTO derivedProvidedProduct,
         String stackId) {
-        return ownerProductApi.createProductByOwner(owner.getKey(), Products.random()
+        return ownerProductApi.createProduct(owner.getKey(), Products.random()
             .attributes(List.of(
                 ProductAttributes.VirtualLimit.withValue("unlimited"),
                 ProductAttributes.StackingId.withValue(stackId),
@@ -658,7 +658,7 @@ public class OneSubPoolPerStackSpecTest {
 
     private PoolDTO createStackedDatacenterProductPool(OwnerDTO owner, String stackId) {
         return ownerApi.createPool(owner.getKey(), Pools.random(
-            createStackedDatacenterProduct(owner, ownerProductApi.createProductByOwner(owner.getKey(),
+            createStackedDatacenterProduct(owner, ownerProductApi.createProduct(owner.getKey(),
             Products.randomEng()), stackId))
             .startDate(OffsetDateTime.now().minusSeconds(5L))
             .contractNumber(DATACENTER_POOL)
@@ -680,17 +680,17 @@ public class OneSubPoolPerStackSpecTest {
     private void createTargetPoolAndProducts(OwnerDTO owner, String stackingId) {
         ContentDTO ownerContent1 = ownerContentApi.createContent(owner.getKey(), Contents.random());
         ContentDTO ownerContent2 = ownerContentApi.createContent(owner.getKey(), Contents.random());
-        ProductDTO ownerDerivedEngProduct = ownerProductApi.createProductByOwner(
+        ProductDTO ownerDerivedEngProduct = ownerProductApi.createProduct(
             owner.getKey(), Products.random());
-        ownerProductApi.addBatchContent(owner.getKey(), ownerDerivedEngProduct.getId(),
+        ownerProductApi.addContentsToProduct(owner.getKey(), ownerDerivedEngProduct.getId(),
             Map.of(ownerContent1.getId(), true, ownerContent2.getId(), true));
 
-        ProductDTO ownerDerivedSku = ownerProductApi.createProductByOwner(owner.getKey(),
+        ProductDTO ownerDerivedSku = ownerProductApi.createProduct(owner.getKey(),
             Products.random()
             .multiplier(1L)
             .attributes(List.of(ProductAttributes.HostLimited.withValue("true"))));
 
-        ProductDTO ownerSku = ownerProductApi.createProductByOwner(owner.getKey(),
+        ProductDTO ownerSku = ownerProductApi.createProduct(owner.getKey(),
             Products.random()
             .multiplier(1L)
             .attributes(List.of(

@@ -95,7 +95,7 @@ class PoolSpecTest {
         ProductDTO product = Products.randomEng();
 
         return client.ownerProducts()
-            .createProductByOwner(owner.getKey(), product);
+            .createProduct(owner.getKey(), product);
     }
 
     // ugh...
@@ -303,7 +303,7 @@ class PoolSpecTest {
             .addAttributesItem(this.buildAttribute("arch", "x86"));
 
         product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), product);
+            .createProduct(owner.getKey(), product);
 
         PoolDTO pool = this.createPool(adminClient, owner, product);
 
@@ -398,7 +398,7 @@ class PoolSpecTest {
             .addAttributesItem(this.buildAttribute("virt_limit", "10"));
 
         product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), product);
+            .createProduct(owner.getKey(), product);
 
         PoolDTO pool = this.createPool(adminClient, owner, product);
 
@@ -474,7 +474,7 @@ class PoolSpecTest {
             .addAttributesItem(this.buildAttribute("virt_limit", "10"));
 
         product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), product);
+            .createProduct(owner.getKey(), product);
 
         upstreamClient.createProduct(product);
         upstreamClient.createSubscription(Subscriptions.random(owner, product).cdn(cdn));
@@ -531,7 +531,7 @@ class PoolSpecTest {
             .addBrandingItem(brand2);
 
         product = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), product);
+            .createProduct(owner.getKey(), product);
 
         PoolDTO pool = this.createPool(adminClient, owner, product);
 

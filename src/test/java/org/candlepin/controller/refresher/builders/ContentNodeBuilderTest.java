@@ -93,7 +93,6 @@ public class ContentNodeBuilderTest {
         // and no updated entity should be created yet
         assertNull(output.getExistingEntity());
         assertEquals(imported, output.getImportedEntity());
-        assertNull(output.getMergedEntity());
 
         // Content does not have any children, and we do not have parents in this context
         assertNotNull(output.getParentNodes());
@@ -134,7 +133,6 @@ public class ContentNodeBuilderTest {
         // and no updated entity should be created yet
         assertEquals(existing, output.getExistingEntity());
         assertEquals(imported, output.getImportedEntity());
-        assertNull(output.getMergedEntity());
 
         // Content does not have any children, and we do not have parents in this context
         assertNotNull(output.getParentNodes());
@@ -174,7 +172,6 @@ public class ContentNodeBuilderTest {
         // and no updated entity should be created yet
         assertEquals(existing, output.getExistingEntity());
         assertNull(output.getImportedEntity());
-        assertNull(output.getMergedEntity());
 
         // Content does not have any children, and we do not have parents in this context
         assertNotNull(output.getParentNodes());
@@ -201,8 +198,8 @@ public class ContentNodeBuilderTest {
 
         ContentNodeBuilder builder = this.buildNodeBuilder();
 
-        assertThrows(IllegalStateException.class,
-            () -> builder.buildNode(this.mockNodeFactory, this.contentMapper, owner, "invalid_id"));
+        assertThrows(IllegalStateException.class, () ->
+            builder.buildNode(this.mockNodeFactory, this.contentMapper, owner, "invalid_id"));
     }
 
     @Test
@@ -218,8 +215,8 @@ public class ContentNodeBuilderTest {
 
         ContentNodeBuilder builder = this.buildNodeBuilder();
 
-        assertThrows(IllegalStateException.class,
-            () -> builder.buildNode(this.mockNodeFactory, this.contentMapper, owner, ""));
+        assertThrows(IllegalStateException.class, () ->
+            builder.buildNode(this.mockNodeFactory, this.contentMapper, owner, ""));
     }
 
     @Test
@@ -235,8 +232,8 @@ public class ContentNodeBuilderTest {
 
         ContentNodeBuilder builder = this.buildNodeBuilder();
 
-        assertThrows(IllegalStateException.class,
-            () -> builder.buildNode(this.mockNodeFactory, this.contentMapper, owner, null));
+        assertThrows(IllegalStateException.class, () ->
+            builder.buildNode(this.mockNodeFactory, this.contentMapper, owner, null));
     }
 
     @Test
@@ -252,8 +249,8 @@ public class ContentNodeBuilderTest {
 
         ContentNodeBuilder builder = this.buildNodeBuilder();
 
-        assertThrows(IllegalArgumentException.class,
-            () -> builder.buildNode(this.mockNodeFactory, this.contentMapper, null, id));
+        assertThrows(IllegalArgumentException.class, () ->
+            builder.buildNode(this.mockNodeFactory, this.contentMapper, null, id));
     }
 
 }

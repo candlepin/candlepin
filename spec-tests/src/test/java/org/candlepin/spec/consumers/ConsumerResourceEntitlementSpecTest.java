@@ -78,10 +78,10 @@ public class ConsumerResourceEntitlementSpecTest {
     @Test
     public void shouldReceivePagedDataBackWhenRequested() {
         String ownerKey = owner.getKey();
-        ProductDTO prod1 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ProductDTO prod2 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ProductDTO prod3 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ProductDTO prod4 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod1 = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ProductDTO prod2 = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ProductDTO prod3 = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ProductDTO prod4 = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
 
         adminClient.owners().createPool(ownerKey, Pools.random(prod1));
         adminClient.owners().createPool(ownerKey, Pools.random(prod2));
@@ -149,7 +149,7 @@ public class ConsumerResourceEntitlementSpecTest {
     @Test
     public void shouldNotRecalculateQuantityAttributesWhenFetchingEntitlements() {
         ProductDTO prod = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         adminClient.owners().createPool(owner.getKey(), Pools.random(prod));
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
@@ -192,7 +192,7 @@ public class ConsumerResourceEntitlementSpecTest {
     @Test
     public void shouldBlockConsumersFromUsingOtherOrgsPools() {
         ProductDTO prod = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(prod));
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         adminClient.consumers().bindProduct(consumer.getUuid(), prod.getId());
@@ -224,7 +224,7 @@ public class ConsumerResourceEntitlementSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         assertThat(consumer).returns("valid", ConsumerDTO::getEntitlementStatus);
         ProductDTO prod = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
 
         consumer.installedProducts(Set.of(Products.toInstalled(prod)));
         adminClient.consumers().updateConsumer(consumer.getUuid(), consumer);
@@ -274,7 +274,7 @@ public class ConsumerResourceEntitlementSpecTest {
         ApiClient consumerClient = ApiClients.ssl(consumer);
         ProductDTO product = Products.random()
             .addAttributesItem(ProductAttributes.Arch.withValue("i386, x86_64"));
-        product = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product);
+        product = adminClient.ownerProducts().createProduct(owner.getKey(), product);
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         assertThat(consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1)).singleElement();
@@ -288,7 +288,7 @@ public class ConsumerResourceEntitlementSpecTest {
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
         ProductDTO product = Products.random();
-        product = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product);
+        product = adminClient.ownerProducts().createProduct(owner.getKey(), product);
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         // Do a bind and make sure the updated timestamp changed:
@@ -311,7 +311,7 @@ public class ConsumerResourceEntitlementSpecTest {
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
         ProductDTO product = Products.random();
-        product = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product);
+        product = adminClient.ownerProducts().createProduct(owner.getKey(), product);
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
 
         AsyncJobStatusDTO job = AsyncJobStatusDTO.fromJson(userClient.consumers().bind(consumer.getUuid(),
@@ -337,12 +337,12 @@ public class ConsumerResourceEntitlementSpecTest {
             .addAttributesItem(ProductAttributes.Sockets.withValue("2"))
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"))
             .addAttributesItem(ProductAttributes.StackingId.withValue("8888"));
-        product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product1);
+        product1 = adminClient.ownerProducts().createProduct(owner.getKey(), product1);
         ProductDTO product2 = Products.random()
             .addAttributesItem(ProductAttributes.Sockets.withValue("2"))
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"))
             .addAttributesItem(ProductAttributes.StackingId.withValue("8888"));
-        product2 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product2);
+        product2 = adminClient.ownerProducts().createProduct(owner.getKey(), product2);
         adminClient.owners().createPool(owner.getKey(), Pools.random(product1)
             .quantity(1L).startDate(OffsetDateTime.now().minusSeconds(3)));
         adminClient.owners().createPool(owner.getKey(), Pools.random(product1)
@@ -369,7 +369,7 @@ public class ConsumerResourceEntitlementSpecTest {
             .addAttributesItem(ProductAttributes.Arch.withValue("ALL"))
             .addAttributesItem(ProductAttributes.Version.withValue("3.11"))
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"));
-        product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product1);
+        product1 = adminClient.ownerProducts().createProduct(owner.getKey(), product1);
         Set<ConsumerInstalledProductDTO> installed = Set.of(new ConsumerInstalledProductDTO()
             .productId(product1.getId()).productName(product1.getName()));
 
@@ -400,10 +400,10 @@ public class ConsumerResourceEntitlementSpecTest {
         String serviceLevel2 = StringUtil.random("Ultra-VIP");
         ProductDTO product1 = Products.randomEng()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue(serviceLevel1));
-        product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product1);
+        product1 = adminClient.ownerProducts().createProduct(owner.getKey(), product1);
         ProductDTO product2 = Products.randomEng()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue(serviceLevel2));
-        product2 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product2);
+        product2 = adminClient.ownerProducts().createProduct(owner.getKey(), product2);
         PoolDTO pool1 = adminClient.owners().createPool(owner.getKey(), Pools.random(product1));
         PoolDTO pool2 = adminClient.owners().createPool(owner.getKey(), Pools.random(product2));
 
@@ -469,13 +469,13 @@ public class ConsumerResourceEntitlementSpecTest {
         String serviceLevel2 = StringUtil.random("Ultra-VIP");
         ProductDTO product1 = Products.randomEng()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue(serviceLevel1));
-        product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product1);
+        product1 = adminClient.ownerProducts().createProduct(owner.getKey(), product1);
         ProductDTO product2 = Products.randomEng()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue(serviceLevel2));
-        product2 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product2);
+        product2 = adminClient.ownerProducts().createProduct(owner.getKey(), product2);
         ProductDTO product3 = Products.randomEng()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue(serviceLevel2));
-        product3 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product3);
+        product3 = adminClient.ownerProducts().createProduct(owner.getKey(), product3);
 
         PoolDTO pool1 = adminClient.owners().createPool(owner.getKey(), Pools.random(product1));
         PoolDTO pool2 = adminClient.owners().createPool(owner.getKey(), Pools.random(product2));
@@ -519,16 +519,16 @@ public class ConsumerResourceEntitlementSpecTest {
         ProductDTO product1 = Products.randomEng()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("Layered"))
             .addAttributesItem(ProductAttributes.SupportLevelExempt.withValue("true"));
-        product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product1);
+        product1 = adminClient.ownerProducts().createProduct(owner.getKey(), product1);
         ProductDTO product2 = Products.randomEng()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue(serviceLevel1));
-        product2 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product2);
+        product2 = adminClient.ownerProducts().createProduct(owner.getKey(), product2);
         ProductDTO product3 = Products.randomEng()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue(serviceLevel2));
-        product3 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product3);
+        product3 = adminClient.ownerProducts().createProduct(owner.getKey(), product3);
         ProductDTO product4 = Products.randomEng()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("LAYered"));
-        product4 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product4);
+        product4 = adminClient.ownerProducts().createProduct(owner.getKey(), product4);
         PoolDTO pool1 = adminClient.owners().createPool(owner.getKey(), Pools.random(product1));
         PoolDTO pool2 = adminClient.owners().createPool(owner.getKey(), Pools.random(product2));
         PoolDTO pool3 = adminClient.owners().createPool(owner.getKey(), Pools.random(product3));
@@ -576,10 +576,10 @@ public class ConsumerResourceEntitlementSpecTest {
     public void shouldReturnEmptListForDryRunWhereAllPoolsAreBlockedBecauseOfConsumerType() {
         ProductDTO product1 = Products.randomEng()
             .addAttributesItem(ProductAttributes.RequiresConsumer.withValue("person"));
-        product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product1);
+        product1 = adminClient.ownerProducts().createProduct(owner.getKey(), product1);
         ProductDTO product2 = Products.randomEng()
             .addAttributesItem(ProductAttributes.RequiresConsumer.withValue("person"));
-        product2 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product2);
+        product2 = adminClient.ownerProducts().createProduct(owner.getKey(), product2);
         PoolDTO pool1 = adminClient.owners().createPool(owner.getKey(), Pools.random(product1));
         PoolDTO pool2 = adminClient.owners().createPool(owner.getKey(), Pools.random(product2));
 
@@ -600,7 +600,7 @@ public class ConsumerResourceEntitlementSpecTest {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.random());
         adminClient.owners().createPool(owner.getKey(), Pools.random(product)
             .startDate(OffsetDateTime.now().minusSeconds(3)));
@@ -621,7 +621,7 @@ public class ConsumerResourceEntitlementSpecTest {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.random());
         adminClient.owners().createPool(owner.getKey(), Pools.random(product)
             .quantity(2L).startDate(OffsetDateTime.now().minusSeconds(3)));
@@ -651,7 +651,7 @@ public class ConsumerResourceEntitlementSpecTest {
             .addAttributesItem(ProductAttributes.Sockets.withValue("1"))
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"))
             .addAttributesItem(ProductAttributes.StackingId.withValue(StringUtil.random("stack")));
-        product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product1);
+        product1 = adminClient.ownerProducts().createProduct(owner.getKey(), product1);
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product1));
 
         Set<ConsumerInstalledProductDTO> installed = Set.of(
@@ -674,7 +674,7 @@ public class ConsumerResourceEntitlementSpecTest {
             .addAttributesItem(ProductAttributes.Sockets.withValue("2"))
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"))
             .addAttributesItem(ProductAttributes.StackingId.withValue(StringUtil.random("stack")));
-        product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product1);
+        product1 = adminClient.ownerProducts().createProduct(owner.getKey(), product1);
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product1));
 
         Set<ConsumerInstalledProductDTO> installed = Set.of(
@@ -698,7 +698,7 @@ public class ConsumerResourceEntitlementSpecTest {
             .addAttributesItem(ProductAttributes.Sockets.withValue("2"))
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"))
             .addAttributesItem(ProductAttributes.StackingId.withValue(StringUtil.random("stack")));
-        product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(), product1);
+        product1 = adminClient.ownerProducts().createProduct(owner.getKey(), product1);
         PoolDTO currentPool = adminClient.owners().createPool(owner.getKey(), Pools.random(product1));
         OffsetDateTime start = OffsetDateTime.now(ZoneOffset.UTC)
             .plusYears(11L).truncatedTo(ChronoUnit.SECONDS);
@@ -728,11 +728,11 @@ public class ConsumerResourceEntitlementSpecTest {
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        ProductDTO product1 = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product1 = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.random());
-        ProductDTO product2 = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product2 = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.random());
-        ProductDTO product3 = adminClient.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO product3 = adminClient.ownerProducts().createProduct(owner.getKey(),
             Products.random());
 
         PoolDTO pool1 = adminClient.owners().createPool(owner.getKey(), Pools.random(product1));

@@ -85,7 +85,7 @@ public class EnvironmentPrioritySpecTest {
     @Test
     public void shouldRegenWhenAddingHigherPriorityEnvironmentWithDifferentContent() {
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         addContentToProduct(product, content1);
         addContentToProduct(product, content2);
         addContentToProduct(product, content3);
@@ -123,8 +123,8 @@ public class EnvironmentPrioritySpecTest {
     @Test
     public void shouldRegenWhenAddingHigherPriorityEnvironmentWithDifferentContentProduction() {
         ProductDTO providedProduct = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
-        ProductDTO product = ownerClient.ownerProducts().createProductByOwner(owner.getKey(),
+            .createProduct(owner.getKey(), Products.randomEng());
+        ProductDTO product = ownerClient.ownerProducts().createProduct(owner.getKey(),
             Products.randomEng().addProvidedProductsItem(providedProduct));
         addContentToProduct(providedProduct, content1);
         addContentToProduct(providedProduct, content2);
@@ -163,7 +163,7 @@ public class EnvironmentPrioritySpecTest {
     @Test
     public void shouldNotRegenWhenAddingLowerPriorityEnvironmentWithSameContent() {
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         addContentToProduct(product, content1);
         addContentToProduct(product, content2);
         addContentToProduct(product, content3);
@@ -200,7 +200,7 @@ public class EnvironmentPrioritySpecTest {
     @Test
     public void shouldRegenWhenAddingLowerPriorityEnvironmentWithDifferentContent() {
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         addContentToProduct(product, content1);
         addContentToProduct(product, content2);
         addContentToProduct(product, content3);
@@ -237,7 +237,7 @@ public class EnvironmentPrioritySpecTest {
     @Test
     public void shouldNotRegenWhenAddingEnvironmentWithoutContent() {
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         addContentToProduct(product, content1);
         addContentToProduct(product, content2);
         addContentToProduct(product, content3);
@@ -273,7 +273,7 @@ public class EnvironmentPrioritySpecTest {
     @Test
     public void shouldRegenWhenReorderingEnvironmentsWithSameContent() {
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         addContentToProduct(product, content1);
         addContentToProduct(product, content2);
         addContentToProduct(product, content3);
@@ -312,7 +312,7 @@ public class EnvironmentPrioritySpecTest {
     public void shouldNotRegenWhenReorderingLowPriorityEnvironments() {
         EnvironmentDTO env3 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         addContentToProduct(product, content1);
         addContentToProduct(product, content2);
         addContentToProduct(product, content3);
@@ -351,7 +351,7 @@ public class EnvironmentPrioritySpecTest {
     @Test
     public void shouldRegenWhenReorderingEnvironmentsWithoutSpecificContent() {
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         ContentDTO content4 = createContent();
         addContentToProduct(product, content1);
         addContentToProduct(product, content2);
@@ -393,7 +393,7 @@ public class EnvironmentPrioritySpecTest {
     @Test
     public void shouldRegenWhenRemovingEnvironmentWihContentSameAsLowerEnvironment() {
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         addContentToProduct(product, content1);
         addContentToProduct(product, content2);
         addContentToProduct(product, content3);
@@ -431,7 +431,7 @@ public class EnvironmentPrioritySpecTest {
     @Test
     public void shouldNotRegenWhenRemovingEnvironmentWihContentSameAsHigherEnvironment() {
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         addContentToProduct(product, content1);
         addContentToProduct(product, content2);
         addContentToProduct(product, content3);
@@ -469,7 +469,7 @@ public class EnvironmentPrioritySpecTest {
     @Test
     public void shouldRegenWhenRemovingHighPriorityEnvironmentWithUniqueContent() {
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         addContentToProduct(product, content1);
         addContentToProduct(product, content2);
         addContentToProduct(product, content3);
@@ -507,7 +507,7 @@ public class EnvironmentPrioritySpecTest {
     @Test
     public void shouldNotRegenWhenRemovingEnvironmentWithContentNotProvidedByEntitlement() {
         ProductDTO product = ownerClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.randomEng());
+            .createProduct(owner.getKey(), Products.randomEng());
         ContentDTO content4 = createContent();
         addContentToProduct(product, content1);
         addContentToProduct(product, content2);
@@ -551,7 +551,8 @@ public class EnvironmentPrioritySpecTest {
     }
 
     private void addContentToProduct(ProductDTO product, ContentDTO content1) {
-        ownerClient.ownerProducts().addContent(owner.getKey(), product.getId(), content1.getId(), true);
+        ownerClient.ownerProducts()
+            .addContentToProduct(owner.getKey(), product.getId(), content1.getId(), true);
     }
 
     private ContentDTO createContent() {

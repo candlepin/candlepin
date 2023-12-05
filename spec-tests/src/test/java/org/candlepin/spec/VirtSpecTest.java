@@ -99,33 +99,33 @@ class VirtSpecTest {
         ConsumerDTO otherHost = createHost();
         ApiClient otherHostClient = ApiClients.ssl(otherHost);
         ProductDTO derivedProduct1 = admin.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.withAttributes(
+            .createProduct(owner.getKey(), Products.withAttributes(
                 ProductAttributes.Cores.withValue("2"),
                 ProductAttributes.Sockets.withValue("4"),
                 ProductAttributes.StackingId.withValue("stackme1-derived")));
 
         ProductDTO datacenterProduct1 = admin.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.withAttributes(
+            .createProduct(owner.getKey(), Products.withAttributes(
                 ProductAttributes.VirtualLimit.withValue("unlimited"),
                 ProductAttributes.Sockets.withValue("2"),
                 ProductAttributes.StackingId.withValue("stackme1"),
                 ProductAttributes.MultiEntitlement.withValue("yes")).derivedProduct(derivedProduct1));
 
         ProductDTO derivedProduct2 = admin.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.withAttributes(
+            .createProduct(owner.getKey(), Products.withAttributes(
                 ProductAttributes.Cores.withValue("2"),
                 ProductAttributes.Sockets.withValue("4"),
                 ProductAttributes.StackingId.withValue("stackme2-derived")));
 
         ProductDTO datacenterProduct2 = admin.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.withAttributes(
+            .createProduct(owner.getKey(), Products.withAttributes(
                 ProductAttributes.VirtualLimit.withValue("unlimited"),
                 ProductAttributes.Sockets.withValue("2"),
                 ProductAttributes.StackingId.withValue("stackme2"),
                 ProductAttributes.MultiEntitlement.withValue("yes")).derivedProduct(derivedProduct2));
 
         ProductDTO bothProducts = admin.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.withAttributes(
+            .createProduct(owner.getKey(), Products.withAttributes(
                 ProductAttributes.Type.withValue("MKT"))
             ).providedProducts(Set.of(
                 derivedProduct1, derivedProduct2
@@ -201,7 +201,7 @@ class VirtSpecTest {
         linkHostToGuests(hostClient, host, GUEST_UUID);
         String stackId = StringUtil.random("test_stack");
         ProductDTO archVirtProduct = admin.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.withAttributes(
+            .createProduct(owner.getKey(), Products.withAttributes(
                 ProductAttributes.VirtualLimit.withValue("3"),
                 ProductAttributes.GuestLimit.withValue("1"),
                 ProductAttributes.Arch.withValue("ppc64"),
@@ -381,7 +381,7 @@ class VirtSpecTest {
         ProductDTO virtLimitProduct = createVirtLimitProduct("3");
         // create a second product in order to test bz #786730
         ProductDTO otherProduct = admin.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         PoolDTO virtLimitPool = admin.owners()
             .createPool(owner.getKey(), Pools.randomUpstream(virtLimitProduct));
         admin.owners().createPool(owner.getKey(), Pools.randomUpstream(otherProduct));
@@ -450,7 +450,7 @@ class VirtSpecTest {
     public void shouldNotBindProductsOnHostIfVirtOnlyAreAlreadyAvailableForGuest() {
         linkHostToGuests(hostClient, host, GUEST_UUID);
         ProductDTO virtLimitProduct = createVirtLimitProduct("1");
-        ProductDTO otherProduct = admin.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO otherProduct = admin.ownerProducts().createProduct(owner.getKey(),
             Products.withAttributes(ProductAttributes.VirtualOnly.withValue("true"))
                 .providedProducts(Set.of(virtLimitProduct)));
         admin.owners().createPool(owner.getKey(), Pools.randomUpstream(virtLimitProduct));
@@ -493,7 +493,7 @@ class VirtSpecTest {
     public void shouldNotHealTheHostIfTheProductIsAlreadyCompliant() {
         linkHostToGuests(hostClient, host, GUEST_UUID);
         ProductDTO virtLimitProduct = createVirtLimitProduct("1");
-        ProductDTO otherProduct = admin.ownerProducts().createProductByOwner(owner.getKey(),
+        ProductDTO otherProduct = admin.ownerProducts().createProduct(owner.getKey(),
             Products.random().providedProducts(Set.of(virtLimitProduct)));
         admin.owners().createPool(owner.getKey(), Pools.randomUpstream(virtLimitProduct));
         admin.owners().createPool(owner.getKey(), Pools.randomUpstream(otherProduct));
@@ -531,7 +531,7 @@ class VirtSpecTest {
         linkHostToGuests(hostClient, host, GUEST_UUID);
         ProductDTO virtLimitProduct = createVirtLimitProduct("1");
         ProductDTO otherProduct = admin.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         admin.owners().createPool(owner.getKey(), Pools.randomUpstream(virtLimitProduct));
         admin.owners().createPool(owner.getKey(), Pools.randomUpstream(otherProduct));
         Set<ConsumerInstalledProductDTO> guestInstalledProducts = toInstalled(virtLimitProduct);
@@ -564,7 +564,7 @@ class VirtSpecTest {
     public void shouldNotAutoBindVirtLimitingProductsThatDoNotCoverGuests() {
         createGuest(owner, OTHER_GUEST_UUID);
         ProductDTO virtLimitProduct = admin.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.withAttributes(
+            .createProduct(owner.getKey(), Products.withAttributes(
                 ProductAttributes.GuestLimit.withValue("1")));
         admin.owners().createPool(owner.getKey(), Pools.randomUpstream(virtLimitProduct));
         Set<ConsumerInstalledProductDTO> installedProducts = toInstalled(virtLimitProduct);
@@ -602,7 +602,7 @@ class VirtSpecTest {
     public void shouldNotChangeTheQuantityOnSubPoolWhenTheSourceEntitlementQuantityChanges() {
         linkHostToGuests(hostClient, host, GUEST_UUID);
         ProductDTO product = admin.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.withAttributes(
+            .createProduct(owner.getKey(), Products.withAttributes(
                 ProductAttributes.VirtualLimit.withValue("3"),
                 ProductAttributes.MultiEntitlement.withValue("yes")));
         admin.owners().createPool(owner.getKey(), Pools.randomUpstream(product));
@@ -643,7 +643,7 @@ class VirtSpecTest {
     @Test
     public void shouldNotBlockVirtGuest() {
         ProductDTO instanceBased = admin.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.withAttributes(
+            .createProduct(owner.getKey(), Products.withAttributes(
                 ProductAttributes.InstanceMultiplier.withValue("2"),
                 ProductAttributes.MultiEntitlement.withValue("yes")));
         admin.owners().createPool(owner.getKey(), Pools.randomUpstream(instanceBased));
@@ -670,7 +670,7 @@ class VirtSpecTest {
     private ProductDTO createVirtLimitProduct(String limit) {
         ProductDTO product = Products.withAttributes(
             ProductAttributes.VirtualLimit.withValue(limit));
-        return admin.ownerProducts().createProductByOwner(owner.getKey(), product);
+        return admin.ownerProducts().createProduct(owner.getKey(), product);
     }
 
     private ListAssert<EntitlementDTO> assertThatEntitlementsOf(ApiClient client, ConsumerDTO consumer) {

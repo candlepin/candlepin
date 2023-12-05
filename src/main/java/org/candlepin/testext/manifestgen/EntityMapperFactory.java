@@ -16,8 +16,6 @@ package org.candlepin.testext.manifestgen;
 
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.ProductCurator;
 
@@ -31,25 +29,19 @@ public class EntityMapperFactory {
 
     private final PoolCurator poolCurator;
     private final ProductCurator productCurator;
-    private final OwnerProductCurator ownerProductCurator;
     private final ContentCurator contentCurator;
-    private final OwnerContentCurator ownerContentCurator;
 
     @Inject
     public EntityMapperFactory(PoolCurator poolCurator, ProductCurator productCurator,
-        OwnerProductCurator ownerProductCurator, ContentCurator contentCurator,
-        OwnerContentCurator ownerContentCurator) {
+        ContentCurator contentCurator) {
 
         this.poolCurator = Objects.requireNonNull(poolCurator);
         this.productCurator = Objects.requireNonNull(productCurator);
-        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
         this.contentCurator = Objects.requireNonNull(contentCurator);
-        this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
     }
 
     public EntityMapper getForOwner(Owner owner) {
-        return new EntityMapper(owner, this.poolCurator, this.ownerProductCurator, this.productCurator,
-            this.ownerContentCurator, this.contentCurator);
+        return new EntityMapper(owner, this.poolCurator, this.productCurator, this.contentCurator);
     }
 
 }
