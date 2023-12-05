@@ -655,19 +655,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * Fetches a list of product UUIDs representing products which are no longer used by any owner.
-     * If no such products exist, this method returns an empty list.
-     *
-     * @return
-     *  a list of UUIDs of products no longer used by any organization
-     */
-    public List<String> getOrphanedProductUuids() {
-        // TODO: Remove this method
-
-        return List.of();
-    }
-
-    /**
      * Returns a mapping of product UUIDs to collections of pools referencing them. That is, for
      * a given entry in the returned map, the key will be one of the input product UUIDs, and the
      * value will be the set of pool IDs which reference it. If no pools reference any of the

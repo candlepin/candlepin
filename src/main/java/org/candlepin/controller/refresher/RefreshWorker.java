@@ -411,13 +411,6 @@ public class RefreshWorker {
             // will just clobber each other in a way that doesn't matter anymore with refresh only
             // affecting the global namespace.
 
-            // // Obtain system locks on products and content so we don't need to worry about
-            // // orphan cleanup deleting stuff out from under us
-            // this.ownerContentCurator.getSystemLock(ContentManager.SYSTEM_LOCK,
-            //    LockModeType.PESSIMISTIC_READ);
-            // this.ownerProductCurator.getSystemLock(ProductManager.SYSTEM_LOCK,
-            //    LockModeType.PESSIMISTIC_READ);
-
             // Clear existing entities in the event this isn't the first run of this refresher
             this.poolMapper.clearExistingEntities();
             this.productMapper.clearExistingEntities();

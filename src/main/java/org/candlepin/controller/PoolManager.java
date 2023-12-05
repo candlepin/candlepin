@@ -121,7 +121,6 @@ public class PoolManager {
     private final PoolConverter poolConverter;
     private final PoolService poolService;
     private final boolean isStandalone;
-    private final int orphanedGracePeriod;
 
     @Inject
     public PoolManager(
@@ -166,7 +165,6 @@ public class PoolManager {
         this.poolConverter = Objects.requireNonNull(poolConverter);
         this.poolService = Objects.requireNonNull(poolService);
         this.isStandalone = config.getBoolean(ConfigProperties.STANDALONE);
-        this.orphanedGracePeriod = config.getInt(ConfigProperties.ORPHANED_ENTITY_GRACE_PERIOD);
     }
 
     /*
