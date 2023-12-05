@@ -19,7 +19,7 @@ import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

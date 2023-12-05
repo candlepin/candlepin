@@ -24,7 +24,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;

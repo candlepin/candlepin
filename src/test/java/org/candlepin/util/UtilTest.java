@@ -33,7 +33,7 @@ import ch.qos.logback.core.Appender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

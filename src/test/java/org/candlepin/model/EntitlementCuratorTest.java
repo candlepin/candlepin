@@ -28,7 +28,7 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.hamcrest.Matchers;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;

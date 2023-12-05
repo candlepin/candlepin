@@ -14,7 +14,7 @@
  */
 package org.candlepin.controller;
 
-import static org.apache.commons.collections.CollectionUtils.containsAny;
+import static org.apache.commons.collections4.CollectionUtils.containsAny;
 import static org.candlepin.model.SourceSubscription.DERIVED_POOL_SUB_KEY;
 import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
