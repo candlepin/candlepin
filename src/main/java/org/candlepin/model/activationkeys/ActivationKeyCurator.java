@@ -20,7 +20,7 @@ import org.candlepin.model.Owner;
 
 import com.google.inject.persist.Transactional;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
