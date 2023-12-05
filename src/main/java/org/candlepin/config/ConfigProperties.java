@@ -25,7 +25,6 @@ import org.candlepin.async.tasks.ImportRecordCleanerJob;
 import org.candlepin.async.tasks.InactiveConsumerCleanerJob;
 import org.candlepin.async.tasks.JobCleaner;
 import org.candlepin.async.tasks.ManifestCleanerJob;
-import org.candlepin.async.tasks.OrphanCleanupJob;
 import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
 import org.candlepin.guice.CandlepinContextListener;
 
@@ -288,7 +287,6 @@ public class ConfigProperties {
         ImportRecordCleanerJob.JOB_KEY,
         JobCleaner.JOB_KEY,
         ManifestCleanerJob.JOB_KEY,
-        OrphanCleanupJob.JOB_KEY,
         UnmappedGuestEntitlementCleanerJob.JOB_KEY,
         InactiveConsumerCleanerJob.JOB_KEY,
         CloudAccountOrgSetupJob.JOB_KEY
@@ -296,10 +294,6 @@ public class ConfigProperties {
 
     // How long (in seconds) to wait for job threads to finish during a graceful Tomcat shutdown
     public static final String ASYNC_JOBS_THREAD_SHUTDOWN_TIMEOUT = "candlepin.async.thread.shutdown.timeout";
-
-    // How many days to allow a product to be orphaned before removing it on the next refresh or
-    // manifest import. Default: 30 days
-    public static final String ORPHANED_ENTITY_GRACE_PERIOD = "candlepin.refresh.orphan_entity_grace_period";
 
     /**
      * Fetches a string representing the prefix for all per-job configuration for the specified job.
@@ -528,18 +522,12 @@ public class ConfigProperties {
             this.put(jobConfig(ManifestCleanerJob.JOB_KEY, ManifestCleanerJob.CFG_MAX_AGE_IN_MINUTES),
                 Integer.toString(ManifestCleanerJob.DEFAULT_MAX_AGE_IN_MINUTES));
 
-            // OrphanCleanupJob
-            this.put(jobConfig(OrphanCleanupJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
-                OrphanCleanupJob.DEFAULT_SCHEDULE);
-
             // UnmappedGuestEntitlementCleanerJob
             this.put(jobConfig(UnmappedGuestEntitlementCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 UnmappedGuestEntitlementCleanerJob.DEFAULT_SCHEDULE);
 
             // Set the triggerable jobs list
             this.put(ASYNC_JOBS_TRIGGERABLE_JOBS, String.join(", ", ASYNC_JOBS_TRIGGERABLE_JOBS_LIST));
-
-            this.put(ORPHANED_ENTITY_GRACE_PERIOD, "30");
 
             // Based on testing with the hypervisor check in process, and going a bit conservative
             this.put(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE, "15000");

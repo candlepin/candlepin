@@ -551,21 +551,6 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
     }
 
     /**
-     * Fetches a list of content UUIDs representing content which are no longer used by any
-     * organization. If no such contents exist, this method returns an empty list.
-     * <p></p>
-     * <strong>Warning:</strong> Due to the nature of this query, it is highly advised that
-     * this it be run within a transaction, with a pessimistic lock held.
-     *
-     * @return
-     *  a list of UUIDs of content no longer used by any organization
-     */
-    public List<String> getOrphanedContentUuids() {
-        // TODO: REMOVE THIS METHOD
-        return List.of();
-    }
-
-    /**
      * Returns a mapping of content UUIDs to collections of products referencing them. That is, for
      * a given entry in the returned map, the key will be one of the input content UUIDs, and the
      * value will be the set of product UUIDs which reference it. If no products reference any of
