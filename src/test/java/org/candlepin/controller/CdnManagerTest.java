@@ -79,7 +79,7 @@ public class CdnManagerTest extends DatabaseTestFixture {
 
         Owner owner = this.createOwner();
 
-        Product product = createProduct(owner);
+        Product product = this.createProduct();
         Pool pool = createPool(owner, product);
         pool.setCdn(cdn);
         poolCurator.create(pool);

@@ -276,7 +276,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         long now = System.currentTimeMillis();
 
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = this.createProduct("p1", "prod1", owner);
+        Product product = this.createProduct("p1", "prod1");
         Pool pool = this.createPool(owner, product, 1L, new Date(now - 86400), new Date(now + 86400));
 
         assertThrows(IllegalStateException.class,

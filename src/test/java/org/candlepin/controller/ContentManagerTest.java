@@ -204,7 +204,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
         Product product = new Product("p1", "product-1");
         product.addContent(content, true);
-        this.createProduct(product, owner);
+        this.createProduct(product);
 
         assertNotNull(content.getUuid());
         assertNotNull(this.contentCurator.get(content.getUuid()));

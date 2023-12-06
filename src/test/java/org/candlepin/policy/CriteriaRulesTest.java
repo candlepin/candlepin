@@ -59,7 +59,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
     public void virtOnlyPoolAttributeFiltering() {
 
         consumer = this.createConsumer(owner);
-        Product targetProduct = this.createProduct(owner);
+        Product targetProduct = this.createProduct();
 
         Pool physicalPool = this.createPool(owner, targetProduct, 1L, new Date(), new Date());
         Pool virtPool = this.createPool(owner, targetProduct, 1L, new Date(), new Date());
@@ -89,7 +89,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
 
         Product targetProduct = TestUtil.createProduct();
         targetProduct.setAttribute(Product.Attributes.VIRT_ONLY, "true");
-        targetProduct = this.createProduct(targetProduct, owner);
+        targetProduct = this.createProduct(targetProduct);
 
         this.createPool(owner, targetProduct, 1L, new Date(), new Date());
         this.createPool(owner, targetProduct, 1L, new Date(), new Date());
@@ -115,7 +115,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         host.addGuestId(new GuestId("GUESTUUID", host));
         consumerCurator.update(host);
 
-        Product targetProduct = this.createProduct(owner);
+        Product targetProduct = this.createProduct();
 
         Pool virtPool = this.createPool(owner, targetProduct, 1L, new Date(), new Date());
         virtPool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
@@ -163,7 +163,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         host.addGuestId(new GuestId("GUESTUUID", host));
         consumerCurator.update(host);
 
-        Product targetProduct = this.createProduct(owner);
+        Product targetProduct = this.createProduct();
 
         Pool virtPool = this.createPool(owner, targetProduct, 1L, new Date(), new Date());
         virtPool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
@@ -193,7 +193,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         host.addGuestId(new GuestId("GUESTUUID", host));
         consumerCurator.update(host);
 
-        Product targetProduct = this.createProduct(owner);
+        Product targetProduct = this.createProduct();
 
         Pool virtPool = this.createPool(owner, targetProduct, 1L, new Date(), new Date());
         virtPool.setAttribute(Product.Attributes.VIRT_ONLY, "true");

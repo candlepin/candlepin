@@ -204,7 +204,7 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
     @Test
     public void testGetContentById() {
         Owner owner = this.createOwner("test_owner");
-        Content content = this.createContent("test_content", "test_content", owner);
+        Content content = this.createContent("test_content", "test_content");
         ContentDTO output = this.ownerContentResource.getContentById(owner.getKey(), content.getId());
 
         assertNotNull(output);

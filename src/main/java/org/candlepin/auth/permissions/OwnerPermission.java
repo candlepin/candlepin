@@ -22,10 +22,6 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.Environment_;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContent;
-import org.candlepin.model.OwnerContent_;
-import org.candlepin.model.OwnerProduct;
-import org.candlepin.model.OwnerProduct_;
 import org.candlepin.model.Owner_;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool_;
@@ -93,12 +89,6 @@ public class OwnerPermission implements Permission, Serializable {
         else if (Environment.class.equals(entityClass)) {
             return Restrictions.eq("owner", owner);
         }
-        else if (OwnerProduct.class.equals(entityClass)) {
-            return Restrictions.eq("owner", owner);
-        }
-        else if (OwnerContent.class.equals(entityClass)) {
-            return Restrictions.eq("owner", owner);
-        }
 
         return null;
     }
@@ -122,12 +112,6 @@ public class OwnerPermission implements Permission, Serializable {
         }
         else if (Environment.class.equals(entityClass)) {
             return builder.equal(((From<?, Environment>) path).get(Environment_.owner), this.getOwner());
-        }
-        else if (OwnerProduct.class.equals(entityClass)) {
-            return builder.equal(((From<?, OwnerProduct>) path).get(OwnerProduct_.owner), this.getOwner());
-        }
-        else if (OwnerContent.class.equals(entityClass)) {
-            return builder.equal(((From<?, OwnerContent>) path).get(OwnerContent_.owner), this.getOwner());
         }
 
         return null;

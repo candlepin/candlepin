@@ -280,10 +280,10 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void testListEntitledProductIdsWhenEntitledPoolsArePresent() {
         Product providedProduct = TestUtil.createProduct();
-        providedProduct = this.createProduct(providedProduct, owner);
+        providedProduct = this.createProduct(providedProduct);
         Product product = TestUtil.createProduct();
         product.addProvidedProduct(providedProduct);
-        product = this.createProduct(product, owner);
+        product = this.createProduct(product);
 
         Pool entitlePool = this.poolCurator.create(new Pool()
             .setOwner(owner).setProduct(product).setQuantity(16L)
@@ -587,8 +587,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
 
-        Product product1 = this.createProduct(owner1);
-        Product product2 = this.createProduct(owner2);
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
 
         Pool p1Attributes = TestUtil.createPool(owner1, product1);
         Pool p1NoAttributes = TestUtil.createPool(owner1, product1);
@@ -671,7 +671,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         for (int i = 0; i < count; ++i) {
             String id = String.format("%s-%d-%d", prefix, (i + 1), TestUtil.randomInt());
-            products.add(this.createProduct(id, id, owner));
+            products.add(this.createProduct(id, id));
         }
 
         return products;
@@ -691,13 +691,13 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             for (Product rprod : required) {
                 content.addModifiedProductId(rprod.getId());
             }
-            this.createContent(content, owner);
+            this.createContent(content);
 
             String id = String.format("%s-%d-%d", prefix, (i + 1), rand);
             Product product = new Product(id, id);
             product.addContent(content, true);
 
-            products.add(this.createProduct(product, owner));
+            products.add(this.createProduct(product));
         }
 
         return products;
@@ -706,7 +706,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     protected Pool createPoolWithProducts(Owner owner, String sku, Collection<Product> provided) {
         Product skuProd = TestUtil.createProduct(sku, sku);
         skuProd.setProvidedProducts(provided);
-        skuProd = this.createProduct(skuProd, owner);
+        skuProd = this.createProduct(skuProd);
 
         Pool pool = this.createPool(owner, skuProd, 1000L, TestUtil.createDate(2000, 1, 1),
             TestUtil.createDate(2100, 1, 1));
@@ -898,8 +898,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Consumer consumer2 = this.createConsumer(owner2);
 
         List<Product> reqProds = Arrays.asList(
-            this.createProduct("req_prod_1", "req_prod_1", owner1, owner2),
-            this.createProduct("req_prod_2", "req_prod_2", owner1, owner2));
+            this.createProduct("req_prod_1", "req_prod_1"),
+            this.createProduct("req_prod_2", "req_prod_2"));
 
         List<Product> dependentProductA = this.createDependentProducts(owner1, 1, "test_dep_prod_a",
             reqProds.subList(0, 1));
@@ -912,8 +912,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Product skuProd2 = TestUtil.createProduct("reqPool2", "reqPool2")
             .setProvidedProducts(reqProds.subList(1, 2));
 
-        this.createProduct(skuProd1, owner1, owner2);
-        this.createProduct(skuProd2, owner1, owner2);
+        this.createProduct(skuProd1);
+        this.createProduct(skuProd2);
 
         Pool requiredPool1A = this.createPool(owner1, skuProd1, 1000L, TestUtil.createDate(2000, 1, 1),
             TestUtil.createDate(2100, 1, 1));
@@ -956,8 +956,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Consumer consumer2 = this.createConsumer(owner2);
 
         List<Product> reqProds = Arrays.asList(
-            this.createProduct("req_prod_1", "req_prod_1", owner1, owner2),
-            this.createProduct("req_prod_2", "req_prod_2", owner1, owner2));
+            this.createProduct("req_prod_1", "req_prod_1"),
+            this.createProduct("req_prod_2", "req_prod_2"));
 
         List<Product> dependentProductA = this.createDependentProducts(owner1, 1, "test_dep_prod_a",
             reqProds.subList(0, 1));
@@ -970,8 +970,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Product skuProd2 = TestUtil.createProduct("reqPool2", "reqPool2")
             .setProvidedProducts(reqProds.subList(1, 2));
 
-        this.createProduct(skuProd1, owner1, owner2);
-        this.createProduct(skuProd2, owner1, owner2);
+        this.createProduct(skuProd1);
+        this.createProduct(skuProd2);
 
         Pool requiredPool1A = this.createPool(owner1, skuProd1, 1000L, TestUtil.createDate(2000, 1, 1),
             TestUtil.createDate(2100, 1, 1));
@@ -1112,7 +1112,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         Product derivedProduct = TestUtil.createProduct("derivedProductId", "dProductName");
         derivedProduct.setProvidedProducts(requiredProducts);
-        this.createProduct(derivedProduct, owner);
+        this.createProduct(derivedProduct);
 
         Pool requiredPool = this.createPoolWithProducts(owner, "reqPool1", providedProducts);
         requiredPool.getProduct().setDerivedProduct(derivedProduct);
@@ -1212,9 +1212,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Product p1 = TestUtil.createProduct("p1", "p1");
         p1.addProvidedProduct(requiredProducts.get(0));
 
-        p1 = this.createProduct(p1, owner);
-        Product p2 = this.createProduct("p2", "p2", owner);
-        Product p3 = this.createProduct("p3", "p3", owner);
+        p1 = this.createProduct(p1);
+        Product p2 = this.createProduct("p2", "p2");
+        Product p3 = this.createProduct("p3", "p3");
 
         List<Product> providedProducts = Arrays.asList(p1, p2, p3);
         List<Product> dependentProducts = this.createDependentProducts(owner, 1, "test_dep_prod_a",
@@ -1223,7 +1223,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Product skuProduct = TestUtil.createProduct("reqPool1", "reqPool1");
         skuProduct.setProvidedProducts(providedProducts);
         skuProduct.setDerivedProduct(p1);
-        skuProduct = this.createProduct(skuProduct, owner);
+        skuProduct = this.createProduct(skuProduct);
 
         Pool requiredPool = this.poolCurator.create(new Pool()
             .setOwner(owner)
@@ -1276,7 +1276,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         Owner owner = this.createOwner();
         Consumer consumer = this.createConsumer(owner);
-        Product product = this.createProduct(owner);
+        Product product = this.createProduct();
         Pool pool = this.createPool(owner, product);
 
         List<String> entIds = new LinkedList<>();
@@ -1305,9 +1305,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Consumer consumer2 = this.createConsumer(owner);
         Consumer consumer3 = this.createConsumer(owner);
 
-        Content content1 = this.createContent(owner);
-        Content content2 = this.createContent(owner);
-        Content content3 = this.createContent(owner);
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+        Content content3 = this.createContent();
 
         Product product1 = new Product()
             .setId("p1")
@@ -1315,7 +1315,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product1.addContent(content1, true);
         product1.addContent(content2, false);
 
-        this.createProduct(product1, owner);
+        this.createProduct(product1);
 
         Product product2 = new Product()
             .setId("p2")
@@ -1323,7 +1323,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product2.addContent(content2, true);
         product2.addContent(content3, false);
 
-        this.createProduct(product2, owner);
+        this.createProduct(product2);
 
         Pool pool1 = this.poolCurator.create(new Pool()
             .setOwner(owner)
@@ -1369,9 +1369,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Consumer consumer2 = this.createConsumer(owner);
         Consumer consumer3 = this.createConsumer(owner);
 
-        Content content1 = this.createContent(owner);
-        Content content2 = this.createContent(owner);
-        Content content3 = this.createContent(owner);
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+        Content content3 = this.createContent();
 
         Product product1 = new Product()
             .setId("p1")
@@ -1379,7 +1379,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product1.addContent(content1, true);
         product1.addContent(content2, false);
 
-        this.createProduct(product1, owner);
+        this.createProduct(product1);
 
         Product product2 = new Product()
             .setId("p2")
@@ -1387,7 +1387,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product2.addContent(content2, true);
         product2.addContent(content3, false);
 
-        this.createProduct(product2, owner);
+        this.createProduct(product2);
 
         Pool pool1 = this.poolCurator.create(new Pool()
             .setOwner(owner)
@@ -1432,9 +1432,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Consumer consumer2 = this.createConsumer(owner);
         Consumer consumer3 = this.createConsumer(owner);
 
-        Content content1 = this.createContent(owner);
-        Content content2 = this.createContent(owner);
-        Content content3 = this.createContent(owner);
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+        Content content3 = this.createContent();
 
         Product product1 = new Product()
             .setId("p1")
@@ -1442,7 +1442,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product1.addContent(content1, true);
         product1.addContent(content2, false);
 
-        this.createProduct(product1, owner);
+        this.createProduct(product1);
 
         Product product2 = new Product()
             .setId("p2")
@@ -1450,7 +1450,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product2.addContent(content2, true);
         product2.addContent(content3, false);
 
-        this.createProduct(product2, owner);
+        this.createProduct(product2);
 
         Pool pool1 = this.poolCurator.create(new Pool()
             .setOwner(owner)
@@ -1491,16 +1491,16 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Consumer consumer2 = this.createConsumer(owner);
         Consumer consumer3 = this.createConsumer(owner);
 
-        Content content1 = this.createContent(owner);
-        Content content2 = this.createContent(owner);
-        Content content3 = this.createContent(owner);
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+        Content content3 = this.createContent();
 
         Product provided1 = new Product()
             .setId("prov1")
             .setName("provided product 1");
         provided1.addContent(content1, true);
 
-        this.createProduct(provided1, owner);
+        this.createProduct(provided1);
 
         Product product1 = new Product()
             .setId("p1")
@@ -1508,14 +1508,14 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product1.addContent(content2, true);
         product1.addProvidedProduct(provided1);
 
-        this.createProduct(product1, owner);
+        this.createProduct(product1);
 
         Product provided2 = new Product()
             .setId("prov2")
             .setName("provided product 2");
         provided2.addContent(content3, true);
 
-        this.createProduct(provided2, owner);
+        this.createProduct(provided2);
 
         Product product2 = new Product()
             .setId("p2")
@@ -1523,7 +1523,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product2.addContent(content2, true);
         product2.addProvidedProduct(provided2);
 
-        this.createProduct(product2, owner);
+        this.createProduct(product2);
 
         Pool pool1 = this.poolCurator.create(new Pool()
             .setOwner(owner)
@@ -1564,9 +1564,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Consumer consumer2 = this.createConsumer(owner);
         Consumer consumer3 = this.createConsumer(owner);
 
-        Content content1 = this.createContent(owner);
-        Content content2 = this.createContent(owner);
-        Content content3 = this.createContent(owner);
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+        Content content3 = this.createContent();
 
         Product product1 = new Product()
             .setId("p1")
@@ -1574,7 +1574,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product1.addContent(content1, true);
         product1.addContent(content2, false);
 
-        this.createProduct(product1, owner);
+        this.createProduct(product1);
 
         Product product2 = new Product()
             .setId("p2")
@@ -1582,7 +1582,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product2.addContent(content2, true);
         product2.addContent(content3, false);
 
-        this.createProduct(product2, owner);
+        this.createProduct(product2);
 
         Pool pool1 = this.poolCurator.create(new Pool()
             .setOwner(owner)

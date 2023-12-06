@@ -222,7 +222,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             .setKey(OWNER_NAME)
             .setDisplayName(OWNER_NAME));
 
-        product = this.createProduct(owner);
+        product = this.createProduct();
         typeLabels = null;
         skus = null;
         subscriptionIds = null;
@@ -381,7 +381,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         Date now = new Date();
-        Product p = this.createProduct(owner);
+        Product p = this.createProduct();
         Pool pool1 = TestUtil.createPool(owner, p);
         pool1.setAttribute(Pool.Attributes.VIRT_ONLY, "true");
         pool1.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
@@ -426,7 +426,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testOwnerAdminCanGetPools() {
         Principal principal = setupPrincipal(owner, Access.ALL);
 
-        Product p = this.createProduct(owner);
+        Product p = this.createProduct();
         Pool pool1 = TestUtil.createPool(owner, p);
         Pool pool2 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
@@ -446,14 +446,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testCanFilterPoolsByAttribute() throws Exception {
         Principal principal = setupPrincipal(owner, Access.ALL);
 
-        Product p = this.createProduct(owner);
+        Product p = this.createProduct();
         Pool pool1 = TestUtil.createPool(owner, p);
         pool1.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         poolCurator.create(pool1);
 
         Product p2 = TestUtil.createProduct();
         p2.setAttribute(Product.Attributes.CORES, "12");
-        createProduct(p2, owner);
+        createProduct(p2);
         Pool pool2 = TestUtil.createPool(owner, p2);
         poolCurator.create(pool2);
 
@@ -485,13 +485,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testCanFilterOutDevPoolsByAttribute() {
         Principal principal = setupPrincipal(owner, Access.ALL);
 
-        Product p = this.createProduct(owner);
+        Product p = this.createProduct();
 
         Pool pool1 = TestUtil.createPool(owner, p);
         pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
         poolCurator.create(pool1);
 
-        Product p2 = this.createProduct(owner);
+        Product p2 = this.createProduct();
         Pool pool2 = TestUtil.createPool(owner, p2);
         poolCurator.create(pool2);
 
@@ -534,7 +534,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerCurator.create(evilOwner);
         Principal principal = setupPrincipal(evilOwner, Access.ALL);
 
-        Product p = this.createProduct(owner);
+        Product p = this.createProduct();
         Pool pool1 = TestUtil.createPool(owner, p);
         Pool pool2 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
@@ -1052,7 +1052,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void consumerListPoolsGetCalculatedAttributes() {
-        Product p = this.createProduct(owner);
+        Product p = this.createProduct();
         Pool pool1 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
 
@@ -1077,7 +1077,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerListPoolsCannotAccessOtherConsumer() {
-        Product p = this.createProduct(owner);
+        Product p = this.createProduct();
         Pool pool1 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
 
@@ -1484,8 +1484,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product prod2 = TestUtil.createProduct()
             .setAttribute(Product.Attributes.SUPPORT_LEVEL, "standard");
 
-        this.createProduct(prod1, owner);
-        this.createProduct(prod2, owner);
+        this.createProduct(prod1);
+        this.createProduct(prod2);
 
         Pool pool1 = TestUtil.createPool(owner, prod1)
             .setQuantity(2000L)
@@ -1709,7 +1709,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testCreatePoolIsLimitedToNamespacedProducts() {
-        Product prod = this.createProduct(owner);
+        Product prod = this.createProduct();
         Pool pool = TestUtil.createPool(owner, prod);
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
 
@@ -1822,7 +1822,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product prod = new Product("foo", "bar")
             .setNamespace(owner.getKey())
             .setAttribute(Product.Attributes.VIRT_LIMIT, "3");
-        this.createProduct(prod, owner);
+        this.createProduct(prod);
 
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setUpstreamPoolId("upstream-" + pool.getId());
@@ -1845,7 +1845,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product prod = TestUtil.createProduct()
             .setNamespace(owner.getKey())
             .setAttribute(Product.Attributes.VIRT_LIMIT, "3");
-        this.createProduct(prod, owner);
+        this.createProduct(prod);
 
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setUpstreamPoolId("upstream-" + pool.getId());

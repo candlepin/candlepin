@@ -74,7 +74,7 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
     @Test
     public void testProcessNodeFlagsUnchangedNodesCorrectly() {
         Owner owner = this.createOwner();
-        Product existingEntity = this.createProduct("test_prod-1", "Test Product", owner);
+        Product existingEntity = this.createProduct("test_prod-1", "Test Product");
         ProductInfo importedEntity = (ProductInfo) existingEntity.clone();
 
         EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existingEntity.getId())
@@ -292,7 +292,7 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
     @Test
     public void testProcessNodeFlagsCreatedNodeCorrectly() {
         Owner owner = this.createOwner();
-        ProductInfo importedEntity = this.createProduct("test_prod-1", "Test Product", owner);
+        ProductInfo importedEntity = this.createProduct("test_prod-1", "Test Product");
 
         EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, importedEntity.getId())
             .setImportedEntity(importedEntity);
@@ -377,7 +377,7 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
     public void testApplyChangesResolvesContentProperly() {
         String id = "test_product-1";
         Owner owner = this.createOwner();
-        Product existingEntity = this.createProduct(id, "test product", owner);
+        Product existingEntity = this.createProduct(id, "test product");
 
         Content content = this.createContent("test_content-1", "test content");
 
@@ -410,7 +410,7 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
     public void testApplyChangesResolvesDerivedProductProperly() {
         String id = "test_product-1";
         Owner owner = this.createOwner();
-        Product existingEntity = this.createProduct(id, "test product", owner);
+        Product existingEntity = this.createProduct(id, "test product");
 
         Product derived = this.createProduct("derived_product-1", "derived product");
 
@@ -441,7 +441,7 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
     public void testApplyChangesResolvesProvidedProductProperly() {
         String id = "test_product-1";
         Owner owner = this.createOwner();
-        Product existingEntity = this.createProduct(id, "test product", owner);
+        Product existingEntity = this.createProduct(id, "test product");
 
         Product provided = this.createProduct("provided_product-1", "provided product");
 
@@ -508,7 +508,7 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
     public void testFullCyclePersistsUpdatedEntity() {
         Owner owner = this.createOwner();
 
-        Product existing = this.createProduct("test_product", "product name", owner);
+        Product existing = this.createProduct("test_product", "product name");
 
         Product imported = new Product()
             .setId(existing.getId())

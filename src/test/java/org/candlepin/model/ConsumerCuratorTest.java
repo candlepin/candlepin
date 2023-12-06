@@ -2033,7 +2033,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             .setType(ct);
         consumer = consumerCurator.create(consumer);
 
-        Product product = this.createProduct("1", "2", owner);
+        Product product = this.createProduct("1", "2");
         Pool pool = createPool(owner, product, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent1 = this.createEntitlement(owner, consumer, pool,
             createEntitlementCertificate("entkey1", "ecert1"));
@@ -2054,7 +2054,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             .setOwner(owner)
             .setType(ct);
         consumerCurator.create(consumer);
-        Product prod = this.createProduct("1", "2", owner);
+        Product prod = this.createProduct("1", "2");
 
         Pool p = createPool(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent = this.createEntitlement(owner, consumer, p,
@@ -2075,7 +2075,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             .setOwner(owner)
             .setType(ct);
         consumerCurator.create(consumer);
-        Product prod = this.createProduct("1", "2", owner);
+        Product prod = this.createProduct("1", "2");
 
         Pool p = createPool(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent = this.createEntitlement(owner, consumer, p,

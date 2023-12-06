@@ -50,7 +50,6 @@ public class ModifierTestDataGenerator {
      * All the entitlements of this consumer are expired
      */
     @Inject private ProductCurator productCurator;
-    @Inject private OwnerProductCurator ownerProductCurator;
     @Inject private CertificateSerialCurator certSerialCurator;
     @Inject private PoolCurator poolCurator;
     @Inject private ConsumerCurator consumerCurator;
