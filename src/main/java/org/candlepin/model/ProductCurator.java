@@ -655,35 +655,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * Checks if the specified product is referenced by any other products as a derived or provided
-     * product.
-     *
-     * @param owner
-     *  the owner of the product to check
-     *
-     * @param product
-     *  the product to check for parent products
-     *
-     * @return
-     *  true if the product is referenced by one or more other products; false otherwise
-     */
-    public boolean productHasParentProducts(Owner owner, Product product) {
-        String jpql = "SELECT count(product) FROM OwnerProduct op " +
-            "JOIN op.product product " +
-            "LEFT JOIN product.providedProducts pp " +
-            "WHERE op.owner.id = :owner_id " +
-            "  AND (product.derivedProduct.uuid = :product_uuid " +
-            "   OR pp.uuid = :product_uuid)";
-
-        TypedQuery<Long> query = this.getEntityManager()
-            .createQuery(jpql, Long.class)
-            .setParameter("owner_id", owner.getId())
-            .setParameter("product_uuid", product.getUuid());
-
-        return query.getSingleResult() != 0;
-    }
-
-    /**
      * Fetches a list of product UUIDs representing products which are no longer used by any owner.
      * If no such products exist, this method returns an empty list.
      *

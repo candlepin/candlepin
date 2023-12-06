@@ -58,8 +58,8 @@ public class ConsumerTest extends DatabaseTestFixture {
     @BeforeEach
     public void setUpTestObjects() {
         owner = this.createOwner("Example Corporation");
-        rhel = this.createProduct("rhel", "Red Hat Enterprise Linux", owner);
-        jboss = this.createProduct("jboss", "JBoss", owner);
+        rhel = this.createProduct("rhel", "Red Hat Enterprise Linux");
+        jboss = this.createProduct("jboss", "JBoss");
 
         consumerType = new ConsumerType(CONSUMER_TYPE_NAME);
         consumerTypeCurator.create(consumerType);
@@ -229,7 +229,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testAddEntitlements() {
         Owner o = createOwner();
-        Product newProduct = this.createProduct(o);
+        Product newProduct = this.createProduct();
 
         Pool pool = createPool(o, newProduct, 1000L, TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));

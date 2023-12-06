@@ -57,7 +57,7 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
         consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
 
-        product = this.createProduct(owner);
+        product = this.createProduct();
 
         pool = createPool(owner, product, 10L,
             TestUtil.createDate(2010, 1, 1), TestUtil.createDate(2029, 12, 31));

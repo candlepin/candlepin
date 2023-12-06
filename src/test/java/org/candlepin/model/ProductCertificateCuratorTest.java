@@ -19,26 +19,18 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+
 
 /**
  * ProductCertificateCuratorTest
  */
 public class ProductCertificateCuratorTest extends DatabaseTestFixture {
-    private Product product;
-
-    @BeforeEach
-    @Override
-    public void init() throws Exception {
-        super.init();
-
-        Owner owner = this.createOwner("Test Corporation");
-        this.product = this.createProduct(owner);
-    }
 
     @Test
     public void emptyFindForProduct() {
+        Product product = this.createProduct();
         assertNull(productCertificateCurator.findForProduct(product));
     }
 
@@ -49,6 +41,8 @@ public class ProductCertificateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void validFindForProduct() {
+        Product product = this.createProduct();
+
         ProductCertificate cert = new ProductCertificate();
         cert.setProduct(product);
         cert.setKey("key");

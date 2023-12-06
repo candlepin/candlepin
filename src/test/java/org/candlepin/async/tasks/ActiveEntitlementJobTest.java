@@ -56,7 +56,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
             .setDisplayName("Test Owner")
             .setContentAccessMode("entitlement"));
 
-        prod = this.createProduct("1", "2", owner);
+        prod = this.createProduct("1", "2");
 
         ct = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);

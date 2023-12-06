@@ -80,7 +80,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Test
     public void getProduct() {
         Owner owner = this.createOwner("Example-Corporation");
-        Product entity = this.createProduct("test_product", "test_product", owner);
+        Product entity = this.createProduct("test_product", "test_product");
         ProductDTO expected = this.modelTranslator.translate(entity, ProductDTO.class);
 
         securityInterceptor.enable();
@@ -94,7 +94,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     public void testGetProductCertificateByUuid() {
         Owner owner = this.createOwner("Example-Corporation");
 
-        Product entity = this.createProduct(owner);
+        Product entity = this.createProduct();
         // ensure we check SecurityHole
         securityInterceptor.enable();
 
@@ -114,15 +114,15 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Owner owner2 = this.ownerCurator.create(new Owner().setKey("testorg-2").setDisplayName("testorg-2"));
         Owner owner3 = this.ownerCurator.create(new Owner().setKey("testorg-3").setDisplayName("testorg-3"));
 
-        Product prod1 = this.createProduct("p1", "p1", owner1, owner2);
-        Product prod2 = this.createProduct("p2", "p2", owner2, owner3);
-        Product prod3 = this.createProduct("p3", "p3", owner3);
+        Product prod1 = this.createProduct("p1", "p1");
+        Product prod2 = this.createProduct("p2", "p2");
+        Product prod3 = this.createProduct("p3", "p3");
 
-        Product poolProd1 = this.createProduct(owner1);
-        Product poolProd2 = this.createProduct(owner2);
-        Product poolProd3 = this.createProduct(owner2);
-        Product poolProd4 = this.createProduct(owner3);
-        Product poolProd5 = this.createProduct(owner3);
+        Product poolProd1 = this.createProduct();
+        Product poolProd2 = this.createProduct();
+        Product poolProd3 = this.createProduct();
+        Product poolProd4 = this.createProduct();
+        Product poolProd5 = this.createProduct();
 
         // Set Provided Products
         poolProd1.setProvidedProducts(Arrays.asList(prod1));

@@ -40,11 +40,11 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
         owner = this.createOwner("test-owner", "Test Owner");
 
         e = this.createEnvironment(owner, "env1", "Env 1");
-        c = this.createContent("contentId1", "testcontent", this.owner);
+        c = this.createContent("contentId1", "testcontent");
 
         p = TestUtil.createProduct();
         p.addContent(c, true);
-        p = this.createProduct(p, owner);
+        p = this.createProduct(p);
 
         envContent = new EnvironmentContent()
             .setEnvironment(e)

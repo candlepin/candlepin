@@ -97,18 +97,16 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
     AbstractHibernateCurator<Owner> testOwnerCurator;
     AbstractHibernateCurator<Content> testContentCurator;
     AbstractHibernateCurator<Environment> testEnvironmentCurator;
-    AbstractHibernateCurator<OwnerProduct> testOwnerProductCurator;
 
     @BeforeEach
     public void setup() {
         this.testOwnerCurator = new TestHibernateCurator<>(Owner.class);
         this.testContentCurator = new TestHibernateCurator<>(Content.class);
         this.testEnvironmentCurator = new TestHibernateCurator<>(Environment.class);
-        this.testOwnerProductCurator = new TestHibernateCurator<>(OwnerProduct.class);
+
         this.injectMembers(this.testOwnerCurator);
         this.injectMembers(this.testContentCurator);
         this.injectMembers(this.testEnvironmentCurator);
-        this.injectMembers(this.testOwnerProductCurator);
     }
 
     @Test
@@ -152,7 +150,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
     @Test
     public void testLockAndLoadWithSingleIdRetainsFlushedChanged() {
         Owner owner = this.createOwner();
-        Content content = this.createContent("c1", "content-1", owner);
+        Content content = this.createContent("c1", "content-1");
 
         // Verify that a flush will make the change persistent
         content.setName("changed_name");
@@ -254,7 +252,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
     @Test
     public void testLockAndLoadWithSingleIdWithClassAndIdRetainsFlushedChanged() {
         Owner owner = this.createOwner();
-        Content content = this.createContent("c1", "content-1", owner);
+        Content content = this.createContent("c1", "content-1");
 
         // Verify that a flush will make the change persistent
         owner.setDisplayName("changed_name");
@@ -561,11 +559,6 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
         assertEquals("id", environmentPrimaryKeyName);
         assertEquals("id", ownerPrimaryKeyName);
-    }
-
-    @Test
-    public void testGetPrimaryKeyNameOnCompositeKey() {
-        assertNull(this.testOwnerProductCurator.getPrimaryKeyName());
     }
 
     @Test
