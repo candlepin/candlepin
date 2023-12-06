@@ -30,6 +30,8 @@ import org.candlepin.service.exception.CouldNotAcquireCloudAccountLockException;
 import org.candlepin.service.exception.CouldNotEntitleOrganizationException;
 import org.candlepin.service.model.CloudAccountData;
 
+import io.opentelemetry.instrumentation.annotations.WithSpan;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +72,7 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
      *     if an exception occurs during job execution
      */
     @Override
+    @WithSpan
     public void execute(JobExecutionContext context) throws JobExecutionException {
         JobArguments args = context.getJobArguments();
 
