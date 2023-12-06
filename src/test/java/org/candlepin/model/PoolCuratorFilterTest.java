@@ -66,11 +66,11 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
 
         Product provided1 = TestUtil.createProduct("101111", "Server Bits");
         provided1.addContent(content, true);
-        provided1 = this.createProduct(provided1, owner);
-        Product provided2 = this.createProduct("202222", "Containers In This One", owner);
+        provided1 = this.createProduct(provided1);
+        Product provided2 = this.createProduct("202222", "Containers In This One");
         searchProduct.setProvidedProducts(Arrays.asList(provided1, provided2));
 
-        searchProduct = this.createProduct(searchProduct, owner);
+        searchProduct = this.createProduct(searchProduct);
 
         Pool searchPool = createPool(owner, searchProduct, 100L, TestUtil.createDate(2005, 3, 2),
             TestUtil.createDate(2050, 3, 2));
@@ -83,9 +83,9 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
 
         // Create another we don't intend to see in the results:
         Product hProduct = TestUtil.createProduct("hidden-product", "Not-So-Awesome OS Home Edition");
-        Product provided = this.createProduct("101", "Workstation Bits", owner);
+        Product provided = this.createProduct("101", "Workstation Bits");
         hProduct.setProvidedProducts(Arrays.asList(provided));
-        Product hideProduct = this.createProduct(hProduct, owner);
+        Product hideProduct = this.createProduct(hProduct);
 
         hidePool = createPool(owner, hideProduct, 100L, TestUtil.createDate(2005, 3, 2),
             TestUtil.createDate(2050, 3, 2));

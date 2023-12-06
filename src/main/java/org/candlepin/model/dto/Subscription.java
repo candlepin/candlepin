@@ -120,9 +120,13 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
 
     /**
      * @param id subscription id
+     *
+     * @return
+     *  a reference to this subscription instance
      */
-    public void setId(String id) {
+    public Subscription setId(String id) {
         this.id = id;
+        return this;
     }
 
     /**
@@ -142,9 +146,13 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
 
     /**
      * @param owner The owner associated with the subscription.
+     *
+     * @return
+     *  a reference to this subscription instance
      */
-    public void setOwner(Owner owner) {
+    public Subscription setOwner(Owner owner) {
         this.owner = owner;
+        return this;
     }
 
     /**
@@ -156,9 +164,13 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
 
     /**
      * @param product The product associated with this subscription.
+     *
+     * @return
+     *  a reference to this subscription instance
      */
-    public void setProduct(ProductData product) {
+    public Subscription setProduct(ProductData product) {
         this.product = product;
+        return this;
     }
 
     @JsonProperty(access = Access.READ_ONLY)
@@ -188,9 +200,13 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
 
     /**
      * @param quantity number of allowed usage.
+     *
+     * @return
+     *  a reference to this subscription instance
      */
-    public void setQuantity(Long quantity) {
+    public Subscription setQuantity(Long quantity) {
         this.quantity = quantity;
+        return this;
     }
 
     /**
@@ -202,9 +218,13 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
 
     /**
      * @param startDate when the subscription is to begin.
+     *
+     * @return
+     *  a reference to this subscription instance
      */
-    public void setStartDate(Date startDate) {
+    public Subscription setStartDate(Date startDate) {
         this.startDate = startDate;
+        return this;
     }
 
     /**
@@ -216,9 +236,13 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
 
     /**
      * @param endDate when the subscription ends.
+     *
+     * @return
+     *  a reference to this subscription instance
      */
-    public void setEndDate(Date endDate) {
+    public Subscription setEndDate(Date endDate) {
         this.endDate = endDate;
+        return this;
     }
 
     /**
@@ -230,9 +254,13 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
 
     /**
      * @param modified when the subscription was changed.
+     *
+     * @return
+     *  a reference to this subscription instance
      */
-    public void setModified(Date modified) {
+    public Subscription setModified(Date modified) {
         this.modified = modified;
+        return this;
     }
 
     /**
@@ -254,17 +282,25 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
     /**
      * set the contract number
      * @param contractNumber
+     *
+     * @return
+     *  a reference to this subscription instance
      */
-    public void setContractNumber(String contractNumber) {
+    public Subscription setContractNumber(String contractNumber) {
         this.contractNumber = contractNumber;
+        return this;
     }
 
     /**
      * set the account number
      * @param accountNumber
+     *
+     * @return
+     *  a reference to this subscription instance
      */
-    public void setAccountNumber(String accountNumber) {
+    public Subscription setAccountNumber(String accountNumber) {
         this.accountNumber = accountNumber;
+        return this;
     }
 
     /**
@@ -277,9 +313,13 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
     /**
      * set the order number
      * @param orderNumber
+     *
+     * @return
+     *  a reference to this subscription instance
      */
-    public void setOrderNumber(String orderNumber) {
+    public Subscription setOrderNumber(String orderNumber) {
         this.orderNumber = orderNumber;
+        return this;
     }
 
     /**
@@ -289,25 +329,27 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         return orderNumber;
     }
 
-
-    public void setUpstreamPoolId(String upstreamPoolId) {
+    public Subscription setUpstreamPoolId(String upstreamPoolId) {
         this.upstreamPoolId = upstreamPoolId;
+        return this;
     }
 
     public String getUpstreamPoolId() {
         return upstreamPoolId;
     }
 
-    public void setUpstreamEntitlementId(String upstreamEntitlementId) {
+    public Subscription setUpstreamEntitlementId(String upstreamEntitlementId) {
         this.upstreamEntitlementId = upstreamEntitlementId;
+        return this;
     }
 
     public String getUpstreamEntitlementId() {
         return upstreamEntitlementId;
     }
 
-    public void setUpstreamConsumerId(String upstreamConsumerId) {
+    public Subscription setUpstreamConsumerId(String upstreamConsumerId) {
         this.upstreamConsumerId = upstreamConsumerId;
+        return this;
     }
 
     public String getUpstreamConsumerId() {
@@ -318,16 +360,18 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         return cert;
     }
 
-    public void setCertificate(SubscriptionsCertificate c) {
+    public Subscription setCertificate(SubscriptionsCertificate c) {
         cert = c;
+        return this;
     }
 
     public Cdn getCdn() {
         return cdn;
     }
 
-    public void setCdn(Cdn cdn) {
+    public Subscription setCdn(Cdn cdn) {
         this.cdn = cdn;
+        return this;
     }
 
     public boolean isStacked() {

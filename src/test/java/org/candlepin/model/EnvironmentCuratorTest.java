@@ -79,9 +79,9 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
     public void testDeleteEnvironmentForOwner() {
         Owner owner1 = this.createOwner("owner1");
         Owner owner2 = this.createOwner("owner2");
-        Content content1 = this.createContent("c1", "c1", owner1);
-        Content content2 = this.createContent("c2", "c2", owner1);
-        Content content3 = this.createContent("c3", "c3", owner2);
+        Content content1 = this.createContent("c1", "c1");
+        Content content2 = this.createContent("c2", "c2");
+        Content content3 = this.createContent("c3", "c3");
 
         Environment environment1 = this.createEnvironment(owner1, "test_env-1", "test_env-1", null, null,
             List.of(content1));
@@ -134,8 +134,8 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner("owner2");
         Consumer consumer1 = this.createConsumer(owner1);
         Consumer consumer2 = this.createConsumer(owner2);
-        Content content1 = this.createContent("c1", "c1", owner1);
-        Content content2 = this.createContent("c3", "c3", owner2);
+        Content content1 = this.createContent("c1", "c1");
+        Content content2 = this.createContent("c3", "c3");
         Environment environment1 = this.createEnvironment(
             owner1, "test_env-1", "test_env-1", null, null, List.of(content1));
         Environment environment2 = this.createEnvironment(
@@ -157,9 +157,9 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
         Owner owner1 = this.createOwner("owner");
         Consumer consumer1 = this.createConsumer(owner1);
         Consumer consumer2 = this.createConsumer(owner1);
-        Content content1 = this.createContent("c1", "c1", owner1);
-        Content content2 = this.createContent("c2", "c2", owner1);
-        Content content3 = this.createContent("c3", "c3", owner1);
+        Content content1 = this.createContent("c1", "c1");
+        Content content2 = this.createContent("c2", "c2");
+        Content content3 = this.createContent("c3", "c3");
         Environment environment1 = this.createEnvironment(
             owner1, "test_env-1", "test_env-1", null, null, List.of(content1));
         Environment environment2 = this.createEnvironment(

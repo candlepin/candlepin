@@ -45,7 +45,7 @@ public class EntitlementCertificateCuratorTest extends DatabaseTestFixture {
     public void setup() {
         this.owner = this.createOwner();
         this.consumer = this.createConsumer(this.owner);
-        this.product = this.createProduct(this.owner);
+        this.product = this.createProduct();
         this.pool = this.createPool(this.owner, this.product);
     }
 

@@ -24,16 +24,13 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.criterion.Subqueries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -166,34 +163,6 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
             .createCriteria("upstreamConsumer")
             .add(Restrictions.eq("uuid", upstreamUuid))
             .uniqueResult();
-    }
-
-    /**
-     * Note that this query looks up only provided products.
-     * @param productIds
-     * @return a list of owners
-     */
-    public CandlepinQuery<Owner> getOwnersByActiveProduct(Collection<String> productIds) {
-        // NOTE: only used by superadmin API calls, no permissions filtering needed here.
-        DetachedCriteria poolIdQuery = DetachedCriteria.forClass(Pool.class, "pool")
-            .createAlias("pool.product", "product")
-            .createAlias("product.providedProducts", "providedProducts")
-            .add(CPRestrictions.in("providedProducts.id", productIds))
-            .setProjection(Property.forName("pool.id"));
-
-        DetachedCriteria ownerIdQuery = DetachedCriteria.forClass(Entitlement.class, "e")
-            .add(Subqueries.propertyIn("e.pool.id", poolIdQuery))
-            .createCriteria("pool").add(Restrictions.gt("endDate", new Date()))
-            .setProjection(Property.forName("e.owner.id"));
-
-        DetachedCriteria distinctQuery = DetachedCriteria.forClass(Owner.class, "o2")
-            .add(Subqueries.propertyIn("o2.id", ownerIdQuery))
-            .setProjection(Projections.distinct(Projections.property("o2.key")));
-
-        DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class, "o")
-            .add(Subqueries.propertyIn("o.key", distinctQuery));
-
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     /**

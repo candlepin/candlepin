@@ -202,7 +202,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     public void testRuleFailsWhenConsumerDoesntHaveFact() {
         Product product = TestUtil.createProduct("a-product", "A product for testing");
         product.setAttribute(PRODUCT_CPULIMITED, "2");
-        product = this.createProduct(product, owner);
+        product = this.createProduct(product);
 
         Consumer consumer = this.createConsumer(owner);
 

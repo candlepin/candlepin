@@ -61,7 +61,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
             }
         }
 
-        return this.createProduct(product, owner);
+        return this.createProduct(product);
     }
 
     @Test
@@ -665,9 +665,9 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         Owner owner1 = this.createOwner();
         Owner owner2 = this.createOwner();
 
-        Content content1 = this.createContent(owner1);
-        Content content2 = this.createContent(owner2);
-        Content content3 = this.createContent(owner1);
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+        Content content3 = this.createContent();
 
         Product product1 = this.createProductWithContent(owner1, content1);
         Product product2 = this.createProductWithContent(owner2, content2, content3);
@@ -693,9 +693,9 @@ public class ContentCuratorTest extends DatabaseTestFixture {
     public void testGetProductsRefrencingContentWithMultipleReferences() {
         Owner owner = this.createOwner();
 
-        Content content1 = this.createContent(owner);
-        Content content2 = this.createContent(owner);
-        Content content3 = this.createContent(owner);
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+        Content content3 = this.createContent();
 
         Product product1 = this.createProductWithContent(owner, content1, content2);
         Product product2 = this.createProductWithContent(owner, content2, content3);
@@ -722,13 +722,13 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         Owner owner1 = this.createOwner();
         Owner owner2 = this.createOwner();
 
-        Content content1 = this.createContent(owner1);
-        Content content2 = this.createContent(owner2);
-        Content content3 = this.createContent(owner1);
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+        Content content3 = this.createContent();
 
-        Product product1 = this.createProduct(owner1);
-        Product product2 = this.createProduct(owner2);
-        Product product3 = this.createProduct(owner1);
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+        Product product3 = this.createProduct();
 
         Set<String> input = Set.of(content1.getUuid(), content2.getUuid(), content3.getUuid());
 
@@ -751,19 +751,19 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         assertTrue(output.isEmpty());
     }
 
-    private Product createProductWithContent(String productId, int contentCount, Owner... owners) {
+    private Product createProductWithContent(String productId, int contentCount) {
         Product product = new Product()
             .setId(productId)
             .setName(productId);
 
         for (int i = 0; i < contentCount; ++i) {
             String cid = productId + "_content-" + i;
-            Content content = this.createContent(cid, owners);
+            Content content = this.createContent(cid);
 
             product.addContent(content, true);
         }
 
-        return this.createProduct(product, owners);
+        return this.createProduct(product);
     }
 
     @Test
@@ -772,9 +772,9 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProductWithContent("p1", 0);
-        Product product2 = this.createProductWithContent("p2", 1, owner1);
-        Product product3 = this.createProductWithContent("p3", 2, owner2);
-        Product product4 = this.createProductWithContent("p4", 3, owner1, owner2);
+        Product product2 = this.createProductWithContent("p2", 1);
+        Product product3 = this.createProductWithContent("p3", 2);
+        Product product4 = this.createProductWithContent("p4", 3);
 
         List<Product> products = List.of(product1, product2, product3, product4);
 
@@ -798,9 +798,9 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProductWithContent("p1", 1);
-        Product product2 = this.createProductWithContent("p2", 2, owner1);
-        Product product3 = this.createProductWithContent("p3", 3, owner2);
-        Product product4 = this.createProductWithContent("p4", 4, owner1, owner2);
+        Product product2 = this.createProductWithContent("p2", 2);
+        Product product3 = this.createProductWithContent("p3", 3);
+        Product product4 = this.createProductWithContent("p4", 4);
 
         List<Product> products = List.of(product2, product3);
 
@@ -824,9 +824,9 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProductWithContent("p1", 1);
-        Product product2 = this.createProductWithContent("p2", 2, owner1);
-        Product product3 = this.createProductWithContent("p3", 3, owner2);
-        Product product4 = this.createProductWithContent("p4", 4, owner1, owner2);
+        Product product2 = this.createProductWithContent("p2", 2);
+        Product product3 = this.createProductWithContent("p3", 3);
+        Product product4 = this.createProductWithContent("p4", 4);
 
         Set<Content> output = this.contentCurator.getChildrenContentOfProductsByUuids(input);
         assertNotNull(output);

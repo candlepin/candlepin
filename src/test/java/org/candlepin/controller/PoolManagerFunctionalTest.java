@@ -779,8 +779,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Date expiredEnd = new Date(ct - 3600000);
 
         Owner owner = this.createOwner();
-        Product product1 = this.createProduct("test-product-1", "Test Product 1", owner);
-        Product product2 = this.createProduct("test-product-2", "Test Product 2", owner);
+        Product product1 = this.createProduct("test-product-1", "Test Product 1");
+        Product product2 = this.createProduct("test-product-2", "Test Product 2");
         Pool activePool = this.createPool(owner, product1, 1L, activeStart, activeEnd);
         Pool expiredPool = this.createPool(owner, product2, 1L, expiredStart, expiredEnd);
 
@@ -808,7 +808,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         for (int i = 0; i < objCount; ++i) {
             Consumer consumer = this.createConsumer(owner);
-            Product product = this.createProduct("test-product-" + i, "Test Product " + i, owner);
+            Product product = this.createProduct("test-product-" + i, "Test Product " + i);
             Pool pool = (i % 2 == 0) ? this.createPool(owner, product, 1L, activeStart, activeEnd) :
                 this.createPool(owner, product, 1L, expiredStart, expiredEnd);
 
@@ -850,8 +850,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Date expiredEnd = new Date(ct - 3600000);
 
         Owner owner = this.createOwner();
-        Product product1 = this.createProduct("test-product-1", "Test Product 1", owner);
-        Product product2 = this.createProduct("test-product-2", "Test Product 2", owner);
+        Product product1 = this.createProduct("test-product-1", "Test Product 1");
+        Product product2 = this.createProduct("test-product-2", "Test Product 2");
         Pool pool1 = this.createPool(owner, product1, 1L, activeStart, activeEnd);
         Pool pool2 = this.createPool(owner, product2, 1L, expiredStart, expiredEnd);
         Pool pool3 = this.createPool(owner, product2, 1L, activeStart, activeEnd);
@@ -891,7 +891,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Date expiredEnd = new Date(ct - 3600000);
 
         Owner owner = this.createOwner();
-        Product product1 = this.createProduct("test-product-1", "Test Product 1", owner);
+        Product product1 = this.createProduct("test-product-1", "Test Product 1");
         String suscriptionId = Util.generateDbUUID();
         Pool pool2 = this.createPool(
             owner, product1, 1L, expiredStart, expiredEnd, suscriptionId, PRIMARY_POOL_SUB_KEY);
@@ -913,7 +913,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testRefreshPoolsWithNewSubscriptions() {
         Owner owner = this.createOwner();
-        Product prod = this.createProduct(owner);
+        Product prod = this.createProduct();
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto = this.modelTranslator.translate(owner,
@@ -947,7 +947,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testRefreshPoolsWithChangedSubscriptions() {
         Owner owner = this.createOwner();
-        Product prod = this.createProduct(owner);
+        Product prod = this.createProduct();
         Pool pool = createPool(owner, prod, 1000L,
             TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
@@ -987,7 +987,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testRefreshPoolsWithRemovedSubscriptions() {
         Owner owner = this.createOwner();
-        Product prod = this.createProduct(owner);
+        Product prod = this.createProduct();
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto = this.modelTranslator.translate(owner,
@@ -1031,8 +1031,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testRefreshMultiplePools() {
         Owner owner = this.createOwner();
-        Product prod = this.createProduct(owner);
-        Product prod2 = this.createProduct(owner);
+        Product prod = this.createProduct();
+        Product prod2 = this.createProduct();
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto = this.modelTranslator.translate(owner,
@@ -1070,12 +1070,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     // test covers scenario from bug 1012386
     @Test
     public void testRefreshPoolsWithRemovedPrimaryPool() {
-        Owner owner = this.createOwner();
-        Product prod = TestUtil.createProduct();
-
-        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
-        createProduct(prod, owner);
         config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        Owner owner = this.createOwner();
+        Product prod = TestUtil.createProduct()
+            .setAttribute(Product.Attributes.VIRT_LIMIT, "4");
+
+        this.createProduct(prod);
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto = this.modelTranslator.translate(owner,
@@ -1135,10 +1136,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testRefreshPoolsWithRemovedBonusPool() {
         Owner owner = this.createOwner();
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct()
+            .setAttribute(Product.Attributes.VIRT_LIMIT, "4");
 
-        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
-        createProduct(prod, owner);
+        this.createProduct(prod);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
@@ -1218,7 +1219,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     private Pool doTestEntitlementsRevocationCommon(long subQ, int e1, int e2) throws ParseException {
         Owner owner = this.createOwner();
-        Product prod = this.createProduct(owner);
+        Product prod = this.createProduct();
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
 
@@ -1274,7 +1275,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void createEntitlementShouldIncreaseNumberOfMembers() throws Exception {
         Owner owner = this.createOwner();
         Consumer consumer = this.createConsumer(owner, this.systemType);
-        Product product = this.createProduct(owner);
+        Product product = this.createProduct();
 
         Long numAvailEntitlements = 1L;
         Pool consumerPool = this.createPool(owner, product, numAvailEntitlements,
@@ -1295,7 +1296,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void createEntitlementShouldUpdateConsumer() throws Exception {
         Owner owner = this.createOwner();
         Consumer consumer = this.createConsumer(owner, this.systemType);
-        Product product = this.createProduct(owner);
+        Product product = this.createProduct();
 
         Long numAvailEntitlements = 1L;
         Pool consumerPool = this.createPool(owner, product, numAvailEntitlements,
@@ -1321,7 +1322,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Product product = TestUtil.createProduct()
             .setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
 
-        product = this.createProduct(product, owner);
+        product = this.createProduct(product);
 
         Pool consumerPool = this.createPool(owner, product, 1000L,
             TestUtil.createDateOffset(-1, 0, 0), TestUtil.createDateOffset(1, 0, 0));

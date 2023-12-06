@@ -112,7 +112,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         productLimit = TestUtil.createProduct();
         productLimit.setAttribute(Product.Attributes.VIRT_LIMIT, "10");
         productLimit.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
-        productLimit = this.createProduct(productLimit, owner);
+        productLimit = this.createProduct(productLimit);
 
         SubscriptionDTO limitSub = new SubscriptionDTO();
         limitSub.setId(Util.generateDbUUID());
@@ -130,7 +130,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         productUnlimit = TestUtil.createProduct();
         productUnlimit.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
         productUnlimit.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
-        productUnlimit = this.createProduct(productUnlimit, owner);
+        productUnlimit = this.createProduct(productUnlimit);
 
         SubscriptionDTO unlimitSub = new SubscriptionDTO();
         unlimitSub.setId(Util.generateDbUUID());

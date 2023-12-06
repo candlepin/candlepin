@@ -996,7 +996,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     public void ensureDoesNotHaveSubscription() {
         Owner owner = this.createOwner();
 
-        Product noSub = this.createProduct("p1", "p1", owner);
+        Product noSub = this.createProduct("p1", "p1");
         assertFalse(productCurator.productHasSubscriptions(owner, noSub));
     }
 
@@ -1071,8 +1071,8 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProduct("p1", "product_1");
-        Product product2 = this.createProduct("p2", "product_2", owner1);
-        Product product3 = this.createProduct("p3", "product_3", owner2);
+        Product product2 = this.createProduct("p2", "product_2");
+        Product product3 = this.createProduct("p3", "product_3");
 
         Pool pool1 = this.createPool(owner1, product1);
         Pool pool2 = this.createPool(owner1, product2);
@@ -1097,8 +1097,8 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProduct("p1", "product_1");
-        Product product2 = this.createProduct("p2", "product_2", owner1);
-        Product product3 = this.createProduct("p3", "product_3", owner2);
+        Product product2 = this.createProduct("p2", "product_2");
+        Product product3 = this.createProduct("p3", "product_3");
 
         Pool pool1 = this.createPool(owner1, product1);
         Pool pool2 = this.createPool(owner1, product2);
@@ -1134,9 +1134,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProduct("p1", "product_1");
-        Product product2 = this.createProduct("p2", "product_2", owner1);
-        Product product3 = this.createProduct("p3", "product_3", owner2);
-        Product product4 = this.createProduct("p4", "product_4", owner2);
+        Product product2 = this.createProduct("p2", "product_2");
+        Product product3 = this.createProduct("p3", "product_3");
+        Product product4 = this.createProduct("p4", "product_4");
 
         Product refProduct1 = TestUtil.createProduct("ref_p1", "ref product 1");
         refProduct1.addProvidedProduct(product1);
@@ -1146,9 +1146,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             .setDerivedProduct(product4);
         refProduct3.addProvidedProduct(product3);
 
-        refProduct1 = this.createProduct(refProduct1, owner1);
-        refProduct2 = this.createProduct(refProduct2, owner1);
-        refProduct3 = this.createProduct(refProduct3, owner2);
+        refProduct1 = this.createProduct(refProduct1);
+        refProduct2 = this.createProduct(refProduct2);
+        refProduct3 = this.createProduct(refProduct3);
 
         Map<String, Set<String>> output = this.productCurator.getProductsReferencingProducts(
             Arrays.asList(product1.getUuid(), product2.getUuid()));
@@ -1169,9 +1169,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProduct("p1", "product_1");
-        Product product2 = this.createProduct("p2", "product_2", owner1);
-        Product product3 = this.createProduct("p3", "product_3", owner2);
-        Product product4 = this.createProduct("p4", "product_4", owner2);
+        Product product2 = this.createProduct("p2", "product_2");
+        Product product3 = this.createProduct("p3", "product_3");
+        Product product4 = this.createProduct("p4", "product_4");
 
         Product refProduct1 = TestUtil.createProduct("ref_p1", "ref product 1");
         refProduct1.addProvidedProduct(product1);
@@ -1181,9 +1181,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             .setDerivedProduct(product4);
         refProduct3.addProvidedProduct(product3);
 
-        refProduct1 = this.createProduct(refProduct1, owner1);
-        refProduct2 = this.createProduct(refProduct2, owner1);
-        refProduct3 = this.createProduct(refProduct3, owner2);
+        refProduct1 = this.createProduct(refProduct1);
+        refProduct2 = this.createProduct(refProduct2);
+        refProduct3 = this.createProduct(refProduct3);
 
         Map<String, Set<String>> output = this.productCurator.getProductsReferencingProducts(
             Arrays.asList("bad uuid", "another bad uuid"));
@@ -1209,28 +1209,26 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertEquals(0, output.size());
     }
 
-    private Product createProductWithChildren(String productId, int provided, boolean derived,
-        Owner... owners) {
-
+    private Product createProductWithChildren(String productId, int provided, boolean derived) {
         Product product = new Product()
             .setId(productId)
             .setName(productId);
 
         for (int i = 0; i < provided; ++i) {
             String pid = productId + "_provided-" + i;
-            Product providedProduct = this.createProduct(pid, owners);
+            Product providedProduct = this.createProduct(pid);
 
             product.addProvidedProduct(providedProduct);
         }
 
         if (derived) {
             String pid = productId + "_derived";
-            Product derivedProduct = this.createProduct(pid, owners);
+            Product derivedProduct = this.createProduct(pid);
 
             product.setDerivedProduct(derivedProduct);
         }
 
-        return this.createProduct(product, owners);
+        return this.createProduct(product);
     }
 
     @Test
@@ -1239,9 +1237,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProductWithChildren("p1", 0, false);
-        Product product2 = this.createProductWithChildren("p2", 1, false, owner1);
-        Product product3 = this.createProductWithChildren("p3", 2, false, owner2);
-        Product product4 = this.createProductWithChildren("p4", 3, false, owner1, owner2);
+        Product product2 = this.createProductWithChildren("p2", 1, false);
+        Product product3 = this.createProductWithChildren("p3", 2, false);
+        Product product4 = this.createProductWithChildren("p4", 3, false);
 
         List<Product> products = List.of(product1, product2, product3, product4);
 
@@ -1264,9 +1262,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProductWithChildren("p1", 0, false);
-        Product product2 = this.createProductWithChildren("p2", 0, true, owner1);
-        Product product3 = this.createProductWithChildren("p3", 0, false, owner2);
-        Product product4 = this.createProductWithChildren("p4", 0, true, owner1, owner2);
+        Product product2 = this.createProductWithChildren("p2", 0, true);
+        Product product3 = this.createProductWithChildren("p3", 0, false);
+        Product product4 = this.createProductWithChildren("p4", 0, true);
 
         List<Product> products = List.of(product1, product2, product3, product4);
 
@@ -1290,9 +1288,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProductWithChildren("p1", 1, true);
-        Product product2 = this.createProductWithChildren("p2", 2, true, owner1);
-        Product product3 = this.createProductWithChildren("p3", 3, true, owner2);
-        Product product4 = this.createProductWithChildren("p4", 4, true, owner1, owner2);
+        Product product2 = this.createProductWithChildren("p2", 2, true);
+        Product product3 = this.createProductWithChildren("p3", 3, true);
+        Product product4 = this.createProductWithChildren("p4", 4, true);
 
         List<Product> products = List.of(product2, product3);
 
@@ -1321,9 +1319,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner1 = this.createOwner();
         Owner owner2 = this.createOwner();
         this.createProduct("p1", "product_1");
-        this.createProduct("p2", "product_2", owner1);
-        this.createProduct("p3", "product_3", owner2);
-        this.createProduct("p4", "product_4", owner2);
+        this.createProduct("p2", "product_2");
+        this.createProduct("p3", "product_3");
+        this.createProduct("p4", "product_4");
 
         Set<Product> output = this.productCurator.getChildrenProductsOfProductsByUuids(input);
         assertNotNull(output);

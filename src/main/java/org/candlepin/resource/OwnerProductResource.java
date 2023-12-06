@@ -691,12 +691,6 @@ public class OwnerProductResource implements OwnerProductApi {
                 productId));
         }
 
-        if (this.productCurator.productHasParentProducts(owner, product)) {
-            throw new BadRequestException(i18n.tr(
-                "Product \"{0}\" cannot be deleted while referenced by one or more products",
-                productId));
-        }
-
         this.productManager.removeProduct(owner, product, true);
     }
 

@@ -203,7 +203,7 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
     @Test
     public void testProcessNodeFlagsUnchangedNodesCorrectly() {
         Owner owner = this.createOwner();
-        Content existingEntity = this.createContent("test_content-1", "Test Content", owner);
+        Content existingEntity = this.createContent("test_content-1", "Test Content");
         ContentInfo importedEntity = (ContentInfo) existingEntity.clone();
 
         EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, existingEntity.getId())
@@ -322,7 +322,7 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
     public void testFullCyclePersistsUpdatedEntity() {
         Owner owner = this.createOwner();
 
-        Content existing = this.createContent("test_content", "content name", owner);
+        Content existing = this.createContent("test_content", "content name");
 
         Content imported = new Content()
             .setId(existing.getId())

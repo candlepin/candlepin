@@ -86,9 +86,7 @@ import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Eventful;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
@@ -205,10 +203,6 @@ public class PoolManagerTest {
     @Mock
     private OwnerCurator mockOwnerCurator;
     @Mock
-    private OwnerContentCurator mockOwnerContentCurator;
-    @Mock
-    private OwnerProductCurator ownerProductCurator;
-    @Mock
     private CdnCurator cdnCurator;
     @Mock
     private BindChainFactory mockBindChainFactory;
@@ -222,6 +216,7 @@ public class PoolManagerTest {
     private OwnerCurator ownerCurator;
     @Mock
     private PoolOpProcessor poolOpProcessor;
+
     private PoolConverter poolConverter;
     private PoolManager manager;
     private PoolService poolService;
@@ -251,7 +246,7 @@ public class PoolManagerTest {
 
         TestUtil.mockTransactionalFunctionality(mock(EntityManager.class), poolCurator,
             mockProductCurator, entitlementCurator, certCurator, consumerCuratorMock,
-            consumerTypeCurator, mockOwnerCurator, ownerProductCurator, cdnCurator, mockContentCurator);
+            consumerTypeCurator, mockOwnerCurator, cdnCurator, mockContentCurator);
 
         when(mockOwnerCurator.getByKey(owner.getKey())).thenReturn(owner);
 

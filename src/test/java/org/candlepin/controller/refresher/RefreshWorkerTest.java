@@ -37,8 +37,6 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
@@ -93,22 +91,17 @@ public class RefreshWorkerTest {
     private EntityManager mockEntityManager;
     private PoolCurator mockPoolCurator;
     private ProductCurator mockProductCurator;
-    private OwnerProductCurator mockOwnerProductCurator;
     private ContentCurator mockContentCurator;
-    private OwnerContentCurator mockOwnerContentCurator;
 
     @BeforeEach
     protected void init() {
         this.mockEntityManager = mock(EntityManager.class);
         this.mockPoolCurator = mock(PoolCurator.class);
         this.mockProductCurator = mock(ProductCurator.class);
-        this.mockOwnerProductCurator = mock(OwnerProductCurator.class);
         this.mockContentCurator = mock(ContentCurator.class);
-        this.mockOwnerContentCurator = mock(OwnerContentCurator.class);
 
         TestUtil.mockTransactionalFunctionality(this.mockEntityManager, this.mockPoolCurator,
-            this.mockProductCurator, this.mockOwnerProductCurator, this.mockContentCurator,
-            this.mockOwnerContentCurator);
+            this.mockProductCurator, this.mockContentCurator);
 
         doAnswer(returnsFirstArg())
             .when(this.mockProductCurator)

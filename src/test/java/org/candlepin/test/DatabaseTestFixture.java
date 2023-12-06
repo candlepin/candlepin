@@ -65,10 +65,8 @@ import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.ManifestFileRecordCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfoCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
@@ -166,10 +164,8 @@ public class DatabaseTestFixture {
     protected ImportRecordCurator importRecordCurator;
     protected KeyPairDataCurator keyPairDataCurator;
     protected ManifestFileRecordCurator manifestFileRecordCurator;
-    protected OwnerContentCurator ownerContentCurator;
     protected OwnerCurator ownerCurator;
     protected OwnerInfoCurator ownerInfoCurator;
-    protected OwnerProductCurator ownerProductCurator;
     protected PermissionBlueprintCurator permissionBlueprintCurator;
     protected ProductCertificateCurator productCertificateCurator;
     protected ProductCurator productCurator;
@@ -299,10 +295,8 @@ public class DatabaseTestFixture {
         importRecordCurator = this.injector.getInstance(ImportRecordCurator.class);
         keyPairDataCurator = injector.getInstance(KeyPairDataCurator.class);
         manifestFileRecordCurator = this.injector.getInstance(ManifestFileRecordCurator.class);
-        ownerContentCurator = this.injector.getInstance(OwnerContentCurator.class);
         ownerCurator = this.injector.getInstance(OwnerCurator.class);
         ownerInfoCurator = this.injector.getInstance(OwnerInfoCurator.class);
-        ownerProductCurator = this.injector.getInstance(OwnerProductCurator.class);
         permissionBlueprintCurator = this.injector.getInstance(PermissionBlueprintCurator.class);
         productCertificateCurator = this.injector.getInstance(ProductCertificateCurator.class);
         productCurator = this.injector.getInstance(ProductCurator.class);
@@ -471,25 +465,23 @@ public class DatabaseTestFixture {
         return this.cdnCurator.create(cdn);
     }
 
-    // TODO: Remove owner parameter from the createContent methods; do not ship without doing so
-
-    protected Content createContent(Owner... owners) {
+    protected Content createContent() {
         String contentId = "test-content-" + TestUtil.randomInt();
-        return this.createContent(contentId, contentId, owners);
+        return this.createContent(contentId, contentId);
     }
 
-    protected Content createContent(String id, Owner... owners) {
-        return this.createContent(id, id, owners);
+    protected Content createContent(String id) {
+        return this.createContent(id, id);
     }
 
-    protected Content createContent(String id, String name, Owner... owners) {
+    protected Content createContent(String id, String name) {
         Content content = TestUtil.createContent(id, name);
         content = this.contentCurator.create(content);
 
         return content;
     }
 
-    protected Content createContent(Content content, Owner... owners) {
+    protected Content createContent(Content content) {
         content = this.contentCurator.create(content);
         return content;
     }
@@ -678,33 +670,30 @@ public class DatabaseTestFixture {
             TestUtil.createDate(2100, 1, 1));
     }
 
-    // TODO: Remove owner parameter from the createProduct methods; do not ship without doing so
-
-    protected Product createProduct(Owner... owners) {
+    protected Product createProduct() {
         String productId = "test_product-" + TestUtil.randomInt();
-        return this.createProduct(productId, productId, owners);
+        return this.createProduct(productId, productId);
     }
 
-    protected Product createProduct(String id, Owner... owners) {
-        return this.createProduct(id, id, owners);
+    protected Product createProduct(String id) {
+        return this.createProduct(id, id);
     }
 
-    protected Product createProduct(String id, String name, Owner... owners) {
+    protected Product createProduct(String id, String name) {
         Product product = TestUtil.createProduct(id, name);
-        return this.createProduct(product, owners);
+        return this.createProduct(product);
     }
 
-    protected Product createProductWithBranding(String id, String name, Branding branding,
-        Owner... owners) {
+    protected Product createProductWithBranding(String id, String name, Branding branding) {
 
         Product product = TestUtil.createProduct(id, name);
         product.addBranding(branding);
-        return this.createProduct(product, owners);
+        return this.createProduct(product);
     }
 
     // Remove this method. It doesn't have a whole lot of value now that we don't need to map
     // products to orgs.
-    protected Product createProduct(Product product, Owner... owners) {
+    protected Product createProduct(Product product) {
         return this.productCurator.create(product);
     }
 

@@ -25,7 +25,6 @@ import static org.mockito.Mockito.verify;
 
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestUtil;
 
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.DisplayName;
@@ -315,9 +314,7 @@ public class PoolTest {
         @Test
         public void testGetProductUuidWithDesyncedProduct() throws Exception {
             Owner owner = this.createOwner();
-            Product product = this.createProduct(TestUtil.randomString("id-"),
-                TestUtil.randomString("name-"),
-                owner);
+            Product product = this.createProduct();
             Pool pool = this.createPool(owner, product);
 
             // We don't want to persist the upcoming changes to the pool, so commit now
@@ -334,13 +331,9 @@ public class PoolTest {
         @Test
         public void testGetProductUuidWithNullProductUuidAndHydratedProduct() throws Exception {
             Owner owner = this.createOwner();
-            Product product1 = this.createProduct(TestUtil.randomString("id-"),
-                TestUtil.randomString("name-"),
-                owner);
+            Product product1 = this.createProduct();
+            Product product2 = this.createProduct();
             Pool pool1 = this.createPool(owner, product1);
-            Product product2 = this.createProduct(TestUtil.randomString("id-"),
-                TestUtil.randomString("name-"),
-                owner);
             Pool pool2 = this.createPool(owner, product2);
 
             this.commitTransaction();
@@ -365,13 +358,9 @@ public class PoolTest {
         @Test
         public void testGetProductUuidWithNullProductUuidAndUnhydratedProduct() throws Exception {
             Owner owner = this.createOwner();
-            Product product1 = this.createProduct(TestUtil.randomString("id-"),
-                TestUtil.randomString("name-"),
-                owner);
+            Product product1 = this.createProduct();
+            Product product2 = this.createProduct();
             Pool pool1 = this.createPool(owner, product1);
-            Product product2 = this.createProduct(TestUtil.randomString("id-"),
-                TestUtil.randomString("name-"),
-                owner);
             Pool pool2 = this.createPool(owner, product2);
 
             this.commitTransaction();
@@ -404,9 +393,7 @@ public class PoolTest {
         @Test
         public void testGetProductUuidWithPopulatedProductUuidAndUnhydratedProduct() throws Exception {
             Owner owner = this.createOwner();
-            Product product = this.createProduct(TestUtil.randomString("id-"),
-                TestUtil.randomString("name-"),
-                owner);
+            Product product = this.createProduct();
             Pool pool = this.createPool(owner, product);
 
             this.commitTransaction();
