@@ -12,6 +12,14 @@ dependencies {
     checkstyle libraries["checkstyleSevntu"]
 }
 
+// This prevents error where checkstyle sometimes resolves its dependencies
+// to use google-collections instead of guava.
+configurations.checkstyle {
+    resolutionStrategy.capabilitiesResolution.withCapability("com.google.collections:google-collections") {
+        select("com.google.guava:guava:0")
+    }
+}
+
 checkstyle {
     // Use the latest checkstyle version instead of default one
     def module = project.dependencies.create(libraries["checkstyle"])
