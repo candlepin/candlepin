@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -33,16 +35,19 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
 
     private Owner owner;
     private Environment environment;
+    private Environment typedEnvironment;
 
     @BeforeEach
     public void setUp() {
         this.owner = this.createOwner("test-owner", "Test Owner");
         environment = environmentCurator.create(new Environment("env1", "Env 1", owner));
+        typedEnvironment = environmentCurator.create(new Environment("env3", "Env 3", owner)
+            .setType("test_type"));
     }
 
     @Test
     public void create() {
-        assertEquals(1, environmentCurator.listAll().list().size());
+        assertEquals(2, environmentCurator.listAll().list().size());
         Environment e = environmentCurator.get("env1");
         assertEquals(owner, e.getOwner());
     }
@@ -50,12 +55,12 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
     @Test
     public void delete() {
         environmentCurator.delete(environment);
-        assertEquals(0, environmentCurator.listAll().list().size());
+        assertEquals(1, environmentCurator.listAll().list().size());
     }
 
     @Test
     public void listForOwner() {
-        List<Environment> envs = environmentCurator.listForOwner(owner).list();
+        List<Environment> envs = environmentCurator.listForOwner(owner, null, false).list();
         assertEquals(1, envs.size());
         assertEquals(envs.get(0), environment);
     }
@@ -69,10 +74,43 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
 
         this.environmentCurator.create(environment);
 
-        List<Environment> envs = environmentCurator.listForOwnerByName(owner, "Another Env").list();
+        List<Environment> envs = environmentCurator.listForOwnerByName(owner, "Another Env", null, false)
+            .list();
         assertNotNull(envs);
         assertEquals(1, envs.size());
         assertEquals(environment, envs.get(0));
+    }
+
+    @Test
+    public void listForOwnerByNameExcludeByType() {
+        Environment environment = new Environment()
+            .setId("env2")
+            .setName("Another Env")
+            .setOwner(owner);
+
+        this.environmentCurator.create(environment);
+
+        List<Environment> envs = environmentCurator.listForOwnerByName(owner, "Another Env",
+            List.of("Test-Type"), false).list();
+        assertNotNull(envs);
+        assertEquals(0, envs.size());
+    }
+
+    @Test
+    public void listForOwnerByType() {
+        List<Environment> envs = environmentCurator.listForOwner(owner, List.of("Test_Type"), false).list();
+        assertNotNull(envs);
+        assertEquals(1, envs.size());
+        assertEquals(typedEnvironment, envs.get(0));
+    }
+
+    @Test
+    public void listForOwnerByListAll() {
+        // Note that list_all overrides type parameter
+        List<Environment> envs = environmentCurator.listForOwner(owner, List.of("Test_Type"), true).list();
+        assertNotNull(envs);
+        assertEquals(2, envs.size());
+        assertThat(envs, contains(environment, typedEnvironment));
     }
 
     @Test

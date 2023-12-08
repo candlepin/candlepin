@@ -145,6 +145,44 @@ public class EnvironmentSpecTest {
     }
 
     @Test
+    public void shouldFindTypedEnvironments() {
+        EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random()
+            .type(null));
+        EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random()
+            .type("test_type"));
+        EnvironmentDTO env3 = ownerClient.owners().createEnv(owner.getKey(), Environments.random()
+            .type("another_type"));
+
+        List<EnvironmentDTO> found1 = ownerClient.environments().getEnvironments(null, false);
+        assertThat(found1).contains(env1);
+        List<EnvironmentDTO> found2 = ownerClient.environments().getEnvironments(List.of("test_type"), false);
+        assertThat(found2).contains(env2);
+        List<EnvironmentDTO> found3 = ownerClient.environments().getEnvironments(List.of("another_type"),
+            true);
+        assertThat(found3).contains(env1, env2, env3);
+    }
+
+    @Test
+    public void shouldFindTypedEnvironmentsByOwner() {
+        EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random()
+            .type(null));
+        EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random()
+            .type("test_type"));
+        EnvironmentDTO env3 = ownerClient.owners().createEnv(owner.getKey(), Environments.random()
+            .type("another_type"));
+
+        List<EnvironmentDTO> found1 = ownerClient.owners().listEnvironments(owner.getKey(), null,
+            null, false);
+        assertThat(found1).contains(env1);
+        List<EnvironmentDTO> found2 = ownerClient.owners().listEnvironments(owner.getKey(), null,
+            List.of("test_type"), false);
+        assertThat(found2).contains(env2);
+        List<EnvironmentDTO> found3 = ownerClient.owners().listEnvironments(owner.getKey(), null,
+            List.of("another_type"), true);
+        assertThat(found3).contains(env1, env2, env3);
+    }
+
+    @Test
     public void shouldLowerCaseEnvironmentType() {
         EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(),
             Environments.random().type("mY_TypE"));

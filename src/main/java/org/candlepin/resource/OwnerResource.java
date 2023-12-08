@@ -1066,11 +1066,11 @@ public class OwnerResource implements OwnerApi {
 
     @Override
     public CandlepinQuery<EnvironmentDTO> listEnvironments(
-        @Verify(Owner.class) String ownerKey, String envName) {
+        @Verify(Owner.class) String ownerKey, String envName, List<String> type, Boolean listAll) {
         Owner owner = findOwnerByKey(ownerKey);
         CandlepinQuery<Environment> query = envName == null ?
-            envCurator.listForOwner(owner) :
-            envCurator.listForOwnerByName(owner, envName);
+            envCurator.listForOwner(owner, type, listAll) :
+            envCurator.listForOwnerByName(owner, envName, type, listAll);
         return translator.translateQuery(query, EnvironmentDTO.class);
     }
 

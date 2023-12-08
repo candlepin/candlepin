@@ -3042,6 +3042,20 @@ paths:
       operationId: getEnvironments
       tags:
         - environment
+      parameters:
+        - name: type
+          in: query
+          description: The type of the environments
+          schema:
+            type: array
+            items:
+              type: string
+        - name: list_all
+          in: query
+          description: List all boolean for environments of all types
+          schema:
+            type: boolean
+            default: false
       security: []
       x-java-response:
         type: Iterable
@@ -5019,6 +5033,19 @@ paths:
           description: The name of the environment
           schema:
             type: string
+        - name: type
+          in: query
+          description: The type of the environments
+          schema:
+            type: array
+            items:
+              type: string
+        - name: list_all
+          in: query
+          description: List all boolean for environments of all types
+          schema:
+            type: boolean
+            default: false
       security: []
       responses:
         200:

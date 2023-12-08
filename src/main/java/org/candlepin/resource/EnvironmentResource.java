@@ -255,8 +255,8 @@ public class EnvironmentResource implements EnvironmentApi {
     }
 
     @Override
-    public Iterable<EnvironmentDTO> getEnvironments() {
-        return translator.translateQuery(this.envCurator.listAll(), EnvironmentDTO.class);
+    public Iterable<EnvironmentDTO> getEnvironments(List<String> type, Boolean listAll) {
+        return translator.translateQuery(this.envCurator.listAll(type, listAll), EnvironmentDTO.class);
     }
 
     @Override

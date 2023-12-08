@@ -71,18 +71,41 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
             .getResultList();
     }
 
-    public CandlepinQuery<Environment> listForOwner(Owner o) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(Restrictions.eq("owner", o));
-
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+    public CandlepinQuery<Environment> listForOwner(Owner o, List<String> type, boolean listAll) {
+        return listEnvironments(o, null, type, listAll);
     }
 
-    public CandlepinQuery<Environment> listForOwnerByName(Owner o, String envName) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(Restrictions.eq("owner", o))
-            .add(Restrictions.eq("name", envName));
+    public CandlepinQuery<Environment> listForOwnerByName(Owner o, String envName, List<String> type,
+        boolean listAll) {
+        return listEnvironments(o, envName, type, listAll);
+    }
 
+    /**
+     * @return all entities for a particular type.
+     */
+    public CandlepinQuery<Environment> listAll(List<String> type, boolean listAll) {
+        return listEnvironments(null, null, type, listAll);
+    }
+
+    private CandlepinQuery<Environment> listEnvironments(Owner o, String envName, List<String> type,
+        boolean listAll) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria();
+        if (o != null) {
+            criteria.add(Restrictions.eq("owner", o));
+        }
+        if (envName != null) {
+            criteria.add(Restrictions.eq("name", envName));
+        }
+        if (!listAll) {
+            if (type != null && type.size() > 0) {
+                criteria.add(Restrictions.in("type", type.stream()
+                    .map(String::toLowerCase)
+                    .toList()));
+            }
+            else if (type == null || type.isEmpty()) {
+                criteria.add(Restrictions.isNull("type"));
+            }
+        }
         return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
