@@ -249,6 +249,9 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @JoinColumn(name = "product_uuid", nullable = false)
     private Product product;
 
+    @Column(name = "dirty_product", nullable = false)
+    private boolean dirtyProduct;
+
     @ElementCollection
     @BatchSize(size = 1000)
     @CollectionTable(name = "cp_pool_attribute", joinColumns = @JoinColumn(name = "pool_id"))
@@ -860,6 +863,31 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      */
     public Product getProduct() {
         return this.product;
+    }
+
+    /**
+     * Checks whether or not the product for this pool should be considered dirty.
+     *
+     * @return
+     *  true if the product for this pool is dirty; false otherwise
+     */
+    public boolean hasDirtyProduct() {
+        return this.dirtyProduct;
+    }
+
+    /**
+     * Sets whether or not the product should be considered "dirty", requiring this pool to consider
+     * the product updated during its next refresh, even if it doesn't appear to have changed.
+     *
+     * @param dirty
+     *  whether or not to set flag the product as dirty
+     *
+     * @return
+     *  a reference to this pool instance
+     */
+    public Pool setDirtyProduct(boolean dirty) {
+        this.dirtyProduct = dirty;
+        return this;
     }
 
     /**

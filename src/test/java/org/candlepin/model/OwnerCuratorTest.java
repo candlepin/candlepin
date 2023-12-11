@@ -28,7 +28,10 @@ import org.candlepin.test.TestUtil;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -322,4 +325,84 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         assertTrue(this.ownerCurator.existsByKey(owner.getKey()));
     }
 
+    @Test
+    public void testSetLastContentUpdateForOwnersWithProducts() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+        Owner owner3 = this.createOwner("test_owner-3");
+
+        Product prod1 = this.createProduct("test_prod-1");
+        Product prod2 = this.createProduct("test_prod-2");
+        Product prod3 = this.createProduct("test_prod-3");
+
+        Pool owner1pool1 = this.createPool(owner1, prod1);
+        Pool owner2pool1 = this.createPool(owner2, prod2);
+        Pool owner3pool1 = this.createPool(owner3, prod3);
+
+        Instant now = Instant.now();
+
+        List<String> input = List.of(prod1.getUuid(), prod2.getUuid());
+
+        int count = this.ownerCurator.setLastContentUpdateForOwnersWithProducts(input);
+        assertEquals(2, count);
+
+        this.ownerCurator.refresh(owner1, owner2, owner3);
+        assertTrue(now.isBefore(owner1.getLastContentUpdate().toInstant()));
+        assertTrue(now.isBefore(owner2.getLastContentUpdate().toInstant()));
+        assertFalse(now.isBefore(owner3.getLastContentUpdate().toInstant()));
+    }
+
+    @Test
+    public void testSetLastContentUpdateForOwnersWithProductsNoMatch() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+        Owner owner3 = this.createOwner("test_owner-3");
+
+        Product prod1 = this.createProduct("test_prod-1");
+        Product prod2 = this.createProduct("test_prod-2");
+        Product prod3 = this.createProduct("test_prod-3");
+        Product prod4 = this.createProduct("test_prod-4");
+
+        Pool owner1pool1 = this.createPool(owner1, prod1);
+        Pool owner2pool1 = this.createPool(owner2, prod2);
+        Pool owner3pool1 = this.createPool(owner3, prod3);
+
+        Instant now = Instant.now();
+
+        List<String> input = List.of(prod4.getUuid(), "invalid_uuid");
+
+        int count = this.ownerCurator.setLastContentUpdateForOwnersWithProducts(input);
+        assertEquals(0, count);
+
+        this.ownerCurator.refresh(owner1, owner2, owner3);
+        assertFalse(now.isBefore(owner1.getLastContentUpdate().toInstant()));
+        assertFalse(now.isBefore(owner2.getLastContentUpdate().toInstant()));
+        assertFalse(now.isBefore(owner3.getLastContentUpdate().toInstant()));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testSetLastContentUpdateForOwnersWithProductsHandlesNullAndEmptyInputs(List<String> input) {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+        Owner owner3 = this.createOwner("test_owner-3");
+
+        Product prod1 = this.createProduct("test_prod-1");
+        Product prod2 = this.createProduct("test_prod-2");
+        Product prod3 = this.createProduct("test_prod-3");
+
+        Pool owner1pool1 = this.createPool(owner1, prod1);
+        Pool owner2pool1 = this.createPool(owner2, prod2);
+        Pool owner3pool1 = this.createPool(owner3, prod3);
+
+        Instant now = Instant.now();
+
+        int count = this.ownerCurator.setLastContentUpdateForOwnersWithProducts(input);
+        assertEquals(0, count);
+
+        this.ownerCurator.refresh(owner1, owner2, owner3);
+        assertFalse(now.isBefore(owner1.getLastContentUpdate().toInstant()));
+        assertFalse(now.isBefore(owner2.getLastContentUpdate().toInstant()));
+        assertFalse(now.isBefore(owner3.getLastContentUpdate().toInstant()));
+    }
 }

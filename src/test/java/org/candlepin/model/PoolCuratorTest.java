@@ -3304,4 +3304,98 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertNotNull(output);
         assertTrue(output.isEmpty());
     }
+
+    @Test
+    public void testMarkPoolsDirtyReferencingProducts() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+        Owner owner3 = this.createOwner("test_owner-3");
+
+        Product prod1 = this.createProduct("test_product-1");
+        Product prod2 = this.createProduct("test_product-2");
+        Product prod3 = this.createProduct("test_product-3");
+
+        Pool pool1 = this.createPool(owner1, prod1);
+        Pool pool2 = this.createPool(owner1, prod2);
+        Pool pool3 = this.createPool(owner2, prod2);
+        Pool pool4 = this.createPool(owner2, prod3);
+        Pool pool5 = this.createPool(owner3, prod3);
+        Pool pool6 = this.createPool(owner3, prod1);
+
+        List<String> input = List.of(prod2.getUuid(), prod3.getUuid());
+
+        int count = this.poolCurator.markPoolsDirtyReferencingProducts(input);
+        assertEquals(4, count);
+
+        this.poolCurator.refresh(pool1, pool2, pool3, pool4, pool5, pool6);
+        assertFalse(pool1.hasDirtyProduct());
+        assertTrue(pool2.hasDirtyProduct());
+        assertTrue(pool3.hasDirtyProduct());
+        assertTrue(pool4.hasDirtyProduct());
+        assertTrue(pool5.hasDirtyProduct());
+        assertFalse(pool6.hasDirtyProduct());
+    }
+
+    @Test
+    public void testMarkPoolsDirtyReferencingProductsNoMatch() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+        Owner owner3 = this.createOwner("test_owner-3");
+
+        Product prod1 = this.createProduct("test_product-1");
+        Product prod2 = this.createProduct("test_product-2");
+        Product prod3 = this.createProduct("test_product-3");
+        Product prod4 = this.createProduct("test_product-4");
+
+        Pool pool1 = this.createPool(owner1, prod1);
+        Pool pool2 = this.createPool(owner1, prod2);
+        Pool pool3 = this.createPool(owner2, prod2);
+        Pool pool4 = this.createPool(owner2, prod3);
+        Pool pool5 = this.createPool(owner3, prod3);
+        Pool pool6 = this.createPool(owner3, prod1);
+
+        List<String> input = List.of(prod4.getUuid(), "invalid_uuid");
+
+        int count = this.poolCurator.markPoolsDirtyReferencingProducts(input);
+        assertEquals(0, count);
+
+        this.poolCurator.refresh(pool1, pool2, pool3, pool4, pool5, pool6);
+        assertFalse(pool1.hasDirtyProduct());
+        assertFalse(pool2.hasDirtyProduct());
+        assertFalse(pool3.hasDirtyProduct());
+        assertFalse(pool4.hasDirtyProduct());
+        assertFalse(pool5.hasDirtyProduct());
+        assertFalse(pool6.hasDirtyProduct());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testMarkPoolsDirtyReferencingProductsHandlesNullAndEmptyInputs(List<String> input) {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+        Owner owner3 = this.createOwner("test_owner-3");
+
+        Product prod1 = this.createProduct("test_product-1");
+        Product prod2 = this.createProduct("test_product-2");
+        Product prod3 = this.createProduct("test_product-3");
+
+        Pool pool1 = this.createPool(owner1, prod1);
+        Pool pool2 = this.createPool(owner1, prod2);
+        Pool pool3 = this.createPool(owner2, prod2);
+        Pool pool4 = this.createPool(owner2, prod3);
+        Pool pool5 = this.createPool(owner3, prod3);
+        Pool pool6 = this.createPool(owner3, prod1);
+
+        int count = this.poolCurator.markPoolsDirtyReferencingProducts(input);
+        assertEquals(0, count);
+
+        this.poolCurator.refresh(pool1, pool2, pool3, pool4, pool5, pool6);
+        assertFalse(pool1.hasDirtyProduct());
+        assertFalse(pool2.hasDirtyProduct());
+        assertFalse(pool3.hasDirtyProduct());
+        assertFalse(pool4.hasDirtyProduct());
+        assertFalse(pool5.hasDirtyProduct());
+        assertFalse(pool6.hasDirtyProduct());
+    }
+
 }

@@ -34,11 +34,14 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -267,6 +270,59 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
             .createQuery("SELECT COUNT(o.id) FROM Owner o WHERE o.key = :owner_key", Long.class)
             .setParameter("owner_key", ownerKey)
             .getSingleResult() > 0;
+    }
+
+    /**
+     * Sets the lastContentUpdate field to the current time for any owners with one or more pools
+     * referencing any of the given products.
+     *
+     * @param productUuids
+     *  A collection of product UUIDs representing updated products
+     *
+     * @return
+     *  the number of rows updated by this method
+     */
+    public int setLastContentUpdateForOwnersWithProducts(Collection<String> productUuids) {
+        if (productUuids == null || productUuids.isEmpty()) {
+            return 0;
+        }
+
+        // Update-joins don't exist in JPA at the time of writing, so we'll need to first get our
+        // list of orgs from the products, then update them accordingly.
+
+        // We're doing an update, which in some configurations may give us an implicit table or
+        // row lock. Order these so we try to perform the update in slightly safer blocks.
+        SortedSet<String> ownerIds = new TreeSet<>();
+
+        String ownerLookupJpql = "SELECT owner.id FROM Pool pool JOIN pool.owner owner " +
+            "WHERE pool.product.uuid IN (:product_uuids)";
+
+        String ownerUpdateJpql = "UPDATE Owner SET lastContentUpdate = CURRENT_TIMESTAMP " +
+            "WHERE id IN (:owner_ids)";
+
+        TypedQuery<String> ownerLookupQuery = this.getEntityManager()
+            .createQuery(ownerLookupJpql, String.class);
+
+        for (List<String> block : this.partition(productUuids)) {
+            List<String> result = ownerLookupQuery.setParameter("product_uuids", block)
+                .getResultList();
+
+            ownerIds.addAll(result);
+        }
+
+        // Perform our update now that we have our set of owner IDs
+        int count = 0;
+        if (!ownerIds.isEmpty()) {
+            Query updateQuery = this.getEntityManager()
+                .createQuery(ownerUpdateJpql);
+
+            for (List<String> block : this.partition(ownerIds)) {
+                count += updateQuery.setParameter("owner_ids", block)
+                    .executeUpdate();
+            }
+        }
+
+        return count;
     }
 
 }

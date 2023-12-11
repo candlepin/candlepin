@@ -215,6 +215,21 @@ public class PoolManager {
         this.poolCurator.transactional(args -> {
             boolean poolsModified = false;
 
+            // Flag pools referencing the updated products as dirty
+            List<String> updatedProductUuids = updatedProducts.values()
+                .stream()
+                .map(Product::getUuid)
+                .toList();
+
+            int count = this.poolCurator.markPoolsDirtyReferencingProducts(updatedProductUuids);
+            log.debug("Flagged {} pool-products as dirty", count);
+
+            // TODO: We *could* also flag entitlements dirty here, but if the lazy flag is set to
+            // false, we'll need to pull all of them back and immediately regen; which could be
+            // catastrophic in terms of memory utilization and refresh runtime. Perhaps revisit this
+            // when we get around to a refresh refactor. :/
+
+            // Gather local subscriptions for pool refresh
             Map<String, List<Pool>> subscriptionPools = this.poolCurator
                 .mapPoolsBySubscriptionIds(subMap.keySet());
 
@@ -285,17 +300,21 @@ public class PoolManager {
             // - We only call refreshPoolsForPrimaryPool or deletePools based on matches with the
             //   received subscriptions
             //
-            // By checking both of these, we can estimate that if we have changed products/content AND
+            // By checking both of these, we can estimate that if we have changed products/content or
             // have refreshed or deleted a pool, we likely have a content view update. Note that this
             // does fall apart in a handful of cases (deletion of an expired pool + modification of that
             // pool's product/content), but barring a major refactor of this code to make the evaluation
             // on a per-pool basis, there's not a whole lot more we can do here.
-            if (poolsModified && refreshResult.hasEntity(Product.class, mutatedStates)) {
+            if (poolsModified || refreshResult.hasEntity(Product.class, mutatedStates)) {
                 // TODO: Should we also mark any existing SCA certs as dirty/revoked here?
 
                 resolvedOwner.setLastContentUpdate(now);
                 this.ownerCurator.merge(resolvedOwner);
             }
+
+            // Set the last content update for all (other*) orgs with pools referencing any of the
+            // products that changed as part of this refresh.
+            this.ownerCurator.setLastContentUpdateForOwnersWithProducts(updatedProductUuids);
 
             log.info("Refresh pools for owner: {} completed in: {}ms", resolvedOwner.getKey(),
                 System.currentTimeMillis() - now.getTime());
