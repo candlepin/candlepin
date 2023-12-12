@@ -219,36 +219,14 @@ ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "run"]
 
 The Candlepin development image is designed to run right after pulling the image using default Candlepin and Tomcat configurations as well as a default certificate and key for TLS communication and encryption. Since this certificate and key is packaged in a publicly available container image, the use of the Candlepin development image should **not** be used in a production environment to avoid security risks.
 
-The following is an example on how to run the Candlepin development container using the Podman CLI.
+The following is an example on how to run the Candlepin development container using the docker compose file.
 
-1. Start the Postgres container
-```Bash
-podman run --name postgres -itd \
-  -e POSTGRES_USER=candlepin \
-  -e POSTGRES_PASSWORD=candlepin \
-  -e POSTGRES_DB=candlepin \
-  --network host \
-  postgres:latest
-```
+The compose file is in the dev-container directory that will pull that development image and the most
+current PostgreSQL image. The configuration settings are in that compose file as environment variables. Refer to the [default configuration](#development-image-default-configurations) section for details on the Candlepin development container's default configurations. Once configured
+you can start and stop(remove) the container with
 
-2. Start the latest stable version of Candlepin:
-```Bash
-podman run --name candlepin -itd \
-  --network host \
-  quay.io/candlepin/candlepin:dev-latest
-```
+``` docker compose up/down```
 
-Note that both containers are running on the host network. That is because the Postgres hostname for the default JDBC connection url is localhost in the Candlepin configurations for the development image. Refer to the [default configuration](#development-image-default-configurations) section for details on the Candlepin development container's default configurations.
-
-To run the Candlepin development container on a user defined network, you will need to set the `jpa.config.hibernate.connection.url` value to include the IP or hostname of the database container.
-
-Example:
-```Bash
-podman run --name candlepin -itd \
-  -e JPA_CONFIG_HIBERNATE_CONNECTION_URL=jdbc:postgresql://postgres/candlepin \
-  --network host \
-  quay.io/candlepin/candlepin:dev-latest
-```
 
 ### Configure Candlepin Container
 
