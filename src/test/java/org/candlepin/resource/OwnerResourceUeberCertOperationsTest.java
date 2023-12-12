@@ -41,6 +41,7 @@ import org.candlepin.model.Role;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.User;
+import org.candlepin.paging.PagingUtilFactory;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.validation.DTOValidator;
@@ -76,6 +77,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     private CalculatedAttributesUtil calculatedAttributesUtil;
     private ConsumerTypeValidator consumerTypeValdator;
     private DTOValidator dtoValidator;
+    private PagingUtilFactory pagingUtilFactory;
 
     private PrincipalProvider principalProvider;
     private JobManager jobManager;
@@ -104,6 +106,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         calculatedAttributesUtil = this.injector.getInstance(CalculatedAttributesUtil.class);
         consumerTypeValdator = this.injector.getInstance(ConsumerTypeValidator.class);
         dtoValidator = this.injector.getInstance(DTOValidator.class);
+        pagingUtilFactory = this.injector.getInstance(PagingUtilFactory.class);
 
         owner = ownerCurator.create(new Owner()
             .setKey(OWNER_NAME)
@@ -127,7 +130,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
             ownerInfoCurator, importRecordCurator, entitlementCurator, ueberCertCurator, ueberCertGenerator,
             environmentCurator, calculatedAttributesUtil, contentOverrideValidator, serviceLevelValidator,
             ownerService, config, consumerTypeValdator, ownerProductCurator, this.modelTranslator,
-            this.jobManager, dtoValidator, this.poolService, this.principalProvider);
+            this.jobManager, dtoValidator, this.poolService, this.principalProvider, this.pagingUtilFactory);
     }
 
     @Test

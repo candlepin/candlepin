@@ -109,6 +109,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
+import org.candlepin.paging.PagingUtilFactory;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.validation.DTOValidator;
@@ -166,6 +167,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private DTOValidator dtoValidator;
     private ContentAccessManager contentAccessManager;
     private PoolService poolService;
+    private PagingUtilFactory pagingUtilFactory;
 
     // Mocks used to build the owner resource
     private ActivationKeyCurator mockActivationKeyCurator;
@@ -213,6 +215,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ueberCertGenerator = this.injector.getInstance(UeberCertificateGenerator.class);
         dtoValidator = this.injector.getInstance(DTOValidator.class);
         contentAccessManager = this.injector.getInstance(ContentAccessManager.class);
+        pagingUtilFactory = this.injector.getInstance(PagingUtilFactory.class);
 
         this.jobManager = mock(JobManager.class);
 
@@ -249,6 +252,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.mockPoolManager = mock(PoolManager.class);
         this.mockJobManager = mock(JobManager.class);
         this.principalProvider = mock(PrincipalProvider.class);
+        this.pagingUtilFactory = mock(PagingUtilFactory.class);
 
         this.ownerServiceAdapter = new DefaultOwnerServiceAdapter(this.mockOwnerCurator, this.i18n);
         this.serviceLevelValidator = new ServiceLevelValidator(this.i18n, this.mockPoolManager,
@@ -265,7 +269,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             this.mockUeberCertificateGenerator, this.mockEnvironmentCurator, this.calculatedAttributesUtil,
             this.contentOverrideValidator, this.serviceLevelValidator, this.ownerServiceAdapter, this.config,
             this.consumerTypeValidator, this.mockOwnerProductCurator, this.modelTranslator,
-            this.mockJobManager, this.dtoValidator, this.poolService, this.principalProvider);
+            this.mockJobManager, this.dtoValidator, this.poolService, this.principalProvider,
+            this.pagingUtilFactory);
     }
 
     private ProductDTO buildTestProductDTO() {
@@ -1595,7 +1600,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             this.environmentCurator, this.calculatedAttributesUtil, this.contentOverrideValidator,
             this.serviceLevelValidator, this.ownerServiceAdapter, this.config, this.consumerTypeValidator,
             this.mockOwnerProductCurator, this.modelTranslator, this.mockJobManager, this.dtoValidator,
-            this.poolService, this.principalProvider);
+            this.poolService, this.principalProvider, this.pagingUtilFactory);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
