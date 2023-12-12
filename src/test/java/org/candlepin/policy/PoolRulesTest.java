@@ -14,6 +14,7 @@
  */
 package org.candlepin.policy;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.model.SourceSubscription.DERIVED_POOL_SUB_KEY;
 import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -1002,6 +1003,26 @@ public class PoolRulesTest {
 
         assertThrows(IllegalStateException.class,
             () -> poolRules.createAndEnrichPools(primaryPool, existingPools));
+    }
+
+    @Test
+    public void testUpdatePoolDetectsDirtyPoolProducts() {
+        PoolRules poolRules = createRules(new DevConfig(Map.of(ConfigProperties.STANDALONE, "true")));
+
+        Owner owner = TestUtil.createOwner();
+        Product prod = TestUtil.createProduct();
+
+        Pool pool = TestUtil.createPool(owner, prod)
+            .setDirtyProduct(true);
+
+        List<PoolUpdate> updates = poolRules.updatePools(pool, List.of(pool), pool.getQuantity(), Map.of());
+
+        assertThat(updates)
+            .singleElement()
+            .returns(true, PoolUpdate::getProductsChanged);
+
+        // We're expecting that it cleared the dirty flag once inspecting it
+        assertFalse(pool.hasDirtyProduct());
     }
 
     private PoolRules createRules(Configuration config) {

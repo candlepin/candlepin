@@ -2005,4 +2005,36 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .getResultList();
     }
 
+    /**
+     * Sets the "dirtyProduct" flag for any pool referencing a product in the given list of product
+     * uuids.
+     *
+     * @param productUuids
+     *  a collection of product UUIDs to use for flagging pools
+     *
+     * @return
+     *  the number of pools flagged by this method, which may include pools which were already
+     *  flagged
+     */
+    public int markPoolsDirtyReferencingProducts(Collection<String> productUuids) {
+        if (productUuids == null || productUuids.isEmpty()) {
+            return 0;
+        }
+
+        String jpql = "UPDATE Pool pool SET pool.dirtyProduct = true " +
+            "WHERE pool.product.uuid IN (:product_uuids)";
+
+        int count = 0;
+
+        javax.persistence.Query query = this.getEntityManager()
+            .createQuery(jpql);
+
+        for (List<String> block : this.partition(productUuids)) {
+            count += query.setParameter("product_uuids", block)
+                .executeUpdate();
+        }
+
+        return count;
+    }
+
 }
