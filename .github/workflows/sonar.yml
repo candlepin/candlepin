@@ -24,7 +24,7 @@ jobs:
           echo "::add-mask::${{ secrets.SONAR_TOKEN }}"
 
       - name: Download PR number artifact
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           workflow: unit_tests.yml
           run_id: ${{ github.event.workflow_run.id }}
@@ -77,7 +77,7 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
 
       - name: Download unit test report
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           workflow: unit_tests.yml
           run_id: ${{ github.event.workflow_run.id }}
