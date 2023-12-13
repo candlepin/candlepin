@@ -97,6 +97,6 @@ libraries["resteasyValidator"] = "org.jboss.resteasy:resteasy-validator-provider
 libraries["rhino"] = "org.mozilla:rhino:1.7.14"
 libraries["slf4j"] = "org.slf4j:slf4j-api:2.0.9"
 libraries["smallryeConfig"] = "io.smallrye.config:smallrye-config:3.4.4"
-libraries["spotbugs"] = "com.github.spotbugs:spotbugs-annotations:4.8.2"
+libraries["spotbugs"] = "com.github.spotbugs:spotbugs-annotations:4.8.3"
 libraries["tomcatAnnotations"] = "org.apache.tomcat:tomcat-annotations-api:10.1.16"
 libraries["swagger"] = "io.swagger:swagger-annotations:1.6.12"
