@@ -1,8 +1,8 @@
 plugins {
-    id "com.gradle.enterprise" version "3.16"
+    id("com.gradle.enterprise") version "3.16"
 }
 
-def runsOnCI = System.getenv("CI") == 'true'
+val runsOnCI = System.getenv("CI") == "true"
 
 gradleEnterprise {
     buildScan {
@@ -15,5 +15,5 @@ gradleEnterprise {
 
 rootProject.name = "candlepin"
 
-include 'client'
-include 'spec-tests'
+include("client")
+include("spec-tests")
