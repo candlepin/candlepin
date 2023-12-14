@@ -14,26 +14,26 @@ description = "Candlepin Spec Tests"
 dependencies {
     implementation project(":client")
 
-    implementation libraries["gson"]
-    implementation libraries["okhttp"]
-    implementation libraries["okhttpTls"]
-    implementation libraries["slf4j"]
-    implementation libraries["junitApi"]
-    implementation libraries["junitParams"]
-    implementation libraries["jacksonDatabind"]
-    implementation libraries["jacksonJdk8"]
-    implementation libraries["jacksonJsr310"]
-    implementation libraries["assertj"]
-    implementation libraries["commonsCodec"]
-    implementation libraries["guava"]
-    implementation libraries["commonsIo"]
-    implementation libraries["commonsLang"]
-    implementation libraries["oauth"]
+    implementation(libs.assertj)
+    implementation(libs.commons.codec)
+    implementation(libs.commons.io)
+    implementation(libs.commons.lang)
+    implementation(libs.gson)
+    implementation(libs.guava)
+    implementation(libs.jackson.databind)
+    implementation(libs.jackson.jdk8)
+    implementation(libs.jackson.jsr310)
+    implementation(libs.junit.api)
+    implementation(libs.junit.params)
+    implementation(libs.oauth)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.tls)
+    implementation(libs.slf4j)
 
-    testImplementation libraries["jimfs"]
-    testImplementation libraries["awaitility"]
+    testImplementation(libs.awaitility)
+    testImplementation(libs.jimfs)
 
-    testRuntimeOnly libraries["junitEngine"]
+    testRuntimeOnly(libs.junit.engine)
 
     implementation fileTree(dir: '/usr/lib64/jss', include: '*.jar')
 }

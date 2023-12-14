@@ -8,8 +8,8 @@ configurations {
 }
 
 dependencies {
-    checkstyle libraries["checkstyle"]
-    checkstyle libraries["checkstyleSevntu"]
+    checkstyle(libs.checkstyle)
+    checkstyle(libs.checkstyle.sevntu)
 }
 
 // This prevents error where checkstyle sometimes resolves its dependencies
