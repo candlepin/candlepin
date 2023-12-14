@@ -354,7 +354,357 @@
         <dropForeignKeyConstraint baseTableName="cp_pool" constraintName="cp_pool_fk1"/>
     </changeSet>
 
-    <!-- TODO: Add migration logic here -->
+   <changeSet id="20231003113535-11" author="crog" dbms="postgresql, mysql, mariadb">
+        <sql>
+            -- Migrate global products and content
+            DROP TABLE IF EXISTS tmp_active_global_products;
+            CREATE TEMPORARY TABLE tmp_active_global_products (
+                uuid VARCHAR(32) NOT NULL,
+                pid VARCHAR(32) NOT NULL,
+                new_uuid VARCHAR(32) NOT NULL,
+                best BOOLEAN NOT NULL DEFAULT false,
+                PRIMARY KEY (uuid));
+
+            DROP TABLE IF EXISTS tmp_active_global_contents;
+            CREATE TEMPORARY TABLE tmp_active_global_contents (
+                uuid VARCHAR(32) NOT NULL,
+                cid VARCHAR(32) NOT NULL,
+                new_uuid VARCHAR(32) NOT NULL,
+                best BOOLEAN NOT NULL DEFAULT false,
+                PRIMARY KEY (uuid));
+
+            -- Collect "active" global products and their children
+            INSERT INTO tmp_active_global_products (uuid, pid, new_uuid, best)
+                WITH RECURSIVE parent_child_map(parent_uuid, child_uuid) AS (
+                    SELECT uuid AS parent_uuid, derived_product_uuid AS child_uuid
+                        FROM cp2_products
+                        WHERE derived_product_uuid IS NOT NULL
+                    UNION
+                    SELECT product_uuid AS parent_uuid, provided_product_uuid AS child_uuid
+                        FROM cp2_product_provided_products),
+                product_graph(uuid, depth) AS (
+                    SELECT active.uuid, 0
+                        FROM cp2_products prod
+                        JOIN (SELECT product_uuid AS uuid FROM cp2_owner_products
+                            UNION
+                            SELECT product_uuid AS uuid FROM cp_pool) active ON active.uuid = prod.uuid
+                        WHERE prod.locked != 0
+                    UNION
+                    SELECT pcmap.child_uuid, pg.depth + 1
+                        FROM parent_child_map pcmap
+                        JOIN product_graph pg ON pg.uuid = pcmap.parent_uuid
+                        -- shouldn't be needed, but here just in case someone decided to be cheeky and define a
+                        -- cyclical product, or some other crazy thing that's entirely unsupported by CP's logic
+                        -- and queries
+                        WHERE pg.depth &lt; 9)
+                SELECT prod.uuid, prod.product_id, md5(concat('--global--', prod.product_id)) AS new_uuid, prod.uuid = best.uuid AS best_uuid
+                    FROM (SELECT DISTINCT uuid FROM product_graph) active
+                    JOIN cp2_products prod ON prod.uuid = active.uuid
+                    JOIN (SELECT prod2.product_id, MAX(prod2.uuid) AS uuid
+                        FROM product_graph pg1
+                        JOIN cp2_products prod2 ON prod2.uuid = pg1.uuid
+                        JOIN (SELECT prod3.product_id, MAX(prod3.updated) AS updated
+                            FROM product_graph pg2
+                            JOIN cp2_products prod3 ON prod3.uuid = pg2.uuid
+                            GROUP BY prod3.product_id) latest ON latest.product_id = prod2.product_id
+                        WHERE prod2.updated = latest.updated
+                        GROUP BY prod2.product_id) best ON best.product_id = prod.product_id;
+
+            -- Collect "active" global content
+            INSERT INTO tmp_active_global_contents (uuid, cid, new_uuid, best)
+                WITH active_contents(uuid) AS (
+                    SELECT content_uuid AS uuid FROM cp2_owner_content
+                    UNION
+                    SELECT pc.content_uuid AS uuid FROM cp2_product_content pc JOIN tmp_active_global_products agp ON agp.uuid = pc.product_uuid)
+                SELECT cont.uuid, cont.content_id, md5(concat('--global--', cont.content_id)) AS new_uuid, cont.uuid = best.uuid AS best_uuid
+                    FROM active_contents active
+                    JOIN cp2_content cont ON cont.uuid = active.uuid
+                    JOIN (SELECT cont2.content_id, MAX(cont2.uuid) AS uuid
+                        FROM active_contents ac1
+                        JOIN cp2_content cont2 ON cont2.uuid = ac1.uuid
+                        JOIN (SELECT cont3.content_id, MAX(cont3.updated) AS updated FROM active_contents ac2 JOIN cp2_content cont3 ON cont3.uuid = ac2.uuid GROUP BY cont3.content_id) latest ON latest.content_id = cont2.content_id
+                        WHERE cont2.updated = latest.updated
+                        GROUP BY cont2.content_id) best ON best.content_id = cont.content_id;
+
+            -- Copy over global content
+            INSERT INTO cp_contents (uuid, created, updated, namespace, content_id, content_url, gpg_url, label, metadata_expire, name, release_ver, required_tags, type, vendor, arches)
+                SELECT agc.new_uuid, old_cont.updated, now(), '', old_cont.content_id, old_cont.contenturl, old_cont.gpgurl, old_cont.label, old_cont.metadataexpire, old_cont.name, old_cont.releasever, old_cont.requiredtags, old_cont.type, old_cont.vendor, old_cont.arches
+                    FROM tmp_active_global_contents agc
+                    JOIN cp2_content old_cont ON old_cont.uuid = agc.uuid
+                    WHERE agc.best = true;
+
+            -- content required (modified) products
+            INSERT INTO cp_content_required_products (content_uuid, product_id)
+            SELECT DISTINCT agc.new_uuid, old_cmp.element
+                FROM tmp_active_global_contents agc
+                JOIN cp2_content_modified_products old_cmp ON old_cmp.content_uuid = agc.uuid;
+
+            -- Copy global products
+            INSERT INTO cp_products (uuid, created, updated, namespace, product_id, name, multiplier, derived_product_uuid)
+            SELECT agp.new_uuid, old_prod.updated, now(), '', old_prod.product_id, old_prod.name, old_prod.multiplier, null
+                FROM tmp_active_global_products agp
+                JOIN cp2_products old_prod ON old_prod.uuid = agp.uuid
+                WHERE agp.best = true;
+
+            -- Update derived product references now that everything exists
+            UPDATE cp_products new_prod SET derived_product_uuid = (
+                SELECT agp2.new_uuid
+                    FROM tmp_active_global_products agp1
+                    JOIN cp2_products old_prod ON old_prod.uuid = agp1.uuid
+                    LEFT JOIN tmp_active_global_products agp2 ON agp2.uuid = old_prod.derived_product_uuid AND agp2.best = true
+                    WHERE agp1.new_uuid = new_prod.uuid
+                        AND agp1.best = true)
+                WHERE namespace = '';
+
+            -- attributes
+            INSERT INTO cp_product_attributes (product_uuid, name, value)
+            WITH attrib_map(product_id, name, latest) AS (
+                SELECT prod.product_id, attrib.name, MAX(prod.updated) AS latest
+                    FROM tmp_active_global_products agp
+                    JOIN cp2_products prod ON prod.uuid = agp.uuid
+                    JOIN cp2_product_attributes attrib ON attrib.product_uuid = prod.uuid
+                    GROUP BY prod.product_id, attrib.name)
+                SELECT agp.new_uuid, attrib.name, attrib.value
+                    FROM attrib_map amap
+                    JOIN tmp_active_global_products agp ON agp.pid = amap.product_id
+                    JOIN cp2_products old_prod ON old_prod.uuid = agp.uuid
+                    JOIN cp2_product_attributes attrib ON attrib.product_uuid = old_prod.uuid AND attrib.name = amap.name
+                    WHERE old_prod.updated = amap.latest;
+
+            -- branding
+            INSERT INTO cp_product_branding (id, created, updated, product_uuid, product_id, type, name)
+            SELECT md5(concat(branding.new_uuid, branding.product_id, branding.type, branding.name)) AS id, now(), now(), branding.new_uuid, branding.product_id, branding.type, branding.name
+                FROM (SELECT DISTINCT agp.new_uuid, old_branding.product_id, old_branding.type, old_branding.name
+                    FROM tmp_active_global_products agp
+                    JOIN cp2_product_branding old_branding ON old_branding.product_uuid = agp.uuid) branding;
+
+            -- content
+            INSERT INTO cp_product_contents (id, created, updated, product_uuid, content_uuid, enabled)
+            WITH content_map(product_id, content_id, latest) AS (
+                SELECT old_prod.product_id, old_cont.content_id, MAX(old_prod.updated) AS latest
+                    FROM tmp_active_global_products agp
+                    JOIN cp2_products old_prod ON old_prod.uuid = agp.uuid
+                    JOIN cp2_product_content old_pc ON old_pc.product_uuid = old_prod.uuid
+                    JOIN cp2_content old_cont ON old_cont.uuid = old_pc.content_uuid
+                    GROUP BY old_prod.product_id, old_cont.content_id)
+                SELECT md5(concat(now(), cmap.product_id, cmap.content_id)) AS id, now(), now(), agp.new_uuid, agc.new_uuid, old_pc.enabled
+                    FROM content_map cmap
+                    JOIN tmp_active_global_products agp ON agp.pid = cmap.product_id
+                    JOIN tmp_active_global_contents agc ON agc.cid = cmap.content_id
+                    JOIN cp2_products old_prod ON old_prod.uuid = agp.uuid
+                    JOIN cp2_product_content old_pc ON old_pc.product_uuid = agp.uuid AND old_pc.content_uuid = agc.uuid
+                    WHERE old_prod.updated = cmap.latest;
+
+            -- dependent product IDs
+            INSERT INTO cp_product_dependent_products (product_uuid, product_id)
+            SELECT DISTINCT agp.new_uuid, old_pdp.element
+                FROM tmp_active_global_products agp
+                JOIN cp2_product_dependent_products old_pdp ON old_pdp.product_uuid = agp.uuid;
+
+            -- provided products
+            INSERT INTO cp_product_provided_products (product_uuid, provided_product_uuid)
+            WITH product_map (product_id, child_id) AS (
+                SELECT DISTINCT agp.pid AS product_id, old_child.product_id AS child_id
+                    FROM tmp_active_global_products agp
+                    JOIN cp2_product_provided_products old_ppp ON old_ppp.product_uuid = agp.uuid
+                    JOIN cp2_products old_child ON old_child.uuid = old_ppp.provided_product_uuid)
+                SELECT agp_parent.new_uuid, agp_child.new_uuid
+                    FROM product_map pmap
+                    JOIN tmp_active_global_products agp_parent ON agp_parent.pid = pmap.product_id
+                    JOIN tmp_active_global_products agp_child ON agp_child.pid = pmap.child_id;
+
+
+
+            -- Migrate custom products and content
+            DROP TABLE IF EXISTS tmp_active_custom_products;
+            CREATE TEMPORARY TABLE tmp_active_custom_products (
+                owner_id VARCHAR(32) NOT NULL,
+                uuid VARCHAR(32) NOT NULL,
+                pid VARCHAR(32) NOT NULL,
+                new_uuid VARCHAR(32) NOT NULL,
+                best BOOLEAN NOT NULL DEFAULT false,
+                PRIMARY KEY (owner_id, uuid));
+
+            DROP TABLE IF EXISTS tmp_active_custom_contents;
+            CREATE TEMPORARY TABLE tmp_active_custom_contents (
+                owner_id VARCHAR(32) NOT NULL,
+                uuid VARCHAR(32) NOT NULL,
+                cid VARCHAR(32) NOT NULL,
+                new_uuid VARCHAR(32) NOT NULL,
+                best BOOLEAN NOT NULL DEFAULT false,
+                PRIMARY KEY (owner_id, uuid));
+
+            -- Collect "active" custom products and their children
+            INSERT INTO tmp_active_custom_products (owner_id, uuid, pid, new_uuid, best)
+                WITH RECURSIVE parent_child_map(parent_uuid, child_uuid) AS (
+                    SELECT uuid AS parent_uuid, derived_product_uuid AS child_uuid
+                        FROM cp2_products
+                        WHERE derived_product_uuid IS NOT NULL
+                    UNION
+                    SELECT product_uuid AS parent_uuid, provided_product_uuid AS child_uuid
+                        FROM cp2_product_provided_products),
+                product_graph(owner_id, uuid, depth) AS (
+                    SELECT active.owner_id, active.uuid, 0
+                        FROM cp2_products prod
+                        JOIN (SELECT owner_id, product_uuid AS uuid FROM cp2_owner_products
+                            UNION
+                            SELECT owner_id, product_uuid AS uuid FROM cp_pool) active ON active.uuid = prod.uuid
+                        WHERE prod.locked = 0
+                    UNION
+                    SELECT pg.owner_id, pcmap.child_uuid, pg.depth + 1
+                        FROM parent_child_map pcmap
+                        JOIN product_graph pg ON pg.uuid = pcmap.parent_uuid
+                        -- shouldn't be needed, but here just in case someone decided to be cheeky and define a
+                        -- cyclical product, or some other crazy thing that's entirely unsupported by CP's logic
+                        -- and queries
+                        WHERE pg.depth &lt; 9)
+                SELECT active.owner_id, prod.uuid, prod.product_id, md5(concat(active.owner_id, prod.product_id)) AS new_uuid, prod.uuid = best.uuid AS best_uuid
+                    FROM (SELECT DISTINCT owner_id, uuid FROM product_graph) active
+                    JOIN cp2_products prod ON prod.uuid = active.uuid
+                    JOIN (SELECT pg1.owner_id, prod2.product_id, MAX(prod2.uuid) AS uuid
+                        FROM product_graph pg1
+                        JOIN cp2_products prod2 ON prod2.uuid = pg1.uuid
+                        JOIN (SELECT pg2.owner_id, prod3.product_id, MAX(prod3.updated) AS updated
+                            FROM product_graph pg2
+                            JOIN cp2_products prod3 ON prod3.uuid = pg2.uuid
+                            GROUP BY pg2.owner_id, prod3.product_id) latest ON latest.product_id = prod2.product_id
+                        WHERE prod2.updated = latest.updated
+                        GROUP BY pg1.owner_id, prod2.product_id) best ON best.owner_id = active.owner_id AND best.product_id = prod.product_id;
+
+            -- Collect "active" custom content
+            INSERT INTO tmp_active_custom_contents (owner_id, uuid, cid, best, new_uuid)
+                WITH active_contents(owner_id, uuid) AS (
+                    SELECT owner_id, content_uuid AS uuid FROM cp2_owner_content
+                    UNION
+                    SELECT acp.owner_id, pc.content_uuid AS uuid FROM cp2_product_content pc JOIN tmp_active_custom_products acp ON acp.uuid = pc.product_uuid)
+                SELECT active.owner_id, cont.uuid, cont.content_id, cont.uuid = best.uuid AS best_uuid, md5(concat(active.owner_id, cont.content_id)) AS new_uuid
+                    FROM active_contents active
+                    JOIN cp2_content cont ON cont.uuid = active.uuid
+                    JOIN (SELECT cont2.content_id, MAX(cont2.uuid) AS uuid
+                        FROM active_contents ac1
+                        JOIN cp2_content cont2 ON cont2.uuid = ac1.uuid
+                        JOIN (SELECT cont3.content_id, MAX(cont3.updated) AS updated FROM active_contents ac2 JOIN cp2_content cont3 ON cont3.uuid = ac2.uuid GROUP BY cont3.content_id) latest ON latest.content_id = cont2.content_id
+                        WHERE cont2.updated = latest.updated
+                        GROUP BY cont2.content_id) best ON best.content_id = cont.content_id;
+
+
+            -- Copy over global content
+            INSERT INTO cp_contents (uuid, created, updated, namespace, content_id, content_url, gpg_url, label, metadata_expire, name, release_ver, required_tags, type, vendor, arches)
+                SELECT acc.new_uuid, old_cont.updated, now(), owner.account, old_cont.content_id, old_cont.contenturl, old_cont.gpgurl, old_cont.label, old_cont.metadataexpire, old_cont.name, old_cont.releasever, old_cont.requiredtags, old_cont.type, old_cont.vendor, old_cont.arches
+                    FROM tmp_active_custom_contents acc
+                    JOIN cp_owner owner ON owner.id = acc.owner_id
+                    JOIN cp2_content old_cont ON old_cont.uuid = acc.uuid
+                    WHERE acc.best = true;
+
+            -- content required (modified) products
+            INSERT INTO cp_content_required_products (content_uuid, product_id)
+            SELECT DISTINCT acc.new_uuid, old_cmp.element
+                FROM tmp_active_custom_contents acc
+                JOIN cp2_content_modified_products old_cmp ON old_cmp.content_uuid = acc.uuid;
+
+            -- Copy global products
+            INSERT INTO cp_products (uuid, created, updated, namespace, product_id, name, multiplier, derived_product_uuid)
+            SELECT acp.new_uuid, old_prod.updated, now(), owner.account, old_prod.product_id, old_prod.name, old_prod.multiplier, null
+                FROM tmp_active_custom_products acp
+                JOIN cp_owner owner ON owner.id = acp.owner_id
+                JOIN cp2_products old_prod ON old_prod.uuid = acp.uuid
+                WHERE acp.best = true;
+
+            -- Update derived product references now that everything exists
+            UPDATE cp_products new_prod SET derived_product_uuid = (
+                SELECT acp2.new_uuid
+                    FROM tmp_active_custom_products acp1
+                    JOIN cp2_products old_prod ON old_prod.uuid = acp1.uuid
+                    LEFT JOIN tmp_active_custom_products acp2 ON acp2.uuid = old_prod.derived_product_uuid AND acp2.owner_id = acp1.owner_id AND acp2.best = true
+                    WHERE acp1.new_uuid = new_prod.uuid
+                        AND acp1.best = true)
+                WHERE namespace != '';
+
+            -- attributes
+            INSERT INTO cp_product_attributes (product_uuid, name, value)
+            WITH attrib_map(owner_id, product_id, name, latest) AS (
+                SELECT acp.owner_id, prod.product_id, attrib.name, MAX(prod.updated) AS latest
+                    FROM tmp_active_custom_products acp
+                    JOIN cp2_products prod ON prod.uuid = acp.uuid
+                    JOIN cp2_product_attributes attrib ON attrib.product_uuid = prod.uuid
+                    GROUP BY acp.owner_id, prod.product_id, attrib.name)
+                SELECT acp.new_uuid, attrib.name, attrib.value
+                    FROM tmp_active_custom_products acp
+                    JOIN cp2_products old_prod ON old_prod.uuid = acp.uuid
+                    JOIN cp2_product_attributes attrib ON attrib.product_uuid = old_prod.uuid
+                    JOIN attrib_map ON attrib_map.owner_id = acp.owner_id AND attrib_map.product_id = old_prod.product_id AND attrib_map.name = attrib.name
+                    WHERE old_prod.updated = attrib_map.latest;
+
+            -- branding
+            INSERT INTO cp_product_branding (id, created, updated, product_uuid, product_id, type, name)
+            SELECT md5(concat(branding.new_uuid, branding.product_id, branding.type, branding.name)) AS id, now(), now(), branding.new_uuid, branding.product_id, branding.type, branding.name
+                FROM (SELECT DISTINCT acp.new_uuid, old_branding.product_id, old_branding.type, old_branding.name
+                    FROM tmp_active_custom_products acp
+                    JOIN cp2_product_branding old_branding ON old_branding.product_uuid = acp.uuid) branding;
+
+            -- content
+            INSERT INTO cp_product_contents (id, created, updated, product_uuid, content_uuid, enabled)
+            WITH content_map(owner_id, product_id, content_id, latest) AS (
+                SELECT acp.owner_id, old_prod.product_id, old_cont.content_id, MAX(old_prod.updated) AS latest
+                    FROM tmp_active_custom_products acp
+                    JOIN cp2_products old_prod ON old_prod.uuid = acp.uuid
+                    JOIN cp2_product_content old_pc ON old_pc.product_uuid = old_prod.uuid
+                    JOIN cp2_content old_cont ON old_cont.uuid = old_pc.content_uuid
+                    GROUP BY acp.owner_id, old_prod.product_id, old_cont.content_id)
+                SELECT md5(concat(now(), cmap.owner_id, cmap.product_id, cmap.content_id)) AS id, now(), now(), acp.new_uuid, acc.new_uuid, old_pc.enabled
+                    FROM content_map cmap
+                    JOIN tmp_active_custom_products acp ON acp.owner_id = cmap.owner_id AND acp.pid = cmap.product_id
+                    JOIN tmp_active_custom_contents acc ON acc.owner_id = cmap.owner_id AND acc.cid = cmap.content_id
+                    JOIN cp2_products old_prod ON old_prod.uuid = acp.uuid
+                    JOIN cp2_product_content old_pc ON old_pc.product_uuid = acp.uuid AND old_pc.content_uuid = acc.uuid
+                    WHERE old_prod.updated = cmap.latest;
+
+            -- dependent product IDs
+            INSERT INTO cp_product_dependent_products (product_uuid, product_id)
+            SELECT DISTINCT acp.new_uuid, old_pdp.element
+                FROM tmp_active_custom_products acp
+                JOIN cp2_product_dependent_products old_pdp ON old_pdp.product_uuid = acp.uuid;
+
+            -- provided products
+            INSERT INTO cp_product_provided_products (product_uuid, provided_product_uuid)
+            WITH product_map (owner_id, product_id, child_id) AS (
+                SELECT DISTINCT acp.owner_id, acp.pid AS product_id, old_child.product_id AS child_id
+                    FROM tmp_active_custom_products acp
+                    JOIN cp2_product_provided_products old_ppp ON old_ppp.product_uuid = acp.uuid
+                    JOIN cp2_products old_child ON old_child.uuid = old_ppp.provided_product_uuid)
+                SELECT acp_parent.new_uuid, acp_child.new_uuid
+                    FROM product_map pmap
+                    JOIN tmp_active_custom_products acp_parent ON acp_parent.owner_id = pmap.owner_id AND acp_parent.pid = pmap.product_id
+                    JOIN tmp_active_custom_products acp_child ON acp_child.owner_id = pmap.owner_id AND acp_child.pid = pmap.child_id;
+
+
+
+            -- update pool mapping to point to the new cp_products
+            DROP TABLE IF EXISTS tmp_pool_product_map;
+            CREATE TEMPORARY TABLE tmp_pool_product_map AS (
+                SELECT pool.owner_id, pool.id AS pool_id, prod.product_id
+                    FROM cp_pool pool
+                    JOIN cp2_products prod ON prod.uuid = pool.product_uuid);
+
+            UPDATE cp_pool pool SET product_uuid = (
+                SELECT COALESCE(acp.new_uuid, agp.new_uuid)
+                    FROM tmp_pool_product_map pmap
+                    LEFT JOIN tmp_active_custom_products acp ON acp.owner_id = pmap.owner_id AND acp.pid = pmap.product_id
+                    LEFT JOIN tmp_active_global_products agp ON agp.pid = pmap.product_id
+                    WHERE pool.id = pmap.pool_id);
+
+
+
+            -- Cleanup temporary tables
+            -- This isn't strictly necessary, but we have no idea how long this session will stick
+            -- around, so let's play nice
+            DROP TABLE IF EXISTS tmp_pool_product_map;
+            DROP TABLE IF EXISTS tmp_active_custom_contents;
+            DROP TABLE IF EXISTS tmp_active_custom_products;
+            DROP TABLE IF EXISTS tmp_active_global_contents;
+            DROP TABLE IF EXISTS tmp_active_global_products;
+        </sql>
+    </changeSet>
 
     <!-- update FKs on pools and other external references to products and content -->
     <changeSet id="20231003113535-12" author="crog">
