@@ -2,6 +2,7 @@ plugins {
     id("java")
     id("groovy-gradle-plugin")
     id("java-gradle-plugin")
+    `kotlin-dsl`
 }
 
 repositories {
