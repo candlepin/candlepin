@@ -1,10 +1,8 @@
 plugins {
-    id "java"
-    id "groovy-gradle-plugin"
-    id "java-gradle-plugin"
+    id("java")
+    id("groovy-gradle-plugin")
+    id("java-gradle-plugin")
 }
-
-apply from: "../dependencies.gradle"
 
 repositories {
     mavenCentral()
@@ -21,23 +19,23 @@ dependencies {
     // Fix for transitive dependency conflict between openapi and owasp
     configurations.configureEach {
         resolutionStrategy {
-            force 'org.yaml:snakeyaml:1.33'
+            force("org.yaml:snakeyaml:1.33")
         }
     }
 }
 
 gradlePlugin {
     plugins {
-        specVersionPlugin {
+        create("specVersionPlugin") {
             id = "org.candlepin.gradle.SpecVersion"
             implementationClass = "org.candlepin.gradle.SpecVersion"
         }
-        gettextPlugin {
-            id = "org.candlepin.gradle.gettext"
+        create("gettextPlugin") {
+            id= "org.candlepin.gradle.gettext"
             implementationClass = "Gettext"
         }
-        msgfmtPlugin {
-            id = "org.candlepin.gradle.msgfmt"
+        create("msgfmtPlugin") {
+            id= "org.candlepin.gradle.msgfmt"
             implementationClass = "Msgfmt"
         }
     }
