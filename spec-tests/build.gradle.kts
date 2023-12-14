@@ -1,9 +1,10 @@
+import com.adarshr.gradle.testlogger.theme.ThemeType
+
 plugins {
-    id "java"
-    id "checkstyle-conventions"
-    id "test-logging-conventions"
+    id("java")
+    id("checkstyle-conventions")
+    id("test-logging-conventions")
 }
-apply from: "../dependencies.gradle"
 
 repositories {
     mavenCentral()
@@ -12,7 +13,7 @@ repositories {
 description = "Candlepin Spec Tests"
 
 dependencies {
-    implementation project(":client")
+    implementation(project(":client"))
 
     implementation(libs.assertj)
     implementation(libs.commons.codec)
@@ -35,29 +36,29 @@ dependencies {
 
     testRuntimeOnly(libs.junit.engine)
 
-    implementation fileTree(dir: '/usr/lib64/jss', include: '*.jar')
+    implementation(fileTree("/usr/lib64/jss").include("*.jar"))
 }
 
 testlogger {
-    theme = "standard-parallel"
+    theme = ThemeType.STANDARD_PARALLEL
 }
 
 // Disable empty test task
-test {
+tasks.named("test", Test::class.java) {
     enabled = false
 }
 
-tasks.withType(JavaCompile).configureEach {
+tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }
 
-tasks.register('spec', Test) {
-    description = 'Run Java based spec tests'
-    group = 'Verification'
+tasks.register<Test>("spec") {
+    description = "Run Java based spec tests"
+    group = "Verification"
     outputs.upToDateWhen { false }
 
     debugOptions {
-        host = '*'
+        host = "*"
     }
 
     useJUnitPlatform()
@@ -66,16 +67,16 @@ tasks.register('spec', Test) {
     reports.junitXml.required = false
 
     // We have to propagate the -D params if we want them available in tests
-    System.properties.keys().each { key ->
-        def properyKey = key.toString()
+    System.getProperties().keys().iterator().forEach { key ->
+        val properyKey = key.toString()
         // Propagate spec config
         if (properyKey.startsWith("spec.test.client")) {
-            systemProperty properyKey, System.getProperty(properyKey)
+            systemProperty(properyKey, System.getProperty(properyKey))
         }
 
         // Propagate current working directory
         if (properyKey == "user.dir") {
-            systemProperty properyKey, System.getProperty(properyKey)
+            systemProperty(properyKey, System.getProperty(properyKey))
         }
     }
 }
