@@ -42,7 +42,6 @@ import java.util.Date;
 import java.util.Set;
 
 
-
 /**
  * ProviderBasedPKIUtility is an abstract class implementing functionality in PKIUtility that only relies
  * on JCA classes and interfaces.  Any method that requires access to an underlying cryptographic provider
@@ -106,16 +105,16 @@ public abstract class ProviderBasedPKIUtility implements PKIUtility {
 
         log.debug("Verify against: {}", reader.getCACert().getSerialNumber());
 
-        if (verifySHA256WithRSAHash(new FileInputStream(input), signedHash,
-            reader.getCACert())) {
-            return true;
+        try (InputStream inputStream = new FileInputStream(input)) {
+            if (verifySHA256WithRSAHash(inputStream, signedHash, reader.getCACert())) {
+                return true;
+            }
         }
-
         for (X509Certificate cert : reader.getUpstreamCACerts()) {
             log.debug("Verify against: {}", cert.getSerialNumber());
 
-            try (InputStream istream = new FileInputStream(input)) {
-                if (verifySHA256WithRSAHash(istream, signedHash, cert)) {
+            try (InputStream inputStream = new FileInputStream(input)) {
+                if (verifySHA256WithRSAHash(inputStream, signedHash, cert)) {
                     return true;
                 }
             }
