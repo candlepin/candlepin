@@ -1,9 +1,8 @@
 plugins {
     alias(libs.plugins.openapi.generator)
-    id "java-library"
-    id "java"
+    id("java-library")
+    id("java")
 }
-apply from: "../dependencies.gradle"
 
 description = "Candlepin Generated Client Library"
 
@@ -22,11 +21,14 @@ dependencies {
     implementation(libs.swagger)
 }
 
-sourceSets.main.java.srcDirs = [
-        "src/main/java",
-        "${buildDir}/generated/src/main/java"
-]
-compileJava.dependsOn tasks.openApiGenerate
+sourceSets {
+    main {
+        java {
+            srcDirs("src/main/java", "${buildDir}/generated/src/main/java")
+        }
+    }
+}
+tasks.getByName<JavaCompile>("compileJava").dependsOn(tasks.getByName("openApiGenerate"))
 
 openApiGenerate {
     inputSpec = "${projectDir}/../api/candlepin-api-spec.yaml"
@@ -35,13 +37,13 @@ openApiGenerate {
     generatorName = "java"
     validateSpec = true
     skipValidateSpec = true
-    configOptions = [
-        dateLibrary: "java8"
-    ]
+    configOptions = mapOf(
+        "dateLibrary" to "java8"
+    )
     modelPackage = "org.candlepin.dto.api.client.v1"
     apiPackage = "org.candlepin.resource.client.v1"
     invokerPackage = "org.candlepin.invoker.client"
-    additionalProperties = [
-        useRuntimeException: true
-    ]
+    additionalProperties = mapOf(
+        "useRuntimeException" to true
+    )
 }
