@@ -3,16 +3,16 @@ import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 import org.yaml.snakeyaml.Yaml
 
 plugins {
-    id "nebula.lint"
-    id "com.github.ben-manes.versions"
-    id "org.openapi.generator"
     id "java"
     id "war"
     id "distribution"
     id "maven-publish"
-    id "org.owasp.dependencycheck"
     id "jacoco"
-    id "org.sonarqube"
+    alias(libs.plugins.dependency.check)
+    alias(libs.plugins.gradle.versions)
+    alias(libs.plugins.nebula.lint)
+    alias(libs.plugins.openapi.generator)
+    alias(libs.plugins.sonarqube)
 
     // The following are plugins are plugins we wrote in the buildSrc folder
     id "org.candlepin.gradle.gettext"
@@ -21,8 +21,6 @@ plugins {
     id "checkstyle-conventions"
     id "test-logging-conventions"
 }
-
-apply from: "dependencies.gradle"
 
 group = "org.candlepin"
 
@@ -72,128 +70,129 @@ ext {
 
 dependencies {
     // Cache
-    implementation libraries["caffeine"]
+    implementation(libs.caffeine)
 
     // Commons
-    implementation libraries["commonsCodec"]
-    implementation libraries["commonsCollections"]
-    implementation libraries["commonsIo"]
-    implementation libraries["commonsLang"]
+    implementation(libs.commons.codec)
+    implementation(libs.commons.collections)
+    implementation(libs.commons.io)
+    implementation(libs.commons.lang)
 
     // Collections
-    implementation libraries["guava"]
+    implementation(libs.guava)
 
     // Gettext libraries used for internationalization & translation
-    implementation libraries["gettext"]
+    implementation(libs.gettext)
 
     // Guice Libraries
-    implementation libraries["guiceServlet"]
-    implementation libraries["guicePersist"]
+    implementation(libs.guice.servlet)
+    implementation(libs.guice.persist)
 
     // Jackson
-    implementation libraries["jacksonJaxrs"]
-    implementation libraries["jacksonJsonSchema"]
-    implementation libraries["jacksonHibernate"]
-    implementation libraries["jacksonJdk8"]
-    implementation libraries["jacksonJsr310"]
-    implementation libraries["jacksonYaml"]
-    implementation libraries["jacksonXml"]
+    implementation(libs.jackson.hibernate)
+    implementation(libs.jackson.jaxrs)
+    implementation(libs.jackson.jdk8)
+    implementation(libs.jackson.json.schema)
+    implementation(libs.jackson.jsr310)
+    implementation(libs.jackson.xml)
+    implementation(libs.jackson.yaml)
 
     // Bean validation API is explicitly added to this version
     // This is a transitive dependency of
     // com.fasterxml.jackson.module:jackson-module-jsonSchema
-    implementation libraries["javaxValidation"]
+    implementation(libs.javax.validation)
 
     // Javax
-    implementation libraries["hibernate"]
-    implementation libraries["javaxAnnotation"]
+    implementation(libs.hibernate)
+    implementation(libs.javax.annotation)
 
     // Liquibase
-    implementation libraries["liquibase"]
-    implementation libraries["picocli"]
+    implementation(libs.liquibase)
+    implementation(libs.picocli)
 
     // Logging
-    implementation libraries["logback"]
+    implementation(libs.logback)
     // Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
     // JCL for example.
-    implementation libraries["jclOverSlf4j"]
-    implementation libraries["log4jOverSlf4j"]
-    implementation libraries["logstash"]
+    implementation(libs.slf4j)
+    implementation(libs.slf4j.jcl)
+    implementation(libs.slf4j.log4j)
+    implementation(libs.logstash)
 
     // Oauth
-    implementation libraries["oauth"]
+    implementation(libs.oauth)
 
     // Resteasy
-    implementation libraries["resteasyGuice"]
-    implementation libraries["resteasyAtom"]
-    implementation libraries["resteasyMultipart"]
-    implementation libraries["resteasyValidator"]
+    implementation(libs.resteasy.atom)
+    implementation(libs.resteasy.guice)
+    implementation(libs.resteasy.multipart)
+    implementation(libs.resteasy.validator)
 
-    implementation libraries["javaxRs"]
+    implementation(libs.javax.rs)
 
     // Sun jaxb
-    implementation libraries["jaxb"]
-    implementation libraries["jaxbCore"]
+    implementation(libs.jaxb)
+    implementation(libs.jaxb.core)
 
     // Swagger
-    implementation libraries["swagger"]
+    implementation(libs.swagger)
 
     // Validator
-    implementation libraries["hibernateValidator"]
-    implementation libraries["hibernateValidatorProcessor"]
+    implementation(libs.hibernate.validator)
+    implementation(libs.hibernate.validator.processor)
 
     // Hibernate
-    implementation libraries["hibernateC3p0"]
+    implementation(libs.hibernate.c3p0)
     // Ehcache (for use with hibernate primarily)
-    implementation libraries["hibernateJcache"]
-    implementation libraries["ehcache"]
-    implementation libraries["javaxCache"]
+    implementation(libs.hibernate.jcache)
+    implementation(libs.ehcache)
+    implementation(libs.javax.cache)
 
     // Artemis server & client
-    implementation libraries["artemisServer"]
-    implementation libraries["artemisStomp"]
+    implementation(libs.artemis.server)
+    implementation(libs.artemis.stomp)
 
     // Javascript Engine
-    implementation libraries["rhino"]
+    implementation(libs.rhino)
 
-    implementation libraries["quartz"]
+    implementation(libs.quartz)
 
     // Keycloak
-    implementation libraries["keycloak"]
+    implementation(libs.keycloak)
 
     // Hibernate JPA integration
-    implementation libraries["hibernateJpamodelgen"]
-    annotationProcessor libraries["hibernateJpamodelgen"]
+    implementation(libs.hibernate.jpamodelgen)
+    annotationProcessor(libs.hibernate.jpamodelgen)
 
     // Smallrye Config
-    implementation libraries["smallryeConfig"]
-    implementation libraries["tomcatAnnotations"]
+    implementation(libs.smallrye.config)
+    implementation(libs.tomcat.annotations)
+
+    // OTEL
+    implementation(libs.otel.annotation)
 
     // Use wildcard because this could be called jss4.jar or jss.jar
     // (depending on if we are before Fedora35/RHEL9 or after)
     providedCompile fileTree(dir: '/usr/lib64/jss', include: '*.jar')
-    providedCompile libraries["javaxServlet"]
+    providedCompile(libs.javax.servlet)
 
     // DB Drivers
-    runtimeOnly libraries["postgresql"]
-    runtimeOnly libraries["mariadb"]
+    runtimeOnly(libs.postgresql)
+    runtimeOnly(libs.mariadb)
 
-    testRuntimeOnly libraries["hsqldb"]
-    testRuntimeOnly libraries["javaxEl"]
+    testRuntimeOnly(libs.hsqldb)
+    testRuntimeOnly(libs.javax.el)
 
     // Core testing libraries
     // Junit 5
-    testImplementation libraries["junitApi"]
-    testImplementation libraries["junitParams"]
-    testRuntimeOnly libraries["junitEngine"]
+    testImplementation(libs.junit.api)
+    testImplementation(libs.junit.params)
+    testRuntimeOnly(libs.junit.engine)
 
-    testImplementation libraries["hamcrest"]
-    testImplementation libraries["mockitoJunit"]
-    testImplementation libraries["liquibaseSlf4j"]
-    testImplementation libraries["assertj"]
-
-    // OTEL
-    implementation libraries["otelAnnotation"]
+    testImplementation(libs.hamcrest)
+    testImplementation(libs.mockito.junit)
+    testImplementation(libs.liquibase.slf4j)
+    testImplementation(libs.assertj)
 }
 
 // Copy the resources to the main classes directory so that the
