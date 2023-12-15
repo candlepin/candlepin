@@ -236,7 +236,7 @@ public class StorageBandSpecTest {
     }
 
     private ProductDTO createCephProductAndPool(OwnerDTO owner) {
-        ProductDTO cephProduct = ownerProductApi.createProductByOwner(owner.getKey(),
+        ProductDTO cephProduct = ownerProductApi.createProduct(owner.getKey(),
             Products.random()
             .multiplier(256L)
             .addAttributesItem(new AttributeDTO().name("version").value("6.4"))

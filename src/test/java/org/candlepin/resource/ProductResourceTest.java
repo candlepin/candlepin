@@ -17,7 +17,6 @@ package org.candlepin.resource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
@@ -31,7 +30,6 @@ import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.dto.api.server.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.exceptions.BadRequestException;
@@ -42,7 +40,6 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
@@ -83,25 +80,21 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Test
     public void getProduct() {
         Owner owner = this.createOwner("Example-Corporation");
-        Product entity = this.createProduct("test_product", "test_product", owner);
+        Product entity = this.createProduct("test_product", "test_product");
         ProductDTO expected = this.modelTranslator.translate(entity, ProductDTO.class);
 
-        if (entity.isLocked()) {
-            throw new RuntimeException("entity is locked...?");
-        }
-
         securityInterceptor.enable();
-        ProductDTO result = productResource.getProduct(entity.getUuid());
+        ProductDTO result = productResource.getProductByUuid(entity.getUuid());
 
         assertNotNull(result);
         assertEquals(result, expected);
     }
 
     @Test
-    public void getProductCertificate() {
+    public void testGetProductCertificateByUuid() {
         Owner owner = this.createOwner("Example-Corporation");
 
-        Product entity = this.createProduct(owner);
+        Product entity = this.createProduct();
         // ensure we check SecurityHole
         securityInterceptor.enable();
 
@@ -111,7 +104,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         cert.setProduct(entity);
         productCertificateCurator.create(cert);
 
-        ProductCertificateDTO cert1 = productResource.getProductCertificate(entity.getUuid());
+        ProductCertificateDTO cert1 = productResource.getProductCertificateByUuid(entity.getUuid());
         ProductCertificateDTO expected = this.modelTranslator.translate(cert, ProductCertificateDTO.class);
         assertEquals(cert1, expected);
     }
@@ -121,15 +114,15 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Owner owner2 = this.ownerCurator.create(new Owner().setKey("testorg-2").setDisplayName("testorg-2"));
         Owner owner3 = this.ownerCurator.create(new Owner().setKey("testorg-3").setDisplayName("testorg-3"));
 
-        Product prod1 = this.createProduct("p1", "p1", owner1, owner2);
-        Product prod2 = this.createProduct("p2", "p2", owner2, owner3);
-        Product prod3 = this.createProduct("p3", "p3", owner3);
+        Product prod1 = this.createProduct("p1", "p1");
+        Product prod2 = this.createProduct("p2", "p2");
+        Product prod3 = this.createProduct("p3", "p3");
 
-        Product poolProd1 = this.createProduct(owner1);
-        Product poolProd2 = this.createProduct(owner2);
-        Product poolProd3 = this.createProduct(owner2);
-        Product poolProd4 = this.createProduct(owner3);
-        Product poolProd5 = this.createProduct(owner3);
+        Product poolProd1 = this.createProduct();
+        Product poolProd2 = this.createProduct();
+        Product poolProd3 = this.createProduct();
+        Product poolProd4 = this.createProduct();
+        Product poolProd5 = this.createProduct();
 
         // Set Provided Products
         poolProd1.setProvidedProducts(Arrays.asList(prod1));
@@ -145,41 +138,6 @@ public class ProductResourceTest extends DatabaseTestFixture {
         this.poolCurator.create(TestUtil.createPool(owner3, poolProd5, 5));
 
         return Arrays.asList(owner1, owner2, owner3);
-    }
-
-    @Test
-    public void testGetOwnersForProducts() {
-        List<Owner> owners = this.setupDBForOwnerProdTests();
-        Owner owner1 = owners.get(0);
-        Owner owner2 = owners.get(1);
-        Owner owner3 = owners.get(2);
-        OwnerDTO ownerDTO1 = this.modelTranslator.translate(owner1, OwnerDTO.class);
-        OwnerDTO ownerDTO2 = this.modelTranslator.translate(owner2, OwnerDTO.class);
-        OwnerDTO ownerDTO3 = this.modelTranslator.translate(owner3, OwnerDTO.class);
-
-        List<OwnerDTO> ownersReturned;
-
-        ownersReturned = productResource.getProductOwners(Collections.singletonList("p1"))
-            .collect(Collectors.toList());
-        assertTrue(CollectionUtils.isEqualCollection(Arrays.asList(ownerDTO1, ownerDTO2), ownersReturned));
-
-        ownersReturned = productResource.getProductOwners(Arrays.asList("p1", "p2"))
-            .collect(Collectors.toList());
-        assertTrue(CollectionUtils
-            .isEqualCollection(Arrays.asList(ownerDTO1, ownerDTO2, ownerDTO3), ownersReturned));
-
-        ownersReturned = productResource.getProductOwners(Collections.singletonList("p3"))
-            .collect(Collectors.toList());
-        assertEquals(Collections.singletonList(ownerDTO3), ownersReturned);
-
-        ownersReturned = productResource.getProductOwners(Collections.singletonList("nope"))
-            .collect(Collectors.toList());
-        assertEquals(0, ownersReturned.size());
-    }
-
-    @Test
-    public void testGetOwnersForProductsInputValidation() {
-        assertThrows(BadRequestException.class, () -> productResource.getProductOwners(new LinkedList<>()));
     }
 
     private void verifyRefreshPoolsJobsWereQueued(List<AsyncJobStatusDTO> jobs) {

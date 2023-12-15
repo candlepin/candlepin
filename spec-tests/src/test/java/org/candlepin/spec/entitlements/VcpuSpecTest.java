@@ -145,7 +145,7 @@ public class VcpuSpecTest {
     }
 
     private ProductDTO createVcpuProuductAndPool(OwnerDTO owner) {
-        ProductDTO vcpuProduct = ownerProductApi.createProductByOwner(owner.getKey(),
+        ProductDTO vcpuProduct = ownerProductApi.createProduct(owner.getKey(),
             Products.random()
             .addAttributesItem(new AttributeDTO().name("version").value("6.4"))
             .addAttributesItem(new AttributeDTO().name("vcpu").value("8"))
@@ -160,7 +160,7 @@ public class VcpuSpecTest {
     }
 
     private ProductDTO createVcpuStackableProductAndPool(OwnerDTO owner) {
-        ProductDTO vcpuStackableProduct =  ownerProductApi.createProductByOwner(owner.getKey(),
+        ProductDTO vcpuStackableProduct =  ownerProductApi.createProduct(owner.getKey(),
             Products.random()
             .addAttributesItem(new AttributeDTO().name("version").value("6.4"))
             .addAttributesItem(new AttributeDTO().name("vcpu").value("8"))

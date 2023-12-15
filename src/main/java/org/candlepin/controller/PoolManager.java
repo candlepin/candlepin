@@ -37,7 +37,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
@@ -98,8 +97,8 @@ import javax.inject.Provider;
 
 
 public class PoolManager {
-
     private static final Logger log = LoggerFactory.getLogger(PoolManager.class);
+
     private static final int MAX_ENTITLE_RETRIES = 3;
 
     private final I18n i18n;
@@ -116,14 +115,12 @@ public class PoolManager {
     private final AutobindRules autobindRules;
     private final ActivationKeyRules activationKeyRules;
     private final OwnerCurator ownerCurator;
-    private final OwnerProductCurator ownerProductCurator;
     private final BindChainFactory bindChainFactory;
     private final Provider<RefreshWorker> refreshWorkerProvider;
     private final PoolOpProcessor poolOpProcessor;
     private final PoolConverter poolConverter;
     private final PoolService poolService;
     private final boolean isStandalone;
-    private final int orphanedGracePeriod;
 
     @Inject
     public PoolManager(
@@ -141,7 +138,6 @@ public class PoolManager {
         AutobindRules autobindRules,
         ActivationKeyRules activationKeyRules,
         OwnerCurator ownerCurator,
-        OwnerProductCurator ownerProductCurator,
         I18n i18n,
         PoolService poolService,
         BindChainFactory bindChainFactory,
@@ -162,7 +158,6 @@ public class PoolManager {
         this.autobindRules = Objects.requireNonNull(autobindRules);
         this.activationKeyRules = Objects.requireNonNull(activationKeyRules);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
-        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
         this.i18n = Objects.requireNonNull(i18n);
         this.bindChainFactory = Objects.requireNonNull(bindChainFactory);
         this.refreshWorkerProvider = Objects.requireNonNull(refreshWorkerProvider);
@@ -170,7 +165,6 @@ public class PoolManager {
         this.poolConverter = Objects.requireNonNull(poolConverter);
         this.poolService = Objects.requireNonNull(poolService);
         this.isStandalone = config.getBoolean(ConfigProperties.STANDALONE);
-        this.orphanedGracePeriod = config.getInt(ConfigProperties.ORPHANED_ENTITY_GRACE_PERIOD);
     }
 
     /*
@@ -187,15 +181,14 @@ public class PoolManager {
         Owner resolvedOwner = this.resolveOwner(owner);
         log.info("Refreshing pools for owner: {}", resolvedOwner);
 
-        RefreshWorker refresher = this.refreshWorkerProvider.get()
-            .setOrphanedEntityGracePeriod(this.orphanedGracePeriod);
+        RefreshWorker refresher = this.refreshWorkerProvider.get();
 
         log.debug("Fetching subscriptions from adapter...");
         refresher.addSubscriptions(subAdapter.getSubscriptions(resolvedOwner.getKey()));
         Map<String, ? extends SubscriptionInfo> subMap = refresher.getSubscriptions();
 
         // Check if there are any dev pools (products) that need refreshing
-        List<String> devProdIds = this.ownerProductCurator.getDevProductIds(resolvedOwner.getId());
+        List<String> devProdIds = this.poolCurator.getDevPoolProductIds(resolvedOwner.getId());
         if (devProdIds != null && !devProdIds.isEmpty()) {
             log.info("Refreshing {} development products for owner: {}", devProdIds.size(),
                 resolvedOwner.getKey());
@@ -222,6 +215,21 @@ public class PoolManager {
         this.poolCurator.transactional(args -> {
             boolean poolsModified = false;
 
+            // Flag pools referencing the updated products as dirty
+            List<String> updatedProductUuids = updatedProducts.values()
+                .stream()
+                .map(Product::getUuid)
+                .toList();
+
+            int count = this.poolCurator.markPoolsDirtyReferencingProducts(updatedProductUuids);
+            log.debug("Flagged {} pool-products as dirty", count);
+
+            // TODO: We *could* also flag entitlements dirty here, but if the lazy flag is set to
+            // false, we'll need to pull all of them back and immediately regen; which could be
+            // catastrophic in terms of memory utilization and refresh runtime. Perhaps revisit this
+            // when we get around to a refresh refactor. :/
+
+            // Gather local subscriptions for pool refresh
             Map<String, List<Pool>> subscriptionPools = this.poolCurator
                 .mapPoolsBySubscriptionIds(subMap.keySet());
 
@@ -238,7 +246,9 @@ public class PoolManager {
 
                 log.debug("Processing subscription: {}", sub);
                 Pool pool = this.poolConverter.convertToPrimaryPool(sub, resolvedOwner, existingProducts);
-                pool.setLocked(true);
+
+                // This pool originates from an upstream source and should not be modified locally via API
+                pool.setManaged(true);
 
                 List<Pool> subPools = subscriptionPools.getOrDefault(sub.getId(), Collections.emptyList());
                 this.refreshPoolsForPrimaryPool(pool, false, lazy, updatedProducts, subPools);
@@ -253,7 +263,7 @@ public class PoolManager {
             List<Pool> poolsToDelete = new ArrayList<>();
 
             for (Pool pool : poolCurator.getPoolsFromBadSubs(resolvedOwner, subMap.keySet())) {
-                if (pool != null && pool.isManaged(this.isStandalone)) {
+                if (pool != null && pool.isManaged()) {
                     poolsToDelete.add(pool);
                     poolsModified = true;
                 }
@@ -268,12 +278,15 @@ public class PoolManager {
 
             // Check if we've put any pools into a state in which they're referencing a product which no
             // longer belongs to the organization
-            List<String> pids = this.poolCurator.getPoolsUsingOrphanedProducts(resolvedOwner.getId());
-            if (pids != null && pids.size() > 0) {
-                log.error("One or more pools references a product which no longer belongs to its " +
-                    "organization: {}", pids);
+            List<Pool> invalidPools = poolCurator.getPoolsReferencingInvalidProducts(resolvedOwner.getId());
+            if (!invalidPools.isEmpty()) {
+                String errmsg = "One or more pools references a product which does not belong to its " +
+                    "organization";
 
-                throw new IllegalStateException("One or more pools was left in an undefined state: " + pids);
+                log.error(errmsg);
+                invalidPools.forEach(pool -> log.error("{} => {}", pool, pool.getProduct()));
+
+                throw new IllegalStateException(errmsg);
             }
 
             // If we've updated or deleted a pool and we have product/content changes, our content view has
@@ -287,17 +300,21 @@ public class PoolManager {
             // - We only call refreshPoolsForPrimaryPool or deletePools based on matches with the
             //   received subscriptions
             //
-            // By checking both of these, we can estimate that if we have changed products/content AND
+            // By checking both of these, we can estimate that if we have changed products/content or
             // have refreshed or deleted a pool, we likely have a content view update. Note that this
             // does fall apart in a handful of cases (deletion of an expired pool + modification of that
             // pool's product/content), but barring a major refactor of this code to make the evaluation
             // on a per-pool basis, there's not a whole lot more we can do here.
-            if (poolsModified && refreshResult.hasEntity(Product.class, mutatedStates)) {
+            if (poolsModified || refreshResult.hasEntity(Product.class, mutatedStates)) {
                 // TODO: Should we also mark any existing SCA certs as dirty/revoked here?
 
                 resolvedOwner.setLastContentUpdate(now);
                 this.ownerCurator.merge(resolvedOwner);
             }
+
+            // Set the last content update for all (other*) orgs with pools referencing any of the
+            // products that changed as part of this refresh.
+            this.ownerCurator.setLastContentUpdateForOwnersWithProducts(updatedProductUuids);
 
             log.info("Refresh pools for owner: {} completed in: {}ms", resolvedOwner.getKey(),
                 System.currentTimeMillis() - now.getTime());
@@ -380,8 +397,8 @@ public class PoolManager {
                 }
             }
 
-            if (pool.isLocked()) {
-                subPool.setLocked(true);
+            if (pool.isManaged()) {
+                subPool.setManaged(true);
             }
         }
 

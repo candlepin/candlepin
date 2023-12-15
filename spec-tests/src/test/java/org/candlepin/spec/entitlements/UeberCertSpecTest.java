@@ -78,20 +78,20 @@ public class UeberCertSpecTest {
     public void shouldContainAllContentForTheEntireOrg() {
         OwnerDTO owner1 = ownerApi.createOwner(Owners.random());
 
-        ProductDTO prod1 = ownerProductApi.createProductByOwner(
+        ProductDTO prod1 = ownerProductApi.createProduct(
             owner1.getKey(), Products.randomEng().name("test product 1"));
-        ProductDTO prod2 = ownerProductApi.createProductByOwner(
+        ProductDTO prod2 = ownerProductApi.createProduct(
             owner1.getKey(), Products.randomEng().name("test product 2"));
-        ProductDTO prod3 = ownerProductApi.createProductByOwner(
+        ProductDTO prod3 = ownerProductApi.createProduct(
             owner1.getKey(), Products.randomEng().name("test product 3"));
 
         ContentDTO content1 = ownerContentApi.createContent(owner1.getKey(), Contents.random());
         ContentDTO content2 = ownerContentApi.createContent(owner1.getKey(), Contents.random());
         ContentDTO content3 = ownerContentApi.createContent(owner1.getKey(), Contents.random());
 
-        prod1 = ownerProductApi.addContent(owner1.getKey(), prod1.getId(), content1.getId(), true);
-        prod1 = ownerProductApi.addContent(owner1.getKey(), prod1.getId(), content2.getId(), true);
-        prod2 = ownerProductApi.addContent(owner1.getKey(), prod2.getId(), content3.getId(), true);
+        prod1 = ownerProductApi.addContentToProduct(owner1.getKey(), prod1.getId(), content1.getId(), true);
+        prod1 = ownerProductApi.addContentToProduct(owner1.getKey(), prod1.getId(), content2.getId(), true);
+        prod2 = ownerProductApi.addContentToProduct(owner1.getKey(), prod2.getId(), content3.getId(), true);
 
         ownerApi.createPool(owner1.getKey(), Pools.random()
             .productId(prod1.getId())

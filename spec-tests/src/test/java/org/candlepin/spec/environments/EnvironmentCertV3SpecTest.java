@@ -71,11 +71,13 @@ public class EnvironmentCertV3SpecTest {
             .singleElement();
 
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.randomEng());
+        ProductDTO product = adminClient.ownerProducts().createProduct(ownerKey, Products.randomEng());
         ContentDTO promotedContent = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         ContentDTO notPromotedContent = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, product.getId(), promotedContent.getId(), true);
-        adminClient.ownerProducts().addContent(ownerKey, product.getId(), notPromotedContent.getId(), true);
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, product.getId(), promotedContent.getId(), true);
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, product.getId(), notPromotedContent.getId(), true);
         promoteContentToEnvironment(orgAdmin, env.getId(), promotedContent, false);
         adminClient.owners().createPool(ownerKey, Pools.random(product));
 
@@ -110,11 +112,13 @@ public class EnvironmentCertV3SpecTest {
             .singleElement();
 
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        ProductDTO product = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.randomEng());
+        ProductDTO product = adminClient.ownerProducts().createProduct(ownerKey, Products.randomEng());
         ContentDTO promotedContent = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         ContentDTO notPromotedContent = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, product.getId(), promotedContent.getId(), true);
-        adminClient.ownerProducts().addContent(ownerKey, product.getId(), notPromotedContent.getId(), true);
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, product.getId(), promotedContent.getId(), true);
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, product.getId(), notPromotedContent.getId(), true);
         promoteContentToEnvironment(orgAdmin, env.getId(), promotedContent, true);
         adminClient.owners().createPool(ownerKey, Pools.random(product));
 
@@ -187,18 +191,20 @@ public class EnvironmentCertV3SpecTest {
 
         ApiClient consumerClient = ApiClients.ssl(consumer);
         ProductDTO provProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng());
+            .createProduct(ownerKey, Products.randomEng());
         ProductDTO product = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.randomEng().providedProducts(Set.of(provProd)));
+            .createProduct(ownerKey, Products.randomEng().providedProducts(Set.of(provProd)));
         ContentDTO promotedContent = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         ContentDTO notPromotedContent = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         ContentDTO notPromotedProvContent = adminClient.ownerContent()
             .createContent(ownerKey, Contents.random());
 
-        adminClient.ownerProducts().addContent(ownerKey, product.getId(), promotedContent.getId(), true);
-        adminClient.ownerProducts().addContent(ownerKey, product.getId(), notPromotedContent.getId(), true);
         adminClient.ownerProducts()
-            .addContent(ownerKey, provProd.getId(), notPromotedProvContent.getId(), true);
+            .addContentToProduct(ownerKey, product.getId(), promotedContent.getId(), true);
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, product.getId(), notPromotedContent.getId(), true);
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, provProd.getId(), notPromotedProvContent.getId(), true);
         promoteContentToEnvironment(orgAdmin, env.getId(), promotedContent, true);
         adminClient.owners().createPool(ownerKey, Pools.random(product));
 

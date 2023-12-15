@@ -43,6 +43,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +52,8 @@ import java.util.Map;
 
 @SpecTest
 public class ContentResourceSpecTest {
+    private static final Logger log = LoggerFactory.getLogger(ContentResourceSpecTest.class);
+
     private static ConsumerClient consumerApi;
     private static OwnerApi ownerApi;
     private static OwnerContentApi ownerContentApi;
@@ -71,9 +75,10 @@ public class ContentResourceSpecTest {
         OwnerDTO owner1 = ownerApi.createOwner(Owners.random());
         ContentDTO expectedContent = createContent(owner1.getKey(), null, null);
         ProductDTO product = createProduct(owner1.getKey(), 4L, null);
-        product = ownerProductApi.addContent(owner1.getKey(), product.getId(), expectedContent.getId(), true);
+        product = ownerProductApi.addContentToProduct(owner1.getKey(), product.getId(),
+            expectedContent.getId(), true);
 
-        ProductDTO actual = productsApi.getProduct(product.getUuid());
+        ProductDTO actual = productsApi.getProductByUuid(product.getUuid());
         assertEquals(1, actual.getProductContent().size());
         ContentDTO actualContent = actual.getProductContent().iterator().next().getContent();
         assertEquals(expectedContent, actualContent);
@@ -82,6 +87,8 @@ public class ContentResourceSpecTest {
     @Test
     public void shouldFilterContentWithMismatchedArchitecture() throws Exception {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
         // We expect this content to NOT be filtered out due to a match with the system's architecture
         ContentDTO content1 = createContent(owner.getKey(), "/this/is/the/path", "ppc64");
         // We expect this content to be filtered out due to a mismatch with the system's architecture
@@ -90,9 +97,9 @@ public class ContentResourceSpecTest {
         ContentDTO content3 = createContent(owner.getKey(), "/this/is/the/path/3", null);
 
         ProductDTO product = createProduct(owner.getKey(), null, null);
-        product = ownerProductApi.addContent(owner.getKey(), product.getId(), content1.getId(), true);
-        product = ownerProductApi.addContent(owner.getKey(), product.getId(), content2.getId(), true);
-        product = ownerProductApi.addContent(owner.getKey(), product.getId(), content3.getId(), true);
+        product = ownerProductApi.addContentToProduct(ownerKey, product.getId(), content1.getId(), true);
+        product = ownerProductApi.addContentToProduct(ownerKey, product.getId(), content2.getId(), true);
+        product = ownerProductApi.addContentToProduct(ownerKey, product.getId(), content3.getId(), true);
         PoolDTO pool = createPool(owner.getKey(), product);
 
         ConsumerTypeDTO consumerType = new ConsumerTypeDTO();
@@ -148,23 +155,25 @@ public class ContentResourceSpecTest {
     @Test
     public void shouldFilterContentWithMismatchedArchitectureFromTheProduct() throws Exception {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
         // Even though this product has no arches specified, and should normally not be filtered out,
         // the product it belongs to has an architecture that mismatches with the system's,
         // so we do expect it to get filtered out.
-        ContentDTO content1 = createContent(owner.getKey(), "/this/is/the/path", null);
+        ContentDTO content1 = createContent(ownerKey, "/this/is/the/path", null);
         AttributeDTO attribute1 = ProductAttributes.Arch.withValue("x86_64");
-        ProductDTO product1 = createProduct(owner.getKey(), null, attribute1);
-        product1 = ownerProductApi.addContent(owner.getKey(), product1.getId(), content1.getId(), true);
+        ProductDTO product1 = createProduct(ownerKey, null, attribute1);
+        product1 = ownerProductApi.addContentToProduct(ownerKey, product1.getId(), content1.getId(), true);
 
         // This content has no arches specified, but the product it belongs to has an arch that
         // matches with that of the system's, so we do NOT expect it to get filtered out.
-        ContentDTO content2 = createContent(owner.getKey(), "/this/is/the/path2", null);
+        ContentDTO content2 = createContent(ownerKey, "/this/is/the/path2", null);
         AttributeDTO attribute2 = ProductAttributes.Arch.withValue("ppc64");
-        ProductDTO product2 = createProduct(owner.getKey(), null, attribute2);
-        product2 = ownerProductApi.addContent(owner.getKey(), product2.getId(), content2.getId(), true);
+        ProductDTO product2 = createProduct(ownerKey, null, attribute2);
+        product2 = ownerProductApi.addContentToProduct(ownerKey, product2.getId(), content2.getId(), true);
 
-        PoolDTO pool1 = createPool(owner.getKey(), product1);
-        PoolDTO pool2 = createPool(owner.getKey(), product2);
+        PoolDTO pool1 = createPool(ownerKey, product1);
+        PoolDTO pool2 = createPool(ownerKey, product2);
 
         ConsumerTypeDTO consumerType = new ConsumerTypeDTO();
         consumerType.setManifest(false);
@@ -177,7 +186,7 @@ public class ContentResourceSpecTest {
         consumer.setType(consumerType);
         consumer.setFacts(facts);
 
-        consumer = consumerApi.createConsumer(consumer, null, owner.getKey(), null, false);
+        consumer = consumerApi.createConsumer(consumer, null, ownerKey, null, false);
         consumerApi.bindPool(consumer.getUuid(), pool1.getId(), null);
         consumerApi.bindPool(consumer.getUuid(), pool2.getId(), null);
 
@@ -228,7 +237,7 @@ public class ContentResourceSpecTest {
         }
 
         newProduct.setMultiplier(multiplier);
-        return ownerProductApi.createProductByOwner(ownerKey, newProduct);
+        return ownerProductApi.createProduct(ownerKey, newProduct);
     }
 
     private PoolDTO createPool(String ownerKey, ProductDTO product) {

@@ -83,7 +83,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
 
     private ContentAccessManager createManager() {
         return new ContentAccessManager(this.config, this.pkiUtility, this.x509V3ExtensionUtil,
-            this.caCertCurator, this.certSerialCurator, this.ownerCurator, this.ownerContentCurator,
+            this.caCertCurator, this.certSerialCurator, this.ownerCurator, this.contentCurator,
             this.consumerCurator, this.consumerTypeCurator, this.environmentCurator, this.caCertCurator,
             this.mockEventSink, this.anonymousCloudConsumerCurator, this.anonymousContentAccessCertCurator,
             this.mockProdAdapter);

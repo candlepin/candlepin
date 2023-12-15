@@ -77,8 +77,8 @@ public class ClientV1SizeSpecTest {
             .addAttributesItem(ProductAttributes.VirtualOnly.withValue("false"))
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("standard"))
             .addAttributesItem(ProductAttributes.SupportType.withValue("excellent"));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
-        product1 = ownerProductApi.addContent(owner.getKey(), product1.getId(),
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
+        product1 = ownerProductApi.addContentToProduct(owner.getKey(), product1.getId(),
             batchContent.get(0).getId(), true);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(product1));
 
@@ -93,7 +93,7 @@ public class ClientV1SizeSpecTest {
         Map<String, Boolean> contentIds = batchContent.stream().skip(1).limit(9)
             .collect(Collectors.toMap(ContentDTO::getId, x -> true));
         final String product1Id = product1.getId();
-        product1 = ownerProductApi.addBatchContent(owner.getKey(), product1Id, contentIds);
+        product1 = ownerProductApi.addContentsToProduct(owner.getKey(), product1Id, contentIds);
         AsyncJobStatusDTO status = client.entitlements()
             .regenerateEntitlementCertificatesForProduct(product1Id, true);
         status = client.jobs().waitForJob(status.getId());
@@ -108,7 +108,7 @@ public class ClientV1SizeSpecTest {
         // the content change to > 185 will not cause a regeneration. It will also not throw an error.
         contentIds = batchContent.stream().skip(10).limit(190)
             .collect(Collectors.toMap(ContentDTO::getId, x -> true));
-        product1 = ownerProductApi.addBatchContent(owner.getKey(), product1Id, contentIds);
+        product1 = ownerProductApi.addContentsToProduct(owner.getKey(), product1Id, contentIds);
         status = client.entitlements().regenerateEntitlementCertificatesForProduct(product1Id, true);
         status = client.jobs().waitForJob(status.getId());
         assertThatJob(status).isFinished();
@@ -140,9 +140,10 @@ public class ClientV1SizeSpecTest {
             .addAttributesItem(ProductAttributes.VirtualOnly.withValue("false"))
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("standard"))
             .addAttributesItem(ProductAttributes.SupportType.withValue("excellent"));
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         final String product1Id = product1.getId();
-        product1 = ownerProductApi.addContent(owner.getKey(), product1Id, batchContent.get(0).getId(), true);
+        product1 = ownerProductApi.addContentToProduct(owner.getKey(), product1Id,
+            batchContent.get(0).getId(), true);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(product1));
 
         ProductDTO product2 = Products.randomEng()
@@ -152,9 +153,10 @@ public class ClientV1SizeSpecTest {
             .addAttributesItem(ProductAttributes.VirtualOnly.withValue("false"))
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("standard"))
             .addAttributesItem(ProductAttributes.SupportType.withValue("excellent"));
-        product2 = ownerProductApi.createProductByOwner(owner.getKey(), product2);
+        product2 = ownerProductApi.createProduct(owner.getKey(), product2);
         final String product2Id = product2.getId();
-        product2 = ownerProductApi.addContent(owner.getKey(), product2Id, batchContent.get(0).getId(), true);
+        product2 = ownerProductApi.addContentToProduct(owner.getKey(), product2Id,
+            batchContent.get(0).getId(), true);
         PoolDTO pool2 = ownerApi.createPool(owner.getKey(), Pools.random(product2));
 
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
@@ -169,8 +171,9 @@ public class ClientV1SizeSpecTest {
         Map<String, Boolean> contentIds = batchContent.stream().skip(1).limit(199)
             .collect(Collectors.toMap(ContentDTO::getId, x -> true));
 
-        product1 = ownerProductApi.addBatchContent(owner.getKey(), product1Id, contentIds);
-        product2 = ownerProductApi.addContent(owner.getKey(), product2Id, batchContent.get(1).getId(), true);
+        product1 = ownerProductApi.addContentsToProduct(owner.getKey(), product1Id, contentIds);
+        product2 = ownerProductApi.addContentToProduct(owner.getKey(), product2Id,
+            batchContent.get(1).getId(), true);
         AsyncJobStatusDTO status = client.entitlements()
             .regenerateEntitlementCertificatesForProduct(product1Id, true);
         status = client.jobs().waitForJob(status.getId());

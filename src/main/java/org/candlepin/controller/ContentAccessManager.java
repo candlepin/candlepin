@@ -36,11 +36,11 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -212,7 +212,7 @@ public class ContentAccessManager {
     private final PKIUtility pki;
     private final CertificateSerialCurator serialCurator;
     private final OwnerCurator ownerCurator;
-    private final OwnerContentCurator ownerContentCurator;
+    private final ContentCurator contentCurator;
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
     private final X509V3ExtensionUtil v3extensionUtil;
     private final ConsumerCurator consumerCurator;
@@ -234,7 +234,7 @@ public class ContentAccessManager {
         ContentAccessCertificateCurator contentAccessCertificateCurator,
         CertificateSerialCurator serialCurator,
         OwnerCurator ownerCurator,
-        OwnerContentCurator ownerContentCurator,
+        ContentCurator contentCurator,
         ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
         EnvironmentCurator environmentCurator,
@@ -250,7 +250,7 @@ public class ContentAccessManager {
         this.serialCurator = Objects.requireNonNull(serialCurator);
         this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
-        this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
+        this.contentCurator = Objects.requireNonNull(contentCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.environmentCurator = Objects.requireNonNull(environmentCurator);
@@ -316,7 +316,7 @@ public class ContentAccessManager {
         ContentPrefix contentPrefix = ScaContentPrefix.from(owner, this.standalone, environments);
         PromotedContent promotedContent = new PromotedContent(contentPrefix).withAll(environments);
 
-        Map<org.candlepin.model.Content, Boolean> ownerContent = this.ownerContentCurator
+        Map<org.candlepin.model.Content, Boolean> ownerContent = this.contentCurator
             .getActiveContentByOwner(owner.getId());
 
         byte[] payloadBytes = createContentAccessDataPayload(consumer, ownerContent, promotedContent);
@@ -363,7 +363,7 @@ public class ContentAccessManager {
             ContentPrefix contentPrefix = ScaContentPrefix.from(owner, this.standalone, environments);
             PromotedContent promotedContent = new PromotedContent(contentPrefix).withAll(environments);
 
-            Map<org.candlepin.model.Content, Boolean> ownerContent = this.ownerContentCurator
+            Map<org.candlepin.model.Content, Boolean> ownerContent = this.contentCurator
                 .getActiveContentByOwner(owner.getId());
 
             byte[] payloadBytes = createContentAccessDataPayload(consumer, ownerContent, promotedContent);
@@ -504,8 +504,8 @@ public class ContentAccessManager {
 
     private Set<X509ExtensionWrapper> prepareV3Extensions(String entType) {
         Set<X509ExtensionWrapper> result = v3extensionUtil.getExtensions();
-        X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_TYPE_KEY), false, entType);
+        X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(
+            OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_TYPE), false, entType);
 
         result.add(typeExtension);
         return result;
@@ -521,8 +521,10 @@ public class ContentAccessManager {
     private byte[] createContentAccessDataPayload(Consumer consumer,
         Map<org.candlepin.model.Content, Boolean> ownerContent, PromotedContent promotedContent)
         throws IOException {
-        log.info("Generating SCA payload for consumer \"{}\"...", consumer != null ? consumer.getUuid() :
-            "unknown");
+
+        String consumerUuid = consumer != null ? consumer.getUuid() : null;
+        log.info("Generating SCA payload for consumer \"{}\"...", consumerUuid);
+
         Product engProduct = new Product()
             .setId("content_access")
             .setName(" Content Access");
@@ -551,10 +553,7 @@ public class ContentAccessManager {
         List<org.candlepin.model.dto.Product> productModels = new ArrayList<>();
         productModels.add(productModel);
 
-        String consumerUuid = consumer != null ? consumer.getUuid() : null;
-
-        return v3extensionUtil
-            .createEntitlementDataPayload(productModels, consumerUuid, emptyPool, null);
+        return v3extensionUtil.createEntitlementDataPayload(productModels, consumerUuid, emptyPool, null);
     }
 
     /**

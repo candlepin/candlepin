@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 
 
@@ -46,7 +45,6 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
 
     private Map<String, E> existingEntities;
     private Map<String, I> importedEntities;
-    private Set<String> dirtyEntityRefs;
 
     /**
      * Creates a new AbstractEntityMapper instance
@@ -54,7 +52,6 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
     public AbstractEntityMapper() {
         this.existingEntities = new HashMap<>();
         this.importedEntities = new HashMap<>();
-        this.dirtyEntityRefs = new HashSet<>();
     }
 
     /**
@@ -144,7 +141,6 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
 
             this.existingEntities.compute(eid, (id, existing) -> {
                 if (existing != null && !existing.equals(entity)) {
-                    this.dirtyEntityRefs.add(id);
                     log.warn("Remapping existing entity with a different entity version; " +
                         "discarding previous... {} -> {} != {}", id, existing, entity);
                 }
@@ -205,48 +201,6 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
      * {@inheritDoc}
      */
     @Override
-    public boolean isDirty() {
-        return !this.dirtyEntityRefs.isEmpty();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isDirty(String id) {
-        return this.dirtyEntityRefs.contains(id);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean containsOnlyExistingEntityIds(Collection<String> ids) {
-        return ids != null ?
-            ids.containsAll(this.existingEntities.keySet()) :
-            this.existingEntities.isEmpty();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean containsOnlyExistingEntities(Collection<? extends E> entities) {
-        if (entities != null && !entities.isEmpty()) {
-            Collection<String> ids = entities.stream()
-                .map(this::getEntityId)
-                .collect(Collectors.toSet());
-
-            return this.containsOnlyExistingEntityIds(ids);
-        }
-
-        return this.existingEntities.isEmpty();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void clear() {
         this.clearExistingEntities();
         this.clearImportedEntities();
@@ -258,7 +212,6 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
     @Override
     public void clearExistingEntities() {
         this.existingEntities.clear();
-        this.dirtyEntityRefs.clear();
     }
 
     /**

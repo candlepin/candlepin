@@ -80,8 +80,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
     private ActivationKeyResource buildActivationKeyResource() {
         return new ActivationKeyResource(this.mockActivationKeyCurator, this.i18n, this.poolService,
-            this.serviceLevelValidator, this.activationKeyRules, this.ownerProductCurator,
-            this.modelTranslator, this.validator, this.akcoCurator, this.coValidator);
+            this.serviceLevelValidator, this.activationKeyRules, this.productCurator, this.modelTranslator,
+            this.validator, this.akcoCurator, this.coValidator);
     }
 
     @Test
@@ -110,7 +110,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     @Test
     public void testAddingRemovingPools() {
         ActivationKey key = new ActivationKey();
-        Product product = this.createProduct(owner);
+        Product product = this.createProduct();
         Pool pool = createPool(owner, product, 10L, new Date(), new Date());
         key.setOwner(owner);
         key.setName("dd");
@@ -125,7 +125,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     @Test
     public void testReaddingPools() {
         ActivationKey key = new ActivationKey();
-        Product product = this.createProduct(owner);
+        Product product = this.createProduct();
         Pool pool = createPool(owner, product, 10L, new Date(), new Date());
 
         key.setOwner(owner);
@@ -317,7 +317,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     public void testAddingRemovingProductIDs() {
         ActivationKey key = new ActivationKey();
         Owner owner = createOwner();
-        Product product = this.createProduct(owner);
+        Product product = this.createProduct();
 
         key.setOwner(owner);
         key.setName("dd");
@@ -334,7 +334,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     public void testReaddingProductIDs() {
         ActivationKey key = new ActivationKey();
         Owner owner = createOwner();
-        Product product = this.createProduct(owner);
+        Product product = this.createProduct();
 
         key.setOwner(owner);
         key.setName("dd");

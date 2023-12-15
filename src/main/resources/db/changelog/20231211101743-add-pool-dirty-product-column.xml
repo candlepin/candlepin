@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+
+    <!--
+        Add the "dirtyProduct" flag so we can detect product changes that occur outside of an org's
+        specific refresh, that may no longer be picked up by refresh due to having globally shared
+        products.
+     -->
+    <changeSet id="20231211101743-1" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="cp_pool" columnName="dirtyProduct"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="cp_pool">
+            <column name="dirty_product" type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

@@ -16,12 +16,10 @@ package org.candlepin.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -30,10 +28,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import org.candlepin.model.Branding;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -47,6 +48,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 
 
@@ -65,7 +67,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         this.mockContentAccessManager = mock(ContentAccessManager.class);
 
         this.productManager = new ProductManager(this.mockContentAccessManager, this.mockEntCertGenerator,
-            this.ownerContentCurator, this.ownerProductCurator, this.productCurator);
+            this.poolCurator, this.productCurator, this.contentCurator, this.activationKeyCurator);
     }
 
     @Test
@@ -73,11 +75,11 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         ProductInfo productInfo = TestUtil.createProductInfo("p1", "prod1");
 
-        assertNull(this.ownerProductCurator.getProductById(owner, "p1"));
+        assertNull(this.productCurator.getProductById(owner.getKey(), productInfo.getId()));
 
         Product output = this.productManager.createProduct(owner, productInfo);
 
-        assertEquals(output, this.ownerProductCurator.getProductById(owner, "p1"));
+        assertEquals(output, this.productCurator.getProductById(owner.getKey(), productInfo.getId()));
     }
 
     @Test
@@ -88,36 +90,23 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product output = this.productManager.createProduct(owner, productInfo);
 
         assertNotNull(output);
-        assertEquals(output, this.ownerProductCurator.getProductById(owner, productInfo.getId()));
+        assertEquals(output, this.productCurator.getProductById(owner.getKey(), productInfo.getId()));
 
         assertThrows(IllegalStateException.class, () ->
             this.productManager.createProduct(owner, productInfo));
     }
 
     @Test
-    public void testCreateProductMergeWithExisting() {
-        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
-        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-
-        Product product1 = TestUtil.createProduct("p1", "prod1");
-        Product product2 = this.createProduct("p1", "prod1", owner2);
-
-        Product output = this.productManager.createProduct(owner1, product1);
-
-        assertEquals(output.getUuid(), product2.getUuid());
-        assertEquals(output, product2);
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
-    }
-
-    @Test
     public void testUpdateProductNoChange() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = this.createProduct("p1", "prod1", owner);
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
+        this.createProduct(product);
+
         Product clone = (Product) product.clone();
         clone.setUuid(null);
 
-        Product output = this.productManager.updateProduct(owner, clone, true);
+        Product output = this.productManager.updateProduct(owner, product, clone, true);
 
         assertEquals(output.getUuid(), product.getUuid());
         assertEquals(output, product);
@@ -129,84 +118,19 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @ValueSource(strings = {"false", "true"})
     public void testUpdateProduct(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = this.createProduct("p1", "prod1", owner);
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
+        this.createProduct(product);
+
         ProductInfo update = TestUtil.createProductInfo("p1", "new product name");
 
-        Product output = this.productManager.updateProduct(owner, update, regenCerts);
+        Product output = this.productManager.updateProduct(owner, product, update, regenCerts);
 
-        assertNotEquals(output.getUuid(), product.getUuid());
         assertEquals(output.getName(), update.getName());
 
-        // We expect the original to be kept around as an orphan until the orphan removal job
-        // gets around to removing them
-        assertNotNull(this.productCurator.get(product.getUuid()));
-        assertEquals(0, this.ownerProductCurator.getOwnerCount(product));
-        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
-
         if (regenCerts) {
-            // TODO: Is there a better way to do this? We won't know the exact product instance,
-            // we just know that a product should be refreshed as a result of this operation.
-            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(owner), eq(product.getId()), anyBoolean());
-        }
-        else {
-            verifyNoInteractions(this.mockEntCertGenerator);
-        }
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(strings = {"false", "true"})
-    public void testUpdateProductConvergeWithExisting(boolean regenCerts) {
-        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
-        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-        Product product1 = this.createProduct("p1", "prod1", owner1);
-        Product product2 = this.createProduct("p1", "updated product", owner2);
-        ProductInfo updateInfo = TestUtil.createProductInfo("p1", "updated product");
-
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product1, owner1));
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product2, owner1));
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product1, owner2));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product2, owner2));
-
-        Product output = this.productManager.updateProduct(owner1, updateInfo, regenCerts);
-
-        assertEquals(output.getUuid(), product2.getUuid());
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product1, owner1));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product2, owner1));
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product1, owner2));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product2, owner2));
-
-        if (regenCerts) {
-            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(owner1), eq(product1.getId()), anyBoolean());
-        }
-        else {
-            verifyNoInteractions(this.mockEntCertGenerator);
-        }
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(strings = {"false", "true"})
-    public void testUpdateProductDivergeFromExisting(boolean regenCerts) {
-        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
-        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-        Product product = this.createProduct("p1", "prod1", owner1, owner2);
-        ProductInfo updateInfo = TestUtil.createProductInfo("p1", "updated product");
-
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
-
-        Product output = this.productManager.updateProduct(owner1, updateInfo, regenCerts);
-
-        assertNotEquals(output.getUuid(), product.getUuid());
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
-
-        if (regenCerts) {
-            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(owner1), eq(product.getId()), anyBoolean());
+            verify(this.mockEntCertGenerator, times(1))
+                .regenerateCertificatesOf(eq(owner), eq(product.getId()), eq(true));
         }
         else {
             verifyNoInteractions(this.mockEntCertGenerator);
@@ -219,100 +143,167 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product product = TestUtil.createProduct("p1", "new_name");
         ProductInfo updateInfo = TestUtil.createProductInfo("p1", "new_name");
 
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner));
-
         assertThrows(IllegalStateException.class,
-            () -> this.productManager.updateProduct(owner, updateInfo, false));
+            () -> this.productManager.updateProduct(owner, product, updateInfo, false));
     }
 
-    @Test
-    public void testRemoveProduct() {
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = {"false", "true"})
+    public void testRemoveProduct(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
-        Product product = this.createProduct("p1", "prod1", owner);
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
+        this.productCurator.create(product);
 
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner));
+        assertNotNull(product.getUuid());
 
-        this.productManager.removeProduct(owner, product);
+        this.productManager.removeProduct(owner, product, regenCerts);
 
-        // The product will be orphaned, but should still exist
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner));
-        assertNotNull(this.productCurator.get(product.getUuid()));
-        assertEquals(0, this.ownerProductCurator.getOwnerCount(product));
-
-        verifyNoInteractions(this.mockEntCertGenerator);
-    }
-
-    @Test
-    public void testRemoveProductDivergeFromExisting() {
-        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
-        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-        Product product = this.createProduct("p1", "prod1", owner1, owner2);
-
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
-
-        this.productManager.removeProduct(owner1, product);
-
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
-        assertNotNull(this.productCurator.get(product.getUuid()));
-        assertEquals(1, this.ownerProductCurator.getOwnerCount(product));
+        assertNull(this.productCurator.get(product.getUuid()));
 
         verifyNoInteractions(this.mockEntCertGenerator);
     }
 
-    @Test
-    public void testRemoveProductThatDoesntExist() {
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = {"false", "true"})
+    public void testRemoveProductDoesntAffectUnrelatedProductEntitlements(boolean regenCerts) {
+        Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
+        Consumer consumer = this.createConsumer(owner);
+
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
+        this.productCurator.create(product);
+
+        Product product2 = TestUtil.createProduct("p2", "prod2")
+            .setNamespace(owner.getKey());
+        this.productCurator.create(product2);
+
+        long now = System.currentTimeMillis();
+        Pool pool = this.createPool(owner, product2, 1L, new Date(now - 86400), new Date(now + 86400));
+        Entitlement entitlement = this.createEntitlement(owner, consumer, pool);
+
+        assertNotNull(product.getUuid());
+
+        this.productManager.removeProduct(owner, product, regenCerts);
+
+        assertNull(this.productCurator.get(product.getUuid()));
+        assertNotNull(this.productCurator.get(product2.getUuid()));
+
+        verifyNoInteractions(this.mockEntCertGenerator);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = {"false", "true"})
+    public void testRemoveDerivedProductDoesNotTriggerEntitlementCertRegeneration(boolean regenCerts) {
+        Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
+        Consumer consumer = this.createConsumer(owner);
+
+        Product childProduct = TestUtil.createProduct("cp1", "child1")
+            .setNamespace(owner.getKey());
+
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey())
+            .setDerivedProduct(childProduct);
+
+        childProduct = this.productCurator.create(childProduct);
+        product = this.productCurator.create(product);
+
+        long now = System.currentTimeMillis();
+        Pool pool = this.createPool(owner, product, 1L, new Date(now - 86400), new Date(now + 86400));
+        Entitlement entitlement = this.createEntitlement(owner, consumer, pool);
+
+        Product output = this.productManager.removeProduct(owner, childProduct, regenCerts);
+        assertEquals(childProduct, output);
+
+        // Impl note:
+        // Derived products themselves don't directly impact content visibility for a given pool or
+        // consumer. Instead, typically a derived product will have a derived/bonus pool associated
+        // with it which will straight up prevent a derived product from being deleted (since it
+        // will have an associated pool). However, in the odd case where it *doesn't* have a derived
+        // pool and it's simply linked to another product, we would not expect that removal and
+        // unlinking to trigger any entitlement regeneration hits.
+
+        verifyNoInteractions(this.mockEntCertGenerator);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = {"false", "true"})
+    public void testRemoveProvidedProductTriggersEntitlementCertRegeneration(boolean regenCerts) {
+        Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
+        Consumer consumer = this.createConsumer(owner);
+
+        Product childProduct = TestUtil.createProduct("cp1", "child1")
+            .setNamespace(owner.getKey());
+
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
+        product.addProvidedProduct(childProduct);
+
+        childProduct = this.productCurator.create(childProduct);
+        product = this.productCurator.create(product);
+
+        long now = System.currentTimeMillis();
+        Pool pool = this.createPool(owner, product, 1L, new Date(now - 86400), new Date(now + 86400));
+        Entitlement entitlement = this.createEntitlement(owner, consumer, pool);
+
+        Product output = this.productManager.removeProduct(owner, childProduct, regenCerts);
+        assertEquals(childProduct, output);
+
+        if (regenCerts) {
+            // TODO: Is there a better way to do this? We won't know the exact product instance,
+            // we just know that a product should be refreshed as a result of this operation.
+            verify(this.mockEntCertGenerator, times(1))
+                .regenerateCertificatesOf(eq(Set.of(entitlement)), eq(true));
+        }
+        else {
+            verifyNoInteractions(this.mockEntCertGenerator);
+        }
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = {"false", "true"})
+    public void testRemoveProductThatDoesntExist(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Product product = TestUtil.createProduct("p1", "prod1");
 
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner));
-
-        assertThrows(IllegalStateException.class, () -> this.productManager.removeProduct(owner, product));
+        assertThrows(IllegalStateException.class,
+            () -> this.productManager.removeProduct(owner, product, regenCerts));
     }
 
-    @Test
-    public void testRemoveProductWithSubscriptions() {
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = {"false", "true"})
+    public void testRemoveProductWithSubscriptions(boolean regenCerts) {
         long now = System.currentTimeMillis();
 
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = this.createProduct("p1", "prod1", owner);
+        Product product = this.createProduct("p1", "prod1");
         Pool pool = this.createPool(owner, product, 1L, new Date(now - 86400), new Date(now + 86400));
 
-        assertThrows(IllegalStateException.class, () -> this.productManager.removeProduct(owner, product));
+        assertThrows(IllegalStateException.class,
+            () -> this.productManager.removeProduct(owner, product, regenCerts));
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = {"false", "true"})
     public void testRemoveProductContent(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = TestUtil.createProduct("p1", "prod1");
         Content content = TestUtil.createContent("c1");
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
         product.addContent(content, true);
         this.contentCurator.create(content);
         this.productCurator.create(product);
-        this.ownerProductCurator.mapProductToOwners(product, owner);
-        this.ownerContentCurator.mapContentToOwner(content, owner);
 
         Product clone = (Product) product.clone();
         clone.setUuid(null);
         clone.removeContent(content.getId());
 
-        Product output = this.productManager.updateProduct(owner, clone, regenCerts);
+        Product output = this.productManager.updateProduct(owner, product, clone, regenCerts);
         assertFalse(output.hasContent(content.getId()));
 
-        // When we change the content associated with a product, we're making a net change to the
-        // product itself, which should trigger the creation of a new product object (since reuse
-        // is currently disabled). The old product will still, temporarily, exist as an orphan
-        // until the orphan cleanup job has a chance to run and remove them.
-        assertNotNull(this.productCurator.get(product.getUuid()));
-        assertEquals(0, this.ownerProductCurator.getOwnerCount(product));
-        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
-        assertNotNull(this.contentCurator.get(content.getUuid()));
-
         if (regenCerts) {
-            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(owner), eq(product.getId()), anyBoolean());
+            verify(this.mockEntCertGenerator, times(1))
+                .regenerateCertificatesOf(eq(owner), eq(product.getId()), eq(true));
         }
         else {
             verifyNoInteractions(this.mockEntCertGenerator);
@@ -321,111 +312,56 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = {"false", "true"})
-    public void testRemoveContentFromSharedProduct(boolean regenCerts) {
-        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
-        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-        Product product = TestUtil.createProduct("p1", "prod1");
-        Content content = TestUtil.createContent("c1");
-        product.addContent(content, true);
-        content = this.contentCurator.create(content);
-        product = this.productCurator.create(product);
-        this.ownerProductCurator.mapProductToOwners(product, owner1, owner2);
-        this.ownerContentCurator.mapContentToOwner(content, owner1);
-
-        Product clone = (Product) product.clone();
-        clone.setUuid(null);
-        clone.removeContent(content.getId());
-
-        Product output = this.productManager.updateProduct(owner1, clone, regenCerts);
-
-        assertNotEquals(product, output);
-        assertFalse(output.hasContent(content.getId()));
-        assertTrue(product.hasContent(content.getId()));
-
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
-
-        if (regenCerts) {
-            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(owner1), eq(product.getId()), anyBoolean());
-        }
-        else {
-            verifyNoInteractions(this.mockEntCertGenerator);
-        }
-    }
-
-    @Test
-    public void testRemoveContentFromProductForBadOwner() {
+    public void testRemoveProductRemovesActivationKeyReferences(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Owner owner2 = this.createOwner("test-owner-2", "Test Owner");
-        Product product = TestUtil.createProduct("p1", "prod1");
-        Content content = TestUtil.createContent("c1");
-        product.addContent(content, true);
-        this.contentCurator.create(content);
-        this.productCurator.create(product);
-        this.ownerProductCurator.mapProductToOwner(product, owner);
-        this.ownerContentCurator.mapContentToOwner(content, owner);
 
-        Product clone = (Product) product.clone();
-        clone.setUuid(null);
-        clone.clearAttributes();
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
 
-        assertThrows(IllegalStateException.class,
-            () -> this.productManager.updateProduct(owner2, clone, false));
-    }
+        product = this.productCurator.create(product);
 
-    @Test
-    public void testAddContentToProduct() {
-        Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
-        Product product = this.createProduct("p1", "prod1");
-        Content content = this.createContent("c1", "content1", owner);
-        this.ownerProductCurator.mapProductToOwners(product, owner);
+        ActivationKey actkey = new ActivationKey()
+            .setOwner(owner)
+            .setName("A Test Key")
+            .addProduct(product);
 
-        Product productClone = (Product) product.clone();
-        productClone.setUuid(null);
-        Content contentClone = content.clone();
-        contentClone.setUuid(null);
-        productClone.addContent(contentClone, true);
+        actkey = this.activationKeyCurator.create(actkey);
 
-        Product output = this.productManager.updateProduct(owner, productClone, false);
+        assertEquals(Set.of(product.getId()), actkey.getProductIds());
 
-        assertNotEquals(product, output);
-        assertTrue(output.hasContent(content.getId()));
+        this.productManager.removeProduct(owner, product, regenCerts);
 
-        verifyNoInteractions(this.mockEntCertGenerator);
+        this.activationKeyCurator.refresh(actkey);
+
+        assertEquals(Set.of(), actkey.getProductIds());
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = {"false", "true"})
-    public void testAddContentToSharedProduct(boolean regenCerts) {
-        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
-        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-        Product product = this.createProduct("p1", "prod1", owner1);
-        Content content = this.createContent("c1", "content1", owner1);
-        this.ownerProductCurator.mapProductToOwners(product, owner1, owner2);
+    public void testAddContentToProduct(boolean regenCerts) {
+        Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
+        Content content = this.createContent("c1", "content1")
+            .setNamespace(owner.getKey());
 
-        Product productClone = (Product) product.clone();
-        productClone.setUuid(null);
-        Content contentClone = content.clone();
-        contentClone.setUuid(null);
-        productClone.addContent(contentClone, true);
+        this.productCurator.create(product);
+        this.contentCurator.create(content);
 
-        Product output = this.productManager.updateProduct(owner1, productClone, regenCerts);
+        Product update = (Product) product.clone();
+        update.setUuid(null);
 
-        assertNotEquals(product, output);
+        update.addContent(content, true);
+
         assertFalse(product.hasContent(content.getId()));
+
+        Product output = this.productManager.updateProduct(owner, product, update, regenCerts);
+
         assertTrue(output.hasContent(content.getId()));
 
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
-
         if (regenCerts) {
-            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(owner1), eq(product.getId()), anyBoolean());
+            verify(this.mockEntCertGenerator, times(1))
+                .regenerateCertificatesOf(eq(owner), eq(product.getId()), eq(true));
         }
         else {
             verifyNoInteractions(this.mockEntCertGenerator);
@@ -438,12 +374,13 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product product = TestUtil.createProduct("p1", "prod1");
         product.addBranding(TestUtil.createBranding("eng_prod_id", "brand_name"));
 
-        assertNull(this.ownerProductCurator.getProductById(owner, "p1"));
+        assertNull(this.productCurator.getProductById(owner.getKey(), "p1"));
 
         Product output = this.productManager.createProduct(owner, product);
 
-        assertEquals(output, this.ownerProductCurator.getProductById(owner, "p1"));
-        assertEquals(1, this.ownerProductCurator.getProductById(owner, "p1").getBranding().size());
+        Product fetched = this.productCurator.getProductById(owner.getKey(), "p1");
+        assertEquals(output, fetched);
+        assertEquals(1, fetched.getBranding().size());
     }
 
     @Test
@@ -460,7 +397,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         clone.setUuid(null);
         clone.addBranding(TestUtil.createBranding("eng_prod_id2", "brand_name2"));
 
-        output = this.productManager.updateProduct(owner, clone, false);
+        output = this.productManager.updateProduct(owner, output, clone, false);
         assertEquals(2, output.getBranding().size());
     }
 
@@ -594,41 +531,6 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertFalse(ProductManager.isChangedBy(existingProduct, newProduct));
     }
 
-    // Move this to ContentManagerTest
-
-    @Test
-    public void testUpdateProductContentOnSharedProduct() {
-        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
-        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-        Product product = new Product("p1", "prod1");
-        Content content = this.createContent("c1", "content1", owner1);
-        product.addContent(content, true);
-        product = this.createProduct(product, owner1);
-        this.ownerProductCurator.mapProductToOwners(product, owner1, owner2);
-
-        Product clone = (Product) product.clone();
-        clone.setUuid(null);
-        clone.getProductContent().stream()
-            .filter(pc -> pc.getContent().getId().equals(content.getId()))
-            .findFirst()
-            .ifPresent(pc -> pc.setEnabled(false));
-
-        Product output = this.productManager.updateProduct(owner1, clone, false);
-
-        assertNotEquals(product, output);
-        assertTrue(product.hasContent(content.getId()));
-        assertTrue(output.hasContent(content.getId()));
-        assertTrue(product.getProductContent().iterator().next().isEnabled());
-        assertFalse(output.getProductContent().iterator().next().isEnabled());
-
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
-
-        verifyNoInteractions(this.mockEntCertGenerator);
-    }
-
     @Test
     public void testCreateProductWithProvidedProduct() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
@@ -637,12 +539,12 @@ public class ProductManagerTest extends DatabaseTestFixture {
         this.productManager.createProduct(owner, prov1);
         product.addProvidedProduct(prov1);
 
-        assertNull(this.ownerProductCurator.getProductById(owner, "p1"));
+        assertNull(this.productCurator.getProductById(owner.getKey(), "p1"));
 
         Product output = this.productManager.createProduct(owner, product);
 
-        assertEquals(output, this.ownerProductCurator.getProductById(owner, "p1"));
-        assertEquals(1, this.ownerProductCurator.getProductById(owner, "p1")
+        assertEquals(output, this.productCurator.getProductById(owner.getKey(), "p1"));
+        assertEquals(1, this.productCurator.getProductById(owner.getKey(), "p1")
             .getProvidedProducts().size());
     }
 
@@ -670,23 +572,29 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testUpdateProductWithProvidedProduct() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = TestUtil.createProduct("p1", "prod1");
 
         // Creating actual provided Products
-        Product prov1 = TestUtil.createProduct("providedId1", "OS1");
+        Product prov1 = TestUtil.createProduct("providedId1", "OS1")
+            .setNamespace(owner.getKey());
         this.productManager.createProduct(owner, prov1);
-        Product prov2 = TestUtil.createProduct("anotherProvidedProductID", "ProvName");
-        this.productManager.createProduct(owner, prov2);
-        product.addProvidedProduct(prov1);
-        Product output = this.productManager.createProduct(owner, product);
 
-        assertEquals(1, output.getProvidedProducts().size());
+        Product prov2 = TestUtil.createProduct("anotherProvidedProductID", "ProvName")
+            .setNamespace(owner.getKey());
+        this.productManager.createProduct(owner, prov2);
+
+        Product product = TestUtil.createProduct("p1", "prod1");
+        product.addProvidedProduct(prov1);
+
+        product = this.productManager.createProduct(owner, product);
+
+        assertEquals(1, product.getProvidedProducts().size());
 
         Product clone = (Product) product.clone();
         clone.addProvidedProduct(prov2);
-        output = this.productManager.updateProduct(owner, clone, false);
 
-        assertEquals(2, output.getProvidedProducts().size());
+        product = this.productManager.updateProduct(owner, product, clone, false);
+
+        assertEquals(2, product.getProvidedProducts().size());
     }
 
     @Test
@@ -726,9 +634,11 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @ValueSource(strings = {"false", "true"})
     public void testUpdateProductFiltersNullValuedAttributes(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product base = TestUtil.createProduct("p1", "prod1");
-        base.setAttributes(Map.of("attrib-1", "original value"));
-        this.createProduct(base, owner);
+        Product base = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey())
+            .setAttributes(Map.of("attrib-1", "original value"));
+
+        this.createProduct(base);
 
         ProductInfo pinfo = mock(ProductInfo.class);
 
@@ -741,7 +651,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         doReturn(base.getId()).when(pinfo).getId();
         doReturn(base.getName()).when(pinfo).getName();
 
-        Product entity = this.productManager.updateProduct(owner, pinfo, regenCerts);
+        Product entity = this.productManager.updateProduct(owner, base, pinfo, regenCerts);
 
         assertNotNull(entity);
         assertNotNull(entity.getAttributes());
@@ -758,145 +668,6 @@ public class ProductManagerTest extends DatabaseTestFixture {
                     entry.getKey());
             }
         }
-    }
-
-    /**
-     * This test verifies that a product version collision on a given product ID can be resolved
-     * by clearing the entity version of the existing product, operating under the assumption that
-     * the current product is broken and the new one is the "correct" entity for the version.
-     */
-    @Test
-    public void testProductCreationEntityVersionCollisionResolution() {
-        Owner owner2 = this.createOwner();
-        Product collider = this.createProduct("test_product", "test product", owner2);
-
-        this.ownerProductCurator.flush();
-        this.ownerProductCurator.clear();
-
-        Owner owner1 = this.createOwner();
-
-        Product created = collider.clone()
-            .setUuid(null)
-            .setMultiplier(9001L);
-
-        long entityVersion = created.getEntityVersion();
-
-        // Forcefully set the entity version
-        int count = this.getEntityManager()
-            .createQuery("UPDATE Product SET entityVersion = :version WHERE uuid = :uuid")
-            .setParameter("version", entityVersion)
-            .setParameter("uuid", collider.getUuid())
-            .executeUpdate();
-
-        assertEquals(1, count);
-
-        Product output = this.productManager.createProduct(owner1, created);
-
-        assertNotNull(output);
-        assertEquals(created, output);
-        assertEquals(entityVersion, output.getEntityVersion());
-
-        // Query the entity version directly so we avoid the automatic regeneration when it's null
-        Long colliderEntityVersion = this.getEntityManager()
-            .createQuery("SELECT entityVersion FROM Product WHERE uuid = :uuid", Long.class)
-            .setParameter("uuid", collider.getUuid())
-            .getSingleResult();
-
-        assertNull(colliderEntityVersion);
-    }
-
-    @Test
-    public void testProductUpdateEntityVersionCollisionResolution() {
-        Owner owner2 = this.createOwner();
-        Product collider = this.createProduct("test_product", "test product", owner2);
-
-        this.ownerProductCurator.flush();
-        this.ownerProductCurator.clear();
-
-        Owner owner1 = this.createOwner();
-        Product toUpdate = this.createProduct("test_product", "not test product", owner1);
-
-        Product update = collider.clone()
-            .setUuid(null)
-            .setMultiplier(9001L);
-
-        long entityVersion = update.getEntityVersion();
-
-        // Forcefully set the entity version
-        int count = this.getEntityManager()
-            .createQuery("UPDATE Product SET entityVersion = :version WHERE uuid = :uuid")
-            .setParameter("version", entityVersion)
-            .setParameter("uuid", collider.getUuid())
-            .executeUpdate();
-
-        assertEquals(1, count);
-
-        Product output = this.productManager.updateProduct(owner1, update, false);
-
-        assertNotNull(output);
-        assertEquals(update, output);
-        assertEquals(entityVersion, output.getEntityVersion());
-
-        // Query the entity version directly so we avoid the automatic regeneration when it's null
-        Long colliderEntityVersion = this.getEntityManager()
-            .createQuery("SELECT entityVersion FROM Product WHERE uuid = :uuid", Long.class)
-            .setParameter("uuid", collider.getUuid())
-            .getSingleResult();
-
-        assertNull(colliderEntityVersion);
-    }
-
-    @Test
-    public void testChildResolutionEntityVersionCollisionResolution() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-
-        Product child = this.createProduct("child_product", "child product", owner1, owner2);
-        Product collider = new Product()
-            .setId("test_product")
-            .setName("test product")
-            .setMultiplier(1L)
-            .setDerivedProduct(child);
-
-        this.createProduct(collider, owner2);
-        this.ownerProductCurator.flush();
-        this.ownerProductCurator.clear();
-
-        Product unlinkedChild = child.clone()
-            .setUuid(null)
-            .setName("unlinked child");
-
-        // Persist the child, but don't associate it with the org. This will allow it to be linked
-        // as a derived or provided product, but will be overwritten by the correct product with
-        // the call to updateChildrenReferences.
-        unlinkedChild = this.productCurator.create(unlinkedChild);
-
-        Product update = collider.clone()
-            .setUuid(null)
-            .setDerivedProduct(unlinkedChild);
-
-        update = this.createProduct(update, owner1);
-
-        // Forcefully make some critical change to our collider product so the version check gets
-        // upset by it -- this shouldn't change the entity version.
-        int count = this.getEntityManager()
-            .createQuery("UPDATE Product SET name = 'collider product' WHERE uuid = :uuid")
-            .setParameter("uuid", collider.getUuid())
-            .executeUpdate();
-
-        Product output = this.productManager.updateChildrenReferences(owner1, update, false);
-
-        assertNotNull(output);
-        assertNotNull(output.getDerivedProduct());
-        assertEquals(child.getUuid(), output.getDerivedProduct().getUuid());
-
-        // Query the entity version directly so we avoid the automatic regeneration when it's null
-        Long colliderEntityVersion = this.getEntityManager()
-            .createQuery("SELECT entityVersion FROM Product WHERE uuid = :uuid", Long.class)
-            .setParameter("uuid", collider.getUuid())
-            .getSingleResult();
-
-        assertNull(colliderEntityVersion);
     }
 
 }

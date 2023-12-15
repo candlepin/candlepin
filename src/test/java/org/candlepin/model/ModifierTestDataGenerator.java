@@ -50,7 +50,6 @@ public class ModifierTestDataGenerator {
      * All the entitlements of this consumer are expired
      */
     @Inject private ProductCurator productCurator;
-    @Inject private OwnerProductCurator ownerProductCurator;
     @Inject private CertificateSerialCurator certSerialCurator;
     @Inject private PoolCurator poolCurator;
     @Inject private ConsumerCurator consumerCurator;
@@ -123,7 +122,6 @@ public class ModifierTestDataGenerator {
 
         for (Product prod: engProducts) {
             productCurator.create(prod);
-            this.ownerProductCurator.mapProductToOwner(prod, owner);
         }
 
         for (int i = 0; i < 3; i++) {
@@ -196,8 +194,8 @@ public class ModifierTestDataGenerator {
     private Entitlement createEntitlement(Consumer consumer, Pool pool) {
         EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, cert);
-        entitlementCurator.create(e);
-        return e;
+
+        return entitlementCurator.create(e);
     }
 
     private EntitlementCertificate createEntitlementCertificate(String key,
@@ -219,7 +217,6 @@ public class ModifierTestDataGenerator {
         }
 
         poolProd = this.productCurator.create(poolProd);
-        this.ownerProductCurator.mapProductToOwner(poolProd, owner);
 
         Pool p = TestUtil.createPool(owner, poolProd)
             .setStartDate(startDate)
@@ -237,8 +234,8 @@ public class ModifierTestDataGenerator {
             .setUsername("test-user")
             .setOwner(owner)
             .setType(type);
-        consumerCurator.create(c);
-        return c;
+
+        return consumerCurator.create(c);
     }
 
 

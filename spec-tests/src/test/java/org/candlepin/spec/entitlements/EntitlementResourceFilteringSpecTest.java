@@ -67,10 +67,10 @@ public class EntitlementResourceFilteringSpecTest {
 
         OwnerDTO owner = ownerClient.createOwner(Owners.random());
 
-        monitoring = ownerProductApi.createProductByOwner(owner.getKey(), Products.random()
+        monitoring = ownerProductApi.createProduct(owner.getKey(), Products.random()
             .name(StringUtil.random("monitoring"))
             .attributes(List.of(new AttributeDTO().name("variant").value("Satellite Starter Pack"))));
-        ProductDTO virtual = ownerProductApi.createProductByOwner(owner.getKey(), Products.random()
+        ProductDTO virtual = ownerProductApi.createProduct(owner.getKey(), Products.random()
             .name(StringUtil.random("virtualization")));
 
         // entitle owner for the virt and monitoring products

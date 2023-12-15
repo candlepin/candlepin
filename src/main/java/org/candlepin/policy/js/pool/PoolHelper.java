@@ -170,10 +170,6 @@ public class PoolHelper {
             pool.setAttribute(entry.getKey(), entry.getValue());
         }
 
-        if (sourcePool.isLocked()) {
-            pool.setLocked(true);
-        }
-
         // Copy upstream fields
         // Impl note/TODO:
         // We are only doing this to facilitate marking pools derived from an upstream source/manifest
@@ -203,12 +199,17 @@ public class PoolHelper {
         pool.setAccountNumber(accountNumber);
         pool.setOrderNumber(orderNumber);
 
-        if (sourcePool != null && sourceConsumer != null && sourceEntitlement != null) {
-            if (sourcePool.isStacked()) {
-                pool.setSourceStack(new SourceStack(sourceConsumer, sourcePool.getStackId()));
-            }
-            else {
-                pool.setSourceEntitlement(sourceEntitlement);
+        if (sourcePool != null) {
+            // Ensure the new pool inherits the managed status of the source pool
+            pool.setManaged(sourcePool.isManaged());
+
+            if (sourceConsumer != null && sourceEntitlement != null) {
+                if (sourcePool.isStacked()) {
+                    pool.setSourceStack(new SourceStack(sourceConsumer, sourcePool.getStackId()));
+                }
+                else {
+                    pool.setSourceEntitlement(sourceEntitlement);
+                }
             }
         }
 

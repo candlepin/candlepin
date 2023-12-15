@@ -102,7 +102,6 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
 
         this.ownerCurator.create(owner);
         this.productCurator.create(product);
-        this.ownerProductCurator.mapProductToOwner(product, owner);
 
         CertificateInfo out = this.productAdapter.getProductCertificate(owner.getKey(), product.getId());
 

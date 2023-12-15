@@ -141,7 +141,7 @@ public class InactiveConsumerCleanerJobSpecTest {
         product.setId(StringUtil.random("ID"));
         product.setName(StringUtil.random("Test Product"));
         product.setMultiplier(100L);
-        product = ownerProductApi.createProductByOwner(owner.getKey(), product);
+        product = ownerProductApi.createProduct(owner.getKey(), product);
 
         PoolDTO pool = new PoolDTO();
         pool.setProductId(product.getId());

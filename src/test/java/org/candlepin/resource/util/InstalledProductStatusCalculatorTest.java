@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyCollection;
-import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -40,9 +40,9 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
@@ -50,7 +50,6 @@ import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.compliance.StatusReasonMessageGenerator;
-import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
@@ -78,7 +77,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import javax.persistence.LockModeType;
+
 
 
 @ExtendWith(MockitoExtension.class)
@@ -102,7 +108,7 @@ public class InstalledProductStatusCalculatorTest {
     @Mock
     private JsRunnerRequestCache cache;
     @Mock
-    private OwnerProductCurator ownerProductCurator;
+    private ProductCurator productCurator;
     @Mock
     private OwnerCurator ownerCurator;
 
@@ -134,7 +140,7 @@ public class InstalledProductStatusCalculatorTest {
             new StatusReasonMessageGenerator(i18n), eventSink, this.consumerCurator, this.consumerTypeCurator,
             ObjectMapperFactory.getRulesObjectMapper(), translator);
 
-        this.consumerEnricher = new ConsumerEnricher(this.complianceRules, this.ownerProductCurator);
+        this.consumerEnricher = new ConsumerEnricher(this.complianceRules, this.productCurator);
     }
 
     @Test
@@ -941,30 +947,38 @@ public class InstalledProductStatusCalculatorTest {
     }
 
     private void mockOwnerProducts(Owner owner, Collection<Product> products) {
-        final Map<String, Product> productMap = new HashMap<>();
-        for (Product product : products) {
-            productMap.put(product.getId(), product);
-        }
+        String namespace = owner != null ? owner.getKey() : null;
 
-        doAnswer((Answer<CandlepinQuery<Product>>) invocation -> {
-            Object[] args = invocation.getArguments();
-            Collection<String> productIds = (Collection<String>) args[1];
+        Map<String, Product> productMap = products.stream()
+            .collect(Collectors.toMap(Product::getId, Function.identity()));
 
-            Collection<Product> products1 = new LinkedList<>();
-            for (String productId : productIds) {
-                Product product = productMap.get(productId);
+        Answer<Product> singleLookupAnswer = iom -> {
+            String pid = iom.getArgument(1);
+            return productMap.get(pid);
+        };
 
-                if (product != null) {
-                    products1.add(product);
-                }
-            }
+        Answer<Map<String, Product>> multiLookupAnswer = iom -> {
+            Collection<String> pids = iom.getArgument(1);
 
-            CandlepinQuery cqmock = mock(CandlepinQuery.class);
-            when(cqmock.iterator()).thenReturn(products1.iterator());
-            when(cqmock.iterate()).thenReturn(new MockResultIterator(products1.iterator()));
+            return Optional.ofNullable(pids)
+                .orElse(List.of())
+                .stream()
+                .map(productMap::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(Product::getId, Function.identity(), (p1, p2) -> p2));
+        };
 
-            return cqmock;
-        }).when(this.ownerProductCurator).getProductsByIds(eq(owner.getId()), anyCollection());
+        when(this.productCurator.resolveProductId(eq(namespace), anyString(), any(LockModeType.class)))
+            .thenAnswer(singleLookupAnswer);
+
+        when(this.productCurator.resolveProductId(eq(namespace), anyString()))
+            .thenAnswer(singleLookupAnswer);
+
+        when(this.productCurator.resolveProductIds(eq(namespace), anyCollection(),
+            any(LockModeType.class))).thenAnswer(multiLookupAnswer);
+
+        when(this.productCurator.resolveProductIds(eq(namespace), anyCollection()))
+            .thenAnswer(multiLookupAnswer);
     }
 
     private ConsumerInstalledProduct getInstalledProduct(Consumer consumer, Product product) {

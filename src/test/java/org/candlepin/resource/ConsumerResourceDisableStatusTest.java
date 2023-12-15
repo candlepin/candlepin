@@ -53,7 +53,7 @@ public class ConsumerResourceDisableStatusTest extends DatabaseTestFixture {
             .setDisplayName("test-owner")
             .setContentAccessMode("org_environment"));
 
-        Product product = this.createProduct(owner);
+        Product product = this.createProduct();
 
         Pool pool = createPool(owner, product, 10L, TestUtil.createDate(2010, 1, 1),
             TestUtil.createDate(2020, 12, 31));

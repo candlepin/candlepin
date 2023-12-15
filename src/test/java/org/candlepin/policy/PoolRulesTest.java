@@ -14,6 +14,7 @@
  */
 package org.candlepin.policy;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.model.SourceSubscription.DERIVED_POOL_SUB_KEY;
 import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,7 +23,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyCollection;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -36,13 +40,11 @@ import org.candlepin.model.Branding;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
@@ -54,23 +56,29 @@ import org.candlepin.util.Util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.mockito.stubbing.Answer;
 
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.persistence.LockModeType;
 
 
 
@@ -90,8 +98,6 @@ public class PoolRulesTest {
     @Mock
     private EntitlementCurator entitlementCurator;
     @Mock
-    private OwnerProductCurator ownerProdCurator;
-    @Mock
     private ProductCurator productCurator;
     @Mock
     private PoolConverter poolConverter;
@@ -101,7 +107,6 @@ public class PoolRulesTest {
 
     @BeforeEach
     public void setUp() {
-
         // Load the default production rules:
         InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
@@ -113,24 +118,71 @@ public class PoolRulesTest {
         owner = principal.getOwners().get(0);
     }
 
+    private void mockProductLookup(Owner owner, final Map<String, Product> productMap) {
+        String namespace = owner != null ? owner.getKey() : null;
+
+        Answer<Product> singleLookupAnswer = iom -> {
+            String pid = iom.getArgument(1);
+            return productMap.get(pid);
+        };
+
+        Answer<Map<String, Product>> multiLookupAnswer = iom -> {
+            Collection<String> pids = iom.getArgument(1);
+
+            return Optional.ofNullable(pids)
+                .orElse(List.of())
+                .stream()
+                .map(productMap::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(Product::getId, Function.identity(), (p1, p2) -> p2));
+        };
+
+        when(this.productCurator.getProductById(eq(namespace), anyString(), any(LockModeType.class)))
+            .thenAnswer(singleLookupAnswer);
+
+        when(this.productCurator.getProductById(eq(namespace), anyString()))
+            .thenAnswer(singleLookupAnswer);
+
+        when(this.productCurator.resolveProductId(eq(namespace), anyString(), any(LockModeType.class)))
+            .thenAnswer(singleLookupAnswer);
+
+        when(this.productCurator.resolveProductId(eq(namespace), anyString()))
+            .thenAnswer(singleLookupAnswer);
+
+        when(this.productCurator.getProductsByIds(eq(namespace), anyCollection(), any(LockModeType.class)))
+            .thenAnswer(multiLookupAnswer);
+
+        when(this.productCurator.getProductsByIds(eq(namespace), anyCollection()))
+            .thenAnswer(multiLookupAnswer);
+    }
+
+    private void mockProductLookup(Owner owner, Product... products) {
+        Map<String, Product> productMap = Stream.of(products)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toMap(Product::getId, Function.identity(), (p1, p2) -> p2));
+
+        this.mockProductLookup(owner, productMap);
+    }
+
     @Test
     public void hostedVirtLimitBadValueDoesntTraceBack() {
         PoolRules poolRules = createRules(new DevConfig(Map.of(ConfigProperties.STANDALONE, "false")));
-        Product product = TestUtil.createProduct();
 
-        when(this.ownerProdCurator.getProductById(owner, product.getId())).thenReturn(product);
-        Pool p = TestUtil.createPool(owner, product);
-        p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "badvalue");
-        p.setQuantity(10L);
+        Product product = TestUtil.createProduct()
+            .setAttribute(Product.Attributes.VIRT_LIMIT, "badvalue");
+
+        Pool pool = TestUtil.createPool(owner, product)
+            .setQuantity(10L);
+
+        this.mockProductLookup(null, product);
 
         List<Pool> pools = null;
         try {
-            pools = poolRules.createAndEnrichPools(p, new LinkedList<>());
+            pools = poolRules.createAndEnrichPools(pool, new LinkedList<>());
         }
         catch (Exception e) {
-            fail(
-                "Create pools should not have thrown an exception on bad value for virt_limit: " +
-                    e.getMessage());
+            fail("Create pools should not have thrown an exception on bad value for virt_limit: " +
+                e.getMessage());
         }
         assertEquals(1, pools.size());
 
@@ -526,13 +578,8 @@ public class PoolRulesTest {
         Product derivedProvidedProd1 = TestUtil.createProduct();
         Product derivedProvidedProd2 = TestUtil.createProduct();
 
-        doReturn(provided1).when(ownerProdCurator).getProductById(owner, provided1.getId());
-        doReturn(provided2).when(ownerProdCurator).getProductById(owner, provided2.getId());
-        doReturn(derivedProd).when(ownerProdCurator).getProductById(owner, derivedProd.getId());
-        doReturn(derivedProvidedProd1).when(ownerProdCurator)
-            .getProductById(owner, derivedProvidedProd1.getId());
-        doReturn(derivedProvidedProd2).when(ownerProdCurator)
-            .getProductById(owner, derivedProvidedProd2.getId());
+        this.mockProductLookup(null, p.getProduct(), provided1, provided2, derivedProd, derivedProvidedProd1,
+            derivedProvidedProd2);
 
         p.setId("mockPoolRuleTestID");
         p.getProduct().addProvidedProduct(provided1);
@@ -542,10 +589,6 @@ public class PoolRulesTest {
         derivedProd.addProvidedProduct(derivedProvidedProd1);
         derivedProd.addProvidedProduct(derivedProvidedProd2);
 
-        when(productCurator.getPoolProvidedProductsCached(p))
-            .thenReturn((Set<Product>) p.getProduct().getProvidedProducts());
-        when(productCurator.getPoolDerivedProvidedProductsCached(p))
-            .thenReturn((Set<Product>) p.getDerivedProduct().getProvidedProducts());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<>());
 
         // Should be virt_only pool for unmapped guests:
@@ -584,8 +627,6 @@ public class PoolRulesTest {
             .setId("mockVirtLimitSubCreateDerived")
             .setUpstreamPoolId("upstream_pool_id");
 
-        when(productCurator.getPoolDerivedProvidedProductsCached(p))
-            .thenReturn((Set<Product>) p.getDerivedProduct().getProvidedProducts());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<>());
 
         // Should be virt_only pool for unmapped guests:
@@ -667,43 +708,32 @@ public class PoolRulesTest {
         }
     }
 
-    private Subscription createVirtLimitSubWithDerivedProducts(String productId,
-        String derivedProductId, long quantity, int virtLimit) {
+    private Subscription createVirtLimitSubWithDerivedProducts(String productId, String derivedProductId,
+        long quantity, int virtLimit) {
 
         // Create some provided products:
         Product provided1 = TestUtil.createProduct();
-        when(ownerProdCurator.getProductById(owner, provided1.getId()))
-            .thenReturn(provided1);
         Product provided2 = TestUtil.createProduct();
-        when(ownerProdCurator.getProductById(owner, provided2.getId()))
-            .thenReturn(provided2);
 
         // Create some derived provided products:
         Product derivedProvided1 = TestUtil.createProduct();
-        when(ownerProdCurator.getProductById(owner, derivedProvided1.getId()))
-            .thenReturn(derivedProvided1);
         Product derivedProvided2 = TestUtil.createProduct();
-        when(ownerProdCurator.getProductById(owner, derivedProvided2.getId()))
-            .thenReturn(derivedProvided2);
 
-        Product derivedProd = TestUtil.createProduct(derivedProductId, derivedProductId);
-        // We'll look for this to make sure it makes it to correct pools:
-        derivedProd.setAttribute(DERIVED_ATTR, "nobodycares");
-        derivedProd.setProvidedProducts(Arrays.asList(derivedProvided1, derivedProvided2));
-        when(ownerProdCurator.getProductById(owner, derivedProd.getId()))
-            .thenReturn(derivedProd);
+        Product derivedProd = TestUtil.createProduct(derivedProductId, derivedProductId)
+            // We'll look for this to make sure it makes it to correct pools:
+            .setAttribute(DERIVED_ATTR, "nobodycares")
+            .setProvidedProducts(Arrays.asList(derivedProvided1, derivedProvided2));
 
-        Product product = TestUtil.createProduct(productId, productId);
-        product.setAttribute(Product.Attributes.VIRT_LIMIT, Integer.toString(virtLimit));
-        product.setDerivedProduct(derivedProd);
-        product.setProvidedProducts(Arrays.asList(provided1, provided2));
-        when(ownerProdCurator.getProductById(owner, product.getId()))
-            .thenReturn(product);
+        Product product = TestUtil.createProduct(productId, productId)
+            .setAttribute(Product.Attributes.VIRT_LIMIT, Integer.toString(virtLimit))
+            .setDerivedProduct(derivedProd)
+            .setProvidedProducts(Arrays.asList(provided1, provided2));
 
-        Subscription s = TestUtil.createSubscription(owner, product);
-        s.setQuantity(quantity);
+        this.mockProductLookup(null, product, provided1, provided2, derivedProd, derivedProvided1,
+            derivedProvided2);
 
-        return s;
+        return TestUtil.createSubscription(owner, product)
+            .setQuantity(quantity);
     }
 
     private Pool createVirtOnlyPool(String productId, int quantity) {
@@ -975,103 +1005,24 @@ public class PoolRulesTest {
             () -> poolRules.createAndEnrichPools(primaryPool, existingPools));
     }
 
-    // TODO:
-    // Refactor these tests when isManaged is refactored to not be reliant upon the config
-    public static Stream<Object[]> getParametersForIsManagedTests() {
-        SourceSubscription srcSub = new SourceSubscription("test_sub_id", "test_sub_key");
+    @Test
+    public void testUpdatePoolDetectsDirtyPoolProducts() {
+        PoolRules poolRules = createRules(new DevConfig(Map.of(ConfigProperties.STANDALONE, "true")));
 
-        return Stream.of(
-            // Standalone tests
-            new Object[] { Pool.PoolType.NORMAL, null, null, false, false },
-            new Object[] { Pool.PoolType.ENTITLEMENT_DERIVED, null, null, false, false },
-            new Object[] { Pool.PoolType.STACK_DERIVED, null, null, false, false },
-            new Object[] { Pool.PoolType.BONUS, null, null, false, false },
-            new Object[] { Pool.PoolType.UNMAPPED_GUEST, null, null, false, false },
-            new Object[] { Pool.PoolType.DEVELOPMENT, null, null, false, false },
+        Owner owner = TestUtil.createOwner();
+        Product prod = TestUtil.createProduct();
 
-            new Object[] { Pool.PoolType.NORMAL, srcSub, null, false, false },
-            new Object[] { Pool.PoolType.ENTITLEMENT_DERIVED, srcSub, null, false, false },
-            new Object[] { Pool.PoolType.STACK_DERIVED, srcSub, null, false, false },
-            new Object[] { Pool.PoolType.BONUS, srcSub, null, false, false },
-            new Object[] { Pool.PoolType.UNMAPPED_GUEST, srcSub, null, false, false },
-            new Object[] { Pool.PoolType.DEVELOPMENT, srcSub, null, false, false },
+        Pool pool = TestUtil.createPool(owner, prod)
+            .setDirtyProduct(true);
 
-            new Object[] { Pool.PoolType.NORMAL, null, "upstream_pool_id", false, false },
-            new Object[] { Pool.PoolType.ENTITLEMENT_DERIVED, null, "upstream_pool_id", false, false },
-            new Object[] { Pool.PoolType.STACK_DERIVED, null, "upstream_pool_id", false, false },
-            new Object[] { Pool.PoolType.BONUS, null, "upstream_pool_id", false, false },
-            new Object[] { Pool.PoolType.UNMAPPED_GUEST, null, "upstream_pool_id", false, false },
-            new Object[] { Pool.PoolType.DEVELOPMENT, null, "upstream_pool_id", false, false },
+        List<PoolUpdate> updates = poolRules.updatePools(pool, List.of(pool), pool.getQuantity(), Map.of());
 
-            new Object[] { Pool.PoolType.NORMAL, srcSub, "upstream_pool_id", false, true },
-            new Object[] { Pool.PoolType.ENTITLEMENT_DERIVED, srcSub, "upstream_pool_id", false, false },
-            new Object[] { Pool.PoolType.STACK_DERIVED, srcSub, "upstream_pool_id", false, false },
-            new Object[] { Pool.PoolType.BONUS, srcSub, "upstream_pool_id", false, true },
-            new Object[] { Pool.PoolType.UNMAPPED_GUEST, srcSub, "upstream_pool_id", false, true },
-            new Object[] { Pool.PoolType.DEVELOPMENT, srcSub, "upstream_pool_id", false, true },
+        assertThat(updates)
+            .singleElement()
+            .returns(true, PoolUpdate::getProductsChanged);
 
-            // Hosted tests
-            new Object[] { Pool.PoolType.NORMAL, null, null, true, false },
-            new Object[] { Pool.PoolType.ENTITLEMENT_DERIVED, null, null, true, false },
-            new Object[] { Pool.PoolType.STACK_DERIVED, null, null, true, false },
-            new Object[] { Pool.PoolType.BONUS, null, null, true, false },
-            new Object[] { Pool.PoolType.UNMAPPED_GUEST, null, null, true, false },
-            new Object[] { Pool.PoolType.DEVELOPMENT, null, null, true, false },
-
-            new Object[] { Pool.PoolType.NORMAL, srcSub, null, true, true },
-            new Object[] { Pool.PoolType.ENTITLEMENT_DERIVED, srcSub, null, true, false },
-            new Object[] { Pool.PoolType.STACK_DERIVED, srcSub, null, true, false },
-            new Object[] { Pool.PoolType.BONUS, srcSub, null, true, true },
-            new Object[] { Pool.PoolType.UNMAPPED_GUEST, srcSub, null, true, true },
-            new Object[] { Pool.PoolType.DEVELOPMENT, srcSub, null, true, true },
-
-            new Object[] { Pool.PoolType.NORMAL, null, "upstream_pool_id", true, false },
-            new Object[] { Pool.PoolType.ENTITLEMENT_DERIVED, null, "upstream_pool_id", true, false },
-            new Object[] { Pool.PoolType.STACK_DERIVED, null, "upstream_pool_id", true, false },
-            new Object[] { Pool.PoolType.BONUS, null, "upstream_pool_id", true, false },
-            new Object[] { Pool.PoolType.UNMAPPED_GUEST, null, "upstream_pool_id", true, false },
-            new Object[] { Pool.PoolType.DEVELOPMENT, null, "upstream_pool_id", true, false },
-
-            new Object[] { Pool.PoolType.NORMAL, srcSub, "upstream_pool_id", true, true },
-            new Object[] { Pool.PoolType.ENTITLEMENT_DERIVED, srcSub, "upstream_pool_id", true, false },
-            new Object[] { Pool.PoolType.STACK_DERIVED, srcSub, "upstream_pool_id", true, false },
-            new Object[] { Pool.PoolType.BONUS, srcSub, "upstream_pool_id", true, true },
-            new Object[] { Pool.PoolType.UNMAPPED_GUEST, srcSub, "upstream_pool_id", true, true },
-            new Object[] { Pool.PoolType.DEVELOPMENT, srcSub, "upstream_pool_id", true, true });
-    }
-
-    @ParameterizedTest
-    @MethodSource("getParametersForIsManagedTests")
-    public void testIsManaged(Pool.PoolType type, SourceSubscription srcSub, String upstreamPoolId,
-        boolean hosted, boolean expected) {
-
-        Pool pool = TestUtil.createPool(owner, TestUtil.createProduct());
-
-        pool.setSourceSubscription(srcSub);
-        pool.setUpstreamPoolId(upstreamPoolId);
-
-        switch (type) {
-            case UNMAPPED_GUEST -> {
-                pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
-                pool.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
-            }
-            case ENTITLEMENT_DERIVED -> {
-                pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
-                pool.setSourceEntitlement(new Entitlement());
-            }
-            case STACK_DERIVED -> {
-                pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
-                pool.setSourceStack(new SourceStack());
-            }
-            case BONUS -> pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
-            case DEVELOPMENT -> pool.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-            default -> {
-                // Nothing to do here
-            }
-        }
-
-        boolean output = pool.isManaged(!hosted);
-        assertEquals(expected, output);
+        // We're expecting that it cleared the dirty flag once inspecting it
+        assertFalse(pool.hasDirtyProduct());
     }
 
     private PoolRules createRules(Configuration config) {

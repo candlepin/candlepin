@@ -58,7 +58,8 @@ public abstract class AbstractNodeTest<E extends AbstractHibernateObject, I exte
      * @param entityId
      *  the ID of the new entity node, and the expected ID of the entities it will contain
      *
-     * @return the newly created EntityNode instance
+     * @return
+     *  the newly created EntityNode instance
      */
     protected abstract EntityNode<E, I> buildEntityNode(Owner owner, String entityId);
 
@@ -71,7 +72,8 @@ public abstract class AbstractNodeTest<E extends AbstractHibernateObject, I exte
      * @param entityId
      *  the ID for the new entity
      *
-     * @return a new local entity instance
+     * @return
+     *  a new local entity instance
      */
     protected abstract E buildLocalEntity(Owner owner, String entityId);
 
@@ -84,14 +86,16 @@ public abstract class AbstractNodeTest<E extends AbstractHibernateObject, I exte
      * @param entityId
      *  the ID for the new entity
      *
-     * @return a new imported entity instance
+     * @return
+     *  a new imported entity instance
      */
     protected abstract I buildImportedEntity(Owner owner, String entityId);
 
     /**
      * Builds an entity node using a generated owner and entity ID
      *
-     * @return a new entity node
+     * @return
+     *  a new entity node
      */
     public EntityNode<E, I> buildEntityNode() {
         return this.buildEntityNode(TestUtil.createOwner(), TestUtil.randomString());
@@ -121,7 +125,8 @@ public abstract class AbstractNodeTest<E extends AbstractHibernateObject, I exte
         List<EntityNode<E, I>> parentNodes = List.of(
             this.buildEntityNode(owner, "p1"),
             this.buildEntityNode(owner, "p2"),
-            this.buildEntityNode(owner, "p3"));
+            this.buildEntityNode(owner, "p3")
+        );
 
         // Verify initial state is an empty collection
         Stream<EntityNode<?, ?>> parents = node.getParentNodes();
@@ -208,7 +213,8 @@ public abstract class AbstractNodeTest<E extends AbstractHibernateObject, I exte
         List<EntityNode<E, I>> childrenNodes = List.of(
             this.buildEntityNode(owner, "c1"),
             this.buildEntityNode(owner, "c2"),
-            this.buildEntityNode(owner, "c3"));
+            this.buildEntityNode(owner, "c3")
+        );
 
         // Verify initial state is an empty collection
         Stream<EntityNode<?, ?>> children = node.getChildrenNodes();
@@ -375,33 +381,5 @@ public abstract class AbstractNodeTest<E extends AbstractHibernateObject, I exte
 
         // Verify the entity was cleared
         assertNull(node.getImportedEntity());
-    }
-
-    @Test
-    public void testUpdatedEntity() {
-        Owner owner = TestUtil.createOwner();
-        E entity = this.buildLocalEntity(owner, "test_id");
-        EntityNode<E, I> node = this.buildEntityNode(owner, "test_id");
-
-        // Initial state should be null
-        assertNull(node.getMergedEntity());
-
-        // Set the entity
-        EntityNode output = node.setMergedEntity(entity);
-        assertNotNull(output);
-        assertSame(node, output);
-
-        // Verify the entity was stored and is returned
-        E updated = node.getMergedEntity();
-        assertNotNull(updated);
-        assertSame(entity, updated);
-
-        // Clear the entity
-        output = node.setMergedEntity(null);
-        assertNotNull(output);
-        assertSame(node, output);
-
-        // Verify the entity was cleared
-        assertNull(node.getMergedEntity());
     }
 }

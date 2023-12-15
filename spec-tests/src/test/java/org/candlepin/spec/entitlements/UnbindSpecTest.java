@@ -60,7 +60,7 @@ public class UnbindSpecTest {
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        ProductDTO monitoring =  ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO monitoring =  ownerProductApi.createProduct(owner.getKey(), Products.random());
         PoolDTO pool = ownerApi.createPool(owner.getKey(), Pools.random(monitoring));
 
         EntitlementDTO ent = ApiClient.MAPPER.convertValue(
@@ -77,9 +77,9 @@ public class UnbindSpecTest {
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        ProductDTO prod1 = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO prod1 = ownerProductApi.createProduct(owner.getKey(), Products.random());
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(prod1));
-        ProductDTO prod2 = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO prod2 = ownerProductApi.createProduct(owner.getKey(), Products.random());
         PoolDTO pool2 = ownerApi.createPool(owner.getKey(), Pools.random(prod2));
 
         EntitlementDTO ent1 = ApiClient.MAPPER.convertValue(
@@ -104,7 +104,7 @@ public class UnbindSpecTest {
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        ProductDTO prod = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO prod = ownerProductApi.createProduct(owner.getKey(), Products.random());
         PoolDTO pool = ownerApi.createPool(owner.getKey(), Pools.random(prod));
         EntitlementDTO ent = ApiClient.MAPPER.convertValue(
             consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1).get(0),
@@ -122,7 +122,7 @@ public class UnbindSpecTest {
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        ProductDTO prod = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO prod = ownerProductApi.createProduct(owner.getKey(), Products.random());
         PoolDTO pool = ownerApi.createPool(owner.getKey(), Pools.random(prod));
         EntitlementDTO ent = ApiClient.MAPPER.convertValue(
             consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1).get(0),
@@ -143,9 +143,9 @@ public class UnbindSpecTest {
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        ProductDTO prod1 = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO prod1 = ownerProductApi.createProduct(owner.getKey(), Products.random());
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(prod1));
-        ProductDTO prod2 = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO prod2 = ownerProductApi.createProduct(owner.getKey(), Products.random());
         PoolDTO pool2 = ownerApi.createPool(owner.getKey(), Pools.random(prod2));
 
         EntitlementDTO ent1 = ApiClient.MAPPER.convertValue(

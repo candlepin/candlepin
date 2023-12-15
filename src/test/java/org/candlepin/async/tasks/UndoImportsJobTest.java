@@ -161,14 +161,16 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     }
 
     protected Pool createPool(String name, Owner owner, boolean keepSourceSub, PoolType type) {
-        Product product = this.createProduct(name, name, owner);
+        Product product = this.createProduct(name, name);
 
         Pool pool = TestUtil.createPool(owner, product);
+
         if (!keepSourceSub) {
             pool.setSourceSubscription(null);
         }
         else {
-            pool.setUpstreamPoolId("upstream_pool_id");
+            pool.setUpstreamPoolId("upstream_pool_id")
+                .setManaged(true);
         }
 
         this.poolCurator.create(pool);

@@ -34,7 +34,7 @@ import java.util.Set;
 
 public abstract class X509Util {
 
-    private static Logger log = LoggerFactory.getLogger(X509Util.class);
+    private static final Logger log = LoggerFactory.getLogger(X509Util.class);
 
     public static final Predicate<Product> PROD_FILTER_PREDICATE = new Predicate<>() {
         /**
@@ -120,7 +120,7 @@ public abstract class X509Util {
             }
             else {
                 log.debug("No entitlements found for modified products.");
-                log.debug("Skipping content set: " + pc.getContent());
+                log.debug("Skipping content set: {}", pc.getContent());
             }
         }
         return filtered;
@@ -187,20 +187,21 @@ public abstract class X509Util {
 
     private Set<String> archesOf(Product product, ProductContent pc) {
         Set<String> contentArches = Arch.parseArches(pc.getContent().getArches());
-        // Empty or null Content.arches should result in
-        // inheriting the arches from the product
+
+        // Empty or null Content.arches should result in inheriting the arches from the product
         if (contentArches.isEmpty()) {
-            Set<String> productArches = Arch.parseArches(product
-                .getAttributeValue(Product.Attributes.ARCHITECTURE));
+            Set<String> productArches =
+                Arch.parseArches(product.getAttributeValue(Product.Attributes.ARCHITECTURE));
+
             if (!productArches.isEmpty()) {
                 contentArches.addAll(productArches);
             }
             else {
-                // No Product arches either, log it, but do
-                // not filter out this content
+                // No Product arches either, log it, but do not filter out this content
                 log.debug("No arch attributes found for content or product");
             }
         }
+
         return contentArches;
     }
 

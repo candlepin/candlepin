@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.service.model.ProductContentInfo;
-import org.candlepin.util.LongHashCodeBuilder;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -26,6 +25,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Immutable;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -44,10 +44,10 @@ import javax.validation.constraints.NotNull;
 @Immutable
 @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 @Table(name = ProductContent.DB_TABLE)
-public class ProductContent extends AbstractHibernateObject implements ProductContentInfo {
+public class ProductContent extends AbstractHibernateObject<ProductContent> implements ProductContentInfo {
 
     /** Name of the table backing this object in the database */
-    public static final String DB_TABLE = "cp2_product_content";
+    public static final String DB_TABLE = "cp_product_contents";
 
     /** The default state of the enabled flag */
     public static final Boolean DEFAULT_ENABLED_STATE = Boolean.FALSE;
@@ -70,14 +70,47 @@ public class ProductContent extends AbstractHibernateObject implements ProductCo
 
     private boolean enabled;
 
-    public ProductContent() {
+    /**
+     * Zero-arg constructor for Hibernate. Do not use.
+     */
+    ProductContent() {
         // Intentionally left empty
     }
 
+    /**
+     * Creates a new ProductContent instance representing a join between the product and content.
+     *
+     * @param product
+     *  the parent product to which the content is to be attached
+     *
+     * @param content
+     *  the content to join to the product
+     *
+     * @param enabled
+     *  whether or not the content should be enabled or disabled
+     */
     public ProductContent(Product product, Content content, boolean enabled) {
-        this.setContent(content);
-        this.setProduct(product);
-        this.setEnabled(enabled);
+        this.product = Objects.requireNonNull(product);
+        this.content = Objects.requireNonNull(content);
+        this.enabled = enabled;
+    }
+
+    /**
+     * Creates a new ProductContent instance representing a content and its enabled state. Instances
+     * created in this way cannot be persisted in the database, and must be recreated with a proper
+     * product reference. Such instances are intended to be used to capture the content for
+     * attaching several contents to a given product via .setProductContent.
+     *
+     * @param content
+     *  the content to eventually attach to a product
+     *
+     * @param enabled
+     *  whether or not the content should be enabled or disabled
+     */
+    public ProductContent(Content content, boolean enabled) {
+        this.product = null;
+        this.content = Objects.requireNonNull(content);
+        this.enabled = enabled;
     }
 
     @Override
@@ -86,51 +119,26 @@ public class ProductContent extends AbstractHibernateObject implements ProductCo
     }
 
     /**
-     * @param content the content to set
-     *
-     * @return
-     *  a reference to this ProductContent instance
-     */
-    public ProductContent setContent(Content content) {
-        this.content = content;
-        return this;
-    }
-
-    /**
      * @return the content
      */
     @Override
     public Content getContent() {
-        return content;
+        return this.content;
     }
 
-    /**
-     * @param product the product to set
-     *
-     * @return
-     *  a reference to this ProductContent instance
-     */
-    public ProductContent setProduct(Product product) {
-        this.product = product;
-        return this;
+    public String getContentId() {
+        return this.content != null ? this.content.getId() : null;
     }
 
     /**
      * @return the product
      */
     public Product getProduct() {
-        return product;
+        return this.product;
     }
 
-    /**
-     * @param enabled the enabled to set
-     *
-     * @return
-     *  a reference to this ProductContent instance
-     */
-    public ProductContent setEnabled(boolean enabled) {
-        this.enabled = enabled;
-        return this;
+    public String getProductId() {
+        return this.product != null ? this.product.getId() : null;
     }
 
     /**
@@ -138,7 +146,7 @@ public class ProductContent extends AbstractHibernateObject implements ProductCo
      */
     @Override
     public Boolean isEnabled() {
-        return enabled;
+        return this.enabled;
     }
 
     @Override
@@ -151,8 +159,8 @@ public class ProductContent extends AbstractHibernateObject implements ProductCo
             ProductContent that = (ProductContent) obj;
 
             return new EqualsBuilder()
-                .append(this.getContent(), that.getContent())
-                .append(this.isEnabled(), that.isEnabled())
+                .append(this.getProductId(), that.getProductId())
+                .append(this.getContentId(), that.getContentId())
                 .isEquals();
         }
 
@@ -162,23 +170,8 @@ public class ProductContent extends AbstractHibernateObject implements ProductCo
     @Override
     public int hashCode() {
         return new HashCodeBuilder(3, 23)
-            .append(this.getContent() != null ? this.getContent().getId() : null)
-            .toHashCode();
-    }
-
-    /**
-     * Calculates and returns a version hash for this entity. This method operates much like the
-     * hashCode method, except that it is more accurate and should have fewer collisions.
-     *
-     * @return
-     *  a version hash for this entity
-     */
-    public long getEntityVersion() {
-        // initialValue and multiplier choosen fairly arbitrarily from a list of prime numbers
-        // These should be unique per versioned entity.
-        return new LongHashCodeBuilder(307, 317)
-            .append(this.getContent() != null ? this.getContent().getEntityVersion() : null)
-            .append(this.isEnabled())
+            .append(this.getProductId())
+            .append(this.getContentId())
             .toHashCode();
     }
 

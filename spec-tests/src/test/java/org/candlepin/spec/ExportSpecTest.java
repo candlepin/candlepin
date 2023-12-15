@@ -45,6 +45,7 @@ import org.candlepin.resource.client.v1.RolesApi;
 import org.candlepin.resource.client.v1.RulesApi;
 import org.candlepin.resource.client.v1.UsersApi;
 import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
+import org.candlepin.spec.bootstrap.assertions.OnlyWithCapability;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -139,9 +140,9 @@ class ExportSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
 
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
         ConsumerDTO consumer = adminClient.consumers()
@@ -171,12 +172,11 @@ class ExportSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        ProductDTO modifiedProd = adminClient.ownerProducts()
-            .createProductByOwner(ownerKey, Products.random());
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO modifiedProd = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
         ContentDTO cont = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(modifiedProd.getId())));
-        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), cont.getId(), true);
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), cont.getId(), true);
         PoolDTO pool = adminClient.owners().createPool(ownerKey, Pools.random(prod));
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
@@ -204,6 +204,7 @@ class ExportSpecTest {
 
     @Test
     @OnlyInHosted
+    @OnlyWithCapability("cloud_registration")
     public void shouldNotExportAnonymousManifestWithAnonymousToken() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());

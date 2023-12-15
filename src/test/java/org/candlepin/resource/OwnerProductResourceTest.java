@@ -14,15 +14,15 @@
  */
 package org.candlepin.resource;
 
+import static org.assertj.core.api.Assertions.as;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.dto.api.server.v1.AttributeDTO;
@@ -32,27 +32,27 @@ import org.candlepin.dto.api.server.v1.ProductContentDTO;
 import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProductCurator;
-import org.candlepin.model.dto.Subscription;
+import org.candlepin.model.ProductContent;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Locale;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 
@@ -98,20 +98,172 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCreateProductResource() {
+    public void testGetProductsByOwnerFetchesAllVisibleEntities() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+
+        Product product1 = TestUtil.createProduct("test_product-1", "test_product-1")
+            .setNamespace((Owner) null);
+        Product product2 = TestUtil.createProduct("test_product-2", "test_product-2")
+            .setNamespace(owner1.getKey());
+        Product product3 = TestUtil.createProduct("test_product-3", "test_product-3")
+            .setNamespace(owner2.getKey());
+
+        this.createProduct(product1);
+        this.createProduct(product2);
+        this.createProduct(product3);
+
+        ProductDTO cdto1 = this.modelTranslator.translate(product1, ProductDTO.class);
+        ProductDTO cdto2 = this.modelTranslator.translate(product2, ProductDTO.class);
+
+        Stream<ProductDTO> response = this.ownerProductResource
+            .getProductsByOwner(owner1.getKey(), List.of(), false);
+
+        assertNotNull(response);
+        assertThat(response.toList())
+            .hasSize(2)
+            .containsOnly(cdto1, cdto2);
+    }
+
+    @Test
+    public void testGetProductsByOwnerOmitsGlobalsWhenOmitFlagIsSet() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+
+        Product product1 = TestUtil.createProduct("test_product-1", "test_product-1")
+            .setNamespace((Owner) null);
+        Product product2 = TestUtil.createProduct("test_product-2", "test_product-2")
+            .setNamespace(owner1.getKey());
+        Product product3 = TestUtil.createProduct("test_product-3", "test_product-3")
+            .setNamespace(owner2.getKey());
+
+        this.createProduct(product1);
+        this.createProduct(product2);
+        this.createProduct(product3);
+
+        ProductDTO cdto2 = this.modelTranslator.translate(product2, ProductDTO.class);
+
+        Stream<ProductDTO> response = this.ownerProductResource
+            .getProductsByOwner(owner1.getKey(), List.of(), true);
+
+        assertNotNull(response);
+        assertThat(response.toList())
+            .hasSize(1)
+            .containsOnly(cdto2);
+    }
+
+    @Test
+    public void testGetProductsByOwnerWithEntityIDFiltering() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+
+        Product product1 = TestUtil.createProduct("test_product-1", "test_product-1")
+            .setNamespace((Owner) null);
+        Product product2 = TestUtil.createProduct("test_product-2", "test_product-2")
+            .setNamespace(owner1.getKey());
+        Product product3 = TestUtil.createProduct("test_product-3", "test_product-3")
+            .setNamespace((Owner) null);
+        Product product4 = TestUtil.createProduct("test_product-4", "test_product-4")
+            .setNamespace(owner1.getKey());
+        Product product5 = TestUtil.createProduct("test_product-5", "test_product-5")
+            .setNamespace(owner2.getKey());
+
+        this.createProduct(product1);
+        this.createProduct(product2);
+        this.createProduct(product3);
+        this.createProduct(product4);
+        this.createProduct(product5);
+
+        List<String> ids = Stream.of(product3, product4, product5)
+            .map(Product::getId)
+            .toList();
+
+        Stream<ProductDTO> response = this.ownerProductResource
+            .getProductsByOwner(owner1.getKey(), ids, false);
+
+        List<ProductDTO> expected = Stream.of(product3, product4)
+            .map(this.modelTranslator.getStreamMapper(Product.class, ProductDTO.class))
+            .toList();
+
+        assertNotNull(response);
+        assertThat(response.toList())
+            .hasSize(expected.size())
+            .containsAll(expected);
+    }
+
+    @Test
+    public void testGetProductsByOwnerWithEntityIDFilteringAndOmitGlobalsSet() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+
+        Product product1 = TestUtil.createProduct("test_product-1", "test_product-1")
+            .setNamespace((Owner) null);
+        Product product2 = TestUtil.createProduct("test_product-2", "test_product-2")
+            .setNamespace(owner1.getKey());
+        Product product3 = TestUtil.createProduct("test_product-3", "test_product-3")
+            .setNamespace((Owner) null);
+        Product product4 = TestUtil.createProduct("test_product-4", "test_product-4")
+            .setNamespace(owner1.getKey());
+        Product product5 = TestUtil.createProduct("test_product-5", "test_product-5")
+            .setNamespace(owner2.getKey());
+
+        this.createProduct(product1);
+        this.createProduct(product2);
+        this.createProduct(product3);
+        this.createProduct(product4);
+        this.createProduct(product5);
+
+        List<String> ids = Stream.of(product3, product4, product5)
+            .map(Product::getId)
+            .toList();
+
+        Stream<ProductDTO> response = this.ownerProductResource
+            .getProductsByOwner(owner1.getKey(), ids, true);
+
+        List<ProductDTO> expected = Stream.of(product4)
+            .map(this.modelTranslator.getStreamMapper(Product.class, ProductDTO.class))
+            .toList();
+
+        assertNotNull(response);
+        assertThat(response.toList())
+            .hasSize(expected.size())
+            .containsAll(expected);
+    }
+
+    @Test
+    public void testGetProductsByOwnerWithNoProduct() throws Exception {
+        Owner owner = this.createOwner("test_owner");
+
+        Stream<ProductDTO> response = this.ownerProductResource
+            .getProductsByOwner(owner.getKey(), List.of(), false);
+        assertNotNull(response);
+
+        List<ProductDTO> received = response.toList();
+        assertEquals(0, received.size());
+    }
+
+    @Test
+    public void testGetProductsByOwnerBadOwner() throws Exception {
+        Owner owner = this.createOwner("test_owner");
+
+        assertThrows(NotFoundException.class,
+            () -> this.ownerProductResource.getProductsByOwner("bad owner", List.of(), false));
+    }
+
+    @Test
+    public void testCreateProduct() {
         Owner owner = this.createOwner("Example-Corporation");
         ProductDTO pdto = this.buildTestProductDTO();
 
-        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), pdto.getId()));
+        assertNull(this.productCurator.getProductById(owner.getKey(), pdto.getId()));
 
-        ProductDTO result = this.ownerProductResource
-            .createProductByOwner(owner.getKey(), pdto);
-        Product entity = this.ownerProductCurator.getProductById(owner, pdto.getId());
-        ProductDTO expected = this.modelTranslator.translate(entity,
-            ProductDTO.class);
-
+        ProductDTO result = this.ownerProductResource.createProduct(owner.getKey(), pdto);
         assertNotNull(result);
+
+        Product entity = this.productCurator.getProductById(owner.getKey(), pdto.getId());
         assertNotNull(entity);
+
+        ProductDTO expected = this.modelTranslator.translate(entity, ProductDTO.class);
         assertEquals(expected, result);
     }
 
@@ -129,7 +281,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
         attributes.forEach((k, v) -> pdto.addAttributesItem(this.createAttribute(k, v)));
 
-        ProductDTO output = this.ownerProductResource.createProductByOwner(owner.getKey(), pdto);
+        ProductDTO output = this.ownerProductResource.createProduct(owner.getKey(), pdto);
 
         assertNotNull(output);
         assertEquals(pdto.getId(), output.getId());
@@ -169,7 +321,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         pdto.addAttributesItem(null);
         pdto.addAttributesItem(this.createAttribute(null, "dropped"));
 
-        ProductDTO output = this.ownerProductResource.createProductByOwner(owner.getKey(), pdto);
+        ProductDTO output = this.ownerProductResource.createProduct(owner.getKey(), pdto);
 
         assertNotNull(output);
         assertEquals(pdto.getId(), output.getId());
@@ -186,18 +338,23 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     @Test
     public void testCreateProductWithContent() {
         Owner owner = this.createOwner("Example-Corporation");
-        Content content = this.createContent("content-1", "content-1", owner);
+        String namespace = owner.getKey();
+
+        Content content = TestUtil.createContent("content-1")
+            .setNamespace(namespace);
+
+        this.createContent(content);
+
         ProductDTO product = this.buildTestProductDTO();
         ContentDTO contentDTO = this.modelTranslator.translate(content, ContentDTO.class);
         addContent(product, contentDTO);
 
-        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), product.getId()));
+        assertNull(this.productCurator.getProductById(namespace, product.getId()));
 
-        ProductDTO result = this.ownerProductResource
-            .createProductByOwner(owner.getKey(), product);
-        Product entity = this.ownerProductCurator.getProductById(owner, product.getId());
-        ProductDTO expected = this.modelTranslator.translate(entity,
-            ProductDTO.class);
+        ProductDTO result = this.ownerProductResource.createProduct(namespace, product);
+
+        Product entity = this.productCurator.getProductById(namespace, product.getId());
+        ProductDTO expected = this.modelTranslator.translate(entity, ProductDTO.class);
 
         assertNotNull(result);
         assertNotNull(entity);
@@ -216,7 +373,10 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         attributes.put("attrib-3", "value-3");
 
         Owner owner = this.createOwner("Test org");
-        Product existing = this.createProduct("test_prod-1", "test product 1", owner);
+        Product existing = TestUtil.createProduct("test_prod-1", "test product 1")
+            .setNamespace(owner.getKey());
+
+        this.createProduct(existing);
 
         assertNotNull(existing);
         assertTrue(existing.getAttributes().isEmpty());
@@ -226,8 +386,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
         attributes.forEach((k, v) -> pdto.addAttributesItem(this.createAttribute(k, v)));
 
-        ProductDTO output = this.ownerProductResource.updateProductByOwner(owner.getKey(),
-            existing.getId(), pdto);
+        ProductDTO output = this.ownerProductResource.updateProduct(owner.getKey(), existing.getId(), pdto);
 
         assertNotNull(output);
         assertEquals(existing.getId(), output.getId());
@@ -256,7 +415,10 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         expected.put("attrib-3", "value-3");
 
         Owner owner = this.createOwner("Test org");
-        Product existing = this.createProduct("test_prod-1", "test product 1", owner);
+        Product existing = TestUtil.createProduct("test_prod-1", "test product 1")
+            .setNamespace(owner.getKey());
+
+        this.createProduct(existing);
 
         assertNotNull(existing);
         assertTrue(existing.getAttributes().isEmpty());
@@ -271,8 +433,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         pdto.addAttributesItem(null);
         pdto.addAttributesItem(this.createAttribute(null, "dropped"));
 
-        ProductDTO output = this.ownerProductResource.updateProductByOwner(owner.getKey(),
-            existing.getId(), pdto);
+        ProductDTO output = this.ownerProductResource.updateProduct(owner.getKey(), existing.getId(), pdto);
 
         assertNotNull(output);
         assertEquals(existing.getId(), output.getId());
@@ -288,101 +449,466 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testUpdateProductWithoutId() {
-        Owner owner = this.createOwner("Update-Product-Owner");
+        Owner owner = this.createOwner("test_owner");
         ProductDTO pdto = this.buildTestProductDTO();
 
-        ProductDTO product = this.ownerProductResource
-            .createProductByOwner(owner.getKey(), pdto);
+        ProductDTO product = this.ownerProductResource.createProduct(owner.getKey(), pdto);
         ProductDTO update = TestUtil.createProductDTO(product.getId());
         update.setName(product.getName());
         update.getAttributes().add(createAttribute("attri", "bute"));
-        ProductDTO result = this.ownerProductResource
-            .updateProductByOwner(owner.getKey(), product.getId(), update);
+        ProductDTO result = this.ownerProductResource.updateProduct(owner.getKey(), product.getId(), update);
         assertEquals("bute", result.getAttributes().get(0).getValue());
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    public void testAddContentToProduct(boolean contentEnabled) {
+        Owner owner = this.createOwner("test_owner");
+
+        Product product = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace(owner.getKey());
+        Content content = TestUtil.createContent("test_content", "test_content")
+            .setNamespace(owner.getKey());
+
+        this.createProduct(product);
+        this.createContent(content);
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .isEmpty();
+
+        ProductDTO output = this.ownerProductResource.addContentToProduct(owner.getKey(), product.getId(),
+            content.getId(), contentEnabled);
+
+        assertThat(output.getProductContent())
+            .isNotNull()
+            .singleElement()
+            .returns(contentEnabled, ProductContentDTO::getEnabled)
+            .extracting(ProductContentDTO::getContent)
+            .returns(content.getId(), ContentDTO::getId);
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .singleElement()
+            .returns(contentEnabled, ProductContent::isEnabled)
+            .extracting(ProductContent::getContent)
+            .returns(content.getId(), Content::getId);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    public void testAddContentToProductDisallowsModifyingGlobalProduct(boolean contentEnabled) {
+        Owner owner = this.createOwner("test_owner");
+
+        Product product = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace((Owner) null);
+        Content content = TestUtil.createContent("test_content", "test_content")
+            .setNamespace(owner.getKey());
+
+        this.createProduct(product);
+        this.createContent(content);
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .isEmpty();
+
+        assertThrows(ForbiddenException.class, () -> this.ownerProductResource
+            .addContentToProduct(owner.getKey(), product.getId(), content.getId(), contentEnabled));
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    public void testAddContentToProductDisallowsAddingGlobalContentToProduct(boolean contentEnabled) {
+        Owner owner = this.createOwner("test_owner");
+
+        Product product = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace(owner.getKey());
+        Content content = TestUtil.createContent("test_content", "test_content")
+            .setNamespace((Owner) null);
+
+        this.createProduct(product);
+        this.createContent(content);
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .isEmpty();
+
+        assertThrows(ForbiddenException.class, () -> this.ownerProductResource
+            .addContentToProduct(owner.getKey(), product.getId(), content.getId(), contentEnabled));
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .isEmpty();
+    }
+
     @Test
-    public void testUpdateProductIdMismatch() {
-        Owner owner = this.createOwner("Update-Product-Owner");
-        ProductDTO pdto = this.buildTestProductDTO();
-        ProductDTO product = this.ownerProductResource
-            .createProductByOwner(owner.getKey(), pdto);
-        ProductDTO update = this.buildTestProductDTO();
-        update.setId("TaylorSwift");
+    public void testAddContentsToProduct() {
+        Owner owner = this.createOwner("test_owner");
+
+        Product product = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace(owner.getKey());
+        Content content1 = TestUtil.createContent("test_content-1", "test_content-1")
+            .setNamespace(owner.getKey());
+        Content content2 = TestUtil.createContent("test_content-2", "test_content-2")
+            .setNamespace(owner.getKey());
+
+
+        this.createProduct(product);
+        this.createContent(content1);
+        this.createContent(content2);
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .isEmpty();
+
+        Map<String, Boolean> input = Map.of(
+            content1.getId(), true,
+            content2.getId(), false);
+
+        ProductDTO output = this.ownerProductResource.addContentsToProduct(owner.getKey(), product.getId(),
+            input);
+
+        assertThat(output.getProductContent())
+            .isNotNull()
+            .hasSize(2);
+
+        Map<String, Boolean> mappedOutputContent = output.getProductContent()
+            .stream()
+            .collect(Collectors.toMap(pc -> pc.getContent().getId(), ProductContentDTO::getEnabled));
+
+        Map<String, Boolean> mappedProductContent = product.getProductContent()
+            .stream()
+            .collect(Collectors.toMap(pc -> pc.getContent().getId(), ProductContent::isEnabled));
+
+        assertEquals(input, mappedOutputContent);
+        assertEquals(input, mappedProductContent);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    public void testAddContentsToProductDisallowsModifyingGlobalProduct(boolean contentEnabled) {
+        Owner owner = this.createOwner("test_owner");
+
+        Product product = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace((Owner) null);
+        Content content = TestUtil.createContent("test_content", "test_content")
+            .setNamespace(owner.getKey());
+
+        this.createProduct(product);
+        this.createContent(content);
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .isEmpty();
+
+        assertThrows(ForbiddenException.class, () -> this.ownerProductResource
+            .addContentsToProduct(owner.getKey(), product.getId(), Map.of(content.getId(), contentEnabled)));
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    public void testAddContentsToProductDisallowsAddingGlobalContentToProduct(boolean contentEnabled) {
+        Owner owner = this.createOwner("test_owner");
+
+        Product product = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace(owner.getKey());
+        Content content = TestUtil.createContent("test_content", "test_content")
+            .setNamespace((Owner) null);
+
+        this.createProduct(product);
+        this.createContent(content);
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .isEmpty();
+
+        assertThrows(ForbiddenException.class, () -> this.ownerProductResource
+            .addContentsToProduct(owner.getKey(), product.getId(), Map.of(content.getId(), contentEnabled)));
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testRemoveContentFromProduct() {
+        Owner owner = this.createOwner("test_owner");
+
+        Content content = TestUtil.createContent("test_content", "test_content")
+            .setNamespace(owner.getKey());
+        Product product = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace(owner.getKey())
+            .addContent(content, true);
+
+        this.createContent(content);
+        this.createProduct(product);
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .hasSize(1);
+
+        ProductDTO output = this.ownerProductResource.removeContentFromProduct(owner.getKey(),
+            product.getId(), content.getId());
+
+        assertThat(output)
+            .isNotNull()
+            .returns(product.getId(), ProductDTO::getId)
+            .extracting(ProductDTO::getProductContent, as(collection(ProductContentDTO.class)))
+            .isEmpty();
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testRemoveContentFromProductDisallowsRemovingFromProductInGlobalNamespace() {
+        Owner owner = this.createOwner("test_owner");
+
+        Content content = TestUtil.createContent("test_content", "test_content")
+            .setNamespace((Owner) null);
+        Product product = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace((Owner) null)
+            .addContent(content, true);
+
+        this.createContent(content);
+        this.createProduct(product);
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .hasSize(1);
+
+        assertThrows(ForbiddenException.class, () -> this.ownerProductResource
+            .removeContentFromProduct(owner.getKey(), product.getId(), content.getId()));
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .hasSize(1);
+    }
+
+    @Test
+    public void testRemoveContentFromProductDisallowsRemovingFromProductInOtherNamespace() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+
+        Content content = TestUtil.createContent("test_content", "test_content")
+            .setNamespace(owner2.getKey());
+        Product product = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace(owner2.getKey())
+            .addContent(content, true);
+
+        this.createContent(content);
+        this.createProduct(product);
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .hasSize(1);
+
+        assertThrows(NotFoundException.class, () -> this.ownerProductResource
+            .removeContentFromProduct(owner1.getKey(), product.getId(), content.getId()));
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .hasSize(1);
+    }
+
+    @Test
+    public void testRemoveContentsFromProduct() {
+        Owner owner = this.createOwner("test_owner");
+
+        Content content1 = TestUtil.createContent("test_content-1", "test_content-1")
+            .setNamespace(owner.getKey());
+        Content content2 = TestUtil.createContent("test_content-2", "test_content-2")
+            .setNamespace(owner.getKey());
+        Content content3 = TestUtil.createContent("test_content-3", "test_content-3")
+            .setNamespace(owner.getKey());
+        Product product = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace(owner.getKey())
+            .addContent(content1, true)
+            .addContent(content2, true)
+            .addContent(content3, true);
+
+        this.createContent(content1);
+        this.createContent(content2);
+        this.createContent(content3);
+        this.createProduct(product);
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .hasSize(3);
+
+        System.out.printf("CONTENT IDS %s, %s, %s\n", content1.getId(), content2.getId(), content3.getId());
+
+        List<String> cids = Stream.of(content1, content3)
+            .map(Content::getId)
+            .toList();
+
+        System.out.printf("COLLECTED: %s\n", cids);
+
+        ProductDTO output = this.ownerProductResource.removeContentsFromProduct(owner.getKey(),
+            product.getId(), cids);
+
+        assertThat(output)
+            .isNotNull()
+            .returns(product.getId(), ProductDTO::getId)
+            .extracting(ProductDTO::getProductContent, as(collection(ProductContentDTO.class)))
+            .singleElement()
+            .extracting(ProductContentDTO::getContent)
+            .returns(content2.getId(), ContentDTO::getId);
+
+        assertThat(product.getProductContent())
+            .singleElement()
+            .extracting(ProductContent::getContent)
+            .returns(content2.getId(), Content::getId);
+    }
+
+    @Test
+    public void testRemoveContentsFromProductDisallowsRemovingFromProductInGlobalNamespace() {
+        Owner owner = this.createOwner("test_owner");
+
+        Content content = TestUtil.createContent("test_content", "test_content")
+            .setNamespace((Owner) null);
+        Product product = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace((Owner) null)
+            .addContent(content, true);
+
+        this.createContent(content);
+        this.createProduct(product);
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .hasSize(1);
+
+        assertThrows(ForbiddenException.class, () -> this.ownerProductResource
+            .removeContentsFromProduct(owner.getKey(), product.getId(), List.of(content.getId())));
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .hasSize(1);
+    }
+
+    @Test
+    public void testRemoveContentsFromProductDisallowsRemovingFromProductInOtherNamespace() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+
+        Content content = TestUtil.createContent("test_content", "test_content")
+            .setNamespace(owner2.getKey());
+        Product product = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace(owner2.getKey())
+            .addContent(content, true);
+
+        this.createContent(content);
+        this.createProduct(product);
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .hasSize(1);
+
+        assertThrows(NotFoundException.class, () -> this.ownerProductResource
+            .removeContentsFromProduct(owner1.getKey(), product.getId(), List.of(content.getId())));
+
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .hasSize(1);
+    }
+
+    @Test
+    public void testCannotUpdateProductInGlobalNamespace() {
+        Owner owner = this.createOwner("test_owner");
+
+        Product template = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace((Owner) null);
+        Product product = this.productCurator.create(template);
+
+        ProductDTO update = TestUtil.createProductDTO(product.getId(), "updated_name");
+
+        assertThrows(ForbiddenException.class,
+            () -> this.ownerProductResource.updateProduct(owner.getKey(), update.getId(), update));
+    }
+
+    @Test
+    public void testCannotUpdateProductInOtherNamespace() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+
+        Product template = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace(owner2.getKey());
+        Product product = this.productCurator.create(template);
+
+        ProductDTO update = TestUtil.createProductDTO(product.getId(), "updated_name");
+
+        assertThrows(NotFoundException.class,
+            () -> this.ownerProductResource.updateProduct(owner1.getKey(), update.getId(), update));
+    }
+
+    @Test
+    public void testRemoveProduct() {
+        Owner owner = this.createOwner("test_owner");
+        Product product = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace(owner.getKey());
+        product = this.productCurator.create(product);
+
+        assertNotNull(this.productCurator.getProductById(owner.getKey(), product.getId()));
+
+        this.ownerProductResource.removeProduct(owner.getKey(), product.getId());
+
+        assertNull(this.productCurator.getProductById(owner.getKey(), product.getId()));
+        assertNull(this.productCurator.get(product.getUuid()));
+    }
+
+    @Test
+    public void testRemoveProductWithSubscriptions() {
+        Owner owner = this.createOwner("test_org");
+        Product product = this.productCurator.create(TestUtil.createProduct("p1", "product1")
+            .setNamespace(owner.getKey()));
+        Pool pool = this.createPool(owner, product);
 
         assertThrows(BadRequestException.class,
-            () -> this.ownerProductResource.updateProductByOwner(owner.getKey(), product.getId(), update));
+            () -> this.ownerProductResource.removeProduct(owner.getKey(), product.getId()));
     }
 
     @Test
-    public void testDeleteProductWithSubscriptions() {
-        OwnerCurator oc = mock(OwnerCurator.class);
-        OwnerProductCurator opc = mock(OwnerProductCurator.class);
-        ProductCurator pc = mock(ProductCurator.class);
-        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-
-        OwnerProductResource ownerres = new OwnerProductResource(oc, i18n, null,
-            opc, null, null, null, null,
-            null, null, pc);
-
-        Owner o = mock(Owner.class);
-        Product p = mock(Product.class);
-
-        when(oc.getByKey(eq("owner"))).thenReturn(o);
-        when(opc.getProductById(eq(o), eq("10"))).thenReturn(p);
-
-        Set<Subscription> subs = new HashSet<>();
-        Subscription s = mock(Subscription.class);
-        subs.add(s);
-        when(pc.productHasSubscriptions(eq(o), eq(p))).thenReturn(true);
-
-        assertThrows(BadRequestException.class, () -> ownerres.deleteProductByOwner("owner", "10"));
-    }
-
-    @Test
-    public void testUpdateLockedProductFails() {
+    public void testCannotRemoveProductFromGlobalNamespace() {
         Owner owner = this.createOwner("test_owner");
-        Product product = this.createProduct("test_product", "test_product", owner);
-        ProductDTO pdto = TestUtil.createProductDTO("test_product", "updated_name");
-        product.setLocked(true);
-        this.productCurator.merge(product);
 
-        assertNotNull(this.ownerProductCurator.getProductById(owner, pdto.getId()));
+        Product template = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace((Owner) null);
+        Product product = this.productCurator.create(template);
 
         assertThrows(ForbiddenException.class,
-            () -> this.ownerProductResource.updateProductByOwner(owner.getKey(), pdto.getId(), pdto));
-        Product entity = this.ownerProductCurator.getProductById(owner, pdto.getId());
-        ProductDTO expected = this.modelTranslator.translate(entity,
-            ProductDTO.class);
-
-        assertNotNull(entity);
-        assertNotEquals(expected, pdto);
+            () -> this.ownerProductResource.removeProduct(owner.getKey(), product.getId()));
     }
 
     @Test
-    public void testDeleteLockedProductFails() {
-        Owner owner = this.createOwner("test_owner");
-        Product product = this.createProduct("test_product", "test_product", owner);
-        product.setLocked(true);
-        this.productCurator.merge(product);
+    public void testCannotRemoveProductFromOtherNamespace() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
 
-        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
+        Product template = TestUtil.createProduct("test_product", "test_product")
+            .setNamespace(owner2.getKey());
+        Product product = this.productCurator.create(template);
 
-        assertThrows(ForbiddenException.class,
-            () -> this.ownerProductResource.deleteProductByOwner(owner.getKey(), product.getId()));
-        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
+        assertThrows(NotFoundException.class,
+            () -> this.ownerProductResource.removeProduct(owner1.getKey(), product.getId()));
     }
 
     @Test
     public void getProduct() {
         Owner owner = this.createOwner("Example-Corporation");
-        Product entity = this.createProduct("test_product", "test_product", owner);
+        Product entity = this.createProduct("test_product", "test_product");
 
         securityInterceptor.enable();
-        ProductDTO result = this.ownerProductResource.getProductByOwner(owner.getKey(),
-            entity.getId());
-        ProductDTO expected = this.modelTranslator.translate(entity,
-            ProductDTO.class);
+        ProductDTO result = this.ownerProductResource.getProductById(owner.getKey(), entity.getId());
+        ProductDTO expected = this.modelTranslator.translate(entity, ProductDTO.class);
 
         assertNotNull(result);
         assertEquals(expected, result);
@@ -392,7 +918,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     public void getProductCertificate() {
         Owner owner = this.createOwner("Example-Corporation");
 
-        Product entity = this.createProduct("123", "AwesomeOS Core", owner);
+        Product entity = this.createProduct("123", "AwesomeOS Core");
         // ensure we check SecurityHole
         securityInterceptor.enable();
 
@@ -402,7 +928,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         cert.setProduct(entity);
         productCertificateCurator.create(cert);
 
-        ProductCertificateDTO cert1 = ownerProductResource.getProductCertificateByOwner(owner.getKey(),
+        ProductCertificateDTO cert1 = ownerProductResource.getProductCertificateById(owner.getKey(),
             entity.getId());
         ProductCertificateDTO expected = this.modelTranslator.translate(cert, ProductCertificateDTO.class);
         assertEquals(cert1, expected);
@@ -412,10 +938,10 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     public void requiresNumericIdForProductCertificates() {
         Owner owner = this.createOwner("Example-Corporation");
 
-        Product entity = this.createProduct("MCT123", "AwesomeOS", owner);
+        Product entity = this.createProduct("MCT123", "AwesomeOS");
         securityInterceptor.enable();
 
         assertThrows(BadRequestException.class,
-            () -> ownerProductResource.getProductCertificateByOwner(owner.getKey(), entity.getId()));
+            () -> ownerProductResource.getProductCertificateById(owner.getKey(), entity.getId()));
     }
 }

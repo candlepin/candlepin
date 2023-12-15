@@ -17,8 +17,8 @@ package org.candlepin.resource.util;
 import org.candlepin.dto.api.server.v1.DateRange;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.util.Util;
@@ -27,10 +27,9 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -40,20 +39,20 @@ import javax.inject.Inject;
  * The ConsumerEnricher populates the transient fields of a consumer and its related objects.
  */
 public class ConsumerEnricher {
-    private static Logger log = LoggerFactory.getLogger(ConsumerEnricher.class);
+    private static final Logger log = LoggerFactory.getLogger(ConsumerEnricher.class);
 
     private static final String RED_STATUS = "red";
     private static final String YELLOW_STATUS = "yellow";
     private static final String GREEN_STATUS = "green";
     private static final String GRAY_STATUS = "gray";
 
-    private ComplianceRules complianceRules;
-    private OwnerProductCurator ownerProductCurator;
+    private final ComplianceRules complianceRules;
+    private final ProductCurator productCurator;
 
     @Inject
-    public ConsumerEnricher(ComplianceRules complianceRules, OwnerProductCurator ownerProductCurator) {
-        this.complianceRules = complianceRules;
-        this.ownerProductCurator = ownerProductCurator;
+    public ConsumerEnricher(ComplianceRules complianceRules, ProductCurator productCurator) {
+        this.complianceRules = Objects.requireNonNull(complianceRules);
+        this.productCurator = Objects.requireNonNull(productCurator);
     }
 
     public void enrich(Consumer consumer) {
@@ -66,17 +65,14 @@ public class ConsumerEnricher {
             true, true);
         Map<String, DateRange> ranges = status.getProductComplianceDateRanges();
 
-        // Compile the product IDs for the products we're going to be enriching
-        Set<String> productIds = new HashSet<>();
-        Map<String, Product> productMap = new HashMap<>();
+        // Compile and prefetch the IDs of the products we're going to be enriching
+        String namespace = consumer.getOwner().getKey();
 
-        for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
-            productIds.add(cip.getProductId());
-        }
+        List<String> productIds = consumer.getInstalledProducts().stream()
+            .map(ConsumerInstalledProduct::getProductId)
+            .toList();
 
-        for (Product product : this.ownerProductCurator.getProductsByIds(consumer.getOwnerId(), productIds)) {
-            productMap.put(product.getId(), product);
-        }
+        Map<String, Product> productMap = this.productCurator.resolveProductIds(namespace, productIds);
 
         // Perform enrichment of the consumer's installed products
         for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {

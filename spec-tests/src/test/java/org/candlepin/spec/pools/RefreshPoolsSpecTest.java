@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.from;
 import static org.assertj.core.api.InstanceOfAssertFactories.collection;
+import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -66,6 +67,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @SpecTest
 public class RefreshPoolsSpecTest {
@@ -183,10 +185,10 @@ public class RefreshPoolsSpecTest {
         compareBrandings(brand1, pools.get(0).getBranding().stream().iterator().next());
 
         // Check the branding set is visible on the product.
-        List<ProductDTO> products = adminClient.ownerProducts().getProductsByOwner(ownerKey, List.of());
-        assertEquals(1, products.size());
-        assertEquals(1, products.get(0).getBranding().size());
-        compareBrandings(brand1, products.get(0).getBranding().stream().iterator().next());
+        ProductDTO actualProduct = adminClient.ownerProducts().getProductById(ownerKey, product.getId());
+        assertNotNull(actualProduct);
+        assertEquals(1, actualProduct.getBranding().size());
+        compareBrandings(brand1, actualProduct.getBranding().stream().iterator().next());
 
         // Add an additional branding to the upstream product than the one we had initially...
         BrandingDTO brand2 = Branding.random();
@@ -201,9 +203,9 @@ public class RefreshPoolsSpecTest {
         compareBrandings(expectedBranding, pools.get(0).getBranding());
 
         // Check the updated branding set is visible on the product.
-        products = adminClient.ownerProducts().getProductsByOwner(ownerKey, List.of());
-        assertEquals(1, products.size());
-        Set<BrandingDTO> actualBranding = products.get(0).getBranding();
+        actualProduct = adminClient.ownerProducts().getProductById(ownerKey, product.getId());
+        assertNotNull(actualProduct);
+        Set<BrandingDTO> actualBranding = actualProduct.getBranding();
         compareBrandings(expectedBranding, actualBranding);
     }
 
@@ -421,7 +423,7 @@ public class RefreshPoolsSpecTest {
         assertEquals(1, pools.size());
 
         // Verify the content exists in its initial state
-        ContentDTO actualContent = adminClient.ownerContent().getOwnerContent(ownerKey, content.getId());
+        ContentDTO actualContent = adminClient.ownerContent().getContentById(ownerKey, content.getId());
         assertNotNull(actualContent);
         assertEquals(content.getId(), actualContent.getId());
         assertEquals(content.getType(), actualContent.getType());
@@ -456,7 +458,7 @@ public class RefreshPoolsSpecTest {
         assertEquals(1, pools.size());
 
         // Verify the content change has been pulled down
-        content = adminClient.ownerContent().getOwnerContent(ownerKey, content.getId());
+        content = adminClient.ownerContent().getContentById(ownerKey, content.getId());
         assertEquals(expectedLabelUpdated, content.getLabel());
 
         // Verify the entitlement cert has changed as a result
@@ -485,7 +487,7 @@ public class RefreshPoolsSpecTest {
         assertEquals(1, pools.size());
 
         // Verify the content exists in its initial state
-        ContentDTO actualContent = adminClient.ownerContent().getOwnerContent(scaOwnerKey, content.getId());
+        ContentDTO actualContent = adminClient.ownerContent().getContentById(scaOwnerKey, content.getId());
         assertNotNull(actualContent);
         assertEquals(content.getLabel(), actualContent.getLabel());
         assertEquals(content.getContentUrl(), actualContent.getContentUrl());
@@ -522,7 +524,7 @@ public class RefreshPoolsSpecTest {
         assertEquals(1, pools.size());
 
         // Verify the content change has been pulled down
-        actualContent = adminClient.ownerContent().getOwnerContent(scaOwnerKey, updatedContent.getId());
+        actualContent = adminClient.ownerContent().getContentById(scaOwnerKey, updatedContent.getId());
         assertNotNull(actualContent);
         assertEquals(updatedContent.getLabel(), actualContent.getLabel());
         assertEquals(updatedContent.getContentUrl(), actualContent.getContentUrl());
@@ -554,7 +556,7 @@ public class RefreshPoolsSpecTest {
         assertEquals(1, pools.size());
 
         // Verify the product exists in its initial state
-        ProductDTO actualProd = adminClient.ownerProducts().getProductByOwner(ownerKey, prod.getId());
+        ProductDTO actualProd = adminClient.ownerProducts().getProductById(ownerKey, prod.getId());
         assertEquals(prod.getId(), actualProd.getId());
         assertEquals(prod.getName(), actualProd.getName());
 
@@ -584,7 +586,7 @@ public class RefreshPoolsSpecTest {
         assertEquals(1, pools.size());
 
         // Verify the product change has been pulled down
-        actualProd = adminClient.ownerProducts().getProductByOwner(ownerKey, prod.getId());
+        actualProd = adminClient.ownerProducts().getProductById(ownerKey, prod.getId());
         assertNotNull(actualProd);
         assertEquals(updatedName, actualProd.getName());
 
@@ -598,6 +600,7 @@ public class RefreshPoolsSpecTest {
 
     @Test
     @OnlyInHosted
+    @SuppressWarnings("methodlength")
     public void shouldRegenEntitlementsWhenRequiredProductsChanges() throws Exception {
         ProductDTO engProd1 = adminClient.hosted().createProduct(Products.randomEng());
         ProductDTO engProd2 = adminClient.hosted().createProduct(Products.randomEng());
@@ -624,16 +627,24 @@ public class RefreshPoolsSpecTest {
         PoolDTO pool1 = pools.get(0).getSubscriptionId().equals(sub1.getId()) ? pools.get(0) : pools.get(1);
         PoolDTO pool2 = pools.get(0).getSubscriptionId().equals(sub2.getId()) ? pools.get(0) : pools.get(1);
 
-        List<ProductDTO> actualProducts = adminClient.ownerProducts().getProductsByOwner(ownerKey, List.of());
+        List<String> pids = Stream.of(engProd1, engProd2, skuProd1, skuProd2)
+            .map(ProductDTO::getId)
+            .toList();
+
+        List<ProductDTO> actualProducts = adminClient.ownerProducts()
+            .getProductsByOwner(ownerKey, pids, false);
         assertThat(actualProducts)
             .map(ProductDTO::getId)
-            .containsExactlyInAnyOrder(engProd1.getId(), engProd2.getId(), skuProd1.getId(),
-            skuProd2.getId());
+            .containsAll(pids);
 
-        List<ContentDTO> actualContent = adminClient.ownerContent().listOwnerContent(ownerKey);
+        List<String> cids = Stream.of(content1, content2, content3)
+            .map(ContentDTO::getId)
+            .toList();
+
+        List<ContentDTO> actualContent = adminClient.ownerContent().getContentsByOwner(ownerKey, cids, false);
         assertThat(actualContent)
             .map(ContentDTO::getId)
-            .containsExactlyInAnyOrder(content1.getId(), content2.getId(), content3.getId());
+            .containsAll(cids);
 
         // Consume both pools
         ConsumerDTO user = adminClient.consumers().createConsumer(Consumers
@@ -680,7 +691,7 @@ public class RefreshPoolsSpecTest {
 
         // Verify the content change has been pulled down
         assertEquals(Set.of(engProd1.getId()), adminClient.ownerContent()
-            .getOwnerContent(ownerKey, content2.getId()).getModifiedProductIds());
+            .getContentById(ownerKey, content2.getId()).getModifiedProductIds());
 
         // Verify the entitlement has been regenerated
         EntitlementDTO updatedEnt = adminClient.entitlements().getEntitlement(bindEnt2.get("id").asText());
@@ -710,7 +721,7 @@ public class RefreshPoolsSpecTest {
 
         // Verify the content change has been pulled down
         assertEquals(Set.of(unknownProdId), adminClient.ownerContent()
-            .getOwnerContent(ownerKey, content3.getId()).getModifiedProductIds());
+            .getContentById(ownerKey, content3.getId()).getModifiedProductIds());
 
         // Verify the entitlement has been regenerated
         updatedEnt = adminClient.entitlements().getEntitlement(bindEnt2.get("id").asText());
@@ -742,7 +753,7 @@ public class RefreshPoolsSpecTest {
         PoolDTO pool = pools.get(0);
 
         // Verify the product exists in its initial state
-        ProductDTO actualProd = adminClient.ownerProducts().getProductByOwner(ownerKey, prod.getId());
+        ProductDTO actualProd = adminClient.ownerProducts().getProductById(ownerKey, prod.getId());
         assertNotNull(actualProd);
         compareProducts(prod, actualProd);
         compareBrandings(prod.getBranding(), actualProd.getBranding());
@@ -773,7 +784,7 @@ public class RefreshPoolsSpecTest {
         assertEquals(1, pools.size());
 
         // Verify the branding change on the product has been pulled down
-        actualProd = adminClient.ownerProducts().getProductByOwner(ownerKey, prod.getId());
+        actualProd = adminClient.ownerProducts().getProductById(ownerKey, prod.getId());
         assertNotNull(actualProd);
         compareProducts(prod, actualProd);
         compareBrandings(prod.getBranding(), actualProd.getBranding());
@@ -802,7 +813,7 @@ public class RefreshPoolsSpecTest {
         PoolDTO pool = pools.get(0);
 
         // Verify the product exists in its initial state
-        ProductDTO fetchedProd = adminClient.ownerProducts().getProductByOwner(ownerKey, prod.getId());
+        ProductDTO fetchedProd = adminClient.ownerProducts().getProductById(ownerKey, prod.getId());
         compareProducts(prod, fetchedProd);
 
         // Consume the pool multiple times so we have entitlements to revoke
@@ -1711,15 +1722,252 @@ public class RefreshPoolsSpecTest {
             .containsExactlyInAnyOrder(provProd1.getUuid(), provProd2.getUuid(), provProd3.getUuid());
     }
 
+    @Test
+    @OnlyInHosted
+    public void shouldDetectProductChangesAcrossMultipleOrgsEntitlementRegeneration() {
+        // With global products, we need to verify that one org refreshing the global product
+        // definitions does not prevent subsequent refreshes for orgs using the same products from
+        // detecting product changes and making necessary pool updates.
+
+        OwnerDTO owner1 = adminClient.owners().createOwner(Owners.random());
+        OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
+        ConsumerDTO owner1Consumer = adminClient.consumers().createConsumer(Consumers.random(owner1));
+        ConsumerDTO owner2Consumer = adminClient.consumers().createConsumer(Consumers.random(owner2));
+
+        // Create a basic pool for the subscription that both orgs will consume
+        ProductDTO product = adminClient.hosted().createProduct(Products.random());
+
+        adminClient.hosted().createSubscription(Subscriptions.random(owner1, product));
+        adminClient.hosted().createSubscription(Subscriptions.random(owner2, product));
+
+        // Refresh our orgs and verify they both have one pool
+        this.refreshPools(adminClient, owner1.getKey());
+        this.refreshPools(adminClient, owner2.getKey());
+
+        List<PoolDTO> owner1Pools = adminClient.pools().listPoolsByOwner(owner1.getId());
+        assertThat(owner1Pools).hasSize(1);
+
+        List<PoolDTO> owner2Pools = adminClient.pools().listPoolsByOwner(owner2.getId());
+        assertThat(owner2Pools).hasSize(1);
+
+        // Consume both pools so we get an entitlement
+        List<EntitlementDTO> owner1Entitlements = adminClient.consumers()
+            .bindPoolSync(owner1Consumer.getUuid(), owner1Pools.get(0).getId(), 1);
+        assertThat(owner1Entitlements).hasSize(1);
+
+        EntitlementDTO owner1Entitlement = owner1Entitlements.get(0);
+        CertificateDTO owner1EntCertificate = owner1Entitlement.getCertificates()
+            .iterator()
+            .next();
+
+        List<EntitlementDTO> owner2Entitlements = adminClient.consumers()
+            .bindPoolSync(owner2Consumer.getUuid(), owner2Pools.get(0).getId(), 1);
+        assertThat(owner2Entitlements).hasSize(1);
+
+        EntitlementDTO owner2Entitlement = owner2Entitlements.get(0);
+        CertificateDTO owner2EntCertificate = owner2Entitlement.getCertificates()
+            .iterator()
+            .next();
+
+        // Update the product with a new name
+        product.setName(product.getName() + " updated");
+        product = adminClient.hosted().updateProduct(product.getId(), product);
+
+        // Refresh first org and verify its client gets a new entitlement
+        this.refreshPools(adminClient, owner1.getKey());
+
+        List<EntitlementDTO> owner1EntitlementsUpdate = adminClient.consumers()
+            .listEntitlementsWithRegen(owner1Consumer.getUuid());
+
+        assertThat(owner1EntitlementsUpdate)
+            .isNotNull()
+            .singleElement()
+            .returns(owner1Entitlement.getId(), EntitlementDTO::getId)
+            .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
+            .singleElement()
+            .doesNotReturn(owner1EntCertificate.getId(), CertificateDTO::getId);
+
+        // Verify org 2 has not been affected
+        List<EntitlementDTO> owner2EntitlementsUpdateA = adminClient.consumers()
+            .listEntitlementsWithRegen(owner2Consumer.getUuid());
+
+        assertThat(owner2EntitlementsUpdateA)
+            .isNotNull()
+            .singleElement()
+            .returns(owner2Entitlement.getId(), EntitlementDTO::getId)
+            .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
+            .singleElement()
+            .returns(owner2EntCertificate.getId(), CertificateDTO::getId);
+
+
+        // Refresh the second org and verify it now detects the product change and regenerates its
+        // entitlement(s)
+        this.refreshPools(adminClient, owner2.getKey());
+
+        List<EntitlementDTO> owner2EntitlementsUpdateB = adminClient.consumers()
+            .listEntitlementsWithRegen(owner2Consumer.getUuid());
+
+        assertThat(owner2EntitlementsUpdateB)
+            .isNotNull()
+            .singleElement()
+            .returns(owner2Entitlement.getId(), EntitlementDTO::getId)
+            .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
+            .singleElement()
+            .doesNotReturn(owner2EntCertificate.getId(), CertificateDTO::getId);
+    }
+
+    @Test
+    @OnlyInHosted
+    public void shouldDetectProductChangesAcrossMultipleOrgsDerivedPoolGeneration() {
+        // With global products, we need to verify that one org refreshing the global product
+        // definitions does not prevent subsequent refreshes for orgs using the same products from
+        // detecting product changes and making necessary pool updates.
+
+        OwnerDTO owner1 = adminClient.owners().createOwner(Owners.random());
+        OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
+
+        // Create a basic pool for the subscription that both orgs will consume
+        ProductDTO product = adminClient.hosted().createProduct(Products.random());
+
+        adminClient.hosted().createSubscription(Subscriptions.random(owner1, product));
+        adminClient.hosted().createSubscription(Subscriptions.random(owner2, product));
+
+        // Refresh our orgs and verify they both have one pool
+        this.refreshPools(adminClient, owner1.getKey());
+        this.refreshPools(adminClient, owner2.getKey());
+
+        List<PoolDTO> owner1Pools = adminClient.pools().listPoolsByOwner(owner1.getId());
+        assertThat(owner1Pools).hasSize(1);
+
+        List<PoolDTO> owner2Pools = adminClient.pools().listPoolsByOwner(owner2.getId());
+        assertThat(owner2Pools).hasSize(1);
+
+        // Update the product with a new derived product
+        ProductDTO derivedProduct = adminClient.hosted().createProduct(Products.random());
+
+        product.derivedProduct(derivedProduct)
+            .addAttributesItem(ProductAttributes.VirtualLimit.withValue("unlimited"));
+
+        product = adminClient.hosted().updateProduct(product.getId(), product);
+
+        // Refresh first org and verify it has a new derived pool
+        this.refreshPools(adminClient, owner1.getKey());
+
+        assertThat(adminClient.pools().listPoolsByOwner(owner1.getId()))
+            .isNotNull()
+            .hasSize(2);
+
+        // Refresh the second org and verify it *also* gets the new derived pool
+        this.refreshPools(adminClient, owner2.getKey());
+
+        assertThat(adminClient.pools().listPoolsByOwner(owner1.getId()))
+            .isNotNull()
+            .hasSize(2);
+    }
+
+    @Test
+    @OnlyInHosted
+    public void shouldDetectProductChangesAcrossMultipleOrgsSCACertificateRegeneration() {
+        // With global products, SCA gets a little bit more aggressive in terms of refresh. Whenever
+        // a product is detected as "changed", we update the lastContentUpdate field on every org
+        // that has a pool referencing it. This should trigger SCA cert refreshes even outside of
+        // an org-specific refresh.
+
+        OwnerDTO owner1 = adminClient.owners().createOwner(Owners.randomSca());
+        OwnerDTO owner2 = adminClient.owners().createOwner(Owners.randomSca());
+        ConsumerDTO owner1Consumer = adminClient.consumers().createConsumer(Consumers.random(owner1));
+        ConsumerDTO owner2Consumer = adminClient.consumers().createConsumer(Consumers.random(owner2));
+
+        // Create a basic pool for the subscription that both orgs will consume
+        ProductDTO product = adminClient.hosted().createProduct(Products.random());
+
+        adminClient.hosted().createSubscription(Subscriptions.random(owner1, product));
+        adminClient.hosted().createSubscription(Subscriptions.random(owner2, product));
+
+        // Refresh our orgs and verify they both have one pool
+        this.refreshPools(adminClient, owner1.getKey());
+        this.refreshPools(adminClient, owner2.getKey());
+
+        List<PoolDTO> owner1Pools = adminClient.pools().listPoolsByOwner(owner1.getId());
+        assertThat(owner1Pools).hasSize(1);
+
+        JsonNode owner1SCAContentBody1 = adminClient.consumers()
+            .getContentAccessBodyJson(owner1Consumer.getUuid(), null);
+
+        String owner1SCALastUpdate1 = owner1SCAContentBody1.get("lastUpdate").asText();
+        String owner1SCAContent1 = owner1SCAContentBody1.get("contentListing")
+            .elements().next().get(1).asText(); // :/
+
+        List<PoolDTO> owner2Pools = adminClient.pools().listPoolsByOwner(owner2.getId());
+        assertThat(owner2Pools).hasSize(1);
+
+        JsonNode owner2SCAContentBody1 = adminClient.consumers()
+            .getContentAccessBodyJson(owner2Consumer.getUuid(), null);
+
+        String owner2SCALastUpdate1 = owner2SCAContentBody1.get("lastUpdate").asText();
+        String owner2SCAContent1 = owner2SCAContentBody1.get("contentListing")
+            .elements().next().get(1).asText(); // :/
+
+        // Update the product with new content
+        ContentDTO content = adminClient.hosted().createContent(Contents.random());
+        adminClient.hosted().addContentToProduct(product.getId(), content.getId(), true);
+
+        // Refresh first org and verify it gets new SCA content blobs
+        this.refreshPools(adminClient, owner1.getKey());
+
+        JsonNode owner1SCAContentBody2 = adminClient.consumers()
+            .getContentAccessBodyJson(owner1Consumer.getUuid(), null);
+
+        String owner1SCALastUpdate2 = owner1SCAContentBody2.get("lastUpdate").asText();
+        String owner1SCAContent2 = owner1SCAContentBody2.get("contentListing")
+            .elements().next().get(1).asText(); // :/
+
+        assertNotEquals(owner1SCALastUpdate1, owner1SCALastUpdate2);
+        assertNotEquals(owner1SCAContent1, owner1SCAContent2);
+
+        // The second org should also be affected by this in SCA mode, even without an explicit
+        // refresh
+        JsonNode owner2SCAContentBody2 = adminClient.consumers()
+            .getContentAccessBodyJson(owner2Consumer.getUuid(), null);
+
+        String owner2SCALastUpdate2 = owner2SCAContentBody2.get("lastUpdate").asText();
+        String owner2SCAContent2 = owner2SCAContentBody2.get("contentListing")
+            .elements().next().get(1).asText(); // :/
+
+        assertNotEquals(owner2SCALastUpdate1, owner2SCALastUpdate2);
+        assertNotEquals(owner2SCAContent1, owner2SCAContent2);
+
+        // An explicit refresh should also trigger another regen, since its pool will be flagged as
+        // dirty. Note that this behavior is not explicitly required for future implementations, so
+        // if this changes in the future, drop this additional check.
+        this.refreshPools(adminClient, owner2.getKey());
+
+        JsonNode owner2SCAContentBody3 = adminClient.consumers()
+            .getContentAccessBodyJson(owner2Consumer.getUuid(), null);
+
+        String owner2SCALastUpdate3 = owner2SCAContentBody3.get("lastUpdate").asText();
+        String owner2SCAContent3 = owner2SCAContentBody3.get("contentListing")
+            .elements().next().get(1).asText(); // :/
+
+        assertNotEquals(owner2SCALastUpdate1, owner2SCALastUpdate2);
+        assertNotEquals(owner2SCAContent1, owner2SCAContent2);
+        assertNotEquals(owner2SCALastUpdate1, owner2SCALastUpdate3);
+        assertNotEquals(owner2SCAContent1, owner2SCAContent3);
+        assertNotEquals(owner2SCALastUpdate2, owner2SCALastUpdate3);
+        assertNotEquals(owner2SCAContent2, owner2SCAContent3);
+    }
+
     private AsyncJobStatusDTO refreshPools(ApiClient client, String ownerKey) {
-        AsyncJobStatusDTO job = adminClient.owners().refreshPools(ownerKey, true);
+        AsyncJobStatusDTO job = client.owners().refreshPools(ownerKey, true);
         if (!CandlepinMode.isHosted()) {
             return null;
         }
 
         assertNotNull(job);
-        job = adminClient.jobs().waitForJob(job);
-        assertEquals("FINISHED", job.getState());
+        job = client.jobs().waitForJob(job);
+
+        assertThatJob(job)
+            .isFinished();
 
         return job;
     }

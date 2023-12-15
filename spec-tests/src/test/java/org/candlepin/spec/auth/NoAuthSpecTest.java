@@ -48,7 +48,7 @@ class NoAuthSpecTest {
     void shouldRejectNoAuthRequestsForSecurityHoleEndpoints() {
         ProductsApi client = ApiClients.noAuth().products();
 
-        assertUnauthorized(() -> client.getProduct("some_uuid"));
+        assertUnauthorized(() -> client.getProductByUuid("some_uuid"));
     }
 
     @Test

@@ -190,4 +190,7 @@
     <include file="db/changelog/20230803000000-create-anonymous-consumers.xml" />
     <include file="db/changelog/20230921144200-add_reg_auth_method_to_cp_consumers.xml"/>
     <include file="db/changelog/202310040000000-create-anonymous-certificates.xml" />
+    <include file="db/changelog/20231003113535-entity_layering_schema.xml"/>
+    <include file="db/changelog/20231003163700-rename_pool_locked_field.xml"/>
+    <include file="db/changelog/20231211101743-add-pool-dirty-product-column.xml"/>
 </databaseChangeLog>

@@ -87,14 +87,11 @@ public class NodeProcessorTest {
 
         E existing = mock(entityCls);
         I imported = mock(importCls);
-        E merged = mock(entityCls);
 
         doReturn(id).when(existing).getId();
-        doReturn(id).when(merged).getId();
 
         node.setExistingEntity(existing);
         node.setImportedEntity(imported);
-        node.setMergedEntity(merged);
 
         return node;
     }
@@ -318,81 +315,6 @@ public class NodeProcessorTest {
         }
     }
 
-    private int validateNodePruningOrder(List<EntityNode> pruneOrder, EntityNode node) {
-        int nodeIndex = pruneOrder.indexOf(node);
-        int lastIndex = pruneOrder.lastIndexOf(node);
-
-        // Ensure the node was actually processed, and only handed to our visitor once.
-        assertNotEquals(-1, nodeIndex);
-        assertEquals(nodeIndex, lastIndex);
-
-        Iterator<EntityNode<?, ?>> parents = node.getParentNodes()
-            .iterator();
-
-        while (parents.hasNext()) {
-            // Ensure the parent was processed properly
-            int parentIndex = this.validateNodePruningOrder(pruneOrder, parents.next());
-
-            // Ensure the parent was processed before the node
-            assertThat(parentIndex, lessThan(nodeIndex));
-        }
-
-        return nodeIndex;
-    }
-
-    @Test
-    public void testPruneNodesProcessesNodesAsTrees() {
-        // This test verifies the order of the node processing. We're expecting that it starts
-        // at a root node, and then processes all of the children of that root before continuing
-        // to the next root node
-
-        // Challenges here:
-        // - We don't care about the order in which trees themselves are processed, so long
-        //   as for a given tree it is processed in its entirety before moving to the next
-        //   tree
-        // - This restriction applies also to subtrees within a given tree. That is, we don't
-        //   care about the order in which children are processed, so long as a given child is
-        //   fully processed before moving on to other children.
-        // - Subtrees can be shared!
-        // - Because of this style of expected processing order, we have to be careful as to
-        //   how the test validation is setup to ensure we don't have periodic failures if the
-        //   order of the nodes on a given tier happens to change
-
-        Class cls = Product.class;
-
-        NodeProcessor processor = new NodeProcessor();
-        NodeMapper mapper = new NodeMapper();
-        NodeVisitor visitor = this.mockNodeVisitor(cls);
-
-        List<EntityNode> pruneOrder = new LinkedList<>();
-
-        // Have our mock visitor store the order in which the nodes are processed.
-        doAnswer(iom -> {
-            EntityNode node = (EntityNode) iom.getArguments()[0];
-
-            if (node != null) {
-                node.setNodeState(NodeState.DELETED);
-                pruneOrder.add(node);
-            }
-
-            return null;
-        }).when(visitor).pruneNode(any(EntityNode.class));
-
-        Collection<EntityNode> trees = this.buildNodeTrees(mapper, cls);
-
-        processor.setNodeMapper(mapper)
-            .addVisitor(visitor);
-
-        processor.processNodes();
-
-        // Step through our trees and verify that the parents are processed before the children, and
-        // that the processing doesn't happen out of order
-
-        for (EntityNode root : trees) {
-            this.validateNodePruningOrder(pruneOrder, root);
-        }
-    }
-
     @Test
     public void testProcessNodesAppliesChangesAsTrees() {
         // This test verifies the order of change application. We're expecting that it starts
@@ -491,9 +413,15 @@ public class NodeProcessorTest {
                         break;
 
                     case UPDATED:
+                    case CHILDREN_UPDATED:
                         entities = result.getEntities(cls, EntityState.UPDATED);
+
                         assertNotNull(entities);
-                        assertEquals(nodesPerState, entities.size());
+
+                        // This should contain entities with both UPDATED or CHILDREN_UPDATED, so
+                        // our count is actually twice that of the nodes per state, and it will
+                        // contain the union of both sets of entities.
+                        assertEquals(nodesPerState * 2, entities.size());
                         break;
 
                     case UNCHANGED:

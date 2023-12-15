@@ -17,7 +17,6 @@ package org.candlepin.spec.products;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
@@ -73,38 +72,6 @@ public class ProductResourceSpecTest {
     }
 
     @Test
-    public void shouldRetrieveOwnersByProduct() {
-        List<OwnerDTO> expectedOwners = setupOrgProductsAndPools();
-        OwnerDTO owner1 = expectedOwners.get(0);
-        OwnerDTO owner2 = expectedOwners.get(1);
-
-        List<OwnerDTO> actual = productsApi.getProductOwners(Arrays.asList(p4ProductId));
-        assertEquals(1, actual.size());
-        compareOwner(owner1, actual.get(0));
-
-        actual = productsApi.getProductOwners(Arrays.asList(p5dProductId));
-        assertEquals(1, actual.size());
-        compareOwner(owner2, actual.get(0));
-
-        actual = productsApi.getProductOwners(Arrays.asList(p1ProductId));
-        assertEquals(3, actual.size());
-
-        for (OwnerDTO expectedOwner : expectedOwners) {
-            boolean found = false;
-            for (OwnerDTO actualOwner : actual) {
-                if (expectedOwner.getKey().equals(actualOwner.getKey())) {
-                    found = true;
-                }
-            }
-
-            assertTrue(found);
-        }
-
-        // Unknown product
-        assertEquals(0, productsApi.getProductOwners(Arrays.asList("UnknownProductId")).size());
-    }
-
-    @Test
     @OnlyInHosted
     public void shouldRefreshPoolsForOrgsOwningProducts() throws Exception {
         setupOrgProductsAndPools();
@@ -138,18 +105,13 @@ public class ProductResourceSpecTest {
     }
 
     @Test
-    public void shouldRaiseBadRequestOnGetOwnersWithNoProducts() {
-        assertBadRequest(() -> productsApi.getProductOwners(new ArrayList<>()));
-    }
-
-    @Test
     public void shouldRaiseBadRequestOnRefreshWithNoProducts() {
         assertBadRequest(() -> productsApi.refreshPoolsForProducts(new ArrayList<>(), false));
     }
 
     @Test
     public void shouldRaiseNotFoundForNonExistingProducts() {
-        assertNotFound(() -> productsApi.getProduct("unknown-product-id"));
+        assertNotFound(() -> productsApi.getProductByUuid("unknown-product-id"));
     }
 
     private List<OwnerDTO> setupOrgProductsAndPools() {
@@ -207,7 +169,7 @@ public class ProductResourceSpecTest {
             newProduct.setProvidedProducts(new HashSet<>(providedProducts));
         }
 
-        return ownerProductApi.createProductByOwner(ownerKey, newProduct);
+        return ownerProductApi.createProduct(ownerKey, newProduct);
     }
 
     private PoolDTO createPool(String ownerKey, ProductDTO product) {

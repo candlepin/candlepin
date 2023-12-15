@@ -260,7 +260,7 @@ public class OwnerResourcePoolFilterSpecTest {
     }
     private static ProductDTO createProductByOwner(ApiClient client, OwnerDTO owner, ProductDTO product)
         throws ApiException {
-        return client.ownerProducts().createProductByOwner(owner.getKey(), product);
+        return client.ownerProducts().createProduct(owner.getKey(), product);
     }
 
     private static ApiClient createUserClient(ApiClient adminClient, OwnerDTO owner) throws ApiException {

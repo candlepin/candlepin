@@ -68,16 +68,16 @@ public class HealingSpecTest {
     public void shouldEntitleNonCompliantProducts() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product1 = Products.randomEng();
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         ProductDTO product2 = Products.randomEng();
-        product2 = ownerProductApi.createProductByOwner(owner.getKey(), product2);
+        product2 = ownerProductApi.createProduct(owner.getKey(), product2);
         Set<ConsumerInstalledProductDTO> installed = Set.of(
             new ConsumerInstalledProductDTO().productId(product1.getId()).productName(product1.getName()),
             new ConsumerInstalledProductDTO().productId(product2.getId()).productName(product2.getName())
         );
         ProductDTO parentProduct = Products.randomEng()
             .providedProducts(Set.of(product1, product2));
-        parentProduct = ownerProductApi.createProductByOwner(owner.getKey(), parentProduct);
+        parentProduct = ownerProductApi.createProduct(owner.getKey(), parentProduct);
         PoolDTO currentPool = Pools.random(parentProduct)
             .endDate(OffsetDateTime.now().plusYears(1L));
         currentPool = ownerApi.createPool(owner.getKey(), currentPool);
@@ -104,16 +104,16 @@ public class HealingSpecTest {
     public void shouldEntitleNonCompliantProductsDespiteAValidFutureEntitlement() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product1 = Products.randomEng();
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         ProductDTO product2 = Products.randomEng();
-        product2 = ownerProductApi.createProductByOwner(owner.getKey(), product2);
+        product2 = ownerProductApi.createProduct(owner.getKey(), product2);
         Set<ConsumerInstalledProductDTO> installed = Set.of(
             new ConsumerInstalledProductDTO().productId(product1.getId()).productName(product1.getName()),
             new ConsumerInstalledProductDTO().productId(product2.getId()).productName(product2.getName())
         );
         ProductDTO parentProduct = Products.randomEng()
             .providedProducts(Set.of(product1, product2));
-        parentProduct = ownerProductApi.createProductByOwner(owner.getKey(), parentProduct);
+        parentProduct = ownerProductApi.createProduct(owner.getKey(), parentProduct);
         PoolDTO currentPool = Pools.random(parentProduct)
             .endDate(OffsetDateTime.now().plusYears(1L));
         currentPool = ownerApi.createPool(owner.getKey(), currentPool);
@@ -144,16 +144,16 @@ public class HealingSpecTest {
     public void shouldEntitleNonCompliantProductsAtAFutureDate() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product1 = Products.randomEng();
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         ProductDTO product2 = Products.randomEng();
-        product2 = ownerProductApi.createProductByOwner(owner.getKey(), product2);
+        product2 = ownerProductApi.createProduct(owner.getKey(), product2);
         Set<ConsumerInstalledProductDTO> installed = Set.of(
             new ConsumerInstalledProductDTO().productId(product1.getId()).productName(product1.getName()),
             new ConsumerInstalledProductDTO().productId(product2.getId()).productName(product2.getName())
         );
         ProductDTO parentProduct = Products.randomEng()
             .providedProducts(Set.of(product1, product2));
-        parentProduct = ownerProductApi.createProductByOwner(owner.getKey(), parentProduct);
+        parentProduct = ownerProductApi.createProduct(owner.getKey(), parentProduct);
 
         // This one should be skipped, as we're going to specify a future date:
         PoolDTO currentPool = Pools.random(parentProduct)
@@ -185,9 +185,9 @@ public class HealingSpecTest {
     public void shouldMultiEntitleStackedEntitlements() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product1 = Products.randomEng();
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         ProductDTO product2 = Products.randomEng();
-        product2 = ownerProductApi.createProductByOwner(owner.getKey(), product2);
+        product2 = ownerProductApi.createProduct(owner.getKey(), product2);
         Set<ConsumerInstalledProductDTO> installed = Set.of(
             new ConsumerInstalledProductDTO().productId(product1.getId()).productName(product1.getName()),
             new ConsumerInstalledProductDTO().productId(product2.getId()).productName(product2.getName())
@@ -198,7 +198,7 @@ public class HealingSpecTest {
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"))
             .addAttributesItem(ProductAttributes.StackingId.withValue(stackId))
             .providedProducts(Set.of(product1, product2));
-        parentProduct = ownerProductApi.createProductByOwner(owner.getKey(), parentProduct);
+        parentProduct = ownerProductApi.createProduct(owner.getKey(), parentProduct);
         PoolDTO currentPool = ownerApi.createPool(owner.getKey(), Pools.random(parentProduct));
 
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
@@ -218,11 +218,11 @@ public class HealingSpecTest {
     public void shouldCompletePartialStacksWithNoInstalledProd() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product1 = Products.randomEng();
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         ProductDTO product2 = Products.randomEng();
-        product2 = ownerProductApi.createProductByOwner(owner.getKey(), product2);
+        product2 = ownerProductApi.createProduct(owner.getKey(), product2);
         ProductDTO product3 = Products.randomEng();
-        product3 = ownerProductApi.createProductByOwner(owner.getKey(), product3);
+        product3 = ownerProductApi.createProduct(owner.getKey(), product3);
         Set<ConsumerInstalledProductDTO> installed = Set.of(
             new ConsumerInstalledProductDTO().productId(product3.getId()).productName(product3.getName())
         );
@@ -232,7 +232,7 @@ public class HealingSpecTest {
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"))
             .addAttributesItem(ProductAttributes.StackingId.withValue(stackId))
             .providedProducts(Set.of(product3));
-        parentProduct = ownerProductApi.createProductByOwner(owner.getKey(), parentProduct);
+        parentProduct = ownerProductApi.createProduct(owner.getKey(), parentProduct);
         PoolDTO currentPool = ownerApi.createPool(owner.getKey(), Pools.random(parentProduct));
 
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
@@ -257,9 +257,9 @@ public class HealingSpecTest {
     public void shouldMultiEntitleStackedEntitlementsAcrossPools() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product1 = Products.randomEng();
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         ProductDTO product2 = Products.randomEng();
-        product2 = ownerProductApi.createProductByOwner(owner.getKey(), product2);
+        product2 = ownerProductApi.createProduct(owner.getKey(), product2);
         Set<ConsumerInstalledProductDTO> installed = Set.of(
             new ConsumerInstalledProductDTO().productId(product1.getId()).productName(product1.getName()),
             new ConsumerInstalledProductDTO().productId(product2.getId()).productName(product2.getName())
@@ -271,14 +271,14 @@ public class HealingSpecTest {
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"))
             .addAttributesItem(ProductAttributes.StackingId.withValue(stackId))
             .providedProducts(Set.of(product1, product2));
-        parentProduct1 = ownerProductApi.createProductByOwner(owner.getKey(), parentProduct1);
+        parentProduct1 = ownerProductApi.createProduct(owner.getKey(), parentProduct1);
         PoolDTO pool1 = ownerApi.createPool(owner.getKey(), Pools.random(parentProduct1).quantity(2L));
         ProductDTO parentProduct2 = Products.randomEng()
             .addAttributesItem(ProductAttributes.Sockets.withValue("2"))
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"))
             .addAttributesItem(ProductAttributes.StackingId.withValue(stackId))
             .providedProducts(Set.of(product1, product2));
-        parentProduct2 = ownerProductApi.createProductByOwner(owner.getKey(), parentProduct2);
+        parentProduct2 = ownerProductApi.createProduct(owner.getKey(), parentProduct2);
         PoolDTO pool2 = ownerApi.createPool(owner.getKey(), Pools.random(parentProduct2).quantity(2L));
 
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
@@ -298,9 +298,9 @@ public class HealingSpecTest {
     public void shouldCompleteAPreExistingPartialStack() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product1 = Products.randomEng();
-        product1 = ownerProductApi.createProductByOwner(owner.getKey(), product1);
+        product1 = ownerProductApi.createProduct(owner.getKey(), product1);
         ProductDTO product2 = Products.randomEng();
-        product2 = ownerProductApi.createProductByOwner(owner.getKey(), product2);
+        product2 = ownerProductApi.createProduct(owner.getKey(), product2);
         Set<ConsumerInstalledProductDTO> installed = Set.of(
             new ConsumerInstalledProductDTO().productId(product1.getId()).productName(product1.getName()),
             new ConsumerInstalledProductDTO().productId(product2.getId()).productName(product2.getName())
@@ -311,7 +311,7 @@ public class HealingSpecTest {
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"))
             .addAttributesItem(ProductAttributes.StackingId.withValue(stackId))
             .providedProducts(Set.of(product1, product2));
-        parentProduct = ownerProductApi.createProductByOwner(owner.getKey(), parentProduct);
+        parentProduct = ownerProductApi.createProduct(owner.getKey(), parentProduct);
         PoolDTO currentPool = ownerApi.createPool(owner.getKey(), Pools.random(parentProduct));
 
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));

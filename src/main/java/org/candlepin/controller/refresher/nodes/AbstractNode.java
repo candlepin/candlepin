@@ -202,8 +202,15 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
      */
     @Override
     public boolean changed() {
-        NodeState state = this.getNodeState();
-        return state == NodeState.CREATED || state == NodeState.UPDATED;
+        switch (this.getNodeState()) {
+            case CREATED:
+            case UPDATED:
+            case CHILDREN_UPDATED:
+                return true;
+
+            default:
+                return false;
+        }
     }
 
     /**
@@ -255,23 +262,6 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
     @Override
     public I getImportedEntity() {
         return this.importedEntity;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EntityNode<E, I> setMergedEntity(E entity) {
-        this.mergedEntity = entity;
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public E getMergedEntity() {
-        return this.mergedEntity;
     }
 
     /**

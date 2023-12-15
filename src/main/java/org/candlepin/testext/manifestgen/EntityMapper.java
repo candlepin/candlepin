@@ -24,8 +24,6 @@ import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
@@ -58,9 +56,7 @@ public class EntityMapper {
     private final Owner owner;
 
     private final PoolCurator poolCurator;
-    private final OwnerProductCurator ownerProductCurator;
     private final ProductCurator productCurator;
-    private final OwnerContentCurator ownerContentCurator;
     private final ContentCurator contentCurator;
 
     private final Map<String, Content> contentMap;
@@ -68,16 +64,13 @@ public class EntityMapper {
     private final List<Pool> pools;
 
 
-    public EntityMapper(Owner owner, PoolCurator poolCurator, OwnerProductCurator ownerProductCurator,
-        ProductCurator productCurator, OwnerContentCurator ownerContentCurator,
+    public EntityMapper(Owner owner, PoolCurator poolCurator, ProductCurator productCurator,
         ContentCurator contentCurator) {
 
         this.owner = Objects.requireNonNull(owner);
 
         this.poolCurator = Objects.requireNonNull(poolCurator);
-        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
         this.productCurator = Objects.requireNonNull(productCurator);
-        this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
         this.contentCurator = Objects.requireNonNull(contentCurator);
 
         this.contentMap = new HashMap<>();
@@ -123,8 +116,10 @@ public class EntityMapper {
                 throw new IllegalStateException("content lacks an id: " + cdto);
             }
 
-            Content fetched = this.ownerContentCurator.getContentById(this.owner, cid);
-
+            // Impl note:
+            // We won't namespace stuff here since it'll be vanishing in a moment anyway, and at the
+            // time of writing, this best reflects how export works and is used today.
+            Content fetched = this.contentCurator.getContentById(null, cid);
             if (fetched == null) {
                 fetched = new Content()
                     .setId(cid);
@@ -158,9 +153,7 @@ public class EntityMapper {
             pcdto.getEnabled() :
             ProductContent.DEFAULT_ENABLED_STATE;
 
-        return new ProductContent()
-            .setContent(this.mergeContentData(pcdto.getContent()))
-            .setEnabled(enabled);
+        return new ProductContent(this.mergeContentData(pcdto.getContent()), enabled);
     }
 
     private Product mergeProductData(ProductDTO pdto) {
@@ -174,8 +167,10 @@ public class EntityMapper {
                 throw new IllegalStateException("product lacks an id: " + pdto);
             }
 
-            Product fetched = this.ownerProductCurator.getProductById(this.owner, pid);
-
+            // Impl note:
+            // We won't namespace stuff here since it'll be vanishing in a moment anyway, and at the
+            // time of writing, this best reflects how export works and is used today.
+            Product fetched = this.productCurator.getProductById(null, pid);
             if (fetched == null) {
                 fetched = new Product()
                     .setId(pid);
@@ -248,7 +243,8 @@ public class EntityMapper {
             .setEndDate(Util.toDate(sdto.getEndDate()))
             .setContractNumber(sdto.getContractNumber())
             .setAccountNumber(sdto.getAccountNumber())
-            .setOrderNumber(sdto.getOrderNumber());
+            .setOrderNumber(sdto.getOrderNumber())
+            .setManaged(true);
 
             // Apparently subscription DTOs don't have attributes, and pool DTOs don't have complete
             // product data. No matter which DTO we pick here, it's wrong. That said, if we want or

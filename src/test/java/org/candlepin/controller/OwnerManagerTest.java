@@ -19,14 +19,14 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprintCurator;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 
@@ -60,9 +60,9 @@ public class OwnerManagerTest {
     @Mock
     private PermissionBlueprintCurator mockPermissionBlueprintCurator;
     @Mock
-    private OwnerProductCurator mockOwnerProductCurator;
+    private ProductCurator mockProductCurator;
     @Mock
-    private OwnerContentCurator mockOwnerContentCurator;
+    private ContentCurator mockContentCurator;
     @Mock
     private OwnerCurator mockOwnerCurator;
     @Mock
@@ -72,7 +72,7 @@ public class OwnerManagerTest {
         return new OwnerManager(
             this.poolService, this.mockConsumerCurator, this.mockActivationKeyCurator,
             this.mockEnvironmentCurator, this.mockExporterMetadataCurator, this.mockImportRecordCurator,
-            this.mockPermissionBlueprintCurator, this.mockOwnerProductCurator, this.mockOwnerContentCurator,
+            this.mockPermissionBlueprintCurator, this.mockProductCurator, this.mockContentCurator,
             this.mockOwnerCurator, this.mockUeberCertificateCurator);
     }
 

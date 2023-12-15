@@ -49,9 +49,7 @@ import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
@@ -129,12 +127,9 @@ public class EntitlerTest {
 
     @Mock
     private ContentCurator mockContentCurator;
-    @Mock
-    private OwnerContentCurator mockOwnerContentCurator;
+
     @Mock
     private ProductCurator mockProductCurator;
-    @Mock
-    private OwnerProductCurator mockOwnerProductCurator;
 
     private RefreshWorker refreshWorker;
     private Provider<RefreshWorker> refreshWorkerProvider;
@@ -155,7 +150,7 @@ public class EntitlerTest {
         translator = new EntitlementRulesTranslator(i18n);
 
         this.refreshWorker = spy(new RefreshWorker(this.poolCurator, this.mockProductCurator,
-            this.mockOwnerProductCurator, this.mockContentCurator, this.mockOwnerContentCurator));
+            this.mockContentCurator));
 
         this.refreshWorkerProvider = () -> refreshWorker;
 

@@ -14,12 +14,12 @@
  */
 package org.candlepin.model;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItem;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -33,36 +33,35 @@ import org.candlepin.util.PropertyValidationException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.hibernate.HibernateException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
 import javax.validation.ConstraintViolationException;
 
 
 public class ProductCuratorTest extends DatabaseTestFixture {
-
-    private Owner owner;
-    private Product product;
-    private Product derivedProduct;
-    private Product providedProduct;
-    private Product derivedProvidedProduct;
-    private Pool pool;
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -76,46 +75,523 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Field field = ProductCurator.class.getDeclaredField("attributeValidator");
         field.setAccessible(true);
         field.set(this.productCurator, new AttributeValidator(this.config, this.i18nProvider));
+    }
 
-        this.owner = this.createOwner();
+    /**
+     * Creates and persists a very basic product using the given product ID and namespace. If the
+     * namespace is null or empty, the product will be created in the global namespace.
+     *
+     * @param productId
+     *  the string to use for the product ID and name
+     *
+     * @param namespace
+     *  the namespace in which to create the product
+     *
+     * @return
+     *  the newly created product
+     */
+    private Product createNamespacedProduct(String productId, String namespace) {
+        Product product = new Product()
+            .setId(productId)
+            .setName(productId)
+            .setNamespace(namespace);
 
-        this.product = TestUtil.createProduct();
-        this.providedProduct = TestUtil.createProduct();
-        this.derivedProduct = TestUtil.createProduct();
-        this.derivedProvidedProduct = TestUtil.createProduct();
+        return this.createProduct(product);
+    }
 
-        this.product.addProvidedProduct(this.providedProduct);
-        this.product.setDerivedProduct(this.derivedProduct);
-        this.derivedProduct.addProvidedProduct(this.derivedProvidedProduct);
+    private static Stream<Arguments> lockModeTypeSource() {
+        return Stream.of(
+            Arguments.of((LockModeType) null),
+            Arguments.of(LockModeType.NONE),
+            Arguments.of(LockModeType.OPTIMISTIC),
+            Arguments.of(LockModeType.PESSIMISTIC_READ),
+            Arguments.of(LockModeType.PESSIMISTIC_WRITE),
+            Arguments.of(LockModeType.READ),
+            Arguments.of(LockModeType.WRITE));
+    }
 
-        this.productCurator.create(this.derivedProvidedProduct);
-        this.productCurator.create(this.derivedProduct);
-        this.productCurator.create(this.providedProduct);
-        this.productCurator.create(this.product);
+    @Test
+    public void testGetProductById() {
+        Product product1 = this.createNamespacedProduct("test_prod-1", null); // global namespace
+        Product product2 = this.createNamespacedProduct("test_prod-2", "namespace-1");
+        Product product3 = this.createNamespacedProduct("test_prod-3", "namespace-2");
 
-        this.pool = new Pool()
-            .setOwner(owner)
-            .setProduct(product)
-            .setQuantity(16L)
-            .setStartDate(TestUtil.createDate(2006, 10, 21))
-            .setEndDate(TestUtil.createDate(2020, 1, 1))
-            .setContractNumber("1")
-            .setAccountNumber("2")
-            .setOrderNumber("3");
+        Product output = this.productCurator.getProductById(product2.getNamespace(), product2.getId());
+        assertEquals(product2, output);
+    }
 
-        this.poolCurator.create(pool);
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = "namespace-1")
+    public void testGetProductByIdRestrictsLookupToNamespace(String namespace) {
+        String id = "test_prod-1";
+
+        Product product1 = this.createNamespacedProduct(id, namespace);
+        Product product2 = this.createNamespacedProduct(id, "namespace-2");
+
+        if (namespace != null && !namespace.isEmpty()) {
+            Product product3 = this.createNamespacedProduct(id, null);
+        }
+
+        Product output = this.productCurator.getProductById(namespace, id);
+        assertEquals(product1, output);
+    }
+
+    @Test
+    public void testGetProductByIdDoesNotFallBackToGlobalNamespace() {
+        Product product1 = this.createNamespacedProduct("test_prod-1", null);
+
+        Product output = this.productCurator.getProductById("namespace-1", product1.getId());
+        assertNull(output);
+    }
+
+    @Test
+    public void testGetProductByIdHandlesNullProductId() {
+        Product product1 = this.createNamespacedProduct("test_prod-1", null);
+        Product product2 = this.createNamespacedProduct("test_prod-1", "namespace-1");
+
+        Product output = this.productCurator.getProductById("namespace-1", null);
+        assertNull(output);
+    }
+
+    @ParameterizedTest
+    @MethodSource("lockModeTypeSource")
+    public void testGetProductByIdWithLockMode(LockModeType lockMode) {
+        String id = "test_prod-1";
+
+        Product product1 = this.createNamespacedProduct(id, null); // global namespace
+        Product product2 = this.createNamespacedProduct(id, "namespace-1");
+        Product product3 = this.createNamespacedProduct("test_prod-2", "namespace-1");
+        Product product4 = this.createNamespacedProduct(id, "namespace-2");
+
+        Product output = this.productCurator.getProductById(product2.getNamespace(), id, lockMode);
+        assertEquals(product2, output);
+    }
+
+    @Test
+    public void testGetProductsByIds() {
+        Product product1 = this.createNamespacedProduct("test_prod-1", null); // global namespace
+        Product product2 = this.createNamespacedProduct("test_prod-2", "namespace-1");
+        Product product3 = this.createNamespacedProduct("test_prod-3", "namespace-1");
+        Product product4 = this.createNamespacedProduct("test_prod-4", "namespace-2");
+
+        String namespace = "namespace-1";
+        List<String> ids = List.of(product2.getId(), product3.getId(), product4.getId());
+
+        Map<String, Product> expected = Map.of(
+            product2.getId(), product2,
+            product3.getId(), product3);
+
+        Map<String, Product> output = this.productCurator.getProductsByIds(namespace, ids);
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderEntriesOf(expected);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = "namespace-1")
+    public void testGetProductsByIdsRestrictsLookupToNamespace(String namespace) {
+        Map<String, List<Product>> productMap = new HashMap<>();
+
+        for (String ns : List.of("", "namespace-1", "namespace-2")) {
+            Product product1 = this.createNamespacedProduct("test_prod-1", ns);
+            Product product2 = this.createNamespacedProduct("test_prod-2", ns);
+            Product product3 = this.createNamespacedProduct("test_prod-3", ns);
+
+            productMap.put(ns, List.of(product1, product2, product3));
+        }
+
+        List<String> ids = List.of("test_prod-1", "test_prod-3", "test_prod-404");
+
+        Map<String, Product> expected = productMap.get(namespace != null ? namespace : "")
+            .stream()
+            .filter(entity -> ids.contains(entity.getId()))
+            .collect(Collectors.toMap(Product::getId, Function.identity()));
+
+        Map<String, Product> output = this.productCurator.getProductsByIds(namespace, ids);
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderEntriesOf(expected);
+    }
+
+    @Test
+    public void testGetProductsByIdsDoesNotFallBackToGlobalNamespace() {
+        Product product1 = this.createNamespacedProduct("test_prod-1", null);
+        Product product2 = this.createNamespacedProduct("test_prod-2", "namespace-1");
+
+        Map<String, Product> output = this.productCurator.getProductsByIds("namespace-1",
+            List.of(product1.getId()));
+
+        assertThat(output)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetProductsByIdsHandlesNullCollection() {
+        Product product1 = this.createNamespacedProduct("test_prod-1", null);
+        Product product2 = this.createNamespacedProduct("test_prod-1", "namespace-1");
+
+        Map<String, Product> output = this.productCurator.getProductsByIds("namespace-1", null);
+
+        assertThat(output)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetProductsByIdsHandlesNullElements() {
+        Product product1 = this.createNamespacedProduct("test_prod-1", null);
+        Product product2 = this.createNamespacedProduct("test_prod-1", "namespace-1");
+
+        List<String> ids = Arrays.asList("test_prod-1", null);
+
+        Map<String, Product> output = this.productCurator.getProductsByIds("namespace-1", ids);
+
+        assertThat(output)
+            .isNotNull()
+            .hasSize(1)
+            .containsEntry(product2.getId(), product2);
+    }
+
+    @ParameterizedTest
+    @MethodSource("lockModeTypeSource")
+    public void testGetProductsByIdsWithLockMode(LockModeType lockMode) {
+        Product product1nsG = this.createNamespacedProduct("test_prod-1", null);
+        Product product1ns1 = this.createNamespacedProduct("test_prod-1", "namespace-1");
+        Product product1ns2 = this.createNamespacedProduct("test_prod-1", "namespace-2");
+        Product product2nsG = this.createNamespacedProduct("test_prod-2", null);
+        Product product2ns1 = this.createNamespacedProduct("test_prod-2", "namespace-1");
+        Product product2ns2 = this.createNamespacedProduct("test_prod-2", "namespace-2");
+        Product product3nsG = this.createNamespacedProduct("test_prod-3", null);
+        Product product3ns1 = this.createNamespacedProduct("test_prod-3", "namespace-1");
+        Product product3ns2 = this.createNamespacedProduct("test_prod-3", "namespace-2");
+
+        List<String> ids = List.of("test_prod-1", "test_prod-2", "test_prod-404");
+        Map<String, Product> expected = Map.of(
+            product1ns1.getId(), product1ns1,
+            product2ns1.getId(), product2ns1);
+
+        Map<String, Product> output = this.productCurator.getProductsByIds("namespace-1", ids, lockMode);
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderEntriesOf(expected);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { "namespace-1", "bad_namespace" })
+    public void testGetProductsByNamespaceRestrictsLookupToNamespace(String namespace) {
+        Map<String, List<Product>> productMap = new HashMap<>();
+
+        for (String ns : List.of("", "namespace-1", "namespace-2")) {
+            Product product1 = this.createNamespacedProduct("test_prod-1", ns);
+            Product product2 = this.createNamespacedProduct("test_prod-2", ns);
+            Product product3 = this.createNamespacedProduct("test_prod-3", ns);
+
+            productMap.put(ns, List.of(product1, product2, product3));
+        }
+
+        List<Product> expected = productMap.getOrDefault(namespace != null ? namespace : "", List.of());
+
+        List<Product> output = this.productCurator.getProductsByNamespace(namespace);
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @ParameterizedTest
+    @MethodSource("lockModeTypeSource")
+    public void testGetProductsByNamespaceWithLockMode(LockModeType lockMode) {
+        Product product1nsG = this.createNamespacedProduct("test_prod-1", null);
+        Product product1ns1 = this.createNamespacedProduct("test_prod-1", "namespace-1");
+        Product product1ns2 = this.createNamespacedProduct("test_prod-1", "namespace-2");
+        Product product2nsG = this.createNamespacedProduct("test_prod-2", null);
+        Product product2ns2 = this.createNamespacedProduct("test_prod-2", "namespace-2");
+        Product product3nsG = this.createNamespacedProduct("test_prod-3", null);
+        Product product3ns1 = this.createNamespacedProduct("test_prod-3", "namespace-1");
+        Product product3ns2 = this.createNamespacedProduct("test_prod-3", "namespace-2");
+
+        List<Product> expected = List.of(product1ns1, product3ns1);
+
+        List<Product> output = this.productCurator.getProductsByNamespace("namespace-1", lockMode);
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    public void testResolveProductId() {
+        Product product1nsG = this.createNamespacedProduct("test_prod-1", null);
+        Product product1ns1 = this.createNamespacedProduct("test_prod-1", "namespace-1");
+        Product product1ns2 = this.createNamespacedProduct("test_prod-1", "namespace-2");
+        Product product2nsG = this.createNamespacedProduct("test_prod-2", null);
+        Product product2ns1 = this.createNamespacedProduct("test_prod-2", "namespace-1");
+        Product product2ns2 = this.createNamespacedProduct("test_prod-2", "namespace-2");
+
+        Product output = this.productCurator.resolveProductId(product1ns1.getNamespace(),
+            product2ns1.getId());
+
+        assertEquals(product2ns1, output);
+    }
+
+    @Test
+    public void testResolveProductIdFallsBackToGlobalNamespace() {
+        Product product1nsG = this.createNamespacedProduct("test_prod-1", null);
+        Product product1ns2 = this.createNamespacedProduct("test_prod-1", "namespace-2");
+
+        Product output = this.productCurator.resolveProductId("namespace-1", product1nsG.getId());
+        assertEquals(product1nsG, output);
+    }
+
+    @Test
+    public void testResolveProductIdDoesNotFallbackFromGlobalNamespace() {
+        Product product1nsG = this.createNamespacedProduct("test_prod-1", null);
+        Product product1ns1 = this.createNamespacedProduct("test_prod-1", "namespace-1");
+        Product product1ns2 = this.createNamespacedProduct("test_prod-1", "namespace-2");
+
+        Product output = this.productCurator.resolveProductId(null, product1nsG.getId());
+        assertEquals(product1nsG, output);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { "test_prod-404" })
+    public void testResolveProductIdHandlesInvalidProductIds(String id) {
+        Product product1nsG = this.createNamespacedProduct("test_prod-1", null);
+        Product product1ns1 = this.createNamespacedProduct("test_prod-1", "namespace-1");
+        Product product1ns2 = this.createNamespacedProduct("test_prod-1", "namespace-2");
+
+        Product output = this.productCurator.resolveProductId("namespace-1", id);
+        assertNull(output);
+    }
+
+    @ParameterizedTest
+    @MethodSource("lockModeTypeSource")
+    public void testResolveProductIdWithLockMode(LockModeType lockMode) {
+        Product product1nsG = this.createNamespacedProduct("test_prod-1", null);
+        Product product1ns1 = this.createNamespacedProduct("test_prod-1", "namespace-1");
+        Product product1ns2 = this.createNamespacedProduct("test_prod-1", "namespace-2");
+        Product product2nsG = this.createNamespacedProduct("test_prod-2", null);
+        Product product2ns1 = this.createNamespacedProduct("test_prod-2", "namespace-1");
+        Product product2ns2 = this.createNamespacedProduct("test_prod-2", "namespace-2");
+
+        Product output = this.productCurator.resolveProductId("namespace-1", "test_prod-1", lockMode);
+
+        assertEquals(product1ns1, output);
+    }
+
+    @Test
+    public void testResolveProductIds() {
+        Product product1 = this.createNamespacedProduct("test_prod-1", null); // global namespace
+        Product product2 = this.createNamespacedProduct("test_prod-2", "namespace-1");
+        Product product3 = this.createNamespacedProduct("test_prod-3", "namespace-1");
+        Product product4 = this.createNamespacedProduct("test_prod-4", "namespace-2");
+
+        String namespace = "namespace-1";
+        List<String> ids = List.of(product2.getId(), product3.getId(), product4.getId());
+
+        Map<String, Product> expected = Map.of(
+            product2.getId(), product2,
+            product3.getId(), product3);
+
+        Map<String, Product> output = this.productCurator.resolveProductIds(namespace, ids);
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderEntriesOf(expected);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { "namespace-1", "namespace-404" })
+    public void testResolveProductIdsPrefersSpecifiedNamespaceOverGlobal(String namespace) {
+        Map<String, List<Product>> productMap = new HashMap<>();
+
+        for (String ns : List.of("", "namespace-1", "namespace-2")) {
+            Product product1 = this.createNamespacedProduct("test_prod-1", ns);
+            Product product2 = this.createNamespacedProduct("test_prod-2", ns);
+            Product product3 = this.createNamespacedProduct("test_prod-3", ns);
+
+            productMap.put(ns, List.of(product1, product2, product3));
+        }
+
+        List<String> ids = List.of("test_prod-1", "test_prod-3", "test_prod-404");
+
+        List<Product> expectedProducts = productMap.get(namespace != null ? namespace : "");
+        if (expectedProducts == null) {
+            expectedProducts = productMap.get("");
+        }
+
+        Map<String, Product> expected = expectedProducts.stream()
+            .filter(entity -> ids.contains(entity.getId()))
+            .collect(Collectors.toMap(Product::getId, Function.identity()));
+
+        Map<String, Product> output = this.productCurator.resolveProductIds(namespace, ids);
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderEntriesOf(expected);
+    }
+
+    @Test
+    public void testResolveProductIdsCanFallBackToGlobalNamespace() {
+        Product product1 = this.createNamespacedProduct("test_prod-1", null);
+        Product product2 = this.createNamespacedProduct("test_prod-2", "namespace-1");
+
+        Map<String, Product> output = this.productCurator.resolveProductIds("namespace-1",
+            List.of(product1.getId(), product2.getId()));
+
+        assertThat(output)
+            .isNotNull()
+            .hasSize(2)
+            .containsEntry(product1.getId(), product1)
+            .containsEntry(product2.getId(), product2);
+    }
+
+    @Test
+    public void testResolveProductIdsHandlesNullCollection() {
+        Product product1 = this.createNamespacedProduct("test_prod-1", null);
+        Product product2 = this.createNamespacedProduct("test_prod-1", "namespace-1");
+
+        Map<String, Product> output = this.productCurator.resolveProductIds("namespace-1", null);
+
+        assertThat(output)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testResolveProductIdsHandlesNullElements() {
+        Product product1 = this.createNamespacedProduct("test_prod-1", null);
+        Product product2 = this.createNamespacedProduct("test_prod-1", "namespace-1");
+
+        List<String> ids = Arrays.asList("test_prod-1", null);
+
+        Map<String, Product> output = this.productCurator.resolveProductIds("namespace-1", ids);
+
+        assertThat(output)
+            .isNotNull()
+            .hasSize(1)
+            .containsEntry(product2.getId(), product2);
+    }
+
+    @ParameterizedTest
+    @MethodSource("lockModeTypeSource")
+    public void testResolveProductIdsWithLockMode(LockModeType lockMode) {
+        Product product1nsG = this.createNamespacedProduct("test_prod-1", null);
+        Product product1ns1 = this.createNamespacedProduct("test_prod-1", "namespace-1");
+        Product product1ns2 = this.createNamespacedProduct("test_prod-1", "namespace-2");
+        Product product2nsG = this.createNamespacedProduct("test_prod-2", null);
+        Product product2ns2 = this.createNamespacedProduct("test_prod-2", "namespace-2");
+        Product product3nsG = this.createNamespacedProduct("test_prod-3", null);
+        Product product3ns1 = this.createNamespacedProduct("test_prod-3", "namespace-1");
+        Product product3ns2 = this.createNamespacedProduct("test_prod-3", "namespace-2");
+
+        List<String> ids = List.of("test_prod-1", "test_prod-2", "test_prod-404");
+        Map<String, Product> expected = Map.of(
+            product1ns1.getId(), product1ns1,
+            product2nsG.getId(), product2nsG);
+
+        Map<String, Product> output = this.productCurator.resolveProductIds("namespace-1", ids, lockMode);
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderEntriesOf(expected);
+    }
+
+    @Test
+    public void testResolveProductsByNamespaceRestrictsLookupToNamespace() {
+        Product product1nsG = this.createNamespacedProduct("test_prod-1", null);
+        Product product1ns1 = this.createNamespacedProduct("test_prod-1", "namespace-1");
+        Product product1ns2 = this.createNamespacedProduct("test_prod-1", "namespace-2");
+        Product product2nsG = this.createNamespacedProduct("test_prod-2", null);
+        Product product2ns1 = this.createNamespacedProduct("test_prod-2", "namespace-1");
+        Product product2ns2 = this.createNamespacedProduct("test_prod-2", "namespace-2");
+        Product product3nsG = this.createNamespacedProduct("test_prod-3", null);
+        Product product3ns1 = this.createNamespacedProduct("test_prod-3", "namespace-1");
+        Product product3ns2 = this.createNamespacedProduct("test_prod-3", "namespace-2");
+
+        List<Product> expected = List.of(product1ns1, product2ns1, product3ns1);
+
+        Collection<Product> output = this.productCurator.resolveProductsByNamespace("namespace-1");
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    public void testResolveProductsByNamespaceFallsBackToGlobalNamespace() {
+        Product product1nsG = this.createNamespacedProduct("test_prod-1", null);
+        Product product1ns1 = this.createNamespacedProduct("test_prod-1", "namespace-1");
+        Product product2nsG = this.createNamespacedProduct("test_prod-2", null);
+        Product product3nsG = this.createNamespacedProduct("test_prod-3", null);
+        Product product3ns1 = this.createNamespacedProduct("test_prod-3", "namespace-1");
+
+        List<Product> expected = List.of(product1ns1, product2nsG, product3ns1);
+
+        Collection<Product> output = this.productCurator.resolveProductsByNamespace("namespace-1");
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    public void testResolveProductsByNamespaceWithGlobalNamespaceHasNoFallback() {
+        Product product1nsG = this.createNamespacedProduct("test_prod-1", null);
+        Product product1ns1 = this.createNamespacedProduct("test_prod-1", "namespace-1");
+        Product product2nsG = this.createNamespacedProduct("test_prod-2", null);
+        Product product3nsG = this.createNamespacedProduct("test_prod-3", null);
+        Product product3ns1 = this.createNamespacedProduct("test_prod-3", "namespace-1");
+
+        List<Product> expected = List.of(product1nsG, product2nsG, product3nsG);
+
+        Collection<Product> output = this.productCurator.resolveProductsByNamespace(null);
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @ParameterizedTest
+    @MethodSource("lockModeTypeSource")
+    public void testResolveProductsByNamespaceWithLockMode(LockModeType lockMode) {
+        Product product1nsG = this.createNamespacedProduct("test_prod-1", null);
+        Product product1ns1 = this.createNamespacedProduct("test_prod-1", "namespace-1");
+        Product product1ns2 = this.createNamespacedProduct("test_prod-1", "namespace-2");
+        Product product2nsG = this.createNamespacedProduct("test_prod-2", null);
+        Product product2ns2 = this.createNamespacedProduct("test_prod-2", "namespace-2");
+        Product product3ns1 = this.createNamespacedProduct("test_prod-3", "namespace-1");
+
+        List<Product> expected = List.of(product1ns1, product2nsG, product3ns1);
+
+        Collection<Product> output = this.productCurator.resolveProductsByNamespace("namespace-1", lockMode);
+
+        assertThat(output)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void normalCreate() {
         Product prod = new Product("cptest-label", "My Product");
-        productCurator.create(prod);
+        this.productCurator.create(prod);
 
-        List<Product> results = this.getEntityManager().createQuery("select p from Product as p")
-            .getResultList();
+        assertNotNull(prod.getUuid());
 
-        assertEquals(5, results.size());
+        Product fetched = this.getEntityManager()
+            .createQuery("SELECT p FROM Product p WHERE p.uuid = :uuid", Product.class)
+            .setParameter("uuid", prod.getUuid())
+            .getSingleResult();
+
+        assertNotNull(fetched);
     }
 
     @Test
@@ -181,7 +657,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testJsonListOfHashes() throws Exception {
-        List<Map<String, String>> data = new LinkedList<>();
+        List<Map<String, String>> data = new ArrayList<>();
         Map<String, String> contentSet1 = new HashMap<>();
         contentSet1.put("name", "cs1");
         contentSet1.put("url", "url");
@@ -240,7 +716,11 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.create(prod);
 
         Product lookedUp = productCurator.get(prod.getUuid());
-        assertThat(lookedUp.getDependentProductIds(), hasItem("ProductX"));
+
+        assertThat(lookedUp.getDependentProductIds())
+            .isNotNull()
+            .singleElement()
+            .isEqualTo("ProductX");
     }
 
     @Test
@@ -456,47 +936,57 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetProductIdFromContentId() {
-        Product p = createTestProduct();
-        Content content = TestUtil.createContent("best-content");
-        p.addContent(content, true);
-
-        contentCurator.create(content);
-        productCurator.create(p);
-        this.ownerProductCurator.mapProductToOwner(p, this.owner);
-        this.ownerContentCurator.mapContentToOwner(content, this.owner);
-
-        List<String> contentIds = new LinkedList<>();
-        contentIds.add(content.getId());
-        List<Product> products = productCurator.getProductsByContent(owner, contentIds).list();
-        assertEquals(1, products.size());
-        assertEquals(p, products.get(0));
-    }
-
-    @Test
-    public void testGetProductIdFromContentUuid() {
-        Product p = createTestProduct();
-        Content content = TestUtil.createContent("best-content");
-        p.addContent(content, true);
-
-        contentCurator.create(content);
-        productCurator.create(p);
-
-        List<String> contentUuids = new LinkedList<>();
-        contentUuids.add(content.getUuid());
-
-        List<Product> products = productCurator.getProductsByContentUuids(contentUuids).list();
-        assertEquals(1, products.size());
-        assertEquals(p, products.get(0));
-    }
-
-    @Test
     public void ensureProductHasSubscription() {
+        Owner owner = this.createOwner();
+
+        Product product = TestUtil.createProduct();
+
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(16L)
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
+            .setContractNumber("1")
+            .setAccountNumber("2")
+            .setOrderNumber("3");
+
+        this.productCurator.create(product);
+        this.poolCurator.create(pool);
+
         assertTrue(productCurator.productHasSubscriptions(owner, product));
     }
 
     @Test
     public void ensureIndirectProductReferencesDoNotCountAsHavingSubscriptions() {
+        Owner owner = this.createOwner();
+
+        Product product = TestUtil.createProduct();
+        Product providedProduct = TestUtil.createProduct();
+        Product derivedProduct = TestUtil.createProduct();
+        Product derivedProvidedProduct = TestUtil.createProduct();
+
+        product.addProvidedProduct(providedProduct);
+        product.setDerivedProduct(derivedProduct);
+        derivedProduct.addProvidedProduct(derivedProvidedProduct);
+
+        this.productCurator.create(derivedProvidedProduct);
+        this.productCurator.create(derivedProduct);
+        this.productCurator.create(providedProduct);
+        this.productCurator.create(product);
+
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(16L)
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
+            .setContractNumber("1")
+            .setAccountNumber("2")
+            .setOrderNumber("3");
+
+        this.poolCurator.create(pool);
+
         assertFalse(productCurator.productHasSubscriptions(owner, providedProduct));
         assertFalse(productCurator.productHasSubscriptions(owner, derivedProduct));
         assertFalse(productCurator.productHasSubscriptions(owner, derivedProvidedProduct));
@@ -504,20 +994,10 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void ensureDoesNotHaveSubscription() {
-        Product noSub = this.createProduct("p1", "p1", owner);
+        Owner owner = this.createOwner();
+
+        Product noSub = this.createProduct("p1", "p1");
         assertFalse(productCurator.productHasSubscriptions(owner, noSub));
-    }
-
-    @Test
-    public void testPoolProvidedProducts() {
-        Set<String> uuids = productCurator.getPoolProvidedProductUuids(pool.getId());
-        assertEquals(Set.of(providedProduct.getUuid()), uuids);
-    }
-
-    @Test
-    public void testDerivedPoolProvidedProducts() {
-        Set<String> uuids = productCurator.getDerivedPoolProvidedProductUuids(pool.getId());
-        assertEquals(Set.of(derivedProvidedProduct.getUuid()), uuids);
     }
 
     @Test
@@ -544,63 +1024,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         // Delete
         productCurator.delete(marketingProduct);
-    }
-
-    @Test
-    public void testProductCannotUpdateImmutableBrandingCollectionByAddingItems() {
-        Product marketingProduct = createTestProduct();
-        marketingProduct.addBranding(
-            new Branding(marketingProduct, "eng_prod_id_1", "Brand No 1", "OS"));
-        marketingProduct.addBranding(
-            new Branding(marketingProduct, "eng_prod_id_2", "Brand No 2", "OS"));
-
-        productCurator.create(marketingProduct);
-        productCurator.flush();
-
-        marketingProduct.addBranding(
-            new Branding(marketingProduct, "eng_prod_id_3", "Brand No 3", "OS"));
-        productCurator.merge(marketingProduct);
-
-        PersistenceException pe = assertThrows(PersistenceException.class, () -> productCurator.flush());
-        assertEquals(HibernateException.class, pe.getCause().getClass());
-        assertTrue(pe.getCause().getMessage().contains("changed an immutable collection instance"));
-    }
-
-    @Test
-    public void testProductCannotUpdateImmutableBrandingCollectionByRemovingItems() {
-        Product marketingProduct = createTestProduct();
-        marketingProduct.addBranding(
-            new Branding(marketingProduct, "eng_prod_id_1", "Brand No 1", "OS"));
-        marketingProduct.addBranding(
-            new Branding(marketingProduct, "eng_prod_id_2", "Brand No 2", "OS"));
-
-        productCurator.create(marketingProduct);
-        productCurator.flush();
-
-        marketingProduct.getBranding().clear();
-        productCurator.merge(marketingProduct);
-
-        PersistenceException pe = assertThrows(PersistenceException.class, () -> productCurator.flush());
-        assertEquals(HibernateException.class, pe.getCause().getClass());
-        assertTrue(pe.getCause().getMessage().contains("changed an immutable collection instance"));
-    }
-
-    @Test
-    public void testProductCannotUpdateImmutableBrandingCollectionByUpdatingItem() {
-        Product marketingProduct = createTestProduct();
-        marketingProduct.addBranding(
-            new Branding(marketingProduct, "eng_prod_id_1", "Brand No 1", "OS"));
-
-        productCurator.create(marketingProduct);
-        productCurator.flush();
-
-        ((Branding) marketingProduct.getBranding().toArray()[0]).setName("new name");
-        productCurator.merge(marketingProduct);
-        productCurator.flush();
-        productCurator.evict(marketingProduct);
-
-        Product lookedUp = productCurator.get(marketingProduct.getUuid());
-        assertNotEquals("new name", ((Branding) lookedUp.getBranding().toArray()[0]).getName());
     }
 
     @Test
@@ -648,8 +1071,8 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProduct("p1", "product_1");
-        Product product2 = this.createProduct("p2", "product_2", owner1);
-        Product product3 = this.createProduct("p3", "product_3", owner2);
+        Product product2 = this.createProduct("p2", "product_2");
+        Product product3 = this.createProduct("p3", "product_3");
 
         Pool pool1 = this.createPool(owner1, product1);
         Pool pool2 = this.createPool(owner1, product2);
@@ -674,8 +1097,8 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProduct("p1", "product_1");
-        Product product2 = this.createProduct("p2", "product_2", owner1);
-        Product product3 = this.createProduct("p3", "product_3", owner2);
+        Product product2 = this.createProduct("p2", "product_2");
+        Product product3 = this.createProduct("p3", "product_3");
 
         Pool pool1 = this.createPool(owner1, product1);
         Pool pool2 = this.createPool(owner1, product2);
@@ -711,9 +1134,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProduct("p1", "product_1");
-        Product product2 = this.createProduct("p2", "product_2", owner1);
-        Product product3 = this.createProduct("p3", "product_3", owner2);
-        Product product4 = this.createProduct("p4", "product_4", owner2);
+        Product product2 = this.createProduct("p2", "product_2");
+        Product product3 = this.createProduct("p3", "product_3");
+        Product product4 = this.createProduct("p4", "product_4");
 
         Product refProduct1 = TestUtil.createProduct("ref_p1", "ref product 1");
         refProduct1.addProvidedProduct(product1);
@@ -723,9 +1146,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             .setDerivedProduct(product4);
         refProduct3.addProvidedProduct(product3);
 
-        refProduct1 = this.createProduct(refProduct1, owner1);
-        refProduct2 = this.createProduct(refProduct2, owner1);
-        refProduct3 = this.createProduct(refProduct3, owner2);
+        refProduct1 = this.createProduct(refProduct1);
+        refProduct2 = this.createProduct(refProduct2);
+        refProduct3 = this.createProduct(refProduct3);
 
         Map<String, Set<String>> output = this.productCurator.getProductsReferencingProducts(
             Arrays.asList(product1.getUuid(), product2.getUuid()));
@@ -746,9 +1169,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProduct("p1", "product_1");
-        Product product2 = this.createProduct("p2", "product_2", owner1);
-        Product product3 = this.createProduct("p3", "product_3", owner2);
-        Product product4 = this.createProduct("p4", "product_4", owner2);
+        Product product2 = this.createProduct("p2", "product_2");
+        Product product3 = this.createProduct("p3", "product_3");
+        Product product4 = this.createProduct("p4", "product_4");
 
         Product refProduct1 = TestUtil.createProduct("ref_p1", "ref product 1");
         refProduct1.addProvidedProduct(product1);
@@ -758,9 +1181,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             .setDerivedProduct(product4);
         refProduct3.addProvidedProduct(product3);
 
-        refProduct1 = this.createProduct(refProduct1, owner1);
-        refProduct2 = this.createProduct(refProduct2, owner1);
-        refProduct3 = this.createProduct(refProduct3, owner2);
+        refProduct1 = this.createProduct(refProduct1);
+        refProduct2 = this.createProduct(refProduct2);
+        refProduct3 = this.createProduct(refProduct3);
 
         Map<String, Set<String>> output = this.productCurator.getProductsReferencingProducts(
             Arrays.asList("bad uuid", "another bad uuid"));
@@ -786,28 +1209,26 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertEquals(0, output.size());
     }
 
-    private Product createProductWithChildren(String productId, int provided, boolean derived,
-        Owner... owners) {
-
+    private Product createProductWithChildren(String productId, int provided, boolean derived) {
         Product product = new Product()
             .setId(productId)
             .setName(productId);
 
         for (int i = 0; i < provided; ++i) {
             String pid = productId + "_provided-" + i;
-            Product providedProduct = this.createProduct(pid, owners);
+            Product providedProduct = this.createProduct(pid);
 
             product.addProvidedProduct(providedProduct);
         }
 
         if (derived) {
             String pid = productId + "_derived";
-            Product derivedProduct = this.createProduct(pid, owners);
+            Product derivedProduct = this.createProduct(pid);
 
             product.setDerivedProduct(derivedProduct);
         }
 
-        return this.createProduct(product, owners);
+        return this.createProduct(product);
     }
 
     @Test
@@ -816,9 +1237,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProductWithChildren("p1", 0, false);
-        Product product2 = this.createProductWithChildren("p2", 1, false, owner1);
-        Product product3 = this.createProductWithChildren("p3", 2, false, owner2);
-        Product product4 = this.createProductWithChildren("p4", 3, false, owner1, owner2);
+        Product product2 = this.createProductWithChildren("p2", 1, false);
+        Product product3 = this.createProductWithChildren("p3", 2, false);
+        Product product4 = this.createProductWithChildren("p4", 3, false);
 
         List<Product> products = List.of(product1, product2, product3, product4);
 
@@ -841,9 +1262,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProductWithChildren("p1", 0, false);
-        Product product2 = this.createProductWithChildren("p2", 0, true, owner1);
-        Product product3 = this.createProductWithChildren("p3", 0, false, owner2);
-        Product product4 = this.createProductWithChildren("p4", 0, true, owner1, owner2);
+        Product product2 = this.createProductWithChildren("p2", 0, true);
+        Product product3 = this.createProductWithChildren("p3", 0, false);
+        Product product4 = this.createProductWithChildren("p4", 0, true);
 
         List<Product> products = List.of(product1, product2, product3, product4);
 
@@ -867,9 +1288,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
 
         Product product1 = this.createProductWithChildren("p1", 1, true);
-        Product product2 = this.createProductWithChildren("p2", 2, true, owner1);
-        Product product3 = this.createProductWithChildren("p3", 3, true, owner2);
-        Product product4 = this.createProductWithChildren("p4", 4, true, owner1, owner2);
+        Product product2 = this.createProductWithChildren("p2", 2, true);
+        Product product3 = this.createProductWithChildren("p3", 3, true);
+        Product product4 = this.createProductWithChildren("p4", 4, true);
 
         List<Product> products = List.of(product2, product3);
 
@@ -898,13 +1319,39 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner1 = this.createOwner();
         Owner owner2 = this.createOwner();
         this.createProduct("p1", "product_1");
-        this.createProduct("p2", "product_2", owner1);
-        this.createProduct("p3", "product_3", owner2);
-        this.createProduct("p4", "product_4", owner2);
+        this.createProduct("p2", "product_2");
+        this.createProduct("p3", "product_3");
+        this.createProduct("p4", "product_4");
 
         Set<Product> output = this.productCurator.getChildrenProductsOfProductsByUuids(input);
         assertNotNull(output);
         assertTrue(output.isEmpty());
+    }
+
+    @Test
+    public void testAttributesRetained() {
+        Map<String, String> attributes = Map.of(
+            "attr1", "val1",
+            "attr2", "val2",
+            "attr3", "val3");
+
+        Product product = new Product()
+            .setId("p1")
+            .setName("product 1")
+            .setAttributes(attributes);
+
+        product = this.productCurator.create(product);
+
+        assertNotNull(product);
+        assertEquals(attributes, product.getAttributes());
+
+        this.productCurator.flush();
+        this.productCurator.clear();
+
+        Product refreshed = this.productCurator.get(product.getUuid());
+
+        assertNotNull(refreshed);
+        assertEquals(attributes, refreshed.getAttributes());
     }
 
 }

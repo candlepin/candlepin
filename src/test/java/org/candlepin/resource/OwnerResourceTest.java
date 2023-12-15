@@ -95,10 +95,11 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.OwnerNotFoundException;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.SystemPurposeAttributeType;
 import org.candlepin.model.UeberCertificate;
@@ -177,7 +178,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private ImportRecordCurator mockImportRecordCurator;
     private OwnerCurator mockOwnerCurator;
     private OwnerInfoCurator mockOwnerInfoCurator;
-    private OwnerProductCurator mockOwnerProductCurator;
+    private PoolCurator mockPoolCurator;
+    private ProductCurator mockProductCurator;
     private PrincipalProvider principalProvider;
     private UeberCertificateCurator mockUeberCertCurator;
     private UeberCertificateGenerator mockUeberCertificateGenerator;
@@ -220,7 +222,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             .setKey(OWNER_NAME)
             .setDisplayName(OWNER_NAME));
 
-        product = this.createProduct(owner);
+        product = this.createProduct();
         typeLabels = null;
         skus = null;
         subscriptionIds = null;
@@ -236,7 +238,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.mockImportRecordCurator = mock(ImportRecordCurator.class);
         this.mockOwnerCurator = mock(OwnerCurator.class);
         this.mockOwnerInfoCurator = mock(OwnerInfoCurator.class);
-        this.mockOwnerProductCurator = mock(OwnerProductCurator.class);
+        this.mockPoolCurator = mock(PoolCurator.class);
+        this.mockProductCurator = mock(ProductCurator.class);
         this.mockUeberCertCurator = mock(UeberCertificateCurator.class);
         this.mockUeberCertificateGenerator = mock(UeberCertificateGenerator.class);
 
@@ -259,13 +262,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private OwnerResource buildOwnerResource() {
         return new OwnerResource(this.mockOwnerCurator, this.mockActivationKeyCurator,
             this.mockConsumerCurator, this.i18n, this.mockEventSink, this.mockEventFactory,
-            this.contentAccessManager, this.mockManifestManager,
-            this.mockPoolManager, this.ownerManager, this.mockExportCurator, this.mockOwnerInfoCurator,
+            this.contentAccessManager, this.mockManifestManager, this.mockPoolManager, this.poolService,
+            this.mockPoolCurator, this.ownerManager, this.mockExportCurator, this.mockOwnerInfoCurator,
             this.mockImportRecordCurator, this.mockEntitlementCurator, this.mockUeberCertCurator,
             this.mockUeberCertificateGenerator, this.mockEnvironmentCurator, this.calculatedAttributesUtil,
             this.contentOverrideValidator, this.serviceLevelValidator, this.ownerServiceAdapter, this.config,
-            this.consumerTypeValidator, this.mockOwnerProductCurator, this.modelTranslator,
-            this.mockJobManager, this.dtoValidator, this.poolService, this.principalProvider);
+            this.consumerTypeValidator, this.mockProductCurator, this.modelTranslator, this.mockJobManager,
+            this.dtoValidator, this.principalProvider);
     }
 
     private ProductDTO buildTestProductDTO() {
@@ -378,7 +381,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         Date now = new Date();
-        Product p = this.createProduct(owner);
+        Product p = this.createProduct();
         Pool pool1 = TestUtil.createPool(owner, p);
         pool1.setAttribute(Pool.Attributes.VIRT_ONLY, "true");
         pool1.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
@@ -423,7 +426,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testOwnerAdminCanGetPools() {
         Principal principal = setupPrincipal(owner, Access.ALL);
 
-        Product p = this.createProduct(owner);
+        Product p = this.createProduct();
         Pool pool1 = TestUtil.createPool(owner, p);
         Pool pool2 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
@@ -443,14 +446,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testCanFilterPoolsByAttribute() throws Exception {
         Principal principal = setupPrincipal(owner, Access.ALL);
 
-        Product p = this.createProduct(owner);
+        Product p = this.createProduct();
         Pool pool1 = TestUtil.createPool(owner, p);
         pool1.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         poolCurator.create(pool1);
 
         Product p2 = TestUtil.createProduct();
         p2.setAttribute(Product.Attributes.CORES, "12");
-        createProduct(p2, owner);
+        createProduct(p2);
         Pool pool2 = TestUtil.createPool(owner, p2);
         poolCurator.create(pool2);
 
@@ -482,13 +485,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testCanFilterOutDevPoolsByAttribute() {
         Principal principal = setupPrincipal(owner, Access.ALL);
 
-        Product p = this.createProduct(owner);
+        Product p = this.createProduct();
 
         Pool pool1 = TestUtil.createPool(owner, p);
         pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
         poolCurator.create(pool1);
 
-        Product p2 = this.createProduct(owner);
+        Product p2 = this.createProduct();
         Pool pool2 = TestUtil.createPool(owner, p2);
         poolCurator.create(pool2);
 
@@ -531,7 +534,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerCurator.create(evilOwner);
         Principal principal = setupPrincipal(evilOwner, Access.ALL);
 
-        Product p = this.createProduct(owner);
+        Product p = this.createProduct();
         Pool pool1 = TestUtil.createPool(owner, p);
         Pool pool2 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
@@ -1049,7 +1052,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void consumerListPoolsGetCalculatedAttributes() {
-        Product p = this.createProduct(owner);
+        Product p = this.createProduct();
         Pool pool1 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
 
@@ -1074,7 +1077,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerListPoolsCannotAccessOtherConsumer() {
-        Product p = this.createProduct(owner);
+        Product p = this.createProduct();
         Pool pool1 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
 
@@ -1481,8 +1484,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product prod2 = TestUtil.createProduct()
             .setAttribute(Product.Attributes.SUPPORT_LEVEL, "standard");
 
-        this.createProduct(prod1, owner);
-        this.createProduct(prod2, owner);
+        this.createProduct(prod1);
+        this.createProduct(prod2);
 
         Pool pool1 = TestUtil.createPool(owner, prod1)
             .setQuantity(2000L)
@@ -1589,13 +1592,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(
             this.mockOwnerCurator, this.activationKeyCurator, this.consumerCurator, this.i18n,
             this.mockEventSink, this.mockEventFactory, this.contentAccessManager, this.mockManifestManager,
-            this.poolManager, this.ownerManager, this.mockExportCurator, this.ownerInfoCurator,
-            this.importRecordCurator, this.entitlementCurator, this.ueberCertificateCurator,
-            this.ueberCertGenerator,
-            this.environmentCurator, this.calculatedAttributesUtil, this.contentOverrideValidator,
-            this.serviceLevelValidator, this.ownerServiceAdapter, this.config, this.consumerTypeValidator,
-            this.mockOwnerProductCurator, this.modelTranslator, this.mockJobManager, this.dtoValidator,
-            this.poolService, this.principalProvider);
+            this.poolManager, this.poolService, this.mockPoolCurator, this.ownerManager,
+            this.mockExportCurator, this.ownerInfoCurator, this.importRecordCurator, this.entitlementCurator,
+            this.ueberCertificateCurator, this.ueberCertGenerator, this.environmentCurator,
+            this.calculatedAttributesUtil, this.contentOverrideValidator, this.serviceLevelValidator,
+            this.ownerServiceAdapter, this.config, this.consumerTypeValidator, this.mockProductCurator,
+            this.modelTranslator, this.mockJobManager, this.dtoValidator, this.principalProvider);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1680,19 +1682,48 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void createPool() {
-        Product prod = this.createProduct(owner);
+        Product prod = TestUtil.createProduct()
+            .setNamespace(owner.getKey());
+        this.createProduct(prod);
+
         Pool pool = TestUtil.createPool(owner, prod);
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
 
         assertEquals(0, poolCurator.listByOwner(owner).list().size());
+
         PoolDTO createdPoolDto = ownerResource.createPool(owner.getKey(), poolDto);
         assertEquals(1, poolCurator.listByOwner(owner).list().size());
         assertNotNull(createdPoolDto.getId());
     }
 
     @Test
+    public void testCreatePoolRequiresExistingProduct() {
+        Pool pool = TestUtil.createPool(owner);
+        PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class)
+            .productId("invalid_product_id");
+
+        assertEquals(0, poolCurator.listByOwner(owner).list().size());
+
+        assertThrows(NotFoundException.class, () -> ownerResource.createPool(owner.getKey(), poolDto));
+    }
+
+    @Test
+    public void testCreatePoolIsLimitedToNamespacedProducts() {
+        Product prod = this.createProduct();
+        Pool pool = TestUtil.createPool(owner, prod);
+        PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
+
+        assertEquals(0, poolCurator.listByOwner(owner).list().size());
+
+        assertThrows(ForbiddenException.class, () -> ownerResource.createPool(owner.getKey(), poolDto));
+    }
+
+    @Test
     public void updatePool() {
-        Product prod = this.createProduct(owner);
+        Product prod = TestUtil.createProduct()
+            .setNamespace(owner.getKey());
+        this.createProduct(prod);
+
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setSubscriptionSubKey(PRIMARY_POOL_SUB_KEY);
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
@@ -1709,11 +1740,42 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(10L, updatedPools.get(0).getQuantity().longValue());
     }
 
+    // TODO: FIXME: Apparently we don't permit updating the product on a pool? The code has comments
+    // that imply this is allowed, but it looks broken. Fix the bug and uncomment this test if that
+    // is intended to be a feature.
+
+    // @Test
+    // public void testUpdatePoolDisallowsChangingToProductsOutsideNamespace() {
+    //     Product prod = TestUtil.createProduct()
+    //         .setNamespace(owner.getKey());
+    //     this.createProduct(prod);
+
+    //     Pool pool = TestUtil.createPool(owner, prod);
+    //     PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
+    //     PoolDTO createdPoolDto = this.ownerResource.createPool(owner.getKey(), poolDto);
+    //     assertEquals(1, this.poolCurator.listByOwner(owner).list().size());
+
+    //     Product globalProd = TestUtil.createProduct()
+    //         .setNamespace((String) null); // global namespace
+    //     this.createProduct(globalProd);
+
+    //     ProductDTO globalProdDTO = this.modelTranslator.translate(globalProd, ProductDTO.class);
+    //     poolDto.setProductId(globalProdDTO.getId());
+
+    //     assertThrows(BadRequestException.class, () ->
+    //         this.ownerResource.updatePool(owner.getKey(), createdPoolDto));
+
+    //     Pool updated = this.poolCurator.get(createdPoolDto.getId());
+    //     assertEquals(prod, updated.getProduct());
+    // }
+
     @Test
     public void createBonusPool() {
-        Product prod = TestUtil.createProduct();
-        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "2");
-        createProduct(prod, owner);
+        Product prod = TestUtil.createProduct()
+            .setNamespace(owner.getKey())
+            .setAttribute(Product.Attributes.VIRT_LIMIT, "2");
+        this.createProduct(prod);
+
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setUpstreamPoolId("upstream-" + pool.getId());
         assertEquals(0, poolCurator.listByOwner(owner).list().size());
@@ -1731,9 +1793,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void createBonusPoolForUpdate() {
-        Product prod = TestUtil.createProduct();
-        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
-        createProduct(prod, owner);
+        Product prod = TestUtil.createProduct()
+            .setNamespace(owner.getKey())
+            .setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        this.createProduct(prod);
+
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setUpstreamPoolId("upstream-" + pool.getId());
         pool.setSubscriptionSubKey(PRIMARY_POOL_SUB_KEY);
@@ -1755,9 +1819,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void removePoolsForExpiredUpdate() {
-        Product prod = new Product("foo", "bar");
-        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
-        this.createProduct(prod, owner);
+        Product prod = new Product("foo", "bar")
+            .setNamespace(owner.getKey())
+            .setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        this.createProduct(prod);
+
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setUpstreamPoolId("upstream-" + pool.getId());
         pool.setSubscriptionSubKey(PRIMARY_POOL_SUB_KEY);
@@ -1776,20 +1842,24 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void cantUpdateBonusPool() {
-        Product prod = TestUtil.createProduct();
-        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
-        createProduct(prod, owner);
+        Product prod = TestUtil.createProduct()
+            .setNamespace(owner.getKey())
+            .setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        this.createProduct(prod);
+
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setUpstreamPoolId("upstream-" + pool.getId());
         pool.setSubscriptionSubKey(PRIMARY_POOL_SUB_KEY);
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
         ownerResource.createPool(owner.getKey(), poolDto);
+
         List<Pool> pools = poolCurator.listByOwner(owner).list();
 
         Pool bonusPool = null;
         for (Pool p : pools) {
             if (p.getSubscriptionSubKey().contentEquals(DERIVED_POOL_SUB_KEY)) {
                 bonusPool = p;
+                break;
             }
         }
         assertNotNull(bonusPool);
@@ -1801,10 +1871,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void enrichPool() {
-        Product prod = TestUtil.createProduct();
-        prod.setAttribute(Product.Attributes.VIRT_ONLY, "true");
-        prod.setMultiplier(2L);
-        createProduct(prod, owner);
+        Product prod = TestUtil.createProduct()
+            .setNamespace(owner.getKey())
+            .setAttribute(Product.Attributes.VIRT_ONLY, "true")
+            .setMultiplier(2L);
+        this.createProduct(prod);
+
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setQuantity(100L);
         assertEquals(0, poolCurator.listByOwner(owner).list().size());
@@ -1904,7 +1976,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             .thenReturn(owner);
 
         Map<String, Set<String>> mockMap = new HashMap<>();
-        when(this.mockOwnerProductCurator.getSyspurposeAttributesByOwner(eq(owner)))
+        when(this.mockPoolCurator.getSyspurposeAttributesByOwner(eq(owner)))
             .thenReturn(mockMap);
 
         Set<String> mockAddons = new HashSet<>();
@@ -1941,7 +2013,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             .thenReturn(owner);
 
         Map<String, Set<String>> mockMap = new HashMap<>();
-        when(this.mockOwnerProductCurator.getSyspurposeAttributesByOwner(eq(owner)))
+        when(this.mockPoolCurator.getSyspurposeAttributesByOwner(eq(owner)))
             .thenReturn(mockMap);
         SystemPurposeAttributesDTO result = resource.getSyspurpose(owner.getKey());
         Map<String, Set<String>> returned = result.getSystemPurposeAttributes();

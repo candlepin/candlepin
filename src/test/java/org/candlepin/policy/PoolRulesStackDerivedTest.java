@@ -31,7 +31,6 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -59,7 +58,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 
 
@@ -75,8 +73,6 @@ public class PoolRulesStackDerivedTest {
 
     @Mock
     private RulesCurator rulesCuratorMock;
-    @Mock
-    private OwnerProductCurator ownerProductCuratorMock;
     @Mock
     private PoolService poolService;
     @Mock
@@ -120,10 +116,8 @@ public class PoolRulesStackDerivedTest {
 
     @BeforeEach
     public void setUp() {
-
         // Load the default production rules:
-        InputStream is = this.getClass().getResourceAsStream(
-            RulesCurator.DEFAULT_RULES_FILE);
+        InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
 
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
@@ -149,19 +143,16 @@ public class PoolRulesStackDerivedTest {
         prod1.setAttribute(Product.Attributes.VIRT_LIMIT, "2");
         prod1.setAttribute(Product.Attributes.STACKING_ID, STACK);
         prod1.setAttribute("testattr1", "1");
-        when(ownerProductCuratorMock.getProductById(owner, prod1.getId())).thenReturn(prod1);
 
         prod2 = TestUtil.createProduct("prod2", "prod2");
         prod2.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
         prod2.setAttribute(Product.Attributes.STACKING_ID, STACK);
         prod2.setAttribute("testattr2", "2");
-        when(ownerProductCuratorMock.getProductById(owner, prod2.getId())).thenReturn(prod2);
 
         prod3 = TestUtil.createProduct("prod3", "prod3");
         prod3.setAttribute(Product.Attributes.VIRT_LIMIT, "9");
         prod3.setAttribute(Product.Attributes.STACKING_ID, STACK + "3");
         prod3.setAttribute("testattr2", "2");
-        when(ownerProductCuratorMock.getProductById(owner, prod3.getId())).thenReturn(prod3);
 
         provided1 = TestUtil.createProduct();
         provided2 = TestUtil.createProduct();
@@ -226,11 +217,8 @@ public class PoolRulesStackDerivedTest {
      */
     private Pool copyFromSub(Subscription sub) {
         Pool pool = TestUtil.copyFromSub(sub);
-        pool.setId("" + lastPoolId++);
-        when(productCurator.getPoolProvidedProductsCached(pool))
-            .thenReturn((Set<Product>) pool.getProduct().getProvidedProducts());
-        when(productCurator.getPoolDerivedProvidedProductsCached(pool))
-            .thenReturn((Set<Product>) pool.getProduct().getProvidedProducts());
+        pool.setId(String.valueOf(lastPoolId++));
+
         return pool;
     }
 

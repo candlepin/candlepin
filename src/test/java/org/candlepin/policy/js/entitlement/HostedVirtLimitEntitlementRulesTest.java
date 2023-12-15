@@ -53,7 +53,6 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
@@ -115,8 +114,6 @@ public class HostedVirtLimitEntitlementRulesTest {
     @Mock
     private EntitlementCurator entCurMock;
     @Mock
-    private OwnerProductCurator ownerProductCuratorMock;
-    @Mock
     private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock
     private JsRunnerRequestCache cache;
@@ -144,6 +141,7 @@ public class HostedVirtLimitEntitlementRulesTest {
     private SystemPurposeComplianceRules systemPurposeComplianceRules;
     @Mock
     private I18n i18n;
+
     private PoolService poolService;
     private Enforcer enforcer;
     private DevConfig config;
@@ -596,13 +594,12 @@ public class HostedVirtLimitEntitlementRulesTest {
     }
 
     private Subscription createVirtLimitSub(String productId, int quantity, String virtLimit) {
-        Product product = TestUtil.createProduct(productId, productId);
-        product.setAttribute(Product.Attributes.VIRT_LIMIT, virtLimit);
-        when(ownerProductCuratorMock.getProductById(owner, productId)).thenReturn(product);
-        Subscription s = TestUtil.createSubscription(owner, product);
-        s.setQuantity((long) quantity);
-        s.setId("subId");
-        return s;
+        Product product = TestUtil.createProduct(productId, productId)
+            .setAttribute(Product.Attributes.VIRT_LIMIT, virtLimit);
+
+        return TestUtil.createSubscription(owner, product)
+            .setQuantity((long) quantity)
+            .setId("subId");
     }
 
     private Pool setupVirtLimitPool() {

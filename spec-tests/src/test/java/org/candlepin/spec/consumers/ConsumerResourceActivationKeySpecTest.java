@@ -87,7 +87,7 @@ public class ConsumerResourceActivationKeySpecTest {
         OwnerDTO owner = ownerClient.createOwner(Owners.random());
         ProductDTO prod1 = Products.random()
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"));
-        prod1 = ownerProductApi.createProductByOwner(owner.getKey(), prod1);
+        prod1 = ownerProductApi.createProduct(owner.getKey(), prod1);
         ownerClient.createPool(owner.getKey(), Pools.random(prod1));
         PoolDTO pool1 = ownerClient.listOwnerPools(owner.getKey()).get(0);
 
@@ -232,7 +232,7 @@ public class ConsumerResourceActivationKeySpecTest {
         IntStream.range(0, poolCount).forEach(entry -> {
             ProductDTO prod = Products.random()
                 .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"));
-            prod = ownerProductApi.createProductByOwner(owner.getKey(), prod);
+            prod = ownerProductApi.createProduct(owner.getKey(), prod);
             PoolDTO pool = ownerClient.createPool(owner.getKey(), Pools.random(prod).quantity(100L));
             if (entry < poolCount / 2) {
                 activationKeyApi.addPoolToKey(key1.getId(), pool.getId(), 1L);
@@ -248,7 +248,7 @@ public class ConsumerResourceActivationKeySpecTest {
         OwnerDTO owner = ownerClient.createOwner(Owners.random());
         ProductDTO prod1 = Products.random()
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"));
-        prod1 = ownerProductApi.createProductByOwner(owner.getKey(), prod1);
+        prod1 = ownerProductApi.createProduct(owner.getKey(), prod1);
         ownerClient.createPool(owner.getKey(), Pools.random(prod1));
         PoolDTO pool1 = ownerClient.listOwnerPools(owner.getKey()).get(0);
 
@@ -270,7 +270,7 @@ public class ConsumerResourceActivationKeySpecTest {
         OwnerDTO owner = ownerClient.createOwner(Owners.random());
         ProductDTO prod1 = Products.random()
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"));
-        prod1 = ownerProductApi.createProductByOwner(owner.getKey(), prod1);
+        prod1 = ownerProductApi.createProduct(owner.getKey(), prod1);
         ownerClient.createPool(owner.getKey(), Pools.random(prod1));
         PoolDTO pool1 = ownerClient.listOwnerPools(owner.getKey()).get(0);
 
@@ -293,9 +293,9 @@ public class ConsumerResourceActivationKeySpecTest {
         OwnerDTO owner = ownerClient.createOwner(Owners.random());
         // create extra product/pool to show selectivity
         ProductDTO prod1 = Products.randomEng();
-        prod1 = ownerProductApi.createProductByOwner(owner.getKey(), prod1);
+        prod1 = ownerProductApi.createProduct(owner.getKey(), prod1);
         ProductDTO prod2 = Products.randomEng();
-        prod2 = ownerProductApi.createProductByOwner(owner.getKey(), prod2);
+        prod2 = ownerProductApi.createProduct(owner.getKey(), prod2);
         PoolDTO pool1 = ownerClient.createPool(owner.getKey(), Pools.random(prod1));
         PoolDTO pool2 = ownerClient.createPool(owner.getKey(), Pools.random(prod2));
 
@@ -318,9 +318,9 @@ public class ConsumerResourceActivationKeySpecTest {
         OwnerDTO owner = ownerClient.createOwner(Owners.random());
         // create extra product/pool to show selectivity
         ProductDTO prod1 = Products.randomEng();
-        prod1 = ownerProductApi.createProductByOwner(owner.getKey(), prod1);
+        prod1 = ownerProductApi.createProduct(owner.getKey(), prod1);
         ProductDTO prod2 = Products.randomEng();
-        prod2 = ownerProductApi.createProductByOwner(owner.getKey(), prod2);
+        prod2 = ownerProductApi.createProduct(owner.getKey(), prod2);
         PoolDTO pool1 = ownerClient.createPool(owner.getKey(), Pools.random(prod1));
         PoolDTO pool2 = ownerClient.createPool(owner.getKey(), Pools.random(prod2));
 
@@ -348,9 +348,9 @@ public class ConsumerResourceActivationKeySpecTest {
         OwnerDTO owner = ownerClient.createOwner(Owners.random());
         // create extra product/pool to show selectivity
         ProductDTO prod1 = Products.randomEng();
-        prod1 = ownerProductApi.createProductByOwner(owner.getKey(), prod1);
+        prod1 = ownerProductApi.createProduct(owner.getKey(), prod1);
         ProductDTO prod2 = Products.randomEng();
-        prod2 = ownerProductApi.createProductByOwner(owner.getKey(), prod2);
+        prod2 = ownerProductApi.createProduct(owner.getKey(), prod2);
         PoolDTO pool1 = ownerClient.createPool(owner.getKey(), Pools.random(prod1));
         PoolDTO pool2 = ownerClient.createPool(owner.getKey(), Pools.random(prod2));
 
@@ -414,7 +414,7 @@ public class ConsumerResourceActivationKeySpecTest {
         OwnerDTO owner = ownerClient.createOwner(Owners.random());
         ProductDTO prod1 = Products.randomEng()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("VIP"));
-        prod1 = ownerProductApi.createProductByOwner(owner.getKey(), prod1);
+        prod1 = ownerProductApi.createProduct(owner.getKey(), prod1);
         PoolDTO pool1 = ownerClient.createPool(owner.getKey(), Pools.random(prod1));
 
         ActivationKeyDTO key1 = ownerClient.createActivationKey(owner.getKey(),
@@ -439,7 +439,7 @@ public class ConsumerResourceActivationKeySpecTest {
     @Test
     public void shouldAllowAConsumerToRegisterWithActivationKeysWithSyspurposeAtts() {
         OwnerDTO owner = ownerClient.createOwner(Owners.random());
-        ProductDTO prod1 = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO prod1 = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ownerClient.createPool(owner.getKey(), Pools.random(prod1));
 
         ActivationKeyDTO key1 = ActivationKeys.random(owner)
@@ -465,7 +465,7 @@ public class ConsumerResourceActivationKeySpecTest {
     @Test
     public void shouldOverrideConsumerSyspurposeAttsWithAttsOnActivationKeys() {
         OwnerDTO owner = ownerClient.createOwner(Owners.random());
-        ProductDTO prod1 = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO prod1 = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ownerClient.createPool(owner.getKey(), Pools.random(prod1));
 
         ActivationKeyDTO key1 = ActivationKeys.random(owner)
@@ -495,7 +495,7 @@ public class ConsumerResourceActivationKeySpecTest {
     @Test
     public void shouldAllowAConsumerToRegisterWithSyspurposeAttsOnActivationKeyAndConsumer() {
         OwnerDTO owner = ownerClient.createOwner(Owners.random());
-        ProductDTO prod1 = ownerProductApi.createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO prod1 = ownerProductApi.createProduct(owner.getKey(), Products.randomEng());
         ownerClient.createPool(owner.getKey(), Pools.random(prod1));
 
         ActivationKeyDTO key1 = ActivationKeys.random(owner)
@@ -563,7 +563,7 @@ public class ConsumerResourceActivationKeySpecTest {
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"))
             .addAttributesItem(ProductAttributes.StackingId.withValue(StringUtil.random("stack")))
             .addAttributesItem(ProductAttributes.Sockets.withValue("1"));
-        prod1 = ownerProductApi.createProductByOwner(owner.getKey(), prod1);
+        prod1 = ownerProductApi.createProduct(owner.getKey(), prod1);
         ownerClient.createPool(owner.getKey(), Pools.random(prod1));
         PoolDTO pool1 = ownerClient.listOwnerPools(owner.getKey()).get(0);
 
@@ -586,7 +586,7 @@ public class ConsumerResourceActivationKeySpecTest {
     public void shouldAllowAConsumerToRegisterWithAnActivationKeyWithAnAutoAttachAcrossPools() {
         OwnerDTO owner = ownerClient.createOwner(Owners.random());
         // create extra product/pool to show selectivity
-        ProductDTO prod1 = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO prod1 = ownerProductApi.createProduct(owner.getKey(), Products.random());
         ownerClient.createPool(owner.getKey(), Pools.random(prod1).quantity(1L));
         ownerClient.createPool(owner.getKey(), Pools.random(prod1).quantity(1L));
         ownerClient.createPool(owner.getKey(), Pools.random(prod1).quantity(2L));
@@ -627,8 +627,8 @@ public class ConsumerResourceActivationKeySpecTest {
         OwnerDTO owner = ownerClient.createOwner(Owners.random());
         ProductDTO rhelProduct = Products.random()
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("VIP"));
-        rhelProduct = ownerProductApi.createProductByOwner(owner.getKey(), rhelProduct);
-        ProductDTO product = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
+        rhelProduct = ownerProductApi.createProduct(owner.getKey(), rhelProduct);
+        ProductDTO product = ownerProductApi.createProduct(owner.getKey(), Products.random());
         ownerClient.createPool(owner.getKey(), Pools.random(rhelProduct).quantity(37L));
         ownerClient.createPool(owner.getKey(), Pools.random(product).quantity(33L));
 
@@ -655,7 +655,7 @@ public class ConsumerResourceActivationKeySpecTest {
         OwnerDTO owner = ownerClient.createOwner(Owners.random());
         ProductDTO prod1 = Products.random()
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"));
-        prod1 = ownerProductApi.createProductByOwner(owner.getKey(), prod1);
+        prod1 = ownerProductApi.createProduct(owner.getKey(), prod1);
         ownerClient.createPool(owner.getKey(), Pools.random(prod1).quantity(0L));
         PoolDTO pool1 = ownerClient.listOwnerPoolsByProduct(owner.getKey(), prod1.getId()).get(0);
 

@@ -90,8 +90,8 @@ public class X509V3ExtensionUtil extends X509Util {
     public Set<X509ExtensionWrapper> getExtensions() {
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<>();
 
-        X509ExtensionWrapper versionExtension = new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_VERSION_KEY), false, CERT_VERSION);
+        X509ExtensionWrapper versionExtension = new X509ExtensionWrapper(
+            OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_VERSION), false, CERT_VERSION);
 
         toReturn.add(versionExtension);
         return toReturn;
@@ -103,8 +103,9 @@ public class X509V3ExtensionUtil extends X509Util {
 
         EntitlementBody eb = createEntitlementBodyContent(productModels);
 
-        X509ByteExtensionWrapper bodyExtension = new X509ByteExtensionWrapper(OIDUtil.REDHAT_OID + "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_DATA_KEY), false, retrieveContentValue(eb));
+        String entDataOid = OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_DATA);
+        X509ByteExtensionWrapper bodyExtension = new X509ByteExtensionWrapper(
+            entDataOid, false, retrieveContentValue(eb));
         toReturn.add(bodyExtension);
 
         return toReturn;

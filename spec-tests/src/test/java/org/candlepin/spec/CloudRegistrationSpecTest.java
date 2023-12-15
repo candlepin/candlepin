@@ -129,7 +129,7 @@ class CloudRegistrationSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         adminClient.hosted().createOwner(owner);
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(owner.getKey(), Products.random());
         adminClient.hosted().createProduct(prod);
         adminClient.owners().createPool(owner.getKey(), Pools.random(prod));
         adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
@@ -157,7 +157,7 @@ class CloudRegistrationSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random().anonymous(true));
         adminClient.hosted().createOwner(owner);
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(owner.getKey(), Products.random());
         adminClient.hosted().createProduct(prod);
         adminClient.owners().createPool(owner.getKey(), Pools.random(prod));
         adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
@@ -251,14 +251,16 @@ class CloudRegistrationSpecTest {
     @Test
     public void shouldReceiveAnonTokenForV2AuthWithNonSyncedPoolInCandlepin() throws Exception {
         ApiClient adminClient = ApiClients.admin();
+
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         adminClient.hosted().createOwner(owner);
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(owner.getKey(), Products.random());
+
+        ProductDTO prod = adminClient.ownerProducts().createProduct(owner.getKey(), Products.random());
         adminClient.hosted().createProduct(prod);
         adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
 
         ProductDTO prodWithPool = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
+            .createProduct(owner.getKey(), Products.random());
         adminClient.hosted().createProduct(prodWithPool);
         adminClient.owners().createPool(owner.getKey(), Pools.random(prodWithPool));
         adminClient.hosted().createSubscription(Subscriptions.random(owner, prodWithPool));
@@ -359,7 +361,7 @@ class CloudRegistrationSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         adminClient.hosted().createOwner(owner);
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(owner.getKey(), Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(owner.getKey(), Products.random());
         adminClient.hosted().createProduct(prod);
         adminClient.owners().createPool(owner.getKey(), Pools.random(prod));
         adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
@@ -457,9 +459,11 @@ class CloudRegistrationSpecTest {
     @Test
     public void shouldCreateConsumerWhenUsingStandardToken() throws JsonProcessingException {
         ApiClient adminClient = ApiClients.admin();
+
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         adminClient.hosted().createOwner(owner);
-        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(owner.getKey(), Products.random());
+
+        ProductDTO prod = adminClient.ownerProducts().createProduct(owner.getKey(), Products.random());
         adminClient.hosted().createProduct(prod);
         adminClient.owners().createPool(owner.getKey(), Pools.random(prod));
         adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
@@ -532,7 +536,7 @@ class CloudRegistrationSpecTest {
             .hasHeaderWithValue("retry-after", 30);
 
         // Product and owner exist in Candlepin
-        adminClient.ownerProducts().createProductByOwner(ownerDTO.getKey(), productDTO);
+        adminClient.ownerProducts().createProduct(ownerDTO.getKey(), productDTO);
         adminClient.owners().createPool(ownerDTO.getKey(), Pools.random(productDTO));
         ConsumerDTO consumer = ApiClients.bearerToken(result.getToken()).consumers()
             .createConsumer(Consumers.random(ownerDTO));

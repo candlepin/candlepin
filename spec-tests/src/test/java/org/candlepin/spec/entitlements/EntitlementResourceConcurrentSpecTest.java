@@ -71,7 +71,7 @@ public class EntitlementResourceConcurrentSpecTest {
     public void shouldAllowConcurrentRequests() {
         ProductDTO product = Products.random();
         product.setAttributes(List.of(new AttributeDTO().name("multi-entitlement").value("yes")));
-        product = ownerProductApi.createProductByOwner(owner.getKey(), product);
+        product = ownerProductApi.createProduct(owner.getKey(), product);
         PoolDTO pool = Pools.random().productId(product.getId()).quantity(50L);
         pool = ownerClient.createPool(owner.getKey(), pool);
 
@@ -93,7 +93,7 @@ public class EntitlementResourceConcurrentSpecTest {
     public void shouldNotAllowOverConsumption() {
         ProductDTO product = Products.random();
         product.setAttributes(List.of(new AttributeDTO().name("multi-entitlement").value("yes")));
-        product = ownerProductApi.createProductByOwner(owner.getKey(), product);
+        product = ownerProductApi.createProduct(owner.getKey(), product);
         PoolDTO pool = Pools.random().productId(product.getId()).quantity(3L);
         pool = ownerClient.createPool(owner.getKey(), pool);
 
@@ -115,7 +115,7 @@ public class EntitlementResourceConcurrentSpecTest {
     public void shouldEndAtZeroConsumption() {
         ProductDTO product = Products.random();
         product.setAttributes(List.of(new AttributeDTO().name("multi-entitlement").value("yes")));
-        product = ownerProductApi.createProductByOwner(owner.getKey(), product);
+        product = ownerProductApi.createProduct(owner.getKey(), product);
         PoolDTO pool = Pools.random().productId(product.getId()).quantity(3L);
         pool = ownerClient.createPool(owner.getKey(), pool);
 

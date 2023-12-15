@@ -188,7 +188,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @ElementCollection
     @CollectionTable(name = "cp_sp_add_on", joinColumns = @JoinColumn(name = "consumer_id"))
     @Column(name = "add_on")
-    private Set<String> addOns = new HashSet<>();
+    private Set<String> addOns;
 
     @Column(name = "sp_status", length = 32)
     @Size(max = 32)

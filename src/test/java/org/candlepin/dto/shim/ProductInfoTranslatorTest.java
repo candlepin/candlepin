@@ -91,7 +91,6 @@ public class ProductInfoTranslatorTest extends
         source.setMultiplier(10L);
         source.setAttributes(attributes);
         source.setDependentProductIds(depProdIds);
-        source.setLocked(true);
 
         for (int i = 0; i < 3; ++i) {
             Content content = TestUtil.createContent("content-" + i);

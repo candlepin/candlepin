@@ -62,24 +62,8 @@ public class PoolNodeVisitor implements NodeVisitor<Pool, SubscriptionInfo> {
      * {@inheritDoc}
      */
     @Override
-    public void pruneNode(EntityNode<Pool, SubscriptionInfo> node) {
-        // Intentionally left empty; see above for details
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void applyChanges(EntityNode<Pool, SubscriptionInfo> node) {
         // Intentionally left empty; see above for details
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void complete() {
-        // Intentionally left empty
     }
 
 }

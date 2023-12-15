@@ -54,7 +54,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
         owner = this.createOwner();
 
-        product = this.createProduct(owner);
+        product = this.createProduct();
 
         ConsumerType ctype = new ConsumerType("system");
         ctype = this.consumerTypeCurator.create(ctype);
@@ -71,7 +71,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
         Product newProduct = TestUtil.createProduct();
         newProduct.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
-        newProduct = this.createProduct(newProduct, owner);
+        newProduct = this.createProduct(newProduct);
 
         Pool consumerPool = createPool(owner, newProduct,
             numAvailEntitlements, TestUtil.createDate(2009, 11, 30),
@@ -93,7 +93,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
     public void concurrentCreationOfEntitlementsShouldFailIfOverMaxMemberLimit() throws Exception {
         Long numAvailEntitlements = 1L;
 
-        Product newProduct = this.createProduct(owner);
+        Product newProduct = this.createProduct();
 
         Pool consumerPool = createPool(owner, newProduct, numAvailEntitlements,
             TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
