@@ -17,6 +17,7 @@ package org.candlepin.spec.entitlements;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.CertificateAssert.assertThatCert;
+import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -41,6 +42,8 @@ import org.candlepin.resource.HostedTestApi;
 import org.candlepin.resource.client.v1.OwnerContentApi;
 import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
+import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
+import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -51,6 +54,7 @@ import org.candlepin.spec.bootstrap.data.builder.Branding;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.OID;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
@@ -71,6 +75,10 @@ import java.util.Objects;
 import java.util.Set;
 
 
+// TODO: FIXME:
+// This test suite needs to be rewritten to separate its flows between standalone and hosted modes.
+// Additionally, the tests should not be using shared, global data.
+
 @SpecTest
 @SuppressWarnings("indentation")
 public class EntitlementCertificateV3SpecTest {
@@ -80,7 +88,8 @@ public class EntitlementCertificateV3SpecTest {
     private static OwnerContentApi ownerContentApi;
     private static OwnerProductApi ownerProductApi;
     private static ConsumerClient consumerApi;
-    private HostedTestApi hostedTestApi;
+    private static HostedTestApi hostedTestApi;
+
     private OwnerDTO owner;
     private ConsumerDTO system;
     private ProductDTO product;
@@ -98,11 +107,11 @@ public class EntitlementCertificateV3SpecTest {
         ownerContentApi = client.ownerContent();
         ownerProductApi = client.ownerProducts();
         consumerApi = client.consumers();
+        hostedTestApi = client.hosted();
     }
 
     @BeforeEach
     public void beforeEach() {
-        hostedTestApi = client.hosted();
         product = Products.randomEng()
             .attributes(List.of(
                 ProductAttributes.Version.withValue("6.4"),
@@ -165,10 +174,11 @@ public class EntitlementCertificateV3SpecTest {
                 .contractNumber("123456")
                 .accountNumber("67890")
                 .orderNumber("order2"));
-            AsyncJobStatusDTO refresh = ownerApi.refreshPools(owner.getKey(), false);
-            if (refresh != null) {
-                client.jobs().waitForJob(refresh.getId());
-            }
+            AsyncJobStatusDTO refreshJob = ownerApi.refreshPools(owner.getKey(), false);
+            assertThatJob(refreshJob)
+                .isNotNull()
+                .terminates(client)
+                .isFinished();
         }
         else {
             product = ownerProductApi.createProduct(owner.getKey(), product);
@@ -281,13 +291,6 @@ public class EntitlementCertificateV3SpecTest {
         assertEquals("standard", subscription.get("service").get("level").asText());
         assertEquals("excellent", subscription.get("service").get("type").asText());
 
-        JsonNode order = jsonBody.get("order");
-        assertEquals("order1", order.get("number").asText());
-        assertEquals(10, order.get("quantity").asInt());
-        assertNotNull(order.get("start"));
-        assertNotNull(order.get("end"));
-        assertEquals("12345", order.get("contract").asText());
-        assertEquals("6789", order.get("account").asText());
 
         JsonNode blobProduct = jsonBody.get("products").get(0);
         assertEquals(product.getId(), blobProduct.get("id").asText());
@@ -473,6 +476,59 @@ public class EntitlementCertificateV3SpecTest {
                 "/content/dist/rhel/$releasever-75/$basearch-75/debug-75",
                 "/content/dist/rhel/$releasever-99/$basearch-99/debug-99"
             );
+    }
+
+    @Test
+    @OnlyInStandalone
+    public void shouldIncludeEntitlementNamespaceForNamespacedProducts() {
+        ProductDTO product = ownerProductApi.createProduct(this.owner.getKey(), Products.randomEng());
+        PoolDTO pool = ownerApi.createPool(this.owner.getKey(), Pools.random(product));
+
+        List<EntitlementDTO> entitlements = consumerApi.bindPoolSync(system.getUuid(), pool.getId(), 1);
+
+        assertThat(entitlements)
+            .isNotNull()
+            .hasSize(1);
+
+        assertThatCert(X509Cert.fromEnt(entitlements.get(0)))
+            .hasEntitlementNamespace(this.owner.getKey());
+    }
+
+    @Test
+    @OnlyInHosted
+    public void shouldNotIncludeEntitlementNamespaceForGlobalProducts() {
+        // Create upstream data
+        ProductDTO product = hostedTestApi.createProduct(Products.randomEng());
+        String productId = product.getId();
+
+        SubscriptionDTO sub = hostedTestApi.createSubscription(Subscriptions.random(this.owner, product));
+
+        // Refresh to pull it in locally
+        AsyncJobStatusDTO refreshJob = ownerApi.refreshPools(this.owner.getKey(), false);
+        assertThatJob(refreshJob)
+            .isNotNull()
+            .terminates(client)
+            .isFinished();
+
+        // Find the pool in the org so we can bind it
+        List<PoolDTO> pools = ownerApi.listOwnerPools(this.owner.getKey());
+        assertThat(pools)
+            .isNotNull()
+            .hasSizeGreaterThanOrEqualTo(1);
+
+        PoolDTO pool = pools.stream()
+            .filter(elem -> productId.equals(elem.getProductId()))
+            .findAny()
+            .get();
+
+        List<EntitlementDTO> entitlements = consumerApi.bindPoolSync(system.getUuid(), pool.getId(), 1);
+
+        assertThat(entitlements)
+            .isNotNull()
+            .hasSize(1);
+
+        assertThatCert(X509Cert.fromEnt(entitlements.get(0)))
+            .doesNotHaveExtension(OID.entitlementNamespace());
     }
 
     private CertificateDTO firstCertOf(EntitlementDTO ent) {

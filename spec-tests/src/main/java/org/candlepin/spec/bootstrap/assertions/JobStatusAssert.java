@@ -15,6 +15,7 @@
 package org.candlepin.spec.bootstrap.assertions;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
+import org.candlepin.spec.bootstrap.client.ApiClient;
 
 import org.assertj.core.api.AbstractAssert;
 
@@ -34,6 +35,71 @@ public class JobStatusAssert extends AbstractAssert<JobStatusAssert, AsyncJobSta
      */
     public static JobStatusAssert assertThatJob(AsyncJobStatusDTO actual) {
         return new JobStatusAssert(actual);
+    }
+
+    /**
+     * Asserts the job completes within a reasonable amount of time, waiting if necessary. This
+     * assertion will fail if the job does not terminate in the specified duration from the time
+     * this assertion is invoked. A job is considered "terminated" when it enters a terminal state
+     * (i.e. FINISHED, FAILED, CANCELED, etc.).
+     * <p>
+     * The object under test will be mapped to the final AsyncJobStatusDTO upon successful
+     * completion.
+     *
+     * @param client
+     *  the client to use to verify the job has completed
+     *
+     * @param duration
+     *  the maximum amount of time to wait for the job to terminate in milliseconds
+     *
+     * @return
+     *  a new JobStatusAssert for the completed job status
+     */
+    public JobStatusAssert terminatesWithinDuration(ApiClient client, long duration) {
+        if (client == null) {
+            throw new IllegalArgumentException("client is null");
+        }
+
+        try {
+            AsyncJobStatusDTO status = client.jobs().waitForJob(this.actual, duration);
+            return new JobStatusAssert(status);
+        }
+        catch (IllegalStateException e) {
+            failWithMessage(e.getMessage());
+        }
+
+        return this;
+    }
+
+    /**
+     * Asserts the job terminates within a reasonable amount of time, waiting if necessary. This
+     * assertion will fail if the job does not terminate in the default amount of time, as defined
+     * by JobsClient.DEFAULT_JOB_WAIT_DURATION. A job is considered "terminated" when it enters a
+     * terminal state (i.e. FINISHED, FAILED, CANCELED, etc.).
+     * <p>
+     * The object under test will be mapped to the final AsyncJobStatusDTO upon successful
+     * completion.
+     *
+     * @param client
+     *  the client to use to verify the job has completed
+     *
+     * @return
+     *  a new JobStatusAssert for the completed job status
+     */
+    public JobStatusAssert terminates(ApiClient client) {
+        if (client == null) {
+            throw new IllegalArgumentException("client is null");
+        }
+
+        try {
+            AsyncJobStatusDTO status = client.jobs().waitForJob(this.actual);
+            return new JobStatusAssert(status);
+        }
+        catch (IllegalStateException e) {
+            failWithMessage(e.getMessage());
+        }
+
+        return this;
     }
 
     /**

@@ -129,7 +129,6 @@ class EntitlementResourceSpecTest {
             .hasSize(1);
     }
 
-
     @Test
     public void shouldAllowConsumerToChangeQuantity() {
         ProductDTO product = ownerProductApi.createProduct(owner.getKey(), Products.random()

@@ -920,6 +920,19 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     }
 
     /**
+     * Fetches the namespace of the product for this pool. If the pool does not yet have a product,
+     * or the product is not namespaced, this method returns null.
+     *
+     * @return
+     *  the namespace of the product for this pool, or null if the pool does not have a namespaced
+     *  product
+     */
+    public String getProductNamespace() {
+        Product product = this.getProduct();
+        return product != null ? product.getNamespace() : null;
+    }
+
+    /**
      * Fetches the marketing name of the product for this pool. If the pool does not yet have a
      * product, or the pool does not define a marketing name, this method returns null.
      *

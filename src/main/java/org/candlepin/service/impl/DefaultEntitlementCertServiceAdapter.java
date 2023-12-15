@@ -334,13 +334,16 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
     public Set<X509ExtensionWrapper> prepareV3Extensions(Pool pool) {
         Set<X509ExtensionWrapper> result = v3extensionUtil.getExtensions();
+
         String entTypeOID = OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_TYPE);
-        String productOID = OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_NAMESPACE);
-        X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(entTypeOID, false, "Basic");
-        X509ExtensionWrapper productExtension = new X509ExtensionWrapper(
-            productOID, false, pool.getProduct().getNamespace());
-        result.add(typeExtension);
-        result.add(productExtension);
+        result.add(new X509ExtensionWrapper(entTypeOID, false, "Basic"));
+
+        String namespace = pool.getProductNamespace();
+        if (namespace != null && !namespace.isBlank()) {
+            String entNamespaceOID = OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_NAMESPACE);
+            result.add(new X509ExtensionWrapper(entNamespaceOID, false, namespace));
+        }
+
         return result;
     }
 

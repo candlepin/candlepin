@@ -15,6 +15,7 @@
 package org.candlepin.spec.bootstrap.client.cert;
 
 import org.candlepin.dto.api.client.v1.CertificateDTO;
+import org.candlepin.dto.api.client.v1.EntitlementDTO;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -34,6 +35,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -58,6 +60,40 @@ public class X509Cert {
         JsonNode certs = entitlement.get("certificates");
         String cert = certs.get(0).get("cert").asText();
         return new X509Cert(parseCertificate(cert));
+    }
+
+    /**
+     * Parses the certificate data from the given entitlement and returns an X509Cert object
+     * containing the parsed data. If the entitlement is null, has no certificates, or contains a
+     * null certificate, this function returns null.
+     * <p>
+     * <strong>Warning:</strong> If the entitlement has multiple certificates, only the first will
+     * be parsed and returned.
+     *
+     * @param entitlement
+     *  the entitlement from which to pull a certificate to parse
+     *
+     * @return
+     *  a X509Cert instance containing the parsed certificate data, or null if the entitlement had
+     *  no certificate
+     */
+    public static X509Cert fromEnt(EntitlementDTO entitlement) {
+        if (entitlement == null) {
+            return null;
+        }
+
+        Set<CertificateDTO> certificates = entitlement.getCertificates();
+        if (certificates == null || certificates.isEmpty()) {
+            return null;
+        }
+
+        // This should only ever return one cert, probably.
+        CertificateDTO certificate = certificates.iterator().next();
+        if (certificate == null) {
+            return null;
+        }
+
+        return new X509Cert(parseCertificate(certificate.getCert()));
     }
 
     public static X509Certificate parseCertificate(String certStr) {
