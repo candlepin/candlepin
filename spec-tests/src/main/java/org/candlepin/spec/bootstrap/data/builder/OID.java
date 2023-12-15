@@ -54,4 +54,7 @@ public final class OID {
         return REDHAT_OID + "8";
     }
 
+    public static String entitlementNamespace() {
+        return REDHAT_OID + "9";
+    }
 }

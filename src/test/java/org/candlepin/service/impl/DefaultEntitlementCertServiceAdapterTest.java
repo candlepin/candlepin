@@ -14,6 +14,7 @@
  */
 package org.candlepin.service.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -66,6 +67,7 @@ import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.pki.impl.JSSProviderLoader;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.CertificateSizeException;
+import org.candlepin.util.OIDUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.util.X509V3ExtensionUtil;
@@ -89,6 +91,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -1311,6 +1315,58 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = { "ns-1", "ns-2", "some long namespace" })
+    public void testPrepareV3ExtensionsIncludesEntitlementNamespaceForNamespacedProducts(String namespace) {
+        Product product = new Product()
+            .setId("test_prod-1")
+            .setNamespace(namespace);
+
+        Pool pool = new Pool()
+            .setProduct(product);
+
+        Set<X509ExtensionWrapper> extensions = this.certServiceAdapter.prepareV3Extensions(pool);
+
+        assertThat(extensions)
+            .isNotNull()
+            .hasSizeGreaterThanOrEqualTo(2);
+
+        String entNamespaceOID = OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_NAMESPACE);
+        List<X509ExtensionWrapper> filtered = extensions.stream()
+            .filter(wrapper -> entNamespaceOID.equals(wrapper.getOid()))
+            .toList();
+
+        assertThat(filtered)
+            .singleElement()
+            .returns(entNamespaceOID, X509ExtensionWrapper::getOid)
+            .returns(namespace, X509ExtensionWrapper::getValue);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { " ", "   " })
+    public void testPrepareV3ExtensionsOmitsEntitlementNamespaceForGlobalProducts(String namespace) {
+        Product product = new Product()
+            .setId("test_prod-1")
+            .setNamespace(namespace);
+
+        Pool pool = new Pool()
+            .setProduct(product);
+
+        Set<X509ExtensionWrapper> extensions = this.certServiceAdapter.prepareV3Extensions(pool);
+
+        assertThat(extensions)
+            .isNotNull()
+            .hasSizeGreaterThanOrEqualTo(1);
+
+        String entNamespaceOID = OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_NAMESPACE);
+        List<X509ExtensionWrapper> filtered = extensions.stream()
+            .filter(wrapper -> entNamespaceOID.equals(wrapper.getOid()))
+            .toList();
+
+        assertTrue(filtered.isEmpty());
+    }
+
     private void assertContainsAll(Object list, String values) {
         List<String> listToCheck = (List<String>) list;
         StringTokenizer st = new StringTokenizer(values, ",");
@@ -1406,9 +1462,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV3Extensions(pool);
         Map<String, X509ExtensionWrapper> map = toExtensionMap(extensions);
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.9"));
         assertEquals(X509V3ExtensionUtil.CERT_VERSION, map.get("1.3.6.1.4.1.2312.9.6").getValue());
-        assertEquals(pool.getProduct().getNamespace(), map.get("1.3.6.1.4.1.2312.9.9").getValue());
 
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
@@ -1467,9 +1521,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV3Extensions(pool);
         Map<String, X509ExtensionWrapper> map = toExtensionMap(extensions);
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.9"));
         assertEquals(X509V3ExtensionUtil.CERT_VERSION, map.get("1.3.6.1.4.1.2312.9.6").getValue());
-        assertEquals(pool.getProduct().getNamespace(), map.get("1.3.6.1.4.1.2312.9.9").getValue());
 
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
@@ -1521,9 +1573,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV3Extensions(pool);
         Map<String, X509ExtensionWrapper> map = toExtensionMap(extensions);
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.9"));
         assertEquals(X509V3ExtensionUtil.CERT_VERSION, map.get("1.3.6.1.4.1.2312.9.6").getValue());
-        assertEquals(pool.getProduct().getNamespace(), map.get("1.3.6.1.4.1.2312.9.9").getValue());
 
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
@@ -1569,9 +1619,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV3Extensions(pool);
         Map<String, X509ExtensionWrapper> map = toExtensionMap(extensions);
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.9"));
         assertEquals(X509V3ExtensionUtil.CERT_VERSION, map.get("1.3.6.1.4.1.2312.9.6").getValue());
-        assertEquals(pool.getProduct().getNamespace(), map.get("1.3.6.1.4.1.2312.9.9").getValue());
 
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(

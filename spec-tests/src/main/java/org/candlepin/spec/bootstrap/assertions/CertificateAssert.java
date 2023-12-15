@@ -98,6 +98,10 @@ public class CertificateAssert extends AbstractAssert<CertificateAssert, X509Cer
         return hasExtensionValue(OID.entitlementType(), type);
     }
 
+    public CertificateAssert hasEntitlementNamespace(String namespace) {
+        return hasExtensionValue(OID.entitlementNamespace(), namespace);
+    }
+
     public CertificateAssert hasContentRepoEnabled(ContentDTO content) {
         return hasExtensionValue(OID.contentRepoEnabled(content), "1");
     }
