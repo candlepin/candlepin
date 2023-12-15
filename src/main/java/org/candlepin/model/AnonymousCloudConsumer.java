@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.service.CloudProvider;
 import org.candlepin.util.Util;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -26,8 +25,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -59,6 +56,8 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     public static final int CLOUD_INSTANCE_ID_MAX_LENGTH = 170;
     /** Max length for a value in the cloud offering ID field */
     public static final int CLOUD_OFFERING_ID_MAX_LENGTH = 170;
+    /** Max length for a value in the cloud provider shortname field */
+    public static final int CLOUD_PROVIDER_MAX_LENGTH = 15;
 
 
     @Id
@@ -84,9 +83,8 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     private String cloudOfferingId;
 
     @Column(name = "cloud_provider_short_name")
-    @Enumerated(EnumType.STRING)
     @NotNull
-    private CloudProvider cloudProviderShortName;
+    private String cloudProviderShortName;
 
     @Column(name = "product_ids")
     @NotNull
@@ -237,7 +235,7 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     /**
      * @return the cloud provider short name for this anonymous cloud consumer
      */
-    public CloudProvider getCloudProviderShortName() {
+    public String getCloudProviderShortName() {
         return this.cloudProviderShortName;
     }
 
@@ -247,9 +245,13 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
      *
      * @return a reference to this AnonymousCloudConsumer instance
      */
-    public AnonymousCloudConsumer setCloudProviderShortName(CloudProvider cloudProviderShortName) {
+    public AnonymousCloudConsumer setCloudProviderShortName(String cloudProviderShortName) {
         if (cloudProviderShortName == null) {
             throw new IllegalArgumentException("cloudProviderShortName is null");
+        }
+
+        if (cloudProviderShortName.length() > CLOUD_PROVIDER_MAX_LENGTH) {
+            throw new IllegalArgumentException("cloudProviderShortName exceeds the max length");
         }
 
         this.cloudProviderShortName = cloudProviderShortName;

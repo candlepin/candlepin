@@ -24,7 +24,6 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.exception.CloudAccountOrgMismatchException;
 import org.candlepin.service.exception.CouldNotAcquireCloudAccountLockException;
@@ -83,8 +82,9 @@ class CloudAccountOrgSetupJobTest {
 
     @Test
     void testJobConfigSetCloudProvider() {
+        String expectedCloudProvider = "azure";
         JobConfig config = CloudAccountOrgSetupJob.createJobConfig()
-            .setCloudProvider(CloudProvider.AZURE);
+            .setCloudProvider(expectedCloudProvider);
 
         JobArguments args = config.getJobArguments();
 
@@ -92,8 +92,7 @@ class CloudAccountOrgSetupJobTest {
             .setCloudProvider(null));
 
         assertTrue(args.containsKey(CloudAccountOrgSetupJob.CLOUD_PROVIDER));
-        assertEquals(CloudProvider.AZURE,
-            args.getAs(CloudAccountOrgSetupJob.CLOUD_PROVIDER, CloudProvider.class));
+        assertEquals(expectedCloudProvider, args.getAsString(CloudAccountOrgSetupJob.CLOUD_PROVIDER));
     }
 
     @Test
@@ -125,7 +124,7 @@ class CloudAccountOrgSetupJobTest {
             CloudAccountOrgSetupJob.createJobConfig()
             .setCloudAccountId(TestUtil.randomString())
             .setCloudOfferingId(offering)
-            .setCloudProvider(CloudProvider.AZURE)
+            .setCloudProvider(TestUtil.randomString())
             .setOwnerKey(TestUtil.randomString());
 
         AsyncJobStatus status = mock(AsyncJobStatus.class);
@@ -155,7 +154,7 @@ class CloudAccountOrgSetupJobTest {
             CloudAccountOrgSetupJob.createJobConfig()
             .setCloudAccountId(TestUtil.randomString())
             .setCloudOfferingId(TestUtil.randomString())
-            .setCloudProvider(CloudProvider.AZURE)
+            .setCloudProvider(TestUtil.randomString())
             .setOwnerKey(TestUtil.randomString());
 
         AsyncJobStatus status = mock(AsyncJobStatus.class);
@@ -177,7 +176,7 @@ class CloudAccountOrgSetupJobTest {
             CloudAccountOrgSetupJob.createJobConfig()
             .setCloudAccountId(TestUtil.randomString())
             .setCloudOfferingId(TestUtil.randomString())
-            .setCloudProvider(CloudProvider.AZURE)
+            .setCloudProvider(TestUtil.randomString())
             .setOwnerKey(TestUtil.randomString());
 
 
@@ -200,7 +199,7 @@ class CloudAccountOrgSetupJobTest {
             CloudAccountOrgSetupJob.createJobConfig()
             .setCloudAccountId(TestUtil.randomString())
             .setCloudOfferingId(TestUtil.randomString())
-            .setCloudProvider(CloudProvider.AZURE)
+            .setCloudProvider(TestUtil.randomString())
             .setOwnerKey(TestUtil.randomString());
 
         AsyncJobStatus status = mock(AsyncJobStatus.class);
@@ -221,7 +220,7 @@ class CloudAccountOrgSetupJobTest {
             CloudAccountOrgSetupJob.createJobConfig()
                 .setCloudAccountId(TestUtil.randomString())
                 .setCloudOfferingId(TestUtil.randomString())
-                .setCloudProvider(CloudProvider.AZURE)
+                .setCloudProvider(TestUtil.randomString())
                 .setOwnerKey(TestUtil.randomString());
 
 
@@ -238,7 +237,7 @@ class CloudAccountOrgSetupJobTest {
             .createJobConfig()
             .setCloudAccountId(TestUtil.randomString())
             .setCloudOfferingId(TestUtil.randomString())
-            .setCloudProvider(CloudProvider.AZURE)
+            .setCloudProvider(TestUtil.randomString())
             .setOwnerKey(TestUtil.randomString());
         jobConfig.validate();
     }

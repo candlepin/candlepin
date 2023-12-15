@@ -24,7 +24,6 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.exception.CloudAccountOrgMismatchException;
 import org.candlepin.service.exception.CouldNotAcquireCloudAccountLockException;
@@ -77,7 +76,7 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
         String accountId = args.getAsString(CLOUD_ACCOUNT_ID);
         String offeringId = args.getAsString(OFFERING_ID);
         String ownerKey = args.getAsString(OWNER_KEY);
-        CloudProvider cloudProviderShortName = args.getAs(CLOUD_PROVIDER, CloudProvider.class);
+        String cloudProviderShortName = args.getAsString(CLOUD_PROVIDER);
 
         try {
             CloudAccountData accountData = this.cloudAdapter.setupCloudAccountOrg(
@@ -170,9 +169,9 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
          *     cloud provider for this job
          * @return a reference to this job config
          */
-        public CloudAccountOrgSetupJobConfig setCloudProvider(CloudProvider cloudProvider) {
-            if (cloudProvider == null) {
-                throw new IllegalArgumentException("cloudProvider is null");
+        public CloudAccountOrgSetupJobConfig setCloudProvider(String cloudProvider) {
+            if (cloudProvider == null || cloudProvider.isBlank()) {
+                throw new IllegalArgumentException("cloudProvider is null or empty");
             }
 
             this.setJobArgument(CLOUD_PROVIDER, cloudProvider);

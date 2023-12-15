@@ -42,10 +42,10 @@ import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PoolCurator;
-import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingException;
 import org.candlepin.service.model.CloudAuthenticationResult;
+import org.candlepin.test.TestUtil;
 
 import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -167,7 +167,7 @@ public class CloudRegistrationResourceTest {
             .signature("test-signature");
 
         CloudAuthenticationResult result = buildMockAuthResult(cloudAccountId, "instanceId",
-            CloudProvider.AWS,
+            TestUtil.randomString(),
             "ownerKey", "offerId", Set.of("productId"), true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
@@ -186,7 +186,7 @@ public class CloudRegistrationResourceTest {
             .signature("test-signature");
 
         CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", instanceId,
-            CloudProvider.AWS,
+            TestUtil.randomString(),
             "ownerKey", "offerId", Set.of("productId"), true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
@@ -219,7 +219,7 @@ public class CloudRegistrationResourceTest {
             .signature("test-signature");
 
         CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", "instanceId",
-            CloudProvider.AWS,
+            TestUtil.randomString(),
             "ownerKey", offerId, Set.of("productId"), true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
@@ -235,7 +235,7 @@ public class CloudRegistrationResourceTest {
             .signature("test-signature");
 
         CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", "instanceId",
-            CloudProvider.AWS, "ownerKey", "offerId", null, true);
+            TestUtil.randomString(), "ownerKey", "offerId", null, true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -250,7 +250,7 @@ public class CloudRegistrationResourceTest {
             .signature("test-signature");
 
         CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", "instanceId",
-            CloudProvider.AWS, "ownerKey", "offerId", Set.of(), true);
+            TestUtil.randomString(), "ownerKey", "offerId", Set.of(), true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -267,8 +267,7 @@ public class CloudRegistrationResourceTest {
         String expectedOwnerKey = "ownerKey";
         String prodId = "productId";
         CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", "instanceId",
-            CloudProvider.AWS,
-            expectedOwnerKey, "offerId", Set.of(prodId), true);
+            TestUtil.randomString(), expectedOwnerKey, "offerId", Set.of(prodId), true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
         Owner owner = new Owner().setKey(expectedOwnerKey);
@@ -307,15 +306,15 @@ public class CloudRegistrationResourceTest {
         Set<String> prodIds = Set.of("productId");
         String accountId = "cloudAccountId";
         String offeringId = "offerId";
-        CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId", CloudProvider.AWS,
-            null, offeringId, prodIds, true);
+        CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId",
+            TestUtil.randomString(), null, offeringId, prodIds, true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
         AnonymousCloudConsumer anonConsumer = new AnonymousCloudConsumer()
             .setCloudAccountId(accountId)
             .setCloudInstanceId("instanceId")
-            .setCloudProviderShortName(CloudProvider.AWS)
+            .setCloudProviderShortName(TestUtil.randomString())
             .setProductIds(prodIds);
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).create(any(AnonymousCloudConsumer.class));
 
@@ -351,8 +350,8 @@ public class CloudRegistrationResourceTest {
         String expectedOwnerKey = "ownerKey";
         String prodId = "productId";
         String accountId = "cloudAccountId";
-        CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId", CloudProvider.AWS,
-            expectedOwnerKey, "offerId", Set.of(prodId), false);
+        CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId",
+            TestUtil.randomString(), expectedOwnerKey, "offerId", Set.of(prodId), false);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
         Owner owner = new Owner().setKey(expectedOwnerKey);
@@ -362,7 +361,7 @@ public class CloudRegistrationResourceTest {
         AnonymousCloudConsumer anonConsumer = new AnonymousCloudConsumer()
             .setCloudAccountId(accountId)
             .setCloudInstanceId("instanceId")
-            .setCloudProviderShortName(CloudProvider.AWS)
+            .setCloudProviderShortName(TestUtil.randomString())
             .setProductIds(Set.of(prodId));
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).create(any(AnonymousCloudConsumer.class));
 
@@ -398,15 +397,15 @@ public class CloudRegistrationResourceTest {
         String expectedOwnerKey = "ownerKey";
         Set<String> prodIds = Set.of("productId");
         String accountId = "cloudAccountId";
-        CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId", CloudProvider.AWS,
-            expectedOwnerKey, "offerId", prodIds, true);
+        CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId",
+            TestUtil.randomString(), expectedOwnerKey, "offerId", prodIds, true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
         AnonymousCloudConsumer anonConsumer = new AnonymousCloudConsumer()
             .setCloudAccountId(accountId)
             .setCloudInstanceId("instanceId")
-            .setCloudProviderShortName(CloudProvider.AWS)
+            .setCloudProviderShortName(TestUtil.randomString())
             .setProductIds(prodIds);
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).create(any(AnonymousCloudConsumer.class));
 
@@ -442,8 +441,8 @@ public class CloudRegistrationResourceTest {
         String expectedOwnerKey = "ownerKey";
         String prodId = "productId";
         String accountId = "cloudAccountId";
-        CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId", CloudProvider.AWS,
-            expectedOwnerKey, "offerId", Set.of(prodId), true);
+        CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId",
+            TestUtil.randomString(), expectedOwnerKey, "offerId", Set.of(prodId), true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
         Owner owner = new Owner().setKey(expectedOwnerKey);
@@ -453,7 +452,7 @@ public class CloudRegistrationResourceTest {
         AnonymousCloudConsumer anonConsumer = new AnonymousCloudConsumer()
             .setCloudAccountId(accountId)
             .setCloudInstanceId("instanceId")
-            .setCloudProviderShortName(CloudProvider.AWS)
+            .setCloudProviderShortName(TestUtil.randomString())
             .setProductIds(Set.of(prodId));
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).create(any(AnonymousCloudConsumer.class));
 
@@ -490,7 +489,7 @@ public class CloudRegistrationResourceTest {
         String prodId = "productId";
         String accountId = "cloudAccountId";
         String instanceId = "instanceId";
-        CloudAuthenticationResult result = buildMockAuthResult(accountId, instanceId, CloudProvider.AWS,
+        CloudAuthenticationResult result = buildMockAuthResult(accountId, instanceId, TestUtil.randomString(),
             expectedOwnerKey, "offerId", Set.of(prodId), true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
@@ -501,7 +500,7 @@ public class CloudRegistrationResourceTest {
         AnonymousCloudConsumer anonConsumer = new AnonymousCloudConsumer()
             .setCloudAccountId(accountId)
             .setCloudInstanceId(instanceId)
-            .setCloudProviderShortName(CloudProvider.AWS)
+            .setCloudProviderShortName(TestUtil.randomString())
             .setProductIds(Set.of(prodId));
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).getByCloudInstanceId(instanceId);
 
@@ -555,7 +554,7 @@ public class CloudRegistrationResourceTest {
     }
 
     private CloudAuthenticationResult buildMockAuthResult(String cloudAccountId, String instanceId,
-        CloudProvider provider,
+        String provider,
         String ownerKey, String offerId, Set<String> productIds, boolean isEntitled) {
         CloudAuthenticationResult mockResult = mock(CloudAuthenticationResult.class);
         doReturn(cloudAccountId).when(mockResult).getCloudAccountId();

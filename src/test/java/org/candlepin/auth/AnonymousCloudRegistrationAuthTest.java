@@ -28,9 +28,9 @@ import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
-import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.model.CloudRegistrationInfo;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.jboss.resteasy.mock.MockHttpRequest;
@@ -306,7 +306,7 @@ public class AnonymousCloudRegistrationAuthTest {
             .setUuid(anonymousConsumerUuid)
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setCloudProviderShortName(CloudProvider.AWS)
+            .setCloudProviderShortName(TestUtil.randomString())
             .setProductIds(List.of("productId"));
 
         doReturn(consumer).when(anonymousCloudConsumerCurator).getByUuid(anonymousConsumerUuid);

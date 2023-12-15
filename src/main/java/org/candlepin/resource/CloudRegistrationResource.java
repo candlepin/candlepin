@@ -35,7 +35,6 @@ import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.resource.server.v1.CloudRegistrationApi;
-import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
 import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingException;
@@ -200,7 +199,7 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
 
             log.info(
                 "Cloud account org setup job created for account {} {} using offer {}",
-                authResult.getCloudProvider().shortName(), authResult.getCloudAccountId(),
+                authResult.getCloudProvider(), authResult.getCloudAccountId(),
                 authResult.getOfferId());
         }
 
@@ -229,7 +228,7 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
             anonymousConsumerUuid = createdAnonConsumer.getUuid();
 
             log.info("Anonymous consumer created for instance {} using cloud account {} {}",
-                authResult.getCloudInstanceId(), authResult.getCloudProvider().shortName(),
+                authResult.getCloudInstanceId(), authResult.getCloudProvider(),
                 authResult.getCloudAccountId());
         }
 
@@ -277,8 +276,8 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
             throw new CloudRegistrationAuthorizationException(errmsg);
         }
 
-        CloudProvider cloudProvider = result.getCloudProvider();
-        if (cloudProvider == null) {
+        String cloudProvider = result.getCloudProvider();
+        if (cloudProvider == null || cloudProvider.isBlank()) {
             String errmsg = this.i18n.tr("cloud provider could not be resolved");
 
             throw new CloudRegistrationAuthorizationException(errmsg);
