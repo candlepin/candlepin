@@ -47,6 +47,7 @@ import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
+import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -142,6 +143,26 @@ public class EnvironmentSpecTest {
         assertThat(foundEnv)
             .singleElement()
             .returns(env.getId(), EnvironmentDTO::getId);
+    }
+
+    @Test
+    public void shouldFindTypedEnvironmentsByOwner() {
+        EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random()
+            .type(null));
+        EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random()
+            .type(StringUtil.random("type-")));
+        EnvironmentDTO env3 = ownerClient.owners().createEnv(owner.getKey(), Environments.random()
+            .type(StringUtil.random("type-")));
+
+        List<EnvironmentDTO> found1 = ownerClient.owners().listEnvironments(owner.getKey(), null,
+            null, false);
+        assertThat(found1).isNotNull().contains(env1).doesNotContain(env2, env3);
+        List<EnvironmentDTO> found2 = ownerClient.owners().listEnvironments(owner.getKey(), null,
+            List.of(env2.getType()), false);
+        assertThat(found2).isNotNull().contains(env2).doesNotContain(env1, env3);
+        List<EnvironmentDTO> found3 = ownerClient.owners().listEnvironments(owner.getKey(), null,
+            List.of(env3.getType()), true);
+        assertThat(found3).isNotNull().contains(env1, env2, env3);
     }
 
     @Test

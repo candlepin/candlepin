@@ -103,6 +103,7 @@ import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
+import org.candlepin.paging.PagingUtilFactory;
 import org.candlepin.resource.server.v1.OwnerApi;
 import org.candlepin.resource.util.AttachedFile;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
@@ -196,6 +197,8 @@ public class OwnerResource implements OwnerApi {
     private final DTOValidator validator;
     private final PrincipalProvider principalProvider;
     private final PoolService poolService;
+    private final PagingUtilFactory pagingUtilFactory;
+
 
     @Inject
     @SuppressWarnings("checkstyle:parameternumber")
@@ -227,7 +230,8 @@ public class OwnerResource implements OwnerApi {
         JobManager jobManager,
         DTOValidator validator,
         PoolService poolService,
-        PrincipalProvider principalProvider) {
+        PrincipalProvider principalProvider,
+        PagingUtilFactory pagingUtilFactory) {
 
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.ownerInfoCurator = Objects.requireNonNull(ownerInfoCurator);
@@ -258,6 +262,7 @@ public class OwnerResource implements OwnerApi {
         this.validator = Objects.requireNonNull(validator);
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.poolService = Objects.requireNonNull(poolService);
+        this.pagingUtilFactory = Objects.requireNonNull(pagingUtilFactory);
     }
 
     /**
@@ -1063,13 +1068,22 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public CandlepinQuery<EnvironmentDTO> listEnvironments(
-        @Verify(Owner.class) String ownerKey, String envName) {
+    public Stream<EnvironmentDTO> listEnvironments(
+        @Verify(Owner.class) String ownerKey, String envName, List<String> type, Boolean listAll) {
         Owner owner = findOwnerByKey(ownerKey);
-        CandlepinQuery<Environment> query = envName == null ?
-            envCurator.listForOwner(owner) :
-            envCurator.listForOwnerByName(owner, envName);
-        return translator.translateQuery(query, EnvironmentDTO.class);
+        // defaults to false on null
+        listAll = listAll != null && listAll;
+        List<Environment> envs;
+        if (listAll) {
+            envs = envCurator.listAllTypes(owner, envName);
+        }
+        else {
+            envs = envCurator.listByType(owner, envName, type == null || type.size() == 0 ? null : type);
+        }
+        Stream<EnvironmentDTO> stream = envs.stream()
+            .map(this.translator.getStreamMapper(Environment.class, EnvironmentDTO.class));
+        return this.pagingUtilFactory.forClass(EnvironmentDTO.class)
+            .applyPaging(stream, envs.size());
     }
 
     @Override

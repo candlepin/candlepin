@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +25,7 @@ import java.util.Map;
 import javax.inject.Singleton;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
-
+import javax.persistence.TypedQuery;
 
 
 @Singleton
@@ -71,19 +69,67 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
             .getResultList();
     }
 
-    public CandlepinQuery<Environment> listForOwner(Owner o) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(Restrictions.eq("owner", o));
+    /**
+     * Retrieves a list on environments based on the criteria and given types
+     * @param owner
+     *  The owner of the environments
+     * @param envName
+     *  An exact name for the environments
+     * @param type
+     *  A list of types to filter the environments
+     * @return
+     *  A List of environments based on the criteria
+     */
+    public List<Environment> listByType(Owner owner, String envName, List<String> type) {
+        if (owner == null) {
+            throw new IllegalArgumentException("Owner is null");
+        }
+        StringBuilder jpql = new StringBuilder("SELECT e FROM Environment e WHERE e.owner.id = :owner_id ");
+        if (envName != null &&  !envName.isEmpty()) {
+            jpql.append("AND e.name = :envName ");
+        }
+        if (type == null || type.isEmpty()) {
+            jpql.append("AND e.type is null");
+        }
+        else {
+            jpql.append("AND e.type in :type");
+        }
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        TypedQuery query =  this.getEntityManager().createQuery(jpql.toString(), Environment.class);
+        query.setParameter("owner_id", owner.getId());
+        if (envName != null && !envName.isEmpty()) {
+            query.setParameter("envName", envName);
+        }
+        if (type != null && !type.isEmpty()) {
+            query.setParameter("type", type.stream().map(x -> x.toLowerCase()).toList());
+        }
+        return query.getResultList();
     }
 
-    public CandlepinQuery<Environment> listForOwnerByName(Owner o, String envName) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(Restrictions.eq("owner", o))
-            .add(Restrictions.eq("name", envName));
+    /**
+     * Retrieves a list on environments based on the criteria and given types
+     * @param owner
+     *  The owner of the environments
+     * @param envName
+     *  An exact name for the environments
+     * @return
+     *  A List of environments based on the criteria
+     */
+    public List<Environment> listAllTypes(Owner owner, String envName) {
+        if (owner == null) {
+            throw new IllegalArgumentException("Owner is null");
+        }
+        StringBuilder jpql = new StringBuilder("SELECT e FROM Environment e  WHERE e.owner.id = :owner_id ");
+        if (envName != null && !envName.isEmpty()) {
+            jpql.append(" AND e.name = :envName");
+        }
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        TypedQuery query =  this.getEntityManager().createQuery(jpql.toString(), Environment.class);
+        query.setParameter("owner_id", owner.getId());
+        if (envName != null && !envName.isEmpty()) {
+            query.setParameter("envName", envName);
+        }
+        return query.getResultList();
     }
 
     /**
