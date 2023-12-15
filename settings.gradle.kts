@@ -15,5 +15,6 @@ gradleEnterprise {
 
 rootProject.name = "candlepin"
 
+include("api")
 include("client")
 include("spec-tests")

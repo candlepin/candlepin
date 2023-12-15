@@ -1,3 +1,5 @@
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
 plugins {
     alias(libs.plugins.openapi.generator)
     id("java-library")
@@ -28,9 +30,8 @@ sourceSets {
         }
     }
 }
-tasks.getByName<JavaCompile>("compileJava").dependsOn(tasks.getByName("openApiGenerate"))
 
-openApiGenerate {
+val generateClient = tasks.named<GenerateTask>("openApiGenerate") {
     inputSpec = "${projectDir}/../api/candlepin-api-spec.yaml"
     outputDir = "${buildDir}/generated"
     configFile = "${projectDir}/../api/candlepin-api-config.json"
@@ -46,4 +47,8 @@ openApiGenerate {
     additionalProperties = mapOf(
         "useRuntimeException" to true
     )
+}
+
+tasks.named<JavaCompile>("compileJava") {
+    dependsOn(generateClient)
 }

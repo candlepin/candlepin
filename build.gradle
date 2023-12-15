@@ -1,5 +1,4 @@
 import groovy.text.GStringTemplateEngine
-import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 import org.yaml.snakeyaml.Yaml
 
 plugins {
@@ -11,7 +10,6 @@ plugins {
     alias(libs.plugins.dependency.check)
     alias(libs.plugins.gradle.versions)
     alias(libs.plugins.nebula.lint)
-    alias(libs.plugins.openapi.generator)
     alias(libs.plugins.sonarqube)
 
     // The following are plugins are plugins we wrote in the buildSrc folder
@@ -27,9 +25,6 @@ apply from: "dependencies.gradle"
 group = "org.candlepin"
 
 ext {
-    api_spec_path = "${projectDir}/api/candlepin-api-spec.yaml"
-    config_file = "${projectDir}/api/candlepin-api-config.json"
-
     cpdb_username = "candlepin"
     cpdb_password = ""
     db_name = "candlepin"
@@ -71,6 +66,8 @@ ext {
 }
 
 dependencies {
+    implementation(project(":api"))
+
     // Commons
     implementation(libs.commons.codec)
     implementation(libs.commons.collections)
@@ -195,8 +192,6 @@ dependencies {
 // Hibernate annotation based discovery.
 sourceSets.main.output.resourcesDir = new File(buildDir, "classes/java/main")
 
-compileJava.dependsOn(processResources)
-
 // Add the openapi generated classes to the main java source sets to compile in the generated interfaces
 sourceSets {
     main.java.srcDir "${buildDir}/generated/api/src/gen/java"
@@ -229,49 +224,18 @@ repositories {
     maven { url "https://repository.jboss.org/nexus/content/groups/public/" }
 }
 
-openApiGenerate {
-    generatorName = "jaxrs-spec"
-    inputSpec = api_spec_path
-    configFile = config_file
-    outputDir = "$buildDir/generated/api"
-    configOptions = [
-            interfaceOnly: 'true',
-            dateLibrary  : "java8",
-            useTags      : "true"
-    ]
-    templateDir = "$rootDir/buildSrc/src/main/resources/templates"
+tasks.register("openApiValidate") {
+    dependsOn(":api:openApiValidate")
 }
 
-openApiValidate {
-    inputSpec = api_spec_path
+tasks.register("openApiGenerate") {
+    dependsOn(":api:openApiGenerate")
+    dependsOn(":client:openApiGenerate")
 }
 
-tasks.register('generateApiDocs', GenerateTask) {
-    generatorName = "html"
-    inputSpec = api_spec_path
-    outputDir = "$buildDir/docs"
-    generateApiDocumentation = true
-    generateModelDocumentation = true
-    generateModelTests = false
-    generateApiTests = false
-    withXml = false
+tasks.register("openApiGenerateJson") {
+    dependsOn(":api:openApiGenerateJson")
 }
-
-tasks.register('generateOpenApiJson', GenerateTask) {
-    generatorName = "openapi"
-    inputSpec = api_spec_path
-    outputDir = "$buildDir/generated/json"
-    generateApiDocumentation = true
-    generateModelDocumentation = true
-    generateModelTests = false
-    generateApiTests = false
-    withXml = false
-}
-
-//Update the compileJava & processResourcesTasks depend on the openapi generation so that the generated classes
-//can be used during compilation.
-compileJava.dependsOn tasks.openApiGenerate
-processResources.dependsOn tasks.generateOpenApiJson
 
 gettext {
     keys_project_dir = "${project.rootDir}/"
@@ -337,6 +301,13 @@ clean.doFirst {
     delete "${rootDir}/src/main/webapp/docs/candlepin-api-spec.yaml"
     delete "${rootDir}/target"
 }
+
+//Update the compileJava & processResourcesTasks depend on the openapi generation so that the generated classes
+//can be used during compilation.
+compileJava.dependsOn tasks.openApiGenerate
+processResources.dependsOn(":api:openApiGenerateJson")
+//processResources.dependsOn tasks.specVersion
+compileJava.dependsOn(processResources)
 
 // substitute the version & release in the version.properties used by the status resource at runtime
 processResources {
