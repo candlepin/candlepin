@@ -14,8 +14,6 @@
  */
 package org.candlepin.service.model;
 
-import org.candlepin.service.CloudProvider;
-
 import java.util.Set;
 
 
@@ -39,7 +37,7 @@ public interface CloudAuthenticationResult {
     /**
      * @return the cloud provider found in the {@link CloudRegistrationInfo} metadata
      */
-    CloudProvider getCloudProvider();
+    String getCloudProvider();
 
     /**
      * @return the owner key associated to the cloud account ID from the {@link CloudRegistrationInfo}
