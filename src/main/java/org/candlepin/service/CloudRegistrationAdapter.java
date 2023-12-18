@@ -96,7 +96,7 @@ public interface CloudRegistrationAdapter {
      * @return key of the organization with entitled offering
      */
     CloudAccountData setupCloudAccountOrg(String cloudAccountID, String cloudOfferingID,
-        CloudProvider cloudProviderShortName, String ownerKey)
+        String cloudProviderShortName, String ownerKey)
         throws CouldNotAcquireCloudAccountLockException, CouldNotEntitleOrganizationException,
             CloudAccountOrgMismatchException;
 
@@ -120,7 +120,7 @@ public interface CloudRegistrationAdapter {
      *
      * @return key of the organization
      */
-    String checkCloudAccountOrgIsReady(String cloudAccountID, CloudProvider cloudProviderShortName,
+    String checkCloudAccountOrgIsReady(String cloudAccountID, String cloudProviderShortName,
         String cloudOfferingID) throws OrgForCloudAccountNotCreatedYetException,
         OrgForCloudAccountNotEntitledYetException;
 

@@ -30,11 +30,11 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.MethodLocator;
-import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.exception.OrgForCloudAccountNotCreatedYetException;
 import org.candlepin.service.exception.OrgForCloudAccountNotEntitledYetException;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.core.interception.jaxrs.PostMatchContainerRequestContext;
@@ -170,8 +170,10 @@ public class SecurityHoleAuthorizationFilterTest extends DatabaseTestFixture {
     }
 
     private void setupAnonymousCloudConsumerPrincipal() {
-        AnonymousCloudConsumer anonymousCloudConsumer = new AnonymousCloudConsumer().setCloudAccountId(
-                "account-id").setCloudOfferingId("offering-id").setCloudProviderShortName(CloudProvider.AWS)
+        AnonymousCloudConsumer anonymousCloudConsumer = new AnonymousCloudConsumer()
+            .setCloudAccountId("account-id")
+            .setCloudOfferingId("offering-id")
+            .setCloudProviderShortName(TestUtil.randomString())
             .setProductIds(List.of("product-1"));
         when(mockSecurityContext.getUserPrincipal()).thenReturn(mockAnonymousCloudConsumerPrincipal);
         when(mockAnonymousCloudConsumerPrincipal.getAnonymousCloudConsumer()).thenReturn(

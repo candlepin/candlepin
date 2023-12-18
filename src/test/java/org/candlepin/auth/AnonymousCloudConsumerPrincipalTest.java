@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.candlepin.auth.permissions.AnonymousCloudConsumerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.model.AnonymousCloudConsumer;
-import org.candlepin.service.CloudProvider;
+import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +46,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
 
@@ -63,7 +63,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
 
@@ -79,7 +79,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
 
@@ -95,7 +95,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
 
@@ -110,7 +110,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
 
@@ -126,7 +126,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
 
@@ -141,7 +141,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
 
@@ -156,7 +156,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
 
@@ -171,7 +171,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
 
@@ -186,7 +186,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
 
         AnonymousCloudConsumer consumer2 = new AnonymousCloudConsumer()
             .setId("id")
@@ -194,7 +194,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
 
         AnonymousCloudConsumerPrincipal principal1 = new AnonymousCloudConsumerPrincipal(consumer1);
         AnonymousCloudConsumerPrincipal principal2 = new AnonymousCloudConsumerPrincipal(consumer2);

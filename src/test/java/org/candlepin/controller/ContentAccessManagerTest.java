@@ -73,7 +73,6 @@ import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.JSSPKIUtility;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
-import org.candlepin.service.CloudProvider;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
@@ -913,7 +912,7 @@ public class ContentAccessManagerTest {
         consumer.setUuid("uuid");
         consumer.setCloudAccountId("account-id");
         consumer.setCloudInstanceId("instance-id");
-        consumer.setCloudProviderShortName(CloudProvider.AWS);
+        consumer.setCloudProviderShortName(TestUtil.randomString());
 
         ContentAccessManager manager = this.createManager();
 
@@ -938,7 +937,7 @@ public class ContentAccessManagerTest {
         consumer.setUuid("uuid");
         consumer.setCloudAccountId("account-id");
         consumer.setCloudInstanceId("instance-id");
-        consumer.setCloudProviderShortName(CloudProvider.AWS);
+        consumer.setCloudProviderShortName(TestUtil.randomString());
         consumer.setContentAccessCert(expected);
 
         ContentAccessManager manager = this.createManager();
@@ -966,7 +965,7 @@ public class ContentAccessManagerTest {
         consumer.setUuid("uuid");
         consumer.setCloudAccountId("account-id");
         consumer.setCloudInstanceId("instance-id");
-        consumer.setCloudProviderShortName(CloudProvider.AWS);
+        consumer.setCloudProviderShortName(TestUtil.randomString());
         consumer.setContentAccessCert(null);
 
         CertificateSerial expectedSerial = new CertificateSerial(678910L);
@@ -1017,7 +1016,7 @@ public class ContentAccessManagerTest {
         consumer.setUuid("uuid");
         consumer.setCloudAccountId("account-id");
         consumer.setCloudInstanceId("instance-id");
-        consumer.setCloudProviderShortName(CloudProvider.AWS);
+        consumer.setCloudProviderShortName(TestUtil.randomString());
         consumer.setProductIds(prodIds);
         consumer.setContentAccessCert(cert);
 
@@ -1060,7 +1059,7 @@ public class ContentAccessManagerTest {
         consumer.setUuid("uuid");
         consumer.setCloudAccountId("account-id");
         consumer.setCloudInstanceId("instance-id");
-        consumer.setCloudProviderShortName(CloudProvider.AWS);
+        consumer.setCloudProviderShortName(TestUtil.randomString());
         consumer.setContentAccessCert(null);
 
         doReturn(prods).when(this.mockProdAdapter).getChildrenByProductIds(consumer.getProductIds());

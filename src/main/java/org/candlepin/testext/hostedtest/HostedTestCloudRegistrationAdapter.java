@@ -14,7 +14,6 @@
  */
 package org.candlepin.testext.hostedtest;
 
-import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
 import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingException;
@@ -157,8 +156,8 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
             }
 
             @Override
-            public CloudProvider getCloudProvider() {
-                return CloudProvider.AWS;
+            public String getCloudProvider() {
+                return "aws";
             }
 
             @Override
@@ -188,7 +187,7 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
      */
     @Override
     public CloudAccountData setupCloudAccountOrg(String cloudAccountID, String cloudOfferingID,
-        CloudProvider cloudProviderShortName, String ownerKey)
+        String cloudProviderShortName, String ownerKey)
         throws CouldNotAcquireCloudAccountLockException, CouldNotEntitleOrganizationException {
 
         if (ownerKey == null) {
@@ -202,7 +201,7 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
      * {@inheritDoc}
      */
     @Override
-    public String checkCloudAccountOrgIsReady(String cloudAccountID, CloudProvider cloudProviderShortName,
+    public String checkCloudAccountOrgIsReady(String cloudAccountID, String cloudProviderShortName,
         String cloudOfferingID)
         throws OrgForCloudAccountNotCreatedYetException, OrgForCloudAccountNotEntitledYetException {
         String ownerKey = this.datastore.getOwnerKeyForCloudAccountId(cloudAccountID);
