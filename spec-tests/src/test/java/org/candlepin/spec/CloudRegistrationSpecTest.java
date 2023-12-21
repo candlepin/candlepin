@@ -85,7 +85,7 @@ class CloudRegistrationSpecTest {
         OwnerDTO owner = upstreamClient.createOwner(Owners.random());
         String token = cloudRegistration.cloudAuthorize(owner.getKey(), "test-type", "test_signature");
 
-        assertTokenType(adminClient.MAPPER, token, STANDARD_TOKEN_TYPE);
+        assertTokenType(ApiClient.MAPPER, token, STANDARD_TOKEN_TYPE);
         assertNotNull(token);
     }
 
@@ -99,7 +99,7 @@ class CloudRegistrationSpecTest {
         ConsumerDTO consumer = ApiClients.bearerToken(token).consumers()
             .createConsumer(Consumers.random(owner));
 
-        assertTokenType(adminClient.MAPPER, token, STANDARD_TOKEN_TYPE);
+        assertTokenType(ApiClient.MAPPER, token, STANDARD_TOKEN_TYPE);
         assertNotNull(consumer);
     }
 
@@ -121,7 +121,7 @@ class CloudRegistrationSpecTest {
         ConsumerDTO consumer = ApiClients.bearerToken(token).consumers()
             .createConsumer(Consumers.random(owner));
         assertNotNull(consumer);
-        assertTokenType(adminClient.MAPPER, token, STANDARD_TOKEN_TYPE);
+        assertTokenType(ApiClient.MAPPER, token, STANDARD_TOKEN_TYPE);
     }
 
     @Test
@@ -144,7 +144,7 @@ class CloudRegistrationSpecTest {
         CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
-        assertTokenType(adminClient.MAPPER, result.getToken(), STANDARD_TOKEN_TYPE);
+        assertTokenType(ApiClient.MAPPER, result.getToken(), STANDARD_TOKEN_TYPE);
         assertThat(result)
             .isNotNull()
             .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
@@ -171,7 +171,7 @@ class CloudRegistrationSpecTest {
         CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
-        assertTokenType(adminClient.MAPPER, result.getToken(), STANDARD_TOKEN_TYPE);
+        assertTokenType(ApiClient.MAPPER, result.getToken(), STANDARD_TOKEN_TYPE);
         assertThat(result)
             .isNotNull()
             .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
@@ -195,7 +195,7 @@ class CloudRegistrationSpecTest {
         CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
-        assertTokenType(adminClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+        assertTokenType(ApiClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
         assertThat(result)
             .isNotNull()
             .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
@@ -215,7 +215,7 @@ class CloudRegistrationSpecTest {
         CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
-        assertTokenType(adminClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+        assertTokenType(ApiClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
         assertThat(result)
             .isNotNull()
             .returns(null, CloudAuthenticationResultDTO::getOwnerKey)
@@ -240,7 +240,7 @@ class CloudRegistrationSpecTest {
         CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
-        assertTokenType(adminClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+        assertTokenType(ApiClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
         assertThat(result)
             .isNotNull()
             .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
@@ -273,7 +273,7 @@ class CloudRegistrationSpecTest {
         CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
-        assertTokenType(adminClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+        assertTokenType(ApiClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
         assertThat(result)
             .isNotNull()
             .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
@@ -282,7 +282,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldReceiveSameAnonConsumerUuidWhenReAuthenticatingForV2Auth() throws Exception {
+    public void shouldReceiveDifferentAnonTokenDuringV2ReAuthenticationWithKnownOwner() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         adminClient.hosted().createOwner(owner);
@@ -293,19 +293,58 @@ class CloudRegistrationSpecTest {
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(StringUtil.random("prod-")));
         adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
 
-        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
+        CloudAuthenticationResultDTO firstResult = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
-        String expectedAnonConsumerUuid = result.getAnonymousConsumerUuid();
+        String expectedAnonConsumerUuid = firstResult.getAnonymousConsumerUuid();
 
-        CloudAuthenticationResultDTO actual = ApiClients.noAuth().cloudAuthorization()
+        CloudAuthenticationResultDTO secondResult = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
-        assertTokenType(adminClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
-        assertThat(actual)
+        assertTokenType(ApiClient.MAPPER, firstResult.getToken(), ANON_TOKEN_TYPE);
+
+        // Check that the same anonymous consumer record (based on uuid) is being used
+        // and that we already have the owner key (even though the owner is not ready for registration)
+        assertThat(secondResult)
             .isNotNull()
             .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
             .returns(expectedAnonConsumerUuid, CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
             .returns(ANON_TOKEN_TYPE, CloudAuthenticationResultDTO::getTokenType);
+
+        // We should have gotten a new token
+        assertThat(secondResult.getToken())
+            .isNotBlank()
+            .isNotEqualTo(firstResult.getToken());
+    }
+
+    @Test
+    public void shouldReceiveDifferentAnonTokenDuringV2ReAuthenticationWithUnknownOwner() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(StringUtil.random("prod-")));
+
+        CloudAuthenticationResultDTO firstResult = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+        String expectedAnonConsumerUuid = firstResult.getAnonymousConsumerUuid();
+
+        CloudAuthenticationResultDTO secondResult = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+
+        assertTokenType(ApiClient.MAPPER, firstResult.getToken(), ANON_TOKEN_TYPE);
+        // Check that the same anonymous consumer record (based on uuid) is being used
+        // and that the owner is null because it is still unknown/not existent
+        assertThat(secondResult)
+            .isNotNull()
+            .returns(null, CloudAuthenticationResultDTO::getOwnerKey)
+            .returns(expectedAnonConsumerUuid, CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
+            .returns(ANON_TOKEN_TYPE, CloudAuthenticationResultDTO::getTokenType);
+
+        // We should have gotten a new token
+        assertThat(secondResult.getToken())
+            .isNotBlank()
+            .isNotEqualTo(firstResult.getToken());
     }
 
     @Test
@@ -409,7 +448,7 @@ class CloudRegistrationSpecTest {
         CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
-        assertTokenType(adminClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+        assertTokenType(ApiClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
         assertThat(result)
             .isNotNull()
             .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
@@ -443,7 +482,7 @@ class CloudRegistrationSpecTest {
         CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
-        assertTokenType(adminClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+        assertTokenType(ApiClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
         assertThat(result)
             .isNotNull()
             .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
@@ -594,10 +633,12 @@ class CloudRegistrationSpecTest {
         assertThat(jobs.size()).isEqualTo(1);
 
         // Extract the owner key from the job's result data, and make sure the owner exists
+        // and is in SCA mode
         String ownerKey = StringUtils.substringBetween((String) jobs.get(0).getResultData(),
             "owner ", " (anonymous");
         assertThat(adminClient.owners().getOwner(ownerKey))
-            .isNotNull();
+            .isNotNull()
+            .returns("org_environment", OwnerDTO::getContentAccessMode);
     }
 
     private void assertTokenType(ObjectMapper mapper, String token, String expectedTokenType)

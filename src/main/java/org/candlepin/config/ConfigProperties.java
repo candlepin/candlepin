@@ -18,7 +18,6 @@ import static org.candlepin.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
 
 import org.candlepin.async.tasks.ActiveEntitlementJob;
 import org.candlepin.async.tasks.CertificateCleanupJob;
-import org.candlepin.async.tasks.CloudAccountOrgSetupJob;
 import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.async.tasks.ExpiredPoolsCleanupJob;
 import org.candlepin.async.tasks.ImportRecordCleanerJob;
@@ -290,8 +289,7 @@ public class ConfigProperties {
         ManifestCleanerJob.JOB_KEY,
         OrphanCleanupJob.JOB_KEY,
         UnmappedGuestEntitlementCleanerJob.JOB_KEY,
-        InactiveConsumerCleanerJob.JOB_KEY,
-        CloudAccountOrgSetupJob.JOB_KEY
+        InactiveConsumerCleanerJob.JOB_KEY
     };
 
     // How long (in seconds) to wait for job threads to finish during a graceful Tomcat shutdown

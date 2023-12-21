@@ -165,14 +165,9 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
         CloudAuthenticationResult authResult) {
         validateCloudAuthenticationResult(authResult);
 
-        String cloudInstanceId = authResult.getCloudInstanceId();
-        AnonymousCloudConsumer existingAnonConsumer = anonymousCloudConsumerCurator
-            .getByCloudInstanceId(cloudInstanceId);
-
-        String ownerKey = authResult.getOwnerKey();
-
         // verify that the owner exists upstream and is entitled
-        boolean createAnonConsumer = false;
+        String ownerKey = authResult.getOwnerKey();
+        boolean isOwnerReadyForRegistration = false;
         if (ownerKey == null || ownerKey.isBlank() || !authResult.isEntitled()) {
             CloudAccountOrgSetupJobConfig jobConfig = CloudAccountOrgSetupJob.createJobConfig()
                 .setCloudAccountId(authResult.getCloudAccountId())
@@ -193,60 +188,62 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
                 throw new IseException(errMsg, e);
             }
 
-            if (existingAnonConsumer == null) {
-                createAnonConsumer = true;
-            }
-
             log.info(
                 "Cloud account org setup job created for account {} {} using offer {}",
                 authResult.getCloudProvider(), authResult.getCloudAccountId(),
                 authResult.getOfferId());
         }
+        else {
+            // Else, check if it exists and is entitled in Candlepin too
+            isOwnerReadyForRegistration = poolCurator
+                 .hasPoolsForProducts(ownerKey, authResult.getProductIds());
+        }
 
-        // Impl note: It is possible the owner and subscription exists through the adapters, but
-        // the owner and pool do not yet exist in Candlepin. If that is the case we will want to create
-        // an anonymous cloud consumer record and provide an anonymous registration token.
-        String anonymousConsumerUuid = null;
-        if (!createAnonConsumer) {
-            anonymousConsumerUuid = existingAnonConsumer == null ? null : existingAnonConsumer.getUuid();
-            boolean ownerAndPoolsExists = poolCurator
-                .hasPoolsForProducts(ownerKey, authResult.getProductIds());
-            if ((!ownerAndPoolsExists && existingAnonConsumer == null)) {
-                createAnonConsumer = true;
+        CloudAuthenticationResultDTO cloudAuthResultDTO;
+        if (isOwnerReadyForRegistration) {
+            String token = tokenGenerator.buildStandardRegistrationToken(principal, ownerKey);
+            CloudAuthTokenType tokenType = CloudAuthTokenType.STANDARD;
+
+            cloudAuthResultDTO = new CloudAuthenticationResultDTO()
+                .ownerKey(ownerKey)
+                .token(token)
+                .tokenType(tokenType.toString());
+        }
+        else {
+            AnonymousCloudConsumer existingAnonConsumer = anonymousCloudConsumerCurator
+                .getByCloudInstanceId(authResult.getCloudInstanceId());
+
+            String anonymousConsumerUuid;
+            if (existingAnonConsumer == null) {
+                AnonymousCloudConsumer createdAnonConsumer = new AnonymousCloudConsumer()
+                    .setCloudAccountId(authResult.getCloudAccountId())
+                    .setCloudInstanceId(authResult.getCloudInstanceId())
+                    .setCloudOfferingId(authResult.getOfferId())
+                    .setProductIds(authResult.getProductIds())
+                    .setCloudProviderShortName(authResult.getCloudProvider());
+
+                createdAnonConsumer = anonymousCloudConsumerCurator.create(createdAnonConsumer);
+                anonymousConsumerUuid = createdAnonConsumer.getUuid();
+
+                log.info("Anonymous consumer created for instance {} using cloud account {} {}",
+                    authResult.getCloudInstanceId(), authResult.getCloudProvider(),
+                    authResult.getCloudAccountId());
             }
-        }
+            else {
+                anonymousConsumerUuid = existingAnonConsumer.getUuid();
+                log.info("Anonymous consumer already exists for instance {} using cloud account {} {}",
+                    authResult.getCloudInstanceId(), authResult.getCloudProvider(),
+                    authResult.getCloudAccountId());
+            }
 
-        if (createAnonConsumer) {
-            AnonymousCloudConsumer createdAnonConsumer = new AnonymousCloudConsumer()
-                .setCloudAccountId(authResult.getCloudAccountId())
-                .setCloudInstanceId(authResult.getCloudInstanceId())
-                .setCloudOfferingId(authResult.getOfferId())
-                .setProductIds(authResult.getProductIds())
-                .setCloudProviderShortName(authResult.getCloudProvider());
+            String token = tokenGenerator.buildAnonymousRegistrationToken(principal, anonymousConsumerUuid);
+            CloudAuthTokenType tokenType = CloudAuthTokenType.ANONYMOUS;
 
-            createdAnonConsumer = anonymousCloudConsumerCurator.create(createdAnonConsumer);
-            anonymousConsumerUuid = createdAnonConsumer.getUuid();
-
-            log.info("Anonymous consumer created for instance {} using cloud account {} {}",
-                authResult.getCloudInstanceId(), authResult.getCloudProvider(),
-                authResult.getCloudAccountId());
-        }
-
-        String token = anonymousConsumerUuid == null ?
-            tokenGenerator.buildStandardRegistrationToken(principal, ownerKey) :
-            tokenGenerator.buildAnonymousRegistrationToken(principal, anonymousConsumerUuid);
-
-        CloudAuthTokenType tokenType = anonymousConsumerUuid == null ?
-            CloudAuthTokenType.STANDARD :
-            CloudAuthTokenType.ANONYMOUS;
-
-        CloudAuthenticationResultDTO cloudAuthResultDTO = new CloudAuthenticationResultDTO()
-            .ownerKey(ownerKey)
-            .token(token)
-            .tokenType(tokenType.toString());
-
-        if (anonymousConsumerUuid != null) {
-            cloudAuthResultDTO.anonymousConsumerUuid(anonymousConsumerUuid);
+            cloudAuthResultDTO = new CloudAuthenticationResultDTO()
+                .ownerKey(ownerKey)
+                .token(token)
+                .tokenType(tokenType.toString())
+                .anonymousConsumerUuid(anonymousConsumerUuid);
         }
 
         return cloudAuthResultDTO;
