@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-12-17 07:06+0000\n"
-"PO-Revision-Date: 2023-11-26 14:01+0000\n"
+"PO-Revision-Date: 2023-12-19 19:36+0000\n"
 "Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ko/>\n"
@@ -21,7 +21,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.2.1\n"
+"X-Generator: Weblate 5.3\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -1239,10 +1239,9 @@ msgid "No content ID specified"
 msgstr "컨텐츠 ID가 지정되어 있지 않습니다"
 
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:412
-#, fuzzy, java-format
-#| msgid "Unable to find content with the ID \"{0}\"."
+#, java-format
 msgid "Unable to find a content with the ID \"{0}\""
-msgstr "ID \"{0}\"인 컨텐츠를 찾을 수 없습니다."
+msgstr "ID \"{0}\"인 컨텐츠를 찾을 수 없습니다"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:97
 msgid "Please supply a valid guest id"
@@ -1335,19 +1334,17 @@ msgstr "컨텐츠 공급업체는 null이거나 비어 있을 수 없습니다"
 msgid ""
 "Cannot modify or remove contents defined outside of the organization's "
 "namespace"
-msgstr ""
+msgstr "조직의 이름공간의 외부에 정의된 내용을 수정하거나 제거 할 수 없습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:184
-#, fuzzy, java-format
-#| msgid "Unable to find a product with the ID \"{0}\" for owner \"{1}\""
+#, java-format
 msgid "Unable to find a content with the ID \"{0}\" for owner \"{1}\""
-msgstr "소유자 \"{1}\"에 대해 ID \"{0}\"인 제품을 찾을 수 없습니다"
+msgstr "소유자 \"{1}\"에 대해 ID \"{0}\"인 내용을 찾을 수 없습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:243
-#, fuzzy, java-format
-#| msgid "Some of the content is already associated with Environment: {0}"
+#, java-format
 msgid "One or more contents are already defined in the global namespace: {0}"
-msgstr "일부 컨텐츠가 다음 환경에 이미 연결되어 있습니다: {0}"
+msgstr "하나 이상의 내용은 전역 이름공간에서 이미 정의되었습니다: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:342
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:742
@@ -1360,7 +1357,7 @@ msgstr "키 \"{0}\"의 소유자를 찾을 수 없습니다."
 msgid ""
 "Cannot modify or remove products defined outside of the organization's "
 "namespace"
-msgstr ""
+msgstr "조직의 이름공간의 외부에 정의된 제품을 수정하거나 제거 할 수 없습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:180
 #: src/main/java/org/candlepin/resource/OwnerResource.java:479
@@ -1369,52 +1366,50 @@ msgid "Unable to find a product with the ID \"{0}\" for owner \"{1}\""
 msgstr "소유자 \"{1}\"에 대해 ID \"{0}\"인 제품을 찾을 수 없습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:231
-#, fuzzy, java-format
-#| msgid "Unable to find content with the ID \"{0}\"."
+#, java-format
 msgid ""
 "Unable to find one or more contents in the namespace \"{0}\" with IDs: {1}"
-msgstr "ID \"{0}\"인 컨텐츠를 찾을 수 없습니다."
+msgstr "IDs: {1}인 이름공간 \"{0}\"에 하나 이상의 내용을 찾을 수 없습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:244
 msgid ""
 "Cannot attach content defined outside of the organization's namespace: {0}"
-msgstr ""
+msgstr "조직의 이름공간: {0}의 외부에 정의된 내용을 첨부 할 수 없습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:371
 msgid "provided products contains one or more null elements"
-msgstr ""
+msgstr "제공된 제품은 하나 이상의 null 요소를 포함합니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:377
 msgid "one or more provided product references lacks a valid ID"
-msgstr ""
+msgstr "제공된 하나 이상의 제품 참조는 유효한 ID가 없습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:389
 msgid "derived product reference lacks a valid ID"
-msgstr ""
+msgstr "파생된 제품 참조는 유효한 ID가 없습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:401
-#, fuzzy, java-format
-#| msgid "Unable to find a product with the ID \"{0}\" for owner \"{1}\""
+#, java-format
 msgid ""
 "Unable to find one or more products in the namespace \"{0}\" with IDs: {1}"
-msgstr "소유자 \"{1}\"에 대해 ID \"{0}\"인 제품을 찾을 수 없습니다"
+msgstr "IDs: {1}인 이름공간 \"{0}\"에 하나 이상의 제품을 찾을 수 없습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:414
 msgid ""
 "Cannot attach product defined outside of the organization's namespace: {0}"
-msgstr ""
+msgstr "조직의 이름공간: {0}의 외부에 정의된 제품을 첨부 할 수 없습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:447
 msgid "product contents contains one or more null elements"
-msgstr ""
+msgstr "제품 내용은 하나 이상의 null 요소를 포함합니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:453
 msgid "product content contains one or more malformed content references"
-msgstr ""
+msgstr "제품 내용은 하나 이상의 잘못된 내용 참조를 포함합니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:459
 msgid "one or more content references lacks a valid ID"
-msgstr ""
+msgstr "하나 이상의 내용 참조는 유효한 ID가 없습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:503
 msgid "product has a null or invalid ID"
@@ -1425,24 +1420,21 @@ msgid "product has a null or invalid name"
 msgstr "제품은 null 또는 잘못된 이름을 가지고 있습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:513
-#, fuzzy, java-format
-#| msgid "Consumer with UUID {0} was already deleted."
+#, java-format
 msgid "A product with ID \"{0}\" is already defined"
-msgstr "UUID {0}인 소유자가 삭제되었습니다."
+msgstr "ID \"{0}\"인 제품이 이미 정의되어 있습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:535
 msgid "Only numeric product IDs are allowed."
 msgstr "제품 ID로 숫자만 사용할 수 있습니다."
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:601
-#, fuzzy
-#| msgid "No content ID specified"
 msgid "No content IDs provided"
-msgstr "컨텐츠 ID가 지정되어 있지 않습니다"
+msgstr "제공된 내용 ID가 없습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:653
 msgid "No content IDs provided, or provided content ID list contains null IDs"
-msgstr ""
+msgstr "제공된 내용 ID가 없거나, 제공된 내용 ID 목록은 null ID를 포함합니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:690
 #, java-format
@@ -1572,7 +1564,7 @@ msgstr "풀 제품 ID가 지정되어 있지 않습니다"
 msgid ""
 "Cannot create pools using products defined outside of the organization's "
 "namespace"
-msgstr ""
+msgstr "조직의 이름공간의 외부에 정의된 제품을 사용하여 풀을 생성 할 수 없습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1387
 #, java-format
@@ -1808,11 +1800,11 @@ msgstr "\"{0}\" 매개 변수 구문이 잘못되었습니다; 예상된 형식:
 
 #: src/main/java/org/candlepin/resource/validation/DTOValidator.java:91
 msgid "collection contains null elements"
-msgstr ""
+msgstr "수집(컬렉션)은 null 요소를 포함합니다"
 
 #: src/main/java/org/candlepin/resource/validation/DTOValidator.java:164
 msgid "map contains null elements"
-msgstr ""
+msgstr "지도는 null 요소를 포함합니다"
 
 #: src/main/java/org/candlepin/resteasy/converter/OffsetDateTimeParamConverterProvider.java:92
 msgid "Unable to parse date parameter"
