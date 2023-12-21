@@ -22,6 +22,7 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
+import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.CloudRegistrationAdapter;
@@ -93,6 +94,20 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
                         .setDisplayName(accountData.ownerKey())
                         .setAnonymous(accountData.isAnonymous())
                         .setClaimed(false);
+
+                    // Anonymous orgs should always and only be allowed to be in SCA mode,
+                    // while non-anonymous orgs should use the defaults.
+                    if (accountData.isAnonymous()) {
+                        newOwner.setContentAccessMode(
+                                ContentAccessManager.ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue())
+                            .setContentAccessModeList(
+                                ContentAccessManager.ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+                    }
+                    else {
+                        newOwner.setContentAccessMode(
+                            ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue())
+                            .setContentAccessModeList(ContentAccessManager.getListDefaultDatabaseValue());
+                    }
                     ownerCurator.create(newOwner);
                 }
             }

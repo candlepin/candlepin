@@ -111,13 +111,12 @@ class CloudAccountOrgSetupJobTest {
     }
 
     @Test
-    void ensureJobSuccessWithNewOrganization()
+    void ensureJobSuccessWithNewAnonymousOrganization()
         throws JobExecutionException, CouldNotAcquireCloudAccountLockException {
         when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any(), anyString()))
             .thenReturn(new CloudAccountData("owner_key", true));
 
         CloudAccountOrgSetupJob regJob = new CloudAccountOrgSetupJob(cloudReg, ownerCurator);
-
 
         String offering = TestUtil.randomString("offering");
         CloudAccountOrgSetupJob.CloudAccountOrgSetupJobConfig jobConfig =
@@ -135,12 +134,42 @@ class CloudAccountOrgSetupJobTest {
 
         regJob.execute(context);
 
-        verify(context, times(1)).setJobResult(captor.capture());
+        verify(context).setJobResult(captor.capture());
         Object result = captor.getValue();
 
         assertEquals(String.format("Entitled offering %s to owner owner_key (anonymous: true).", offering),
             result);
+    }
 
+    @Test
+    void ensureJobSuccessWithNewNonAnonymousOrganization()
+        throws JobExecutionException, CouldNotAcquireCloudAccountLockException {
+        when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any(), anyString()))
+            .thenReturn(new CloudAccountData("owner_key", false));
+
+        CloudAccountOrgSetupJob regJob = new CloudAccountOrgSetupJob(cloudReg, ownerCurator);
+
+        String offering = TestUtil.randomString("offering");
+        CloudAccountOrgSetupJob.CloudAccountOrgSetupJobConfig jobConfig =
+            CloudAccountOrgSetupJob.createJobConfig()
+            .setCloudAccountId(TestUtil.randomString())
+            .setCloudOfferingId(offering)
+            .setCloudProvider(TestUtil.randomString())
+            .setOwnerKey(TestUtil.randomString());
+
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = spy(new JobExecutionContext(status));
+        when(status.getJobArguments()).thenReturn(jobConfig.getJobArguments());
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        regJob.execute(context);
+
+        verify(context).setJobResult(captor.capture());
+        Object result = captor.getValue();
+
+        assertEquals(String.format("Entitled offering %s to owner owner_key (anonymous: false).", offering),
+            result);
     }
 
     @Test
