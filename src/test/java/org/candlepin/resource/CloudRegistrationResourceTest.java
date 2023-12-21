@@ -527,6 +527,51 @@ public class CloudRegistrationResourceTest {
     }
 
     @Test
+    public void testCloudAuthorizeWithNoExistingOwnerFromAdapterAndExistingAnonConsumerUsingV2Auth() {
+        CloudRegistrationDTO dto = new CloudRegistrationDTO()
+            .type("test-type")
+            .metadata("test-metadata")
+            .signature("test-signature");
+
+        String prodId = "productId";
+        String accountId = "cloudAccountId";
+        String instanceId = "instanceId";
+        CloudAuthenticationResult result = buildMockAuthResult(accountId, instanceId, TestUtil.randomString(),
+            null, "offerId", Set.of(prodId), true);
+        doReturn(result).when(mockCloudRegistrationAdapter)
+            .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
+
+        AnonymousCloudConsumer anonConsumer = new AnonymousCloudConsumer()
+            .setCloudAccountId(accountId)
+            .setCloudInstanceId(instanceId)
+            .setCloudProviderShortName(TestUtil.randomString())
+            .setProductIds(Set.of(prodId));
+        doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).getByCloudInstanceId(instanceId);
+
+        String expectedToken = "anon-token";
+        doReturn(expectedToken).when(mockTokenGenerator).buildAnonymousRegistrationToken(principal,
+            anonConsumer.getUuid());
+
+        Response response = cloudRegResource.cloudAuthorize(dto, 2);
+
+        // If there is no upstream owner, we have no reason to check for pools downstream yet
+        verify(mockPoolCurator, never()).hasPoolsForProducts(any(), any());
+
+        assertThat(response)
+            .isNotNull()
+            .returns(200, Response::getStatus)
+            .extracting(Response::getEntity)
+            .isNotNull()
+            .isInstanceOf(CloudAuthenticationResultDTO.class);
+
+        assertThat((CloudAuthenticationResultDTO) response.getEntity())
+            .returns(null, CloudAuthenticationResultDTO::getOwnerKey)
+            .returns(anonConsumer.getUuid(), CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
+            .returns(expectedToken, CloudAuthenticationResultDTO::getToken)
+            .returns(CloudAuthTokenType.ANONYMOUS.toString(), CloudAuthenticationResultDTO::getTokenType);
+    }
+
+    @Test
     public void testAuthorizeWithUnknownVersion() {
         assertThrows(BadRequestException.class,
             () -> cloudRegResource.cloudAuthorize(new CloudRegistrationDTO(), 100));

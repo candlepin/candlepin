@@ -23,8 +23,6 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import com.google.inject.Inject;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -35,9 +33,6 @@ import java.util.List;
 
 
 public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
-
-    @Inject
-    private AnonymousCloudConsumerCurator anonymousCloudConsumerCurator;
 
     @Test
     public void testCreate() throws Exception {
