@@ -37,14 +37,14 @@ public class AnonymousContentAccessCertificateCurator
      *
      * @return all of the expired anonymous content access certificates
      */
-    public List<ExpiredCertificate> listAllExpired() {
-        String hql = "SELECT new org.candlepin.model.ExpiredCertificate(c.id, s.id)" +
+    public List<CertSerial> listAllExpired() {
+        String hql = "SELECT new org.candlepin.model.CertSerial(c.id, s.id)" +
             " FROM AnonymousContentAccessCertificate c" +
             " INNER JOIN c.serial s " +
             " WHERE s.expiration < :nowDate";
 
         return this.getEntityManager()
-            .createQuery(hql, ExpiredCertificate.class)
+            .createQuery(hql, CertSerial.class)
             .setParameter("nowDate", new Date())
             .getResultList();
     }

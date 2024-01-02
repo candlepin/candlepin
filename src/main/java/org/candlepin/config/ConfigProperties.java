@@ -210,6 +210,7 @@ public class ConfigProperties {
 
     public static final String PRODUCT_CACHE_MAX = "candlepin.cache.product_cache_max";
 
+    public static final String CONSUMER_MIGRATION_BATCH_SIZE = "candlepin.consumer.migration.batch.size";
     public static final String INTEGER_FACTS = "candlepin.integer_facts";
     private static final String INTEGER_FACT_LIST = "";
 
@@ -538,6 +539,7 @@ public class ConfigProperties {
 
             // Set the triggerable jobs list
             this.put(ASYNC_JOBS_TRIGGERABLE_JOBS, String.join(", ", ASYNC_JOBS_TRIGGERABLE_JOBS_LIST));
+            this.put(CONSUMER_MIGRATION_BATCH_SIZE, "200");
 
             this.put(ORPHANED_ENTITY_GRACE_PERIOD, "30");
 

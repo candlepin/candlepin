@@ -50,13 +50,13 @@ public class AnonymousContentAccessCertificateCuratorTest extends DatabaseTestFi
 
         cert = anonymousContentAccessCertCurator.create(cert);
 
-        List<ExpiredCertificate> actual = this.anonymousContentAccessCertCurator
+        List<CertSerial> actual = this.anonymousContentAccessCertCurator
             .listAllExpired();
 
         assertThat(actual)
             .singleElement()
-            .returns(expiredCert.getId(), ExpiredCertificate::getCertId)
-            .returns(expiredSerial.getId(), ExpiredCertificate::getSerial);
+            .returns(expiredCert.getId(), CertSerial::certId)
+            .returns(expiredSerial.getId(), CertSerial::serial);
     }
 
     @Test

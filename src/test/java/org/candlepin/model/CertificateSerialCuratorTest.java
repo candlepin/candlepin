@@ -140,7 +140,6 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         assertEquals(0, certSerialCurator.revokeByIds(List.of(unknownId)));
     }
 
-
     @Test
     public void revokesSpecifiedSerial() {
         CertSerialBuilder builder = new CertSerialBuilder(this.certSerialCurator);

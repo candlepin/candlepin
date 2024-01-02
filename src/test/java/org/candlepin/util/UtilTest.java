@@ -596,4 +596,10 @@ public class UtilTest {
         assertEquals(text, result);
     }
 
+    @Test
+    void name() {
+        assertEquals(true, Util.isFalse(null));
+        assertEquals(true, Util.isFalse(false));
+        assertEquals(false, Util.isFalse(true));
+    }
 }

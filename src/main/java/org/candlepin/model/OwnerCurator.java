@@ -246,8 +246,8 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         return owners;
     }
 
-    public CandlepinQuery<String> getConsumerIds(Owner owner) {
-        return this.getConsumerIds(owner.getId());
+    public List<String> getConsumerIds(Owner owner) {
+        return this.getConsumerIds(owner.getId()).list();
     }
 
     public CandlepinQuery<String> getConsumerIds(String ownerId) {

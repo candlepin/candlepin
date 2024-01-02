@@ -1273,7 +1273,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                 .multiLoad(new ArrayList(idSet));
         }
 
-        return new ArrayList<E>();
+        return new ArrayList<>();
     }
 
     /**

@@ -690,4 +690,15 @@ public class Util {
         return text.substring(prefix.length());
     }
 
+    /**
+     * Inverse of Boolean.TRUE.equals(). Returns true unless value is non-null
+     * and is a boolean value representing true.
+     *
+     * @param value value t be matched
+     * @return true if null or false
+     */
+    public static boolean isFalse(Boolean value) {
+        return value == null || Boolean.FALSE.equals(value);
+    }
+
 }

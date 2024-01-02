@@ -26,7 +26,6 @@ import javax.inject.Singleton;
 import javax.persistence.Query;
 
 
-
 /**
  * CertificateSerialCurator - Interface to request a unique certificate serial number.
  */
@@ -149,4 +148,5 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
 
         return updated;
     }
+
 }

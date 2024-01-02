@@ -191,4 +191,5 @@
     <include file="db/changelog/20230921144200-add_reg_auth_method_to_cp_consumers.xml"/>
     <include file="db/changelog/202310040000000-create-anonymous-certificates.xml" />
     <include file="db/changelog/20240101162555-update-anon-cert-foreign-key.xml"/>
+    <include file="db/changelog/202401081559-add-claimant-owner-column.xml"/>
 </databaseChangeLog>

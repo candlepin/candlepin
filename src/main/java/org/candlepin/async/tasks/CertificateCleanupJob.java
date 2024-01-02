@@ -19,10 +19,10 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificateCurator;
+import org.candlepin.model.CertSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
-import org.candlepin.model.ExpiredCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
 
 import com.google.inject.persist.Transactional;
@@ -85,7 +85,7 @@ public class CertificateCleanupJob implements AsyncJob {
     }
 
     private void cleanupExpiredIdentityCerts() {
-        List<ExpiredCertificate> allExpiredIdCertificates = this.identCertCurator.listAllExpired();
+        List<CertSerial> allExpiredIdCertificates = this.identCertCurator.listAllExpired();
 
         if (allExpiredIdCertificates == null || allExpiredIdCertificates.isEmpty()) {
             log.info("No expired identity certificates to clean up.");
@@ -108,7 +108,7 @@ public class CertificateCleanupJob implements AsyncJob {
     }
 
     private void cleanupExpiredContentAccessCerts() {
-        List<ExpiredCertificate> allExpiredCaCertificates = this.caCertCurator.listAllExpired();
+        List<CertSerial> allExpiredCaCertificates = this.caCertCurator.listAllExpired();
 
         if (allExpiredCaCertificates == null || allExpiredCaCertificates.isEmpty()) {
             log.info("No expired content access certificates to clean up.");
@@ -131,7 +131,7 @@ public class CertificateCleanupJob implements AsyncJob {
     }
 
     private void cleanupExpiredAnonymousContentAccessCerts() {
-        List<ExpiredCertificate> expiredCerts = this.anonCertCurator.listAllExpired();
+        List<CertSerial> expiredCerts = this.anonCertCurator.listAllExpired();
         if (expiredCerts == null || expiredCerts.isEmpty()) {
             log.info("No expired anonymous content access certificates to clean up.");
             return;
@@ -158,15 +158,15 @@ public class CertificateCleanupJob implements AsyncJob {
         log.info("Cleaning up {} expired and revoked certificate serials.", deleted);
     }
 
-    private List<String> certIdsOf(List<ExpiredCertificate> expiredCertificates) {
+    private List<String> certIdsOf(List<CertSerial> expiredCertificates) {
         return expiredCertificates.stream()
-            .map(ExpiredCertificate::getCertId)
+            .map(CertSerial::certId)
             .collect(Collectors.toList());
     }
 
-    private List<Long> serialsOf(List<ExpiredCertificate> expiredCertificates) {
+    private List<Long> serialsOf(List<CertSerial> expiredCertificates) {
         return expiredCertificates.stream()
-            .map(ExpiredCertificate::getSerial)
+            .map(CertSerial::serial)
             .collect(Collectors.toList());
     }
 

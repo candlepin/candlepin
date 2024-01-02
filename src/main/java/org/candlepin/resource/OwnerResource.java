@@ -19,6 +19,7 @@ import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.ConsumerMigrationJob;
 import org.candlepin.async.tasks.HealEntireOrgJob;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.async.tasks.UndoImportsJob;
@@ -44,6 +45,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.server.v1.ActivationKeyPoolDTO;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.server.v1.ClaimantOwner;
 import org.candlepin.dto.api.server.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.server.v1.ContentAccessDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
@@ -208,6 +210,7 @@ public class OwnerResource implements OwnerApi {
         ContentAccessManager contentAccessManager,
         ManifestManager manifestManager,
         PoolManager poolManager,
+        PoolService poolService,
         OwnerManager ownerManager,
         ExporterMetadataCurator exportCurator,
         OwnerInfoCurator ownerInfoCurator,
@@ -226,7 +229,6 @@ public class OwnerResource implements OwnerApi {
         ModelTranslator translator,
         JobManager jobManager,
         DTOValidator validator,
-        PoolService poolService,
         PrincipalProvider principalProvider) {
 
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
@@ -962,16 +964,7 @@ public class OwnerResource implements OwnerApi {
         Owner owner = findOwnerByKey(ownerKey);
         JobConfig config = HealEntireOrgJob.createJobConfig().setOwner(owner).setEntitleDate(new Date());
 
-        try {
-            AsyncJobStatus job = this.jobManager.queueJob(config);
-            return this.translator.translate(job, AsyncJobStatusDTO.class);
-        }
-        catch (JobException e) {
-            String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
-                config.getJobKey());
-            log.error(errmsg, e);
-            throw new IseException(errmsg, e);
-        }
+        return queueJob(config);
     }
 
     @Override
@@ -1302,16 +1295,7 @@ public class OwnerResource implements OwnerApi {
             .setOwner(owner)
             .setLazyRegeneration(true);
 
-        try {
-            AsyncJobStatus job = this.jobManager.queueJob(config);
-            return this.translator.translate(job, AsyncJobStatusDTO.class);
-        }
-        catch (JobException e) {
-            String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
-                config.getJobKey());
-            log.error(errmsg, e);
-            throw new IseException(errmsg, e);
-        }
+        return queueJob(config);
     }
 
     @Override
@@ -1444,16 +1428,7 @@ public class OwnerResource implements OwnerApi {
         JobConfig config = UndoImportsJob.createJobConfig()
             .setOwner(owner);
 
-        try {
-            AsyncJobStatus job = this.jobManager.queueJob(config);
-            return this.translator.translate(job, AsyncJobStatusDTO.class);
-        }
-        catch (JobException e) {
-            String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
-                config.getJobKey());
-            log.error(errmsg, e);
-            throw new IseException(errmsg, e);
-        }
+        return queueJob(config);
     }
 
     private ConflictOverrides processConflictOverrideParams(List<String> overrideConflicts) {
@@ -1506,17 +1481,7 @@ public class OwnerResource implements OwnerApi {
             JobConfig config = this.manifestManager
                 .importManifestAsync(owner, archive, archiveFilename, overrides);
 
-            try {
-                AsyncJobStatus job = this.jobManager.queueJob(config);
-                return this.translator.translate(job, AsyncJobStatusDTO.class);
-            }
-            catch (JobException e) {
-                String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
-                    config.getJobKey());
-
-                log.error(errmsg, e);
-                throw new IseException(errmsg, e);
-            }
+            return queueJob(config);
         }
         catch (IOException e) {
             manifestManager.recordImportFailure(owner, e, archiveFilename);
@@ -1630,28 +1595,49 @@ public class OwnerResource implements OwnerApi {
         return translator.translateQuery(query, ConsumerDTOArrayElement.class);
     }
 
-    /**
-     * Retrieves an Owner instance for the owner with the specified key/account. If a matching owner
-     * could not be found, this method throws an exception.
-     *
-     * @param key
-     *     The key for the owner to retrieve
-     *
-     * @throws NotFoundException
-     *     if an owner could not be found for the specified key.
-     *
-     * @return the Owner instance for the owner with the specified key.
-     *
-     * @httpcode 200
-     * @httpcode 404
-     */
-    protected Owner getOwnerByKey(String key) {
-        Owner owner = this.ownerCurator.getByKey(key);
-        if (owner == null) {
-            throw new NotFoundException(i18n.tr("Owner with key \"{0}\" was not found.", key));
+    @Override
+    @Transactional
+    public AsyncJobStatusDTO claim(String anonymousOwnerKey, ClaimantOwner claimantOwner) {
+        if (claimantOwner == null || StringUtils.isBlank(claimantOwner.getClaimantOwnerKey())) {
+            throw new BadRequestException(this.i18n.tr("Claimant owner has to be present!"));
+        }
+        Owner originOwner = findOwnerByKey(anonymousOwnerKey);
+        if (Util.isFalse(originOwner.getAnonymous())) {
+            throw new BadRequestException(this.i18n.tr("Origin owner has to be anonymous!"));
+        }
+        Owner destinationOwner = findOwnerByKey(claimantOwner.getClaimantOwnerKey());
+        if (Boolean.TRUE.equals(destinationOwner.getAnonymous())) {
+            throw new BadRequestException(this.i18n.tr("Claimant owner cannot be anonymous!"));
         }
 
-        return owner;
+        boolean claimantOwnerMatches = StringUtils.equals(
+            claimantOwner.getClaimantOwnerKey(), originOwner.getClaimantOwner());
+        if (Boolean.TRUE.equals(originOwner.getClaimed()) && !claimantOwnerMatches) {
+            throw new BadRequestException(this.i18n.tr("Claimant owners don't match!"));
+        }
+
+        if (Util.isFalse(originOwner.getClaimed()) && originOwner.getClaimantOwner() == null) {
+            originOwner.setClaimed(true);
+            originOwner.setClaimantOwner(claimantOwner.getClaimantOwnerKey());
+        }
+
+        JobConfig jobConfig = ConsumerMigrationJob.createConfig()
+            .setOriginOwner(anonymousOwnerKey)
+            .setDestinationOwner(claimantOwner.getClaimantOwnerKey());
+
+        return queueJob(jobConfig);
+    }
+
+    private AsyncJobStatusDTO queueJob(JobConfig jobConfig) {
+        try {
+            AsyncJobStatus job = this.jobManager.queueJob(jobConfig);
+            return this.translator.translate(job, AsyncJobStatusDTO.class);
+        }
+        catch (JobException e) {
+            String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
+                jobConfig.getJobKey());
+            throw new IseException(errmsg, e);
+        }
     }
 
     public boolean removeContent(ProductDTO product, Set<String> contentIds) {
