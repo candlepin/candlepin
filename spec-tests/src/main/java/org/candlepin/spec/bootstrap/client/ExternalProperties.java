@@ -38,15 +38,11 @@ public class ExternalProperties implements Supplier<Properties> {
 
     private final List<Path> sources;
 
-    public ExternalProperties(List<Path> sources) {
-        if (sources == null || sources.isEmpty()) {
+    public ExternalProperties(Path... sources) {
+        if (sources == null || sources.length == 0) {
             throw new IllegalArgumentException("At least one path to configuration file must be provided!");
         }
-        this.sources = sources;
-    }
-
-    public ExternalProperties(Path... sources) {
-        this(Arrays.asList(sources));
+        this.sources = Arrays.asList(sources);
     }
 
     @Override
