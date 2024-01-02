@@ -74,7 +74,7 @@ class ExternalPropertiesTest {
 
     @Test
     void shouldRequireProvidedConfigPaths() {
-        assertThatThrownBy(ExternalProperties::new)
+        assertThatThrownBy(() -> new ExternalProperties())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
