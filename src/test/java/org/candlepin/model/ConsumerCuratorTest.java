@@ -35,6 +35,7 @@ import org.candlepin.util.FactValidator;
 import org.candlepin.util.PropertyValidationException;
 import org.candlepin.util.Util;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -2183,6 +2184,43 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(0, consumerCurator.unlinkCaCertificates(null));
         assertEquals(0, consumerCurator.unlinkCaCertificates(List.of()));
         assertEquals(0, consumerCurator.unlinkCaCertificates(List.of("UnknownId")));
+    }
+
+    @Test
+    public void shouldUpdateOwner() {
+        Owner newOwner = createOwner();
+        Consumer consumer1 = createConsumer(owner);
+        Consumer consumer2 = createConsumer(owner);
+        List<String> consumerIds = List.of(
+            consumer1.getId(),
+            consumer2.getId()
+        );
+
+        consumerCurator.bulkUpdateOwner(consumerIds, newOwner);
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        List<Consumer> consumers = this.consumerCurator.listAllByIds(consumerIds).list();
+        Assertions.assertThat(consumers)
+            .hasSize(2)
+            .extracting(Consumer::getOwnerId)
+            .containsOnly(newOwner.getId());
+    }
+
+    @Test
+    public void shouldLockConsumersByIds() {
+        Consumer consumer1 = createConsumer(owner);
+        Consumer consumer2 = createConsumer(owner);
+        List<String> consumerIds = List.of(
+            consumer1.getId(),
+            consumer2.getId()
+        );
+
+        Collection<String> lockedIds = consumerCurator.lockAndLoadIds(consumerIds);
+
+        Assertions.assertThat(lockedIds)
+            .hasSize(2)
+            .containsExactlyInAnyOrderElementsOf(consumerIds);
     }
 
     private IdentityCertificate createIdCert() {

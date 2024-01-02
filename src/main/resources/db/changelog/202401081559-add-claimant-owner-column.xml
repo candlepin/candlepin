@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="202401081559-1" author="ojanus">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="cp_owner" columnName="claimant_owner"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="cp_owner">
+            <column name="claimant_owner" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="cp_owner"
+            baseColumnNames="claimant_owner"
+            referencedTableName="cp_owner"
+            referencedColumnNames="account"
+            constraintName="fk_cp_owner_claimant_owner"
+            onDelete="CASCADE" />
+    </changeSet>
+
+</databaseChangeLog>

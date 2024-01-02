@@ -71,6 +71,8 @@ public class OwnerTranslatorTest extends
             owner.setContentAccessModeList(String.format("cam%1$d-a,cam%1$d-b,cam%1$d-c", i));
             owner.setContentAccessMode(String.format("cam%d-b", i));
             owner.setLastRefreshed(new Date());
+            owner.setClaimed(false);
+            owner.setClaimantOwner("claimant" + i);
 
             parent = owner;
         }

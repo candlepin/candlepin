@@ -6616,6 +6616,55 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /owners/{anonymous_owner_key}/claim:
+    put:
+      description: Claims consumers of an anonymous owner and migrates them to the claimant owner
+      tags:
+        - owner
+      operationId: claim
+      security: []
+      parameters:
+        - name: anonymous_owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Claimant owner
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimantOwner'
+      responses:
+        200:
+          description:  A job to migrate consumers has been scheduled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        400:
+          description: Owner key is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Owner key could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /products:
     get:
       tags:
@@ -8249,6 +8298,15 @@ components:
           type: string
           minLength: 1
 
+    ClaimantOwner:
+      description: Represents an owner claiming the consumers of an anonymous owner
+      required:
+        - claimant_owner_key
+      properties:
+        claimant_owner_key:
+          type: string
+          minLength: 1
+
     CloudRegistrationDTO:
       description: Contains data for performing automatic cloud-based registration.
       required:
@@ -8987,6 +9045,8 @@ components:
               type: boolean
             claimed:
               type: boolean
+            claimantOwner:
+              type: string
 
     OwnerInfo:
       description: Represents owner information

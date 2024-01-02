@@ -16,6 +16,7 @@ package org.candlepin.spec.owners;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
+import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
@@ -23,6 +24,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.AttributeDTO;
+import org.candlepin.dto.api.client.v1.CertificateDTO;
+import org.candlepin.dto.api.client.v1.ClaimantOwner;
+import org.candlepin.dto.api.client.v1.CloudAuthenticationResultDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.client.v1.ConsumerTypeDTO;
@@ -50,6 +54,7 @@ import org.candlepin.spec.bootstrap.data.builder.Permissions;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
+import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 import org.candlepin.spec.bootstrap.data.util.DateUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
@@ -59,10 +64,10 @@ import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 
 
 @SpecTest
@@ -790,6 +795,81 @@ public class OwnerResourceSpecTest {
         // return an error)
         SystemPurposeAttributesDTO attributes = userClient.owners().getSyspurpose(owner.getKey());
         assertEquals(owner.getKey(), attributes.getOwner().getKey());
+    }
+
+    @Test
+    @OnlyInHosted
+    public void shouldMigrateAllConsumersOfAnonymousOwnerToTargetOwner() {
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+        OwnerDTO anonOwner = owners.createOwner(Owners.randomSca().anonymous(true));
+        OwnerDTO destOwner = owners.createOwner(Owners.randomSca());
+        admin.hosted().createOwner(anonOwner);
+        ProductDTO prod = admin.ownerProducts().createProduct(anonOwner.getKey(), Products.random());
+        admin.hosted().createProduct(prod);
+        owners.createPool(anonOwner.getKey(), Pools.random(prod));
+        admin.hosted().createSubscription(Subscriptions.random(anonOwner, prod));
+
+        admin.hosted().associateProductIdsToCloudOffer(offerId, List.of(prod.getId()));
+        admin.hosted().associateOwnerToCloudAccount(accountId, anonOwner.getKey());
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+
+        ApiClient anonClient = ApiClients.bearerToken(result.getToken());
+        List<ConsumerDTO> consumers = List.of(
+            anonClient.consumers().createConsumer(Consumers.random(anonOwner)),
+            anonClient.consumers().createConsumer(Consumers.random(anonOwner)),
+            anonClient.consumers().createConsumer(Consumers.random(anonOwner))
+        );
+        List<CertificateDTO> oldIdCerts = consumers.stream().map(ConsumerDTO::getIdCert).toList();
+        List<CertificateDTO> oldScaCerts = fetchCertsOf(consumers, admin);
+
+        AsyncJobStatusDTO job = owners.claim(anonOwner.getKey(),
+            new ClaimantOwner().claimantOwnerKey(destOwner.getKey()));
+
+        job = admin.jobs().waitForJob(job);
+        assertThatJob(job).isFinished();
+
+        // Anon owner should be left with no consumers
+        List<ConsumerDTOArrayElement> anonConsumers = owners.listOwnerConsumers(anonOwner.getKey());
+        assertThat(anonConsumers).isEmpty();
+
+        // All consumers should be migrated to destination owner
+        List<ConsumerDTOArrayElement> migratedConsumers = owners.listOwnerConsumers(destOwner.getKey());
+        assertThat(migratedConsumers).hasSize(3);
+
+        // Anon owner should be claimed
+        OwnerDTO updatedOwner = owners.getOwner(anonOwner.getKey());
+        assertThat(updatedOwner)
+            .returns(true, OwnerDTO::getClaimed)
+            .returns(destOwner.getKey(), OwnerDTO::getClaimantOwner);
+
+        // Consumers should have regenerated identity certificates
+        List<ConsumerDTO> updatedConsumers = fetchConsumers(consumers, admin);
+        List<CertificateDTO> newIdCerts = updatedConsumers.stream().map(ConsumerDTO::getIdCert).toList();
+        assertThat(newIdCerts)
+            .hasSize(3)
+            .doesNotContainAnyElementsOf(oldIdCerts);
+
+        // Consumers should have regenerated content access certificates
+        List<CertificateDTO> newScaCerts = fetchCertsOf(consumers, admin);
+        assertThat(newScaCerts)
+            .hasSize(3)
+            .doesNotContainAnyElementsOf(oldScaCerts);
+    }
+
+    private List<ConsumerDTO> fetchConsumers(List<ConsumerDTO> consumers, ApiClient client) {
+        return consumers.stream()
+            .map(consumer -> client.consumers().getConsumer(consumer.getUuid()))
+            .toList();
+    }
+
+    private List<CertificateDTO> fetchCertsOf(List<ConsumerDTO> consumers, ApiClient client) {
+        return consumers.stream()
+            .map(consumer -> client.consumers().fetchCertificates(consumer.getUuid(), null))
+            .flatMap(Collection::stream)
+            .toList();
     }
 
 }
