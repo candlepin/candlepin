@@ -19,6 +19,7 @@ import org.candlepin.async.JobMessageDispatcher;
 import org.candlepin.async.JobMessageReceiver;
 import org.candlepin.async.tasks.ActiveEntitlementJob;
 import org.candlepin.async.tasks.CertificateCleanupJob;
+import org.candlepin.async.tasks.ClaimedOwnerConsumerDetectionJob;
 import org.candlepin.async.tasks.CloudAccountOrgSetupJob;
 import org.candlepin.async.tasks.EntitleByProductsJob;
 import org.candlepin.async.tasks.EntitlerJob;
@@ -434,6 +435,8 @@ public class CandlepinModule extends AbstractModule {
 
         JobManager.registerJob(ActiveEntitlementJob.JOB_KEY, ActiveEntitlementJob.class);
         JobManager.registerJob(CertificateCleanupJob.JOB_KEY, CertificateCleanupJob.class);
+        JobManager.registerJob(ClaimedOwnerConsumerDetectionJob.JOB_KEY,
+            ClaimedOwnerConsumerDetectionJob.class);
         JobManager.registerJob(EntitlerJob.JOB_KEY, EntitlerJob.class);
         JobManager.registerJob(EntitleByProductsJob.JOB_KEY, EntitleByProductsJob.class);
         JobManager.registerJob(ExpiredPoolsCleanupJob.JOB_KEY, ExpiredPoolsCleanupJob.class);

@@ -14,11 +14,14 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.controller.OwnerContentAccess;
@@ -34,6 +37,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.PersistenceException;
@@ -405,4 +409,43 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         assertFalse(now.isBefore(owner2.getLastContentUpdate().toInstant()));
         assertFalse(now.isBefore(owner3.getLastContentUpdate().toInstant()));
     }
+
+    @Test
+    public void testGetClaimedOwnersWithConsumersWithClaimedAnonymousOwnerWithConsumer() {
+        Owner ownerWithConsumers = createOwner(TestUtil.randomString());
+        createConsumer(ownerWithConsumers);
+        createConsumer(ownerWithConsumers);
+        // Owner with no consumers
+        createOwner(TestUtil.randomString());
+
+        Owner anonOwnerWithConsumers = createAnonymousOwner(false);
+        createConsumer(anonOwnerWithConsumers);
+        createConsumer(anonOwnerWithConsumers);
+        // Anonymous owner with no consumers
+        createAnonymousOwner(false);
+
+        Owner anonClaimedOwnerWithConsumers1 = createAnonymousOwner(true);
+        createConsumer(anonClaimedOwnerWithConsumers1);
+        createConsumer(anonClaimedOwnerWithConsumers1);
+        Owner anonClaimedOwnerWithConsumers2 = createAnonymousOwner(true);
+        createConsumer(anonClaimedOwnerWithConsumers2);
+        createConsumer(anonClaimedOwnerWithConsumers2);
+        // Anonymous and claimed owner with no consumers
+        createAnonymousOwner(true);
+
+        Map<String, String> actual = ownerCurator.getClaimedOwnersWithConsumers();
+
+        // TODO: Need to verify when we know the claimant field on the owner class
+        assertThat(actual)
+            .isNotNull();
+    }
+
+    private Owner createAnonymousOwner(boolean claimed) {
+        Owner owner = TestUtil.createOwner(TestUtil.randomString());
+        owner.setClaimed(claimed);
+        owner.setAnonymous(true);
+
+        return ownerCurator.create(owner);
+    }
+
 }

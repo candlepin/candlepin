@@ -31,17 +31,22 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
+import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -323,6 +328,26 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         }
 
         return count;
+    }
+
+    // TODO: Add javadoc
+    // TODO: Need to finish this query when we know the claimant owner column 
+    public Map<String, String> getClaimedOwnersWithConsumers() {
+        String query = "SELECT owner.id anonOwnerId, owner." +
+            "FROM Owner owner " +
+            "INNER JOIN Consumer consumer ON consumer.ownerId = owner.id" + 
+            "WHERE owner.anonymous = true AND owner.claimed = true";
+
+        return this.getEntityManager()
+            .createQuery(query, Tuple.class)
+            .getResultList()
+            .stream()
+            .collect(
+                Collectors.toMap(
+                    tuple -> (String) tuple.get("anonOwnerId"),
+                    tuple -> (String) tuple.get("postCount")
+                )
+            );
     }
 
 }
