@@ -17,6 +17,7 @@ package org.candlepin.async.tasks;
 import org.candlepin.async.AsyncJob;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
+import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerCurator;
@@ -53,6 +54,7 @@ public class CertificateCleanupJob implements AsyncJob {
     private final ContentAccessCertificateCurator caCertCurator;
     private final CertificateSerialCurator serialCurator;
     private final AnonymousContentAccessCertificateCurator anonCertCurator;
+    private final AnonymousCloudConsumerCurator anonConsumerCurator;
 
     @Inject
     public CertificateCleanupJob(
@@ -60,12 +62,14 @@ public class CertificateCleanupJob implements AsyncJob {
         IdentityCertificateCurator identCerts,
         ContentAccessCertificateCurator contentAccessCerts,
         CertificateSerialCurator serialCurator,
-        AnonymousContentAccessCertificateCurator anonCertCurator) {
+        AnonymousContentAccessCertificateCurator anonCertCurator,
+        AnonymousCloudConsumerCurator anonConsumerCurator) {
         this.consumerCurator = Objects.requireNonNull(consumers);
         this.identCertCurator = Objects.requireNonNull(identCerts);
         this.caCertCurator = Objects.requireNonNull(contentAccessCerts);
         this.serialCurator = Objects.requireNonNull(serialCurator);
         this.anonCertCurator = Objects.requireNonNull(anonCertCurator);
+        this.anonConsumerCurator = Objects.requireNonNull(anonConsumerCurator);
     }
 
     @Override
@@ -137,6 +141,10 @@ public class CertificateCleanupJob implements AsyncJob {
         }
 
         List<String> expiredCertIds = certIdsOf(expiredCerts);
+        int unlinkedAnonConsumers = this.anonConsumerCurator.unlinkAnonymousCertificates(expiredCertIds);
+        log.debug("Unlinked anonymous content access certificates of {} anonymous consumers.",
+            unlinkedAnonConsumers);
+
         int certsDeleted = this.anonCertCurator.deleteByIds(expiredCertIds);
         log.debug("Deleted {} anonymous content access certificates.", certsDeleted);
 
@@ -147,7 +155,7 @@ public class CertificateCleanupJob implements AsyncJob {
 
     private void cleanupCertificateSerials() {
         int deleted = this.serialCurator.deleteRevokedExpiredSerials();
-        log.debug("Cleaning up {} expired and revoked certificate serials.", deleted);
+        log.info("Cleaning up {} expired and revoked certificate serials.", deleted);
     }
 
     private List<String> certIdsOf(List<ExpiredCertificate> expiredCertificates) {

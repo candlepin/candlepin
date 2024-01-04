@@ -440,10 +440,12 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testUpdateToAnonymousContentAccessCertificate() {
+        CertificateSerial serial = new CertificateSerial();
+        this.certSerialCurator.create(serial);
         AnonymousContentAccessCertificate certificate = new AnonymousContentAccessCertificate();
         certificate.setCert("cert-1");
         certificate.setKey("key-1");
-        certificate.setSerial(new CertificateSerial(12345L));
+        certificate.setSerial(serial);
 
         certificate = anonymousContentAccessCertCurator.create(certificate);
 
@@ -462,10 +464,12 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
 
         consumer = anonymousCloudConsumerCurator.create(consumer);
 
+        CertificateSerial expectedSerial = new CertificateSerial();
+        this.certSerialCurator.create(expectedSerial);
         AnonymousContentAccessCertificate expectedCert = new AnonymousContentAccessCertificate();
         expectedCert.setCert("cert-2");
         expectedCert.setKey("key-2");
-        expectedCert.setSerial(new CertificateSerial(678910L));
+        expectedCert.setSerial(expectedSerial);
         expectedCert = anonymousContentAccessCertCurator.create(expectedCert);
         consumer.setContentAccessCert(expectedCert);
 
