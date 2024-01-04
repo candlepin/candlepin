@@ -71,6 +71,9 @@ ext {
 }
 
 dependencies {
+    // Cache
+    implementation libraries["caffeine"]
+
     // Commons
     implementation libraries["commonsCodec"]
     implementation libraries["commonsCollections"]
