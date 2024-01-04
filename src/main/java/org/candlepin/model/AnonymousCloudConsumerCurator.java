@@ -14,11 +14,14 @@
  */
 package org.candlepin.model;
 
+import com.google.inject.persist.Transactional;
+
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import javax.inject.Singleton;
@@ -96,4 +99,32 @@ public class AnonymousCloudConsumerCurator extends AbstractHibernateCurator<Anon
         return (AnonymousCloudConsumer) criteria.uniqueResult();
     }
 
+    /**
+     * Takes a list of anonymous content access certificate ids and unlinks them from anonymous consumers.
+     *
+     * @param certIds
+     *     certificate ids to be unlinked
+     * @return the number of unlinked anonymous consumers
+     */
+    @Transactional
+    public int unlinkAnonymousCertificates(Collection<String> certIds) {
+        if (certIds == null || certIds.isEmpty()) {
+            return 0;
+        }
+
+        String query = "UPDATE AnonymousCloudConsumer c" +
+            " SET c.contentAccessCert = NULL, c.updated = :date" +
+            " WHERE c.contentAccessCert.id IN (:cert_ids)";
+
+        int updated = 0;
+        Date updateTime = new Date();
+        for (Collection<String> certIdBlock : this.partition(certIds)) {
+            updated += this.currentSession().createQuery(query)
+                .setParameter("date", updateTime)
+                .setParameter("cert_ids", certIdBlock)
+                .executeUpdate();
+        }
+
+        return updated;
+    }
 }
