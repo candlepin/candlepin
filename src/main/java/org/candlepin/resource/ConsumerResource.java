@@ -241,8 +241,6 @@ public class ConsumerResource implements ConsumerApi {
     private final ContentOverrideValidator coValidator;
     private final ConsumerContentOverrideCurator ccoCurator;
     private final EntitlementCertificateGenerator entCertGenerator;
-    private final CloudRegistrationAdapter cloudAdapter;
-    private final PoolCurator poolCurator;
     private final AnonymousCloudConsumerCurator anonymousConsumerCurator;
     private final AnonymousContentAccessCertificateCurator anonymousCertCurator;
 
@@ -337,8 +335,6 @@ public class ConsumerResource implements ConsumerApi {
         this.ccoCurator = Objects.requireNonNull(ccoCurator);
         this.entCertGenerator = Objects.requireNonNull(entCertGenerator);
         this.poolService = Objects.requireNonNull(poolService);
-        this.cloudAdapter = Objects.requireNonNull(cloudAdapter);
-        this.poolCurator = Objects.requireNonNull(poolCurator);
         this.anonymousConsumerCurator = Objects.requireNonNull(anonymousConsumerCurator);
         this.anonymousCertCurator = Objects.requireNonNull(anonymousCertCurator);
 
