@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="20240101162555-1" author="nmoumoul">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyName="fk_cp_anonymous_cloud_consumers_cert"/>
+        </preConditions>
+
+        <comment>Drop the fk because it uses CASCADE on delete</comment>
+        <dropForeignKeyConstraint baseTableName="cp_anonymous_cloud_consumers"
+            constraintName="fk_cp_anonymous_cloud_consumers_cert"/>
+    </changeSet>
+
+    <changeSet id="20240101162555-2" author="nmoumoul">
+        <comment>Recreate the fk with NO ACTION on delete</comment>
+        <addForeignKeyConstraint baseTableName="cp_anonymous_cloud_consumers"
+            baseColumnNames="cont_acc_cert_id"
+            referencedTableName="cp_anonymous_certificates"
+            referencedColumnNames="id"
+            constraintName="cp_anonymous_cloud_consumers_cert_fk"
+            onDelete="NO ACTION"
+            onUpdate="NO ACTION" />
+    </changeSet>
+
+    <changeSet id="20240101162555-3" author="nmoumoul">
+        <comment>Add foreign key for serial</comment>
+        <addForeignKeyConstraint
+             baseColumnNames="serial_id"
+             baseTableName="cp_anonymous_certificates"
+             constraintName="anon_cont_acc_serial_fk"
+             onDelete="NO ACTION"
+             onUpdate="NO ACTION"
+             referencedColumnNames="id"
+             referencedTableName="cp_cert_serial" />
+    </changeSet>
+</databaseChangeLog>

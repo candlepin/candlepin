@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.async.JobExecutionException;
+import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousContentAccessCertificate;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
@@ -35,7 +36,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.List;
-
+import java.util.Set;
 
 
 class CertificateCleanupJobTest extends DatabaseTestFixture {
@@ -90,7 +91,9 @@ class CertificateCleanupJobTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void shouldCleanExpiredAnonymousCertificates() throws JobExecutionException {
+    public void shouldCleanExpiredAnonymousCertificatesButNotDeleteAnonConsumer()
+        throws JobExecutionException {
+
         CertificateSerial expiredSerial = new CertificateSerial();
         expiredSerial.setExpiration(TestUtil.createDateOffset(0, 0, -7));
         certSerialCurator.create(expiredSerial);
@@ -102,6 +105,15 @@ class CertificateCleanupJobTest extends DatabaseTestFixture {
 
         expiredCert = anonymousContentAccessCertCurator.create(expiredCert);
 
+        AnonymousCloudConsumer consumerWithExpiredCert = new AnonymousCloudConsumer();
+        consumerWithExpiredCert.setContentAccessCert(expiredCert)
+            .setCloudAccountId("cloud-account-1")
+            .setCloudInstanceId("cloud-instance-1")
+            .setProductIds(Set.of("SKU00001"))
+            .setCloudProviderShortName("GCP")
+            .setCloudOfferingId("RH-offering-1");
+        this.anonymousCloudConsumerCurator.create(consumerWithExpiredCert);
+
         CertificateSerial serial = new CertificateSerial();
         serial.setExpiration(TestUtil.createDateOffset(0, 0, 7));
         certSerialCurator.create(serial);
@@ -112,6 +124,17 @@ class CertificateCleanupJobTest extends DatabaseTestFixture {
         cert.setSerial(serial);
 
         cert = anonymousContentAccessCertCurator.create(cert);
+
+        AnonymousCloudConsumer consumerWithValidCert = new AnonymousCloudConsumer();
+        consumerWithValidCert.setContentAccessCert(cert)
+            .setCloudAccountId("cloud-account-2")
+            .setCloudInstanceId("cloud-instance-2")
+            .setProductIds(Set.of("SKU00002"))
+            .setCloudProviderShortName("GCP")
+            .setCloudOfferingId("RH-offering-2");
+        this.anonymousCloudConsumerCurator.create(consumerWithValidCert);
+        assertThat(this.anonymousCloudConsumerCurator.getByUuid(consumerWithExpiredCert.getUuid()))
+            .isNotNull();
 
         job.execute(null);
         certSerialCurator.flush();
@@ -127,6 +150,11 @@ class CertificateCleanupJobTest extends DatabaseTestFixture {
         assertThat(certSerialCurator.get(serial.getId()))
             .isNotNull()
             .returns(serial.getId(), CertificateSerial::getId);
+
+        // When the CertificateCleanupJob deletes anonymous certificates, we should NOT be deleting the
+        // anonymous cloud consumer itself!
+        assertThat(this.anonymousCloudConsumerCurator.getByUuid(consumerWithExpiredCert.getUuid()))
+            .isNotNull();
     }
 
     private Consumer findConsumer(Consumer consumer) {
