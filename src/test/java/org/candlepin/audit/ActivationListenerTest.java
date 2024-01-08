@@ -17,6 +17,7 @@ package org.candlepin.audit;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -50,5 +51,15 @@ public class ActivationListenerTest {
         when(event.getEventData()).thenReturn("{\"subscriptionId\":\"sub-id-1\"}");
         listener.onEvent(event);
         verify(subscriptionService, times(1)).sendActivationEmail("sub-id-1");
+    }
+
+    @Test
+    public void testActivationEmailIsNotSentAndNoExceptionWithNullSubscriptionId() {
+        Event event = mock(Event.class);
+        when(event.getTarget()).thenReturn(Event.Target.POOL);
+        when(event.getType()).thenReturn(Event.Type.CREATED);
+        when(event.getEventData()).thenReturn(null);
+        listener.onEvent(event);
+        verifyNoInteractions(subscriptionService);
     }
 }

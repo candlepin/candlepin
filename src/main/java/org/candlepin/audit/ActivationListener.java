@@ -16,6 +16,7 @@ package org.candlepin.audit;
 
 import org.candlepin.service.SubscriptionServiceAdapter;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
@@ -45,10 +46,16 @@ public class ActivationListener implements EventListener {
     public void onEvent(Event event) {
         if (event.getType().equals(Event.Type.CREATED) &&
             event.getTarget().equals(Event.Target.POOL)) {
+            JsonNode subscriptionId = null;
             try {
-                String subscriptionId = mapper.readTree(event.getEventData())
-                    .get("subscriptionId").asText();
-                subscriptionService.sendActivationEmail(subscriptionId);
+                if (event.getEventData() != null) {
+                    subscriptionId = mapper.readTree(event.getEventData())
+                        .get("subscriptionId");
+                }
+
+                if (subscriptionId != null) {
+                    subscriptionService.sendActivationEmail(subscriptionId.asText());
+                }
             }
             catch (IOException e) {
                 logError(event, e);
