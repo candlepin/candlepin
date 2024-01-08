@@ -325,4 +325,21 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         return count;
     }
 
+    /**
+     * Method searches for claimed owners that have consumers that were not yet migrated.
+     *
+     * @return a list of claimed owners
+     */
+    public List<ClaimedOwner> findClaimedUnMigratedOwners() {
+        String hql = """
+            SELECT new org.candlepin.model.ClaimedOwner(o.key, o.claimantOwner) FROM Owner o
+            INNER JOIN Consumer c ON o.id = c.owner
+            WHERE o.claimed = true
+            GROUP BY o.key""";
+        TypedQuery<ClaimedOwner> query = entityManager.get()
+            .createQuery(hql, ClaimedOwner.class);
+
+        return query.getResultList();
+    }
+
 }

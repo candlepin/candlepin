@@ -18,6 +18,7 @@ import static org.candlepin.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
 
 import org.candlepin.async.tasks.ActiveEntitlementJob;
 import org.candlepin.async.tasks.CertificateCleanupJob;
+import org.candlepin.async.tasks.ClaimedOwnerConsumerDetectionJob;
 import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.async.tasks.ExpiredPoolsCleanupJob;
 import org.candlepin.async.tasks.ImportRecordCleanerJob;
@@ -526,6 +527,10 @@ public class ConfigProperties {
             // UnmappedGuestEntitlementCleanerJob
             this.put(jobConfig(UnmappedGuestEntitlementCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 UnmappedGuestEntitlementCleanerJob.DEFAULT_SCHEDULE);
+
+            // ClaimedOwnerConsumerDetectionJob
+            this.put(jobConfig(ClaimedOwnerConsumerDetectionJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                ClaimedOwnerConsumerDetectionJob.DEFAULT_SCHEDULE);
 
             // Set the triggerable jobs list
             this.put(ASYNC_JOBS_TRIGGERABLE_JOBS, String.join(", ", ASYNC_JOBS_TRIGGERABLE_JOBS_LIST));

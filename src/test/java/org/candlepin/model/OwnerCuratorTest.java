@@ -27,6 +27,7 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -404,5 +405,28 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         assertFalse(now.isBefore(owner1.getLastContentUpdate().toInstant()));
         assertFalse(now.isBefore(owner2.getLastContentUpdate().toInstant()));
         assertFalse(now.isBefore(owner3.getLastContentUpdate().toInstant()));
+    }
+    @Test
+    public void shouldFindClaimedOwnersWithConsumers() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner().setClaimed(true).setClaimantOwner(owner1.getKey());
+        Owner owner3 = this.createOwner().setClaimed(true).setClaimantOwner(owner1.getKey());
+        this.createOwner().setClaimed(true).setClaimantOwner(owner1.getKey());
+
+        this.createConsumer(owner2);
+        this.createConsumer(owner2);
+        this.createConsumer(owner2);
+        this.createConsumer(owner3);
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        List<ClaimedOwner> owners = this.ownerCurator.findClaimedUnMigratedOwners();
+
+        Assertions.assertThat(owners)
+            .hasSize(2)
+            .containsExactlyInAnyOrder(
+                new ClaimedOwner(owner2.getKey(), owner1.getKey()),
+                new ClaimedOwner(owner3.getKey(), owner1.getKey())
+            );
     }
 }

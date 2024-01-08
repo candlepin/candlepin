@@ -19,6 +19,7 @@ import org.candlepin.async.JobMessageDispatcher;
 import org.candlepin.async.JobMessageReceiver;
 import org.candlepin.async.tasks.ActiveEntitlementJob;
 import org.candlepin.async.tasks.CertificateCleanupJob;
+import org.candlepin.async.tasks.ClaimedOwnerConsumerDetectionJob;
 import org.candlepin.async.tasks.CloudAccountOrgSetupJob;
 import org.candlepin.async.tasks.ConsumerMigrationJob;
 import org.candlepin.async.tasks.EntitleByProductsJob;
@@ -459,6 +460,8 @@ public class CandlepinModule extends AbstractModule {
         JobManager.registerJob(InactiveConsumerCleanerJob.JOB_KEY, InactiveConsumerCleanerJob.class);
         JobManager.registerJob(CloudAccountOrgSetupJob.JOB_KEY, CloudAccountOrgSetupJob.class);
         JobManager.registerJob(ConsumerMigrationJob.JOB_KEY, ConsumerMigrationJob.class);
+        JobManager.registerJob(ClaimedOwnerConsumerDetectionJob.JOB_KEY,
+            ClaimedOwnerConsumerDetectionJob.class);
     }
 
     private void configureExporter() {

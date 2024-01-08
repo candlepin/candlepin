@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - {year} Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,3 +12,14 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
+
+package org.candlepin.model;
+
+/**
+ * Represents a claimed owner by its key and a key of its claimant
+ *
+ * @param ownerKey key of the claimed owner
+ * @param claimantKey key of the claimant owner
+ */
+public record ClaimedOwner(String ownerKey, String claimantKey) {
+}
