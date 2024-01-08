@@ -35,6 +35,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -471,8 +473,12 @@ public class PoolRules {
     }
 
     private boolean checkForDateChange(Date start, Date end, Pool existingPool) {
-        boolean datesChanged = (!start.equals(existingPool.getStartDate())) ||
-            (!end.equals(existingPool.getEndDate()));
+        // because of mariadb's need to truncate milliseconds
+        Instant startInstant = start.toInstant().truncatedTo(ChronoUnit.SECONDS);
+        Instant endInstant = end.toInstant().truncatedTo(ChronoUnit.SECONDS);
+        Instant poolStartInstant = existingPool.getStartDate().toInstant().truncatedTo(ChronoUnit.SECONDS);
+        Instant poolEndInstant = existingPool.getEndDate().toInstant().truncatedTo(ChronoUnit.SECONDS);
+        boolean datesChanged = !startInstant.equals(poolStartInstant) || !endInstant.equals(poolEndInstant);
 
         if (datesChanged) {
             existingPool.setStartDate(start);
