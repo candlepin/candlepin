@@ -58,6 +58,7 @@ public final class TestConfig {
         defaults.put(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE, "10");
         defaults.put(DatabaseConfigFactory.BATCH_BLOCK_SIZE, "10");
         defaults.put(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT, "32000");
+        defaults.put(ConfigProperties.CACHE_ANON_CERT_CONTENT_TTL, "120000");
 
         return defaults;
     }

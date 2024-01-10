@@ -178,6 +178,7 @@ public class ConfigProperties {
     // Cache
     public static final String CACHE_JMX_STATS = "cache.jmx.statistics";
     public static final String CACHE_CONFIG_FILE_URI = JPA_CONFIG_PREFIX + "hibernate.javax.cache.uri";
+    public static final String CACHE_ANON_CERT_CONTENT_TTL = "candlepin.cache.anon_cert_content_ttl";
 
     public static final String[] ENCRYPTED_PROPERTIES = new String[] {
         DB_PASSWORD,
@@ -410,6 +411,7 @@ public class ConfigProperties {
 
             this.put(CACHE_JMX_STATS, "false");
             this.put(CACHE_CONFIG_FILE_URI, "ehcache.xml");
+            this.put(CACHE_ANON_CERT_CONTENT_TTL, "120000"); // milliseconds
 
             this.put(SUSPEND_MODE_ENABLED, "true");
 
