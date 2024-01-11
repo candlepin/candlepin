@@ -81,7 +81,8 @@ public class OwnerTranslator implements ObjectTranslator<Owner, OwnerDTO> {
             .contentAccessModeList(source.getContentAccessModeList())
             .lastRefreshed(Util.toDateTime(source.getLastRefreshed()))
             .anonymous(source.getAnonymous())
-            .claimed(source.getClaimed());
+            .claimed(source.getClaimed())
+            .claimantOwner(source.getClaimantOwner());
 
         if (translator != null) {
             Owner parent = source.getParentOwner();

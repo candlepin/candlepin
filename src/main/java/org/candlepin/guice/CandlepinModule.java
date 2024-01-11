@@ -20,6 +20,7 @@ import org.candlepin.async.JobMessageReceiver;
 import org.candlepin.async.tasks.ActiveEntitlementJob;
 import org.candlepin.async.tasks.CertificateCleanupJob;
 import org.candlepin.async.tasks.CloudAccountOrgSetupJob;
+import org.candlepin.async.tasks.ConsumerMigrationJob;
 import org.candlepin.async.tasks.EntitleByProductsJob;
 import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.async.tasks.ExpiredPoolsCleanupJob;
@@ -54,6 +55,7 @@ import org.candlepin.cache.JCacheManagerProvider;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.ConfigurationPrefixes;
+import org.candlepin.controller.ConsumerMigration;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
@@ -229,6 +231,7 @@ public class CandlepinModule extends AbstractModule {
         bind(EntitlementRulesTranslator.class);
         bind(PoolManager.class);
         bind(PoolService.class);
+        bind(ConsumerMigration.class);
         bind(RefresherFactory.class);
         bind(CandlepinModeManager.class).asEagerSingleton();
         bind(SuspendModeTransitioner.class).asEagerSingleton();
@@ -455,6 +458,7 @@ public class CandlepinModule extends AbstractModule {
             UnmappedGuestEntitlementCleanerJob.class);
         JobManager.registerJob(InactiveConsumerCleanerJob.JOB_KEY, InactiveConsumerCleanerJob.class);
         JobManager.registerJob(CloudAccountOrgSetupJob.JOB_KEY, CloudAccountOrgSetupJob.class);
+        JobManager.registerJob(ConsumerMigrationJob.JOB_KEY, ConsumerMigrationJob.class);
     }
 
     private void configureExporter() {

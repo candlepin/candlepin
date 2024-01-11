@@ -22,6 +22,7 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -81,18 +82,18 @@ class ContentAccessCertificateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void shouldListExpiredCerts() {
-        List<ExpiredCertificate> expiredCertificates = this.caCertCurator.listAllExpired();
+        List<CertSerial> expiredCertificates = this.caCertCurator.listAllExpired();
 
         assertEquals(1, expiredCertificates.size());
-        assertEquals(consumer1.getContentAccessCert().getId(), expiredCertificates.get(0).getCertId());
+        assertEquals(consumer1.getContentAccessCert().getId(), expiredCertificates.get(0).certId());
     }
 
     @Test
     public void noExpiredCerts() {
-        List<ExpiredCertificate> expiredCertificates = this.caCertCurator.listAllExpired();
+        List<CertSerial> expiredCertificates = this.caCertCurator.listAllExpired();
 
         assertEquals(1, expiredCertificates.size());
-        assertEquals(consumer1.getContentAccessCert().getId(), expiredCertificates.get(0).getCertId());
+        assertEquals(consumer1.getContentAccessCert().getId(), expiredCertificates.get(0).certId());
     }
 
 
@@ -114,6 +115,37 @@ class ContentAccessCertificateCuratorTest extends DatabaseTestFixture {
         assertEquals(0, this.caCertCurator.deleteByIds(null));
         assertEquals(0, this.caCertCurator.deleteByIds(List.of()));
         assertEquals(0, this.caCertCurator.deleteByIds(List.of("UnknownId")));
+    }
+
+    @Test
+    public void shouldFetchCACertSerials() {
+        Owner owner = createOwner();
+        Consumer consumer1 = createConsumerWithCACert(owner);
+        Consumer consumer2 = createConsumerWithCACert(owner);
+        Consumer consumer3 = createConsumerWithCACert(owner);
+        List<CertSerial> expected = List.of(getSerial(consumer1), getSerial(consumer2), getSerial(consumer3));
+
+        List<CertSerial> serials = this.caCertCurator.listCertSerials(List.of(
+            consumer1.getId(), consumer2.getId(), consumer3.getId()
+        ));
+
+        Assertions.assertThat(serials)
+            .hasSize(3)
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    private CertSerial getSerial(Consumer consumer1) {
+        return new CertSerial(consumer1.getContentAccessCert().getId(),
+            consumer1.getContentAccessCert().getSerial().getId());
+    }
+
+    private Consumer createConsumerWithCACert(Owner owner) {
+        Consumer consumer = createConsumer(owner);
+        ContentAccessCertificate idCert = createCertificate(consumer, "cert");
+        this.caCertCurator.saveOrUpdate(idCert);
+        consumer.setContentAccessCert(idCert);
+
+        return this.consumerCurator.saveOrUpdate(consumer);
     }
 
     private ContentAccessCertificate createCertificate(Consumer consumer, String cert) {

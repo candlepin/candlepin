@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import com.google.inject.persist.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -43,8 +44,8 @@ public class IdentityCertificateCurator extends AbstractHibernateCurator<Identit
      * @return a list of expired certificates
      */
     @SuppressWarnings("unchecked")
-    public List<ExpiredCertificate> listAllExpired() {
-        String hql = "SELECT new org.candlepin.model.ExpiredCertificate(c.id, s.id)" +
+    public List<CertSerial> listAllExpired() {
+        String hql = "SELECT new org.candlepin.model.CertSerial(c.id, s.id)" +
             " FROM IdentityCertificate c" +
             " INNER JOIN c.serial s" +
             " INNER JOIN Consumer con on con.idCert = c.id" +
@@ -52,9 +53,9 @@ public class IdentityCertificateCurator extends AbstractHibernateCurator<Identit
             " WHERE s.expiration < :nowDate" +
             " AND type.manifest <> true";
 
-        Query query = this.getEntityManager().createQuery(hql, ExpiredCertificate.class);
+        Query query = this.getEntityManager().createQuery(hql, CertSerial.class);
 
-        return (List<ExpiredCertificate>) query
+        return (List<CertSerial>) query
             .setParameter("nowDate", new Date())
             .getResultList();
     }
@@ -81,6 +82,30 @@ public class IdentityCertificateCurator extends AbstractHibernateCurator<Identit
         }
 
         return deleted;
+    }
+
+    /**
+     * Takes a list of consumer ids and lists certificate serials of their identity certificates.
+     *
+     * @param consumerIds consumers to list serials for
+     * @return a list of certificate serials
+     */
+    public List<CertSerial> listCertSerials(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String hql = """
+            SELECT new org.candlepin.model.CertSerial(c.idCert.id, c.idCert.serial.id)
+            FROM Consumer c WHERE id IN (:consumerIds)""";
+        Query query = entityManager.get().createQuery(hql, CertSerial.class);
+
+        List<CertSerial> serials = new ArrayList<>(consumerIds.size());
+        for (Collection<String> idBlock : this.partition(consumerIds)) {
+            serials.addAll(query.setParameter("consumerIds", idBlock).getResultList());
+        }
+
+        return serials;
     }
 
 }
