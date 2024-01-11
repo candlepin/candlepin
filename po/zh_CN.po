@@ -10,8 +10,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-12-17 07:06+0000\n"
-"PO-Revision-Date: 2023-12-09 12:44+0000\n"
-"Last-Translator: Jingge Chen <mariocanfly@hotmail.com>\n"
+"PO-Revision-Date: 2023-12-21 18:37+0000\n"
+"Last-Translator: Charles Lee <lchopn@gmail.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
 "projects/candlepin/master/zh_CN/>\n"
 "Language: zh_CN\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.2.1\n"
+"X-Generator: Weblate 5.3\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -1211,10 +1211,9 @@ msgid "No content ID specified"
 msgstr "未指定内容 ID"
 
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:412
-#, fuzzy, java-format
-#| msgid "Unable to find content with the ID \"{0}\"."
+#, java-format
 msgid "Unable to find a content with the ID \"{0}\""
-msgstr "无法找到 ID 为 \"{0}\" 的内容。"
+msgstr "无法找到 ID 为 \"{0}\" 的内容"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:97
 msgid "Please supply a valid guest id"
@@ -1336,11 +1335,10 @@ msgid "Unable to find a product with the ID \"{0}\" for owner \"{1}\""
 msgstr "无法为所有者 \"{1}\" 找到使用 ID 为 \"{0}\" 的产品"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:231
-#, fuzzy, java-format
-#| msgid "Unable to find content with the ID \"{0}\"."
+#, java-format
 msgid ""
 "Unable to find one or more contents in the namespace \"{0}\" with IDs: {1}"
-msgstr "无法找到 ID 为 \"{0}\" 的内容。"
+msgstr "无法在命名空间 \"{0}\" 中找到 ID 为 {1} 的内容"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:244
 msgid ""
