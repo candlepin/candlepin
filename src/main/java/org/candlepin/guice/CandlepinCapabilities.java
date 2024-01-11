@@ -30,7 +30,7 @@ public class CandlepinCapabilities extends HashSet<String> {
     private static final String[] DEFAULT_CAPABILITIES = { "cores", "ram", "instance_multiplier",
         "derived_product", "cert_v3", "guest_limit", "vcpu", "hypervisors_async", "storage_band",
         "remove_by_pool_id", "batch_bind", "org_level_content_access", "syspurpose", "hypervisors_heartbeat",
-        "multi_environment"
+        "multi_environment", "typed_environments"
     };
 
     /**

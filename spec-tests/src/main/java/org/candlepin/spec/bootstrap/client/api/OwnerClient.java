@@ -266,12 +266,30 @@ public class OwnerClient extends OwnerApi {
         return super.importManifestAsync(ownerKey, List.of(), input);
     }
 
+    /**
+     *  Convenience method that allows the owner parameter only. It will bypass any type filtering.
+     * @param owner
+     *  The owner to retreive environments for
+     * @return
+     *  List of matching environments
+     * @throws ApiException
+     */
     public List<EnvironmentDTO> listEnvironments(OwnerDTO owner) throws ApiException {
-        return super.listEnvironments(owner.getKey(), null);
+        return super.listEnvironments(owner.getKey(), null, null, true);
     }
 
+    /**
+     * Convenience method that allows the owner and name parameters only. It bypasses type filtering.
+     * @param owner
+     *  The owner to retreive environments for
+     * @param name
+     *  The exact name match for filtering the environments
+     * @return
+     *  List of matching environments
+     * @throws ApiException
+     */
     public List<EnvironmentDTO> listEnvironments(OwnerDTO owner, String name) throws ApiException {
-        return super.listEnvironments(owner.getKey(), name);
+        return super.listEnvironments(owner.getKey(), name, null, true);
     }
 
 }

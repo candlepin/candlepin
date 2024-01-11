@@ -16,8 +16,7 @@ package org.candlepin.service.impl;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.controller.util.ContentPrefix;
-import org.candlepin.controller.util.EntitlementContentPrefix;
+import org.candlepin.controller.util.ContentPathBuilder;
 import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -382,8 +381,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             .collect(Collectors.toSet());
 
         List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
-        ContentPrefix contentPrefix = EntitlementContentPrefix.from(owner, environments);
-        PromotedContent promotedContent = new PromotedContent(contentPrefix)
+        ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(owner, environments);
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder)
             .withAll(environments);
 
         Map<String, EntitlementCertificate> entitlementCerts = new HashMap<>();

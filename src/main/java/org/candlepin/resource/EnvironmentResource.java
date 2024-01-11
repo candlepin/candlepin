@@ -255,11 +255,6 @@ public class EnvironmentResource implements EnvironmentApi {
     }
 
     @Override
-    public Iterable<EnvironmentDTO> getEnvironments() {
-        return translator.translateQuery(this.envCurator.listAll(), EnvironmentDTO.class);
-    }
-
-    @Override
     @Transactional
     public AsyncJobStatusDTO promoteContent(@Verify(Environment.class) String envId,
         List<ContentToPromoteDTO> contentToPromote, Boolean lazyRegen) {

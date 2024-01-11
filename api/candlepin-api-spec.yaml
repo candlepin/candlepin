@@ -3053,28 +3053,6 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
-  /environments:
-    get:
-      description: Lists the Environments.  Only available to super admins.
-      operationId: getEnvironments
-      tags:
-        - environment
-      security: []
-      x-java-response:
-        type: Iterable
-        isContainer: true
-      responses:
-        200:
-          description: Environment was successfully retrieved.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/EnvironmentDTO'
-        default:
-          $ref: '#/components/responses/default'
-
   /environments/{env_id}:
     get:
       description: Retrieves a single Environment
@@ -5044,7 +5022,7 @@ paths:
         - owner
       operationId: listEnvironments
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       parameters:
         - name: owner_key
@@ -5058,6 +5036,19 @@ paths:
           description: The name of the environment
           schema:
             type: string
+        - name: type
+          in: query
+          description: The type of the environments
+          schema:
+            type: array
+            items:
+              type: string
+        - name: list_all
+          in: query
+          description: List all boolean for environments of all types
+          schema:
+            type: boolean
+            default: false
       security: []
       responses:
         200:
@@ -8778,7 +8769,11 @@ components:
               type: string
             name:
               type: string
+            type:
+              type: string
             description:
+              type: string
+            content_prefix:
               type: string
             owner:
               $ref: "#/components/schemas/NestedOwnerDTO"

@@ -49,6 +49,11 @@ public class Environment extends AbstractHibernateObject implements Serializable
     public static final String DB_TABLE = "cp_environment";
     private static final long serialVersionUID = 4162471699021316341L;
 
+    @Id
+    @Column(length = 32)
+    @NotNull
+    private String id;
+
     @Column(name = "owner_id", nullable = false)
     private String ownerId;
 
@@ -61,14 +66,17 @@ public class Environment extends AbstractHibernateObject implements Serializable
     @NotNull
     private String name;
 
+    @Column
+    @Size(max = 32)
+    private String type;
+
     @Column(nullable = true)
     @Size(max = 255)
     private String description;
 
-    @Id
-    @Column(length = 32)
-    @NotNull
-    private String id;
+    @Column(name = "content_prefix")
+    @Size(max = 255)
+    private String contentPrefix;
 
     @OneToMany(mappedBy = "environment", targetEntity = EnvironmentContent.class,
         cascade = CascadeType.ALL)
@@ -185,12 +193,32 @@ public class Environment extends AbstractHibernateObject implements Serializable
         return this;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public Environment setType(String type) {
+        if (type != null) {
+            this.type = type.toLowerCase();
+        }
+        return this;
+    }
+
     public String getDescription() {
         return description;
     }
 
     public Environment setDescription(String description) {
         this.description = description;
+        return this;
+    }
+
+    public String getContentPrefix() {
+        return contentPrefix;
+    }
+
+    public Environment setContentPrefix(String contentPrefix) {
+        this.contentPrefix = contentPrefix;
         return this;
     }
 

@@ -89,7 +89,6 @@ public class ImportUpdateSpecTest {
 
         AsyncJobStatusDTO importJob = adminClient.owners()
             .importManifestAsync(owner.getKey(), forced, manifest);
-
         return adminClient.jobs().waitForJob(importJob);
     }
 

@@ -47,6 +47,7 @@ import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
+import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -65,7 +66,6 @@ import java.util.stream.Collectors;
 
 
 @SpecTest
-@SuppressWarnings("indentation")
 public class EnvironmentSpecTest {
 
     private static ApiClient admin;
@@ -98,7 +98,8 @@ public class EnvironmentSpecTest {
         List<EnvironmentDTO> environments = ownerClient.owners().listEnvironments(owner);
         assertThat(environments)
             .singleElement()
-            .returns(expectedEnv.getId(), EnvironmentDTO::getId);
+            .returns(expectedEnv.getId(), EnvironmentDTO::getId)
+            .returns(expectedEnv.getContentPrefix(), EnvironmentDTO::getContentPrefix);
     }
 
     @Test
@@ -142,6 +143,38 @@ public class EnvironmentSpecTest {
         assertThat(foundEnv)
             .singleElement()
             .returns(env.getId(), EnvironmentDTO::getId);
+    }
+
+    @Test
+    public void shouldFindTypedEnvironmentsByOwner() {
+        EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random()
+            .type(null));
+        EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random()
+            .type(StringUtil.random("type-")));
+        EnvironmentDTO env3 = ownerClient.owners().createEnv(owner.getKey(), Environments.random()
+            .type(StringUtil.random("type-")));
+
+        List<EnvironmentDTO> found1 = ownerClient.owners().listEnvironments(owner.getKey(), null,
+            null, false);
+        assertThat(found1).isNotNull().contains(env1).doesNotContain(env2, env3);
+        List<EnvironmentDTO> found2 = ownerClient.owners().listEnvironments(owner.getKey(), null,
+            List.of(env2.getType()), false);
+        assertThat(found2).isNotNull().contains(env2).doesNotContain(env1, env3);
+        List<EnvironmentDTO> found3 = ownerClient.owners().listEnvironments(owner.getKey(), null,
+            List.of(env3.getType()), true);
+        assertThat(found3).isNotNull().contains(env1, env2, env3);
+    }
+
+    @Test
+    public void shouldLowerCaseEnvironmentType() {
+        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(),
+            Environments.random().type("mY_TypE"));
+
+        List<EnvironmentDTO> foundEnv = ownerClient.owners().listEnvironments(owner, env.getName());
+
+        assertThat(foundEnv)
+            .singleElement()
+            .returns("my_type", EnvironmentDTO::getType);
     }
 
     @Test
@@ -486,9 +519,9 @@ public class EnvironmentSpecTest {
             .hasSize(3)
             .map(jsonNode -> jsonNode.get("path").asText())
             .containsOnly(
-                content1.getContentUrl(),
-                content2.getContentUrl(),
-                content3.getContentUrl()
+                env1.getContentPrefix() + content1.getContentUrl(),
+                env2.getContentPrefix() + content2.getContentUrl(),
+                env3.getContentPrefix() + content3.getContentUrl()
             );
     }
 

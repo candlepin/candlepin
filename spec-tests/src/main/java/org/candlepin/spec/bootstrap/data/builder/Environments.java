@@ -30,7 +30,9 @@ public class Environments {
         return new EnvironmentDTO()
             .id(StringUtil.random("id-"))
             .name(StringUtil.random("name-"))
-            .description(StringUtil.random("desc-"));
+            .type(StringUtil.random("type-"))
+            .description(StringUtil.random("desc-"))
+            .contentPrefix(StringUtil.random("/"));
     }
 
 }

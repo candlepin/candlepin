@@ -77,7 +77,9 @@ public class EnvironmentTranslator implements ObjectTranslator<Environment, Envi
             .updated(Util.toDateTime(source.getUpdated()))
             .id(source.getId())
             .name(source.getName())
-            .description(source.getDescription());
+            .type(source.getType())
+            .description(source.getDescription())
+            .contentPrefix(source.getContentPrefix());
 
         if (translator != null) {
             Owner owner = source.getOwner();
@@ -86,11 +88,9 @@ public class EnvironmentTranslator implements ObjectTranslator<Environment, Envi
             Set<EnvironmentContent> envContents = source.getEnvironmentContent();
             if (envContents != null) {
                 Set<EnvironmentContentDTO> ecdtos = envContents.stream()
-                    .map(ec -> {
-                        return new EnvironmentContentDTO()
-                            .contentId(ec.getContentId())
-                            .enabled(ec.getEnabled());
-                    })
+                    .map(ec -> new EnvironmentContentDTO()
+                        .contentId(ec.getContentId())
+                        .enabled(ec.getEnabled()))
                     .collect(Collectors.toSet());
 
                 dest.setEnvironmentContent(ecdtos);
