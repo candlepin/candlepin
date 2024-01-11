@@ -1,15 +1,14 @@
 plugins {
     id("checkstyle")
 }
-project.apply from: "${rootDir}/dependencies.gradle"
 
 configurations {
     checkstyle
 }
 
 dependencies {
-    checkstyle libraries["checkstyle"]
-    checkstyle libraries["checkstyleSevntu"]
+    checkstyle(libs.checkstyle)
+    checkstyle(libs.checkstyle.sevntu)
 }
 
 // This prevents error where checkstyle sometimes resolves its dependencies
@@ -22,9 +21,6 @@ configurations.checkstyle {
 
 checkstyle {
     // Use the latest checkstyle version instead of default one
-    def module = project.dependencies.create(libraries["checkstyle"])
-    def version = module.version
-    toolVersion = version
     configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
     maxWarnings = 0
     maxErrors = 0

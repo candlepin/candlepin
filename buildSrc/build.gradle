@@ -4,8 +4,6 @@ plugins {
     id "java-gradle-plugin"
 }
 
-apply from: "../dependencies.gradle"
-
 repositories {
     mavenCentral()
     gradlePluginPortal()
@@ -13,13 +11,10 @@ repositories {
 
 dependencies {
     implementation(gradleApi())
-    implementation(libraries["openapi"])
+    implementation(libs.openapi)
 
-    // add all plugin artifacts to gradle classpath as defined in dependencies.gradle
-    // this makes them available via plugin ID only across *all* projects
-    for (pluginDependency in project.ext.plugins) {
-        implementation pluginDependency
-    }
+    // Plugins are not yet available in convention plugins, so we have to load it here.
+    implementation(libs.test.logger.plugin)
 
     // Fix for transitive dependency conflict between openapi and owasp
     configurations.configureEach {

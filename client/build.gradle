@@ -1,9 +1,8 @@
 plugins {
-    id "org.openapi.generator"
+    alias(libs.plugins.openapi.generator)
     id "java-library"
     id "java"
 }
-apply from: "../dependencies.gradle"
 
 description = "Candlepin Generated Client Library"
 
@@ -12,14 +11,14 @@ repositories {
 }
 
 dependencies {
-    implementation libraries["swagger"]
-    implementation libraries["gson"]
-    implementation libraries["okhttp"]
-    implementation libraries["okhttpInterceptor"]
-    implementation libraries["javaxAnnotation"]
-    implementation libraries["spotbugs"]
-    implementation libraries["gsonfire"]
-    implementation libraries["javaxRs"]
+    implementation(libs.gson)
+    implementation(libs.gsonfire)
+    implementation(libs.javax.annotation)
+    implementation(libs.javax.rs)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.interceptor)
+    implementation(libs.spotbugs)
+    implementation(libs.swagger)
 }
 
 sourceSets.main.java.srcDirs = [
