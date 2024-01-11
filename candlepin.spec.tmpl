@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.2
+Version: 4.4.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -240,6 +240,96 @@ fi
 
 #raw
 %changelog
+* Thu Jan 11 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.3-1
+- Add new translations using Weblate (noreply@weblate.org)
+- Bump com.google.guava:guava from 32.1.3-jre to 33.0.0-jre
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-720: Implement Anonymous Owner Claim endpoint (ojanus@redhat.com)
+- CANDLEPIN-695: Update environment APIs to support typing (wpoteat@redhat.com)
+- CANDLEPIN-696: Add "typed_environments" Candlepin capability
+  (wpoteat@redhat.com)
+- CANDLEPIN-690: Update content prefix logic (ojanus@redhat.com)
+- CANDLEPIN-694: Add environment types to database and API model
+  (ojanus@redhat.com)
+- CANDLEPIN-689: Add environment prefix (ojanus@redhat.com)
+- Migrate to Gradle Version Catalog (ojanus@redhat.com)
+- Log anonymous cert generation root cause errors (nmoumoul@redhat.com)
+- CANDLEPIN-733: Created anonymous certificate content cache - Created
+  ConsumerCertificateContentCache to cache cert content - Added the cache to
+  the ContentAccessManager and attempt to use the   cached content when
+  creating anonymous content access certificates - Removed unused
+  CloudRegistrationAdapter and PoolCurator from the   ConsumerResource class
+  (joshmalbrecht@gmail.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.17 to 10.1.18
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.slf4j:jcl-over-slf4j from 2.0.10 to 2.0.11
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.slf4j:slf4j-api from 2.0.10 to 2.0.11
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.slf4j:log4j-over-slf4j from 2.0.10 to 2.0.11
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-739: Catch scenario with null event data (wpoteat@redhat.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 23.0.3 to 23.0.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.owasp:dependency-check-gradle from 9.0.7 to 9.0.8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-731: Comparison for pool dates fails without milliseconds
+  (wpoteat@redhat.com)
+- Update/add foreign keys around cp_anonymous_certificates
+  (nmoumoul@redhat.com)
+- Bump io.smallrye.config:smallrye-config from 3.5.0 to 3.5.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.assertj:assertj-core from 3.25.0 to 3.25.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.assertj:assertj-core from 3.24.2 to 3.25.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Fix ambiguous assert call (ojanus@redhat.com)
+- Fix ambiguous constructor call (ojanus@redhat.com)
+- Bump org.slf4j:log4j-over-slf4j from 2.0.9 to 2.0.10
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.slf4j:jcl-over-slf4j from 2.0.9 to 2.0.10
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.12.6 to 10.12.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.slf4j:slf4j-api from 2.0.9 to 2.0.10
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.module:jackson-module-jsonSchema
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-hibernate5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.dataformat:jackson-dataformat-xml
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-jdk8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.core:jackson-databind from 2.15.3 to 2.16.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.4.4 to 3.5.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-jsr310
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.dataformat:jackson-dataformat-yaml
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-728: Enable tracing for calls between Candlepin async jobs and
+  RHSM-API (sbakaj@redhat.com)
+- Fix autoregv2 reauthentication & other flow updates (nmoumoul@redhat.com)
+- Bump org.mariadb.jdbc:mariadb-java-client from 3.3.1 to 3.3.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- cloud.enable set to true when hosted flag is used on deploy
+  (wpoteat@redhat.com)
+- Bump org.owasp:dependency-check-gradle from 9.0.6 to 9.0.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.google.guava:guava from 32.1.3-jre to 33.0.0-jre
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.liquibase:liquibase-core from 4.24.0 to 4.25.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 23.0.2 to 23.0.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-742: Replaced CloudProvider enum for String - Replaced the
+  CloudProvider enum with String to remove the   limitation put on the adapters
+  (joshmalbrecht@gmail.com)
+
 * Mon Dec 18 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.2-1
 - Add new translations using Weblate (noreply@weblate.org)
 - updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
