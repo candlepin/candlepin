@@ -224,7 +224,6 @@ public class AnonymousConsumerResourceCreationTest {
             this.consumerContentOverrideCurator, this.entCertGenerator, this.poolService,
             this.environmentContentCurator, this.cloudRegistrationAdapter, this.poolCurator,
             this.anonymousConsumerCurator, this.anonymousCertCurator
-
         );
 
         this.system = this.initConsumerType();

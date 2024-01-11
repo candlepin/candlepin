@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.service.exception;
+package org.candlepin.service.exception.cloudregistration;
 
 /**
  * The CouldNotEntitleOrganizationException indicates that the owner could not be entitled upstream

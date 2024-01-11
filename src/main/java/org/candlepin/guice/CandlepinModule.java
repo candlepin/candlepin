@@ -82,6 +82,7 @@ import org.candlepin.exceptions.mappers.NotSupportedExceptionMapper;
 import org.candlepin.exceptions.mappers.ReaderExceptionMapper;
 import org.candlepin.exceptions.mappers.RollbackExceptionMapper;
 import org.candlepin.exceptions.mappers.RuntimeExceptionMapper;
+import org.candlepin.exceptions.mappers.ServiceExceptionMapper;
 import org.candlepin.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.exceptions.mappers.WriterExceptionMapper;
@@ -255,6 +256,7 @@ public class CandlepinModule extends AbstractModule {
         bind(ValidationExceptionMapper.class);
         bind(WebApplicationExceptionMapper.class);
         bind(FailureExceptionMapper.class);
+        bind(ServiceExceptionMapper.class);
         bind(ReaderExceptionMapper.class);
         bind(WriterExceptionMapper.class);
         bind(CandlepinExceptionMapper.class);

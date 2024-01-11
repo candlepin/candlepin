@@ -15,7 +15,7 @@
 package org.candlepin.service.impl;
 
 import org.candlepin.service.CloudRegistrationAdapter;
-import org.candlepin.service.exception.OrgForCloudAccountNotCreatedYetException;
+import org.candlepin.service.exception.cloudregistration.OrgForCloudAccountNotCreatedYetException;
 import org.candlepin.service.model.CloudAccountData;
 import org.candlepin.service.model.CloudAuthenticationResult;
 import org.candlepin.service.model.CloudRegistrationInfo;

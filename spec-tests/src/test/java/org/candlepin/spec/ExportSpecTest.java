@@ -205,7 +205,7 @@ class ExportSpecTest {
     @Test
     @OnlyInHosted
     @OnlyWithCapability("cloud_registration")
-    public void shouldNotExportAnonymousManifestWithAnonymousToken() throws Exception {
+    public void shouldNotExportAnonymousManifestWithAnonymousToken() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         adminClient.hosted().createOwner(owner);

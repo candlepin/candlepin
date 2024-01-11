@@ -2396,4 +2396,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertThrows(NotFoundException.class,
             () -> resource.getOwnerContentAccess("test_owner"));
     }
+
+    @Test
+    void refreshPoolsBadOwner() {
+        assertThrows(NotFoundException.class,
+            () -> ownerResource.refreshPools("This_key_does_not_exist", false));
+    }
 }

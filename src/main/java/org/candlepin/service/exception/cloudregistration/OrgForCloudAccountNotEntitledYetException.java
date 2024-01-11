@@ -12,19 +12,20 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.service.exception;
+
+package org.candlepin.service.exception.cloudregistration;
 
 /**
- * The CloudRegistrationNotSupportedForOfferingException is used to reject a registration attempt for a
- * cloud system when that system is using a type of offering that is not supported (e.g. 1P offerings).
+ * The OrgForCloudAccountNotEntitledYetException is used when organization for cloud account is not
+ * entitled
  */
-public class CloudRegistrationNotSupportedForOfferingException extends RuntimeException {
+public class OrgForCloudAccountNotEntitledYetException extends RuntimeException {
 
     /**
      * Constructs a new exception with null as its detail message. The cause is not initialized, and may
      * subsequently be initialized by a call to initCause(java.lang.Throwable).
      */
-    public CloudRegistrationNotSupportedForOfferingException() {
+    public OrgForCloudAccountNotEntitledYetException() {
         super();
     }
 
@@ -36,7 +37,7 @@ public class CloudRegistrationNotSupportedForOfferingException extends RuntimeEx
      *     the detail message. The detail message is saved for later retrieval by the getMessage()
      *     method.
      */
-    public CloudRegistrationNotSupportedForOfferingException(String message) {
+    public OrgForCloudAccountNotEntitledYetException(String message) {
         super(message);
     }
 
@@ -50,7 +51,7 @@ public class CloudRegistrationNotSupportedForOfferingException extends RuntimeEx
      *     the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *     value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public CloudRegistrationNotSupportedForOfferingException(Throwable cause) {
+    public OrgForCloudAccountNotEntitledYetException(Throwable cause) {
         super(cause);
     }
 
@@ -69,7 +70,7 @@ public class CloudRegistrationNotSupportedForOfferingException extends RuntimeEx
      *     the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *     value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public CloudRegistrationNotSupportedForOfferingException(String message, Throwable cause) {
+    public OrgForCloudAccountNotEntitledYetException(String message, Throwable cause) {
         super(message, cause);
     }
 }

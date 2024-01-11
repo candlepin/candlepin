@@ -410,7 +410,7 @@ public class Entitler {
             List<String> devProductIds = new ArrayList<>();
             this.collectDevProductIds(devProductIds, devProduct);
 
-            // Do a refresh so we're all up to date here
+            // Do a refresh, so we're all up to date here
             log.debug("Importing products for dev pool resolution...");
 
             RefreshResult refreshResult = this.refreshWorkerProvider.get()

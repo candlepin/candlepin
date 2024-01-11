@@ -35,7 +35,7 @@ public interface UserServiceAdapter {
      * @return true if username and password combination are valid.
      * @throws Exception if there was an error validating the user
      */
-    boolean validateUser(String username, String password) throws Exception;
+    boolean validateUser(String username, String password);
 
     // User life cycle
     UserInfo createUser(UserInfo user);

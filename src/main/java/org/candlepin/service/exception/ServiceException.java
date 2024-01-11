@@ -14,19 +14,16 @@
  */
 package org.candlepin.service.exception;
 
-
-
 /**
- * The MalformedCloudRegistrationException is used to denote malformed or incomplete cloud
- * registration details
+ * The ServiceException is used to as a base for all exceptions returned from the service adapters
  */
-public class MalformedCloudRegistrationException extends RuntimeException {
+public class ServiceException extends RuntimeException {
 
     /**
      * Constructs a new exception with null as its detail message. The cause is not initialized,
      * and may subsequently be initialized by a call to initCause(java.lang.Throwable).
      */
-    public MalformedCloudRegistrationException() {
+    public ServiceException() {
         super();
     }
 
@@ -38,7 +35,7 @@ public class MalformedCloudRegistrationException extends RuntimeException {
      *  the detail message. The detail message is saved for later retrieval by the getMessage()
      *  method.
      */
-    public MalformedCloudRegistrationException(String message) {
+    public ServiceException(String message) {
         super(message);
     }
 
@@ -52,7 +49,7 @@ public class MalformedCloudRegistrationException extends RuntimeException {
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public MalformedCloudRegistrationException(Throwable cause) {
+    public ServiceException(Throwable cause) {
         super(cause);
     }
 
@@ -70,7 +67,7 @@ public class MalformedCloudRegistrationException extends RuntimeException {
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public MalformedCloudRegistrationException(String message, Throwable cause) {
+    public ServiceException(String message, Throwable cause) {
         super(message, cause);
     }
 }

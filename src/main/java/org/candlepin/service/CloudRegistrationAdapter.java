@@ -14,14 +14,11 @@
  */
 package org.candlepin.service;
 
-import org.candlepin.service.exception.CloudAccountOrgMismatchException;
-import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
-import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingException;
-import org.candlepin.service.exception.CouldNotAcquireCloudAccountLockException;
-import org.candlepin.service.exception.CouldNotEntitleOrganizationException;
-import org.candlepin.service.exception.MalformedCloudRegistrationException;
-import org.candlepin.service.exception.OrgForCloudAccountNotCreatedYetException;
-import org.candlepin.service.exception.OrgForCloudAccountNotEntitledYetException;
+import org.candlepin.service.exception.cloudregistration.CloudAccountOrgMismatchException;
+import org.candlepin.service.exception.cloudregistration.CouldNotAcquireCloudAccountLockException;
+import org.candlepin.service.exception.cloudregistration.CouldNotEntitleOrganizationException;
+import org.candlepin.service.exception.cloudregistration.OrgForCloudAccountNotCreatedYetException;
+import org.candlepin.service.exception.cloudregistration.OrgForCloudAccountNotEntitledYetException;
 import org.candlepin.service.model.CloudAccountData;
 import org.candlepin.service.model.CloudAuthenticationResult;
 import org.candlepin.service.model.CloudRegistrationInfo;
@@ -38,16 +35,9 @@ public interface CloudRegistrationAdapter {
      * @param cloudRegInfo
      *     A CloudRegistrationInfo instance which contains the cloud provider details to process
      *
-     * @throws MalformedCloudRegistrationException
-     *     if the cloud registration info is null, incomplete, or invalid
-     *
-     * @throws CloudRegistrationAuthorizationException
-     *     if cloud registration is not permitted for the provider or account holder
-     *
      * @return the owner key of the owner (organization) to which the cloud user will be registered
      */
-    String resolveCloudRegistrationData(CloudRegistrationInfo cloudRegInfo)
-        throws CloudRegistrationAuthorizationException, MalformedCloudRegistrationException;
+    String resolveCloudRegistrationData(CloudRegistrationInfo cloudRegInfo);
 
     /**
      * Resolves the cloud registration details to a specific owner using version 2 logic.
@@ -55,21 +45,10 @@ public interface CloudRegistrationAdapter {
      * @param cloudRegInfo
      *     A CloudRegistrationInfo instance which contains the cloud provider details to process
      *
-     * @throws MalformedCloudRegistrationException
-     *     if the cloud registration info is null, incomplete, or invalid
-     *
-     * @throws CloudRegistrationAuthorizationException
-     *     if cloud registration is not permitted for the provider or account holder
-     *
-     * @throws CloudRegistrationNotSupportedForOfferingException
-     *     if cloud registration is not supported for the type of offering the client is using
-     *
      * @return the cloud authentication result which contains the owner key, cloud account ID, and
      * product ID
      */
-    CloudAuthenticationResult resolveCloudRegistrationDataV2(CloudRegistrationInfo cloudRegInfo)
-        throws CloudRegistrationAuthorizationException, MalformedCloudRegistrationException,
-            CloudRegistrationNotSupportedForOfferingException;
+    CloudAuthenticationResult resolveCloudRegistrationDataV2(CloudRegistrationInfo cloudRegInfo);
 
     /**
      * Create (if one does not already exist) and entitle an owner upstream of Candlepin, for the given

@@ -13,21 +13,18 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.service.exception;
-
+package org.candlepin.service.exception.cloudregistration;
 
 /**
- * The CloudAccountOrgMismatchException indicates that there was a conflict (HTTP status code 409)
- * regarding the cloud account's organization key upstream of Candlepin, when trying to entitle that
- * organization. Candlepin should retry to entitle it until that conflict is resolved.
+ * The OrgForCloudAccountNotCreatedYetException is used when organization does not exist for cloud account
  */
-public class CloudAccountOrgMismatchException extends RuntimeException {
+public class OrgForCloudAccountNotCreatedYetException extends RuntimeException {
 
     /**
      * Constructs a new exception with null as its detail message. The cause is not initialized, and may
      * subsequently be initialized by a call to initCause(java.lang.Throwable).
      */
-    public CloudAccountOrgMismatchException() {
+    public OrgForCloudAccountNotCreatedYetException() {
         super();
     }
 
@@ -39,7 +36,7 @@ public class CloudAccountOrgMismatchException extends RuntimeException {
      *     the detail message. The detail message is saved for later retrieval by the getMessage()
      *     method.
      */
-    public CloudAccountOrgMismatchException(String message) {
+    public OrgForCloudAccountNotCreatedYetException(String message) {
         super(message);
     }
 
@@ -53,7 +50,7 @@ public class CloudAccountOrgMismatchException extends RuntimeException {
      *     the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *     value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public CloudAccountOrgMismatchException(Throwable cause) {
+    public OrgForCloudAccountNotCreatedYetException(Throwable cause) {
         super(cause);
     }
 
@@ -72,7 +69,7 @@ public class CloudAccountOrgMismatchException extends RuntimeException {
      *     the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *     value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public CloudAccountOrgMismatchException(String message, Throwable cause) {
+    public OrgForCloudAccountNotCreatedYetException(String message, Throwable cause) {
         super(message, cause);
     }
 }

@@ -14,6 +14,7 @@
  */
 package org.candlepin.controller;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -43,6 +44,7 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
@@ -242,6 +244,47 @@ public class EntitlerTest {
         entitler.bindByProducts(data);
 
         verify(pm).entitleByProducts(data);
+    }
+
+    @Test
+    public void bindByProductsConsumerDevAutoDisabled() {
+        AutobindData data = new AutobindData(consumer, owner);
+        when(owner.isAutobindDisabled()).thenReturn(true);
+        assertThrows(AutobindDisabledForOwnerException.class, () -> entitler.bindByProducts(data));
+    }
+
+    @Test
+    public void bindByProductsConsumerDevAutoHypervisorDisabledHypervisor() {
+        AutobindData data = new AutobindData(consumer, owner);
+        when(owner.isAutobindDisabled()).thenReturn(false);
+        when(owner.isAutobindHypervisorDisabled()).thenReturn(true);
+        when(consumerTypeCurator.getConsumerType(eq(consumer)))
+            .thenReturn(new ConsumerType(ConsumerType.ConsumerTypeEnum.HYPERVISOR));
+        assertThrows(AutobindHypervisorDisabledException.class, () -> entitler.bindByProducts(data));
+    }
+
+    @Test
+    public void bindByProductsConsumerDevAutoDisabledSCA() throws Exception {
+        AutobindData data = new AutobindData(consumer, owner);
+        when(owner.isUsingSimpleContentAccess()).thenReturn(true);
+        assertEquals(0, entitler.bindByProducts(data).size());
+    }
+
+    @Test
+    public void adjustEntitlementQuantity() {
+        Entitlement ent = mock(Entitlement.class);
+        assertDoesNotThrow(() -> entitler.adjustEntitlementQuantity(consumer, ent, 4));
+    }
+
+    @Test
+    public void adjustEntitlementQuantityException() throws Exception {
+        Entitlement ent = mock(Entitlement.class);
+        ValidationResult vr = new ValidationResult();
+        vr.addError("Error");
+        Map<String, ValidationResult> results = Map.of("test", vr);
+        when(pm.adjustEntitlementQuantity(consumer, ent, 4))
+            .thenThrow(new EntitlementRefusedException(results));
+        assertThrows(ForbiddenException.class, () -> entitler.adjustEntitlementQuantity(consumer, ent, 4));
     }
 
     @Test
