@@ -56,6 +56,15 @@ public class AnonymousCertContentCacheTest {
     }
 
     @Test
+    public void testCacheCreationWithInvalidMaxEntriesConfig() throws Exception {
+        config.setProperty(ConfigProperties.CACHE_ANON_CERT_CONTENT_MAX_ENTRIES, "-100");
+
+        assertThrows(ConfigurationException.class, () -> {
+            new AnonymousCertContentCache(config);
+        });
+    }
+
+    @Test
     public void testGetWithInvalidSkuIds() throws Exception {
         AnonymousCertContentCache cache = new AnonymousCertContentCache(config);
 
