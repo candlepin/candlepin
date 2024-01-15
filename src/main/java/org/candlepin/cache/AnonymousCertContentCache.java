@@ -46,8 +46,16 @@ public class AnonymousCertContentCache {
             throw new ConfigurationException(msg);
         }
 
+        long maxEntries = config.getLong(ConfigProperties.CACHE_ANON_CERT_CONTENT_MAX_ENTRIES);
+        if (maxEntries < 0) {
+            String msg = ConfigProperties.CACHE_ANON_CERT_CONTENT_MAX_ENTRIES +
+                " must be larger than or equal to 0";
+            throw new ConfigurationException(msg);
+        }
+
         cache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofMillis(expirationDuration))
+            .maximumSize(maxEntries)
             .build();
     }
 
