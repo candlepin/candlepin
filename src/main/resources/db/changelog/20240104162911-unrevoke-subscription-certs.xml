@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+
+    <property dbms="postgresql,mysql,mariadb" name="unrevoked_value" value="false"/>
+
+    <property dbms="postgresql,mysql,mariadb" name="revoked_value" value="true"/>
+
+    <!--
+        Undo the accidental revoking of certificate serials for SubscriptionCertificates (that are not
+        supposed to be revocable) which happened in changelog 20170301083925-1, and caused a fk violation
+        when the CertificateCleanupJob run in standalone instances.
+     -->
+    <changeSet id="20240104162911-1" author="nmoumoul">
+        <sql dbms="postgresql,mysql,mariadb">
+            UPDATE cp_cert_serial cs SET revoked = ${unrevoked_value}
+                WHERE revoked = ${revoked_value}
+                AND EXISTS (SELECT 1 FROM cp_certificate subcert WHERE subcert.serial_id = cs.id);
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
