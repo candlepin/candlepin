@@ -15,6 +15,7 @@
 package org.candlepin.auth;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -22,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
@@ -61,6 +63,7 @@ import java.util.Map;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class CloudRegistrationAuthTest {
+    private static final String CLAIMANT_KEY = "claimant_key";
     private DevConfig config;
     private CertificateReader certificateReader;
     private CloudRegistrationAdapter mockCloudRegistrationAdapter;
@@ -81,6 +84,8 @@ public class CloudRegistrationAuthTest {
             return ownerCache.computeIfAbsent(ownerKey, key -> new Owner()
                 .setKey(key)
                 .setDisplayName(key)
+                .setClaimed(true)
+                .setClaimantOwner(CLAIMANT_KEY)
                 .setId(Util.generateUUID()));
         }).when(this.mockOwnerCurator).getByKey(anyString());
 
@@ -209,7 +214,7 @@ public class CloudRegistrationAuthTest {
             .getPrincipal(request);
 
         assertNotNull(principal);
-        assertTrue(principal instanceof UserPrincipal);
+        assertTrue(principal instanceof CloudConsumerPrincipal);
         assertEquals(AuthenticationMethod.CLOUD, principal.getAuthenticationMethod());
 
         // Test note:
@@ -217,7 +222,57 @@ public class CloudRegistrationAuthTest {
         // we've defined in our test init, which *always* uses the type as the owner key. In the real
         // implementation, this isn't guaranteed.
         Owner owner = this.mockOwnerCurator.getByKey(ownerKey);
-        assertTrue(principal.canAccess(owner, SubResource.CONSUMERS, Access.CREATE));
+        assertFalse(principal.canAccess(owner, SubResource.CONSUMERS, Access.CREATE));
+    }
+
+    @Test
+    public void testGetPrincipalWithClaimantPermissions() {
+        String ownerKey = "test_org";
+        int ctSeconds = this.getCurrentSeconds() - 5;
+
+        String token = this.buildMalformedToken(new JsonWebToken()
+            .type(CloudAuthTokenType.STANDARD.toString())
+            .subject("test_subject")
+            .audience(ownerKey)
+            .issuedAt(ctSeconds)
+            .notBefore(ctSeconds)
+            .expiration(ctSeconds + 300));
+
+        MockHttpRequest request = this.buildHttpRequest();
+        request.header("Authorization", "Bearer " + token);
+
+        Principal principal = this.buildAuthProvider()
+            .getPrincipal(request);
+
+        assertNotNull(principal);
+        assertTrue(principal instanceof CloudConsumerPrincipal);
+        assertEquals(AuthenticationMethod.CLOUD, principal.getAuthenticationMethod());
+
+        Owner claimant = this.mockOwnerCurator.getByKey(CLAIMANT_KEY);
+        assertFalse(principal.canAccess(claimant, SubResource.CONSUMERS, Access.CREATE));
+    }
+
+    @Test
+    public void testGetPrincipalRequiresOwnerToExist() {
+        String ownerKey = "test_org";
+        when(this.mockOwnerCurator.getByKey(anyString())).thenReturn(null);
+        int ctSeconds = this.getCurrentSeconds() - 5;
+
+        String token = this.buildMalformedToken(new JsonWebToken()
+            .type(CloudAuthTokenType.STANDARD.toString())
+            .subject("test_subject")
+            .audience(ownerKey)
+            .issuedAt(ctSeconds)
+            .notBefore(ctSeconds)
+            .expiration(ctSeconds + 300));
+
+        MockHttpRequest request = this.buildHttpRequest();
+        request.header("Authorization", "Bearer " + token);
+
+        Principal principal = this.buildAuthProvider()
+            .getPrincipal(request);
+
+        assertNull(principal);
     }
 
     @Test

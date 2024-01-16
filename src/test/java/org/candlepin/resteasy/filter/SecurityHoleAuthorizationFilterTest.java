@@ -15,16 +15,24 @@
 
 package org.candlepin.resteasy.filter;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import org.candlepin.TestingModules;
+import org.candlepin.auth.ActivationKeyPrincipal;
 import org.candlepin.auth.AnonymousCloudConsumerPrincipal;
+import org.candlepin.auth.CloudConsumerPrincipal;
+import org.candlepin.auth.Principal;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
+import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.TooManyRequestsException;
 import org.candlepin.model.AnonymousCloudConsumer;
+import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.resource.ConsumerResource;
@@ -33,8 +41,10 @@ import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.exception.OrgForCloudAccountNotCreatedYetException;
 import org.candlepin.service.exception.OrgForCloudAccountNotEntitledYetException;
-import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.core.interception.jaxrs.PostMatchContainerRequestContext;
@@ -43,15 +53,21 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Stream;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
@@ -59,7 +75,7 @@ import javax.ws.rs.core.SecurityContext;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class SecurityHoleAuthorizationFilterTest extends DatabaseTestFixture {
+public class SecurityHoleAuthorizationFilterTest {
 
     @Mock
     private OwnerCurator mockOwnerCurator;
@@ -70,33 +86,26 @@ public class SecurityHoleAuthorizationFilterTest extends DatabaseTestFixture {
     @Mock
     private SecurityContext mockSecurityContext;
     @Mock
-    private AnonymousCloudConsumerPrincipal mockAnonymousCloudConsumerPrincipal;
-    @Mock
     private ResourceInfo mockResourceInfo;
+    private I18n i18n;
 
     private MockHttpRequest mockReq;
     private SecurityHoleAuthorizationFilter interceptor;
 
     @BeforeEach
     public void setUp() throws URISyntaxException, NoSuchMethodException {
-        MockitoAnnotations.initMocks(this);
-
-        Class clazz = ConsumerResource.class;
-        when(mockResourceInfo.getResourceClass()).thenReturn(clazz);
-
-        mockReq = MockHttpRequest.create("POST", "http://localhost/candlepin/consumers");
-        Method method = ConsumerResource.class.getMethod("createConsumer", ConsumerDTO.class, String.class,
-            String.class, String.class, Boolean.class);
-        mockResourceMethod(method);
-
-        ResteasyContext.pushContext(ResourceInfo.class, this.mockResourceInfo);
-        ResteasyContext.pushContext(SecurityContext.class, this.mockSecurityContext);
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.ServletEnvironmentModule(),
+            new TestingModules.StandardTest());
+        this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         MethodLocator methodLocator = new MethodLocator(injector);
         methodLocator.init();
+
         AnnotationLocator annotationLocator = new AnnotationLocator(methodLocator);
-        interceptor = new SecurityHoleAuthorizationFilter(i18nProvider, annotationLocator, mockOwnerCurator,
-            mockPoolCurator, mockCloudAdapter);
+        interceptor = new SecurityHoleAuthorizationFilter(() -> this.i18n, annotationLocator,
+            mockOwnerCurator, mockPoolCurator, mockCloudAdapter);
     }
 
     @AfterEach
@@ -112,10 +121,9 @@ public class SecurityHoleAuthorizationFilterTest extends DatabaseTestFixture {
         when(mockOwnerCurator.existsByKey(anyString())).thenReturn(false);
 
         TooManyRequestsException thrown = assertThrows(TooManyRequestsException.class, () -> {
-            interceptor.runFilter(getContext());
+            interceptor.runFilter(openRequest());
         });
-        assertEqualsRetryAfterHeader(SecurityHoleAuthorizationFilter.ORG_NOT_CREATED_IN_CANDLEPIN, thrown);
-
+        assertRetryAfterHeader(SecurityHoleAuthorizationFilter.ORG_NOT_CREATED_IN_CANDLEPIN, thrown);
     }
 
     @Test
@@ -127,9 +135,9 @@ public class SecurityHoleAuthorizationFilterTest extends DatabaseTestFixture {
         when(mockPoolCurator.hasPoolsForProducts(anyString(), any())).thenReturn(false);
 
         TooManyRequestsException thrown = assertThrows(TooManyRequestsException.class, () -> {
-            interceptor.runFilter(getContext());
+            interceptor.runFilter(openRequest());
         });
-        assertEqualsRetryAfterHeader(SecurityHoleAuthorizationFilter.ORG_DOES_NOT_HAVE_POOLS, thrown);
+        assertRetryAfterHeader(SecurityHoleAuthorizationFilter.ORG_DOES_NOT_HAVE_POOLS, thrown);
     }
 
     @Test
@@ -140,9 +148,9 @@ public class SecurityHoleAuthorizationFilterTest extends DatabaseTestFixture {
             OrgForCloudAccountNotCreatedYetException.class);
 
         TooManyRequestsException thrown = assertThrows(TooManyRequestsException.class, () -> {
-            interceptor.runFilter(getContext());
+            interceptor.runFilter(openRequest());
         });
-        assertEqualsRetryAfterHeader(SecurityHoleAuthorizationFilter.ORG_DOES_NOT_EXIST_AT_ALL, thrown);
+        assertRetryAfterHeader(SecurityHoleAuthorizationFilter.ORG_DOES_NOT_EXIST_AT_ALL, thrown);
     }
 
     @Test
@@ -152,10 +160,9 @@ public class SecurityHoleAuthorizationFilterTest extends DatabaseTestFixture {
         when(mockCloudAdapter.checkCloudAccountOrgIsReady(anyString(), any(), anyString())).thenThrow(
             OrgForCloudAccountNotEntitledYetException.class);
 
-        TooManyRequestsException thrown = assertThrows(TooManyRequestsException.class, () -> {
-            interceptor.runFilter(getContext());
-        });
-        assertEqualsRetryAfterHeader(SecurityHoleAuthorizationFilter.ORG_IS_NOT_ENTITLED, thrown);
+        TooManyRequestsException thrown = assertThrows(TooManyRequestsException.class,
+            () -> interceptor.runFilter(openRequest()));
+        assertRetryAfterHeader(SecurityHoleAuthorizationFilter.ORG_IS_NOT_ENTITLED, thrown);
     }
 
     @Test
@@ -166,7 +173,24 @@ public class SecurityHoleAuthorizationFilterTest extends DatabaseTestFixture {
             "owner_key");
         when(mockPoolCurator.hasPoolsForProducts(anyString(), any())).thenReturn(true);
 
-        interceptor.runFilter(getContext());
+        interceptor.runFilter(openRequest());
+    }
+
+    @ParameterizedTest
+    @MethodSource("principals")
+    public void shouldForbidAccessWithoutSecurityHole(Principal principal) {
+        when(mockSecurityContext.getUserPrincipal()).thenReturn(principal);
+
+        assertThatThrownBy(() -> interceptor.runFilter(secureRequest()))
+            .isInstanceOf(ForbiddenException.class);
+    }
+
+    public static Stream<Arguments> principals() {
+        return Stream.of(
+            Arguments.of(new ActivationKeyPrincipal("keys")),
+            Arguments.of(new AnonymousCloudConsumerPrincipal(mock(AnonymousCloudConsumer.class))),
+            Arguments.of(new CloudConsumerPrincipal(new Owner()))
+        );
     }
 
     private void setupAnonymousCloudConsumerPrincipal() {
@@ -175,21 +199,63 @@ public class SecurityHoleAuthorizationFilterTest extends DatabaseTestFixture {
             .setCloudOfferingId("offering-id")
             .setCloudProviderShortName(TestUtil.randomString())
             .setProductIds(List.of("product-1"));
-        when(mockSecurityContext.getUserPrincipal()).thenReturn(mockAnonymousCloudConsumerPrincipal);
-        when(mockAnonymousCloudConsumerPrincipal.getAnonymousCloudConsumer()).thenReturn(
+        AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(
             anonymousCloudConsumer);
+        when(mockSecurityContext.getUserPrincipal()).thenReturn(principal);
     }
 
-    private void assertEqualsRetryAfterHeader(int expectedTime, TooManyRequestsException exception) {
+    private void assertRetryAfterHeader(int expectedTime, TooManyRequestsException exception) {
         assertEquals(expectedTime, exception.getRetryAfterTime());
     }
 
-    private ContainerRequestContext getContext() {
-        return new PostMatchContainerRequestContext(mockReq, null);
+    /**
+     * Creates a request to an endpoint with a security hole defined
+     *
+     * @return mocked request
+     */
+    private ContainerRequestContext openRequest() {
+        try {
+            Class clazz = ConsumerResource.class;
+            when(mockResourceInfo.getResourceClass()).thenReturn(clazz);
+
+            mockReq = MockHttpRequest.create("POST", "http://localhost/candlepin/consumers");
+            Method method = ConsumerResource.class.getMethod("createConsumer", ConsumerDTO.class,
+                String.class, String.class, String.class, Boolean.class);
+            when(mockResourceInfo.getResourceMethod()).thenReturn(method);
+
+            ResteasyContext.pushContext(ResourceInfo.class, this.mockResourceInfo);
+            ResteasyContext.pushContext(SecurityContext.class, this.mockSecurityContext);
+
+            return new PostMatchContainerRequestContext(mockReq, null);
+        }
+        catch (URISyntaxException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private Method mockResourceMethod(Method method) {
-        when(mockResourceInfo.getResourceMethod()).thenReturn(method);
-        return method;
+    /**
+     * Creates a request to a secured endpoint
+     *
+     * @return mocked request
+     */
+    private ContainerRequestContext secureRequest() {
+        try {
+            Class clazz = ConsumerResource.class;
+
+            when(mockResourceInfo.getResourceClass()).thenReturn(clazz);
+
+            mockReq = MockHttpRequest.create("POST", "http://localhost/candlepin/consumers");
+            Method method = ConsumerResource.class
+                .getMethod("listConsumerContentOverrides", String.class);
+            when(mockResourceInfo.getResourceMethod()).thenReturn(method);
+
+            ResteasyContext.pushContext(ResourceInfo.class, this.mockResourceInfo);
+            ResteasyContext.pushContext(SecurityContext.class, this.mockSecurityContext);
+
+            return new PostMatchContainerRequestContext(mockReq, null);
+        }
+        catch (URISyntaxException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

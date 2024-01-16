@@ -14,8 +14,6 @@
  */
 package org.candlepin.auth;
 
-import org.candlepin.auth.permissions.OwnerPermission;
-import org.candlepin.auth.permissions.Permission;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.ConversionException;
@@ -34,8 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -134,7 +130,7 @@ public class CloudRegistrationAuth implements AuthProvider {
                 }
 
                 log.info("Token type used for authentication: {}", CloudAuthTokenType.STANDARD);
-                return this.createCloudUserPrincipal(subject, ownerKey);
+                return this.createPrincipal(ownerKey);
             }
         }
         catch (VerificationException e) {
@@ -149,33 +145,20 @@ public class CloudRegistrationAuth implements AuthProvider {
     }
 
     /**
-     * Creates a dummy user principal with the minimum amount of information and access to complete a
-     * user registration. The username of the principal will be the subject provided.
-     *
-     * @param subject
-     *     the subject for which to create the principal; will be used as the username
+     * Creates a principal with the minimum amount of information and access to complete a
+     * user registration.
      *
      * @param ownerKey
-     *     the key of an organization in which the principal will have authorization to register clients
-     *
-     * @return a minimal UserPrincipal representing the cloud registration token
+     *  the key of an organization in which the principal will have authorization to register clients
+     * @return
+     *  a minimal {@link Principal} representing the cloud registration token
      */
-    private UserPrincipal createCloudUserPrincipal(String subject, String ownerKey) {
+    private CloudConsumerPrincipal createPrincipal(String ownerKey) {
         Owner owner = this.ownerCurator.getByKey(ownerKey);
-        if (owner == null) {
-            // If the owner does not exist, we might be creating it on client registration, so
-            // make a fake owner to pass into our permission object
-            owner = new Owner()
-                .setKey(ownerKey)
-                .setDisplayName(ownerKey);
+        if (owner != null) {
+            return new CloudConsumerPrincipal(owner);
         }
-
-        List<Permission> permissions = Arrays.asList(
-            new OwnerPermission(owner, Access.CREATE)
-        // Add any additional permissions here as needed
-        );
-
-        return new UserPrincipal(subject, permissions, false, null, AuthenticationMethod.CLOUD);
+        return null;
     }
 
 }

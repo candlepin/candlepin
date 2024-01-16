@@ -915,7 +915,7 @@ public class ConsumerResource implements ConsumerApi {
 
     @Override
     @Transactional
-    @SecurityHole(activationKey = true, anonConsumer = true)
+    @SecurityHole(activationKey = true, autoregToken = true)
     public ConsumerDTO createConsumer(ConsumerDTO dto, String userName, String ownerKey,
         String activationKeys, Boolean identityCertCreation) {
 
@@ -1410,9 +1410,16 @@ public class ConsumerResource implements ConsumerApi {
 
         createOwnerIfNeeded(principal);
 
-        Owner owner = ownerCurator.getByKey(ownerKey);
-        if (owner == null) {
+        Owner origOwner = ownerCurator.getByKey(ownerKey);
+        if (origOwner == null) {
             throw new BadRequestException(i18n.tr("Organization {0} does not exist.", ownerKey));
+        }
+        Owner owner;
+        if (Boolean.TRUE.equals(origOwner.getClaimed()) && origOwner.getClaimantOwner() != null) {
+            owner = ownerCurator.getByKey(origOwner.getClaimantOwner());
+        }
+        else {
+            owner = origOwner;
         }
 
         // Check permissions for current principal on the owner:
