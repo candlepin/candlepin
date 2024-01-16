@@ -247,6 +247,33 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testCreateConsumerForClaimedOwner() {
+        Owner claimedOwner = this.ownerCurator.saveOrUpdate(createOwner()
+            .setClaimed(true).setClaimantOwner(owner.getKey()));
+        ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, toDto(claimedOwner),
+            standardSystemTypeDTO);
+        toSubmit.putFactsItem(METADATA_NAME, METADATA_VALUE);
+        ConsumerDTO submitted = consumerResource.createConsumer(
+            toSubmit,
+            someuser.getUsername(),
+            owner.getKey(), null, true);
+
+        assertNotNull(submitted);
+        assertNotNull(consumerCurator.get(submitted.getId()));
+        assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
+        assertEquals(METADATA_VALUE, consumerResource.getFactValue(submitted.getFacts(), METADATA_NAME));
+        assertEquals(owner.getKey(), submitted.getOwner().getKey());
+    }
+
+    private static OwnerDTO toDto(Owner owner) {
+        return new OwnerDTO()
+            .key(owner.getKey())
+            .displayName(owner.getDisplayName())
+            .claimed(owner.getClaimed())
+            .claimantOwner(owner.getClaimantOwner());
+    }
+
+    @Test
     @SuppressWarnings("checkstyle:indentation")
     public void testCreateConsumerVsDefaultServiceLevelForOwner() {
         ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
