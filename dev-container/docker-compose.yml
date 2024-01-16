@@ -22,7 +22,7 @@ services:
     container_name: candlepin
     environment:
       JPA_CONFIG_HIBERNATE_CONNECTION_URL: jdbc:postgresql://postgres/candlepin
-      CANDLEPIN_AUTH_CLOUD_ENABLE: "false"
+      CANDLEPIN_AUTH_CLOUD_ENABLE: "true"
       CANDLEPIN_AUTH_TRUSTED_ENABLE: "true"
       CANDLEPIN_STANDALONE: "false"
       MODULE_CONFIG_HOSTED_CONFIGURATION_MODULE: org.candlepin.testext.hostedtest.HostedTestModule
@@ -30,7 +30,7 @@ services:
     ports:
       - "8443:8443"
     healthcheck:
-      test: wget --tries=1 --spider https://localhost:8443/candlepin/status || exit 1
+      test: curl --fail -k https://localhost:8443/candlepin/status || exit 1
       timeout: 5s
       retries: 10
       start_period: 30s
