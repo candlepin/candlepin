@@ -4,6 +4,7 @@
 # 1. docker installed
 # 2. docker-compose installed
 # 3. run the script using sudo
+# 4. In ./dev-container/docker-compose.yml set CANDLEPIN_AUTH_CLOUD_ENABLE to "true"
 
 echo -e "Demo description: This demo will be walking through the automatic registration version 2 functionality for Candlepin. 
 This demo includes the content access portion of the automatic registration version 2 functionality and the cloud account 
@@ -39,7 +40,7 @@ echo -e "curl -k -H "Content-Type: application/json" -d '{"type":"test-type", "s
 curl -k -H "Content-Type: application/json" -d '{"type":"test-type", "signature":"signature", "metadata":"{\"accountId\":\"account-1\", \"instanceId\":\"instance-1\", \"cloudOfferingId\": \"offer-1\"}"}' -X POST -u admin:admin https://localhost:8443/candlepin/cloud/authorize?version=2
 sleep 1
 
-echo -e "\nWe recieve an anonymous bearer token because Candlepin does not yet have an anonymous organization to register the system to. This bearer token can then be used to get an anonymous content access certificate for content access now and to attempt to register when the anonymous org is created. 
+echo -e "\nWe receive an anonymous bearer token because Candlepin does not yet have an anonymous organization to register the system to. This bearer token can then be used to get an anonymous content access certificate for content access now and to attempt to register when the anonymous org is created. 
 We can now attempt to register using the anonymous token while the anonymous organization does not exist. \n"
 
 read -p "press key to continue"
