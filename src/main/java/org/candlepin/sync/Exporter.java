@@ -32,7 +32,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -41,7 +40,6 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.version.VersionUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -82,7 +80,6 @@ public class Exporter {
     private MetaExporter meta;
     private ConsumerExporter consumerExporter;
     private ProductExporter productExporter;
-    private ProductCertExporter productCertExporter;
     private ConsumerTypeExporter consumerType;
     private RulesExporter rules;
     private EntitlementExporter entExporter;
@@ -111,7 +108,7 @@ public class Exporter {
         ConsumerExporter consumerExporter, ConsumerTypeExporter consumerType,
         RulesExporter rules,
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
-        ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
+        ProductServiceAdapter productAdapter,
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter,
         PKIUtility pki, Configuration config, ExportRules exportRules,
         PrincipalProvider principalProvider, DistributorVersionCurator distVerCurator,
@@ -132,7 +129,6 @@ public class Exporter {
         this.entCertAdapter = entCertAdapter;
         this.productExporter = productExporter;
         this.productAdapter = productAdapter;
-        this.productCertExporter = productCertExporter;
         this.entitlementCurator = entitlementCurator;
         this.entExporter = entExporter;
         this.pki = pki;
@@ -505,23 +501,6 @@ public class Exporter {
             File file = new File(path, productId + ".json");
             try (FileWriter writer = new FileWriter(file)) {
                 productExporter.export(mapper, writer, product);
-            }
-
-            // Real products have a numeric id.
-            if (StringUtils.isNumeric(product.getId())) {
-                Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
-
-                CertificateInfo cert = productAdapter.getProductCertificate(owner.getKey(), product.getId());
-
-                // XXX: not all product adapters implement getProductCertificate,
-                // so just skip over this if we get null back
-                // XXX: need to decide if the cert should always be in the export, or never.
-                if (cert != null) {
-                    file = new File(productDir.getCanonicalPath(), product.getId() + ".pem");
-                    try (FileWriter writer = new FileWriter(file)) {
-                        productCertExporter.export(writer, cert);
-                    }
-                }
             }
         }
     }

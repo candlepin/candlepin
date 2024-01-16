@@ -16,6 +16,8 @@ package org.candlepin.model;
 
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.annotations.QueryHints;
+
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -23,6 +25,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import javax.inject.Singleton;
+import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 
@@ -51,17 +54,62 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
     }
 
     /**
-     * Deletes all revoked cert serials that have expired.
+     * Deletes all cert serials that are both revoked AND expired, and are NOT referenced by any table.
      *
      * @return the total number of serials that were deleted.
      */
     @Transactional
     public int deleteRevokedExpiredSerials() {
-        String hql = "DELETE FROM CertificateSerial c WHERE c.revoked = true" +
-            " AND c.expiration < :cutoff";
-        Query query = this.getEntityManager().createQuery(hql);
-        query.setParameter("cutoff", getExpiryRestriction());
-        return query.executeUpdate();
+        EntityManager entityManager = this.getEntityManager();
+
+        // Impl. note: Under normal circumstances, we should not have to worry about deleting revoked
+        // serials being referenced in any certificate table, because the corresponding certificate is
+        // always deleted when the serial is revoked. However, this avoids bugs such as 2229095, where bad
+        // data caused by accident/bug could make this query fail.
+        //
+        // Also, there doesn't seem to be a way to do this kind of query with JQPL, so we're using native
+        // SQL, and MariaDB does not like table aliases in delete statements, so we have to do this
+        // in 2 queries (select, then delete).
+        List<String> nativeSpaces = List.of(CertificateSerial.class.getName(),
+            SubscriptionsCertificate.class.getName(),
+            EntitlementCertificate.class.getName(),
+            CdnCertificate.class.getName(),
+            IdentityCertificate.class.getName(),
+            ContentAccessCertificate.class.getName(),
+            AnonymousContentAccessCertificate.class.getName(),
+            UeberCertificate.class.getName());
+        String fetchSQL = "SELECT cs.id FROM cp_cert_serial cs " +
+            "LEFT JOIN cp_certificate subc ON cs.id = subc.serial_id " +
+            "LEFT JOIN cp_ent_certificate entc ON cs.id = entc.serial_id " +
+            "LEFT JOIN cp_cdn_certificate cdnc ON cs.id = cdnc.serial_id " +
+            "LEFT JOIN cp_id_cert idc ON cs.id = idc.serial_id " +
+            "LEFT JOIN cp_cont_access_cert scac ON cs.id = scac.serial_id " +
+            "LEFT JOIN cp_anonymous_certificates anonc ON cs.id = anonc.serial_id " +
+            "LEFT JOIN cp_ueber_cert uebc ON cs.id = uebc.serial_id " +
+            "WHERE cs.revoked = true " +
+            "AND cs.expiration < ? " +
+            "AND subc.serial_id IS NULL " +
+            "AND entc.serial_id IS NULL " +
+            "AND cdnc.serial_id IS NULL " +
+            "AND idc.serial_id IS NULL " +
+            "AND scac.serial_id IS NULL " +
+            "AND anonc.serial_id IS NULL " +
+            "AND uebc.serial_id IS NULL;";
+        List<Long> serials = entityManager.createNativeQuery(fetchSQL)
+            .setHint(QueryHints.NATIVE_SPACES, nativeSpaces)
+            .setParameter(1, getExpiryRestriction())
+            .getResultList();
+
+        String deleteSQL = "DELETE FROM cp_cert_serial WHERE id IN (:serials_to_delete)";
+        nativeSpaces = List.of(CertificateSerial.class.getName());
+        int deleted = 0;
+        for (List<Long> serialsToDeleteBlock : this.partition(serials)) {
+            deleted += entityManager.createNativeQuery(deleteSQL)
+                .setHint(QueryHints.NATIVE_SPACES, nativeSpaces)
+                .setParameter("serials_to_delete", serialsToDeleteBlock)
+                .executeUpdate();
+        }
+        return deleted;
     }
 
     @SuppressWarnings("unchecked")

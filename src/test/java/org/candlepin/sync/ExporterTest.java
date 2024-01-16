@@ -33,6 +33,7 @@ import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
+import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
@@ -55,7 +56,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.pki.PKIUtility;
@@ -115,7 +115,6 @@ public class ExporterTest {
     private EntitlementCertServiceAdapter ecsa;
     private ProductExporter pe;
     private ProductServiceAdapter psa;
-    private ProductCertExporter pce;
     private EntitlementCurator ec;
     private DistributorVersionCurator dvc;
     private DistributorVersionExporter dve;
@@ -145,7 +144,6 @@ public class ExporterTest {
         ecsa = mock(EntitlementCertServiceAdapter.class);
         pe = new ProductExporter(translator);
         psa = mock(ProductServiceAdapter.class);
-        pce = new ProductCertExporter();
         ec = mock(EntitlementCurator.class);
         ee = new EntitlementExporter(translator);
         pki = mock(PKIUtility.class);
@@ -193,50 +191,43 @@ public class ExporterTest {
 
         Owner owner = TestUtil.createOwner("Example-Corporation");
 
-        Product prod = TestUtil.createProduct("12345", "RHEL Product");
-        prod.setMultiplier(1L);
-        prod.setCreated(new Date());
-        prod.setUpdated(new Date());
-        prod.setAttributes(Collections.<String, String>emptyMap());
+        Product prod12345 = TestUtil.createProduct("12345", "RHEL Product");
+        prod12345.setMultiplier(1L);
+        prod12345.setCreated(new Date());
+        prod12345.setUpdated(new Date());
+        prod12345.setAttributes(Collections.<String, String>emptyMap());
 
-        Product prod1 = TestUtil.createProduct("MKT-prod", "RHEL Product");
-        prod1.setMultiplier(1L);
-        prod1.setCreated(new Date());
-        prod1.setUpdated(new Date());
-        prod1.setAttributes(Collections.<String, String>emptyMap());
+        Product mktProd = TestUtil.createProduct("MKT-prod", "RHEL Product");
+        mktProd.setMultiplier(1L);
+        mktProd.setCreated(new Date());
+        mktProd.setUpdated(new Date());
+        mktProd.setAttributes(Collections.<String, String>emptyMap());
 
-        Product subProduct = TestUtil.createProduct("MKT-sub-prod", "Sub Product");
-        subProduct.setMultiplier(1L);
-        subProduct.setCreated(new Date());
-        subProduct.setUpdated(new Date());
-        subProduct.setAttributes(Collections.<String, String>emptyMap());
+        Product mktSubProd = TestUtil.createProduct("MKT-sub-prod", "Sub Product");
+        mktSubProd.setMultiplier(1L);
+        mktSubProd.setCreated(new Date());
+        mktSubProd.setUpdated(new Date());
+        mktSubProd.setAttributes(Collections.<String, String>emptyMap());
 
-        Product subProvidedProduct = TestUtil.createProduct("332211", "Sub Product");
-        subProvidedProduct.setMultiplier(1L);
-        subProvidedProduct.setCreated(new Date());
-        subProvidedProduct.setUpdated(new Date());
-        subProvidedProduct.setAttributes(Collections.<String, String>emptyMap());
+        Product subProvidedProduct332211 = TestUtil.createProduct("332211", "Sub Product");
+        subProvidedProduct332211.setMultiplier(1L);
+        subProvidedProduct332211.setCreated(new Date());
+        subProvidedProduct332211.setUpdated(new Date());
+        subProvidedProduct332211.setAttributes(Collections.<String, String>emptyMap());
 
-        prod1.addProvidedProduct(prod);
-        prod1.setDerivedProduct(subProduct);
-        subProduct.addProvidedProduct(subProvidedProduct);
-
-        ProductCertificate pcert = new ProductCertificate();
-        pcert.setKey("euh0876puhapodifbvj094");
-        pcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
-        pcert.setCreated(new Date());
-        pcert.setUpdated(new Date());
+        mktProd.addProvidedProduct(prod12345);
+        mktProd.setDerivedProduct(mktSubProd);
+        mktSubProd.addProvidedProduct(subProvidedProduct332211);
 
         Pool pool = TestUtil.createPool(owner)
             .setId("MockedPoolId")
-            .setProduct(prod1);
+            .setProduct(mktProd);
 
         when(ent.getPool()).thenReturn(pool);
         when(mrules.getRules()).thenReturn("foobar");
         when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(consumer.getEntitlements()).thenReturn(entitlements);
-        when(psa.getProductCertificate(any(String.class), any(String.class))).thenReturn(pcert);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
         idcert.setSerial(new CertificateSerial(10L, new Date()));
@@ -266,23 +257,25 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
 
         File export = e.getFullExport(consumer, null, null, null);
 
         // VERIFY
         assertNotNull(export);
-        verifyContent(export, "export/products/12345.pem", new VerifyProductCert("12345.pem"));
-        assertFalse(verifyHasEntry(export, "export/products/MKT-prod.pem"));
+        verifyContent(export, "export/products/12345.json", new VerifyProduct("12345.json", prod12345));
+        verifyContent(export, "export/products/MKT-prod.json", new VerifyProduct("MKT-prod.json", mktProd));
 
-        verifyContent(export, "export/products/332211.pem", new VerifyProductCert("332211.pem"));
-        assertFalse(verifyHasEntry(export, "export/products/MKT-sub-prod.pem"));
+        verifyContent(export, "export/products/332211.json",
+            new VerifyProduct("332211.json", subProvidedProduct332211));
+        verifyContent(export, "export/products/MKT-sub-prod.json",
+            new VerifyProduct("MKT-sub-prod.json", mktSubProd));
 
         FileUtils.deleteDirectory(export.getParentFile());
         assertTrue(new File("/tmp/consumer_export.zip").delete());
-        assertTrue(new File("/tmp/12345.pem").delete());
-        assertTrue(new File("/tmp/332211.pem").delete());
+        assertTrue(new File("/tmp/12345.json").delete());
+        assertTrue(new File("/tmp/332211.json").delete());
     }
 
     @Test
@@ -320,7 +313,7 @@ public class ExporterTest {
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
 
         assertThrows(ExportCreationException.class, () -> e.getFullExport(consumer, null, null, null));
@@ -363,7 +356,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null);
 
@@ -416,7 +409,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null);
 
@@ -475,7 +468,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null);
 
@@ -540,7 +533,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null);
 
@@ -593,7 +586,7 @@ public class ExporterTest {
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getEntitlementExport(consumer, null);
 
@@ -654,7 +647,7 @@ public class ExporterTest {
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         Set<Long> serials = new HashSet<>();
         serials.add(12345678910L);
@@ -717,7 +710,7 @@ public class ExporterTest {
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         Set<Long> serials = new HashSet<>();
         serials.add(entSerial.getId());
@@ -780,7 +773,7 @@ public class ExporterTest {
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         Set<Long> serials = new HashSet<>();
         serials.add(cacSerial.getId());
@@ -930,11 +923,13 @@ public class ExporterTest {
         }
     }
 
-    public static class VerifyProductCert implements Verify {
+    public static class VerifyProduct implements Verify {
         private String filename;
+        private Product originalProduct;
 
-        public VerifyProductCert(String filename) {
+        public VerifyProduct(String filename, Product originalProduct) {
             this.filename = filename;
+            this.originalProduct = originalProduct;
         }
 
         public void verify(ZipInputStream zis, byte[] buf) throws IOException {
@@ -946,9 +941,18 @@ public class ExporterTest {
             os.flush();
             os.close();
 
-            BufferedReader br = new BufferedReader(new FileReader("/tmp/" + filename));
-            assertEquals("hpj-08ha-w4gpoknpon*)&^%#", br.readLine());
-            br.close();
+            DevConfig config = TestConfig.custom(Map.of(
+                ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"));
+
+            ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
+
+            ProductDTO prod = mapper.readValue(new FileInputStream("/tmp/" + filename), ProductDTO.class);
+
+            assertEquals(originalProduct.getId(), prod.getId());
+            assertEquals(originalProduct.getName(), prod.getName());
+            assertEquals(originalProduct.getMultiplier(), prod.getMultiplier());
+            assertEquals(originalProduct.getCreated(), prod.getCreated());
+            assertEquals(originalProduct.getUpdated(), prod.getUpdated());
         }
     }
 

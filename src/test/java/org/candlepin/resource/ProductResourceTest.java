@@ -30,13 +30,11 @@ import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.server.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCertificate;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -88,25 +86,6 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
         assertNotNull(result);
         assertEquals(result, expected);
-    }
-
-    @Test
-    public void testGetProductCertificateByUuid() {
-        Owner owner = this.createOwner("Example-Corporation");
-
-        Product entity = this.createProduct();
-        // ensure we check SecurityHole
-        securityInterceptor.enable();
-
-        ProductCertificate cert = new ProductCertificate();
-        cert.setCert("some text");
-        cert.setKey("some key");
-        cert.setProduct(entity);
-        productCertificateCurator.create(cert);
-
-        ProductCertificateDTO cert1 = productResource.getProductCertificateByUuid(entity.getUuid());
-        ProductCertificateDTO expected = this.modelTranslator.translate(cert, ProductCertificateDTO.class);
-        assertEquals(cert1, expected);
     }
 
     private List<Owner> setupDBForOwnerProdTests() {

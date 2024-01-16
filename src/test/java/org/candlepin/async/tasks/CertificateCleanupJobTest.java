@@ -27,9 +27,9 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
+import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,50 +42,44 @@ import java.util.Set;
 class CertificateCleanupJobTest extends DatabaseTestFixture {
 
     private static final Date VALID = TestUtil.createDateOffset(2, 0, 0);
-    private static final Date EXPIRED = Util.yesterday();
+    private static final Date EXPIRED = TestUtil.createDateOffset(0, 0, -10);
 
     private Owner owner;
-    private ConsumerType ct;
-    private Consumer consumer1;
-    private Consumer consumer2;
-    private Consumer consumer3;
-    private Consumer consumer4;
 
     private CertificateCleanupJob job;
 
     @BeforeEach
     public void setUp() {
         this.owner = this.createOwner("test-owner", "Test Owner");
-        this.ct = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
-        this.ct = this.consumerTypeCurator.create(ct);
-
-        this.consumer1 = createConsumer(VALID, VALID);
-        this.consumer2 = createConsumer(EXPIRED, VALID);
-        this.consumer3 = createConsumer(VALID, EXPIRED);
-        this.consumer4 = createConsumer(EXPIRED, EXPIRED);
-
         job = injector.getInstance(CertificateCleanupJob.class);
     }
 
     @Test
-    void shouldCleanExpiredCertificates() throws JobExecutionException {
+    void shouldCleanExpiredIdentityAndSimpleContentAccessCertificates() throws JobExecutionException {
+        ConsumerType consumerType = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
+        consumerType = this.consumerTypeCurator.create(consumerType);
+        Consumer consumer1 = createConsumer(consumerType, VALID, VALID);
+        Consumer consumer2 = createConsumer(consumerType, EXPIRED, VALID);
+        Consumer consumer3 = createConsumer(consumerType, VALID, EXPIRED);
+        Consumer consumer4 = createConsumer(consumerType, EXPIRED, EXPIRED);
+
         job.execute(null);
         this.consumerCurator.flush();
         this.consumerCurator.clear();
 
-        Consumer consumer1 = findConsumer(this.consumer1);
+        consumer1 = findConsumer(consumer1);
         assertNotNull(consumer1.getIdCert());
         assertNotNull(consumer1.getContentAccessCert());
 
-        Consumer consumer2 = findConsumer(this.consumer2);
+        consumer2 = findConsumer(consumer2);
         assertNull(consumer2.getIdCert());
         assertNotNull(consumer2.getContentAccessCert());
 
-        Consumer consumer3 = findConsumer(this.consumer3);
+        consumer3 = findConsumer(consumer3);
         assertNotNull(consumer3.getIdCert());
         assertNull(consumer3.getContentAccessCert());
 
-        Consumer consumer4 = findConsumer(this.consumer4);
+        consumer4 = findConsumer(consumer4);
         assertNull(consumer4.getIdCert());
         assertNull(consumer4.getContentAccessCert());
     }
@@ -93,7 +87,6 @@ class CertificateCleanupJobTest extends DatabaseTestFixture {
     @Test
     public void shouldCleanExpiredAnonymousCertificatesButNotDeleteAnonConsumer()
         throws JobExecutionException {
-
         CertificateSerial expiredSerial = new CertificateSerial();
         expiredSerial.setExpiration(TestUtil.createDateOffset(0, 0, -7));
         certSerialCurator.create(expiredSerial);
@@ -157,16 +150,40 @@ class CertificateCleanupJobTest extends DatabaseTestFixture {
             .isNotNull();
     }
 
+    @Test
+    void shouldNotFailWithForeignKeyViolationWhenCleaningUpExpiredAndRevokedSerials()
+        throws JobExecutionException {
+
+        SubscriptionsCertificate subsCert = new SubscriptionsCertificate()
+                .setCreated(new Date())
+                .setUpdated(new Date());
+        subsCert.setKey("key_abc");
+        subsCert.setCert("cert_abcd");
+        CertificateSerial expiredSerial = new CertificateSerial();
+        expiredSerial.setExpiration(TestUtil.createDateOffset(0, 0, -7));
+        subsCert.setSerial(expiredSerial);
+
+        // This should NEVER happen under normal circumstances. Subscription Certificates are not revocable
+        // through any normal code path, and this could only happen through a db schema upgrade accident.
+        expiredSerial.setRevoked(Boolean.TRUE);
+
+        this.subscriptionsCertificateCurator.create(subsCert);
+
+        // This should not fail with a FK violation, even though we have an expired+revoked serial
+        // that is still referenced with a foreign key in another table (cp_certificate
+        job.execute(null);
+    }
+
     private Consumer findConsumer(Consumer consumer) {
         return this.consumerCurator.getConsumer(consumer.getUuid());
     }
 
-    private Consumer createConsumer(Date idExpiration, Date caExpiration) {
+    private Consumer createConsumer(ConsumerType consumerType, Date idExpiration, Date caExpiration) {
         Consumer consumer = new Consumer()
             .setName("c1")
             .setUsername("u1")
             .setOwner(owner)
-            .setType(ct)
+            .setType(consumerType)
             .setIdCert(createIdCert(idExpiration))
             .setContentAccessCert(createContentAccessCert(caExpiration));
 
