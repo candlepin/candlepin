@@ -6720,39 +6720,6 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
-  /products/{product_uuid}/certificate:
-    get:
-      description: Retrieves a Certificate for a Product
-      tags:
-        - products
-      operationId: getProductCertificateByUuid
-      parameters:
-        - in: path
-          name: product_uuid
-          description: The product UUID
-          required: true
-          schema:
-            type: string
-      security: []
-      responses:
-        200:
-          description: A product certificate
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductCertificateDTO'
-        404:
-          description: Product not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Product not found
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
   /pools:
     get:
       description: |

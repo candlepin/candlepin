@@ -528,6 +528,15 @@ public class OwnerProductResource implements OwnerProductApi {
         return this.translator.translate(product, ProductDTO.class);
     }
 
+    /**
+     * Generating product certificates for dev/testing is the only purpose for this endpoint.
+     * It is not used in production in any capacity (product certificates themselves are not used in
+     * production, in any capacity).
+     *
+     * @param ownerKey the owner key for which the product is scoped for
+     * @param productId the product ID for which a certificate is to be fetched
+     * @return a product certificate (generating one if one does not exist for the given product id)
+     */
     @Override
     @Transactional
     public ProductCertificateDTO getProductCertificateById(String ownerKey, String productId) {

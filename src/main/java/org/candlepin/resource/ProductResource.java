@@ -22,7 +22,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.server.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
@@ -30,7 +29,6 @@ import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.resource.server.v1.ProductsApi;
@@ -109,17 +107,6 @@ public class ProductResource implements ProductsApi {
     public ProductDTO getProductByUuid(String productUuid) {
         Product product = this.fetchProduct(productUuid);
         return this.translator.translate(product, ProductDTO.class);
-    }
-
-    @Override
-    @SecurityHole
-    public ProductCertificateDTO getProductCertificateByUuid(String productUuid) {
-        // TODO:
-        // Should this be enabled globally? This will create a cert if it hasn't yet been created.
-
-        Product product = this.fetchProduct(productUuid);
-        ProductCertificate productCertificate = this.productCertCurator.getCertForProduct(product);
-        return this.translator.translate(productCertificate, ProductCertificateDTO.class);
     }
 
     @Override
