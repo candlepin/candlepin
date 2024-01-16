@@ -5,10 +5,10 @@
 # 2. docker-compose installed
 # 3. run the script using sudo
 
-# echo -e "Demo description: This demo will be walking through the automatic registration version 2 functionality for Candlepin. 
-# This demo includes the content access portion of the automatic registration version 2 functionality and the cloud account 
-# claiming process. This script is intended to be placed in the root directory of the candlepin project (https://github.com/candlepin/candlepin) 
-# to properly setup the environment and run the demo. \n"
+echo -e "Demo description: This demo will be walking through the automatic registration version 2 functionality for Candlepin. 
+This demo includes the content access portion of the automatic registration version 2 functionality and the cloud account 
+claiming process. This script is intended to be placed in the root directory of the candlepin project (https://github.com/candlepin/candlepin) 
+to properly setup the environment and run the demo. \n"
 
 read -p "press key to continue"
 
@@ -83,7 +83,7 @@ sleep 1
 
 echo -e "\ncreating owner in Candlepin...\n"
 
-curl -k -H "Content-Type: application/json" -d '{"displayName":"Test account 1","key":"account-1","contentAccessMode":"entitlement","contentAccessModeList":"entitlement,org_environment"}' -X POST -u admin:admin https://localhost:8443/candlepin/owners
+curl -k -H "Content-Type: application/json" -d '{"displayName":"Test account 1","key":"account-1","contentAccessMode":"entitlement","contentAccessModeList":"entitlement,org_environment", "anonymous":"true"}' -X POST -u admin:admin https://localhost:8443/candlepin/owners
 sleep 1
 
 echo -e "\ncreating product in Candlepin...\n"
@@ -108,3 +108,32 @@ sleep 3
 echo -e "\nWe successfully register to the anonymous organization and get a content access certificate! This concludes the fast content access portion of the automatic registration v2
 functionality."
 
+######### Starting the claim process #########
+
+echo -e "\nThe customer eventually can create a Red Hat account and link this newly created Red Hat account to their cloud provider account. When they do this, we initiate a claiming process. 
+This claiming process migrates systems that were registered in the anonymous organization to the claimant organization. First lets create the claimant organization in Candlepin.\n"
+
+read -p "press key to continue"
+
+curl -k -H "Content-Type: application/json" -d '{"displayName":"claimant org","key":"claimant-org","contentAccessMode":"entitlement","contentAccessModeList":"entitlement,org_environment"}' -X POST -u admin:admin https://localhost:8443/candlepin/owners
+sleep 1
+
+echo -e "\nNow that the claimant organization is created, we can claim the anonymous organization and migrate the systems.\n"
+
+read -p "press key to continue"
+
+curl -k -H "Content-Type: application/json" -d '{"claimant_owner_key":"claimant-org"}' -X PUT -u admin:admin https://localhost:8443/candlepin/owners/account-1/claim
+sleep 1
+
+echo -e "\nThis move the anonymous organization into a claimed state and will kick off an asynchronous job to migrate the consumers. Let's wait 5 seconds for the job to complete.\n"
+
+sleep 5
+
+echo -e "\nNow lets see if the systems have been migrated to the claimant organization.\n"
+
+curl -k -u admin:admin https://localhost:8443/candlepin/owners/claimant-org/consumers
+sleep 1
+
+echo -e "\nWe can now see our system under the claimant organization! This concludes the Candlepin's claiming functionality for automatic registration v2.\n"
+
+echo -e "\nLet me know if there are any questions!\n"
