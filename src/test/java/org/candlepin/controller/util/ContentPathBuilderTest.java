@@ -63,7 +63,9 @@ class ContentPathBuilderTest {
             Arguments.of(OWNER_2, null, CONTENT_1, "ftp://ftp.site.com/content/path/to/content1"),
             Arguments.of(null, null, CONTENT_1, "/path/to/content1"),
             Arguments.of(null, ENV_1, CONTENT_1, "/env1/envprefix/path/to/content1"),
-            Arguments.of(null, null, CONTENT_1, "/path/to/content1")
+            Arguments.of(null, null, CONTENT_1, "/path/to/content1"),
+            Arguments.of("ftp://org_prefix", "qwert://env_prefix", "/path/to/content",
+                "qwert://env_prefix/path/to/content")
         );
     }
 
@@ -209,7 +211,7 @@ class ContentPathBuilderTest {
                 "https://redhat.com/owner/env/content"),
             Arguments.of("https://redhat.com:8443///owner", "env", "content",
                 "https://redhat.com:8443/owner/env/content"),
-            Arguments.of("", "", "https://redhat.com:8443", "https://redhat.com:8443/")
+            Arguments.of("", "", "https://redhat.com:8443", "https://redhat.com:8443")
         );
     }
 
