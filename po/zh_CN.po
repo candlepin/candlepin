@@ -4,21 +4,22 @@
 # Charles Lee <lchopn@gmail.com>, 2021, 2023.
 # Transtats <suanand@redhat.com>, 2022.
 # John Sefler <jsefler@redhat.com>, 2023.
+# Jingge Chen <mariocanfly@hotmail.com>, 2023.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-09-28 07:07+0000\n"
-"PO-Revision-Date: 2023-04-21 10:20+0000\n"
-"Last-Translator: Charles Lee <lchopn@gmail.com>\n"
+"PO-Revision-Date: 2023-12-09 12:43+0000\n"
+"Last-Translator: Jingge Chen <mariocanfly@hotmail.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
-"projects/candlepin/master/zh_CN/>\n"
+"projects/candlepin/candlepin-4-3-hotfix/zh_CN/>\n"
 "Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.15.2\n"
+"X-Generator: Weblate 5.2.1\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -26,16 +27,14 @@ msgstr "尝试针对不存在的组织密钥“ {}”进行修复"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:92
 #: src/main/java/org/candlepin/controller/Entitler.java:229
-#, fuzzy, java-format
-#| msgid "Auto-attach is disabled for owner \"{0}\"."
+#, java-format
 msgid "Auto-attach is disabled for owner {0}"
-msgstr "所有者 \"{0}\" 的自动附件功能已被禁用。"
+msgstr "所有者 {0} 的自动附加功能已被禁用。"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:97
-#, fuzzy, java-format
-#| msgid "Auto-attach is disabled for owner \"{0}\"."
+#, java-format
 msgid "Auto-attach is disabled for owner {0} while using simple content access"
-msgstr "所有者 \"{0}\" 的自动附件功能已被禁用。"
+msgstr "使用简单内容访问时，所有者 {0} 的自动附加功能被禁用"
 
 #: src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:140
 #, java-format
@@ -347,10 +346,9 @@ msgid ""
 msgstr "未映射的虚拟机权限尚未建立主机/虚拟机映射就已过期。"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:237
-#, fuzzy, java-format
-#| msgid "Auto-attach is disabled for owner \"{0}\"."
+#, java-format
 msgid "Auto-attach is disabled for hypervisors of owner {0}"
-msgstr "所有者 \"{0}\" 的自动附件功能已被禁用。"
+msgstr "所有者 {0} 的管理程序已禁用自动附加功能"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:303
 #: src/main/java/org/candlepin/controller/Entitler.java:504
@@ -448,27 +446,27 @@ msgstr "无法找到 ID 是 \"{0}\" 的产品。"
 
 #: src/main/java/org/candlepin/model/Pool.java:168
 msgid "Other"
-msgstr ""
+msgstr "其他"
 
 #: src/main/java/org/candlepin/model/Pool.java:169
 msgid "Standard"
-msgstr ""
+msgstr "标准"
 
 #: src/main/java/org/candlepin/model/Pool.java:170
 msgid "Instance Based"
-msgstr ""
+msgstr "基于实例"
 
 #: src/main/java/org/candlepin/model/Pool.java:171
 msgid "Stackable"
-msgstr ""
+msgstr "可堆叠"
 
 #: src/main/java/org/candlepin/model/Pool.java:172
 msgid "Stackable only with other subscriptions"
-msgstr ""
+msgstr "只能与其他订阅叠加使用"
 
 #: src/main/java/org/candlepin/model/Pool.java:173
 msgid "Multi-Entitleable"
-msgstr ""
+msgstr "多授权"
 
 #: src/main/java/org/candlepin/model/RulesCurator.java:111
 msgid "No rules file found in the database"
@@ -1642,7 +1640,7 @@ msgstr "用户已存在：{0}"
 #: src/main/java/org/candlepin/resource/util/CalculatedAttributesUtil.java:55
 #, java-format
 msgid "{0} (Temporary)"
-msgstr ""
+msgstr "{0} (临时的)"
 
 #: src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:153
 msgid ""
