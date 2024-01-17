@@ -1070,20 +1070,19 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @RootResource.LinkedResource
     public Stream<EnvironmentDTO> listEnvironments(
         @Verify(Owner.class) String ownerKey, String envName, List<String> type, Boolean listAll) {
-        Owner owner = findOwnerByKey(ownerKey);
-        // defaults to false on null
-        listAll = listAll != null && listAll;
-        List<Environment> envs;
-        if (listAll) {
-            envs = envCurator.listAllTypes(owner, envName);
-        }
-        else {
-            envs = envCurator.listByType(owner, envName, type == null || type.size() == 0 ? null : type);
-        }
+
+        Owner owner = this.findOwnerByKey(ownerKey);
+
+        List<Environment> envs = (listAll != null && listAll) ?
+            this.envCurator.listAllTypes(owner, envName) :
+            this.envCurator.listByType(owner, envName, type == null || type.size() == 0 ? null : type);
+
         Stream<EnvironmentDTO> stream = envs.stream()
             .map(this.translator.getStreamMapper(Environment.class, EnvironmentDTO.class));
+
         return this.pagingUtilFactory.forClass(EnvironmentDTO.class)
             .applyPaging(stream, envs.size());
     }
