@@ -50,7 +50,6 @@ Requires: tomcat < 1:10.0.0
 %else
 Requires: pki-servlet-engine
 %endif
-Requires: jss
 Requires: javapackages-tools
 
 %description
@@ -135,11 +134,6 @@ touch %{buildroot}/%{_sysconfdir}/%{name}/%{name}.conf
 %{__install} -d -m 755 %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}
 %{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/tomcat/
 %{__unzip} %{SOURCE1} -d %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}
-
-## If we're running with jss 5+ (RHEL9+/Fedora35+) use the appropriate jar file name
-%if (0%{?rhel} && 0%{?rhel} >= 9) || (0%{?fedora} && 0%{?fedora} >= 35)
-sed -i 's/jss4.jar/jss.jar/g' %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}/META-INF/context.xml
-%endif
 
 %{__ln_s} /etc/candlepin/certs/keystore %{buildroot}/%{_sysconfdir}/tomcat/keystore
 

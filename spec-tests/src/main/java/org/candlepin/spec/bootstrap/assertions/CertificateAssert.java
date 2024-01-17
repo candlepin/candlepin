@@ -26,7 +26,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.ListAssert;
-import org.mozilla.jss.netscape.security.util.DerValue;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DERUTF8String;
 
 import java.io.IOException;
 import java.util.List;
@@ -68,9 +70,8 @@ public class CertificateAssert extends AbstractAssert<CertificateAssert, X509Cer
     }
 
     public CertificateAssert hasExtensionValue(String extensionId, String value) {
-        DerValue derValue = findExtensionValue(extensionId);
-
-        String anObject = derValue.toString();
+        DERUTF8String derValue = (DERUTF8String) findExtensionValue(extensionId);
+        String anObject = derValue == null ? null : derValue.getString();
         if (!value.equals(anObject)) {
             failWithMessage("Extension: %s with value %s does not match expected value: %s",
                 extensionId, anObject, value);
@@ -111,16 +112,9 @@ public class CertificateAssert extends AbstractAssert<CertificateAssert, X509Cer
     }
 
     public ListAssert<String> extractingEntitlementPayload() {
-        DerValue derValue = findExtensionValue(OID.entitlementPayload());
+        DEROctetString derValue = (DEROctetString) findExtensionValue(OID.entitlementPayload());
 
-        byte[] value;
-        try {
-            value = derValue.getOctetString();
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
+        byte[] value = derValue == null ? new byte[0] : derValue.getOctets();
         X509HuffmanDecodeUtil decode = new X509HuffmanDecodeUtil();
         List<String> payload;
         try {
@@ -133,8 +127,8 @@ public class CertificateAssert extends AbstractAssert<CertificateAssert, X509Cer
         return assertThat(payload);
     }
 
-    private DerValue findExtensionValue(String extensionId) {
-        DerValue derValue = actual.extensionValue(extensionId);
+    private ASN1Primitive findExtensionValue(String extensionId) {
+        ASN1Primitive derValue = actual.extensionValue(extensionId);
         if (derValue == null) {
             failWithMessage("Extension: %s not found", extensionId);
         }

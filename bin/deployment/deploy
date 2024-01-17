@@ -160,10 +160,6 @@ configure_tomcat_root_dir() {
         if [ ! -d "${REPOS}/META-INF" ]; then
             $SUDO mkdir -p "${REPOS}/META-INF"
         fi
-
-        if [ ! -f "${REPOS}/META-INF/context.xml" ]; then
-            $SUDO cp "$PROJECT_DIR/src/main/root/META-INF/context.xml" "${REPOS}/META-INF/context.xml"
-        fi
     fi
 }
 
@@ -407,13 +403,6 @@ fi
 
 # deploy the webapp
 deploy
-
-# Starting with jss 5, the jar is called 'jss.jar' instead of 'jss4.jar'
-if [ -f "/usr/lib64/jss/jss.jar" ]; then
-    $SUDO unzip -q $DEPLOY -d $DEPLOY_DIR
-    $SUDO sed -i 's/jss4.jar/jss.jar/g' $DEPLOY_DIR/META-INF/context.xml
-    $SUDO chown -R tomcat:tomcat $DEPLOY_DIR
-fi
 
 eval $START
 

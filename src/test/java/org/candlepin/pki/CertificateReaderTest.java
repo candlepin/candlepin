@@ -17,7 +17,7 @@ package org.candlepin.pki;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.TestConfig;
-import org.candlepin.pki.impl.JSSPrivateKeyReader;
+import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -40,6 +40,7 @@ public class CertificateReaderTest {
             ConfigProperties.CA_KEY_PASSWORD, "password"
         ));
 
-        Assertions.assertDoesNotThrow(() -> new CertificateReader(config, new JSSPrivateKeyReader()));
+        Assertions.assertDoesNotThrow(() -> new CertificateReader(config,
+            new BouncyCastlePrivateKeyReader()));
     }
 }

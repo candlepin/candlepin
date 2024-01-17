@@ -38,7 +38,7 @@ jobs:
 
       - name: Install dependencies
         shell: bash
-        run: dnf --setopt install_weak_deps=False install -y gettext jss git-core unzip
+        run: dnf --setopt install_weak_deps=False install -y gettext git-core unzip
 
       - name: Request GitHub API for PR data
         uses: octokit/request-action@v2.x

@@ -68,7 +68,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.impl.JSSProviderLoader;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.Importer.ImportFile;
@@ -155,10 +154,6 @@ public class ImporterTest {
     private ObjectMapper mapper;
     private ClassLoader classLoader = getClass().getClassLoader();
     private String mockJsPath;
-
-    static {
-        JSSProviderLoader.initialize();
-    }
 
     @BeforeEach
     public void init() throws Exception {

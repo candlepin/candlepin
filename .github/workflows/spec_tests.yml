@@ -31,7 +31,7 @@ jobs:
         shell: bash
         run: |
           dnf -y --setopt install_weak_deps=False update
-          dnf --setopt install_weak_deps=False install -y gettext jss docker git-core
+          dnf --setopt install_weak_deps=False install -y gettext docker git-core
 
       - name: Check out repository
         uses: actions/checkout@v4

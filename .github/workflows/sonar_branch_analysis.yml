@@ -43,7 +43,7 @@ jobs:
 
       - name: Install dependencies
         shell: bash
-        run: dnf --setopt install_weak_deps=False install -y gettext jss
+        run: dnf --setopt install_weak_deps=False install -y gettext
 
       - name: Set up Java
         uses: actions/setup-java@v4

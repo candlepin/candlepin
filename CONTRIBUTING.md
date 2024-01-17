@@ -21,7 +21,6 @@
     - [Candlepin Configuration](#candlepin-configuration)
     - [Development Image Default Configurations](#development-image-default-configurations)
     - [Paths](#paths)
-* [JSS Candlepin Crypto Extension](#jss-candlepin-crypto-extension)
 * [Miscellaneous](#miscellaneous)
 * [Frequently Asked Questions](#frequently-asked-questions)
 
@@ -63,7 +62,6 @@ If you have not done so on this machine, you need to:
 
 -   Install Git and configure your GitHub access
 -   Install Java SDK 8 or 11+ (OpenJDK recommended)
--   Install JSS (see [here](#jss-candlepin-crypto-extension) for details)
 
 Docker is not strictly necessary: it is used to run the MariaDB and PostgreSQL tests which are not enabled by default.
 
@@ -305,14 +303,6 @@ Default Tomcat server.xml connector configuration:
   </SSLHostConfig>
 </Connector>
 ```
-
-## JSS Candlepin Crypto Extension
-
-Our crypto functions are provided by [JSS](https://github.com/dogtagpki/jss)
-which is not available in the normal Maven repositories, and is only available as an
-RPM dependency. It is both a compile time and runtime dependency. You can install it using
-`dnf/yum install jss` in Fedora and RHEL. If you want to install it in RHEL 8 specifically,
-will need to first enable the pki-core module by running `dnf module enable pki-core`.
 
 ## Miscellaneous
 * `buildr pom` creates a `pom.xml` file with the project dependencies in it

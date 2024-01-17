@@ -27,7 +27,6 @@
       - gettext
       - git
       - java-17-openjdk-devel
-      - jss
       - make
       - openssl
       - tomcat

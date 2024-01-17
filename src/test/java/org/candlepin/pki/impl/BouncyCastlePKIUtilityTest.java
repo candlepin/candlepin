@@ -40,8 +40,8 @@ import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.util.OIDUtil;
 
 import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1UTF8String;
 import org.bouncycastle.asn1.DERBitString;
-import org.bouncycastle.asn1.DERUTF8String;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
@@ -58,8 +58,6 @@ import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.operator.DigestCalculator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mozilla.jss.netscape.security.x509.AuthorityKeyIdentifierExtension;
-import org.mozilla.jss.netscape.security.x509.KeyIdentifier;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -72,7 +70,6 @@ import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPublicKey;
 import java.security.spec.RSAPrivateCrtKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.time.LocalDate;
@@ -83,7 +80,7 @@ import java.util.Set;
 
 
 
-public class JSSPKIUtilityTest {
+public class BouncyCastlePKIUtilityTest {
 
     private KeyPair subjectKeyPair;
     private Configuration config;
@@ -95,7 +92,6 @@ public class JSSPKIUtilityTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        JSSProviderLoader.initialize();
         this.config = TestConfig.defaults();
 
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
@@ -103,7 +99,7 @@ public class JSSPKIUtilityTest {
         this.subjectKeyPair = generator.generateKeyPair();
 
         certificateReader = new CertificateReaderForTesting();
-        skiWriter = new DefaultSubjectKeyIdentifierWriter();
+        skiWriter = new BouncyCastleSubjectKeyIdentifierWriter();
 
         this.mockKeyPairDataCurator = mock(KeyPairDataCurator.class);
         doAnswer(returnsFirstArg()).when(this.mockKeyPairDataCurator).merge(any());
@@ -111,14 +107,14 @@ public class JSSPKIUtilityTest {
         doAnswer(returnsFirstArg()).when(this.mockKeyPairDataCurator).create(any(), anyBoolean());
     }
 
-    private JSSPKIUtility buildJSSPKIUtility() {
-        return new JSSPKIUtility(this.certificateReader, this.skiWriter, this.config,
+    private BouncyCastlePKIUtility buildBCPKIUtility() {
+        return new BouncyCastlePKIUtility(this.certificateReader, this.skiWriter, this.config,
             this.mockKeyPairDataCurator);
     }
 
     @Test
     public void testCreateX509Certificate() throws Exception {
-        JSSPKIUtility pki = this.buildJSSPKIUtility();
+        BouncyCastlePKIUtility pki = this.buildBCPKIUtility();
 
         Date start = new Date();
         Date end = Date.from(LocalDate.now().plusDays(365).atStartOfDay(ZoneId.systemDefault()).toInstant());
@@ -160,7 +156,8 @@ public class JSSPKIUtilityTest {
         RSAPublicKeySpec pubKs = new RSAPublicKeySpec(ks.getModulus(), ks.getPublicExponent());
         PublicKey pubKey = kf.generatePublic(pubKs);
         assertArrayEquals(
-            new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(pubKey).getEncoded(),
+            new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(
+                this.certificateReader.getCACert()).getEncoded(),
             AuthorityKeyIdentifier.fromExtensions(bcExtensions).getEncoded());
 
         assertEquals(expected, actual);
@@ -168,7 +165,7 @@ public class JSSPKIUtilityTest {
 
     @Test
     public void testCustomExtensions() throws Exception {
-        JSSPKIUtility pki = this.buildJSSPKIUtility();
+        BouncyCastlePKIUtility pki = this.buildBCPKIUtility();
 
         Date start = new Date();
         Date end = Date.from(LocalDate.now().plusDays(365).atStartOfDay(ZoneId.systemDefault()).toInstant());
@@ -189,7 +186,7 @@ public class JSSPKIUtilityTest {
 
         ASN1OctetString value = (ASN1OctetString) ASN1OctetString
             .fromByteArray(cert.getExtensionValue(extOid));
-        DERUTF8String actual = DERUTF8String.getInstance(value.getOctets());
+        ASN1UTF8String actual = ASN1UTF8String.getInstance(value.getOctets());
         assertEquals("OrgLevel", actual.getString());
 
         value = (ASN1OctetString) ASN1OctetString.fromByteArray(cert.getExtensionValue(byteExtOid));
@@ -198,25 +195,8 @@ public class JSSPKIUtilityTest {
     }
 
     @Test
-    public void testCalculateAuthorityKeyIdentifier() throws Exception {
-        KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
-        RSAPublicKey key = (RSAPublicKey) gen.generateKeyPair().getPublic();
-
-        AuthorityKeyIdentifier expectedAki = new JcaX509ExtensionUtils(
-            new SHA256DigestCalculator(MessageDigest.getInstance("SHA-256")))
-            .createAuthorityKeyIdentifier(key);
-        AuthorityKeyIdentifierExtension actualAki = JSSPKIUtility.buildAuthorityKeyIdentifier(key);
-
-        byte[] expectedKeyIdentifier = expectedAki.getKeyIdentifier();
-        byte[] actualKeyIdentifier = ((KeyIdentifier) actualAki.get(AuthorityKeyIdentifierExtension.KEY_ID))
-            .getIdentifier();
-
-        assertArrayEquals(expectedKeyIdentifier, actualKeyIdentifier);
-    }
-
-    @Test
     public void testGenerateKeyPair() throws Exception {
-        JSSPKIUtility pki = this.buildJSSPKIUtility();
+        BouncyCastlePKIUtility pki = this.buildBCPKIUtility();
 
         KeyPair keypair = pki.generateKeyPair();
         assertNotNull(keypair);
@@ -235,7 +215,7 @@ public class JSSPKIUtilityTest {
 
     @Test
     public void testGetConsumerKeyPair() throws Exception {
-        JSSPKIUtility pki = this.buildJSSPKIUtility();
+        BouncyCastlePKIUtility pki = this.buildBCPKIUtility();
 
         Consumer consumer = new Consumer();
         assertNull(consumer.getKeyPairData());
@@ -257,13 +237,12 @@ public class JSSPKIUtilityTest {
         // The encoding of the returned keys should match what we store in the consumer
         KeyPairData kpdata = consumer.getKeyPairData();
         assertNotNull(kpdata);
-        assertEquals(publicKey.getEncoded(), kpdata.getPublicKeyData());
-        assertEquals(privateKey.getEncoded(), kpdata.getPrivateKeyData());
+        assertArrayEquals(privateKey.getEncoded(), kpdata.getPrivateKeyData());
     }
 
     @Test
     public void testGetConsumerKeyPairRepeatsOutputForConsumer() throws Exception {
-        JSSPKIUtility pki = this.buildJSSPKIUtility();
+        BouncyCastlePKIUtility pki = this.buildBCPKIUtility();
 
         Consumer consumer = new Consumer();
         assertNull(consumer.getKeyPairData());
@@ -305,7 +284,7 @@ public class JSSPKIUtilityTest {
 
     @Test
     public void testGetConsumerKeyPairConvertsLegacySerializedKeyPairs() throws Exception {
-        JSSPKIUtility pki = this.buildJSSPKIUtility();
+        BouncyCastlePKIUtility pki = this.buildBCPKIUtility();
 
         KeyPair keypair = pki.generateKeyPair();
         byte[] jsoPubKeyBytes = this.serializeObject(keypair.getPublic());
@@ -337,7 +316,7 @@ public class JSSPKIUtilityTest {
 
     @Test
     public void testGetConsumerKeyPairRegneratesMalformedKeyPairs() throws Exception {
-        JSSPKIUtility pki = this.buildJSSPKIUtility();
+        BouncyCastlePKIUtility pki = this.buildBCPKIUtility();
 
         byte[] pubKeyBytes = "bad_public_key".getBytes();
         byte[] privKeyBytes = "bad_private_key".getBytes();

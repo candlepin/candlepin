@@ -64,9 +64,8 @@ import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
-import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
-import org.candlepin.pki.impl.JSSPKIUtility;
-import org.candlepin.pki.impl.JSSProviderLoader;
+import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.CertificateSizeException;
@@ -207,11 +206,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         "/content/beta/rhel/$releasever/$basearch/debug",
         "/content/beta/rhel/$releasever/$basearch/source/SRPMS"
     };
-
-    static {
-        JSSProviderLoader.initialize();
-    }
-
     @BeforeAll
     public static void keyPair() throws Exception {
         ClassLoader cl = DefaultEntitlementCertServiceAdapterTest.class.getClassLoader();
@@ -227,8 +221,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @BeforeEach
     public void setUp() throws CertificateException, IOException {
         config = TestConfig.defaults();
-        realPKI = new JSSPKIUtility(new CertificateReaderForTesting(),
-            new DefaultSubjectKeyIdentifierWriter(), this.config, new KeyPairDataCurator());
+        realPKI = new BouncyCastlePKIUtility(new CertificateReaderForTesting(),
+            new BouncyCastleSubjectKeyIdentifierWriter(), this.config, new KeyPairDataCurator());
         extensionUtil = new X509ExtensionUtil(this.config);
         mapper = ObjectMapperFactory.getX509V3ExtensionUtilObjectMapper();
 
