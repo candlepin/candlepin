@@ -33,6 +33,7 @@ import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
+import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
@@ -74,8 +75,8 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
         PrivateKeyReader keyReader = new BouncyCastlePrivateKeyReader();
         CertificateReader certReader = new CertificateReader(this.config, keyReader);
         SubjectKeyIdentifierWriter keyIdWriter = new BouncyCastleSubjectKeyIdentifierWriter();
-        this.pkiUtility = spy(new BouncyCastlePKIUtility(certReader, keyIdWriter, this.config,
-            this.keyPairDataCurator));
+        this.pkiUtility = spy(new BouncyCastlePKIUtility(new BouncyCastleSecurityProvider(), certReader,
+            keyIdWriter, this.config, this.keyPairDataCurator));
 
         this.x509V3ExtensionUtil = spy(new X509V3ExtensionUtil(this.config, this.entitlementCurator,
             ObjectMapperFactory.getObjectMapper()));

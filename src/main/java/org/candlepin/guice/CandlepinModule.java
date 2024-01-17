@@ -100,6 +100,7 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
+import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.JsRunner;
@@ -300,6 +301,8 @@ public class CandlepinModule extends AbstractModule {
         bind(CertificateReader.class).asEagerSingleton();
         bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class);
         bind(X509ExtensionUtil.class);
+
+        bind(BouncyCastleSecurityProvider.class);
     }
 
     private void resources() {

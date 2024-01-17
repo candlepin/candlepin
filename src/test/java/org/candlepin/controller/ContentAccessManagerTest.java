@@ -75,6 +75,7 @@ import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
+import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
@@ -184,8 +185,8 @@ public class ContentAccessManagerTest {
         PrivateKeyReader keyReader = new BouncyCastlePrivateKeyReader();
         CertificateReader certReader = new CertificateReader(this.config, keyReader);
         SubjectKeyIdentifierWriter keyIdWriter = new BouncyCastleSubjectKeyIdentifierWriter();
-        this.pkiUtility = spy(new BouncyCastlePKIUtility(certReader, keyIdWriter, this.config,
-            this.mockKeyPairDataCurator));
+        this.pkiUtility = spy(new BouncyCastlePKIUtility(new BouncyCastleSecurityProvider(), certReader,
+            keyIdWriter, this.config, this.mockKeyPairDataCurator));
 
         this.x509V3ExtensionUtil = spy(new X509V3ExtensionUtil(this.config, this.mockEntitlementCurator,
             objectMapper));

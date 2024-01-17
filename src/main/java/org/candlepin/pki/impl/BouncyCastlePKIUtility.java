@@ -14,8 +14,6 @@
  */
 package org.candlepin.pki.impl;
 
-import static org.candlepin.pki.impl.BouncyCastleProviderLoader.BC_PROVIDER;
-
 import org.candlepin.config.Configuration;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.KeyPairData;
@@ -49,6 +47,7 @@ import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
@@ -77,47 +76,53 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Set;
+
+import javax.inject.Provider;
 
 /**
  * The default {@link ProviderBasedPKIUtility} for Candlepin.
  * This class implements methods to create X509 Certificates, X509 CRLs, encode
  * objects in PEM format (for saving to the db or sending to the client), and
  * decode raw ASN.1 DER values (as read from a Certificate/CRL).
- *
+ * <p>
  * All code that imports bouncycastle should live in this module.
- *
+ * <p>
  * (March 24, 2011) Notes on implementing a ProviderBasedPKIUtility with NSS/JSS:
- *
+ * <p>
  * JSS provides classes and functions to generate X509Certificates (see CertificateInfo,
  * for example).
- *
+ * <p>
  * PEM encoding requires us to determine the object type (which we know), add the correct
  * header and footer to the output, base64 encode the DER for the object, and line wrap
  * the base64 encoding.
- *
+ * <p>
  * decodeDERValue should be simple, as JSS provides code to parse ASN.1, but I wasn't
  * able to get it to work.
- *
+ * <p>
  * The big one is CRL generation. JSS has no code to generate CRLs in any format. We'll
  * have to use the raw ASN.1 libraries to build up our own properly formatted CRL DER
  * representation, then PEM encode it.
  */
 public class BouncyCastlePKIUtility extends ProviderBasedPKIUtility {
-    private static Logger log = LoggerFactory.getLogger(BouncyCastlePKIUtility.class);
-    public static final byte[] LINE_SEPARATOR = String.format("%n").getBytes();
-    public static final String SIGNING_ALG_ID = "SHA256withRSA";
-
-    private final KeyPairDataCurator keypairDataCurator;
+    private static final Logger log = LoggerFactory.getLogger(BouncyCastlePKIUtility.class);
+    private static final byte[] LINE_SEPARATOR = String.format("%n").getBytes();
+    private static final String SIGNING_ALG_ID = "SHA256withRSA";
     private static final String KEY_ALGORITHM = "RSA";
-    public static final int KEY_SIZE = 4096;
-    public static final String PRIVATE_KEY_PEM_NAME = "PRIVATE KEY";
+    private static final int KEY_SIZE = 4096;
+    private static final String PRIVATE_KEY_PEM_NAME = "PRIVATE KEY";
+
+    private final Provider<BouncyCastleProvider> securityProvider;
+    private final KeyPairDataCurator keypairDataCurator;
 
     @Inject
-    public BouncyCastlePKIUtility(CertificateReader reader, SubjectKeyIdentifierWriter subjectKeyWriter,
-        Configuration config, KeyPairDataCurator keypairDataCurator) {
+    public BouncyCastlePKIUtility(Provider<BouncyCastleProvider> securityProvider, CertificateReader reader,
+        SubjectKeyIdentifierWriter subjectKeyWriter, Configuration config,
+        KeyPairDataCurator keypairDataCurator) {
         super(reader, subjectKeyWriter, config);
-        this.keypairDataCurator = keypairDataCurator;
+        this.keypairDataCurator = Objects.requireNonNull(keypairDataCurator);
+        this.securityProvider = Objects.requireNonNull(securityProvider);
     }
 
     @Override
@@ -205,7 +210,7 @@ public class BouncyCastlePKIUtility extends ProviderBasedPKIUtility {
         }
 
         JcaContentSignerBuilder builder = new JcaContentSignerBuilder(SIGNING_ALG_ID)
-            .setProvider(BC_PROVIDER);
+            .setProvider(this.securityProvider.get());
         ContentSigner signer;
         try {
             signer = builder.build(reader.getCaKey());
@@ -427,7 +432,7 @@ public class BouncyCastlePKIUtility extends ProviderBasedPKIUtility {
     private PublicKey generatePublicKey(byte[] keydata, String algorithm)
         throws NoSuchAlgorithmException, InvalidKeySpecException {
 
-        KeyFactory factory = KeyFactory.getInstance(algorithm, BouncyCastleProviderLoader.getProvider());
+        KeyFactory factory = KeyFactory.getInstance(algorithm, this.securityProvider.get());
         X509EncodedKeySpec spec = new X509EncodedKeySpec(keydata, algorithm);
 
         return factory.generatePublic(spec);
@@ -448,7 +453,7 @@ public class BouncyCastlePKIUtility extends ProviderBasedPKIUtility {
     private PrivateKey generatePrivateKey(byte[] keydata, String algorithm)
         throws NoSuchAlgorithmException, InvalidKeySpecException {
 
-        KeyFactory factory = KeyFactory.getInstance(algorithm, BouncyCastleProviderLoader.getProvider());
+        KeyFactory factory = KeyFactory.getInstance(algorithm, this.securityProvider.get());
         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keydata, algorithm);
 
         return factory.generatePrivate(spec);
