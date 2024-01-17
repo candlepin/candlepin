@@ -45,15 +45,15 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.dto.Content;
 import org.candlepin.pki.DistinguishedName;
+import org.candlepin.pki.OID;
 import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.X509ByteExtensionWrapper;
-import org.candlepin.pki.X509ExtensionWrapper;
+import org.candlepin.pki.X509Extension;
+import org.candlepin.pki.certs.X509StringExtension;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.Arch;
-import org.candlepin.util.OIDUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
@@ -418,12 +418,12 @@ public class ContentAccessManager {
         throws GeneralSecurityException, IOException {
 
         log.info("Generating X509 certificate for consumer \"{}\"...", consumerUuid);
-        Set<X509ExtensionWrapper> extensions = prepareV3Extensions(entType);
-        Set<X509ByteExtensionWrapper> byteExtensions = prepareV3ByteExtensions(product);
+        Set<X509Extension> extensions = new HashSet<>(prepareV3Extensions(entType));
+        extensions.addAll(prepareV3ByteExtensions(product));
         DistinguishedName dn = new DistinguishedName(consumerUuid, owner);
 
         X509Certificate x509Cert = this.pki.createX509Certificate(
-            dn, extensions, byteExtensions, Date.from(start.toInstant()),
+            dn, extensions, Date.from(start.toInstant()),
             Date.from(end.toInstant()), keyPair, BigInteger.valueOf(serial.getId()), null);
 
         byte[] encodedCert = this.pki.getPemEncoded(x509Cert);
@@ -492,16 +492,14 @@ public class ContentAccessManager {
         return entitlementVersion != null && entitlementVersion.startsWith("3.");
     }
 
-    private Set<X509ExtensionWrapper> prepareV3Extensions(String entType) {
-        Set<X509ExtensionWrapper> result = v3extensionUtil.getExtensions();
-        X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(
-            OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_TYPE), false, entType);
-
-        result.add(typeExtension);
-        return result;
+    private Set<X509Extension> prepareV3Extensions(String entType) {
+        Set<X509Extension> extensions = new HashSet<>(v3extensionUtil.getExtensions());
+        extensions.add(new X509StringExtension(
+            OID.EntitlementType.namespace(), entType));
+        return extensions;
     }
 
-    private Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(org.candlepin.model.dto.Product container)
+    private Set<X509Extension> prepareV3ByteExtensions(org.candlepin.model.dto.Product container)
         throws IOException {
         List<org.candlepin.model.dto.Product> products = new ArrayList<>();
         products.add(container);

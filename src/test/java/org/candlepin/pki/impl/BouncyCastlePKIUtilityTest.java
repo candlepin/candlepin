@@ -34,11 +34,12 @@ import org.candlepin.model.KeyPairData;
 import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.DistinguishedName;
+import org.candlepin.pki.OID;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.X509ByteExtensionWrapper;
-import org.candlepin.pki.X509ExtensionWrapper;
+import org.candlepin.pki.X509Extension;
+import org.candlepin.pki.certs.X509ByteExtension;
+import org.candlepin.pki.certs.X509StringExtension;
 import org.candlepin.test.CertificateReaderForTesting;
-import org.candlepin.util.OIDUtil;
 
 import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1UTF8String;
@@ -114,7 +115,7 @@ public class BouncyCastlePKIUtilityTest {
         Date start = new Date();
         Date end = Date.from(LocalDate.now().plusDays(365).atStartOfDay(ZoneId.systemDefault()).toInstant());
 
-        X509Certificate cert = pki.createX509Certificate(buildDN(), null, null, start,
+        X509Certificate cert = pki.createX509Certificate(buildDN(), null, start,
             end, subjectKeyPair, BigInteger.valueOf(1999L), "altName");
 
         assertEquals("SHA256withRSA", cert.getSigAlgName());
@@ -165,17 +166,16 @@ public class BouncyCastlePKIUtilityTest {
         Date start = new Date();
         Date end = Date.from(LocalDate.now().plusDays(365).atStartOfDay(ZoneId.systemDefault()).toInstant());
 
-        String extOid = OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_TYPE);
-        X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(extOid, false, "OrgLevel");
-        Set<X509ExtensionWrapper> exts = Set.of(typeExtension);
-
-        String byteExtOid = OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_DATA);
+        String extOid = OID.EntitlementType.namespace();
+        String byteExtOid = OID.EntitlementData.namespace();
         byte[] someBytes = new byte[]{0xd, 0xe, 0xf, 0xa, 0xc, 0xe, 0xa, 0xc, 0xe};
-        X509ByteExtensionWrapper byteExtension = new X509ByteExtensionWrapper(byteExtOid, false, someBytes);
-        Set<X509ByteExtensionWrapper> byteExtensions = Set.of(byteExtension);
+        Set<X509Extension> exts = Set.of(
+            new X509StringExtension(extOid, "OrgLevel"),
+            new X509ByteExtension(byteExtOid, someBytes)
+        );
 
         X509Certificate cert = pki.createX509Certificate(buildDN(), exts,
-            byteExtensions, start, end, subjectKeyPair, BigInteger.valueOf(2000L), "altName");
+            start, end, subjectKeyPair, BigInteger.valueOf(2000L), "altName");
 
         assertNotNull(cert.getExtensionValue(extOid));
 

@@ -38,11 +38,11 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.pki.DistinguishedName;
+import org.candlepin.pki.OID;
 import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.X509ByteExtensionWrapper;
-import org.candlepin.pki.X509ExtensionWrapper;
+import org.candlepin.pki.X509Extension;
+import org.candlepin.pki.certs.X509StringExtension;
 import org.candlepin.util.CertificateSizeException;
-import org.candlepin.util.OIDUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.util.X509Util;
@@ -171,13 +171,12 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         throws GeneralSecurityException, IOException {
 
         // oidutil is busted at the moment, so do this manually
-        Set<X509ExtensionWrapper> extensions;
-        Set<X509ByteExtensionWrapper> byteExtensions = new LinkedHashSet<>();
+        Set<X509Extension> extensions = new HashSet<>();
         products.add(product);
 
         if (shouldGenerateV3(consumer)) {
-            extensions = prepareV3Extensions(pool);
-            byteExtensions = this.v3extensionUtil.getByteExtensions(productModels);
+            extensions.addAll(prepareV3Extensions(pool));
+            extensions.addAll(this.v3extensionUtil.getByteExtensions(productModels));
         }
         else {
             extensions = prepareV1Extensions(products, pool, consumer, ent.getQuantity(),
@@ -197,7 +196,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         DistinguishedName dn = new DistinguishedName(ent.getId(), owner);
 
         return this.pki.createX509Certificate(
-            dn, extensions, byteExtensions, startDate,
+            dn, extensions, startDate,
             endDate, keyPair, serialNumber, null);
     }
 
@@ -278,9 +277,9 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         return false;
     }
 
-    public Set<X509ExtensionWrapper> prepareV1Extensions(Set<Product> products, Pool pool, Consumer consumer,
+    public Set<X509Extension> prepareV1Extensions(Set<Product> products, Pool pool, Consumer consumer,
         Integer quantity, PromotedContent promotedContent, Set<Pool> entitledPools) {
-        Set<X509ExtensionWrapper> result = new LinkedHashSet<>();
+        Set<X509Extension> result = new LinkedHashSet<>();
 
         Set<String> entitledProductIds = entCurator.listEntitledProductIds(
             consumer, pool, entitledPools);
@@ -326,23 +325,20 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         result.addAll(extensionUtil.consumerExtensions(consumer));
 
         if (log.isDebugEnabled()) {
-            for (X509ExtensionWrapper eWrapper : result) {
-                log.debug("Extension {} with value {}", eWrapper.getOid(), eWrapper.getValue());
+            for (X509Extension eWrapper : result) {
+                log.debug("Extension {} with value {}", eWrapper.oid(), eWrapper.value());
             }
         }
         return result;
     }
 
-    public Set<X509ExtensionWrapper> prepareV3Extensions(Pool pool) {
-        Set<X509ExtensionWrapper> result = v3extensionUtil.getExtensions();
-
-        String entTypeOID = OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_TYPE);
-        result.add(new X509ExtensionWrapper(entTypeOID, false, "Basic"));
+    public Set<X509Extension> prepareV3Extensions(Pool pool) {
+        Set<X509Extension> result = new HashSet<>(v3extensionUtil.getExtensions());
+        result.add(new X509StringExtension(OID.EntitlementType.namespace(), "Basic"));
 
         String namespace = pool.getProductNamespace();
         if (namespace != null && !namespace.isBlank()) {
-            String entNamespaceOID = OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_NAMESPACE);
-            result.add(new X509ExtensionWrapper(entNamespaceOID, false, namespace));
+            result.add(new X509StringExtension(OID.EntitlementNamespace.namespace(), namespace));
         }
 
         return result;

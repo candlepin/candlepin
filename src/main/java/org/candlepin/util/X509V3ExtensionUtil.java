@@ -28,8 +28,10 @@ import org.candlepin.model.dto.EntitlementBody;
 import org.candlepin.model.dto.Order;
 import org.candlepin.model.dto.Service;
 import org.candlepin.model.dto.TinySubscription;
-import org.candlepin.pki.X509ByteExtensionWrapper;
-import org.candlepin.pki.X509ExtensionWrapper;
+import org.candlepin.pki.OID;
+import org.candlepin.pki.X509Extension;
+import org.candlepin.pki.certs.X509ByteExtension;
+import org.candlepin.pki.certs.X509StringExtension;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Collections2;
@@ -51,6 +53,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.zip.Deflater;
@@ -70,9 +73,9 @@ public class X509V3ExtensionUtil extends X509Util {
     private static final boolean TREE_DEBUG = false;
     public static final String CERT_VERSION = "3.4";
 
-    private ObjectMapper mapper;
-    private Configuration config;
-    private EntitlementCurator entCurator;
+    private final ObjectMapper mapper;
+    private final Configuration config;
+    private final EntitlementCurator entCurator;
 
     private long pathNodeId = 0;
     private long huffNodeId = 0;
@@ -82,31 +85,25 @@ public class X509V3ExtensionUtil extends X509Util {
         @Named("X509V3ExtensionUtilObjectMapper") ObjectMapper objectMapper) {
 
         // Output everything in UTC
-        this.config = config;
-        this.entCurator = entCurator;
-        this.mapper = objectMapper;
+        this.config = Objects.requireNonNull(config);
+        this.entCurator = Objects.requireNonNull(entCurator);
+        this.mapper = Objects.requireNonNull(objectMapper);
     }
 
-    public Set<X509ExtensionWrapper> getExtensions() {
-        Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<>();
-
-        X509ExtensionWrapper versionExtension = new X509ExtensionWrapper(
-            OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_VERSION), false, CERT_VERSION);
-
-        toReturn.add(versionExtension);
-        return toReturn;
+    public Set<X509Extension> getExtensions() {
+        return Set.of(
+            new X509StringExtension(OID.EntitlementVersion.namespace(), CERT_VERSION)
+        );
     }
 
-    public Set<X509ByteExtensionWrapper> getByteExtensions(
+    public Set<X509Extension> getByteExtensions(
         List<org.candlepin.model.dto.Product> productModels) throws IOException {
-        Set<X509ByteExtensionWrapper> toReturn = new LinkedHashSet<>();
+        Set<X509Extension> toReturn = new LinkedHashSet<>();
 
         EntitlementBody eb = createEntitlementBodyContent(productModels);
 
-        String entDataOid = OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_DATA);
-        X509ByteExtensionWrapper bodyExtension = new X509ByteExtensionWrapper(
-            entDataOid, false, retrieveContentValue(eb));
-        toReturn.add(bodyExtension);
+        toReturn.add(new X509ByteExtension(
+            OID.EntitlementData.namespace(), retrieveContentValue(eb)));
 
         return toReturn;
     }

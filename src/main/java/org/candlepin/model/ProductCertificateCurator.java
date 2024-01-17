@@ -16,7 +16,7 @@ package org.candlepin.model;
 
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.X509ExtensionWrapper;
+import org.candlepin.pki.X509Extension;
 import org.candlepin.util.X509ExtensionUtil;
 
 import org.hibernate.criterion.Restrictions;
@@ -107,7 +107,7 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
         log.debug("Generating cert for product: {}", product);
 
         KeyPair keyPair = this.pki.generateKeyPair();
-        Set<X509ExtensionWrapper> extensions = this.extensionUtil.productExtensions(product);
+        Set<X509Extension> extensions = this.extensionUtil.productExtensions(product);
 
         BigInteger serial = BigInteger.valueOf(product.getId().hashCode()).abs();
 
@@ -116,7 +116,7 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
 
         DistinguishedName dn = new DistinguishedName(product.getId());
         X509Certificate x509Cert = this.pki.createX509Certificate(
-            dn, extensions, null, new Date(), future.getTime(), keyPair,
+            dn, extensions, new Date(), future.getTime(), keyPair,
             serial, null
         );
 

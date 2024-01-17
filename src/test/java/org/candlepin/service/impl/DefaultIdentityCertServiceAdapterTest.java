@@ -104,7 +104,7 @@ public class DefaultIdentityCertServiceAdapterTest {
                     return cs;
                 }
             });
-        when(pki.createX509Certificate(any(DistinguishedName.class), nullable(Set.class), nullable(Set.class),
+        when(pki.createX509Certificate(any(DistinguishedName.class), nullable(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class)))
             .thenReturn(mock(X509Certificate.class));
@@ -169,7 +169,7 @@ public class DefaultIdentityCertServiceAdapterTest {
             cs.setId(42L);
             return cs;
         });
-        when(pki.createX509Certificate(any(DistinguishedName.class), nullable(Set.class), nullable(Set.class),
+        when(pki.createX509Certificate(any(DistinguishedName.class), nullable(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class)))
             .thenReturn(mock(X509Certificate.class));
@@ -222,7 +222,7 @@ public class DefaultIdentityCertServiceAdapterTest {
             return cs;
         });
 
-        when(pki.createX509Certificate(any(DistinguishedName.class), nullable(Set.class), nullable(Set.class),
+        when(pki.createX509Certificate(any(DistinguishedName.class), nullable(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class)))
             .thenReturn(mock(X509Certificate.class));
