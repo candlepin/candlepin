@@ -816,6 +816,27 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return count;
     }
 
+    /**
+     * Marks all entitlements assigned to the specified organization as dirty. If the organization
+     * has no entitlements, or the owner does not exist, this method returns 0. The output of this
+     * method does not account for entitlements that are already dirty, and will, in effect, return
+     * the number of entitlements in the organization.
+     *
+     * @param ownerId
+     *  the ID of the organization (owner) for which to flag entitlements
+     *
+     * @return
+     *  the number of entitlements flagged as dirty
+     */
+    public int markEntitlementsDirtyForOwner(String ownerId) {
+        String jpql = "UPDATE Entitlement SET dirty = true WHERE owner.id = :owner_id";
+
+        return this.getEntityManager()
+            .createQuery(jpql)
+            .setParameter("owner_id", ownerId)
+            .executeUpdate();
+    }
+
     @Transactional
     private Page<List<Entitlement>> listByProduct(
         AbstractHibernateObject object, String objectType, String productId, PageRequest pageRequest) {

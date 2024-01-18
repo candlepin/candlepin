@@ -18,6 +18,7 @@ import static org.candlepin.model.SourceSubscription.DERIVED_POOL_SUB_KEY;
 import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -1589,6 +1590,112 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals("New Name", owner.getDisplayName());
         assertEquals(parentOwner2, owner.getParentOwner());
         assertFalse(owner.isAutobindDisabled());
+    }
+
+    private Entitlement buildEntitlementForOwner(Owner owner) {
+        Product product = this.createProduct();
+        Pool pool = this.createPool(owner, product);
+
+        Consumer consumer = this.createConsumer(owner);
+
+        return this.createEntitlement(owner, consumer, pool);
+    }
+
+    @Test
+    public void testUpdateOwnerWithContentPrefixChangeTriggersEntitlementRegeneration() {
+        Owner owner = new Owner()
+            .setKey("test_org")
+            .setDisplayName("test org")
+            .setContentPrefix("prefix");
+
+        this.ownerCurator.create(owner);
+
+        Entitlement ent1 = this.buildEntitlementForOwner(owner);
+        Entitlement ent2 = this.buildEntitlementForOwner(owner);
+        Entitlement ent3 = this.buildEntitlementForOwner(owner);
+
+        OwnerDTO update = new OwnerDTO()
+            .contentPrefix("updated_prefix");
+
+        this.ownerResource.updateOwner(owner.getKey(), update);
+
+        this.entitlementCurator.clear();
+
+        assertEquals(update.getContentPrefix(), owner.getContentPrefix());
+
+        for (Entitlement entitlement : this.entitlementCurator.listByOwner(owner)) {
+            assertNotNull(entitlement);
+            assertTrue(entitlement.isDirty());
+        }
+    }
+
+    @Test
+    public void testUpdateOwnerWithContentPrefixChangeTriggersLastContentUpdateSync() throws Exception {
+        Owner owner = new Owner()
+            .setKey("test_org")
+            .setDisplayName("test org")
+            .setContentPrefix("prefix");
+
+        this.ownerCurator.create(owner);
+
+        Date initialContentUpdate = owner.getLastContentUpdate();
+
+        // Delay a moment so we actually end up with a different timestamp
+        Thread.sleep(1000);
+
+        OwnerDTO update = new OwnerDTO()
+            .contentPrefix("updated_prefix");
+
+        this.ownerResource.updateOwner(owner.getKey(), update);
+
+        assertNotEquals(initialContentUpdate, owner.getLastContentUpdate());
+    }
+
+    @Test
+    public void testUpdateOwnerWithoutContentPrefixChangeDoesNotTriggerEntitlementRegeneration() {
+        Owner owner = new Owner()
+            .setKey("test_org")
+            .setDisplayName("test org")
+            .setContentPrefix("prefix");
+
+        this.ownerCurator.create(owner);
+
+        Entitlement ent1 = this.buildEntitlementForOwner(owner);
+        Entitlement ent2 = this.buildEntitlementForOwner(owner);
+        Entitlement ent3 = this.buildEntitlementForOwner(owner);
+
+        OwnerDTO update = new OwnerDTO()
+            .displayName("updated org name");
+
+        this.ownerResource.updateOwner(owner.getKey(), update);
+
+        assertEquals(update.getDisplayName(), owner.getDisplayName());
+
+        for (Entitlement entitlement : this.entitlementCurator.listByOwner(owner)) {
+            assertNotNull(entitlement);
+            assertFalse(entitlement.isDirty());
+        }
+    }
+
+    @Test
+    public void testUpdateOwnerWithContentPrefixChangeDoesNotTriggerLastContentUpdateSync() {
+        Owner owner = new Owner()
+            .setKey("test_org")
+            .setDisplayName("test org")
+            .setContentPrefix("prefix");
+
+        this.ownerCurator.create(owner);
+
+        Date initialContentUpdate = owner.getLastContentUpdate();
+
+        OwnerDTO update = new OwnerDTO()
+            .displayName("updated org name");
+
+        this.ownerResource.updateOwner(owner.getKey(), update);
+
+        assertEquals(update.getDisplayName(), owner.getDisplayName());
+
+        assertEquals(initialContentUpdate, owner.getLastContentUpdate());
     }
 
     @Test

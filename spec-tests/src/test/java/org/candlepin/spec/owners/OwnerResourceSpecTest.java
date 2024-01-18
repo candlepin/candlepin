@@ -21,6 +21,7 @@ import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.asser
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.AttributeDTO;
@@ -447,6 +448,47 @@ public class OwnerResourceSpecTest {
 
         // Cannot set exempt level:
         assertBadRequest(() -> owners.updateOwner(owner.getKey(), owner.defaultServiceLevel("Layered")));
+    }
+
+    @Test
+    public void shouldRegenOrgEntitlementsWhenContentPrefixChanges() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+
+        // Create a pool to bind
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(), Products.random());
+        PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(product));
+
+        // Create a consumer and bind the pool
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        adminClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
+
+        // Fetch the cert for the consumer so we can check if it's been regenerated later
+        List<CertificateDTO> initCerts = adminClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(initCerts)
+            .isNotNull()
+            .hasSize(1);
+
+        CertificateDTO initCert = initCerts.get(0);
+        assertNotNull(initCert);
+
+        // Update the content prefix on the org, which should trigger a regen of the cert when we
+        // fetch it later
+        owner.setContentPrefix("content_prefix");
+        adminClient.owners().updateOwner(owner.getKey(), owner);
+
+        // Fetch the certs again, verify we still only have the one but it has a new serial,
+        // indicating it was regenerated.
+        List<CertificateDTO> regenCerts = adminClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(regenCerts)
+            .isNotNull()
+            .hasSize(1);
+
+        CertificateDTO regenCert = regenCerts.get(0);
+        assertThat(regenCert)
+            .isNotNull()
+            .extracting(CertificateDTO::getSerial)
+            .isNotEqualTo(initCert.getSerial());
     }
 
     @Test

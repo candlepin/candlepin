@@ -846,8 +846,20 @@ public class OwnerResource implements OwnerApi {
             updateContentAccess = true;
         }
 
+        // Check if the content prefix changed
+        String contentPrefix = dto.getContentPrefix();
+        boolean contentPrefixChanged = contentPrefix != null &&
+            !contentPrefix.equals(owner.getContentPrefix());
+
         // Do the bulk of our entity population
         this.populateEntity(owner, dto);
+
+        // If the prefix changed, we should flag certs as dirty and update the last content changed
+        // so clients can get their certs regenerated with the new paths
+        if (contentPrefixChanged) {
+            owner.syncLastContentUpdate();
+            this.entitlementCurator.markEntitlementsDirtyForOwner(owner.getId());
+        }
 
         // Refresh content access mode if necessary
         if (updateContentAccess) {

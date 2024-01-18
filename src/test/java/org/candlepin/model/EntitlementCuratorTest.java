@@ -33,6 +33,9 @@ import org.hamcrest.Matchers;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Arrays;
@@ -653,6 +656,82 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertTrue(ent1.isDirty());
         assertTrue(ent2.isDirty());
         assertFalse(ent3.isDirty());
+    }
+
+    private Entitlement buildEntitlementForOwner(Owner owner) {
+        Product product = this.createProduct();
+        Pool pool = this.createPool(owner, product);
+
+        Consumer consumer = this.createConsumer(owner);
+
+        return this.createEntitlement(owner, consumer, pool);
+    }
+
+    @Test
+    public void testMarkEntitlementsDirtyForOwner() {
+        Owner owner = this.createOwner();
+
+        Entitlement ent1 = this.buildEntitlementForOwner(owner);
+        Entitlement ent2 = this.buildEntitlementForOwner(owner);
+        Entitlement ent3 = this.buildEntitlementForOwner(owner);
+
+        int output = this.entitlementCurator.markEntitlementsDirtyForOwner(owner.getId());
+        assertEquals(3, output);
+
+        this.entitlementCurator.clear();
+
+        for (Entitlement entitlement : this.entitlementCurator.listByOwner(owner)) {
+            assertNotNull(entitlement);
+            assertTrue(entitlement.isDirty());
+        }
+    }
+
+    @Test
+    public void testMarkEntitlementsDirtyForOwnerDoesntAffectOtherOwner() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Entitlement owner1ent1 = this.buildEntitlementForOwner(owner1);
+        Entitlement owner1ent2 = this.buildEntitlementForOwner(owner1);
+        Entitlement owner1ent3 = this.buildEntitlementForOwner(owner1);
+        Entitlement owner2ent1 = this.buildEntitlementForOwner(owner2);
+        Entitlement owner2ent2 = this.buildEntitlementForOwner(owner2);
+        Entitlement owner2ent3 = this.buildEntitlementForOwner(owner2);
+
+        int output = this.entitlementCurator.markEntitlementsDirtyForOwner(owner1.getId());
+        assertEquals(3, output);
+
+        this.entitlementCurator.clear();
+
+        for (Entitlement entitlement : this.entitlementCurator.listByOwner(owner1)) {
+            assertNotNull(entitlement);
+            assertTrue(entitlement.isDirty());
+        }
+
+        for (Entitlement entitlement : this.entitlementCurator.listByOwner(owner2)) {
+            assertNotNull(entitlement);
+            assertFalse(entitlement.isDirty());
+        }
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = "404-owner")
+    public void testMarkEntitlementsDirtyForOwnerWithInvalidValues(String ownerId) {
+        Owner owner = this.createOwner();
+
+        Entitlement ent1 = this.buildEntitlementForOwner(owner);
+        Entitlement ent2 = this.buildEntitlementForOwner(owner);
+        Entitlement ent3 = this.buildEntitlementForOwner(owner);
+
+        int output = this.entitlementCurator.markEntitlementsDirtyForOwner(ownerId);
+        assertEquals(0, output);
+
+        // Ensure we didn't affect our org unexpectedly...
+        for (Entitlement entitlement : this.entitlementCurator.listByOwner(owner)) {
+            assertNotNull(entitlement);
+            assertFalse(entitlement.isDirty());
+        }
     }
 
     @Test
