@@ -9,6 +9,8 @@ services:
       POSTGRES_PASSWORD: candlepin
       POSTGRES_DB: candlepin
       POSTGRES_HOST_AUTH_METHOD: trust
+    networks:
+      - gh_network
     ports:
       - "5432:5432"
     healthcheck:
@@ -21,10 +23,7 @@ services:
     container_name: candlepin
     build:
       context: ${GITHUB_WORKSPACE}
-      dockerfile: ./containers/release.Containerfile
-      target: development
-      args:
-      - WAR_FILE=${WAR_FILE}
+      dockerfile: ./.github/containers/Dockerfile
     environment:
       JPA_CONFIG_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQL92Dialect
       JPA_CONFIG_HIBERNATE_CONNECTION_DRIVER_CLASS: org.postgresql.Driver
@@ -39,10 +38,12 @@ services:
       CANDLEPIN_STANDALONE: ${CANDLEPIN_STANDALONE}
       MODULE_CONFIG_HOSTEDTEST_CONFIGURATION_MODULE: ${MODULE_CONFIG_HOSTEDTEST_CONFIGURATION_MODULE}
       MODULE_CONFIG_MANIFESTGEN_CONFIGURATION_MODULE: ${MODULE_CONFIG_MANIFESTGEN_CONFIGURATION_MODULE}
+    networks:
+      - gh_network
     ports:
       - "8443:8443"
     healthcheck:
-      test: curl --fail -k https://localhost:8443/candlepin/status || exit 1
+      test: wget --tries=1 --spider https://localhost:8443/candlepin/status || exit 1
       timeout: 5s
       retries: 10
       start_period: 30s
@@ -50,4 +51,8 @@ services:
       postgres:
         condition: service_healthy
 
+networks:
+  gh_network:
+    name: ${NETWORK}
+    external: true
 
