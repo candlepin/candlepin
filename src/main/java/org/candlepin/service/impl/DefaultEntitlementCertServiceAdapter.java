@@ -37,6 +37,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
+import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -193,9 +194,10 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             pool.getStartDate().getTime() < calNow.getTime().getTime()) {
             startDate = calMinusHour.getTime();
         }
+        DistinguishedName dn = new DistinguishedName(ent.getId(), owner);
 
         return this.pki.createX509Certificate(
-            createDN(ent, owner), extensions, byteExtensions, startDate,
+            dn, extensions, byteExtensions, startDate,
             endDate, keyPair, serialNumber, null);
     }
 
@@ -482,10 +484,6 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         }
 
         return entitlementCerts;
-    }
-
-    private String createDN(Entitlement ent, Owner owner) {
-        return "CN=" + ent.getId() + ", O=" + owner.getKey();
     }
 
     public List<Long> listEntitlementSerialIds(Consumer consumer) {

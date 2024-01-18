@@ -30,6 +30,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ExpiryDateFunction;
@@ -62,9 +63,12 @@ import java.util.Set;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class DefaultIdentityCertServiceAdapterTest {
 
-    @Mock private PKIUtility pki;
-    @Mock private IdentityCertificateCurator idcur;
-    @Mock private CertificateSerialCurator csc;
+    @Mock
+    private PKIUtility pki;
+    @Mock
+    private IdentityCertificateCurator idcur;
+    @Mock
+    private CertificateSerialCurator csc;
     private DefaultIdentityCertServiceAdapter dicsa;
 
 
@@ -100,7 +104,7 @@ public class DefaultIdentityCertServiceAdapterTest {
                     return cs;
                 }
             });
-        when(pki.createX509Certificate(any(String.class), nullable(Set.class), nullable(Set.class),
+        when(pki.createX509Certificate(any(DistinguishedName.class), nullable(Set.class), nullable(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class)))
             .thenReturn(mock(X509Certificate.class));
@@ -149,6 +153,7 @@ public class DefaultIdentityCertServiceAdapterTest {
         Consumer consumer = mock(Consumer.class);
         IdentityCertificate mockic = mock(IdentityCertificate.class);
         when(consumer.getIdCert()).thenReturn(mockic);
+        when(consumer.getUuid()).thenReturn("test_uuid");
         Owner owner = mock(Owner.class);
         when(owner.getKey()).thenReturn(TestUtil.randomString());
         when(consumer.getOwner()).thenReturn(owner);
@@ -158,16 +163,13 @@ public class DefaultIdentityCertServiceAdapterTest {
 
         KeyPair kp = createKeyPair();
         when(pki.getConsumerKeyPair(consumer)).thenReturn(kp);
-        when(csc.create(any(CertificateSerial.class))).thenAnswer(
-            new Answer<CertificateSerial>() {
-                public CertificateSerial answer(InvocationOnMock invocation) {
-                    Object[] args = invocation.getArguments();
-                    CertificateSerial cs = (CertificateSerial) args[0];
-                    cs.setId(42L);
-                    return cs;
-                }
-            });
-        when(pki.createX509Certificate(any(String.class), nullable(Set.class), nullable(Set.class),
+        when(csc.create(any(CertificateSerial.class))).thenAnswer((Answer<CertificateSerial>) invocation -> {
+            Object[] args = invocation.getArguments();
+            CertificateSerial cs = (CertificateSerial) args[0];
+            cs.setId(42L);
+            return cs;
+        });
+        when(pki.createX509Certificate(any(DistinguishedName.class), nullable(Set.class), nullable(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class)))
             .thenReturn(mock(X509Certificate.class));
@@ -213,17 +215,14 @@ public class DefaultIdentityCertServiceAdapterTest {
 
         KeyPair kp = createKeyPair();
         when(pki.getConsumerKeyPair(consumer)).thenReturn(kp);
-        when(csc.create(any(CertificateSerial.class))).thenAnswer(
-            new Answer<CertificateSerial>() {
-                public CertificateSerial answer(InvocationOnMock invocation) {
-                    Object[] args = invocation.getArguments();
-                    CertificateSerial cs = (CertificateSerial) args[0];
-                    cs.setId(42L);
-                    return cs;
-                }
-            });
+        when(csc.create(any(CertificateSerial.class))).thenAnswer((Answer<CertificateSerial>) invocation -> {
+            Object[] args = invocation.getArguments();
+            CertificateSerial cs = (CertificateSerial) args[0];
+            cs.setId(42L);
+            return cs;
+        });
 
-        when(pki.createX509Certificate(any(String.class), nullable(Set.class), nullable(Set.class),
+        when(pki.createX509Certificate(any(DistinguishedName.class), nullable(Set.class), nullable(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class)))
             .thenReturn(mock(X509Certificate.class));

@@ -19,6 +19,7 @@ import org.candlepin.controller.util.ContentPathBuilder;
 import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -152,7 +153,7 @@ public class UeberCertificateGenerator {
             }
         }
 
-        String dn = "O=" + data.getOwner().getKey();
+        DistinguishedName dn = new DistinguishedName(null, data.getOwner());
         Set<X509ByteExtensionWrapper> byteExtensions = new LinkedHashSet<>();
         return this.pki.createX509Certificate(dn, extensions, byteExtensions,  data.getStartDate(),
             data.getEndDate(), keyPair, serialNumber, null);

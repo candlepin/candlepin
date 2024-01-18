@@ -61,6 +61,7 @@ import org.candlepin.model.ProductContent;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -299,7 +300,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         largeContentSubscription.setId("2");
         largeContentSubscription.setQuantity(1L);
 
-        owner = new Owner();
+        owner = new Owner().setKey("test_key");
         owner.setId(TestUtil.randomString());
         when(ownerCurator.findOwnerById(owner.getId())).thenReturn(owner);
 
@@ -324,7 +325,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(this.mockConsumerTypeCurator.getConsumerType(consumer)).thenReturn(type);
         when(this.mockConsumerTypeCurator.get(type.getId())).thenReturn(type);
 
-        entitlement = new Entitlement().setPool(pool)
+        entitlement = new Entitlement().setId("test_ent").setPool(pool)
             .setQuantity(Integer.valueOf(ENTITLEMENT_QUANTITY));
         entitlement.setConsumer(consumer);
         entitlement.setOwner(owner);
@@ -614,7 +615,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<>(), promotedContent, entitlement),
             new BigInteger("1234"), keyPair, new PromotedContent(prefix(owner)), new HashSet<>());
 
-        verify(mockedPKI).createX509Certificate(any(String.class),
+        verify(mockedPKI).createX509Certificate(any(DistinguishedName.class),
             argThat(new ListContainsContentUrl(CONTENT_URL, CONTENT_ID)),
             anySet(), any(Date.class), any(Date.class), any(KeyPair.class),
             any(BigInteger.class), nullable(String.class));
@@ -628,7 +629,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<>(), promotedContent, entitlement),
             new BigInteger("1234"), keyPair, promotedContent, new HashSet<>());
 
-        verify(mockedPKI).createX509Certificate(any(String.class),
+        verify(mockedPKI).createX509Certificate(any(DistinguishedName.class),
             argThat(new ListContainsContentUrl(CONTENT_URL, CONTENT_ID)),
             anySet(), any(Date.class), any(Date.class), any(KeyPair.class),
             any(BigInteger.class), nullable(String.class));
@@ -694,7 +695,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<>(), promotedContent, entitlement),
             new BigInteger("1234"), keyPair, new PromotedContent(prefix(owner)), new HashSet<>());
 
-        verify(mockedPKI).createX509Certificate(any(String.class),
+        verify(mockedPKI).createX509Certificate(any(DistinguishedName.class),
             argThat(new ListContainsContentExtensions()), anySet(), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class));
@@ -708,7 +709,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<>(), promotedContent, entitlement),
             new BigInteger("1234"), keyPair, promotedContent, new HashSet<>());
 
-        verify(mockedPKI).createX509Certificate(any(String.class),
+        verify(mockedPKI).createX509Certificate(any(DistinguishedName.class),
             argThat(new ListContainsEntitlementExtensions()), anySet(),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class));
@@ -722,7 +723,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<>(), promotedContent, entitlement),
             new BigInteger("1234"), keyPair, promotedContent, new HashSet<>());
 
-        verify(mockedPKI).createX509Certificate(any(String.class),
+        verify(mockedPKI).createX509Certificate(any(DistinguishedName.class),
             argThat(new ListContainsProvidesManagement("0")), anySet(),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class));
@@ -738,7 +739,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<>(), promotedContent, entitlement),
             new BigInteger("1234"), keyPair, promotedContent, new HashSet<>());
 
-        verify(mockedPKI).createX509Certificate(any(String.class),
+        verify(mockedPKI).createX509Certificate(any(DistinguishedName.class),
             argThat(new ListContainsProvidesManagement("1")), anySet(),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class));
@@ -754,7 +755,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<>(), promotedContent, entitlement),
             new BigInteger("1234"), keyPair, promotedContent, new HashSet<>());
 
-        verify(mockedPKI).createX509Certificate(any(String.class),
+        verify(mockedPKI).createX509Certificate(any(DistinguishedName.class),
             argThat(new ListContainsStackingId("3456")), anySet(), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class));
@@ -771,7 +772,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<>(), promotedContent, entitlement),
             new BigInteger("1234"), keyPair, promotedContent, new HashSet<>());
 
-        verify(mockedPKI).createX509Certificate(any(String.class),
+        verify(mockedPKI).createX509Certificate(any(DistinguishedName.class),
             argThat(new ListContainsVirtOnlyKey("1")), anySet(), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class));
@@ -787,7 +788,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<>(), promotedContent, entitlement),
             new BigInteger("1234"), keyPair, promotedContent, new HashSet<>());
 
-        verify(mockedPKI).createX509Certificate(any(String.class),
+        verify(mockedPKI).createX509Certificate(any(DistinguishedName.class),
             argThat(new ListContainsOrderNumberKey("this_order")), anySet(),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class));
@@ -805,12 +806,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<>(), promotedContent, entitlement),
             new BigInteger("1234"), keyPair, promotedContent, new HashSet<>());
 
-        verify(mockedPKI).createX509Certificate(any(String.class),
+        verify(mockedPKI).createX509Certificate(any(DistinguishedName.class),
             argThat(new ListContainsSupportLevel("Premium")), anySet(),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class));
 
-        verify(mockedPKI).createX509Certificate(any(String.class),
+        verify(mockedPKI).createX509Certificate(any(DistinguishedName.class),
             argThat(new ListContainsSupportType("Level 3")), anySet(),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class));
@@ -851,12 +852,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<>(), promotedContent, entitlement),
             new BigInteger("1234"), keyPair, promotedContent, new HashSet<>());
 
-        verify(mockedPKI).createX509Certificate(any(String.class),
+        verify(mockedPKI).createX509Certificate(any(DistinguishedName.class),
             argThat(new ListDoesNotContainSupportLevel()), anySet(), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class));
 
-        verify(mockedPKI).createX509Certificate(any(String.class),
+        verify(mockedPKI).createX509Certificate(any(DistinguishedName.class),
             argThat(new ListDoesNotContainSupportType()), anySet(), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class));
@@ -1645,9 +1646,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 return certificateSerials;
             });
 
-        when(mockedPKI
-            .createX509Certificate(any(String.class), anySet(), anySet(), any(Date.class),
-                any(Date.class), any(KeyPair.class), any(BigInteger.class), nullable(String.class)))
+        when(mockedPKI.createX509Certificate(any(DistinguishedName.class), anySet(), anySet(),
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            nullable(String.class)))
             .thenReturn(mock(X509Certificate.class));
         when(mockedPKI.getPemEncoded(any(X509Certificate.class))).thenReturn("".getBytes());
         when(mockedPKI.getPemEncoded(any(PrivateKey.class))).thenReturn("".getBytes());

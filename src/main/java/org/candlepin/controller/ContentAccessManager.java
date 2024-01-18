@@ -44,6 +44,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.dto.Content;
+import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -81,8 +82,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.naming.ldap.Rdn;
-
 
 
 /**
@@ -421,10 +420,10 @@ public class ContentAccessManager {
         log.info("Generating X509 certificate for consumer \"{}\"...", consumerUuid);
         Set<X509ExtensionWrapper> extensions = prepareV3Extensions(entType);
         Set<X509ByteExtensionWrapper> byteExtensions = prepareV3ByteExtensions(product);
-        String orgName = owner != null ? owner.getKey() : null;
+        DistinguishedName dn = new DistinguishedName(consumerUuid, owner);
 
         X509Certificate x509Cert = this.pki.createX509Certificate(
-            createDN(consumerUuid, orgName), extensions, byteExtensions, Date.from(start.toInstant()),
+            dn, extensions, byteExtensions, Date.from(start.toInstant()),
             Date.from(end.toInstant()), keyPair, BigInteger.valueOf(serial.getId()), null);
 
         byte[] encodedCert = this.pki.getPemEncoded(x509Cert);
@@ -491,25 +490,6 @@ public class ContentAccessManager {
         // Consumer isn't a special type, check their certificate_version fact
         String entitlementVersion = consumer.getFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION);
         return entitlementVersion != null && entitlementVersion.startsWith("3.");
-    }
-
-    private String createDN(String commonName, String organizationName) {
-        StringBuilder builder = new StringBuilder();
-        if (commonName != null && !commonName.isEmpty()) {
-            builder.append("CN=")
-                .append(commonName);
-        }
-
-        if (organizationName != null && !organizationName.isBlank()) {
-            if (!builder.isEmpty()) {
-                builder.append(", ");
-            }
-
-            builder.append("O=")
-                .append(Rdn.escapeValue(organizationName));
-        }
-
-        return builder.toString();
     }
 
     private Set<X509ExtensionWrapper> prepareV3Extensions(String entType) {
