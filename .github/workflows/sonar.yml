@@ -10,8 +10,6 @@ jobs:
   sonar:
     name: Sonar
     runs-on: ubuntu-latest
-    container:
-      image: fedora:38
     if: github.event.workflow_run.conclusion == 'success'
     steps:
       - name: echo event
@@ -38,7 +36,7 @@ jobs:
 
       - name: Install dependencies
         shell: bash
-        run: dnf --setopt install_weak_deps=False install -y gettext git-core unzip
+        run: sudo apt-get install -y gettext git-core unzip
 
       - name: Request GitHub API for PR data
         uses: octokit/request-action@v2.x

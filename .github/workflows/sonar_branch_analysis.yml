@@ -29,8 +29,6 @@ jobs:
   branch_sonar_analysis:
     name: long-lived branch sonar analysis
     runs-on: ubuntu-latest
-    container:
-      image: fedora:38
     steps:
       - name: Mask secrets
         shell: bash
@@ -43,7 +41,7 @@ jobs:
 
       - name: Install dependencies
         shell: bash
-        run: dnf --setopt install_weak_deps=False install -y gettext
+        run: sudo apt-get install -y gettext
 
       - name: Set up Java
         uses: actions/setup-java@v4
