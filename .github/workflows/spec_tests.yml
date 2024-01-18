@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 
 # Cancel in-progress PR verification workflows. We only care about verifying the latest commit.
+# Adding change
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
