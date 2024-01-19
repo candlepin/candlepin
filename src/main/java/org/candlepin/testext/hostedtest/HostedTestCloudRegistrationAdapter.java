@@ -33,6 +33,7 @@ import org.candlepin.util.Util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -109,7 +110,8 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
 
         Map<String, String> metadata = new HashMap<>();
         try {
-            metadata = OBJ_MAPPER.readValue(cloudRegInfo.getMetadata(), Map.class);
+            String decoded = new String(Base64.getDecoder().decode(cloudRegInfo.getMetadata()));
+            metadata = OBJ_MAPPER.readValue(decoded, Map.class);
         }
         catch (JsonProcessingException e) {
             throw new MalformedCloudRegistrationException(
