@@ -843,6 +843,40 @@ public class ContentAccessSpecTest {
     }
 
     @Test
+    public void shouldUpdateExistingContentAccessCertContentWhenOrgContentPrefixChanges() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        assertThat(consumerClient.consumers().exportCertificates(consumer.getUuid(), null))
+            .singleElement();
+
+        // Update the content prefix on the org, which should trigger a refresh of at least the
+        // content payload of the SCA cert
+        owner.setContentPrefix("content_prefix");
+        adminClient.owners().updateOwner(owner.getKey(), owner);
+
+        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
+        assertThat(prodIdToContentIds)
+            .hasSize(1)
+            .extractingByKey("content_access", as(collection(String.class)))
+            .containsExactly(content.getId());
+
+        JsonNode certContent = certs.get(0).get("products").get(0).get("content").get(0);
+        assertThat(certContent.get("path").asText())
+            .contains(owner.getContentPrefix());
+    }
+
+    @Test
     public void shouldNotUpdateExistingContentAccessCertContentWhenNoDataChanges() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
