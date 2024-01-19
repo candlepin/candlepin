@@ -8798,7 +8798,7 @@ components:
               type: string
             description:
               type: string
-            content_prefix:
+            contentPrefix:
               type: string
             owner:
               $ref: "#/components/schemas/NestedOwnerDTO"
