@@ -100,7 +100,7 @@ class CloudRegistrationSpecTest {
         upstreamClient.createOwner(owner);
         String token = cloudRegistration.cloudAuthorize(owner.getKey(), "test-type", "test_signature");
         ConsumerDTO consumer = ApiClients.bearerToken(token).consumers()
-            .createConsumer(Consumers.random(owner));
+            .createConsumerWithoutOwner(Consumers.randomNoOwner());
 
         assertTokenType(ApiClient.MAPPER, token, STANDARD_TOKEN_TYPE);
         assertNotNull(consumer);
@@ -123,7 +123,7 @@ class CloudRegistrationSpecTest {
         upstreamClient.createOwner(owner);
         String token = cloudRegistration.cloudAuthorize(owner.getKey(), "test-type", "");
         ConsumerDTO consumer = ApiClients.bearerToken(token).consumers()
-            .createConsumer(Consumers.random(owner));
+            .createConsumerWithoutOwner(Consumers.randomNoOwner());
         assertNotNull(consumer);
         assertTokenType(ApiClient.MAPPER, token, STANDARD_TOKEN_TYPE);
     }
@@ -516,7 +516,7 @@ class CloudRegistrationSpecTest {
         assertTokenType(ApiClient.MAPPER, result.getToken(), STANDARD_TOKEN_TYPE);
 
         ConsumerDTO consumer = ApiClients.bearerToken(result.getToken()).consumers()
-            .createConsumer(Consumers.random(owner));
+            .createConsumerWithoutOwner(Consumers.randomNoOwner());
 
         assertNotNull(consumer);
     }
@@ -541,7 +541,7 @@ class CloudRegistrationSpecTest {
 
         // The Org does not exist at all in the backend services upstream of Candlepin yet
         assertThatStatus(() -> ApiClients.bearerToken(result.getToken()).consumers()
-            .createConsumer(Consumers.random(ownerDTO)))
+            .createConsumerWithoutOwner(Consumers.randomNoOwner()))
             .isTooMany()
             .hasHeaderWithValue("retry-after", 300);
 
@@ -550,7 +550,7 @@ class CloudRegistrationSpecTest {
 
         // The Org exists upstream of Candlepin, but does not have SKU(s) subscribed to it yet
         assertThatStatus(() -> ApiClients.bearerToken(result.getToken()).consumers()
-            .createConsumer(Consumers.random(ownerDTO)))
+            .createConsumerWithoutOwner(Consumers.randomNoOwner()))
             .isTooMany()
             .hasHeaderWithValue("retry-after", 180);
 
@@ -558,7 +558,7 @@ class CloudRegistrationSpecTest {
 
         // No product and no owner exist in Candlepin
         assertThatStatus(() -> ApiClients.bearerToken(result.getToken()).consumers()
-            .createConsumer(Consumers.random(ownerDTO)))
+            .createConsumerWithoutOwner(Consumers.randomNoOwner()))
             .isTooMany()
             .hasHeaderWithValue("retry-after", 60);
 
@@ -566,7 +566,7 @@ class CloudRegistrationSpecTest {
         // Just owner exist in Candlepin
         adminClient.owners().createOwner(ownerDTO);
         assertThatStatus(() -> ApiClients.bearerToken(result.getToken()).consumers()
-            .createConsumer(Consumers.random(ownerDTO)))
+            .createConsumerWithoutOwner(Consumers.randomNoOwner()))
             .isTooMany()
             .hasHeaderWithValue("retry-after", 30);
 
@@ -574,7 +574,7 @@ class CloudRegistrationSpecTest {
         adminClient.ownerProducts().createProductByOwner(ownerDTO.getKey(), productDTO);
         adminClient.owners().createPool(ownerDTO.getKey(), Pools.random(productDTO));
         ConsumerDTO consumer = ApiClients.bearerToken(result.getToken()).consumers()
-            .createConsumer(Consumers.random(ownerDTO));
+            .createConsumerWithoutOwner(Consumers.randomNoOwner());
 
         assertThat(consumer)
             .isNotNull()
@@ -600,21 +600,33 @@ class CloudRegistrationSpecTest {
         admin.hosted().associateProductIdsToCloudOffer(offerId, List.of(productDTO.getId()));
 
         admin.hosted().createOwner(anonOwner);
+
+        // Autoregistration v2 before the owner is associated with a cloud account, will result
+        // in a response that includes an anonymous token, and has a null owner (since one may not
+        // even exist yet).
+        CloudAuthenticationResultDTO anonTokenResponse = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+        assertThat(anonTokenResponse.getTokenType()).isEqualTo("CP-Anonymous-Cloud-Registration");
+        assertThat(anonTokenResponse.getOwnerKey()).isNull();
+        ApiClient anonClient = ApiClients.bearerToken(anonTokenResponse.getToken());
+
         admin.hosted().associateOwnerToCloudAccount(accountId, anonOwner.getKey());
         admin.hosted().createSubscription(Subscriptions.random(anonOwner, productDTO));
         admin.owners().createOwner(anonOwner);
         admin.ownerProducts().createProductByOwner(anonOwner.getKey(), productDTO);
-
-        CloudAuthenticationResultDTO anonToken = ApiClients.noAuth().cloudAuthorization()
-            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
-        ApiClient anonClient = ApiClients.bearerToken(anonToken.getToken());
-
         admin.owners().createPool(anonOwner.getKey(), Pools.random(productDTO));
 
-        CloudAuthenticationResultDTO token = ApiClients.noAuth().cloudAuthorization()
+        // Autoregistration v2 after the owner is fully ready, will result
+        // in a response that includes a standard token, and also has an owner,
+        // although that value is not actually set as a query parameter during registration
+        // by the client (since the owner key is already included in the token itself.
+        CloudAuthenticationResultDTO standardTokenResponse = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
-        ApiClient client = ApiClients.bearerToken(token.getToken());
-        client.consumers().createConsumer(Consumers.random(anonOwner));
+        assertThat(standardTokenResponse.getTokenType()).isEqualTo("CP-Cloud-Registration");
+        assertThat(standardTokenResponse.getOwnerKey()).isNotNull().isEqualTo(anonOwner.getKey());
+        ApiClient client = ApiClients.bearerToken(standardTokenResponse.getToken());
+
+        client.consumers().createConsumerWithoutOwner(Consumers.randomNoOwner());
 
         AsyncJobStatusDTO job = owners.claim(anonOwner.getKey(),
             new ClaimantOwner().claimantOwnerKey(destOwner.getKey()));
@@ -622,9 +634,9 @@ class CloudRegistrationSpecTest {
         assertThatJob(job).isFinished();
 
         // Create more consumers after owner is claimed
-        anonClient.consumers().createConsumer(Consumers.random(anonOwner));
-        client.consumers().createConsumer(Consumers.random(anonOwner));
-        client.consumers().createConsumer(Consumers.random(anonOwner));
+        anonClient.consumers().createConsumerWithoutOwner(Consumers.randomNoOwner());
+        client.consumers().createConsumerWithoutOwner(Consumers.randomNoOwner());
+        client.consumers().createConsumerWithoutOwner(Consumers.randomNoOwner());
 
         // Anon owner should be left with no consumers
         List<ConsumerDTOArrayElement> anonConsumers = owners.listOwnerConsumers(anonOwner.getKey());

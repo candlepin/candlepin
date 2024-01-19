@@ -80,6 +80,9 @@ public class ConsumerClient extends ConsumerApi {
     public ConsumerDTO createPersonConsumer(ConsumerDTO consumer, String username) {
         return super.createConsumer(consumer, username, consumer.getOwner().getKey(), null, true);
     }
+    public ConsumerDTO createConsumerWithoutOwner(ConsumerDTO consumer) {
+        return super.createConsumer(consumer, null, null, null, true);
+    }
 
     public JsonNode bindPool(String consumerUuid, String poolId, Integer quantity) {
         return getJsonNode(super.bind(consumerUuid, poolId, null, quantity, "",

@@ -27,6 +27,7 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.AnonymousCloudConsumerPrincipal;
+import org.candlepin.auth.CloudConsumerPrincipal;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SecurityHole;
@@ -1376,36 +1377,38 @@ public class ConsumerResource implements ConsumerApi {
      * if the user does not have permission to register on this owner.
      */
     protected Owner setupOwner(Principal principal, String ownerKey) {
-        // If no owner was specified, try to assume based on which owners the principal has admin rights for.
-        // If more than one, we have to error out.
+        // If no owner was specified, for UserPrincipals, try to assume based on which owners it has admin
+        // rights for. If more than one, we have to error out. In case of autoregistration principals, they
+        // have the owner key set from the token itself.
+        if (ownerKey == null) {
+            if (principal instanceof UserPrincipal) {
+                // check for this cast?
+                List<String> ownerKeys = ((UserPrincipal) principal).getOwnerKeys();
 
-        if (ownerKey == null && !(principal instanceof UserPrincipal) &&
-            !(principal instanceof AnonymousCloudConsumerPrincipal)) {
-            // There's no resolution we can perform here.
-            log.warn("Cannot determine organization with which to register client: {}", principal);
-            String errmsg = i18n.tr("Client is not authorized to register with any organization");
-
-            throw new BadRequestException(errmsg);
-        }
-
-        if (ownerKey == null && (principal instanceof UserPrincipal)) {
-            // check for this cast?
-            List<String> ownerKeys = ((UserPrincipal) principal).getOwnerKeys();
-
-            if (ownerKeys.size() != 1) {
-                OwnerInfo primary = ((UserPrincipal) principal).getPrimaryOwner();
-                if (primary == null) {
-                    throw new BadRequestException(i18n.tr("You must specify an organization for new units."));
+                if (ownerKeys.size() != 1) {
+                    OwnerInfo primary = ((UserPrincipal) principal).getPrimaryOwner();
+                    if (primary == null) {
+                        throw new BadRequestException(
+                            i18n.tr("You must specify an organization for new units."));
+                    }
+                    ownerKey = primary.getKey();
                 }
-                ownerKey = primary.getKey();
+                else {
+                    ownerKey = ownerKeys.get(0);
+                }
+            }
+            else if (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal) {
+                ownerKey = anonymPrincipal.getAnonymousCloudConsumer().getOwnerKey();
+            }
+            else if (principal instanceof CloudConsumerPrincipal cloudConsumerPrincipal) {
+                ownerKey = cloudConsumerPrincipal.getOwnerKey();
             }
             else {
-                ownerKey = ownerKeys.get(0);
+                // There's no resolution we can perform here.
+                log.warn("Cannot determine organization with which to register client: {}", principal);
+                String errmsg = i18n.tr("Client is not authorized to register with any organization");
+                throw new BadRequestException(errmsg);
             }
-        }
-
-        if (ownerKey == null && (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal)) {
-            ownerKey = anonymPrincipal.getAnonymousCloudConsumer().getOwnerKey();
         }
 
         createOwnerIfNeeded(principal);
