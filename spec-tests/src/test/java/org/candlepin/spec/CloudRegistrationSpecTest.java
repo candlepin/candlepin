@@ -25,8 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.client.v1.ClaimantOwner;
 import org.candlepin.dto.api.client.v1.CloudAuthenticationResultDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
+import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.client.v1.ContentDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
@@ -38,6 +40,7 @@ import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.CloudRegistrationClient;
+import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
@@ -48,7 +51,6 @@ import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -78,7 +80,7 @@ class CloudRegistrationSpecTest {
     private static final String ANON_TOKEN_TYPE = "CP-Anonymous-Cloud-Registration";
 
     @Test
-    public void shouldGenerateValidTokenWithValidMetadata() throws Exception {
+    public void shouldGenerateValidTokenWithValidMetadata() {
         ApiClient adminClient = ApiClients.admin();
         HostedTestApi upstreamClient = adminClient.hosted();
         CloudRegistrationClient cloudRegistration = ApiClients.noAuth().cloudAuthorization();
@@ -90,11 +92,12 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldAllowRegistrationWithValidToken() throws Exception {
+    public void shouldAllowRegistrationWithValidToken() {
         ApiClient adminClient = ApiClients.admin();
         HostedTestApi upstreamClient = adminClient.hosted();
         CloudRegistrationClient cloudRegistration = ApiClients.noAuth().cloudAuthorization();
-        OwnerDTO owner = upstreamClient.createOwner(Owners.random());
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        upstreamClient.createOwner(owner);
         String token = cloudRegistration.cloudAuthorize(owner.getKey(), "test-type", "test_signature");
         ConsumerDTO consumer = ApiClients.bearerToken(token).consumers()
             .createConsumer(Consumers.random(owner));
@@ -112,11 +115,12 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldAllowRegistrationWithEmptySignature() throws Exception {
+    public void shouldAllowRegistrationWithEmptySignature() {
         ApiClient adminClient = ApiClients.admin();
         HostedTestApi upstreamClient = adminClient.hosted();
         CloudRegistrationClient cloudRegistration = ApiClients.noAuth().cloudAuthorization();
-        OwnerDTO owner = upstreamClient.createOwner(Owners.random());
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        upstreamClient.createOwner(owner);
         String token = cloudRegistration.cloudAuthorize(owner.getKey(), "test-type", "");
         ConsumerDTO consumer = ApiClients.bearerToken(token).consumers()
             .createConsumer(Consumers.random(owner));
@@ -125,7 +129,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldAllowV2AuthWithExistingEntitledOwnerForCloudAccountId() throws Exception {
+    public void shouldAllowV2AuthWithExistingEntitledOwnerForCloudAccountId() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         adminClient.hosted().createOwner(owner);
@@ -153,7 +157,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldAllowV2AuthWithExistingEntitledAnonymousOwnerForCloudAccountId() throws Exception {
+    public void shouldAllowV2AuthWithExistingEntitledAnonymousOwnerForCloudAccountId() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random().anonymous(true));
         adminClient.hosted().createOwner(owner);
@@ -180,8 +184,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldReceiveAnonTokenForV2AuthWithExistingOwnerForCloudAccountIdAndNoEntitlement()
-        throws Exception {
+    public void shouldReceiveAnonTokenForV2AuthWithExistingOwnerForCloudAccountIdAndNoEntitlement() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         adminClient.hosted().createOwner(owner);
@@ -204,7 +207,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldReceiveAnonTokenForV2AuthWithNoOwnerForCloudAccountId() throws Exception {
+    public void shouldReceiveAnonTokenForV2AuthWithNoOwnerForCloudAccountId() {
         ApiClient adminClient = ApiClients.admin();
         String accountId = StringUtil.random("cloud-account-id-");
         String instanceId = StringUtil.random("cloud-instance-id-");
@@ -224,7 +227,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldReceiveAnonTokenForV2AuthWithNonSyncedOwnerInCandlepin() throws Exception {
+    public void shouldReceiveAnonTokenForV2AuthWithNonSyncedOwnerInCandlepin() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.hosted().createOwner(Owners.random());
         ProductDTO prod = adminClient.hosted().createProduct(Products.random());
@@ -249,7 +252,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldReceiveAnonTokenForV2AuthWithNonSyncedPoolInCandlepin() throws Exception {
+    public void shouldReceiveAnonTokenForV2AuthWithNonSyncedPoolInCandlepin() {
         ApiClient adminClient = ApiClients.admin();
 
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
@@ -284,7 +287,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldReceiveDifferentAnonTokenDuringV2ReAuthenticationWithKnownOwner() throws Exception {
+    public void shouldReceiveDifferentAnonTokenDuringV2ReAuthenticationWithKnownOwner() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         adminClient.hosted().createOwner(owner);
@@ -319,7 +322,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldReceiveDifferentAnonTokenDuringV2ReAuthenticationWithUnknownOwner() throws Exception {
+    public void shouldReceiveDifferentAnonTokenDuringV2ReAuthenticationWithUnknownOwner() {
         ApiClient adminClient = ApiClients.admin();
         String accountId = StringUtil.random("cloud-account-id-");
         String instanceId = StringUtil.random("cloud-instance-id-");
@@ -350,7 +353,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWithMissingCloudAccountIdForV2Auth() throws Exception {
+    public void shouldReturnBadRequestWithMissingCloudAccountIdForV2Auth() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.hosted().createOwner(Owners.random());
         ProductDTO prod = adminClient.hosted().createProduct(Products.random());
@@ -365,7 +368,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWithMissingCloudInstanceIdForV2Auth() throws Exception {
+    public void shouldReturnBadRequestWithMissingCloudInstanceIdForV2Auth() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.hosted().createOwner(Owners.random());
         ProductDTO prod = adminClient.hosted().createProduct(Products.random());
@@ -380,7 +383,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWithMissingCloudOfferingIdForV2Auth() throws Exception {
+    public void shouldReturnBadRequestWithMissingCloudOfferingIdForV2Auth() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.hosted().createOwner(Owners.random());
         ProductDTO prod = adminClient.hosted().createProduct(Products.random());
@@ -395,8 +398,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldThrowNotAuthorizedExceptionWithUnknownProductIdForCloudOfferingForV2Auth()
-        throws Exception {
+    public void shouldThrowNotAuthorizedExceptionWithUnknownProductIdForCloudOfferingForV2Auth() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         adminClient.hosted().createOwner(owner);
@@ -415,8 +417,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldThrowNotImplementedExceptionWith1POfferingForV2Auth()
-        throws Exception {
+    public void shouldThrowNotImplementedExceptionWith1POfferingForV2Auth() {
         ApiClient adminClient = ApiClients.admin();
         String accountId = StringUtil.random("cloud-account-id-");
         String instanceId = StringUtil.random("cloud-instance-id-");
@@ -430,7 +431,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldExportCertificatesWithAnonymousToken() throws Exception {
+    public void shouldExportCertificatesWithAnonymousToken() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         adminClient.hosted().createOwner(owner);
@@ -469,8 +470,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldNotExportCertificatesWithAnonymousTokenForUnknownAnonCloudConsumer()
-            throws Exception {
+    public void shouldNotExportCertificatesWithAnonymousTokenForUnknownAnonCloudConsumer() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         adminClient.hosted().createOwner(owner);
@@ -496,7 +496,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldCreateConsumerWhenUsingStandardToken() throws JsonProcessingException {
+    public void shouldCreateConsumerWhenUsingStandardToken() {
         ApiClient adminClient = ApiClients.admin();
 
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
@@ -526,7 +526,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldCreateConsumerWhenUsingAnonymousToken() throws JsonProcessingException {
+    public void shouldCreateConsumerWhenUsingAnonymousToken() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO ownerDTO = Owners.random();
         ProductDTO productDTO = Products.random();
@@ -587,8 +587,60 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void shouldCreateOwnerWhenNoOwnerExistsForCloudAccountDuringV2Auth()
-        throws JsonProcessingException {
+    @OnlyInHosted
+    public void shouldMigrateConsumersRegisteredAfterClaiming() {
+        ApiClient admin = ApiClients.admin();
+        OwnerClient owners = admin.owners();
+        OwnerDTO anonOwner = Owners.randomSca().anonymous(true);
+        OwnerDTO destOwner = owners.createOwner(Owners.randomSca());
+
+        ProductDTO productDTO = Products.random();
+
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        admin.hosted().createProduct(productDTO);
+        admin.hosted().associateProductIdsToCloudOffer(offerId, List.of(productDTO.getId()));
+
+        admin.hosted().createOwner(anonOwner);
+        admin.hosted().associateOwnerToCloudAccount(accountId, anonOwner.getKey());
+        admin.hosted().createSubscription(Subscriptions.random(anonOwner, productDTO));
+        admin.owners().createOwner(anonOwner);
+        admin.ownerProducts().createProduct(anonOwner.getKey(), productDTO);
+
+        CloudAuthenticationResultDTO anonToken = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+        ApiClient anonClient = ApiClients.bearerToken(anonToken.getToken());
+
+        admin.owners().createPool(anonOwner.getKey(), Pools.random(productDTO));
+
+        CloudAuthenticationResultDTO token = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+        ApiClient client = ApiClients.bearerToken(token.getToken());
+        client.consumers().createConsumer(Consumers.random(anonOwner));
+
+        AsyncJobStatusDTO job = owners.claim(anonOwner.getKey(),
+            new ClaimantOwner().claimantOwnerKey(destOwner.getKey()));
+        job = admin.jobs().waitForJob(job);
+        assertThatJob(job).isFinished();
+
+        // Create more consumers after owner is claimed
+        anonClient.consumers().createConsumer(Consumers.random(anonOwner));
+        client.consumers().createConsumer(Consumers.random(anonOwner));
+        client.consumers().createConsumer(Consumers.random(anonOwner));
+
+        // Anon owner should be left with no consumers
+        List<ConsumerDTOArrayElement> anonConsumers = owners.listOwnerConsumers(anonOwner.getKey());
+        assertThat(anonConsumers).isEmpty();
+
+        // All consumers should be migrated to destination owner
+        List<ConsumerDTOArrayElement> migratedConsumers = owners.listOwnerConsumers(destOwner.getKey());
+        assertThat(migratedConsumers).hasSize(4);
+    }
+
+    @Test
+    public void shouldCreateOwnerWhenNoOwnerExistsForCloudAccountDuringV2Auth() {
 
         ApiClient adminClient = ApiClients.admin();
         ProductDTO productDTO = Products.random();
@@ -645,8 +697,7 @@ class CloudRegistrationSpecTest {
             .returns("org_environment", OwnerDTO::getContentAccessMode);
     }
 
-    private void assertTokenType(ObjectMapper mapper, String token, String expectedTokenType)
-        throws JsonMappingException, JsonProcessingException {
+    private void assertTokenType(ObjectMapper mapper, String token, String expectedTokenType) {
         if (token == null || expectedTokenType == null) {
             throw new IllegalArgumentException("token or token type is null");
         }
@@ -658,7 +709,13 @@ class CloudRegistrationSpecTest {
 
         Base64.Decoder decoder = Base64.getUrlDecoder();
         String body = new String(decoder.decode(chunks[1]));
-        Map<String, String> bodyMap = mapper.readValue(body, HashMap.class);
+        Map<String, String> bodyMap = null;
+        try {
+            bodyMap = mapper.readValue(body, HashMap.class);
+        }
+        catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
 
         assertEquals(expectedTokenType, bodyMap.get("typ"));
     }

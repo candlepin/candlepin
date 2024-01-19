@@ -16,6 +16,7 @@ package org.candlepin.resteasy.filter;
 
 import org.candlepin.auth.ActivationKeyPrincipal;
 import org.candlepin.auth.AnonymousCloudConsumerPrincipal;
+import org.candlepin.auth.CloudConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SecurityHole;
 import org.candlepin.exceptions.TooManyRequestsException;
@@ -99,19 +100,28 @@ public class SecurityHoleAuthorizationFilter extends AbstractAuthorizationFilter
             }
         }
         if (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal) {
-            if (!securityHole.anonConsumer()) {
+            if (!securityHole.autoregToken()) {
                 denyAccess(principal, method);
             }
-            AnonymousCloudConsumer anonymousCloudConsumer = anonymPrincipal.getAnonymousCloudConsumer();
-            String ownerKey = checkCloudAccountOrganization(anonymousCloudConsumer);
-            if (!ownerCurator.existsByKey(ownerKey)) {
-                throw new TooManyRequestsException(ORG_NOT_CREATED_IN_CANDLEPIN);
-            }
-            if (!poolCurator.hasPoolsForProducts(ownerKey, anonymousCloudConsumer.getProductIds())) {
-                throw new TooManyRequestsException(ORG_DOES_NOT_HAVE_POOLS);
-            }
-            anonymousCloudConsumer.setOwnerKey(ownerKey);
+            validateAnonymousCloudConsumer(anonymPrincipal);
         }
+        if (principal instanceof CloudConsumerPrincipal) {
+            if (!securityHole.autoregToken()) {
+                denyAccess(principal, method);
+            }
+        }
+    }
+
+    private void validateAnonymousCloudConsumer(AnonymousCloudConsumerPrincipal principal) {
+        AnonymousCloudConsumer anonymousCloudConsumer = principal.getAnonymousCloudConsumer();
+        String ownerKey = checkCloudAccountOrganization(anonymousCloudConsumer);
+        if (!ownerCurator.existsByKey(ownerKey)) {
+            throw new TooManyRequestsException(ORG_NOT_CREATED_IN_CANDLEPIN);
+        }
+        if (!poolCurator.hasPoolsForProducts(ownerKey, anonymousCloudConsumer.getProductIds())) {
+            throw new TooManyRequestsException(ORG_DOES_NOT_HAVE_POOLS);
+        }
+        anonymousCloudConsumer.setOwnerKey(ownerKey);
     }
 
     private String checkCloudAccountOrganization(AnonymousCloudConsumer anonymousCloudConsumer) {
