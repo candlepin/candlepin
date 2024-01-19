@@ -17,6 +17,7 @@ package org.candlepin.model;
 import org.candlepin.dto.api.server.v1.ConsumptionTypeCountsDTO;
 import org.candlepin.dto.api.server.v1.OwnerInfo;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -32,6 +33,14 @@ public class OwnerInfoBuilder {
 
     public OwnerInfoBuilder() {
         ownerInfo = new OwnerInfo();
+        ownerInfo.setConsumerTypeCountByPool(new LinkedHashMap<>());
+        ownerInfo.setConsumerCounts(new LinkedHashMap<>());
+        ownerInfo.setConsumerGuestCounts(new LinkedHashMap<>());
+        ownerInfo.setEntitlementsConsumedByType(new LinkedHashMap<>());
+        ownerInfo.setConsumerTypeCountByPool(new LinkedHashMap<>());
+        ownerInfo.setEnabledConsumerTypeCountByPool(new LinkedHashMap<>());
+        ownerInfo.setConsumerCountsByComplianceStatus(new LinkedHashMap<>());
+        ownerInfo.setEntitlementsConsumedByFamily(new LinkedHashMap<>());
         ownerInfo.putConsumerGuestCountsItem(GUEST, 0);
         ownerInfo.putConsumerGuestCountsItem(PHYSICAL, 0);
     }

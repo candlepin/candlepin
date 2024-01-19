@@ -47,6 +47,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -105,7 +106,7 @@ public class HypervisorUpdateAction {
         Set<String> hosts = new HashSet<>();
         Set<String> guests = new HashSet<>();
         Map<String, ConsumerDTO> incomingHosts = new HashMap<>();
-        HypervisorUpdateResultDTO result = new HypervisorUpdateResultDTO();
+        HypervisorUpdateResultDTO result = initResultDTO();
         parseHypervisorList(hypervisors, hosts, guests, incomingHosts);
         VirtConsumerMap hypervisorConsumersMap = new VirtConsumerMap();
 
@@ -134,6 +135,15 @@ public class HypervisorUpdateAction {
         }
 
         return new Result(result, hypervisorConsumersMap);
+    }
+
+    private HypervisorUpdateResultDTO initResultDTO() {
+        HypervisorUpdateResultDTO dto = new HypervisorUpdateResultDTO();
+        dto.setUpdated(new LinkedHashSet<>());
+        dto.setCreated(new LinkedHashSet<>());
+        dto.setUnchanged(new LinkedHashSet<>());
+        dto.setFailedUpdate(new LinkedHashSet<>());
+        return dto;
     }
 
     public Consumer reconcileHost(Owner owner, ConsumerDTO incomingHost, HypervisorUpdateResultDTO result,

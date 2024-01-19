@@ -35,7 +35,8 @@ openApiGenerate {
     validateSpec = true
     skipValidateSpec = true
     configOptions = [
-        dateLibrary: "java8"
+        dateLibrary: "java8",
+        containerDefaultToNull: "true"
     ]
     modelPackage = "org.candlepin.dto.api.client.v1"
     apiPackage = "org.candlepin.resource.client.v1"
