@@ -31,6 +31,10 @@ public final class Consumers {
         throw new UnsupportedOperationException();
     }
 
+    public static ConsumerDTO randomNoOwner() {
+        return random((NestedOwnerDTO) null);
+    }
+
     public static ConsumerDTO random(OwnerDTO owner) {
         return random(owner != null ? Owners.toNested(owner) : null);
     }

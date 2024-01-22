@@ -42,6 +42,10 @@ public class CloudConsumerPrincipal extends Principal {
         return this.owner.getKey();
     }
 
+    public String getOwnerKey() {
+        return this.owner.getKey();
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

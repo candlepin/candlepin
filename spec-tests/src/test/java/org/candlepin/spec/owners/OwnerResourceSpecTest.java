@@ -858,11 +858,11 @@ public class OwnerResourceSpecTest {
         CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
 
-        ApiClient anonClient = ApiClients.bearerToken(result.getToken());
+        ApiClient tokenClient = ApiClients.bearerToken(result.getToken());
         List<ConsumerDTO> consumers = List.of(
-            anonClient.consumers().createConsumer(Consumers.random(anonOwner)),
-            anonClient.consumers().createConsumer(Consumers.random(anonOwner)),
-            anonClient.consumers().createConsumer(Consumers.random(anonOwner))
+            tokenClient.consumers().createConsumerWithoutOwner(Consumers.randomNoOwner()),
+            tokenClient.consumers().createConsumerWithoutOwner(Consumers.randomNoOwner()),
+            tokenClient.consumers().createConsumerWithoutOwner(Consumers.randomNoOwner())
         );
         List<CertificateDTO> oldIdCerts = consumers.stream().map(ConsumerDTO::getIdCert).toList();
         List<CertificateDTO> oldScaCerts = fetchCertsOf(consumers, admin);
