@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -80,14 +79,12 @@ public class CertificateReader {
      * Supplies the CA's {@link X509Certificate}.
      *
      * @return a new Cert
-     * @throws IOException if a file can't be read or is not found
-     * @throws CertificateException  if there is an error from the underlying cert factory
      */
-    public X509Certificate getCACert() throws IOException, CertificateException {
+    public X509Certificate getCACert() {
         return this.x509Certificate;
     }
 
-    public Set<X509Certificate> getUpstreamCACerts()  throws IOException, CertificateException {
+    public Set<X509Certificate> getUpstreamCACerts() {
         return this.upstreamX509Certificates;
     }
 
@@ -95,10 +92,8 @@ public class CertificateReader {
      * Supplies the CA's {@link PrivateKey}.
      *
      * @return a new PrivateKey
-     * @throws IOException if a file can't be read or is not found
-     * @throws GeneralSecurityException if something violated policy
      */
-    public PrivateKey getCaKey() throws IOException, GeneralSecurityException {
+    public PrivateKey getCaKey() {
         return this.privateKey;
     }
 

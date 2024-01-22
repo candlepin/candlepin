@@ -108,8 +108,8 @@ public class BouncyCastlePKIUtilityTest {
     }
 
     private BouncyCastlePKIUtility buildBCPKIUtility() {
-        return new BouncyCastlePKIUtility(this.certificateReader, this.skiWriter, this.config,
-            this.mockKeyPairDataCurator);
+        return new BouncyCastlePKIUtility(new BouncyCastleSecurityProvider(), this.certificateReader,
+            this.skiWriter, this.config, this.mockKeyPairDataCurator);
     }
 
     @Test

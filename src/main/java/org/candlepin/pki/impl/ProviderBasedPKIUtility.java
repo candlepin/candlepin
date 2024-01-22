@@ -39,6 +39,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Set;
 
 
@@ -58,10 +59,9 @@ public abstract class ProviderBasedPKIUtility implements PKIUtility {
 
     public ProviderBasedPKIUtility(CertificateReader reader, SubjectKeyIdentifierWriter writer,
         Configuration config) {
-
-        this.reader = reader;
-        this.subjectKeyWriter = writer;
-        this.config = config;
+        this.reader = Objects.requireNonNull(reader);
+        this.subjectKeyWriter = Objects.requireNonNull(writer);
+        this.config = Objects.requireNonNull(config);
     }
 
     @Override

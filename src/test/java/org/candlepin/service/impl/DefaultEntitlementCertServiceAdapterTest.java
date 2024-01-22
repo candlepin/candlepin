@@ -65,6 +65,7 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.TestUtil;
@@ -221,8 +222,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @BeforeEach
     public void setUp() throws CertificateException, IOException {
         config = TestConfig.defaults();
-        realPKI = new BouncyCastlePKIUtility(new CertificateReaderForTesting(),
-            new BouncyCastleSubjectKeyIdentifierWriter(), this.config, new KeyPairDataCurator());
+        realPKI = new BouncyCastlePKIUtility(new BouncyCastleSecurityProvider(),
+            new CertificateReaderForTesting(), new BouncyCastleSubjectKeyIdentifierWriter(),
+            this.config, new KeyPairDataCurator());
         extensionUtil = new X509ExtensionUtil(this.config);
         mapper = ObjectMapperFactory.getX509V3ExtensionUtilObjectMapper();
 
