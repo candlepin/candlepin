@@ -340,40 +340,34 @@ public class ImportSuccessSpecTest {
     public void shouldPurgeImportRecords() throws Exception {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-        try {
-            File manifest = new ExportGenerator()
-                .addProduct(Products.random())
-                .export();
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
 
-            // This value comes from the default configuration of the cleaner job, which keeps the
-            // latest 10 records by default. If the Candlepin instance under test is running with a
-            // different configuration, this test will fail.
-            int recordsRetained = 10;
+        // This value comes from the default configuration of the cleaner job, which keeps the
+        // latest 10 records by default. If the Candlepin instance under test is running with a
+        // different configuration, this test will fail.
+        int recordsRetained = 10;
 
-            int importRecords = 12;
-            for (int i = 0; i < importRecords; i++) {
-                this.importAsync(owner, manifest, "MANIFEST_SAME");
-            }
-
-            List<ImportRecordDTO> importRecords1 = adminClient.owners().getImports(owner.getKey());
-            assertThat(importRecords1)
-                .isNotNull()
-                .hasSize(importRecords);
-
-            AsyncJobStatusDTO cleanerJob = adminClient.jobs().scheduleJob(RECORD_CLEANER_JOB_KEY);
-            cleanerJob = adminClient.jobs().waitForJob(cleanerJob.getId());
-            assertThatJob(cleanerJob)
-                .isFinished();
-
-            List<ImportRecordDTO> importRecords2 = adminClient.owners().getImports(owner.getKey());
-            assertThat(importRecords2)
-                .isNotNull()
-                .hasSize(recordsRetained);
+        int importRecords = 12;
+        for (int i = 0; i < importRecords; i++) {
+            this.importAsync(owner, manifest, "MANIFEST_SAME");
         }
-        finally {
-            // Cleanup rules that have been created.
-            adminClient.rules().deleteRules();
-        }
+
+        List<ImportRecordDTO> importRecords1 = adminClient.owners().getImports(owner.getKey());
+        assertThat(importRecords1)
+            .isNotNull()
+            .hasSize(importRecords);
+
+        AsyncJobStatusDTO cleanerJob = adminClient.jobs().scheduleJob(RECORD_CLEANER_JOB_KEY);
+        cleanerJob = adminClient.jobs().waitForJob(cleanerJob.getId());
+        assertThatJob(cleanerJob)
+            .isFinished();
+
+        List<ImportRecordDTO> importRecords2 = adminClient.owners().getImports(owner.getKey());
+        assertThat(importRecords2)
+            .isNotNull()
+            .hasSize(recordsRetained);
     }
 
     @Test
