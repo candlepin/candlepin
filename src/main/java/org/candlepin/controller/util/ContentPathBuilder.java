@@ -20,6 +20,8 @@ import org.candlepin.util.Util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
  * Class encapsulates the building of full content paths.
  */
 public class ContentPathBuilder {
+    private static final Logger log = LoggerFactory.getLogger(PromotedContent.class);
 
     private static final Pattern PROTOCOL_PATTERN = Pattern.compile("^[A-Za-z]+://.*$");
 
@@ -142,19 +145,30 @@ public class ContentPathBuilder {
         if (!isFullUri(contentPath)) {
             return "/" + encodePathSegments(contentPath);
         }
-        URIBuilder uriBuilder = urlBuilder(contentPath);
-        String scheme = uriBuilder.getScheme();
-        String host = uriBuilder.getHost();
-        String port = uriBuilder.getPort() == -1 ? "" : ":" + uriBuilder.getPort();
-        String path = uriBuilder.getPath();
-        String encodedPath = encodePathSegments(path);
-        return "%s://%s%s/%s".formatted(scheme, host, port, encodedPath);
+
+        try {
+            URIBuilder uriBuilder = new URIBuilder(contentPath);
+
+            // Encode the segments of the path... for reasons
+            String encodedPath = this.encodePathSegments(uriBuilder.getPath());
+            uriBuilder.setPath(encodedPath);
+
+            // Build + return the URI as a string
+            return uriBuilder.toString();
+        }
+        catch (URISyntaxException e) {
+            // Uh oh... this is probably bad, but it's not up to us to police URIs, so just return
+            // it as-is and issue a very loud warning
+            log.warn("Invalid URI constructed for content path; returning path as-is: {}", contentPath, e);
+            return contentPath;
+        }
     }
 
     private String encodePathSegments(String path) {
         if (path == null || path.isBlank()) {
             return "";
         }
+
         return Arrays.stream(path.split("/"))
             .filter(s -> !s.isBlank())
             .map(this::encode)
@@ -165,15 +179,6 @@ public class ContentPathBuilder {
         // Putting $ back to keep unknown macros (such as $basearch) unencoded.
         // We should check if this is still necessary.
         return Util.encodeUrl(pathSegment).replace("%24", "$");
-    }
-
-    private URIBuilder urlBuilder(String contentPath) {
-        try {
-            return new URIBuilder(contentPath);
-        }
-        catch (URISyntaxException e) {
-            throw new IllegalStateException("Could not parse the content path!", e);
-        }
     }
 
 }
