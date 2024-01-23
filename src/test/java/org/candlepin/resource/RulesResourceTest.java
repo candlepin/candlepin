@@ -21,9 +21,10 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.apache.commons.codec.binary.Base64;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Base64;
 
 /**
  * RulesResourceTest
@@ -41,32 +42,12 @@ public class RulesResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testUpload() {
-        String rulesBuffer = new String(
-            Base64.encodeBase64String((TestUtil.createRulesBlob(10000).getBytes())));
-        rulesResource.uploadRules(rulesBuffer);
-        Rules rules = rulesCurator.getRules();
-        String expected = "" + RulesCurator.RULES_API_VERSION + "." + 10000;
-        assertEquals(expected, rules.getVersion());
-    }
-
-    @Test
     public void testGet() {
-        String rulesBuffer = new String(
-            Base64.encodeBase64String((TestUtil.createRulesBlob(10000).getBytes())));
-        rulesResource.uploadRules(rulesBuffer);
+        String rulesBuffer = TestUtil.createRulesBlob(10000);
+        Rules rules = new Rules(rulesBuffer);
+        rules.setRulesSource(Rules.RulesSourceEnum.DATABASE);
+        rulesCurator.create(rules);
         String rulesBlob = rulesResource.getRules();
-        assertEquals(rulesBlob, rulesBuffer);
-    }
-
-    @Test
-    public void testDelete() {
-        String origRules = rulesResource.getRules();
-        String rulesBuffer = new String(
-            Base64.encodeBase64String((TestUtil.createRulesBlob(10000).getBytes())));
-        rulesResource.uploadRules(rulesBuffer);
-        rulesResource.deleteRules();
-        String rulesAfterDelete = rulesResource.getRules();
-        assertEquals(rulesAfterDelete, origRules);
+        assertEquals(new String(Base64.getDecoder().decode(rulesBlob)), rulesBuffer);
     }
 }
