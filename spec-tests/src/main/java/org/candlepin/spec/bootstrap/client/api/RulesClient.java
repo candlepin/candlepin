@@ -17,7 +17,7 @@ package org.candlepin.spec.bootstrap.client.api;
 import org.candlepin.invoker.client.ApiClient;
 import org.candlepin.resource.client.v1.RulesApi;
 
-import org.apache.commons.codec.binary.Base64;
+import java.util.Base64;
 
 public class RulesClient extends RulesApi {
 
@@ -31,17 +31,6 @@ public class RulesClient extends RulesApi {
             return encodedRules;
         }
 
-        return new String(Base64.decodeBase64(encodedRules));
+        return new String(Base64.getDecoder().decode(encodedRules));
     }
-
-    public String uploadRules(String rules) {
-        if (rules == null || rules.length() == 0) {
-            return null;
-        }
-
-        String encodedRules = Base64.encodeBase64String(rules.getBytes());
-
-        return super.uploadRules(encodedRules);
-    }
-
 }

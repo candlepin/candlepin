@@ -353,31 +353,25 @@ class ExportSpecTest {
         @Test
         @OnlyInStandalone
         void shouldPurgeImportRecords() throws Exception {
-            try {
-                OwnerDTO importOwner = ownerApi.createOwner(Owners.random());
-                int expectedRecordCount = 11;
-                for (int i = 0; i < expectedRecordCount; i++) {
-                    List<String> force = List.of("SIGNATURE_CONFLICT", "MANIFEST_SAME");
-                    AsyncJobStatusDTO status = client.owners()
-                        .importManifestAsync(importOwner.getKey(), force, manifest);
-                    status = client.jobs().waitForJob(status.getId());
-                    assertEquals("FINISHED", status.getState());
-                }
-
-                List<ImportRecordDTO> records = ownerApi.getImports(importOwner.getKey());
-                assertEquals(expectedRecordCount, records.size());
-
-                AsyncJobStatusDTO cleanerJob = jobsApi.scheduleJob(RECORD_CLEANER_JOB_KEY);
-                cleanerJob = jobsApi.waitForJob(cleanerJob.getId());
-                assertEquals("FINISHED", cleanerJob.getState());
-
-                records = ownerApi.getImports(importOwner.getKey());
-                assertEquals(10, records.size());
+            OwnerDTO importOwner = ownerApi.createOwner(Owners.random());
+            int expectedRecordCount = 11;
+            for (int i = 0; i < expectedRecordCount; i++) {
+                List<String> force = List.of("SIGNATURE_CONFLICT", "MANIFEST_SAME");
+                AsyncJobStatusDTO status = client.owners()
+                    .importManifestAsync(importOwner.getKey(), force, manifest);
+                status = client.jobs().waitForJob(status.getId());
+                assertEquals("FINISHED", status.getState());
             }
-            finally {
-                // Cleanup rules that have been created.
-                rulesApi.deleteRules();
-            }
+
+            List<ImportRecordDTO> records = ownerApi.getImports(importOwner.getKey());
+            assertEquals(expectedRecordCount, records.size());
+
+            AsyncJobStatusDTO cleanerJob = jobsApi.scheduleJob(RECORD_CLEANER_JOB_KEY);
+            cleanerJob = jobsApi.waitForJob(cleanerJob.getId());
+            assertEquals("FINISHED", cleanerJob.getState());
+
+            records = ownerApi.getImports(importOwner.getKey());
+            assertEquals(10, records.size());
         }
 
         @Test
