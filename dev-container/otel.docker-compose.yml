@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: candlepin
+      POSTGRES_PASSWORD: candlepin
+      POSTGRES_DB: candlepin
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U candlepin -d candlepin"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  candlepin:
+    container_name: candlepin
+    build:
+      context: ../
+      dockerfile: ./containers/release.Containerfile
+      target: otel
+      args:
+        WAR_FILE: ./build/libs/candlepin-*.war
+    environment:
+      ####### Candlepin CONFIGURATION #########
+      JPA_CONFIG_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQL92Dialect
+      JPA_CONFIG_HIBERNATE_CONNECTION_DRIVER_CLASS: org.postgresql.Driver
+      JPA_CONFIG_HIBERNATE_CONNECTION_URL: jdbc:postgresql://postgres/candlepin
+      JPA_CONFIG_HIBERNATE_CONNECTION_USERNAME: candlepin
+      JPA_CONFIG_HIBERNATE_CONNECTION_PASSWORD: candlepin
+      CANDLEPIN_AUTH_CLOUD_ENABLE: "true"
+      CANDLEPIN_AUTH_TRUSTED_ENABLE: "true"
+      CANDLEPIN_AUTH_OAUTH_ENABLE: "true"
+      CANDLEPIN_AUTH_OAUTH_CONSUMER_RSPEC_SECRET: rspec-oauth-secret
+      CANDLEPIN_DB_DATABASE_MANAGE_ON_STARTUP: Manage
+      CANDLEPIN_REFRESH_ORPHAN_ENTITY_GRACE_PERIOD: 0
+      ### HOSTED ###
+#      CANDLEPIN_STANDALONE: "false"
+#      MODULE_CONFIG_HOSTEDTEST_CONFIGURATION_MODULE: org.candlepin.testext.hostedtest.HostedTestModule
+#      MODULE_CONFIG_MANIFESTGEN_CONFIGURATION_MODULE: org.candlepin.testext.manifestgen.ManifestGeneratorModule
+      ### STANDALONE ###
+      CANDLEPIN_STANDALONE: "true"
+      ####### OTEL CONFIGURATION #########
+      CATALINA_OPTS: "$CATALINA_OPTS -javaagent:/tmp/opentelemetry-javaagent.jar"
+      OTEL_SERVICE_NAME: candlepin
+      OTEL_TRACES_EXPORTER: jaeger
+      OTEL_EXPORTER_JAEGER_ENDPOINT: http://jaeger:14250
+      OTEL_LOGS_EXPORTER: none
+      OTEL_METRICS_EXPORTER: none
+    ports:
+      - "8443:8443"
+    healthcheck:
+      test: curl --fail -k https://localhost:8443/candlepin/status
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  jaeger:
+    container_name: jaeger
+    image: registry.hub.docker.com/jaegertracing/all-in-one:latest
+    environment:
+      COLLECTOR_ZIPKIN_HOST_PORT: ':9411'
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - '5775:5775/udp' # agent - (deprecated) accept zipkin.thrift over compact Thrift protocol (used by legacy clients only)
+      - '6831:6831/udp' # agent - accept jaeger.thrift over Thrift-compact protocol (used by most SDKs)
+      - '6832:6832/udp' # agent - accept jaeger.thrift over Thrift-binary protocol (used by Node.js SDK)
+      - '5778:5778'     # agent - serve configs (sampling, etc)
+      - '4317:4317'     # collector - accept OpenTelemetry Protocol (OTLP) over gRPC, if enabled
+      - '4318:4318'     # collector - accept OpenTelemetry Protocol (OTLP) over HTTP, if enabled
+      - '9411:9411'     # collector - Zipkin compatible endpoint (optional)
+      - '14250:14250'   # collector - accept model.proto
+      - '14268:14268'   # collector - accept jaeger.thrift directly from clients
+      - '14269:14269'
+      - '16686:16686'   # web ui

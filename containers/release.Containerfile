@@ -122,3 +122,32 @@ USER tomcat
 EXPOSE 8080 8443 5432 3306
 
 ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "run"]
+
+################################# OTEL Image ################################
+
+FROM production as otel
+
+LABEL org.opencontainers.image.title="Candlepin Image with OTEL agent" \
+    org.opencontainers.image.description="Candlepin is an open source subscription & entitlement engine \
+    which is designed to manage software subscriptions from both vendor's & customer's perspectives. \
+    This is a development image not intended for production use."
+
+USER root
+
+# Setup development certificate and key
+WORKDIR /etc/candlepin/certs
+COPY --from=builder /app/certs /etc/candlepin/certs
+# Add the certificate to the Java trust store
+RUN ln -s /etc/candlepin/certs/*.crt /etc/pki/ca-trust/source/anchors --force; \
+    update-ca-trust;
+
+RUN curl -L https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar -o /tmp/opentelemetry-javaagent.jar
+
+COPY ./containers/server.xml /opt/tomcat/conf
+
+USER tomcat
+
+# Expose ports for tomcat, candlepin, postgres and mariadb
+EXPOSE 8080 8443 5432 3306
+
+ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "run"]
