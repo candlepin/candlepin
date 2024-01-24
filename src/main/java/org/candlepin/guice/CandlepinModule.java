@@ -177,7 +177,6 @@ import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.validation.CandlepinMessageInterpolator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.name.Names;
@@ -194,6 +193,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Function;
 
 import javax.cache.CacheManager;
 import javax.inject.Named;
@@ -287,7 +287,6 @@ public class CandlepinModule extends AbstractModule {
         // UeberCerts
         bind(UeberCertificateGenerator.class);
 
-        // flexible end date for identity certificates
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);
 
@@ -305,6 +304,7 @@ public class CandlepinModule extends AbstractModule {
 
         bind(BouncyCastleSecurityProvider.class);
         bind(X509CertificateBuilderProvider.class);
+        bind(X509CertificateBuilder.class).toProvider(X509CertificateBuilderProvider.class);
     }
 
     private void resources() {

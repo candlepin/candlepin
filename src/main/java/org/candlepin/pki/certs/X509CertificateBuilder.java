@@ -16,6 +16,7 @@
 package org.candlepin.pki.certs;
 
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.X509Extension;
 
 import org.bouncycastle.asn1.ASN1Encodable;
@@ -60,8 +61,6 @@ import java.util.Objects;
 
 import javax.inject.Provider;
 
-import jakarta.inject.Inject;
-
 public class X509CertificateBuilder {
 
     private static final String SIGNATURE_ALGORITHM = "SHA256WithRSA";
@@ -70,7 +69,7 @@ public class X509CertificateBuilder {
     private final CertificateReader certificateAuthority;
     private final List<X509Extension> certExtensions;
 
-    private String distinguishedName;
+    private DistinguishedName distinguishedName;
     private String subjectAltName;
     private Instant validAfter;
     private Instant validUntil;
@@ -85,8 +84,8 @@ public class X509CertificateBuilder {
         this.certExtensions = new ArrayList<>();
     }
 
-    public X509CertificateBuilder withDN(String distinguishedName) {
-        this.distinguishedName = distinguishedName;
+    public X509CertificateBuilder withDN(DistinguishedName dn) {
+        this.distinguishedName = dn;
         return this;
     }
 
@@ -142,19 +141,20 @@ public class X509CertificateBuilder {
         X509Certificate caCertificate = this.certificateAuthority.getCACert();
         PublicKey clientPubKey = this.keyPair.getPublic();
 
+        String dn = this.distinguishedName.value();
         X509v3CertificateBuilder builder = new X509v3CertificateBuilder(
             X500Name.getInstance(caCertificate.getSubjectX500Principal().getEncoded()),
             this.certSerial,
             Date.from(this.validAfter),
             Date.from(this.validUntil),
-            new X500Name(this.distinguishedName),
+            new X500Name(dn),
             SubjectPublicKeyInfo.getInstance(clientPubKey.getEncoded()));
 
         this.addSSLCertificateType(builder);
         this.addKeyUsage(builder);
         this.addAuthorityKeyIdentifier(builder, caCertificate);
         this.addSubjectKeyIdentifier(builder, clientPubKey);
-        this.addSubjectAltName(builder, this.distinguishedName, this.subjectAltName);
+        this.addSubjectAltName(builder, dn, this.subjectAltName);
         this.addExtensions(builder, this.certExtensions);
 
         return buildCertificate(builder, this.signer());
@@ -216,7 +216,7 @@ public class X509CertificateBuilder {
         //  - https://tools.ietf.org/html/rfc6125#section-6.4.4
 
         GeneralName subject = new GeneralName(GeneralName.directoryName, distinguishedName);
-        GeneralName name = new GeneralName(GeneralName.directoryName, "CN=" + subjectAltName);
+        GeneralName name = new GeneralName(GeneralName.directoryName, new DistinguishedName(subjectAltName).value());
         ASN1Encodable[] altNameArray = {subject, name};
 
         GeneralNames altNames = GeneralNames.getInstance(new DERSequence(altNameArray));
@@ -245,7 +245,7 @@ public class X509CertificateBuilder {
      * @throws IllegalStateException if one or more required fields have not been populated
      */
     private void checkMandatoryFields() {
-        if (this.distinguishedName == null || this.distinguishedName.isEmpty()) {
+        if (this.distinguishedName == null) {
             throw new IllegalStateException("distinguished name has not been set");
         }
 

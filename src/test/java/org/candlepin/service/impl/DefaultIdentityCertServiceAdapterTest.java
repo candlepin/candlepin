@@ -24,6 +24,7 @@ import static org.mockito.Mockito.nullable;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.config.TestConfig;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -33,7 +34,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -74,7 +74,7 @@ public class DefaultIdentityCertServiceAdapterTest {
 
     @BeforeEach
     public void setUp() {
-        dicsa = new DefaultIdentityCertServiceAdapter(pki, idcur, csc, new ExpiryDateFunction(1));
+        dicsa = new DefaultIdentityCertServiceAdapter(TestConfig.defaults(), pki, idcur, csc, null);
     }
 
     // can't mock a final class, so create a dummy one
