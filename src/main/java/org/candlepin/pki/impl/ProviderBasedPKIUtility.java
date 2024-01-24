@@ -17,6 +17,7 @@ package org.candlepin.pki.impl;
 import org.candlepin.config.Configuration;
 import org.candlepin.model.Consumer;
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509ByteExtensionWrapper;
@@ -65,7 +66,7 @@ public abstract class ProviderBasedPKIUtility implements PKIUtility {
     }
 
     @Override
-    public abstract X509Certificate createX509Certificate(String dn,
+    public abstract X509Certificate createX509Certificate(DistinguishedName dn,
         Set<X509ExtensionWrapper> extensions, Set<X509ByteExtensionWrapper> byteExtensions,
         Date startDate, Date endDate, KeyPair clientKeyPair, BigInteger serialNumber, String alternateName)
         throws GeneralSecurityException, IOException;

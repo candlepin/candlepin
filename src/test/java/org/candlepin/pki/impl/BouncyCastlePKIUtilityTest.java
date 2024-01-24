@@ -33,6 +33,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.KeyPairData;
 import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -44,8 +45,6 @@ import org.bouncycastle.asn1.ASN1UTF8String;
 import org.bouncycastle.asn1.DERBitString;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
-import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
-import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
@@ -55,18 +54,15 @@ import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
-import org.bouncycastle.operator.DigestCalculator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
@@ -77,7 +73,6 @@ import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Set;
-
 
 
 public class BouncyCastlePKIUtilityTest {
@@ -119,7 +114,7 @@ public class BouncyCastlePKIUtilityTest {
         Date start = new Date();
         Date end = Date.from(LocalDate.now().plusDays(365).atStartOfDay(ZoneId.systemDefault()).toInstant());
 
-        X509Certificate cert = pki.createX509Certificate("cn=candlepinproject.org", null, null, start,
+        X509Certificate cert = pki.createX509Certificate(buildDN(), null, null, start,
             end, subjectKeyPair, BigInteger.valueOf(1999L), "altName");
 
         assertEquals("SHA256withRSA", cert.getSigAlgName());
@@ -179,7 +174,7 @@ public class BouncyCastlePKIUtilityTest {
         X509ByteExtensionWrapper byteExtension = new X509ByteExtensionWrapper(byteExtOid, false, someBytes);
         Set<X509ByteExtensionWrapper> byteExtensions = Set.of(byteExtension);
 
-        X509Certificate cert = pki.createX509Certificate("cn=candlepinproject.org", exts,
+        X509Certificate cert = pki.createX509Certificate(buildDN(), exts,
             byteExtensions, start, end, subjectKeyPair, BigInteger.valueOf(2000L), "altName");
 
         assertNotNull(cert.getExtensionValue(extOid));
@@ -344,27 +339,8 @@ public class BouncyCastlePKIUtilityTest {
         assertArrayEquals(keypair.getPrivate().getEncoded(), kpdata.getPrivateKeyData());
     }
 
-    private static class SHA256DigestCalculator
-        implements DigestCalculator {
-        private ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-        private MessageDigest digest;
-
-        public SHA256DigestCalculator(MessageDigest digest) {
-            this.digest = digest;
-        }
-
-        public AlgorithmIdentifier getAlgorithmIdentifier() {
-            return new AlgorithmIdentifier(PKCSObjectIdentifiers.sha256WithRSAEncryption);
-        }
-
-        public OutputStream getOutputStream() {
-            return bOut;
-        }
-
-        public byte[] getDigest() {
-            byte[] bytes = digest.digest(bOut.toByteArray());
-            bOut.reset();
-            return bytes;
-        }
+    private DistinguishedName buildDN() {
+        return new DistinguishedName("candlepinproject.org");
     }
+
 }

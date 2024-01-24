@@ -19,6 +19,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.KeyPairData;
 import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -126,7 +127,7 @@ public class BouncyCastlePKIUtility extends ProviderBasedPKIUtility {
     }
 
     @Override
-    public X509Certificate createX509Certificate(String dn,
+    public X509Certificate createX509Certificate(DistinguishedName dn,
         Set<X509ExtensionWrapper> extensions, Set<X509ByteExtensionWrapper> byteExtensions,
         Date startDate, Date endDate,
         KeyPair clientKeyPair, BigInteger serialNumber, String alternateName)
@@ -140,7 +141,7 @@ public class BouncyCastlePKIUtility extends ProviderBasedPKIUtility {
             serialNumber,
             startDate,
             endDate,
-            new X500Name(dn),
+            new X500Name(dn.value()),
             SubjectPublicKeyInfo.getInstance(publicKeyEncoded));
 
         // set key usage - required for proper x509 function
@@ -181,8 +182,9 @@ public class BouncyCastlePKIUtility extends ProviderBasedPKIUtility {
 
              NB: These extensions should *not* be marked critical since the subject field is not empty.
             */
-            GeneralName subject = new GeneralName(GeneralName.directoryName, dn);
-            GeneralName name = new GeneralName(GeneralName.directoryName, "CN=" + alternateName);
+            GeneralName subject = new GeneralName(GeneralName.directoryName, dn.value());
+            GeneralName name = new GeneralName(GeneralName.directoryName,
+                new DistinguishedName(alternateName).value());
             ASN1Encodable[] altNameArray = {subject, name};
             GeneralNames altNames = GeneralNames.getInstance(new DERSequence(altNameArray));
             certGen.addExtension(Extension.subjectAlternativeName, false, altNames);

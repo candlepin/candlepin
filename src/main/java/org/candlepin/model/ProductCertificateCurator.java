@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.util.X509ExtensionUtil;
@@ -113,8 +114,9 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
         Calendar future = Calendar.getInstance();
         future.add(Calendar.YEAR, 10);
 
+        DistinguishedName dn = new DistinguishedName(product.getId());
         X509Certificate x509Cert = this.pki.createX509Certificate(
-            "CN=" + product.getId(), extensions, null, new Date(), future.getTime(), keyPair,
+            dn, extensions, null, new Date(), future.getTime(), keyPair,
             serial, null
         );
 

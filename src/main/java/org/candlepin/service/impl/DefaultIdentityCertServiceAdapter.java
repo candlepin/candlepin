@@ -19,6 +19,7 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
+import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.IdentityCertServiceAdapter;
 
@@ -125,8 +126,8 @@ public class DefaultIdentityCertServiceAdapter implements
         // We need the sequence generated id before we create the EntitlementCertificate,
         // otherwise we could have used cascading create
         serialCurator.create(serial);
+        DistinguishedName dn = new DistinguishedName(consumer.getUuid(), consumer.getOwner());
 
-        String dn = createDN(consumer);
         IdentityCertificate identityCert = new IdentityCertificate();
         KeyPair keyPair = this.pki.getConsumerKeyPair(consumer);
         X509Certificate x509cert = pki.createX509Certificate(dn, null, null,
@@ -141,11 +142,4 @@ public class DefaultIdentityCertServiceAdapter implements
         return idCertCurator.create(identityCert);
     }
 
-    private String createDN(Consumer consumer) {
-        StringBuilder sb = new StringBuilder("CN=");
-        sb.append(consumer.getUuid());
-        sb.append(", O=");
-        sb.append(consumer.getOwner().getKey());
-        return sb.toString();
-    }
 }
