@@ -37,8 +37,11 @@ import org.candlepin.dto.api.server.v1.CloudRegistrationDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.exceptions.NotImplementedException;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
+import org.candlepin.model.AnonymousContentAccessCertificate;
+import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PoolCurator;
@@ -47,14 +50,13 @@ import org.candlepin.service.exception.cloudregistration.CloudRegistrationNotSup
 import org.candlepin.service.model.CloudAuthenticationResult;
 import org.candlepin.test.TestUtil;
 
-
-import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -78,10 +80,11 @@ public class CloudRegistrationResourceTest {
     private CloudRegistrationAdapter mockCloudRegistrationAdapter;
     private OwnerCurator mockOwnerCurator;
     private AnonymousCloudConsumerCurator mockAnonCloudConsumerCurator;
+    private AnonymousContentAccessCertificateCurator mockAnonCloudCertCurator;
     private PoolCurator mockPoolCurator;
     private JobManager mockJobManager;
     private CloudAuthTokenGenerator mockTokenGenerator;
-
+    private PrincipalProvider principalProvider;
     private Principal principal;
 
     private CloudRegistrationResource cloudRegResource;
@@ -97,15 +100,17 @@ public class CloudRegistrationResourceTest {
         this.mockTokenGenerator = mock(CloudAuthTokenGenerator.class);
         this.mockTokenGenerator = mock(CloudAuthTokenGenerator.class);
         this.mockOwnerCurator = mock(OwnerCurator.class);
+        this.mockAnonCloudCertCurator = mock(AnonymousContentAccessCertificateCurator.class);
+        this.principalProvider = mock(PrincipalProvider.class);
 
         doReturn(true).when(mockConfig).getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
         this.principal = new UserPrincipal("test_user", null, false);
-        ResteasyContext.pushContext(Principal.class, this.principal);
+        doReturn(this.principal).when(principalProvider).get();
 
         cloudRegResource = new CloudRegistrationResource(this.mockConfig, this.i18n,
             this.mockCloudRegistrationAdapter,
             this.mockAnonCloudConsumerCurator, this.mockPoolCurator, this.mockJobManager,
-            this.mockTokenGenerator);
+            this.mockTokenGenerator, this.mockAnonCloudCertCurator, this.principalProvider);
     }
 
     @Test
@@ -119,7 +124,8 @@ public class CloudRegistrationResourceTest {
 
         cloudRegResource = new CloudRegistrationResource(this.mockConfig, this.i18n,
             this.mockCloudRegistrationAdapter, this.mockAnonCloudConsumerCurator, this.mockPoolCurator,
-            this.mockJobManager, this.mockTokenGenerator);
+            this.mockJobManager, this.mockTokenGenerator, this.mockAnonCloudCertCurator,
+            this.principalProvider);
 
         assertThrows(NotImplementedException.class,
             () -> cloudRegResource.cloudAuthorize(new CloudRegistrationDTO().type("test_type"), 1));
@@ -609,6 +615,20 @@ public class CloudRegistrationResourceTest {
         doReturn(isEntitled).when(mockResult).isEntitled();
 
         return mockResult;
+    }
+
+    @Test
+    public void testDeleteAnonymousConsumers() {
+        String accountId = "test-account-id";
+        AnonymousCloudConsumer consumer = mock(AnonymousCloudConsumer.class);
+        doReturn(List.of(consumer)).when(mockAnonCloudConsumerCurator).getByCloudAccountId(accountId);
+        doReturn(mock(AnonymousContentAccessCertificate.class)).when(consumer).getContentAccessCert();
+
+        cloudRegResource.deleteAnonymousConsumersByAccountId(accountId);
+        verify(this.mockAnonCloudConsumerCurator, Mockito.times(1))
+            .delete(consumer);
+        verify(this.mockAnonCloudCertCurator, Mockito.times(1))
+            .delete(any(AnonymousContentAccessCertificate.class));
     }
 
 }

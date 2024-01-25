@@ -32,6 +32,7 @@ import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.client.v1.ContentDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
+import org.candlepin.dto.api.client.v1.UserDTO;
 import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.HostedTestApi;
 import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
@@ -584,6 +585,60 @@ class CloudRegistrationSpecTest {
             .isNotNull()
             .extracting(ConsumerDTO::getIdCert)
             .isNotNull();
+    }
+
+    @Test
+    public void shouldDeleteAnonymousConsumersForAccount() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO ownerDTO = Owners.random();
+        ProductDTO productDTO = Products.random();
+
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        adminClient.hosted().createProduct(productDTO);
+        adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(productDTO.getId()));
+
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+
+        assertTokenType(ApiClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+
+        adminClient.cloudAuthorization().deleteAnonymousConsumersByAccountId(accountId);
+
+        // the status tells us that the anonymous consumer is gone
+        assertThatStatus(() -> ApiClients.bearerToken(result.getToken()).consumers()
+            .createConsumerWithoutOwner(Consumers.randomNoOwner()))
+            .isUnauthorized()
+            .hasMessageContaining("Invalid Credentials");
+    }
+
+    @Test
+    public void cannotDeleteAnonymousConsumersForAccountNotSuperAdmin() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO ownerDTO = Owners.random();
+        ProductDTO productDTO = Products.random();
+        String username = StringUtil.random("Joe");
+        String password = StringUtil.random("password");
+        adminClient.users().createUser(new UserDTO().username(username).password(password));
+
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        adminClient.hosted().createProduct(productDTO);
+        adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(productDTO.getId()));
+
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+
+        assertTokenType(ApiClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+
+        assertThatStatus(() -> ApiClients.basic(username, password)
+            .cloudAuthorization().deleteAnonymousConsumersByAccountId(accountId))
+            .isForbidden()
+            .hasMessageContaining("Insufficient permissions");
     }
 
     @Test
