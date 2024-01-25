@@ -31,8 +31,10 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.exceptions.NotImplementedException;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
+import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.resource.server.v1.CloudRegistrationApi;
 import org.candlepin.service.CloudRegistrationAdapter;
@@ -41,11 +43,13 @@ import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingE
 import org.candlepin.service.exception.MalformedCloudRegistrationException;
 import org.candlepin.service.model.CloudAuthenticationResult;
 
-import org.jboss.resteasy.core.ResteasyContext;
+import com.google.inject.persist.Transactional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -65,9 +69,11 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
     private final CloudRegistrationAdapter cloudRegistrationAdapter;
     private final I18n i18n;
     private final AnonymousCloudConsumerCurator anonymousCloudConsumerCurator;
+    private final AnonymousContentAccessCertificateCurator anonymousCloudCertCurator;
     private final PoolCurator poolCurator;
     private final JobManager jobManager;
     private final CloudAuthTokenGenerator tokenGenerator;
+    private final PrincipalProvider principalProvider;
 
     private final boolean enabled;
 
@@ -75,15 +81,19 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
     public CloudRegistrationResource(Configuration config, I18n i18n,
         CloudRegistrationAdapter cloudRegistrationAdapter,
         AnonymousCloudConsumerCurator anonymousCloudConsumerCurator,
-        PoolCurator poolCurator, JobManager jobManager, CloudAuthTokenGenerator tokenGenerator) {
+        PoolCurator poolCurator, JobManager jobManager, CloudAuthTokenGenerator tokenGenerator,
+        AnonymousContentAccessCertificateCurator anonymousCloudCertCurator,
+        PrincipalProvider principalProvider) {
 
         this.config = Objects.requireNonNull(config);
         this.i18n = Objects.requireNonNull(i18n);
         this.cloudRegistrationAdapter = Objects.requireNonNull(cloudRegistrationAdapter);
         this.anonymousCloudConsumerCurator = Objects.requireNonNull(anonymousCloudConsumerCurator);
+        this.anonymousCloudCertCurator = Objects.requireNonNull(anonymousCloudCertCurator);
         this.poolCurator = Objects.requireNonNull(poolCurator);
         this.jobManager = Objects.requireNonNull(jobManager);
         this.tokenGenerator = Objects.requireNonNull(tokenGenerator);
+        this.principalProvider = Objects.requireNonNull(principalProvider);
 
         this.enabled = this.config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
     }
@@ -95,7 +105,7 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
             throw new BadRequestException(this.i18n.tr("No cloud registration information provided"));
         }
 
-        Principal principal = ResteasyContext.getContextData(Principal.class);
+        Principal principal = this.principalProvider.get();
         try {
             if (!this.enabled) {
                 throw new UnsupportedOperationException(
@@ -292,6 +302,25 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
             String errmsg = this.i18n.tr("product IDs could not be resolved");
 
             throw new CloudRegistrationAuthorizationException(errmsg);
+        }
+    }
+
+    /**
+     * Allows the removal of anonymous consumers for an entire cloud account.
+     *  This is only for testing purposes.
+     *
+     * @param cloudAccountId
+     */
+    @Override
+    @Transactional
+    public void deleteAnonymousConsumersByAccountId(String cloudAccountId) {
+        List<AnonymousCloudConsumer> consumers = anonymousCloudConsumerCurator
+            .getByCloudAccountId(cloudAccountId);
+        if (consumers != null) {
+            for (AnonymousCloudConsumer consumer : consumers) {
+                anonymousCloudCertCurator.delete(consumer.getContentAccessCert());
+                anonymousCloudConsumerCurator.delete(consumer);
+            }
         }
     }
 }

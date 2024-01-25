@@ -614,6 +614,35 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /cloud/consumers/anonymous:
+    delete:
+      description: Removes Anonymous Consumers (for testing purposes only)
+      tags:
+        - cloud_registration
+      operationId: deleteAnonymousConsumersByAccountId
+      security: [ ]
+      parameters:
+        - name: cloud_account_id
+          in: query
+          description: The ID of the Cloud Account
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: A successful operation.
+        403:
+          description: Anonymous Consumers could not be deleted due to insufficient permissions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Anonymous Consumers could not be deleted due to insufficient permissions.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /consumers:
     get:
       description: Retrieves a list of the Consumers according to search criteria.

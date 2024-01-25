@@ -100,6 +100,26 @@ public class AnonymousCloudConsumerCurator extends AbstractHibernateCurator<Anon
     }
 
     /**
+     * Retrieves an anonymous cloud consumer using the provided cloud instance ID.
+     *
+     * @param accountId
+     *     the ID of the cloud instance that used to retrieve an anonymous cloud consumer
+     *
+     * @return the anonymous consumer based on the cloud instance ID, or null if no matching anonymous
+     * cloud consumer is found
+     */
+    public List<AnonymousCloudConsumer> getByCloudAccountId(String accountId) {
+        if (accountId == null || accountId.isBlank()) {
+            return new ArrayList<>();
+        }
+
+        String query = "SELECT c FROM AnonymousCloudConsumer c WHERE c.cloudAccountId =:accountId";
+        return this.currentSession().createQuery(query, AnonymousCloudConsumer.class)
+            .setParameter("accountId", accountId)
+            .getResultList();
+    }
+
+    /**
      * Takes a list of anonymous content access certificate ids and unlinks them from anonymous consumers.
      *
      * @param certIds

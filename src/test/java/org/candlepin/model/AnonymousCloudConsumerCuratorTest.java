@@ -230,6 +230,40 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
         assertNull(actual);
     }
 
+    @Test
+    public void testGetByAccountIdWithExistingAnonymousCloudConsumer() {
+        String otherProductId = "other-product-Id";
+        AnonymousCloudConsumer expected = new AnonymousCloudConsumer()
+            .setCloudAccountId("cloudAccountId")
+            .setCloudInstanceId("instanceId")
+            .setCloudOfferingId("offeringId")
+            .setProductIds(List.of("productId"))
+            .setCloudProviderShortName(TestUtil.randomString());
+        expected = this.anonymousCloudConsumerCurator.create(expected);
+
+        AnonymousCloudConsumer other = new AnonymousCloudConsumer()
+            .setCloudAccountId("otherCloudAccountId")
+            .setCloudInstanceId("otherInstanceId")
+            .setCloudOfferingId("otherOfferingId")
+            .setProductIds(List.of(otherProductId))
+            .setCloudProviderShortName(TestUtil.randomString());
+        other = this.anonymousCloudConsumerCurator.create(other);
+
+        List<AnonymousCloudConsumer> actual = this.anonymousCloudConsumerCurator
+            .getByCloudAccountId("otherCloudAccountId");
+
+        assertThat(actual)
+            .singleElement()
+            .returns(other.getId(), AnonymousCloudConsumer::getId)
+            .returns(other.getUuid(), AnonymousCloudConsumer::getUuid)
+            .returns(other.getCloudAccountId(), AnonymousCloudConsumer::getCloudAccountId)
+            .returns(other.getCloudInstanceId(), AnonymousCloudConsumer::getCloudInstanceId)
+            .returns(other.getCloudOfferingId(), AnonymousCloudConsumer::getCloudOfferingId)
+            .returns(other.getCloudProviderShortName(), AnonymousCloudConsumer::getCloudProviderShortName)
+            .extracting(AnonymousCloudConsumer::getProductIds, as(collection(String.class)))
+            .containsExactly(otherProductId);
+    }
+
     private List<AnonymousCloudConsumer> getAnonymousConsumersFromDB() {
         return this.getEntityManager()
             .createQuery("select c from AnonymousCloudConsumer c", AnonymousCloudConsumer.class)
