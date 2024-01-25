@@ -34,6 +34,8 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Objects;
@@ -120,8 +122,9 @@ public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAda
 
     private IdentityCertificate generate(Consumer consumer)
         throws GeneralSecurityException, IOException {
-        Instant from = Instant.now().minus(1, ChronoUnit.HOURS);
-        Instant to = Instant.now().plus(this.yearAddendum, ChronoUnit.YEARS);
+        ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
+        Instant from = now.minusHours(1).toInstant();
+        Instant to = now.plusYears(this.yearAddendum).toInstant();
         DistinguishedName dn = new DistinguishedName(consumer.getUuid(), consumer.getOwner());
         CertificateSerial serial = new CertificateSerial(Date.from(to));
         // We need the sequence generated id before we create the EntitlementCertificate,
