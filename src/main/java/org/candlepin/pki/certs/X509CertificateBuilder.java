@@ -26,6 +26,7 @@ import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
+import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.GeneralName;
@@ -70,7 +71,7 @@ public class X509CertificateBuilder {
     private final List<X509Extension> certExtensions;
 
     private DistinguishedName distinguishedName;
-    private String subjectAltName;
+    private DistinguishedName subjectAltName;
     private Instant validAfter;
     private Instant validUntil;
     private KeyPair keyPair;
@@ -90,7 +91,7 @@ public class X509CertificateBuilder {
     }
 
     public X509CertificateBuilder withSubjectAltName(String subjectAltName) {
-        this.subjectAltName = subjectAltName;
+        this.subjectAltName = new DistinguishedName(subjectAltName);
         return this;
     }
 
@@ -141,20 +142,20 @@ public class X509CertificateBuilder {
         X509Certificate caCertificate = this.certificateAuthority.getCACert();
         PublicKey clientPubKey = this.keyPair.getPublic();
 
-        String dn = this.distinguishedName.value();
         X509v3CertificateBuilder builder = new X509v3CertificateBuilder(
             X500Name.getInstance(caCertificate.getSubjectX500Principal().getEncoded()),
             this.certSerial,
             Date.from(this.validAfter),
             Date.from(this.validUntil),
-            new X500Name(dn),
+            new X500Name(this.distinguishedName.value()),
             SubjectPublicKeyInfo.getInstance(clientPubKey.getEncoded()));
 
         this.addSSLCertificateType(builder);
         this.addKeyUsage(builder);
         this.addAuthorityKeyIdentifier(builder, caCertificate);
         this.addSubjectKeyIdentifier(builder, clientPubKey);
-        this.addSubjectAltName(builder, dn, this.subjectAltName);
+        this.addSubjectAltName(builder, this.distinguishedName, this.subjectAltName);
+        this.addBasicConstraints(builder);
         this.addExtensions(builder, this.certExtensions);
 
         return buildCertificate(builder, this.signer());
@@ -167,9 +168,8 @@ public class X509CertificateBuilder {
     }
 
     private void addKeyUsage(X509v3CertificateBuilder builder) {
-        KeyUsage usage = new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment |
-            KeyUsage.dataEncipherment);
-
+        KeyUsage usage = new KeyUsage(KeyUsage.digitalSignature |
+            KeyUsage.keyEncipherment | KeyUsage.dataEncipherment);
         this.addExtension(builder, Extension.keyUsage, false, usage);
 
         ExtendedKeyUsage exUsage = new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth);
@@ -199,9 +199,9 @@ public class X509CertificateBuilder {
     }
 
     private void addSubjectAltName(X509v3CertificateBuilder builder,
-        String distinguishedName, String subjectAltName) {
+        DistinguishedName distinguishedName, DistinguishedName subjectAltName) {
 
-        if (subjectAltName == null || subjectAltName.isEmpty()) {
+        if (subjectAltName == null) {
             return;
         }
 
@@ -215,12 +215,16 @@ public class X509CertificateBuilder {
         //  - http://stackoverflow.com/questions/5935369
         //  - https://tools.ietf.org/html/rfc6125#section-6.4.4
 
-        GeneralName subject = new GeneralName(GeneralName.directoryName, distinguishedName);
-        GeneralName name = new GeneralName(GeneralName.directoryName, new DistinguishedName(subjectAltName).value());
+        GeneralName subject = new GeneralName(GeneralName.directoryName, distinguishedName.value());
+        GeneralName name = new GeneralName(GeneralName.directoryName, subjectAltName.value());
         ASN1Encodable[] altNameArray = {subject, name};
 
         GeneralNames altNames = GeneralNames.getInstance(new DERSequence(altNameArray));
         this.addExtension(builder, Extension.subjectAlternativeName, false, altNames);
+    }
+
+    private void addBasicConstraints(X509v3CertificateBuilder builder) {
+        addExtension(builder, Extension.basicConstraints, false, new BasicConstraints(false));
     }
 
     private void addExtensions(X509v3CertificateBuilder builder, Collection<X509Extension> extensions) {

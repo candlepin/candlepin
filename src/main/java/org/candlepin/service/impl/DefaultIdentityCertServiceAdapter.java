@@ -137,10 +137,6 @@ public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAda
             .withSubjectAltName(consumer.getName())
             .build();
 
-        X509Certificate x509cert = pki.createX509Certificate(dn, null,
-            startDate, endDate, keyPair, BigInteger.valueOf(serial.getId()),
-            consumer.getName());
-
         IdentityCertificate identityCertificate = new IdentityCertificate();
         identityCertificate.setCert(new String(pki.getPemEncoded(certificate)));
         identityCertificate.setKey(new String(pki.getPemEncoded(keyPair.getPrivate())));
