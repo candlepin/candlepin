@@ -95,18 +95,15 @@ import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.EnforcerForTesting;
 import org.candlepin.test.VerifyAuthorizationFilterFactory;
 import org.candlepin.util.DateSource;
-import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.validation.CandlepinMessageInterpolator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.matcher.Matchers;
-import com.google.inject.name.Names;
 import com.google.inject.persist.PersistService;
 import com.google.inject.persist.UnitOfWork;
 import com.google.inject.persist.jpa.JpaPersistModule;
@@ -328,9 +325,6 @@ public class TestingModules {
             bind(CriteriaRules.class);
             bind(PoolManager.class);
             bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
-
-            bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
-                .to(ExpiryDateFunction.class).in(Singleton.class);
 
             bind(CandlepinModeManager.class).asEagerSingleton();
             bind(BindChainFactory.class);

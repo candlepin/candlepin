@@ -169,7 +169,6 @@ import org.candlepin.sync.SyncUtils;
 import org.candlepin.util.AttributeValidator;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
-import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
@@ -193,7 +192,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Function;
 
 import javax.cache.CacheManager;
 import javax.inject.Named;
@@ -286,9 +284,6 @@ public class CandlepinModule extends AbstractModule {
 
         // UeberCerts
         bind(UeberCertificateGenerator.class);
-
-        bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
-            .to(ExpiryDateFunction.class).in(Singleton.class);
 
         bind(CacheManager.class).toProvider(JCacheManagerProvider.class).in(Singleton.class);
 
