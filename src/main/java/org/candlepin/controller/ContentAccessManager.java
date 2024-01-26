@@ -15,8 +15,6 @@
 package org.candlepin.controller;
 
 import org.candlepin.audit.EventSink;
-import org.candlepin.cache.AnonymousCertContent;
-import org.candlepin.cache.AnonymousCertContentCache;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.util.ContentPathBuilder;
@@ -48,8 +46,9 @@ import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509Extension;
+import org.candlepin.pki.certs.AnonymousCertificateGenerator;
+import org.candlepin.pki.certs.ContentAccessCertificateGenerator;
 import org.candlepin.pki.certs.X509StringExtension;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
@@ -203,63 +202,38 @@ public class ContentAccessManager {
             ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
     }
 
-    private static final String BASIC_ENTITLEMENT_TYPE = "basic";
-    private static final String SCA_ENTITLEMENT_TYPE = "OrgLevel";
-
     private final Configuration config;
-    private final PKIUtility pki;
-    private final CertificateSerialCurator serialCurator;
     private final OwnerCurator ownerCurator;
-    private final ContentCurator contentCurator;
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
-    private final X509V3ExtensionUtil v3extensionUtil;
     private final ConsumerCurator consumerCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
-    private final EnvironmentCurator environmentCurator;
     private final ContentAccessCertificateCurator contentAccessCertCurator;
     private final EventSink eventSink;
-    private final AnonymousCloudConsumerCurator anonCloudConsumerCurator;
-    private final AnonymousContentAccessCertificateCurator anonContentAccessCertCurator;
-    private final ProductServiceAdapter prodAdapter;
-    private final AnonymousCertContentCache contentCache;
-
+    private final AnonymousCertificateGenerator anonymousCertificateGenerator;
+    private final ContentAccessCertificateGenerator contentAccessCertificateGenerator;
     private final boolean standalone;
 
     @Inject
     public ContentAccessManager(
         Configuration config,
-        PKIUtility pki,
-        X509V3ExtensionUtil v3extensionUtil,
         ContentAccessCertificateCurator contentAccessCertificateCurator,
-        CertificateSerialCurator serialCurator,
         OwnerCurator ownerCurator,
-        ContentCurator contentCurator,
         ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        EnvironmentCurator environmentCurator,
         ContentAccessCertificateCurator contentAccessCertCurator,
         EventSink eventSink,
-        AnonymousCloudConsumerCurator anonCloudConsumerCurator,
-        AnonymousContentAccessCertificateCurator anonContentAccessCertCurator,
-        ProductServiceAdapter prodAdapter,
-        AnonymousCertContentCache contentCache) {
+        ContentAccessCertificateGenerator contentAccessCertificateGenerator,
+        AnonymousCertificateGenerator anonymousCertificateGenerator) {
 
         this.config = Objects.requireNonNull(config);
-        this.pki = Objects.requireNonNull(pki);
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
-        this.serialCurator = Objects.requireNonNull(serialCurator);
-        this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
-        this.contentCurator = Objects.requireNonNull(contentCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
-        this.environmentCurator = Objects.requireNonNull(environmentCurator);
         this.contentAccessCertCurator = Objects.requireNonNull(contentAccessCertCurator);
         this.eventSink = Objects.requireNonNull(eventSink);
-        this.anonCloudConsumerCurator = Objects.requireNonNull(anonCloudConsumerCurator);
-        this.anonContentAccessCertCurator = Objects.requireNonNull(anonContentAccessCertCurator);
-        this.prodAdapter = Objects.requireNonNull(prodAdapter);
-        this.contentCache = Objects.requireNonNull(contentCache);
+        this.anonymousCertificateGenerator = Objects.requireNonNull(anonymousCertificateGenerator);
+        this.contentAccessCertificateGenerator = Objects.requireNonNull(contentAccessCertificateGenerator);
         this.standalone = this.config.getBoolean(ConfigProperties.STANDALONE);
     }
 
@@ -287,8 +261,8 @@ public class ContentAccessManager {
                 .execute(args -> {
                     ContentAccessCertificate existing = consumer.getContentAccessCert();
                     return existing == null ?
-                        createNewScaCertificate(consumer, owner) :
-                        updateScaCertificate(consumer, owner, existing);
+                        this.contentAccessCertificateGenerator.createCertificate(consumer, owner) :
+                        this.contentAccessCertificateGenerator.updateCertificate(consumer, owner, existing);
                 });
 
             return this.wrap(result);
@@ -301,98 +275,6 @@ public class ContentAccessManager {
         return null;
     }
 
-    private ContentAccessCertificate createNewScaCertificate(Consumer consumer, Owner owner)
-        throws IOException, GeneralSecurityException {
-        log.info("Generating new SCA certificate for consumer: \"{}\"", consumer.getUuid());
-        OffsetDateTime start = OffsetDateTime.now().minusHours(1L);
-        OffsetDateTime end = start.plusYears(1L);
-
-        CertificateSerial serial = createSerial(end);
-
-        KeyPair keyPair = this.pki.getConsumerKeyPair(consumer);
-        byte[] pemEncodedKeyPair = this.pki.getPemEncoded(keyPair.getPrivate());
-        org.candlepin.model.dto.Product container = createSCAProdContainer(owner, consumer);
-
-        List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
-        ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(owner, environments);
-        PromotedContent promotedContent = new PromotedContent(contentPathBuilder).withAll(environments);
-
-        Map<org.candlepin.model.Content, Boolean> ownerContent = this.contentCurator
-            .getActiveContentByOwner(owner.getId());
-
-        byte[] payloadBytes = createContentAccessDataPayload(consumer, ownerContent, promotedContent);
-
-        ContentAccessCertificate existing = new ContentAccessCertificate();
-        existing.setSerial(serial);
-        existing.setKeyAsBytes(pemEncodedKeyPair);
-        existing.setConsumer(consumer);
-
-        existing.setCert(createX509Cert(consumer.getUuid(), owner, serial, keyPair, container,
-            SCA_ENTITLEMENT_TYPE, start, end));
-        existing.setContent(this.createPayloadAndSignature(payloadBytes));
-        ContentAccessCertificate savedCert = this.contentAccessCertificateCurator.create(existing);
-        consumer.setContentAccessCert(savedCert);
-        this.consumerCurator.merge(consumer);
-        return savedCert;
-    }
-
-    private ContentAccessCertificate updateScaCertificate(Consumer consumer, Owner owner,
-        ContentAccessCertificate existing) throws GeneralSecurityException, IOException {
-        Date now = new Date();
-        Date expiration = existing.getSerial().getExpiration();
-        boolean isX509CertExpired = expiration.before(now);
-
-        if (isX509CertExpired) {
-            OffsetDateTime start = OffsetDateTime.now().minusHours(1L);
-            OffsetDateTime end = start.plusYears(1L);
-
-            KeyPair keyPair = this.pki.getConsumerKeyPair(consumer);
-            this.serialCurator.revokeById(existing.getSerial().getId());
-            CertificateSerial serial = createSerial(end);
-            org.candlepin.model.dto.Product container = createSCAProdContainer(owner, consumer);
-
-            existing.setSerial(serial);
-            existing.setCert(createX509Cert(consumer.getUuid(), owner, serial, keyPair, container,
-                SCA_ENTITLEMENT_TYPE, start, end));
-            this.contentAccessCertificateCurator.saveOrUpdate(existing);
-        }
-
-        Date contentUpdate = owner.getLastContentUpdate();
-        boolean shouldUpdateContent = !contentUpdate.before(existing.getUpdated());
-        if (shouldUpdateContent || isX509CertExpired) {
-            List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
-            ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(owner, environments);
-            PromotedContent promotedContent = new PromotedContent(contentPathBuilder).withAll(environments);
-
-            Map<org.candlepin.model.Content, Boolean> ownerContent = this.contentCurator
-                .getActiveContentByOwner(owner.getId());
-
-            byte[] payloadBytes = createContentAccessDataPayload(consumer, ownerContent, promotedContent);
-            existing.setContent(this.createPayloadAndSignature(payloadBytes));
-            this.contentAccessCertificateCurator.saveOrUpdate(existing);
-        }
-
-        return existing;
-    }
-
-    private org.candlepin.model.dto.Product createSCAProdContainer(Owner owner, Consumer consumer) {
-        org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
-        List<org.candlepin.model.dto.Content> dtoContents = new ArrayList<>();
-        List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
-
-        for (Environment environment : environments) {
-            dtoContents.add(createContent(owner, environment));
-        }
-
-        if (dtoContents.isEmpty()) {
-            dtoContents.add(createContent(owner, null));
-        }
-
-        container.setContent(dtoContents);
-
-        return container;
-    }
-
     private ContentAccessCertificate wrap(ContentAccessCertificate cert) {
         ContentAccessCertificate result = new ContentAccessCertificate();
         result.setCert(cert.getCert() + cert.getContent());
@@ -403,58 +285,6 @@ public class ContentAccessManager {
         result.setKey(cert.getKey());
         result.setSerial(cert.getSerial());
         return result;
-    }
-
-    private CertificateSerial createSerial(OffsetDateTime end) {
-        CertificateSerial serial = new CertificateSerial(Date.from(end.toInstant()));
-        // We need the sequence generated id before we create the Certificate,
-        // otherwise we could have used cascading create
-        serialCurator.create(serial);
-        return serial;
-    }
-
-    private String createX509Cert(String consumerUuid, Owner owner, CertificateSerial serial, KeyPair keyPair,
-        org.candlepin.model.dto.Product product, String entType, OffsetDateTime start, OffsetDateTime end)
-        throws GeneralSecurityException, IOException {
-
-        log.info("Generating X509 certificate for consumer \"{}\"...", consumerUuid);
-        Set<X509Extension> extensions = new HashSet<>(prepareV3Extensions(entType));
-        extensions.addAll(prepareV3ByteExtensions(product));
-        DistinguishedName dn = new DistinguishedName(consumerUuid, owner);
-
-        X509Certificate x509Cert = this.pki.createX509Certificate(
-            dn, extensions, Date.from(start.toInstant()),
-            Date.from(end.toInstant()), keyPair, BigInteger.valueOf(serial.getId()), null);
-
-        byte[] encodedCert = this.pki.getPemEncoded(x509Cert);
-        return new String(encodedCert);
-    }
-
-    private Content createContent(Owner owner, Environment environment) {
-        Content dContent = new Content();
-        // TODO What content path do we want for SCA certs? Are we ok with /{ownerKey}/{envName}?
-        String path = "";
-        if (owner != null) {
-            path += "/" + Util.encodeUrl(owner.getKey());
-        }
-        if (environment != null) {
-            path += "/" + Util.encodeUrl(environment.getName());
-        }
-        dContent.setPath(path);
-        return dContent;
-    }
-
-    private String createPayloadAndSignature(byte[] payloadBytes)
-        throws IOException {
-        String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
-        payload += Util.toBase64(payloadBytes);
-        payload += "-----END ENTITLEMENT DATA-----\n";
-
-        byte[] bytes = pki.getSHA256WithRSAHash(new ByteArrayInputStream(payloadBytes));
-        String signature = "-----BEGIN RSA SIGNATURE-----\n";
-        signature += Util.toBase64(bytes);
-        signature += "-----END RSA SIGNATURE-----\n";
-        return payload + signature;
     }
 
     /**
@@ -490,58 +320,6 @@ public class ContentAccessManager {
         // Consumer isn't a special type, check their certificate_version fact
         String entitlementVersion = consumer.getFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION);
         return entitlementVersion != null && entitlementVersion.startsWith("3.");
-    }
-
-    private Set<X509Extension> prepareV3Extensions(String entType) {
-        Set<X509Extension> extensions = new HashSet<>(v3extensionUtil.getExtensions());
-        extensions.add(new X509StringExtension(
-            OID.EntitlementType.namespace(), entType));
-        return extensions;
-    }
-
-    private Set<X509Extension> prepareV3ByteExtensions(org.candlepin.model.dto.Product container)
-        throws IOException {
-        List<org.candlepin.model.dto.Product> products = new ArrayList<>();
-        products.add(container);
-        return v3extensionUtil.getByteExtensions(products);
-    }
-
-    private byte[] createContentAccessDataPayload(Consumer consumer,
-        Map<org.candlepin.model.Content, Boolean> ownerContent, PromotedContent promotedContent)
-        throws IOException {
-
-        String consumerUuid = consumer != null ? consumer.getUuid() : null;
-        log.info("Generating SCA payload for consumer \"{}\"...", consumerUuid);
-
-        Product engProduct = new Product()
-            .setId("content_access")
-            .setName(" Content Access");
-
-        ownerContent.forEach(engProduct::addContent);
-
-        Product skuProduct = new Product()
-            .setId("content_access")
-            .setName("Content Access");
-
-        Pool emptyPool = new Pool()
-            .setProduct(skuProduct)
-            .setStartDate(new Date())
-            .setEndDate(new Date());
-
-        Entitlement emptyEnt = new Entitlement();
-        emptyEnt.setPool(emptyPool);
-        emptyEnt.setConsumer(consumer);
-
-        Set<String> entitledProductIds = new HashSet<>();
-        entitledProductIds.add("content-access");
-
-        org.candlepin.model.dto.Product productModel = v3extensionUtil.mapProduct(engProduct, skuProduct,
-            promotedContent, consumer, emptyPool, entitledProductIds);
-
-        List<org.candlepin.model.dto.Product> productModels = new ArrayList<>();
-        productModels.add(productModel);
-
-        return v3extensionUtil.createEntitlementDataPayload(productModels, consumerUuid, emptyPool, null);
     }
 
     /**
@@ -844,190 +622,29 @@ public class ContentAccessManager {
      *  the retieved or generated certificate
      */
     @Transactional
-    public AnonymousContentAccessCertificate getCertificate(AnonymousCloudConsumer consumer)
-        throws GeneralSecurityException, IOException {
+    public AnonymousContentAccessCertificate getCertificate(AnonymousCloudConsumer consumer) {
         if (standalone) {
-            String msg = "cannot retrieve or create content access certificate in standalone mode";
-            throw new RuntimeException(msg);
+            throw new UnsupportedOperationException("""
+                Cannot retrieve or create anonymous content access certificate in standalone mode""");
         }
 
         if (consumer == null) {
-            throw new IllegalArgumentException("anonymous cloud consumer is null");
+            throw new IllegalArgumentException("Anonymous cloud consumer is null");
         }
 
         AnonymousContentAccessCertificate cert = consumer.getContentAccessCert();
         Date now = new Date();
 
         // Return a valid certificate if the anonymous cloud consumer has one
-        if (cert != null && cert.getSerial() != null && cert.getSerial().getExpiration().after(now)) {
+        boolean isCertificateValid = cert != null && cert.getSerial() != null &&
+            cert.getSerial().getExpiration().after(now);
+        if (isCertificateValid) {
             log.debug("Returning existing and valid anonymous certificate for consumer: \"{}\"",
                 consumer.getUuid());
             return cert;
         }
 
-        // Generate a new certificate if one does not exist or the existing certificate is expired.
-        // First attempt to retrieve an already built and cached content access payload based on the
-        // anonymous cloud consumer's top level product IDs, or retrieve the data through adapters if
-        // we hava a cache miss.
-        String payload;
-        List<Content> content;
-        AnonymousCertContent cached = contentCache.get(consumer.getProductIds());
-        if (cached != null) {
-            log.debug("Anonymous content access certificate content retrieved from cache");
-            payload = cached.contentAccessDataPayload();
-            content = cached.content();
-        }
-        else {
-            log.debug("Retrieving anonymous content access certificate content from product adapter");
-            // Get product information from adapters to build the content access certificate
-            List<ProductInfo> products = prodAdapter.getChildrenByProductIds(consumer.getProductIds());
-            if (products == null || products.isEmpty()) {
-                String msg = "Unable to retrieve products for anonymous cloud consumer: " +
-                    consumer.getUuid();
-                throw new RuntimeException(msg);
-            }
-
-            payload = createAnonPayloadAndSignature(products);
-            List<ContentInfo> contentInfo = getContentInfo(products);
-            content = convertContentInfoToContentDto(contentInfo);
-
-            // Cache the generated content for future requests
-            contentCache.put(consumer.getProductIds(), new AnonymousCertContent(payload, content));
-        }
-
-        return createAnonContentAccessCertificate(consumer, payload, content);
-    }
-
-    private AnonymousContentAccessCertificate createAnonContentAccessCertificate(
-        AnonymousCloudConsumer consumer, String payloadAndSignature, List<Content> certificateContent)
-        throws IOException, GeneralSecurityException {
-
-        if (consumer == null) {
-            throw new IllegalArgumentException("anonymous cloud consumer is null");
-        }
-
-        if (payloadAndSignature == null) {
-            throw new IllegalArgumentException("content access payload is null");
-        }
-
-        if (certificateContent == null || certificateContent.isEmpty()) {
-            throw new IllegalArgumentException("certificate content is null or empty");
-        }
-
-        log.info("Generating anonymous content access certificate for consumer: \"{}\"",
-            consumer.getUuid());
-
-        OffsetDateTime start = OffsetDateTime.now().minusHours(1L);
-        OffsetDateTime end = start.plusDays(2L);
-
-        CertificateSerial serial = createSerial(end);
-        KeyPair keyPair = this.pki.generateKeyPair();
-        byte[] pemEncodedKeyPair = this.pki.getPemEncoded(keyPair.getPrivate());
-
-        org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
-        container.setContent(certificateContent);
-        String x509Cert = createX509Cert(consumer.getUuid(), null, serial, keyPair, container,
-            BASIC_ENTITLEMENT_TYPE, start, end);
-
-        AnonymousContentAccessCertificate caCert = new AnonymousContentAccessCertificate();
-        caCert.setSerial(serial);
-        caCert.setKeyAsBytes(pemEncodedKeyPair);
-        caCert.setCert(x509Cert + payloadAndSignature);
-        caCert = anonContentAccessCertCurator.create(caCert);
-
-        consumer.setContentAccessCert(caCert);
-        this.anonCloudConsumerCurator.merge(consumer);
-
-        return caCert;
-    }
-
-    private String createAnonPayloadAndSignature(Collection<ProductInfo> prodInfo) throws IOException {
-        List<ContentInfo> contentInfo = getContentInfo(prodInfo);
-        List<org.candlepin.model.Content> contents = convertContentInfoToContent(contentInfo);
-        Map<org.candlepin.model.Content, Boolean> activeContent = new HashMap<>();
-        contents.forEach(content -> activeContent.put(content, true));
-        PromotedContent promotedContent = new PromotedContent(ContentPathBuilder.from(null, null));
-        byte[] data = createContentAccessDataPayload(null, activeContent, promotedContent);
-
-        return createPayloadAndSignature(data);
-    }
-
-    /**
-     * Retrieves all of the {@link ContentInfo} from the provided {@link ProductInfo}
-     *
-     * @param prodInfo
-     *  the product info that contains content info
-     *
-     * @return all of the content info from the provided product info
-     */
-    private List<ContentInfo> getContentInfo(Collection<ProductInfo> prodInfo) {
-        return prodInfo.stream()
-            .filter(Objects::nonNull)
-            .map(ProductInfo::getProductContent)
-            .flatMap(Collection::stream)
-            .filter(Objects::nonNull)
-            .map(ProductContentInfo::getContent)
-            .toList();
-    }
-
-    /**
-     * Converts {@link ContentInfo} into {@link Content}
-     *
-     * @param contentInfo
-     *  the content to convert
-     *
-     * @return the converted {@link ContentInfo} objects
-     */
-    private List<Content> convertContentInfoToContentDto(Collection<ContentInfo> contentInfo) {
-        return contentInfo.stream()
-            .filter(Objects::nonNull)
-            .map(content -> {
-                Content converted = new Content();
-                converted.setId(content.getId());
-                converted.setName(content.getName());
-                converted.setType(content.getType());
-                converted.setLabel(content.getLabel());
-                converted.setVendor(content.getVendor());
-                converted.setGpgUrl(content.getGpgUrl());
-                converted.setMetadataExpiration(content.getMetadataExpiration());
-                converted.setRequiredTags(Util.toList(content.getRequiredTags()));
-                converted.setArches(new ArrayList<>(Arch.parseArches(content.getArches())));
-                converted.setPath(content.getContentUrl());
-
-                return converted;
-            })
-            .toList();
-    }
-
-    /**
-     * Converts {@link ContentInfo} to {@link org.candlepin.model.Content}.
-     *
-     * @param contentInfo
-     *  the content to convert
-     *
-     * @return the converted {@link org.candlepin.model.Content} objects
-     */
-    private List<org.candlepin.model.Content> convertContentInfoToContent(
-        Collection<ContentInfo> contentInfo) {
-        return contentInfo.stream()
-            .filter(Objects::nonNull)
-            .map(content -> {
-                org.candlepin.model.Content converted = new org.candlepin.model.Content();
-                converted.setId(content.getId());
-                converted.setName(content.getName());
-                converted.setType(content.getType());
-                converted.setLabel(content.getLabel());
-                converted.setVendor(content.getVendor());
-                converted.setGpgUrl(content.getGpgUrl());
-                converted.setMetadataExpiration(content.getMetadataExpiration());
-                converted.setRequiredTags(content.getRequiredTags());
-                converted.setArches(content.getArches());
-                converted.setContentUrl(content.getContentUrl());
-                converted.setReleaseVersion(content.getReleaseVersion());
-
-                return converted;
-            })
-            .toList();
+        return this.anonymousCertificateGenerator.createCertificate(consumer);
     }
 
 }

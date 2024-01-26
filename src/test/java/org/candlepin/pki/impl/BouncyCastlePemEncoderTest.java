@@ -18,21 +18,32 @@ package org.candlepin.pki.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.candlepin.pki.DistinguishedName;
+import org.candlepin.pki.certs.X509CertificateBuilder;
+import org.candlepin.test.CertificateReaderForTesting;
+
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.util.io.pem.PemGenerationException;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.util.Date;
 
 class BouncyCastlePemEncoderTest {
 
     @Test
     void shouldEncodeKey() throws NoSuchAlgorithmException {
         BouncyCastlePemEncoder encoder = new BouncyCastlePemEncoder();
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-        generator.initialize(4096);
-        KeyPair keyPair = generator.generateKeyPair();
+        KeyPair keyPair = createKeyPair();
 
         String result = encoder.encodeAsString(keyPair.getPrivate());
 
@@ -42,17 +53,24 @@ class BouncyCastlePemEncoderTest {
     }
 
     @Test
-    void shouldEncodeCert() throws NoSuchAlgorithmException {
+    void shouldEncodeCert() throws NoSuchAlgorithmException, CertificateException, IOException {
         BouncyCastlePemEncoder encoder = new BouncyCastlePemEncoder();
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-        generator.initialize(4096);
-        KeyPair keyPair = generator.generateKeyPair();
+        KeyPair keyPair = createKeyPair();
+        BouncyCastleSecurityProvider provider = new BouncyCastleSecurityProvider();
+        CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
+        X509CertificateBuilder builder = new X509CertificateBuilder(certificateReader, provider);
+        X509Certificate certificate = builder
+            .withValidity(Instant.now(), Instant.now())
+            .withRandomSerial()
+            .withDN(new DistinguishedName("asd123"))
+            .withKeyPair(keyPair)
+            .build();
 
-        String result = encoder.encodeAsString(keyPair.getPrivate());
+        String result = encoder.encodeAsString(certificate);
 
         assertThat(result)
-            .startsWith("-----BEGIN RSA PRIVATE KEY-----")
-            .endsWith("-----END RSA PRIVATE KEY-----\n");
+            .startsWith("-----BEGIN CERTIFICATE-----")
+            .endsWith("-----END CERTIFICATE-----\n");
     }
 
     @Test
@@ -73,6 +91,12 @@ class BouncyCastlePemEncoderTest {
             .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> encoder.encodeAsString(null))
             .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    private KeyPair createKeyPair() throws NoSuchAlgorithmException {
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+        generator.initialize(4096);
+        return generator.generateKeyPair();
     }
 
 }

@@ -604,7 +604,7 @@ public class X509V3ExtensionUtil extends X509Util {
         }
     }
 
-    public List<String> orderStrings(PathNode parent) throws IOException {
+    public List<String> orderStrings(PathNode parent) {
         List<String> parts = new ArrayList<>();
         // walk tree to make string map
         Map<String, Integer> segments = new HashMap<>();

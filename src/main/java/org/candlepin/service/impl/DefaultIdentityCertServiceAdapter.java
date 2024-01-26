@@ -125,7 +125,7 @@ public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAda
     }
 
     private IdentityCertificate generate(Consumer consumer)
-        throws GeneralSecurityException, IOException {
+        throws GeneralSecurityException {
         ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
         Instant from = now.minusHours(1).toInstant();
         Instant to = now.plusYears(this.yearAddendum).toInstant();
