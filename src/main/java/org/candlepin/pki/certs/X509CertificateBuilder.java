@@ -136,6 +136,14 @@ public class X509CertificateBuilder {
         return this;
     }
 
+    public X509CertificateBuilder withExtensions(Collection<X509Extension> extensions) {
+        if (extensions != null && !extensions.isEmpty()) {
+            this.certExtensions.addAll(extensions);
+        }
+
+        return this;
+    }
+
     public X509Certificate build() {
         this.checkMandatoryFields();
 

@@ -24,8 +24,7 @@ import java.util.Date;
  * DefaultUniqueIdGenerator
  */
 public class DefaultUniqueIdGenerator implements UniqueIdGenerator {
-
-    private static Object lock = new Object();
+    private static final Object lock = new Object();
     private static long idCount = 0;
 
     /* (non-Javadoc)

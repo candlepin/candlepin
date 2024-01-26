@@ -16,7 +16,7 @@ package org.candlepin.service;
 
 /**
  * Service interface for generating UIDs.
- *
+ * <p>
  * Implementations of this interface must generate numeric IDs, as such IDs have special meaning
  * when applied to products or content. While generating non-numeric IDs may work for some features,
  * it may break others which rely on this detail for filtering and certificate generation.

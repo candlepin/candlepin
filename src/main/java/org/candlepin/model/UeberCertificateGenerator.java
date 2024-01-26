@@ -22,6 +22,7 @@ import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509Extension;
+import org.candlepin.pki.certs.X509CertificateBuilder;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.X509ExtensionUtil;
 
@@ -44,28 +45,25 @@ import java.util.Set;
 import java.util.TimeZone;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 
-
-/**
- * UeberCertificateGenerator
- */
 public class UeberCertificateGenerator {
+    private static final Logger log = LoggerFactory.getLogger(UeberCertificateGenerator.class);
     private static final String UEBER_CERT_CONSUMER_TYPE = "uebercert";
     private static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
     private static final  String UEBER_CONTENT_NAME = "ueber_content";
     private static final String UEBER_PRODUCT_POSTFIX = "_ueber_product";
 
-    private static final Logger log = LoggerFactory.getLogger(UeberCertificateGenerator.class);
-
-    private UniqueIdGenerator idGenerator;
-    private PKIUtility pki;
-    private CertificateSerialCurator serialCurator;
-    private X509ExtensionUtil extensionUtil;
-    private OwnerCurator ownerCurator;
-    private UeberCertificateCurator ueberCertCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private I18n i18n;
+    private final UniqueIdGenerator idGenerator;
+    private final PKIUtility pki;
+    private final CertificateSerialCurator serialCurator;
+    private final X509ExtensionUtil extensionUtil;
+    private final OwnerCurator ownerCurator;
+    private final UeberCertificateCurator ueberCertCurator;
+    private final ConsumerTypeCurator consumerTypeCurator;
+    private final I18n i18n;
+    private final Provider<X509CertificateBuilder> certificateBuilder;
 
     @Inject
     public UeberCertificateGenerator(
@@ -76,7 +74,8 @@ public class UeberCertificateGenerator {
         OwnerCurator ownerCurator,
         UeberCertificateCurator ueberCertCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        I18n i18n) {
+        I18n i18n,
+        Provider<X509CertificateBuilder> certificateBuilder) {
 
         this.idGenerator = idGenerator;
         this.pki = pki;
@@ -86,6 +85,7 @@ public class UeberCertificateGenerator {
         this.ueberCertCurator = ueberCertCurator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.i18n = i18n;
+        this.certificateBuilder = certificateBuilder;
     }
 
     @Transactional
@@ -118,13 +118,11 @@ public class UeberCertificateGenerator {
         serialCurator.create(serial);
 
         KeyPair keyPair = this.pki.generateKeyPair();
-        byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
-        X509Certificate x509Cert =
-            createX509Certificate(ueberCertData, BigInteger.valueOf(serial.getId()), keyPair);
+        X509Certificate x509Cert = createX509Certificate(ueberCertData, serial.getId(), keyPair);
 
         UeberCertificate ueberCert = new UeberCertificate();
         ueberCert.setSerial(serial);
-        ueberCert.setKeyAsBytes(pemEncodedKeyPair);
+        ueberCert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));
         ueberCert.setOwner(owner);
         ueberCert.setCert(new String(this.pki.getPemEncoded(x509Cert)));
         ueberCert.setCreated(ueberCertData.getStartDate());
@@ -134,8 +132,7 @@ public class UeberCertificateGenerator {
         return ueberCert;
     }
 
-    private X509Certificate createX509Certificate(UeberCertData data, BigInteger serialNumber,
-        KeyPair keyPair) throws GeneralSecurityException, IOException {
+    private X509Certificate createX509Certificate(UeberCertData data, long serialNumber, KeyPair keyPair) {
         ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(null, List.of());
         Set<X509Extension> extensions = new LinkedHashSet<>(
             extensionUtil.productExtensions(data.getProduct()));
@@ -153,8 +150,13 @@ public class UeberCertificateGenerator {
         }
 
         DistinguishedName dn = new DistinguishedName(null, data.getOwner());
-        return this.pki.createX509Certificate(dn, extensions,  data.getStartDate(),
-            data.getEndDate(), keyPair, serialNumber, null);
+        return this.certificateBuilder.get()
+            .withDN(dn)
+            .withExtensions(extensions)
+            .withValidity(data.getStartDate().toInstant(), data.getEndDate().toInstant())
+            .withKeyPair(keyPair)
+            .withSerial(serialNumber)
+            .build();
     }
 
     /**
@@ -164,16 +166,15 @@ public class UeberCertificateGenerator {
      *
      */
     private class UeberCertData {
-        private Owner owner;
-        private ConsumerType ueberCertType;
-        private Consumer consumer;
-        private Product product;
-        private Content content;
-        private Pool pool;
-        private Entitlement entitlement;
-
-        private Date startDate;
-        private Date endDate;
+        private final Owner owner;
+        private final ConsumerType ueberCertType;
+        private final Consumer consumer;
+        private final Product product;
+        private final Content content;
+        private final Pool pool;
+        private final Entitlement entitlement;
+        private final Date startDate;
+        private final Date endDate;
 
         public UeberCertData(Owner owner, String generatedByUsername, ConsumerType ueberCertType) {
             startDate = Calendar.getInstance().getTime();
