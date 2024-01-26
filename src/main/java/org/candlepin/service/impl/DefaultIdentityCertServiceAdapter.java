@@ -23,6 +23,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.certs.X509CertificateBuilder;
 import org.candlepin.service.IdentityCertServiceAdapter;
 
@@ -49,6 +50,7 @@ import javax.inject.Provider;
 public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAdapter {
     private static final Logger log = LoggerFactory.getLogger(DefaultIdentityCertServiceAdapter.class);
     private final PKIUtility pki;
+    private final PemEncoder pemEncoder;
     private final IdentityCertificateCurator idCertCurator;
     private final CertificateSerialCurator serialCurator;
     private final Provider<X509CertificateBuilder> certBuilder;
@@ -57,11 +59,13 @@ public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAda
     @Inject
     public DefaultIdentityCertServiceAdapter(
         Configuration config,
+        PemEncoder pemEncoder,
         PKIUtility pki,
         IdentityCertificateCurator identityCertCurator,
         CertificateSerialCurator serialCurator,
         Provider<X509CertificateBuilder> certBuilder) {
         this.pki = Objects.requireNonNull(pki);
+        this.pemEncoder = Objects.requireNonNull(pemEncoder);
         this.idCertCurator = Objects.requireNonNull(identityCertCurator);
         this.serialCurator = Objects.requireNonNull(serialCurator);
         this.certBuilder = Objects.requireNonNull(certBuilder);
@@ -141,8 +145,8 @@ public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAda
             .build();
 
         IdentityCertificate identityCertificate = new IdentityCertificate();
-        identityCertificate.setCert(new String(pki.getPemEncoded(certificate)));
-        identityCertificate.setKey(new String(pki.getPemEncoded(keyPair.getPrivate())));
+        identityCertificate.setCert(this.pemEncoder.encodeAsString(certificate));
+        identityCertificate.setKey(this.pemEncoder.encodeAsString(keyPair.getPrivate()));
         identityCertificate.setSerial(serial);
         consumer.setIdCert(identityCertificate);
 

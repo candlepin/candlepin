@@ -24,6 +24,7 @@ import static org.mockito.Mockito.nullable;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -33,6 +34,7 @@ import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
@@ -74,7 +76,9 @@ public class DefaultIdentityCertServiceAdapterTest {
 
     @BeforeEach
     public void setUp() {
-        dicsa = new DefaultIdentityCertServiceAdapter(TestConfig.defaults(), pki, idcur, csc, null);
+        DevConfig config = TestConfig.defaults();
+        BouncyCastlePemEncoder encoder = new BouncyCastlePemEncoder();
+        dicsa = new DefaultIdentityCertServiceAdapter(config, encoder, pki, idcur, csc, null);
     }
 
     // can't mock a final class, so create a dummy one

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,26 +12,15 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.pki;
 
-import java.io.IOException;
-import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
+package org.candlepin.pki.impl;
 
+public class PemEncodingException extends RuntimeException {
+    public PemEncodingException(String message) {
+        super(message);
+    }
 
-/**
- * Interface for lower level PKI operations that require access to a provider's internals.
- */
-public interface PemEncoder {
-
-    byte[] encodeAsBytes(Object data);
-
-    /**
-     * Take an X509Certificate object and return a byte[] of the certificate,
-     * PEM encoded
-     * @param cert
-     * @return PEM-encoded bytes of the certificate
-     */
-    String encodeAsString(Object data);
-
+    public PemEncodingException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
