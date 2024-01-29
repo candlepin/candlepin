@@ -31,6 +31,8 @@ import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
+import org.candlepin.pki.certs.AnonymousCertificateGenerator;
+import org.candlepin.pki.certs.ContentAccessCertificateGenerator;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
@@ -66,12 +68,16 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
 
     private EventSink mockEventSink;
     private AnonymousCertContentCache cache;
+    private ContentAccessCertificateGenerator contentAccessCertificateGenerator;
+    private AnonymousCertificateGenerator anonymousCertificateGenerator;
 
     @Mock
     private ProductServiceAdapter mockProdAdapter;
 
     @BeforeEach
     public void setup() throws Exception {
+        contentAccessCertificateGenerator = injector.getInstance(ContentAccessCertificateGenerator.class);
+        anonymousCertificateGenerator = injector.getInstance(AnonymousCertificateGenerator.class);
         PrivateKeyReader keyReader = new BouncyCastlePrivateKeyReader();
         CertificateReader certReader = new CertificateReader(this.config, keyReader);
         SubjectKeyIdentifierWriter keyIdWriter = new BouncyCastleSubjectKeyIdentifierWriter();
@@ -87,10 +93,9 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
 
     private ContentAccessManager createManager() {
         return new ContentAccessManager(this.config,
-            this.caCertCurator, this.certSerialCurator, this.ownerCurator, this.contentCurator,
-            this.consumerCurator, this.consumerTypeCurator, this.environmentCurator, this.caCertCurator,
-            this.mockEventSink, this.anonymousCloudConsumerCurator, this.anonymousContentAccessCertCurator,
-            this.mockProdAdapter, this.cache);
+            this.caCertCurator, this.ownerCurator, this.consumerCurator, this.consumerTypeCurator,
+            this.caCertCurator, this.mockEventSink, this.contentAccessCertificateGenerator,
+            this.anonymousCertificateGenerator);
     }
 
     private Owner createSCAOwner() {

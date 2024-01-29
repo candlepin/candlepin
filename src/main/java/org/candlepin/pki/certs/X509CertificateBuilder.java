@@ -60,6 +60,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 
 public class X509CertificateBuilder {
@@ -77,6 +78,7 @@ public class X509CertificateBuilder {
     private KeyPair keyPair;
     private BigInteger certSerial;
 
+    @Inject
     public X509CertificateBuilder(CertificateReader certificateAuthority,
         Provider<BouncyCastleProvider> securityProvider) {
         this.certificateAuthority = Objects.requireNonNull(certificateAuthority);

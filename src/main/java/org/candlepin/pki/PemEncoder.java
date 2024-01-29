@@ -24,14 +24,12 @@ import java.security.cert.X509Certificate;
  */
 public interface PemEncoder {
 
-    byte[] encodeAsBytes(Object data);
+    byte[] encodeAsBytes(X509Certificate certificate);
 
-    /**
-     * Take an X509Certificate object and return a byte[] of the certificate,
-     * PEM encoded
-     * @param cert
-     * @return PEM-encoded bytes of the certificate
-     */
-    String encodeAsString(Object data);
+    byte[] encodeAsBytes(PrivateKey privateKey);
+
+    String encodeAsString(X509Certificate certificate);
+
+    String encodeAsString(PrivateKey privateKey);
 
 }

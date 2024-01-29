@@ -73,6 +73,8 @@ import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
+import org.candlepin.pki.certs.AnonymousCertificateGenerator;
+import org.candlepin.pki.certs.ContentAccessCertificateGenerator;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
@@ -118,7 +120,6 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 
-
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ContentAccessManagerTest {
@@ -153,6 +154,10 @@ public class ContentAccessManagerTest {
     private AnonymousContentAccessCertificateCurator mockAnonContentAccessCertCurator;
     @Mock
     private ProductServiceAdapter mockProdAdapter;
+    @Mock
+    private ContentAccessCertificateGenerator contentAccessCertificateGenerator;
+    @Mock
+    private AnonymousCertificateGenerator anonymousCertificateGenerator;
 
     private ObjectMapper objectMapper;
     private PKIUtility pkiUtility;
@@ -235,17 +240,11 @@ public class ContentAccessManagerTest {
         }
     }
 
-    private ContentAccessManager createManager(PKIUtility pkiUtil) {
-        return new ContentAccessManager(
-            this.config, pkiUtil, this.x509V3ExtensionUtil, this.mockContentAccessCertCurator,
-            this.mockCertSerialCurator, this.mockOwnerCurator, this.mockContentCurator,
-            this.mockConsumerCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
-            this.mockContentAccessCertCurator, this.mockEventSink, this.mockAnonCloudConsumerCurator,
-            this.mockAnonContentAccessCertCurator, this.mockProdAdapter, this.cache);
-    }
-
     private ContentAccessManager createManager() {
-        return this.createManager(this.pkiUtility);
+        return new ContentAccessManager(
+            this.config, this.mockContentAccessCertCurator, this.mockOwnerCurator, this.mockConsumerCurator,
+            this.mockConsumerTypeCurator, this.mockContentAccessCertCurator, this.mockEventSink,
+            this.contentAccessCertificateGenerator, this.anonymousCertificateGenerator);
     }
 
     private Owner mockOwner() {
@@ -717,7 +716,7 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testGetCertificateReturnsNullOnException() throws Exception {
+    public void testGetCertificateReturnsNullOnException() {
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
         Content content = this.mockContent(owner);
@@ -731,7 +730,7 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testGetCertificateReturnsNullIfConsumerDoesNotSupportV3Cert() throws Exception {
+    public void testGetCertificateReturnsNullIfConsumerDoesNotSupportV3Cert() {
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
         consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, null); // remove v3 cert capability
@@ -929,7 +928,7 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testGetCertificateForAnonConsumerWithExistingCertificate() throws Exception {
+    public void testGetCertificateForAnonConsumerWithExistingCertificate() {
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         CertificateSerial serial = new CertificateSerial(12345L);
@@ -966,7 +965,7 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testGetCertificateForAnonConsumerWithNoExistingCertificate() throws Exception {
+    public void testGetCertificateForAnonConsumerWithNoExistingCertificate() {
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
@@ -1008,7 +1007,7 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testGetCertificateForAnonConsumerWithCachedCertContent() throws Exception {
+    public void testGetCertificateForAnonConsumerWithCachedCertContent() {
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         List<String> skuIds = List.of(TestUtil.randomString(), TestUtil.randomString());
@@ -1052,7 +1051,7 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testGetCertificateForAnonConsumerWithNoExistingCertificateAndNoProdIds() throws Exception {
+    public void testGetCertificateForAnonConsumerWithNoExistingCertificateAndNoProdIds() {
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
@@ -1064,11 +1063,11 @@ public class ContentAccessManagerTest {
         consumer.setContentAccessCert(null);
 
         ContentAccessManager manager = this.createManager();
-        assertThrows(RuntimeException.class, () ->manager.getCertificate(consumer));
+        assertThrows(RuntimeException.class, () -> manager.getCertificate(consumer));
     }
 
     @Test
-    public void testGetCertificateForAnonConsumerWithExpiredCertificate() throws Exception {
+    public void testGetCertificateForAnonConsumerWithExpiredCertificate() {
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         CertificateSerial expiredSerial = new CertificateSerial(12345L);
@@ -1121,8 +1120,7 @@ public class ContentAccessManagerTest {
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @NullAndEmptySource
-    public void testGetCertificateForAnonConsumerWithInvalidProductInfoFromAdapter(List<String> prods)
-        throws Exception {
+    public void testGetCertificateForAnonConsumerWithInvalidProductInfoFromAdapter(List<String> prods) {
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();

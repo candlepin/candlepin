@@ -16,8 +16,10 @@ package org.candlepin.pki.impl;
 
 import org.candlepin.pki.PemEncoder;
 
+import com.google.common.base.Charsets;
 import com.google.inject.Inject;
 
+import org.apache.commons.codec.binary.Base64OutputStream;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 
 import java.io.ByteArrayOutputStream;
@@ -25,20 +27,24 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 
 public class BouncyCastlePemEncoder implements PemEncoder {
+    private static final byte[] LINE_SEPARATOR = String.format("%n").getBytes();
+
     @Inject
     public BouncyCastlePemEncoder() {
     }
 
     @Override
-    public byte[] encodeAsBytes(Object data) {
-        if (data == null) {
+    public byte[] encodeAsBytes(X509Certificate certificate) {
+        if (certificate == null) {
             throw new IllegalArgumentException("Cannot encode null!");
         }
         try (ByteArrayOutputStream output = new ByteArrayOutputStream();
              OutputStreamWriter writer = new OutputStreamWriter(output)) {
-            encode(data, writer);
+            encode(certificate, writer);
             return output.toByteArray();
         }
         catch (IOException e) {
@@ -47,12 +53,12 @@ public class BouncyCastlePemEncoder implements PemEncoder {
     }
 
     @Override
-    public String encodeAsString(Object data) {
-        if (data == null) {
+    public String encodeAsString(X509Certificate certificate) {
+        if (certificate == null) {
             throw new IllegalArgumentException("Cannot encode null!");
         }
         try (StringWriter writer = new StringWriter(1024)) {
-            encode(data, writer);
+            encode(certificate, writer);
             return writer.toString();
         }
         catch (IOException e) {
@@ -60,9 +66,47 @@ public class BouncyCastlePemEncoder implements PemEncoder {
         }
     }
 
-    private void encode(Object obj, Writer output) {
+    @Override
+    public byte[] encodeAsBytes(PrivateKey privateKey) {
+        if (privateKey == null) {
+            throw new IllegalArgumentException("Cannot encode null!");
+        }
+        return encode(privateKey);
+    }
+
+    @Override
+    public String encodeAsString(PrivateKey privateKey) {
+        if (privateKey == null) {
+            throw new IllegalArgumentException("Cannot encode null!");
+        }
+        return new String(encode(privateKey));
+    }
+
+    public byte[] encode(PrivateKey key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            out.write(("-----BEGIN PRIVATE KEY-----\n").getBytes(Charsets.UTF_8));
+
+            // Write base64 encoded DER. Does not close the underlying stream.
+            Base64OutputStream b64Out = new Base64OutputStream(out, true, 64, LINE_SEPARATOR);
+            b64Out.write(key.getEncoded());
+            b64Out.eof();
+            b64Out.flush();
+
+            out.write(("-----END PRIVATE KEY-----\n").getBytes(Charsets.UTF_8));
+            return out.toByteArray();
+        }
+        catch (IOException e) {
+            throw new PemEncodingException("Could not encode key", e);
+        }
+    }
+
+    private void encode(Object data, Writer output) {
         try (JcaPEMWriter pemWriter = new JcaPEMWriter(output)) {
-            pemWriter.writeObject(obj);
+            pemWriter.writeObject(data);
             pemWriter.flush();
         }
         catch (IOException e) {

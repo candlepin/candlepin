@@ -22,49 +22,59 @@ import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.certs.X509CertificateBuilder;
 import org.candlepin.test.CertificateReaderForTesting;
 
-import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-import org.bouncycastle.cert.X509v3CertificateBuilder;
-import org.bouncycastle.util.io.pem.PemGenerationException;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
-import java.util.Date;
 
 class BouncyCastlePemEncoderTest {
 
     @Test
-    void shouldEncodeKey() throws NoSuchAlgorithmException {
+    void shouldEncodeKeyAsBytes() throws NoSuchAlgorithmException {
         BouncyCastlePemEncoder encoder = new BouncyCastlePemEncoder();
         KeyPair keyPair = createKeyPair();
 
-        String result = encoder.encodeAsString(keyPair.getPrivate());
+        String encoded = encoder.encodeAsString(keyPair.getPrivate());
+        byte[] encodedBytes = encoder.encodeAsBytes(keyPair.getPrivate());
 
-        assertThat(result)
-            .startsWith("-----BEGIN RSA PRIVATE KEY-----")
-            .endsWith("-----END RSA PRIVATE KEY-----\n");
+        assertThat(new String(encodedBytes))
+            .isEqualTo(encoded);
     }
 
     @Test
-    void shouldEncodeCert() throws NoSuchAlgorithmException, CertificateException, IOException {
+    void shouldEncodeKeyAsString() throws NoSuchAlgorithmException {
         BouncyCastlePemEncoder encoder = new BouncyCastlePemEncoder();
         KeyPair keyPair = createKeyPair();
-        BouncyCastleSecurityProvider provider = new BouncyCastleSecurityProvider();
-        CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
-        X509CertificateBuilder builder = new X509CertificateBuilder(certificateReader, provider);
-        X509Certificate certificate = builder
-            .withValidity(Instant.now(), Instant.now())
-            .withRandomSerial()
-            .withDN(new DistinguishedName("asd123"))
-            .withKeyPair(keyPair)
-            .build();
+
+        String encodedKey = encoder.encodeAsString(keyPair.getPrivate());
+
+        assertThat(encodedKey)
+            .startsWith("-----BEGIN PRIVATE KEY-----")
+            .endsWith("-----END PRIVATE KEY-----\n");
+    }
+
+    @Test
+    void shouldEncodeCertAsBytes() throws NoSuchAlgorithmException, CertificateException, IOException {
+        BouncyCastlePemEncoder encoder = new BouncyCastlePemEncoder();
+        X509Certificate certificate = createCertificate();
+
+        String encoded = encoder.encodeAsString(certificate);
+        byte[] encodedBytes = encoder.encodeAsBytes(certificate);
+
+        assertThat(new String(encodedBytes))
+            .isEqualTo(encoded);
+    }
+
+    @Test
+    void shouldEncodeCertAsString() throws NoSuchAlgorithmException, CertificateException, IOException {
+        BouncyCastlePemEncoder encoder = new BouncyCastlePemEncoder();
+        X509Certificate certificate = createCertificate();
 
         String result = encoder.encodeAsString(certificate);
 
@@ -74,23 +84,32 @@ class BouncyCastlePemEncoderTest {
     }
 
     @Test
-    void shouldFailForInvalidObjects() {
-        BouncyCastlePemEncoder encoder = new BouncyCastlePemEncoder();
-
-        assertThatThrownBy(() -> encoder.encodeAsBytes("Invalid"))
-            .isInstanceOf(PemEncodingException.class);
-        assertThatThrownBy(() -> encoder.encodeAsString("Invalid"))
-            .isInstanceOf(PemEncodingException.class);
-    }
-
-    @Test
     void shouldFailForInvalidNulls() {
         BouncyCastlePemEncoder encoder = new BouncyCastlePemEncoder();
 
-        assertThatThrownBy(() -> encoder.encodeAsBytes(null))
+        assertThatThrownBy(() -> encoder.encodeAsBytes((X509Certificate) null))
             .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> encoder.encodeAsString(null))
+        assertThatThrownBy(() -> encoder.encodeAsBytes((PrivateKey) null))
             .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> encoder.encodeAsString((X509Certificate) null))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> encoder.encodeAsString((PrivateKey) null))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    private X509Certificate createCertificate() throws NoSuchAlgorithmException,
+        CertificateException, IOException {
+        KeyPair keyPair = createKeyPair();
+        BouncyCastleSecurityProvider provider = new BouncyCastleSecurityProvider();
+        CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
+        X509CertificateBuilder builder = new X509CertificateBuilder(certificateReader, provider);
+
+        return builder
+            .withValidity(Instant.now(), Instant.now())
+            .withRandomSerial()
+            .withDN(new DistinguishedName("asd123"))
+            .withKeyPair(keyPair)
+            .build();
     }
 
     private KeyPair createKeyPair() throws NoSuchAlgorithmException {
