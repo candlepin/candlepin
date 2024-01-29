@@ -41,7 +41,6 @@ import org.candlepin.cache.AnonymousCertContentCache;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
-import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
@@ -423,7 +422,7 @@ public class ContentAccessManagerTest {
         ContentAccessManager manager = this.createManager();
         manager.updateOwnerContentAccess(owner, contentAccessModeList, contentAccessMode);
 
-        assertEquals(owner.getContentAccessModeList(), ContentAccessManager.getListDefaultDatabaseValue());
+        assertEquals(owner.getContentAccessModeList(), ContentAccessMode.getListDefaultDatabaseValue());
         assertEquals(owner.getContentAccessMode(), ContentAccessMode.getDefault().toDatabaseValue());
     }
 
@@ -604,7 +603,7 @@ public class ContentAccessManagerTest {
         ContentAccessManager manager = this.createManager();
         Owner updatedOwner = manager.updateOwnerContentAccess(owner,
             contentAccessModeList, contentAccessMode);
-        assertEquals(ContentAccessManager.getListDefaultDatabaseValue(),
+        assertEquals(ContentAccessMode.getListDefaultDatabaseValue(),
             updatedOwner.getContentAccessModeList());
     }
 

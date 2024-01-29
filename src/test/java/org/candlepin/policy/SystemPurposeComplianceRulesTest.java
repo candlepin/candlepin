@@ -23,7 +23,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
-import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -79,7 +79,7 @@ public class SystemPurposeComplianceRulesTest {
             .setId(TestUtil.randomString())
             .setKey("test")
             .setDisplayName("test")
-            .setContentAccessMode(String.valueOf(ContentAccessManager.ContentAccessMode.ORG_ENVIRONMENT));
+            .setContentAccessMode(String.valueOf(ContentAccessMode.ORG_ENVIRONMENT));
     }
 
     private Entitlement mockEntitlement(Consumer consumer, Product product, Product ... providedProducts) {

@@ -19,12 +19,8 @@ import org.candlepin.service.UniqueIdGenerator;
 import java.util.Date;
 
 
-
-/**
- * DefaultUniqueIdGenerator
- */
 public class DefaultUniqueIdGenerator implements UniqueIdGenerator {
-    private static final Object lock = new Object();
+    private static final Object LOCK = new Object();
     private static long idCount = 0;
 
     /* (non-Javadoc)
@@ -32,7 +28,7 @@ public class DefaultUniqueIdGenerator implements UniqueIdGenerator {
      */
     @Override
     public String generateId() {
-        synchronized (lock) {
+        synchronized (LOCK) {
             Date now = new Date();
             long id = now.getTime() + ++idCount;
 

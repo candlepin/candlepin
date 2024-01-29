@@ -40,7 +40,7 @@ import org.candlepin.config.Configuration;
 import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
+import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
@@ -723,11 +723,11 @@ public class ConsumerResource implements ConsumerApi {
         String caMode = Util.firstOf(predicate,
             consumer.getContentAccessMode(),
             consumer.getOwner().getContentAccessMode(),
-            ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue());
+            ContentAccessMode.getDefault().toDatabaseValue());
 
         String caList = Util.firstOf(predicate,
             consumer.getOwner().getContentAccessModeList(),
-            ContentAccessManager.getListDefaultDatabaseValue());
+            ContentAccessMode.getListDefaultDatabaseValue());
 
         return new ContentAccessDTO()
             .contentAccessMode(caMode)

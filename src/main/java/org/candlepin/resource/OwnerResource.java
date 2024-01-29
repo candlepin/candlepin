@@ -35,7 +35,7 @@ import org.candlepin.auth.Verify;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
+import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerContentAccess;
 import org.candlepin.controller.OwnerManager;
@@ -795,10 +795,10 @@ public class OwnerResource implements OwnerApi {
             OwnerContentAccess owner = this.ownerCurator.getOwnerContentAccess(ownerKey);
             String caMode = Util.firstOf(
                 owner.getContentAccessMode(),
-                ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue());
+                ContentAccessMode.getDefault().toDatabaseValue());
             String caList = Util.firstOf(
                 owner.getContentAccessModeList(),
-                ContentAccessManager.getListDefaultDatabaseValue());
+                ContentAccessMode.getListDefaultDatabaseValue());
             return new ContentAccessDTO()
                 .contentAccessMode(caMode)
                 .contentAccessModeList(Util.toList(caList));
@@ -902,7 +902,7 @@ public class OwnerResource implements OwnerApi {
     private void validateContentAccessModeChanges(Owner owner, String calist, String camode) {
         if (calist != null) {
             if (calist.isEmpty()) {
-                calist = ContentAccessManager.getListDefaultDatabaseValue();
+                calist = ContentAccessMode.getListDefaultDatabaseValue();
             }
 
             String[] modes = calist.split(",");
@@ -926,7 +926,7 @@ public class OwnerResource implements OwnerApi {
             }
 
             if (calist == null || calist.isEmpty()) {
-                calist = ContentAccessManager.getListDefaultDatabaseValue();
+                calist = ContentAccessMode.getListDefaultDatabaseValue();
             }
 
             String[] modes = calist.split(",");
@@ -1721,7 +1721,7 @@ public class OwnerResource implements OwnerApi {
         boolean configureContentAccess = false;
 
         final String defaultContentAccess = ContentAccessMode.getDefault().toDatabaseValue();
-        final String defaultContentAccessList = ContentAccessManager.getListDefaultDatabaseValue();
+        final String defaultContentAccessList = ContentAccessMode.getListDefaultDatabaseValue();
         String contentAccessModeList = ownerDTO.getContentAccessModeList();
         String contentAccessMode = ownerDTO.getContentAccessMode();
 

@@ -53,7 +53,7 @@ import org.candlepin.config.TestConfig;
 import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
+import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
@@ -1437,10 +1437,10 @@ public class ConsumerResourceTest {
 
     @Test
     void usesDefaultWhenNoCAAvailable() {
-        String expectedMode = ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue();
+        String expectedMode = ContentAccessMode.getDefault().toDatabaseValue();
         List<String> expectedModeList = Arrays.asList(
-            ContentAccessManager.ContentAccessMode.ENTITLEMENT.toDatabaseValue(),
-            ContentAccessManager.ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+            ContentAccessMode.ENTITLEMENT.toDatabaseValue(),
+            ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
         Consumer consumer = createConsumer(createOwner());
         when(consumerCurator.verifyAndLookupConsumer(anyString()))
             .thenReturn(consumer);

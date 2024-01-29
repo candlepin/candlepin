@@ -21,7 +21,6 @@ import static org.mockito.Mockito.spy;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.cache.AnonymousCertContentCache;
-import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ContentAccessCertificate;

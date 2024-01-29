@@ -14,7 +14,6 @@
  */
 package org.candlepin.pki;
 
-import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
