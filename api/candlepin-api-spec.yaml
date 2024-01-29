@@ -643,6 +643,41 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /cloud/jobs/orgsetup/{cloud_account_id}:
+    delete:
+      description: Cancels all jobs associated with the specified cloud account ID (for testing purpose only)
+      tags:
+        - cloud_registration
+      operationId: cancelCloudAccountJobs
+      parameters:
+        - in: path
+          name: cloud_account_id
+          description: The ID of the cloud account
+          required: true
+          schema:
+            type: string
+      security: [ ]
+      responses:
+        200:
+          description: List of ids for jobs associated with the cloud account id that were cancelled.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        400:
+          description: Cloud account ID is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Cloud account ID is null or empty.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /consumers:
     get:
       description: Retrieves a list of the Consumers according to search criteria.

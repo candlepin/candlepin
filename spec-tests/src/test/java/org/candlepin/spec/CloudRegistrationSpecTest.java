@@ -56,7 +56,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -64,6 +69,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -795,5 +801,55 @@ class CloudRegistrationSpecTest {
             Arguments.of(null, "test-type", "test_signature"),
             Arguments.of(owner.getKey(), null, "test_signature"),
             Arguments.of(owner.getKey(), "test-type", null));
+    }
+
+    @Nested
+    @Isolated
+    @Execution(ExecutionMode.SAME_THREAD)
+    class WithScheduler {
+
+        @AfterEach
+        void tearDown() {
+            ApiClients.admin().jobs().setSchedulerStatus(true);
+        }
+
+        @Test
+        void shouldCancelCloudOrgSetUpJobs() {
+            ApiClients.admin().jobs().setSchedulerStatus(false);
+            ApiClient adminClient = ApiClients.admin();
+            ProductDTO productDTO = Products.random();
+
+            String accountId = StringUtil.random("cloud-account-id-");
+            String instanceId = StringUtil.random("cloud-instance-id-");
+            String offerId = StringUtil.random("cloud-offer-");
+
+            adminClient.hosted().createProduct(productDTO);
+            adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(productDTO.getId()));
+
+            OffsetDateTime timeBeforeJobStarts = OffsetDateTime.now();
+            // Because MySQL/Mariadb versions before 5.6.4 truncate milliseconds, lets remove a couple seconds
+            // to ensure we will not miss the job we need in the job query results later on.
+            timeBeforeJobStarts = timeBeforeJobStarts.minusSeconds(2);
+
+            CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
+                .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+
+            assertTokenType(ApiClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+
+            List<AsyncJobStatusDTO> jobs = adminClient.jobs().listJobStatuses(null,
+                Set.of("CloudAccountOrgSetupJob"), Set.of("CREATED"), null, Set.of("Anonymous"), null, null,
+                timeBeforeJobStarts, null, null, null, null, null);
+
+            assertThat(jobs).hasSize(1);
+            assertThatJob(jobs.get(0)).isCreated();
+
+            List<String> cancelledJobIds = adminClient.cloudAuthorization().cancelCloudAccountJobs(accountId);
+
+            jobs = adminClient.jobs()
+                .listJobStatuses(new HashSet<>(cancelledJobIds), null, null, null, null, null, null, null,
+                    null, null, null, null, null);
+
+            assertThatJob(jobs.get(0)).isCanceled();
+        }
     }
 }

@@ -35,6 +35,9 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificateCurator;
+import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.AsyncJobStatusCurator;
+import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryArguments;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.resource.server.v1.CloudRegistrationApi;
 import org.candlepin.service.CloudRegistrationAdapter;
@@ -47,7 +50,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -70,6 +75,7 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
     private final AnonymousContentAccessCertificateCurator anonymousCloudCertCurator;
     private final PoolCurator poolCurator;
     private final JobManager jobManager;
+    private final AsyncJobStatusCurator jobStatusCurator;
     private final CloudAuthTokenGenerator tokenGenerator;
     private final PrincipalProvider principalProvider;
 
@@ -81,7 +87,7 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
         AnonymousCloudConsumerCurator anonymousCloudConsumerCurator,
         PoolCurator poolCurator, JobManager jobManager, CloudAuthTokenGenerator tokenGenerator,
         AnonymousContentAccessCertificateCurator anonymousCloudCertCurator,
-        PrincipalProvider principalProvider) {
+        PrincipalProvider principalProvider, AsyncJobStatusCurator jobStatusCurator) {
 
         this.config = Objects.requireNonNull(config);
         this.i18n = Objects.requireNonNull(i18n);
@@ -90,6 +96,7 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
         this.anonymousCloudCertCurator = Objects.requireNonNull(anonymousCloudCertCurator);
         this.poolCurator = Objects.requireNonNull(poolCurator);
         this.jobManager = Objects.requireNonNull(jobManager);
+        this.jobStatusCurator = Objects.requireNonNull(jobStatusCurator);
         this.tokenGenerator = Objects.requireNonNull(tokenGenerator);
         this.principalProvider = Objects.requireNonNull(principalProvider);
 
@@ -157,6 +164,64 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
             String errmsg = this.i18n.tr("Cloud registration is not supported for the type of " +
                 "offering the client is using");
             throw new NotImplementedException(errmsg, e);
+        }
+    }
+
+    /**
+     *  Allows us to cancel the CloudOrgSetupJobs for the specified cloud account ID
+     *  This is only for testing purposes.
+     *
+     * @param cloudAccountId
+     */
+    @Override
+    public List<String> cancelCloudAccountJobs(String cloudAccountId) {
+
+        if (cloudAccountId == null || cloudAccountId.isBlank()) {
+            throw new BadRequestException(this.i18n.tr("Cloud account ID is null or empty"));
+        }
+
+        Map<String, String> jobArgs = Map.of("cloud_account_id", cloudAccountId);
+        List<String> jobIds = jobStatusCurator.fetchJobIdsByArguments(CloudAccountOrgSetupJob.JOB_KEY,
+            jobArgs);
+        AsyncJobStatusQueryArguments asyncJobStatusQueryArguments = new AsyncJobStatusQueryArguments();
+        asyncJobStatusQueryArguments.setJobIds(jobIds)
+            .setJobStates(AsyncJobStatus.JobState.CREATED, AsyncJobStatus.JobState.QUEUED,
+                AsyncJobStatus.JobState.RUNNING, AsyncJobStatus.JobState.SCHEDULED,
+                AsyncJobStatus.JobState.WAITING, AsyncJobStatus.JobState.FAILED_WITH_RETRY);
+        List<AsyncJobStatus> jobs = this.jobManager.findJobs(asyncJobStatusQueryArguments);
+
+        List<String> cancelledJobIds = new ArrayList<>();
+        jobs.forEach(job -> {
+            try {
+                AsyncJobStatus cancelledJobStatus = jobManager.cancelJob(job.getId());
+                if (cancelledJobStatus != null) {
+                    cancelledJobIds.add(job.getId());
+                }
+            }
+            catch (IllegalStateException e) {
+                log.info("{}", e.getMessage());
+            }
+        });
+
+        return cancelledJobIds;
+    }
+
+    /**
+     * Allows the removal of anonymous consumers for an entire cloud account.
+     *  This is only for testing purposes.
+     *
+     * @param cloudAccountId
+     */
+    @Override
+    @Transactional
+    public void deleteAnonymousConsumersByAccountId(String cloudAccountId) {
+        List<AnonymousCloudConsumer> consumers = anonymousCloudConsumerCurator
+            .getByCloudAccountId(cloudAccountId);
+        if (consumers != null) {
+            for (AnonymousCloudConsumer consumer : consumers) {
+                anonymousCloudCertCurator.delete(consumer.getContentAccessCert());
+                anonymousCloudConsumerCurator.delete(consumer);
+            }
         }
     }
 
@@ -296,25 +361,6 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
             String errmsg = this.i18n.tr("product IDs could not be resolved");
 
             throw new NotAuthorizedException(errmsg);
-        }
-    }
-
-    /**
-     * Allows the removal of anonymous consumers for an entire cloud account.
-     *  This is only for testing purposes.
-     *
-     * @param cloudAccountId
-     */
-    @Override
-    @Transactional
-    public void deleteAnonymousConsumersByAccountId(String cloudAccountId) {
-        List<AnonymousCloudConsumer> consumers = anonymousCloudConsumerCurator
-            .getByCloudAccountId(cloudAccountId);
-        if (consumers != null) {
-            for (AnonymousCloudConsumer consumer : consumers) {
-                anonymousCloudCertCurator.delete(consumer.getContentAccessCert());
-                anonymousCloudConsumerCurator.delete(consumer);
-            }
         }
     }
 }
