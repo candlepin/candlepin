@@ -14,6 +14,7 @@
  */
 package org.candlepin.resteasy.filter;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doReturn;
@@ -29,6 +30,9 @@ import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Persisted;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
@@ -55,6 +59,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -309,6 +314,13 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
 
         // Expect no errors
         interceptor.filter(mockRequestContext);
+    }
+
+    @Test
+    public void testVerifyTypesToString() throws Exception {
+        Class<? extends Persisted>[] values = new Class[]{Pool.class, Product.class};
+        assertEquals("[Pool, Product]", interceptor.verifyTypesToString(values));
+        assertEquals("Pool", interceptor.verifyTypesToString(Arrays.copyOfRange(values, 0, 1)));
     }
 
     /**

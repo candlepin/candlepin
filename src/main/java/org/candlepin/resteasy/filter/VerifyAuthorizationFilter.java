@@ -35,6 +35,7 @@ import org.xnap.commons.i18n.I18n;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -314,12 +315,18 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
         return minimumLevel;
     }
 
-    private String verifyTypesToString(Class<? extends Persisted>[] verifyTypes) {
-        StringBuilder builder = new StringBuilder("[");
-        for (Class<? extends Persisted> klass : verifyTypes) {
-            builder.append(Util.getClassName(klass));
+    String verifyTypesToString(Class<? extends Persisted>[] verifyTypes) {
+        if (verifyTypes == null) {
+            return "";
         }
-
-        return builder.append("]").toString();
+        List<String> asList = Arrays.stream(verifyTypes)
+            .map(Util::getClassName)
+            .toList();
+        if (asList.size() == 1) {
+            return asList.get(0);
+        }
+        else {
+            return asList.toString();
+        }
     }
 }
