@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.ClaimantOwner;
 import org.candlepin.dto.api.client.v1.CloudAuthenticationResultDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
@@ -630,12 +631,26 @@ class CloudRegistrationSpecTest {
         assertThat(standardTokenResponse.getOwnerKey()).isNotNull().isEqualTo(anonOwner.getKey());
         ApiClient client = ApiClients.bearerToken(standardTokenResponse.getToken());
 
-        client.consumers().createConsumerWithoutOwner(Consumers.randomNoOwner());
+        ConsumerDTO consumer = client.consumers().createConsumerWithoutOwner(Consumers.randomNoOwner());
+        assertThat(consumer.getIdCert()).isNotNull();
+
+        // Check the consumer has an identity cert
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        consumer = consumerClient.consumers().getConsumer(consumer.getUuid());
+        CertificateDTO originalIdCert = consumer.getIdCert();
+        assertThat(consumer.getIdCert()).isNotNull();
 
         AsyncJobStatusDTO job = owners.claim(anonOwner.getKey(),
             new ClaimantOwner().claimantOwnerKey(destOwner.getKey()));
         job = admin.jobs().waitForJob(job);
         assertThatJob(job).isFinished();
+
+        // Check the consumer has a different identity cert after the claiming process
+        consumerClient = ApiClients.ssl(consumer);
+        consumer = consumerClient.consumers().getConsumer(consumer.getUuid());
+        assertThat(consumer.getIdCert())
+            .isNotNull()
+            .isNotEqualTo(originalIdCert);
 
         // Create more consumers after owner is claimed
         anonClient.consumers().createConsumerWithoutOwner(Consumers.randomNoOwner());

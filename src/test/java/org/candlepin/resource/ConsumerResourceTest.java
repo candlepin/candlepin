@@ -790,7 +790,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void doesNotGeneratesMissingIdCert() throws Exception {
+    public void doesGenerateMissingIdCert() throws Exception {
         Consumer consumer = createConsumer(createOwner());
         ComplianceStatus status = new ComplianceStatus();
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), anyBoolean()))
@@ -799,7 +799,7 @@ public class ConsumerResourceTest {
 
         ConsumerDTO c = consumerResource.getConsumer(consumer.getUuid());
 
-        assertNull(c.getIdCert());
+        assertNotNull(c.getIdCert());
     }
 
     @Test
