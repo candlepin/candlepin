@@ -14,19 +14,16 @@ import zipfile
 
 import cp_connectors as cp
 
-# Tables as of CP v4.2 (2022-09-29)
-#   - cp2_content
-#   - cp2_content_modified_products
-#   - cp2_owner_content
-#   - cp2_owner_products
-#   - cp2_pool_source_sub
-#   - cp2_product_attributes
-#   - cp2_product_branding
-#   - cp2_product_certificates
-#   - cp2_product_content
-#   - cp2_product_dependent_products
-#   - cp2_product_provided_products
-#   - cp2_products
+# Tables as of CP v4.4 (2024-01-29)
+#   - cp_content_required_products
+#   - cp_contents
+#   - cp_product_attributes
+#   - cp_product_branding
+#   - cp_product_certificates
+#   - cp_product_contents
+#   - cp_product_dependent_products
+#   - cp_product_provided_products
+#   - cp_products
 #   - cp_act_key_sp_add_on
 #   - cp_activation_key
 #   - cp_activation_key_products
@@ -68,6 +65,7 @@ import cp_connectors as cp
 #   - cp_pool
 #   - cp_pool_attribute
 #   - cp_pool_source_stack
+#   - cp2_pool_source_sub
 #   - cp_product_pool_attribute
 #   - cp_role                           -- intentionally omitted
 #   - cp_role_users                     -- intentionally omitted
@@ -131,6 +129,17 @@ def resolve_org(db, org):
             org_id = row[0]
 
     return org_id
+
+def resolve_org_namespace(db, org_id):
+    namespace = None
+
+    with db.execQuery("SELECT account FROM cp_owner WHERE id=%s", (org_id,)) as cursor:
+        row = cursor.fetchone()
+
+        if row is not None:
+            namespace = row[0]
+
+    return namespace
 
 
 def list_orgs(db):
@@ -207,13 +216,14 @@ def fetch_product_uuids(db, org_id):
     # logic layer, so it's not critical we only select distinct UUIDs with these queries. Further,
     # our second query must be partitioned and repeatedly executed, eliminating the value of any
     # DB-level deduplication feature anyway.
-    product_uuid_query = 'SELECT op.product_uuid FROM cp2_owner_products op WHERE op.owner_id = %s ' + \
+    namespace = resolve_org_namespace(db, org_id)
+    product_uuid_query = 'SELECT op.uuid FROM cp_products op WHERE op.namespace in (%s, \'\') ' + \
         'UNION ' + \
         'SELECT pool.product_uuid FROM cp_pool pool WHERE pool.owner_id = %s '
 
-    children_uuid_query = 'SELECT p.derived_product_uuid AS product_uuid FROM cp2_products p WHERE p.derived_product_uuid IS NOT NULL AND p.uuid IN (%s) ' + \
+    children_uuid_query = 'SELECT p.derived_product_uuid AS product_uuid FROM cp_products p WHERE p.derived_product_uuid IS NOT NULL AND p.uuid IN (%s) ' + \
         'UNION ' + \
-        'SELECT pp.provided_product_uuid AS product_uuid FROM cp2_product_provided_products pp WHERE pp.product_uuid IN (%s)'
+        'SELECT pp.provided_product_uuid AS product_uuid FROM cp_product_provided_products pp WHERE pp.product_uuid IN (%s)'
 
     def process_cursor(cursor, uuids, children_uuids, tier):
         for row in cursor:
@@ -225,7 +235,7 @@ def fetch_product_uuids(db, org_id):
     tier = 0
 
     # Fetch top-level product UUIDs
-    with db.execQuery(product_uuid_query, (org_id, org_id)) as cursor:
+    with db.execQuery(product_uuid_query, (namespace, org_id)) as cursor:
         process_cursor(cursor, uuids, children_uuids, tier)
 
     # Fetch children UUIDs
@@ -441,20 +451,21 @@ class ContentManager(ModelManager):
         # target org), and then fetched via UUID as a partitioned query
 
         # Content references references:
-        #   - cp2_owner_products.content_uuid
-        #   - cp2_product_content.content_uuid
+        #   - cp_products.content_uuid
+        #   - cp_product_contents.content_uuid
         #
         # Product tables
-        # - cp2_content
-        # - cp2_content_modified_products
+        # - cp_contents
+        # - cp_content_required_products
 
         content_uuids = set()
+        namespace = resolve_org_namespace(self.db, self.org_id)
 
-        content_uuid_query1 = 'SELECT oc.content_uuid FROM cp2_owner_content oc WHERE oc.owner_id = %s'
-        content_uuid_query2 = 'SELECT pc.content_uuid FROM cp2_product_content pc WHERE pc.product_uuid IN (%s)'
+        content_uuid_query1 = 'SELECT oc.uuid FROM cp_contents oc WHERE oc.namespace in (%s, \'\')'
+        content_uuid_query2 = 'SELECT pc.content_uuid FROM cp_product_contents pc WHERE pc.product_uuid IN (%s)'
 
         # Pull content UUIDs from referencing tables
-        with self.db.execQuery(content_uuid_query1, (self.org_id,)) as cursor:
+        with self.db.execQuery(content_uuid_query1, (namespace,)) as cursor:
             for row in cursor:
                 content_uuids.add(row[0])
 
@@ -469,11 +480,8 @@ class ContentManager(ModelManager):
         content_uuids = list(content_uuids)
 
         # Export content for fetched UUIDs
-        self._export_partitioned_query('cp2_content.json', 'cp2_content', 'SELECT c.* FROM cp2_content c WHERE c.uuid IN (%s)', content_uuids)
-        self._export_partitioned_query('cp2_content_modified_products.json', 'cp2_content_modified_products', 'SELECT cmp.* FROM cp2_content_modified_products cmp WHERE cmp.content_uuid IN (%s)', content_uuids)
-
-        # Export owner-content mapping
-        self._export_query('cp2_owner_content.json', 'cp2_owner_content', 'SELECT * FROM cp2_owner_content WHERE owner_id=%s', (self.org_id,))
+        self._export_partitioned_query('cp_contents.json', 'cp_contents', 'SELECT c.* FROM cp_contents c WHERE c.uuid IN (%s)', content_uuids)
+        self._export_partitioned_query('cp_content_required_products.json', 'cp_content_required_products', 'SELECT cmp.* FROM cp_content_required_products cmp WHERE cmp.content_uuid IN (%s)', content_uuids)
 
         self._exported = True
         return True
@@ -482,9 +490,8 @@ class ContentManager(ModelManager):
         if self.imported:
             return True
 
-        result = self._import_json('cp2_content.json')
-        result = result and self._import_json('cp2_content_modified_products.json')
-        result = result and self._import_json('cp2_owner_content.json')
+        result = self._import_json('cp_contents.json')
+        result = result and self._import_json('cp_content_required_products.json')
 
         self._imported = result
         return result
@@ -507,40 +514,37 @@ class ProductManager(ModelManager):
         # then recursively sift through the products we've pulled to check for children products
         #
         # Product references:
-        #   - cp2_owner_products.product_uuid
+        #   - cp_products.product_uuid
         #   - cp_pool.product_uuid
         #
         # Recursive references:
-        #   - cp2_products.derived_product_uuid
-        #   - cp2_product_provided_products.provided_product_uuid
+        #   - cp_products.derived_product_uuid
+        #   - cp_product_provided_products.provided_product_uuid
         #
         # Product tables
-        # - cp2_products
-        # - cp2_product_dependent_products
-        # - cp2_product_attributes
-        # - cp2_product_branding
-        # - cp2_product_certificates
-        # - cp2_product_content
-        # - cp2_product_provided_products
+        # - cp_products
+        # - cp_product_dependent_products
+        # - cp_product_attributes
+        # - cp_product_branding
+        # - cp_product_certificates
+        # - cp_product_contents
+        # - cp_product_provided_products
 
         # Fetch product UUIDs
         uuid_map = fetch_product_uuids(self.db, self.org_id)
         product_uuids = list(uuid_map.keys())
 
         # Fetch actual products from our UUID collection
-        # self._export_partitioned_query('cp2_products.json', 'cp2_products', 'SELECT * FROM cp2_products WHERE uuid IN (%s)', product_uuids, IN_OPERATOR_LIMIT, lambda products: log.debug("Products? %s" % (products,)))
-        self._export_partitioned_query('cp2_products.json', 'cp2_products', 'SELECT * FROM cp2_products WHERE uuid IN (%s)', product_uuids, IN_OPERATOR_LIMIT, lambda products: products.sort(reverse=True, key=lambda product: uuid_map[product[0]]))
+        # self._export_partitioned_query('cp_products.json', 'cp_products', 'SELECT * FROM cp_products WHERE uuid IN (%s)', product_uuids, IN_OPERATOR_LIMIT, lambda products: log.debug("Products? %s" % (products,)))
+        self._export_partitioned_query('cp_products.json', 'cp_products', 'SELECT * FROM cp_products WHERE uuid IN (%s)', product_uuids, IN_OPERATOR_LIMIT, lambda products: products.sort(reverse=True, key=lambda product: uuid_map[product[0]]))
 
         # Grab ancillary product tables
-        self._export_partitioned_query('cp2_product_attributes.json', 'cp2_product_attributes', 'SELECT pa.* FROM cp2_product_attributes pa WHERE pa.product_uuid IN (%s)', product_uuids)
-        self._export_partitioned_query('cp2_product_certificates.json', 'cp2_product_certificates', 'SELECT pc.* FROM cp2_product_certificates pc WHERE pc.product_uuid IN (%s)', product_uuids)
-        self._export_partitioned_query('cp2_product_content.json', 'cp2_product_content', 'SELECT pc.* FROM cp2_product_content pc WHERE pc.product_uuid IN (%s)', product_uuids)
-        self._export_partitioned_query('cp2_product_branding.json', 'cp2_product_branding', 'SELECT pb.* FROM cp2_product_branding pb WHERE pb.product_uuid IN (%s)', product_uuids)
-        self._export_partitioned_query('cp2_product_provided_products.json', 'cp2_product_provided_products', 'SELECT ppp.* FROM cp2_product_provided_products ppp WHERE ppp.product_uuid IN (%s)', product_uuids)
-        self._export_partitioned_query('cp2_product_dependent_products.json', 'cp2_product_dependent_products', 'SELECT pdp.* FROM cp2_product_dependent_products pdp WHERE pdp.product_uuid IN (%s)', product_uuids)
-
-        # Grab owner-product mappings
-        self._export_query('cp2_owner_products.json', 'cp2_owner_products', 'SELECT * FROM cp2_owner_products WHERE owner_id=%s', (self.org_id,))
+        self._export_partitioned_query('cp_product_attributes.json', 'cp_product_attributes', 'SELECT pa.* FROM cp_product_attributes pa WHERE pa.product_uuid IN (%s)', product_uuids)
+        self._export_partitioned_query('cp_product_certificates.json', 'cp_product_certificates', 'SELECT pc.* FROM cp_product_certificates pc WHERE pc.product_uuid IN (%s)', product_uuids)
+        self._export_partitioned_query('cp_product_contents.json', 'cp_product_contents', 'SELECT pc.* FROM cp_product_contents pc WHERE pc.product_uuid IN (%s)', product_uuids)
+        self._export_partitioned_query('cp_product_branding.json', 'cp_product_branding', 'SELECT pb.* FROM cp_product_branding pb WHERE pb.product_uuid IN (%s)', product_uuids)
+        self._export_partitioned_query('cp_product_provided_products.json', 'cp_product_provided_products', 'SELECT ppp.* FROM cp_product_provided_products ppp WHERE ppp.product_uuid IN (%s)', product_uuids)
+        self._export_partitioned_query('cp_product_dependent_products.json', 'cp_product_dependent_products', 'SELECT pdp.* FROM cp_product_dependent_products pdp WHERE pdp.product_uuid IN (%s)', product_uuids)
 
         self._exported = True
         return True
@@ -549,14 +553,13 @@ class ProductManager(ModelManager):
         if self.imported:
             return True
 
-        result = self._import_json('cp2_products.json')
-        result = result and self._import_json('cp2_product_attributes.json')
-        result = result and self._import_json('cp2_product_certificates.json', base64_decoder(['cert', 'privatekey']))
-        result = result and self._import_json('cp2_product_content.json', boolean_converter(['enabled']))
-        result = result and self._import_json('cp2_owner_products.json')
-        result = result and self._import_json('cp2_product_branding.json')
-        result = result and self._import_json('cp2_product_provided_products.json')
-        result = result and self._import_json('cp2_product_dependent_products.json')
+        result = self._import_json('cp_products.json')
+        result = result and self._import_json('cp_product_attributes.json')
+        result = result and self._import_json('cp_product_certificates.json', base64_decoder(['cert', 'privatekey']))
+        result = result and self._import_json('cp_product_contents.json', boolean_converter(['enabled']))
+        result = result and self._import_json('cp_product_branding.json')
+        result = result and self._import_json('cp_product_provided_products.json')
+        result = result and self._import_json('cp_product_dependent_products.json')
 
         self._imported = result
         return result
