@@ -723,13 +723,20 @@ public class Importer {
                 String entryName = zipentry.getName();
                 log.debug("entryname {}", entryName);
 
-                File newFile = new File(entryName);
-                String directory = newFile.getParent();
-                if (directory != null) {
-                    new File(tempDir, directory).mkdirs();
+                File newFile = new File(tempDir, entryName).getCanonicalFile();
+
+                // Check if the file is outside of the target directory
+                if (!newFile.getPath().startsWith(tempDir.getCanonicalPath())) {
+                    throw new ImportExtractionException(i18n.tr(
+                        "Entry is outside of the target directory: {0}", entryName));
                 }
 
-                try (FileOutputStream fileoutputstream = new FileOutputStream(new File(tempDir, entryName))) {
+                String directory = newFile.getParent();
+                if (directory != null) {
+                    new File(directory).mkdirs();
+                }
+
+                try (FileOutputStream fileoutputstream = new FileOutputStream(newFile)) {
                     int n;
                     while ((n = zipinputstream.read(buf, 0, 1024)) > -1) {
                         fileoutputstream.write(buf, 0, n);
