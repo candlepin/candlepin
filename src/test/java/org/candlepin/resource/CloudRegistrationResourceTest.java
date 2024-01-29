@@ -15,14 +15,19 @@
 package org.candlepin.resource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.CloudAccountOrgSetupJob.CloudAccountOrgSetupJobConfig;
 import org.candlepin.auth.CloudAuthTokenGenerator;
@@ -42,6 +47,8 @@ import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificate;
 import org.candlepin.model.AnonymousContentAccessCertificateCurator;
+import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PoolCurator;
@@ -49,6 +56,9 @@ import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingException;
 import org.candlepin.service.model.CloudAuthenticationResult;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ObjectMapperFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,8 +73,12 @@ import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.core.Response;
@@ -83,6 +97,7 @@ public class CloudRegistrationResourceTest {
     private AnonymousContentAccessCertificateCurator mockAnonCloudCertCurator;
     private PoolCurator mockPoolCurator;
     private JobManager mockJobManager;
+    private AsyncJobStatusCurator mockJobStatusCurator;
     private CloudAuthTokenGenerator mockTokenGenerator;
     private PrincipalProvider principalProvider;
     private Principal principal;
@@ -97,6 +112,7 @@ public class CloudRegistrationResourceTest {
         this.mockAnonCloudConsumerCurator = mock(AnonymousCloudConsumerCurator.class);
         this.mockPoolCurator = mock(PoolCurator.class);
         this.mockJobManager = mock(JobManager.class);
+        this.mockJobStatusCurator = mock(AsyncJobStatusCurator.class);
         this.mockTokenGenerator = mock(CloudAuthTokenGenerator.class);
         this.mockTokenGenerator = mock(CloudAuthTokenGenerator.class);
         this.mockOwnerCurator = mock(OwnerCurator.class);
@@ -110,7 +126,8 @@ public class CloudRegistrationResourceTest {
         cloudRegResource = new CloudRegistrationResource(this.mockConfig, this.i18n,
             this.mockCloudRegistrationAdapter,
             this.mockAnonCloudConsumerCurator, this.mockPoolCurator, this.mockJobManager,
-            this.mockTokenGenerator, this.mockAnonCloudCertCurator, this.principalProvider);
+            this.mockTokenGenerator, this.mockAnonCloudCertCurator, this.principalProvider,
+            this.mockJobStatusCurator);
     }
 
     @Test
@@ -125,7 +142,7 @@ public class CloudRegistrationResourceTest {
         cloudRegResource = new CloudRegistrationResource(this.mockConfig, this.i18n,
             this.mockCloudRegistrationAdapter, this.mockAnonCloudConsumerCurator, this.mockPoolCurator,
             this.mockJobManager, this.mockTokenGenerator, this.mockAnonCloudCertCurator,
-            this.principalProvider);
+            this.principalProvider, this.mockJobStatusCurator);
 
         assertThrows(NotImplementedException.class,
             () -> cloudRegResource.cloudAuthorize(new CloudRegistrationDTO(), 1));
@@ -597,6 +614,91 @@ public class CloudRegistrationResourceTest {
         assertThrows(NotImplementedException.class, () -> cloudRegResource.cloudAuthorize(dto, 2));
     }
 
+    @Test
+    void testCancelCloudAccountJobsValidAccountId() throws JsonProcessingException {
+        String cloudAccountId = TestUtil.randomString("validCloudAccountId-");
+        String jobId1 = TestUtil.randomString("jobId-");
+        String jobId2 = TestUtil.randomString("jobId-");
+        List<AsyncJobStatus> jobs = Arrays.asList(
+            createMockJob(jobId1, cloudAccountId), createMockJob(jobId2, cloudAccountId)
+        );
+        when(mockJobManager.findJobs(any())).thenReturn(jobs);
+        when(mockJobManager.cancelJob(any())).thenReturn(new AsyncJobStatus());
+
+        List<String> canceledJobIds = cloudRegResource.cancelCloudAccountJobs(cloudAccountId);
+
+        assertEquals(List.of(jobId1, jobId2), canceledJobIds);
+    }
+
+    @Test
+    void testCancelCloudAccountJobsNoJobsToCancel() {
+        String cloudAccountId = "validAccountId";
+        when(mockJobManager.findJobs(any())).thenReturn(Collections.emptyList());
+
+        List<String> canceledJobIds = cloudRegResource.cancelCloudAccountJobs(cloudAccountId);
+
+        assertThat(canceledJobIds).isEmpty();
+    }
+
+    @Test
+    void testCancelJobsShouldThrowBadRequestWithNullId() {
+        assertThrows(BadRequestException.class, () -> cloudRegResource.cancelCloudAccountJobs(null));
+    }
+
+    @Test
+    void testCancelJobsShouldThrowBadRequestWithEmptyId() {
+        assertThrows(BadRequestException.class, () -> cloudRegResource.cancelCloudAccountJobs(""));
+    }
+
+    @Test
+    void testValidOptionsForJobStatuses() {
+        String cloudAccountId = TestUtil.randomString("validCloudAccountId-");
+        List<AsyncJobStatus> jobs = Collections.emptyList();
+        when(mockJobManager.findJobs(any())).thenReturn(jobs);
+
+        cloudRegResource.cancelCloudAccountJobs(cloudAccountId);
+
+        verify(mockJobManager, times(1)).findJobs(argThat(argument ->
+            argument.getJobStates().containsAll(Arrays.asList(
+                AsyncJobStatus.JobState.CREATED,
+                AsyncJobStatus.JobState.QUEUED,
+                AsyncJobStatus.JobState.RUNNING,
+                AsyncJobStatus.JobState.SCHEDULED,
+                AsyncJobStatus.JobState.WAITING,
+                AsyncJobStatus.JobState.FAILED_WITH_RETRY
+            ))
+        ));
+    }
+
+    @Test
+    void testCancelingJobInTerminalState() throws JsonProcessingException {
+        String cloudAccountId = TestUtil.randomString("validCloudAccountId-");
+        String jobId = TestUtil.randomString("jobId-");
+        List<AsyncJobStatus> jobs = List.of(createMockJob(jobId, cloudAccountId));
+
+        when(mockJobManager.findJobs(any())).thenReturn(jobs);
+        when(mockJobManager.cancelJob(jobId)).thenThrow(IllegalStateException.class);
+
+        List<String> cancelledJobIds = cloudRegResource.cancelCloudAccountJobs(cloudAccountId);
+
+        verify(mockJobManager, times(1)).cancelJob(jobId);
+        assertThat(cancelledJobIds).isEmpty();
+    }
+
+    @Test
+    void testDeleteAnonymousConsumers() {
+        String accountId = "test-account-id";
+        AnonymousCloudConsumer consumer = mock(AnonymousCloudConsumer.class);
+        doReturn(List.of(consumer)).when(mockAnonCloudConsumerCurator).getByCloudAccountId(accountId);
+        doReturn(mock(AnonymousContentAccessCertificate.class)).when(consumer).getContentAccessCert();
+
+        cloudRegResource.deleteAnonymousConsumersByAccountId(accountId);
+        verify(this.mockAnonCloudConsumerCurator, Mockito.times(1))
+            .delete(consumer);
+        verify(this.mockAnonCloudCertCurator, Mockito.times(1))
+            .delete(any(AnonymousContentAccessCertificate.class));
+    }
+
     private CloudRegistrationData getCloudRegistrationData(CloudRegistrationDTO cloudRegistrationDTO) {
         CloudRegistrationData registrationData = new CloudRegistrationData();
         registrationData.setType(cloudRegistrationDTO.getType());
@@ -620,18 +722,18 @@ public class CloudRegistrationResourceTest {
         return mockResult;
     }
 
-    @Test
-    public void testDeleteAnonymousConsumers() {
-        String accountId = "test-account-id";
-        AnonymousCloudConsumer consumer = mock(AnonymousCloudConsumer.class);
-        doReturn(List.of(consumer)).when(mockAnonCloudConsumerCurator).getByCloudAccountId(accountId);
-        doReturn(mock(AnonymousContentAccessCertificate.class)).when(consumer).getContentAccessCert();
+    private AsyncJobStatus createMockJob(String jobId, String cloudAccountId) throws JsonProcessingException {
+        AsyncJobStatus job = Mockito.mock(AsyncJobStatus.class);
+        Mockito.when(job.getId()).thenReturn(jobId);
 
-        cloudRegResource.deleteAnonymousConsumersByAccountId(accountId);
-        verify(this.mockAnonCloudConsumerCurator, Mockito.times(1))
-            .delete(consumer);
-        verify(this.mockAnonCloudCertCurator, Mockito.times(1))
-            .delete(any(AnonymousContentAccessCertificate.class));
+        Map<String, String> arguments = new HashMap<>();
+        arguments.put("cloud_account_id",
+            ObjectMapperFactory.getObjectMapper().writeValueAsString(cloudAccountId));
+
+        JobArguments jobArguments = new JobArguments(arguments);
+        Mockito.when(job.getJobArguments()).thenReturn(jobArguments);
+
+        return job;
     }
 
 }
