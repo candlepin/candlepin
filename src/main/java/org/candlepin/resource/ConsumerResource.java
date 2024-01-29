@@ -703,6 +703,20 @@ public class ConsumerResource implements ConsumerApi {
                     consumer = this.regenerateIdentityCertificate(consumer);
                 }
             }
+            else {
+                // When anonymous orgs get claimed, identity certs are revoked, so we need to regenerate
+                // them for cloud VM consumers that check in right after the claiming happened.
+                //
+                // Also, because there is a case where a hypervisor may not be (yet, or at all) a registered
+                // system it may not have an identity certificate, we don't want to generate one for it.
+                // Here we're making the (reasonably safe) assumption that a hypervisor being run as a
+                // cloud VM is not a realistic setup.
+                if (!this.consumerTypeCurator.getConsumerType(consumer).isType(ConsumerTypeEnum.HYPERVISOR)) {
+                    log.info("Regenerating identity certificate for consumer with null identity cert: {}",
+                        uuid);
+                    consumer = this.regenerateIdentityCertificate(consumer);
+                }
+            }
 
             // enrich with subscription data
             consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
