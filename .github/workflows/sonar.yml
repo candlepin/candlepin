@@ -85,7 +85,7 @@ jobs:
 
       - name: Analyze
         if: ${{ fromJson(steps.get_pr_data.outputs.data).base.ref == 'main' || fromJson(steps.get_pr_data.outputs.data).base.ref == 'feature/autoreg_v2'}}
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
