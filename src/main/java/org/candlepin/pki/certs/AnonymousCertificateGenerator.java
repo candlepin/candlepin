@@ -35,6 +35,7 @@ import org.candlepin.pki.OID;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509Extension;
+import org.candlepin.pki.impl.KeyPairGenerator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
@@ -48,7 +49,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.security.KeyException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.time.OffsetDateTime;
@@ -82,6 +82,7 @@ public class AnonymousCertificateGenerator {
     private final ProductServiceAdapter prodAdapter;
     private final AnonymousCertContentCache contentCache;
     private final PemEncoder pemEncoder;
+    private final KeyPairGenerator pairGenerator;
     private final Provider<X509CertificateBuilder> certificateBuilder;
 
     @Inject
@@ -94,6 +95,7 @@ public class AnonymousCertificateGenerator {
         ProductServiceAdapter prodAdapter,
         AnonymousCertContentCache contentCache,
         PemEncoder pemEncoder,
+        KeyPairGenerator pairGenerator,
         Provider<X509CertificateBuilder> certificateBuilder) {
 
         this.pki = Objects.requireNonNull(pki);
@@ -104,6 +106,7 @@ public class AnonymousCertificateGenerator {
         this.prodAdapter = Objects.requireNonNull(prodAdapter);
         this.contentCache = Objects.requireNonNull(contentCache);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
+        this.pairGenerator = Objects.requireNonNull(pairGenerator);
         this.certificateBuilder = Objects.requireNonNull(certificateBuilder);
     }
 
@@ -114,7 +117,7 @@ public class AnonymousCertificateGenerator {
         // we hava a cache miss.
         String payload;
         List<Content> content;
-        AnonymousCertContent cached = contentCache.get(consumer.getProductIds());
+        AnonymousCertContent cached = this.contentCache.get(consumer.getProductIds());
         if (cached != null) {
             log.debug("Anonymous content access certificate content retrieved from cache");
             payload = cached.contentAccessDataPayload();
@@ -123,7 +126,7 @@ public class AnonymousCertificateGenerator {
         else {
             log.debug("Retrieving anonymous content access certificate content from product adapter");
             // Get product information from adapters to build the content access certificate
-            List<ProductInfo> products = prodAdapter.getChildrenByProductIds(consumer.getProductIds());
+            List<ProductInfo> products = this.prodAdapter.getChildrenByProductIds(consumer.getProductIds());
             if (products == null || products.isEmpty()) {
                 String msg = "Unable to retrieve products for anonymous cloud consumer: " +
                     consumer.getUuid();
@@ -135,7 +138,7 @@ public class AnonymousCertificateGenerator {
             content = convertContentInfoToContentDto(contentInfo);
 
             // Cache the generated content for future requests
-            contentCache.put(consumer.getProductIds(), new AnonymousCertContent(payload, content));
+            this.contentCache.put(consumer.getProductIds(), new AnonymousCertContent(payload, content));
         }
 
         return createAnonContentAccessCertificate(consumer, payload, content);
@@ -163,7 +166,7 @@ public class AnonymousCertificateGenerator {
         OffsetDateTime end = start.plusDays(2L);
 
         CertificateSerial serial = createSerial(end);
-        KeyPair keyPair = getKeyPair();
+        KeyPair keyPair = this.pairGenerator.generateKeyPair();
 
         org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
         container.setContent(certificateContent);
@@ -174,22 +177,12 @@ public class AnonymousCertificateGenerator {
         caCert.setSerial(serial);
         caCert.setKeyAsBytes(this.pemEncoder.encodeAsBytes(keyPair.getPrivate()));
         caCert.setCert(this.pemEncoder.encodeAsString(x509Cert) + payloadAndSignature);
-        caCert = anonContentAccessCertCurator.create(caCert);
+        caCert = this.anonContentAccessCertCurator.create(caCert);
 
         consumer.setContentAccessCert(caCert);
         this.anonCloudConsumerCurator.merge(consumer);
 
         return caCert;
-    }
-
-    private KeyPair getKeyPair() {
-        try {
-            return this.pki.generateKeyPair();
-        }
-        catch (KeyException e) {
-            // todo
-            throw new RuntimeException(e);
-        }
     }
 
     private String createAnonPayloadAndSignature(Collection<ProductInfo> prodInfo) {
@@ -207,7 +200,7 @@ public class AnonymousCertificateGenerator {
         CertificateSerial serial = new CertificateSerial(Date.from(end.toInstant()));
         // We need the sequence generated id before we create the Certificate,
         // otherwise we could have used cascading create
-        serialCurator.create(serial);
+        this.serialCurator.create(serial);
         return serial;
     }
 
@@ -229,6 +222,7 @@ public class AnonymousCertificateGenerator {
             .build();
     }
 
+    // todo
     private String createPayloadAndSignature(byte[] payloadBytes) {
         String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
         payload += Util.toBase64(payloadBytes);

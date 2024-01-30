@@ -35,6 +35,7 @@ import org.candlepin.pki.OID;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509Extension;
+import org.candlepin.pki.impl.KeyPairGenerator;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
@@ -44,7 +45,6 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.security.KeyException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.time.OffsetDateTime;
@@ -73,6 +73,7 @@ public class ContentAccessCertificateGenerator {
     private final ConsumerCurator consumerCurator;
     private final EnvironmentCurator environmentCurator;
     private final PemEncoder pemEncoder;
+    private final KeyPairGenerator keyPairGenerator;
     private final Provider<X509CertificateBuilder> certificateBuilder;
 
     @Inject
@@ -85,6 +86,7 @@ public class ContentAccessCertificateGenerator {
         ConsumerCurator consumerCurator,
         EnvironmentCurator environmentCurator,
         PemEncoder pemEncoder,
+        KeyPairGenerator keyPairGenerator,
         Provider<X509CertificateBuilder> certificateBuilder) {
 
         this.pki = Objects.requireNonNull(pki);
@@ -95,6 +97,7 @@ public class ContentAccessCertificateGenerator {
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.environmentCurator = Objects.requireNonNull(environmentCurator);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
+        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
         this.certificateBuilder = Objects.requireNonNull(certificateBuilder);
     }
 
@@ -106,7 +109,7 @@ public class ContentAccessCertificateGenerator {
 
         CertificateSerial serial = createSerial(end);
 
-        KeyPair keyPair = getConsumerKeyPair(consumer);
+        KeyPair keyPair = this.keyPairGenerator.getKeyPair(consumer);
         org.candlepin.model.dto.Product container = createSCAProdContainer(owner, consumer);
 
         List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
@@ -144,7 +147,7 @@ public class ContentAccessCertificateGenerator {
             OffsetDateTime start = OffsetDateTime.now().minusHours(1L);
             OffsetDateTime end = start.plusYears(1L);
 
-            KeyPair keyPair = getConsumerKeyPair(consumer);
+            KeyPair keyPair = this.keyPairGenerator.getKeyPair(consumer);
             this.serialCurator.revokeById(existing.getSerial().getId());
             CertificateSerial serial = createSerial(end);
             org.candlepin.model.dto.Product container = createSCAProdContainer(owner, consumer);
@@ -172,16 +175,6 @@ public class ContentAccessCertificateGenerator {
         }
 
         return existing;
-    }
-
-    private KeyPair getConsumerKeyPair(Consumer consumer) {
-        try {
-            return this.pki.getConsumerKeyPair(consumer);
-        }
-        catch (KeyException e) {
-            // todo
-            throw new RuntimeException(e);
-        }
     }
 
     private org.candlepin.model.dto.Product createSCAProdContainer(Owner owner, Consumer consumer) {

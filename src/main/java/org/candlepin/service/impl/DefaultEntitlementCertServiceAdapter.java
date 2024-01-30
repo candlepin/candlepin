@@ -40,8 +40,11 @@ import org.candlepin.model.ProductContent;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509Extension;
+import org.candlepin.pki.certs.X509CertificateBuilder;
 import org.candlepin.pki.certs.X509StringExtension;
+import org.candlepin.pki.impl.KeyPairGenerator;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
@@ -69,10 +72,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * DefaultEntitlementCertServiceAdapter
@@ -90,6 +95,9 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private final Configuration config;
     private final ConsumerTypeCurator consumerTypeCurator;
     private final EnvironmentCurator environmentCurator;
+    private final PemEncoder pemEncoder;
+    private final KeyPairGenerator keyPairGenerator;
+    private final Provider<X509CertificateBuilder> certificateBuilder;
 
     @Inject
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki,
@@ -101,19 +109,25 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         EntitlementCurator entCurator, I18n i18n,
         Configuration config,
         ConsumerTypeCurator consumerTypeCurator,
-        EnvironmentCurator environmentCurator) {
+        EnvironmentCurator environmentCurator,
+        PemEncoder pemEncoder,
+        KeyPairGenerator keyPairGenerator,
+        Provider<X509CertificateBuilder> certificateBuilder) {
 
-        this.pki = pki;
-        this.extensionUtil = extensionUtil;
-        this.v3extensionUtil = v3extensionUtil;
-        this.entCertCurator = entCertCurator;
-        this.serialCurator = serialCurator;
-        this.ownerCurator = ownerCurator;
-        this.entCurator = entCurator;
-        this.i18n = i18n;
-        this.config = config;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.environmentCurator = environmentCurator;
+        this.pki = Objects.requireNonNull(pki);
+        this.extensionUtil = Objects.requireNonNull(extensionUtil);
+        this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
+        this.entCertCurator = Objects.requireNonNull(entCertCurator);
+        this.serialCurator = Objects.requireNonNull(serialCurator);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.entCurator = Objects.requireNonNull(entCurator);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.config = Objects.requireNonNull(config);
+        this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
+        this.environmentCurator = Objects.requireNonNull(environmentCurator);
+        this.pemEncoder = Objects.requireNonNull(pemEncoder);
+        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
+        this.certificateBuilder = Objects.requireNonNull(certificateBuilder);
     }
 
 
@@ -183,6 +197,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 promotedContent, entitledPools);
         }
 
+        // todo
         Date endDate = setupEntitlementEndDate(pool, consumer);
         ent.setEndDateOverride(endDate);
         Calendar calNow = Calendar.getInstance();
@@ -195,9 +210,13 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         }
         DistinguishedName dn = new DistinguishedName(ent.getId(), owner);
 
-        return this.pki.createX509Certificate(
-            dn, extensions, startDate,
-            endDate, keyPair, serialNumber, null);
+        return this.certificateBuilder.get()
+            .withDN(dn)
+            .withValidity(startDate.toInstant(), endDate.toInstant())
+            .withSerial(serialNumber)
+            .withKeyPair(keyPair)
+            .withExtensions(extensions)
+            .build();
     }
 
     /**
@@ -363,8 +382,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
 
         log.debug("Generating entitlement cert for entitlements");
-        KeyPair keyPair = this.pki.getConsumerKeyPair(consumer);
-        byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
+        KeyPair keyPair = this.keyPairGenerator.getKeyPair(consumer);
 
         Map<String, CertificateSerial> serialMap = new HashMap<>();
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
@@ -413,7 +431,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 BigInteger.valueOf(serial.getId()), keyPair, promotedContent, entitledPools);
 
             log.debug("Getting PEM encoded cert.");
-            String pem = new String(this.pki.getPemEncoded(x509Cert));
+            String pem = this.pemEncoder.encodeAsString(x509Cert);
 
             if (shouldGenerateV3(consumer)) {
                 log.debug("Generating v3 entitlement data");
@@ -425,7 +443,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 payload += Util.toBase64(payloadBytes);
                 payload += "-----END ENTITLEMENT DATA-----\n";
 
-                byte[] bytes = pki.getSHA256WithRSAHash(new ByteArrayInputStream(payloadBytes));
+                byte[] bytes = this.pki.getSHA256WithRSAHash(new ByteArrayInputStream(payloadBytes));
                 String signature = "-----BEGIN RSA SIGNATURE-----\n";
                 signature += Util.toBase64(bytes);
                 signature += "-----END RSA SIGNATURE-----\n";
@@ -435,6 +453,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
             // Build a skeleton cert as part of the entitlement processing.
             EntitlementCertificate cert = new EntitlementCertificate();
+            byte[] pemEncodedKeyPair = this.pemEncoder.encodeAsBytes(keyPair.getPrivate());
             cert.setKeyAsBytes(pemEncodedKeyPair);
             cert.setCert(pem);
             if (save) {
