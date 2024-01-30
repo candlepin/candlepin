@@ -99,6 +99,7 @@ import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
+import org.candlepin.pki.certs.ProductCertificateGenerator;
 import org.candlepin.pki.certs.X509CertificateBuilder;
 import org.candlepin.pki.certs.X509CertificateBuilderProvider;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
@@ -305,6 +306,8 @@ public class CandlepinModule extends AbstractModule {
         bind(X509CertificateBuilder.class).toProvider(X509CertificateBuilderProvider.class);
         bind(PemEncoder.class).to(BouncyCastlePemEncoder.class);
         bind(KeyPairGenerator.class);
+
+        bind(ProductCertificateGenerator.class);
     }
 
     private void resources() {

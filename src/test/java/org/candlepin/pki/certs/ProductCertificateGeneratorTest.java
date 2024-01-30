@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,11 +12,11 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.service.impl;
+
+package org.candlepin.pki.certs;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
@@ -32,15 +32,13 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.certs.ProductCertificateGenerator;
-import org.candlepin.service.UniqueIdGenerator;
+import org.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.test.TestUtil;
@@ -55,13 +53,7 @@ import java.security.PublicKey;
 import java.util.List;
 import java.util.Map;
 
-
-
-// TODO: FIXME: Rewrite this test to not be so reliant upon mocks. It's making things incredibly brittle and
-// wasting dev time tracking down non-issues when a mock silently fails because the implementation changes.
-// :(
-
-public class DefaultProductServiceAdapterTest {
+class ProductCertificateGeneratorTest {
     private String someid = "deadbeef";
 
     private DefaultProductServiceAdapter dpsa;

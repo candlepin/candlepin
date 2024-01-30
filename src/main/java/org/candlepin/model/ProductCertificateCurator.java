@@ -14,46 +14,21 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.pki.DistinguishedName;
-import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.X509Extension;
-import org.candlepin.util.X509ExtensionUtil;
-
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.cert.X509Certificate;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 
-
-/**
- * ProductCertificateCurator
- */
 @Singleton
 public class ProductCertificateCurator extends AbstractHibernateCurator<ProductCertificate> {
-    private static Logger log = LoggerFactory.getLogger(ProductCertificateCurator.class);
-
-    private PKIUtility pki;
-    private X509ExtensionUtil extensionUtil;
-
+    private static final Logger log = LoggerFactory.getLogger(ProductCertificateCurator.class);
 
     @Inject
-    public ProductCertificateCurator(PKIUtility pki, X509ExtensionUtil extensionUtil) {
+    public ProductCertificateCurator() {
         super(ProductCertificate.class);
-
-        this.pki = pki;
-        this.extensionUtil = extensionUtil;
     }
 
     public ProductCertificate findForProduct(Product product) {
@@ -63,69 +38,6 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
             .createCriteria(ProductCertificate.class)
             .add(Restrictions.eq("product", product))
             .uniqueResult();
-    }
-
-    /**
-     * Gets the certificate that defines the given product, creating one if necessary. If the
-     * product is not one that has certificates, this method returns null. If a certificate does
-     * not yet exist and cannot be created, this method throws an exception.
-     *
-     * @param product
-     *  the product for which to fetch the certificate
-     *
-     * @return
-     *  the stored or created {@link ProductCertificate}, or null if the product cannot have
-     *  certificates
-     */
-    public ProductCertificate getCertForProduct(Product product) {
-        log.debug("Retrieving cert for product: {}", product);
-        ProductCertificate cert = this.findForProduct(product);
-
-        if (cert == null) {
-            try {
-                cert = this.createCertForProduct(product);
-                this.create(cert);
-            }
-            catch (IllegalArgumentException e) {
-                // This occurs if the product is not an engineering product, fails the cert
-                // encoding (as marketing products have non-numeric IDs), and fails out with
-                // an IAE.
-                log.warn("Attempted to create a product certificate for a non-engineering product: {}",
-                    product, e);
-            }
-            catch (Exception e) {
-                log.error("Error creating product certificate!", e);
-                throw new RuntimeException("Unable to generate product certificate", e);
-            }
-        }
-
-        return cert;
-    }
-
-    private ProductCertificate createCertForProduct(Product product)
-        throws GeneralSecurityException, IOException {
-        log.debug("Generating cert for product: {}", product);
-
-        KeyPair keyPair = this.pki.generateKeyPair();
-        Set<X509Extension> extensions = this.extensionUtil.productExtensions(product);
-
-        BigInteger serial = BigInteger.valueOf(product.getId().hashCode()).abs();
-
-        Calendar future = Calendar.getInstance();
-        future.add(Calendar.YEAR, 10);
-
-        DistinguishedName dn = new DistinguishedName(product.getId());
-        X509Certificate x509Cert = this.pki.createX509Certificate(
-            dn, extensions, new Date(), future.getTime(), keyPair,
-            serial, null
-        );
-
-        ProductCertificate cert = new ProductCertificate();
-        cert.setKeyAsBytes(this.pki.getPemEncoded(keyPair.getPrivate()));
-        cert.setCertAsBytes(this.pki.getPemEncoded(x509Cert));
-        cert.setProduct(product);
-
-        return cert;
     }
 
 }

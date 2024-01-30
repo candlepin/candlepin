@@ -43,6 +43,7 @@ import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.paging.PagingUtilFactory;
+import org.candlepin.pki.certs.ProductCertificateGenerator;
 import org.candlepin.resource.server.v1.OwnerProductApi;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.resource.validation.DTOValidator;
@@ -84,9 +85,9 @@ public class OwnerProductResource implements OwnerProductApi {
     private final PagingUtilFactory pagingUtilFactory;
     private final OwnerCurator ownerCurator;
     private final ProductManager productManager;
-    private final ProductCertificateCurator productCertCurator;
     private final ProductCurator productCurator;
     private final ContentCurator contentCurator;
+    private final ProductCertificateGenerator productCertificateGenerator;
 
     @Inject
     @SuppressWarnings("checkstyle:parameternumber")
@@ -99,9 +100,9 @@ public class OwnerProductResource implements OwnerProductApi {
         PagingUtilFactory pagingUtilFactory,
         OwnerCurator ownerCurator,
         ProductManager productManager,
-        ProductCertificateCurator productCertCurator,
         ProductCurator productCurator,
-        ContentCurator contentCurator) {
+        ContentCurator contentCurator,
+        ProductCertificateGenerator productCertificateGenerator) {
 
         this.i18n = Objects.requireNonNull(i18n);
         this.config = Objects.requireNonNull(config);
@@ -111,9 +112,9 @@ public class OwnerProductResource implements OwnerProductApi {
         this.pagingUtilFactory = Objects.requireNonNull(pagingUtilFactory);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.productManager = Objects.requireNonNull(productManager);
-        this.productCertCurator = Objects.requireNonNull(productCertCurator);
         this.productCurator = Objects.requireNonNull(productCurator);
         this.contentCurator = Objects.requireNonNull(contentCurator);
+        this.productCertificateGenerator = Objects.requireNonNull(productCertificateGenerator);
     }
 
     /**
@@ -547,8 +548,7 @@ public class OwnerProductResource implements OwnerProductApi {
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.resolveProductId(owner, productId, null);
 
-        // FIXME: Should this be fetching the cert from the product service? Feels like an oversight.
-        ProductCertificate productCertificate = this.productCertCurator.getCertForProduct(product);
+        ProductCertificate productCertificate = this.productCertificateGenerator.getCertForProduct(product);
         return this.translator.translate(productCertificate, ProductCertificateDTO.class);
     }
 
