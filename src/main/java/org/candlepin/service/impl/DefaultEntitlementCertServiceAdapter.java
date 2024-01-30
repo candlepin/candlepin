@@ -453,8 +453,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
             // Build a skeleton cert as part of the entitlement processing.
             EntitlementCertificate cert = new EntitlementCertificate();
-            byte[] pemEncodedKeyPair = this.pemEncoder.encodeAsBytes(keyPair.getPrivate());
-            cert.setKeyAsBytes(pemEncodedKeyPair);
+            cert.setKeyAsBytes(this.pemEncoder.encodeAsBytes(keyPair.getPrivate()));
             cert.setCert(pem);
             if (save) {
                 cert.setEntitlement(ent);
