@@ -20,9 +20,10 @@ import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.pki.DistinguishedName;
-import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.pki.certs.X509CertificateBuilder;
+import org.candlepin.pki.impl.KeyPairGenerator;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.X509ExtensionUtil;
 
@@ -34,12 +35,13 @@ import org.xnap.commons.i18n.I18n;
 
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TimeZone;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -53,7 +55,6 @@ public class UeberCertificateGenerator {
     private static final String UEBER_PRODUCT_POSTFIX = "_ueber_product";
 
     private final UniqueIdGenerator idGenerator;
-    private final PKIUtility pki;
     private final CertificateSerialCurator serialCurator;
     private final X509ExtensionUtil extensionUtil;
     private final OwnerCurator ownerCurator;
@@ -61,21 +62,23 @@ public class UeberCertificateGenerator {
     private final ConsumerTypeCurator consumerTypeCurator;
     private final I18n i18n;
     private final Provider<X509CertificateBuilder> certificateBuilder;
+    private final PemEncoder pemEncoder;
+    private final KeyPairGenerator keyPairGenerator;
 
     @Inject
     public UeberCertificateGenerator(
         UniqueIdGenerator idGenerator,
-        PKIUtility pki,
         X509ExtensionUtil extensionUtil,
         CertificateSerialCurator serialCurator,
         OwnerCurator ownerCurator,
         UeberCertificateCurator ueberCertCurator,
         ConsumerTypeCurator consumerTypeCurator,
         I18n i18n,
-        Provider<X509CertificateBuilder> certificateBuilder) {
+        Provider<X509CertificateBuilder> certificateBuilder,
+        PemEncoder pemEncoder,
+        KeyPairGenerator keyPairGenerator) {
 
         this.idGenerator = idGenerator;
-        this.pki = pki;
         this.serialCurator = serialCurator;
         this.extensionUtil = extensionUtil;
         this.ownerCurator = ownerCurator;
@@ -83,6 +86,8 @@ public class UeberCertificateGenerator {
         this.consumerTypeCurator = consumerTypeCurator;
         this.i18n = i18n;
         this.certificateBuilder = certificateBuilder;
+        this.pemEncoder = pemEncoder;
+        this.keyPairGenerator = keyPairGenerator;
     }
 
     @Transactional
@@ -114,14 +119,14 @@ public class UeberCertificateGenerator {
         CertificateSerial serial = new CertificateSerial(ueberCertData.getEndDate());
         serialCurator.create(serial);
 
-        KeyPair keyPair = this.pki.generateKeyPair();
+        KeyPair keyPair = this.keyPairGenerator.generateKeyPair();
         X509Certificate x509Cert = createX509Certificate(ueberCertData, serial.getId(), keyPair);
 
         UeberCertificate ueberCert = new UeberCertificate();
         ueberCert.setSerial(serial);
-        ueberCert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));
+        ueberCert.setKeyAsBytes(this.pemEncoder.encodeAsBytes(keyPair.getPrivate()));
         ueberCert.setOwner(owner);
-        ueberCert.setCert(new String(this.pki.getPemEncoded(x509Cert)));
+        ueberCert.setCert(this.pemEncoder.encodeAsString(x509Cert));
         ueberCert.setCreated(ueberCertData.getStartDate());
         ueberCert.setUpdated(ueberCertData.getStartDate());
         ueberCertCurator.create(ueberCert);
@@ -240,7 +245,7 @@ public class UeberCertificateGenerator {
         }
 
         private Content createUeberContent(UniqueIdGenerator idGenerator, Owner owner, Product product) {
-            Content ueberContent = new Content()
+            return new Content()
                 .setId(idGenerator.generateId())
                 .setName(UEBER_CONTENT_NAME)
                 .setType("yum")
@@ -249,8 +254,6 @@ public class UeberCertificateGenerator {
                 .setContentUrl("/" + owner.getKey())
                 .setGpgUrl("")
                 .setArches("");
-
-            return ueberContent;
         }
 
         /*
@@ -275,11 +278,9 @@ public class UeberCertificateGenerator {
          * See https://bugzilla.redhat.com/show_bug.cgi?id=1242310
          */
         private Date lateIn2049() {
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
             // December 1, 2049 at 13:00 GMT
-            cal.set(1900 + 149, Calendar.DECEMBER, 1, 13, 0, 0);
-            Date late2049 = cal.getTime();
-            return late2049;
+            OffsetDateTime late2049 = OffsetDateTime.of(2049, 12, 1, 13, 0, 0, 0, ZoneOffset.UTC);
+            return Date.from(late2049.toInstant());
         }
     }
 }
