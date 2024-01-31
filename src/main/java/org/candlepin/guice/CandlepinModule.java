@@ -96,8 +96,10 @@ import org.candlepin.messaging.impl.noop.NoopSessionFactory;
 import org.candlepin.model.CPRestrictions;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
+import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
@@ -302,6 +304,7 @@ public class CandlepinModule extends AbstractModule {
         bind(X509ExtensionUtil.class);
 
         bind(BouncyCastleSecurityProvider.class);
+        bind(KeyPairGenerator.class).to(BouncyCastleKeyPairGenerator.class);
     }
 
     private void resources() {

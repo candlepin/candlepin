@@ -20,6 +20,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.pki.DistinguishedName;
+import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.IdentityCertServiceAdapter;
 
@@ -35,6 +36,7 @@ import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -42,25 +44,26 @@ import javax.inject.Named;
 /**
  * DefaultIdentityCertServiceAdapter
  */
-public class DefaultIdentityCertServiceAdapter implements
-    IdentityCertServiceAdapter {
-    private PKIUtility pki;
-    private static Logger log =
-        LoggerFactory.getLogger(DefaultIdentityCertServiceAdapter.class);
-    private IdentityCertificateCurator idCertCurator;
-    private CertificateSerialCurator serialCurator;
-    private Function<Date, Date> endDateGenerator;
+public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAdapter {
+    private static final Logger log = LoggerFactory.getLogger(DefaultIdentityCertServiceAdapter.class);
+    private final PKIUtility pki;
+    private final IdentityCertificateCurator idCertCurator;
+    private final CertificateSerialCurator serialCurator;
+    private final Function<Date, Date> endDateGenerator;
+    private final KeyPairGenerator keyPairGenerator;
 
     @SuppressWarnings("unchecked")
     @Inject
     public DefaultIdentityCertServiceAdapter(PKIUtility pki,
         IdentityCertificateCurator identityCertCurator,
         CertificateSerialCurator serialCurator,
+        KeyPairGenerator keyPairGenerator,
         @Named("endDateGenerator") Function endDtGen) {
-        this.pki = pki;
-        this.idCertCurator = identityCertCurator;
-        this.serialCurator = serialCurator;
-        this.endDateGenerator = endDtGen;
+        this.pki = Objects.requireNonNull(pki);
+        this.idCertCurator = Objects.requireNonNull(identityCertCurator);
+        this.serialCurator = Objects.requireNonNull(serialCurator);
+        this.endDateGenerator = Objects.requireNonNull(endDtGen);
+        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
     }
 
     @Override
@@ -79,10 +82,7 @@ public class DefaultIdentityCertServiceAdapter implements
     @Override
     public IdentityCertificate generateIdentityCert(Consumer consumer)
         throws GeneralSecurityException, IOException {
-
-        if (log.isDebugEnabled()) {
-            log.debug("Generating identity cert for consumer: {}", consumer.getUuid());
-        }
+        log.debug("Generating identity cert for consumer: {}", consumer.getUuid());
 
         IdentityCertificate certificate = null;
 
@@ -129,7 +129,7 @@ public class DefaultIdentityCertServiceAdapter implements
         DistinguishedName dn = new DistinguishedName(consumer.getUuid(), consumer.getOwner());
 
         IdentityCertificate identityCert = new IdentityCertificate();
-        KeyPair keyPair = this.pki.getConsumerKeyPair(consumer);
+        KeyPair keyPair = this.keyPairGenerator.getKeyPair(consumer);
         X509Certificate x509cert = pki.createX509Certificate(dn, null,
             startDate, endDate, keyPair, BigInteger.valueOf(serial.getId()),
             consumer.getName());
