@@ -160,7 +160,6 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -767,7 +766,7 @@ public class ConsumerResourceTest {
         // cert expires today which will trigger regen
         IdentityCertificate idCert = createIdCert();
         consumer.setIdCert(idCert);
-        BigInteger origserial = consumer.getIdCert().getSerial().getSerial();
+        long origserial = consumer.getIdCert().getSerial().getSerial().longValue();
         when(identityCertServiceAdapter.regenerateIdentityCert(consumer)).thenReturn(createIdCert());
 
         ConsumerDTO c = consumerResource.getConsumer(consumer.getUuid());
@@ -993,6 +992,8 @@ public class ConsumerResourceTest {
         certificate.setKeyAsBytes(key.getBytes());
         certificate.setCertAsBytes(cert.getBytes());
         certificate.setSerial(expectedSerial);
+        certificate.setUpdated(new Date());
+        certificate.setUpdated(new Date());
         return certificate;
     }
 
@@ -1270,8 +1271,8 @@ public class ConsumerResourceTest {
         assertEquals(expectedCertificate.getId(), actualCertificate.getId());
         assertEquals(expectedCertificate.getKey(), actualCertificate.getKey());
         assertEquals(expectedCertificate.getCert(), actualCertificate.getCert());
-        assertEquals(expectedCertificate.getCreated(), actualCertificate.getCreated());
-        assertEquals(expectedCertificate.getUpdated(), actualCertificate.getUpdated());
+        assertEquals(Util.toDateTime(expectedCertificate.getCreated()), actualCertificate.getCreated());
+        assertEquals(Util.toDateTime(expectedCertificate.getUpdated()), actualCertificate.getUpdated());
         assertEquals(expectedCertificate.getSerial().getId(), actualCertificate.getSerial().getId());
     }
 
@@ -1300,8 +1301,8 @@ public class ConsumerResourceTest {
         assertEquals(expectedCertificate.getId(), actualCertificate.getId());
         assertEquals(expectedCertificate.getKey(), actualCertificate.getKey());
         assertEquals(expectedCertificate.getCert(), actualCertificate.getCert());
-        assertEquals(expectedCertificate.getCreated(), actualCertificate.getCreated());
-        assertEquals(expectedCertificate.getUpdated(), actualCertificate.getUpdated());
+        assertEquals(Util.toDateTime(expectedCertificate.getCreated()), actualCertificate.getCreated());
+        assertEquals(Util.toDateTime(expectedCertificate.getUpdated()), actualCertificate.getUpdated());
         assertEquals(expectedCertificate.getSerial().getId(), actualCertificate.getSerial().getId());
     }
 

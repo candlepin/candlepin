@@ -595,7 +595,7 @@ public class RefreshPoolsSpecTest {
         assertNotNull(updatedEnt);
         assertEquals(1, updatedEnt.getCertificates().size());
         CertificateDTO updatedCert = updatedEnt.getCertificates().stream().iterator().next();
-        assertNotEquals(entSerial.asText(), updatedCert.getSerial().getSerial());
+        assertNotEquals(entSerial.asLong(), updatedCert.getSerial().getSerial());
     }
 
     @Test
@@ -697,7 +697,7 @@ public class RefreshPoolsSpecTest {
         EntitlementDTO updatedEnt = adminClient.entitlements().getEntitlement(bindEnt2.get("id").asText());
         assertEquals(1, updatedEnt.getCertificates().size());
         CertificateDTO cert = updatedEnt.getCertificates().stream().iterator().next();
-        assertNotEquals(bindEnt2.get("certificates").get(0).path("serial").path("serial").asText(), cert
+        assertNotEquals(bindEnt2.get("certificates").get(0).path("serial").path("serial").asLong(), cert
             .getSerial().getSerial());
 
         // Verify the content path is still present in the entitlement
@@ -727,7 +727,7 @@ public class RefreshPoolsSpecTest {
         updatedEnt = adminClient.entitlements().getEntitlement(bindEnt2.get("id").asText());
         assertEquals(1, updatedEnt.getCertificates().size());
         cert = updatedEnt.getCertificates().stream().iterator().next();
-        assertNotEquals(bindEnt2.get("certificates").get(0).path("serial").path("serial").asText(), cert
+        assertNotEquals(bindEnt2.get("certificates").get(0).path("serial").path("serial").asLong(), cert
             .getSerial().getSerial());
 
         // Verify the content path is still present in the entitlement

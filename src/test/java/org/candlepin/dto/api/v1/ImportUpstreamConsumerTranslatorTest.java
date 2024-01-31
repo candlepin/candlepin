@@ -21,7 +21,9 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.ImportUpstreamConsumerDTO;
 import org.candlepin.model.ImportUpstreamConsumer;
+import org.candlepin.util.Util;
 
+import java.util.Date;
 
 /**
  * Test suite for the ImportUpstreamConsumerTranslator class
@@ -59,6 +61,8 @@ public class ImportUpstreamConsumerTranslatorTest extends
         consumer.setWebUrl("http://www.url.com");
         consumer.setOwnerId("owner_id");
         consumer.setType(this.consumerTypeTranslatorTest.initSourceObject());
+        consumer.setCreated(new Date());
+        consumer.setUpdated(new Date());
 
         return consumer;
     }
@@ -80,8 +84,8 @@ public class ImportUpstreamConsumerTranslatorTest extends
             assertEquals(source.getApiUrl(), dest.getApiUrl());
             assertEquals(source.getWebUrl(), dest.getWebUrl());
             assertEquals(source.getOwnerId(), dest.getOwnerId());
-            assertEquals(source.getCreated(), dest.getCreated());
-            assertEquals(source.getUpdated(), dest.getUpdated());
+            assertEquals(Util.toDateTime(source.getCreated()), dest.getCreated());
+            assertEquals(Util.toDateTime(source.getUpdated()), dest.getUpdated());
 
             if (childrenGenerated) {
                 this.consumerTypeTranslatorTest.verifyOutput(source.getType(), dest.getType(), true);

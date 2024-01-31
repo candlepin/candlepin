@@ -21,7 +21,9 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.UeberCertificateDTO;
 import org.candlepin.model.UeberCertificate;
+import org.candlepin.util.Util;
 
+import java.util.Date;
 
 /**
  * Test suite for the UeberCertificateTranslator class
@@ -60,6 +62,8 @@ public class UeberCertificateTranslatorTest extends
         cert.setCert("cert_cert");
         cert.setSerial(this.certSerialTranslatorTest.initSourceObject());
         cert.setOwner(this.ownerTranslatorTest.initSourceObject());
+        cert.setCreated(new Date());
+        cert.setUpdated(new Date());
 
         return cert;
     }
@@ -78,8 +82,8 @@ public class UeberCertificateTranslatorTest extends
             assertEquals(source.getId(), dest.getId());
             assertEquals(source.getKey(), dest.getKey());
             assertEquals(source.getCert(), dest.getCert());
-            assertEquals(source.getCreated(), dest.getCreated());
-            assertEquals(source.getUpdated(), dest.getUpdated());
+            assertEquals(Util.toDateTime(source.getCreated()), dest.getCreated());
+            assertEquals(Util.toDateTime(source.getUpdated()), dest.getUpdated());
 
             if (childrenGenerated) {
                 this.certSerialTranslatorTest.verifyOutput(source.getSerial(),
