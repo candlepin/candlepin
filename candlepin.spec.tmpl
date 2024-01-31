@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.3
+Version: 4.4.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,82 @@ fi
 
 #raw
 %changelog
+* Wed Jan 31 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.4-1
+- Bump artemis from 2.31.2 to 2.32.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- CANDLEPIN-779: Add API endpoint to cancel CloudAccountOrgSetupJobs
+  (sbakaj@redhat.com)
+- Generate new Identity cert for claimed systems (nmoumoul@redhat.com)
+- Bump gradle/gradle-build-action from 2 to 3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jwalton/gh-docker-logs
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.12.7 to 10.13.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 23.0.4 to 23.0.5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-778: Add API endpoint for Anonymous Consumer deletion
+  (wpoteat@redhat.com)
+- CANDLEPIN-780: Remove brackets around entity type (wpoteat@redhat.com)
+- Bump io.swagger:swagger-annotations from 1.6.12 to 1.6.13
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.gradle.enterprise from 3.16.1 to 3.16.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.9.0 to 5.10.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Bump org.assertj:assertj-core from 3.25.1 to 3.25.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.ben-manes.versions from 0.50.0 to 0.51.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-718: Refactor DN construction (ojanus@redhat.com)
+- CANDLEPIN-765: Remove Rules upload and delete (wpoteat@redhat.com)
+- CANDLEPIN-718: Turn BC provider into injectable dependency
+  (ojanus@redhat.com)
+- CANDLEPIN-774: HostedTestCloudRegistrationAdapter should decode metadata as
+  base64 (wpoteat@redhat.com)
+- Updated Candlepin health check in dev compose file - updated the Candlepin
+  health check to use curl with insecure option (joshmalbrecht@gmail.com)
+- CANDLEPIN-773: Regenerate certs when org content prefix changes
+  (crog@redhat.com)
+- Code updates for openapi-generator changes (wpoteat@redhat.com)
+- Do not specify owner query param in Autoreg spec tests (nmoumoul@redhat.com)
+- CANDLEPIN-754: Register late anonymous consumers to the claimant org
+  (ojanus@redhat.com)
+- CANDLEPIN-776: Updated the content prefix field name in EnvironmentDTO
+  (crog@redhat.com)
+- Revert "CANDLEPIN-735: Updated CI with removal of JSS dependency"
+  (crog@redhat.com)
+- CANDLEPIN-735: Updated CI with removal of JSS dependency - removed the use of
+  the fedora container in spec tests job - removed
+  .github/containers/Dockerfile - updated spec test job to use
+  containers/release.Containerfile - updated spec test job to build the
+  Candlepin war file - removed the use of the github network in github compose
+  files - removed login for the github container registry in spec test job
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-771: Fixed issues surrounding content path encoding
+  (crog@redhat.com)
+- CANDLEPIN-772: Fixed missing environment resource (crog@redhat.com)
+- CANDLEPIN-762: Update overrides of openapi-generator to match new package
+  version (wpoteat@redhat.com)
+- Bump org.owasp.dependencycheck from 9.0.8 to 9.0.9
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- 2256950: Fix CertificateCleanupJob fk violation (nmoumoul@redhat.com)
+- CANDLEPIN-770: Added max size for AnonymousCertContentCache - Added
+  configuration for adding max number of entries for
+  AnonymousCertContentCache - Added default value for new max size
+  configuration (joshmalbrecht@gmail.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.8.0 to 5.9.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.5.1 to 3.5.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-611: Change cert generation to Bouncycastle (wpoteat@redhat.com)
+- CANDLEPIN-323: Update exception handling for adapters (wpoteat@redhat.com)
+
 * Thu Jan 11 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.3-1
 - Add new translations using Weblate (noreply@weblate.org)
 - Bump com.google.guava:guava from 32.1.3-jre to 33.0.0-jre
