@@ -1,5 +1,5 @@
 [versions]
-artemis = "2.31.2"
+artemis = "2.32.0"
 guice = "6.0.0"
 hibernate = "5.6.15.Final"
 hibernate-validator = "6.2.5.Final"
