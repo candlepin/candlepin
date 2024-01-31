@@ -15,7 +15,6 @@
 package org.candlepin.pki.impl;
 
 import org.candlepin.config.Configuration;
-import org.candlepin.model.Consumer;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
@@ -32,7 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
-import java.security.KeyException;
 import java.security.KeyPair;
 import java.security.Signature;
 import java.security.SignatureException;
@@ -160,15 +158,4 @@ public abstract class ProviderBasedPKIUtility implements PKIUtility {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public abstract KeyPair generateKeyPair() throws KeyException;
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public abstract KeyPair getConsumerKeyPair(Consumer consumer) throws KeyException;
 }

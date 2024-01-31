@@ -31,6 +31,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.pki.DistinguishedName;
+import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ExpiryDateFunction;
@@ -40,7 +41,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -66,22 +66,17 @@ public class DefaultIdentityCertServiceAdapterTest {
     @Mock
     private PKIUtility pki;
     @Mock
-    private IdentityCertificateCurator idcur;
+    private IdentityCertificateCurator identityCertificateCurator;
     @Mock
-    private CertificateSerialCurator csc;
-    private DefaultIdentityCertServiceAdapter dicsa;
-
+    private CertificateSerialCurator serialCurator;
+    @Mock
+    private KeyPairGenerator keyPairGenerator;
+    private DefaultIdentityCertServiceAdapter adapter;
 
     @BeforeEach
     public void setUp() {
-        dicsa = new DefaultIdentityCertServiceAdapter(pki, idcur, csc, new ExpiryDateFunction(1));
-    }
-
-    // can't mock a final class, so create a dummy one
-    private KeyPair createKeyPair() {
-        PublicKey pk = mock(PublicKey.class);
-        PrivateKey ppk = mock(PrivateKey.class);
-        return new KeyPair(pk, ppk);
+        adapter = new DefaultIdentityCertServiceAdapter(pki, identityCertificateCurator,
+            serialCurator, keyPairGenerator, new ExpiryDateFunction(1));
     }
 
     @Test
@@ -93,16 +88,14 @@ public class DefaultIdentityCertServiceAdapterTest {
         when(owner.getKey()).thenReturn(TestUtil.randomString());
         when(consumer.getOwner()).thenReturn(owner);
         KeyPair kp = createKeyPair();
-        when(pki.getConsumerKeyPair(consumer)).thenReturn(kp);
-        when(idcur.get(consumer.getId())).thenReturn(null);
-        when(csc.create(any(CertificateSerial.class))).thenAnswer(
-            new Answer<CertificateSerial>() {
-                public CertificateSerial answer(InvocationOnMock invocation) {
-                    Object[] args = invocation.getArguments();
-                    CertificateSerial cs = (CertificateSerial) args[0];
-                    cs.setId(42L);
-                    return cs;
-                }
+        when(keyPairGenerator.getKeyPair(consumer)).thenReturn(kp);
+        when(identityCertificateCurator.get(consumer.getId())).thenReturn(null);
+        when(serialCurator.create(any(CertificateSerial.class)))
+            .thenAnswer((Answer<CertificateSerial>) invocation -> {
+                Object[] args = invocation.getArguments();
+                CertificateSerial cs = (CertificateSerial) args[0];
+                cs.setId(42L);
+                return cs;
             });
         when(pki.createX509Certificate(any(DistinguishedName.class), nullable(Set.class), nullable(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
@@ -112,17 +105,15 @@ public class DefaultIdentityCertServiceAdapterTest {
             "x509cert".getBytes());
         when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn(
             "priv".getBytes());
-        when(idcur.create(any(IdentityCertificate.class))).thenAnswer(
-            new Answer<IdentityCertificate>() {
-                public IdentityCertificate answer(InvocationOnMock invocation) {
-                    Object[] args = invocation.getArguments();
-                    IdentityCertificate ic = (IdentityCertificate) args[0];
-                    ic.setId("42");
-                    return ic;
-                }
+        when(identityCertificateCurator.create(any(IdentityCertificate.class)))
+            .thenAnswer((Answer<IdentityCertificate>) invocation -> {
+                Object[] args = invocation.getArguments();
+                IdentityCertificate ic = (IdentityCertificate) args[0];
+                ic.setId("42");
+                return ic;
             });
 
-        IdentityCertificate ic = dicsa.generateIdentityCert(consumer);
+        IdentityCertificate ic = adapter.generateIdentityCert(consumer);
 
         assertNotNull(ic);
         assertEquals("priv", ic.getKey());
@@ -130,7 +121,7 @@ public class DefaultIdentityCertServiceAdapterTest {
         assertNotNull(ic.getCertAsBytes());
         assertNotNull(ic.getKeyAsBytes());
         verify(consumer).setIdCert(ic);
-        verify(csc).create(any(CertificateSerial.class));
+        verify(serialCurator).create(any(CertificateSerial.class));
     }
 
     @Test
@@ -139,10 +130,10 @@ public class DefaultIdentityCertServiceAdapterTest {
         IdentityCertificate mockic = mock(IdentityCertificate.class);
 
         when(consumer.getIdCert()).thenReturn(mockic);
-        when(idcur.get(mockic.getId())).thenReturn(mockic);
-        when(idcur.get(consumer.getId())).thenReturn(mockic);
+        when(identityCertificateCurator.get(mockic.getId())).thenReturn(mockic);
+        when(identityCertificateCurator.get(consumer.getId())).thenReturn(mockic);
 
-        IdentityCertificate ic = dicsa.generateIdentityCert(consumer);
+        IdentityCertificate ic = adapter.generateIdentityCert(consumer);
 
         assertNotNull(ic);
         assertEquals(ic, mockic);
@@ -158,17 +149,18 @@ public class DefaultIdentityCertServiceAdapterTest {
         when(owner.getKey()).thenReturn(TestUtil.randomString());
         when(consumer.getOwner()).thenReturn(owner);
         when(mockic.getId()).thenReturn("43");
-        when(idcur.get(mockic.getId())).thenReturn(mockic);
+        when(identityCertificateCurator.get(mockic.getId())).thenReturn(mockic);
 
 
         KeyPair kp = createKeyPair();
-        when(pki.getConsumerKeyPair(consumer)).thenReturn(kp);
-        when(csc.create(any(CertificateSerial.class))).thenAnswer((Answer<CertificateSerial>) invocation -> {
-            Object[] args = invocation.getArguments();
-            CertificateSerial cs = (CertificateSerial) args[0];
-            cs.setId(42L);
-            return cs;
-        });
+        when(keyPairGenerator.getKeyPair(consumer)).thenReturn(kp);
+        when(serialCurator.create(any(CertificateSerial.class)))
+            .thenAnswer((Answer<CertificateSerial>) invocation -> {
+                Object[] args = invocation.getArguments();
+                CertificateSerial cs = (CertificateSerial) args[0];
+                cs.setId(42L);
+                return cs;
+            });
         when(pki.createX509Certificate(any(DistinguishedName.class), nullable(Set.class), nullable(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class)))
@@ -177,27 +169,25 @@ public class DefaultIdentityCertServiceAdapterTest {
             "x509cert".getBytes());
         when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn(
             "priv".getBytes());
-        when(idcur.create(any(IdentityCertificate.class))).thenAnswer(
-            new Answer<IdentityCertificate>() {
-                public IdentityCertificate answer(InvocationOnMock invocation) {
-                    Object[] args = invocation.getArguments();
-                    IdentityCertificate ic = (IdentityCertificate) args[0];
-                    ic.setId("42");
-                    return ic;
-                }
+        when(identityCertificateCurator.create(any(IdentityCertificate.class)))
+            .thenAnswer((Answer<IdentityCertificate>) invocation -> {
+                Object[] args = invocation.getArguments();
+                IdentityCertificate ic = (IdentityCertificate) args[0];
+                ic.setId("42");
+                return ic;
             });
 
-        IdentityCertificate ic = dicsa.regenerateIdentityCert(consumer);
+        IdentityCertificate ic = adapter.regenerateIdentityCert(consumer);
 
         verify(consumer).setIdCert(null);
-        verify(idcur).delete(mockic);
+        verify(identityCertificateCurator).delete(mockic);
         assertNotSame(ic, mockic);
         assertEquals("priv", ic.getKey());
         assertEquals("x509cert", ic.getCert());
         assertNotNull(ic.getCertAsBytes());
         assertNotNull(ic.getKeyAsBytes());
         verify(consumer).setIdCert(ic);
-        verify(csc).create(any(CertificateSerial.class));
+        verify(serialCurator).create(any(CertificateSerial.class));
 
     }
 
@@ -210,17 +200,18 @@ public class DefaultIdentityCertServiceAdapterTest {
         when(owner.getKey()).thenReturn(TestUtil.randomString());
         when(consumer.getOwner()).thenReturn(owner);
 
-        when(idcur.get(consumer.getId())).thenReturn(null);
+        when(identityCertificateCurator.get(consumer.getId())).thenReturn(null);
 
 
         KeyPair kp = createKeyPair();
-        when(pki.getConsumerKeyPair(consumer)).thenReturn(kp);
-        when(csc.create(any(CertificateSerial.class))).thenAnswer((Answer<CertificateSerial>) invocation -> {
-            Object[] args = invocation.getArguments();
-            CertificateSerial cs = (CertificateSerial) args[0];
-            cs.setId(42L);
-            return cs;
-        });
+        when(keyPairGenerator.getKeyPair(consumer)).thenReturn(kp);
+        when(serialCurator.create(any(CertificateSerial.class)))
+            .thenAnswer((Answer<CertificateSerial>) invocation -> {
+                Object[] args = invocation.getArguments();
+                CertificateSerial cs = (CertificateSerial) args[0];
+                cs.setId(42L);
+                return cs;
+            });
 
         when(pki.createX509Certificate(any(DistinguishedName.class), nullable(Set.class), nullable(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
@@ -230,27 +221,32 @@ public class DefaultIdentityCertServiceAdapterTest {
             "x509cert".getBytes());
         when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn(
             "priv".getBytes());
-        when(idcur.create(any(IdentityCertificate.class))).thenAnswer(
-            new Answer<IdentityCertificate>() {
-                public IdentityCertificate answer(InvocationOnMock invocation) {
-                    Object[] args = invocation.getArguments();
-                    IdentityCertificate ic = (IdentityCertificate) args[0];
-                    ic.setId("42");
-                    return ic;
-                }
+        when(identityCertificateCurator.create(any(IdentityCertificate.class)))
+            .thenAnswer((Answer<IdentityCertificate>) invocation -> {
+                Object[] args = invocation.getArguments();
+                IdentityCertificate ic = (IdentityCertificate) args[0];
+                ic.setId("42");
+                return ic;
             });
 
-        IdentityCertificate ic = dicsa.regenerateIdentityCert(consumer);
+        IdentityCertificate ic = adapter.regenerateIdentityCert(consumer);
 
         assertNotNull(ic);
         verify(consumer, never()).setIdCert(null);
-        verify(idcur, never()).delete(any(IdentityCertificate.class));
+        verify(identityCertificateCurator, never()).delete(any(IdentityCertificate.class));
         assertEquals("priv", ic.getKey());
         assertEquals("x509cert", ic.getCert());
         assertNotNull(ic.getCertAsBytes());
         assertNotNull(ic.getKeyAsBytes());
         verify(consumer).setIdCert(ic);
-        verify(csc).create(any(CertificateSerial.class));
+        verify(serialCurator).create(any(CertificateSerial.class));
 
+    }
+
+    // can't mock a final class, so create a dummy one
+    private KeyPair createKeyPair() {
+        PublicKey pk = mock(PublicKey.class);
+        PrivateKey ppk = mock(PrivateKey.class);
+        return new KeyPair(pk, ppk);
     }
 }

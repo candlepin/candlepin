@@ -50,9 +50,11 @@ import org.candlepin.model.CPRestrictions;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
@@ -294,6 +296,7 @@ public class TestingModules {
             bind(PKIUtility.class).to(BouncyCastlePKIUtility.class).asEagerSingleton();
             bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class);
             bind(CertificateReader.class).to(CertificateReaderForTesting.class).asEagerSingleton();
+            bind(KeyPairGenerator.class).to(BouncyCastleKeyPairGenerator.class).asEagerSingleton();
 
             bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
             bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);

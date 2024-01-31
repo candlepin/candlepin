@@ -38,6 +38,7 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.pki.DistinguishedName;
+import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -69,6 +70,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -90,6 +92,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private final Configuration config;
     private final ConsumerTypeCurator consumerTypeCurator;
     private final EnvironmentCurator environmentCurator;
+    private final KeyPairGenerator keyPairGenerator;
 
     @Inject
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki,
@@ -101,19 +104,21 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         EntitlementCurator entCurator, I18n i18n,
         Configuration config,
         ConsumerTypeCurator consumerTypeCurator,
-        EnvironmentCurator environmentCurator) {
+        EnvironmentCurator environmentCurator,
+        KeyPairGenerator keyPairGenerator) {
 
-        this.pki = pki;
-        this.extensionUtil = extensionUtil;
-        this.v3extensionUtil = v3extensionUtil;
-        this.entCertCurator = entCertCurator;
-        this.serialCurator = serialCurator;
-        this.ownerCurator = ownerCurator;
-        this.entCurator = entCurator;
-        this.i18n = i18n;
-        this.config = config;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.environmentCurator = environmentCurator;
+        this.pki = Objects.requireNonNull(pki);
+        this.extensionUtil = Objects.requireNonNull(extensionUtil);
+        this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
+        this.entCertCurator = Objects.requireNonNull(entCertCurator);
+        this.serialCurator = Objects.requireNonNull(serialCurator);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.entCurator = Objects.requireNonNull(entCurator);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.config = Objects.requireNonNull(config);
+        this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
+        this.environmentCurator = Objects.requireNonNull(environmentCurator);
+        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
     }
 
 
@@ -367,7 +372,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
 
         log.debug("Generating entitlement cert for entitlements");
-        KeyPair keyPair = this.pki.getConsumerKeyPair(consumer);
+        KeyPair keyPair = this.keyPairGenerator.getKeyPair(consumer);
         byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
 
         Map<String, CertificateSerial> serialMap = new HashMap<>();
