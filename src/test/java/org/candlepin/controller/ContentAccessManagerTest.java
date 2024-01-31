@@ -70,6 +70,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
@@ -153,6 +154,8 @@ public class ContentAccessManagerTest {
     private AnonymousContentAccessCertificateCurator mockAnonContentAccessCertCurator;
     @Mock
     private ProductServiceAdapter mockProdAdapter;
+    @Mock
+    private KeyPairGenerator keyPairGenerator;
 
     private ObjectMapper objectMapper;
     private PKIUtility pkiUtility;
@@ -198,7 +201,8 @@ public class ContentAccessManagerTest {
         doAnswer(new PersistSimulator<>()).when(this.mockConsumerCurator).merge(any(Consumer.class));
         doAnswer(new PersistSimulator<>()).when(this.mockContentAccessCertCurator)
             .create(any(ContentAccessCertificate.class));
-        doReturn(this.testingKeyPair).when(this.pkiUtility).getConsumerKeyPair(any(Consumer.class));
+        when(this.keyPairGenerator.getKeyPair(any(Consumer.class))).thenReturn(testingKeyPair);
+        when(this.keyPairGenerator.generateKeyPair()).thenReturn(testingKeyPair);
 
         doAnswer(iom -> {
             CertificateSerial serial = iom.getArgument(0);
@@ -241,7 +245,7 @@ public class ContentAccessManagerTest {
             this.mockCertSerialCurator, this.mockOwnerCurator, this.mockContentCurator,
             this.mockConsumerCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
             this.mockContentAccessCertCurator, this.mockEventSink, this.mockAnonCloudConsumerCurator,
-            this.mockAnonContentAccessCertCurator, this.mockProdAdapter, this.cache);
+            this.mockAnonContentAccessCertCurator, this.mockProdAdapter, this.cache, keyPairGenerator);
     }
 
     private ContentAccessManager createManager() {
@@ -717,7 +721,7 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testGetCertificateReturnsNullOnException() throws Exception {
+    public void testGetCertificateReturnsNullOnException() {
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
         Content content = this.mockContent(owner);
@@ -731,7 +735,7 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testGetCertificateReturnsNullIfConsumerDoesNotSupportV3Cert() throws Exception {
+    public void testGetCertificateReturnsNullIfConsumerDoesNotSupportV3Cert() {
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
         consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, null); // remove v3 cert capability
@@ -1052,7 +1056,7 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testGetCertificateForAnonConsumerWithNoExistingCertificateAndNoProdIds() throws Exception {
+    public void testGetCertificateForAnonConsumerWithNoExistingCertificateAndNoProdIds() {
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
@@ -1121,8 +1125,7 @@ public class ContentAccessManagerTest {
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @NullAndEmptySource
-    public void testGetCertificateForAnonConsumerWithInvalidProductInfoFromAdapter(List<String> prods)
-        throws Exception {
+    public void testGetCertificateForAnonConsumerWithInvalidProductInfoFromAdapter(List<String> prods) {
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();

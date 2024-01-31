@@ -28,9 +28,11 @@ import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
@@ -57,7 +59,6 @@ import org.mockito.quality.Strictness;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ContentAccessManagerDBTest extends DatabaseTestFixture {
-
     private static final String ENTITLEMENT_MODE = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
     private static final String ORG_ENVIRONMENT_MODE = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
@@ -66,6 +67,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
 
     private EventSink mockEventSink;
     private AnonymousCertContentCache cache;
+    private KeyPairGenerator keyPairGenerator;
 
     @Mock
     private ProductServiceAdapter mockProdAdapter;
@@ -75,8 +77,10 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
         PrivateKeyReader keyReader = new BouncyCastlePrivateKeyReader();
         CertificateReader certReader = new CertificateReader(this.config, keyReader);
         SubjectKeyIdentifierWriter keyIdWriter = new BouncyCastleSubjectKeyIdentifierWriter();
-        this.pkiUtility = spy(new BouncyCastlePKIUtility(new BouncyCastleSecurityProvider(), certReader,
-            keyIdWriter, this.config, this.keyPairDataCurator));
+        BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
+        this.keyPairGenerator = new BouncyCastleKeyPairGenerator(securityProvider, this.keyPairDataCurator);
+        this.pkiUtility = new BouncyCastlePKIUtility(securityProvider, certReader,
+            keyIdWriter, this.config, this.keyPairDataCurator);
 
         this.x509V3ExtensionUtil = spy(new X509V3ExtensionUtil(this.config, this.entitlementCurator,
             ObjectMapperFactory.getObjectMapper()));
@@ -90,7 +94,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
             this.caCertCurator, this.certSerialCurator, this.ownerCurator, this.contentCurator,
             this.consumerCurator, this.consumerTypeCurator, this.environmentCurator, this.caCertCurator,
             this.mockEventSink, this.anonymousCloudConsumerCurator, this.anonymousContentAccessCertCurator,
-            this.mockProdAdapter, this.cache);
+            this.mockProdAdapter, this.cache, this.keyPairGenerator);
     }
 
     private Owner createSCAOwner() {

@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.pki.DistinguishedName;
+import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.util.X509ExtensionUtil;
@@ -30,6 +31,7 @@ import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -42,18 +44,21 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class ProductCertificateCurator extends AbstractHibernateCurator<ProductCertificate> {
-    private static Logger log = LoggerFactory.getLogger(ProductCertificateCurator.class);
+    private static final Logger log = LoggerFactory.getLogger(ProductCertificateCurator.class);
 
-    private PKIUtility pki;
-    private X509ExtensionUtil extensionUtil;
+    private final PKIUtility pki;
+    private final X509ExtensionUtil extensionUtil;
+    private final KeyPairGenerator keyPairGenerator;
 
 
     @Inject
-    public ProductCertificateCurator(PKIUtility pki, X509ExtensionUtil extensionUtil) {
+    public ProductCertificateCurator(PKIUtility pki, X509ExtensionUtil extensionUtil,
+        KeyPairGenerator keyPairGenerator) {
         super(ProductCertificate.class);
 
-        this.pki = pki;
-        this.extensionUtil = extensionUtil;
+        this.pki = Objects.requireNonNull(pki);
+        this.extensionUtil = Objects.requireNonNull(extensionUtil);
+        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
     }
 
     public ProductCertificate findForProduct(Product product) {
@@ -106,7 +111,7 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
         throws GeneralSecurityException, IOException {
         log.debug("Generating cert for product: {}", product);
 
-        KeyPair keyPair = this.pki.generateKeyPair();
+        KeyPair keyPair = this.keyPairGenerator.generateKeyPair();
         Set<X509Extension> extensions = this.extensionUtil.productExtensions(product);
 
         BigInteger serial = BigInteger.valueOf(product.getId().hashCode()).abs();
