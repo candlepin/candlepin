@@ -16,10 +16,6 @@ package org.candlepin.model;
 
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.UserInfo;
-import org.candlepin.util.Util;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -93,7 +89,7 @@ public class User extends AbstractHibernateObject implements UserInfo {
         this();
 
         this.username = login;
-        this.hashedPassword = Util.hash(password);
+        this.hashedPassword = password;
         this.superAdmin = superAdmin;
         this.primaryOwner = primaryOwner;
     }
@@ -148,32 +144,9 @@ public class User extends AbstractHibernateObject implements UserInfo {
      * @return
      *  a reference to this User
      */
-    public User setHashedPassword(String hashedPassword) {
-        this.hashedPassword = hashedPassword;
+    public User setHashedPassword(String password) {
+        this.hashedPassword = password;
         return this;
-    }
-
-    /**
-     * @param password the password to set
-     *
-     * @return
-     *  a reference to this User
-     */
-    @JsonProperty
-    public User setPassword(String password) {
-        this.hashedPassword = Util.hash(password);
-        return this;
-    }
-
-    /**
-     * Password is a "split property" in Jackson's terminology.  The JsonProperty annotation on the
-     * setter means it can be written, but the @JsonIgnore on the getter means it will not be included when
-     * a User is serialized.
-     * @return the hashed password
-     */
-    @JsonIgnore
-    public String getPassword() {
-        return getHashedPassword();
     }
 
     /**

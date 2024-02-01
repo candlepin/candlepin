@@ -584,8 +584,7 @@ public class InfoAdapter {
              */
             @Override
             public String getHashedPassword() {
-                return source.getPassword() == null ? source.getPassword() :
-                    Util.hash(source.getPassword());
+                return source.getPassword();
             }
 
             /**
