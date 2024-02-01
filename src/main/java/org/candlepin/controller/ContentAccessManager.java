@@ -48,6 +48,7 @@ import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.pki.certs.X509StringExtension;
 import org.candlepin.service.ProductServiceAdapter;
@@ -207,7 +208,6 @@ public class ContentAccessManager {
     private static final String BASIC_ENTITLEMENT_TYPE = "basic";
     private static final String SCA_ENTITLEMENT_TYPE = "OrgLevel";
 
-    private final Configuration config;
     private final PKIUtility pki;
     private final CertificateSerialCurator serialCurator;
     private final OwnerCurator ownerCurator;
@@ -224,6 +224,7 @@ public class ContentAccessManager {
     private final ProductServiceAdapter prodAdapter;
     private final AnonymousCertContentCache contentCache;
     private final KeyPairGenerator keyPairGenerator;
+    private final PemEncoder pemEncoder;
 
     private final boolean standalone;
 
@@ -245,9 +246,9 @@ public class ContentAccessManager {
         AnonymousContentAccessCertificateCurator anonContentAccessCertCurator,
         ProductServiceAdapter prodAdapter,
         AnonymousCertContentCache contentCache,
-        KeyPairGenerator keyPairGenerator) {
+        KeyPairGenerator keyPairGenerator,
+        PemEncoder pemEncoder) {
 
-        this.config = Objects.requireNonNull(config);
         this.pki = Objects.requireNonNull(pki);
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
         this.serialCurator = Objects.requireNonNull(serialCurator);
@@ -264,7 +265,8 @@ public class ContentAccessManager {
         this.prodAdapter = Objects.requireNonNull(prodAdapter);
         this.contentCache = Objects.requireNonNull(contentCache);
         this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
-        this.standalone = this.config.getBoolean(ConfigProperties.STANDALONE);
+        this.pemEncoder = Objects.requireNonNull(pemEncoder);
+        this.standalone = config.getBoolean(ConfigProperties.STANDALONE);
     }
 
     /**
@@ -314,7 +316,7 @@ public class ContentAccessManager {
         CertificateSerial serial = createSerial(end);
 
         KeyPair keyPair = this.keyPairGenerator.getKeyPair(consumer);
-        byte[] pemEncodedKeyPair = this.pki.getPemEncoded(keyPair.getPrivate());
+        byte[] pemEncodedKeyPair = this.pemEncoder.encodeAsBytes(keyPair.getPrivate());
         org.candlepin.model.dto.Product container = createSCAProdContainer(owner, consumer);
 
         List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
@@ -430,8 +432,7 @@ public class ContentAccessManager {
             dn, extensions, Date.from(start.toInstant()),
             Date.from(end.toInstant()), keyPair, BigInteger.valueOf(serial.getId()), null);
 
-        byte[] encodedCert = this.pki.getPemEncoded(x509Cert);
-        return new String(encodedCert);
+        return this.pemEncoder.encodeAsString(x509Cert);
     }
 
     private Content createContent(Owner owner, Environment environment) {
@@ -926,7 +927,7 @@ public class ContentAccessManager {
 
         CertificateSerial serial = createSerial(end);
         KeyPair keyPair = this.keyPairGenerator.generateKeyPair();
-        byte[] pemEncodedKeyPair = this.pki.getPemEncoded(keyPair.getPrivate());
+        byte[] pemEncodedKeyPair = this.pemEncoder.encodeAsBytes(keyPair.getPrivate());
 
         org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
         container.setContent(certificateContent);

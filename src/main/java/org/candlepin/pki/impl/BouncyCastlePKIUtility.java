@@ -23,7 +23,6 @@ import org.candlepin.pki.X509Extension;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.codec.binary.Base64OutputStream;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
@@ -42,20 +41,14 @@ import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.Objects;
@@ -88,9 +81,7 @@ import javax.inject.Provider;
  * representation, then PEM encode it.
  */
 public class BouncyCastlePKIUtility extends ProviderBasedPKIUtility {
-    private static final byte[] LINE_SEPARATOR = String.format("%n").getBytes();
     private static final String SIGNING_ALG_ID = "SHA256withRSA";
-    private static final String PRIVATE_KEY_PEM_NAME = "PRIVATE KEY";
 
     private final Provider<BouncyCastleProvider> securityProvider;
 
@@ -183,61 +174,4 @@ public class BouncyCastlePKIUtility extends ProviderBasedPKIUtility {
         // Generate the certificate
         return new JcaX509CertificateConverter().getCertificate(certGen.build(signer));
     }
-
-    private void writePemEncoded(Object obj, OutputStream out) throws IOException {
-        OutputStreamWriter oswriter = new OutputStreamWriter(out);
-        JcaPEMWriter writer = new JcaPEMWriter(oswriter);
-        writer.writeObject(obj);
-        writer.flush();
-        // We're hoping close does nothing more than a flush and super.close() here
-    }
-
-    private byte[] getPemEncoded(Object obj) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        this.writePemEncoded(obj, out);
-
-        byte[] output = out.toByteArray();
-        out.close();
-
-        return output;
-    }
-
-    @Override
-    public byte[] getPemEncoded(X509Certificate cert) throws IOException {
-        return getPemEncoded((Object) cert);
-    }
-
-    @Override
-    public byte[] getPemEncoded(PrivateKey key) throws IOException {
-        if (key == null) {
-            throw new IllegalArgumentException("key is null");
-        }
-
-        try {
-            byte[] encoded = key.getEncoded();
-            return this.getPemEncoded(encoded, PRIVATE_KEY_PEM_NAME);
-        }
-        catch (Exception e) {
-            throw new IOException("Could not encode key", e);
-        }
-    }
-
-    private byte[] getPemEncoded(byte[] der, String type) throws IOException {
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            writePemEncoded(der, out, type);
-            return out.toByteArray();
-        }
-    }
-
-    private void writePemEncoded(byte[] der, OutputStream out, String type) throws IOException {
-        out.write(("-----BEGIN " + type + "-----\n").getBytes(StandardCharsets.UTF_8));
-
-        // Write base64 encoded DER.  Does not close the underlying stream.
-        Base64OutputStream b64Out = new Base64OutputStream(out, true, 64, LINE_SEPARATOR);
-        b64Out.write(der);
-        b64Out.eof();
-        b64Out.flush();
-        out.write(("-----END " + type + "-----\n").getBytes(StandardCharsets.UTF_8));
-    }
-
 }

@@ -17,6 +17,7 @@ package org.candlepin.model;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.util.X509ExtensionUtil;
 
@@ -49,16 +50,17 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
     private final PKIUtility pki;
     private final X509ExtensionUtil extensionUtil;
     private final KeyPairGenerator keyPairGenerator;
-
+    private final PemEncoder pemEncoder;
 
     @Inject
     public ProductCertificateCurator(PKIUtility pki, X509ExtensionUtil extensionUtil,
-        KeyPairGenerator keyPairGenerator) {
+        KeyPairGenerator keyPairGenerator, PemEncoder pemEncoder) {
         super(ProductCertificate.class);
 
         this.pki = Objects.requireNonNull(pki);
         this.extensionUtil = Objects.requireNonNull(extensionUtil);
         this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
+        this.pemEncoder = Objects.requireNonNull(pemEncoder);
     }
 
     public ProductCertificate findForProduct(Product product) {
@@ -126,8 +128,8 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
         );
 
         ProductCertificate cert = new ProductCertificate();
-        cert.setKeyAsBytes(this.pki.getPemEncoded(keyPair.getPrivate()));
-        cert.setCertAsBytes(this.pki.getPemEncoded(x509Cert));
+        cert.setKeyAsBytes(this.pemEncoder.encodeAsBytes(keyPair.getPrivate()));
+        cert.setCertAsBytes(this.pemEncoder.encodeAsBytes(x509Cert));
         cert.setProduct(product);
 
         return cert;

@@ -32,14 +32,12 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ResultIterator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.version.VersionUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -60,6 +58,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -73,42 +72,36 @@ import javax.inject.Named;
  * Exporter
  */
 public class Exporter {
-    private static Logger log = LoggerFactory.getLogger(Exporter.class);
-
-    private ObjectMapper mapper;
-
-    private MetaExporter meta;
-    private ConsumerExporter consumerExporter;
-    private ProductExporter productExporter;
-    private ConsumerTypeExporter consumerType;
-    private RulesExporter rules;
-    private EntitlementExporter entExporter;
-    private DistributorVersionCurator distVerCurator;
-    private DistributorVersionExporter distVerExporter;
-    private CdnCurator cdnCurator;
-    private CdnExporter cdnExporter;
-
-    private OwnerCurator ownerCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private EntitlementCertServiceAdapter entCertAdapter;
-    private ProductServiceAdapter productAdapter;
-    private EntitlementCurator entitlementCurator;
-    private PKIUtility pki;
-    private Configuration config;
-    private ExportRules exportRules;
-    private PrincipalProvider principalProvider;
-    private ModelTranslator translator;
-    private ContentAccessManager contentAccessManager;
-
+    private static final Logger log = LoggerFactory.getLogger(Exporter.class);
     private static final String LEGACY_RULES_FILE = "/rules/default-rules.js";
-    private SyncUtils syncUtils;
+
+    private final ObjectMapper mapper;
+    private final MetaExporter meta;
+    private final ConsumerExporter consumerExporter;
+    private final ProductExporter productExporter;
+    private final ConsumerTypeExporter consumerType;
+    private final RulesExporter rules;
+    private final EntitlementExporter entExporter;
+    private final DistributorVersionCurator distVerCurator;
+    private final DistributorVersionExporter distVerExporter;
+    private final CdnCurator cdnCurator;
+    private final CdnExporter cdnExporter;
+    private final ConsumerTypeCurator consumerTypeCurator;
+    private final EntitlementCertServiceAdapter entCertAdapter;
+    private final EntitlementCurator entitlementCurator;
+    private final PKIUtility pki;
+    private final Configuration config;
+    private final ExportRules exportRules;
+    private final PrincipalProvider principalProvider;
+    private final ModelTranslator translator;
+    private final ContentAccessManager contentAccessManager;
+    private final SyncUtils syncUtils;
 
     @Inject
-    public Exporter(ConsumerTypeCurator consumerTypeCurator, OwnerCurator ownerCurator, MetaExporter meta,
+    public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
         ConsumerExporter consumerExporter, ConsumerTypeExporter consumerType,
         RulesExporter rules,
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
-        ProductServiceAdapter productAdapter,
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter,
         PKIUtility pki, Configuration config, ExportRules exportRules,
         PrincipalProvider principalProvider, DistributorVersionCurator distVerCurator,
@@ -120,29 +113,27 @@ public class Exporter {
         ModelTranslator translator,
         ContentAccessManager contentAccessManager) {
 
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.ownerCurator = ownerCurator;
-        this.meta = meta;
-        this.consumerExporter = consumerExporter;
-        this.consumerType = consumerType;
-        this.rules = rules;
-        this.entCertAdapter = entCertAdapter;
-        this.productExporter = productExporter;
-        this.productAdapter = productAdapter;
-        this.entitlementCurator = entitlementCurator;
-        this.entExporter = entExporter;
-        this.pki = pki;
-        this.config = config;
-        this.exportRules = exportRules;
-        this.principalProvider = principalProvider;
-        this.distVerCurator = distVerCurator;
-        this.distVerExporter = distVerExporter;
-        this.cdnCurator = cdnCurator;
-        this.cdnExporter = cdnExporter;
-        this.syncUtils = syncUtils;
-        this.mapper = mapper;
-        this.translator = translator;
-        this.contentAccessManager = contentAccessManager;
+        this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
+        this.meta = Objects.requireNonNull(meta);
+        this.consumerExporter = Objects.requireNonNull(consumerExporter);
+        this.consumerType = Objects.requireNonNull(consumerType);
+        this.rules = Objects.requireNonNull(rules);
+        this.entCertAdapter = Objects.requireNonNull(entCertAdapter);
+        this.productExporter = Objects.requireNonNull(productExporter);
+        this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
+        this.entExporter = Objects.requireNonNull(entExporter);
+        this.pki = Objects.requireNonNull(pki);
+        this.config = Objects.requireNonNull(config);
+        this.exportRules = Objects.requireNonNull(exportRules);
+        this.principalProvider = Objects.requireNonNull(principalProvider);
+        this.distVerCurator = Objects.requireNonNull(distVerCurator);
+        this.distVerExporter = Objects.requireNonNull(distVerExporter);
+        this.cdnCurator = Objects.requireNonNull(cdnCurator);
+        this.cdnExporter = Objects.requireNonNull(cdnExporter);
+        this.syncUtils = Objects.requireNonNull(syncUtils);
+        this.mapper = Objects.requireNonNull(mapper);
+        this.translator = Objects.requireNonNull(translator);
+        this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
     }
 
     /**

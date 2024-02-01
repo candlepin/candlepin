@@ -33,6 +33,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.Util;
@@ -71,12 +72,15 @@ public class DefaultIdentityCertServiceAdapterTest {
     private CertificateSerialCurator serialCurator;
     @Mock
     private KeyPairGenerator keyPairGenerator;
+    @Mock
+    private PemEncoder pemEncoder;
     private DefaultIdentityCertServiceAdapter adapter;
+
 
     @BeforeEach
     public void setUp() {
         adapter = new DefaultIdentityCertServiceAdapter(pki, identityCertificateCurator,
-            serialCurator, keyPairGenerator, new ExpiryDateFunction(1));
+            serialCurator, keyPairGenerator, pemEncoder, new ExpiryDateFunction(1));
     }
 
     @Test
@@ -101,10 +105,8 @@ public class DefaultIdentityCertServiceAdapterTest {
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class)))
             .thenReturn(mock(X509Certificate.class));
-        when(pki.getPemEncoded(any(X509Certificate.class))).thenReturn(
-            "x509cert".getBytes());
-        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn(
-            "priv".getBytes());
+        when(this.pemEncoder.encodeAsString(any(X509Certificate.class))).thenReturn("x509cert");
+        when(this.pemEncoder.encodeAsString(any(PrivateKey.class))).thenReturn("priv");
         when(identityCertificateCurator.create(any(IdentityCertificate.class)))
             .thenAnswer((Answer<IdentityCertificate>) invocation -> {
                 Object[] args = invocation.getArguments();
@@ -165,10 +167,8 @@ public class DefaultIdentityCertServiceAdapterTest {
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class)))
             .thenReturn(mock(X509Certificate.class));
-        when(pki.getPemEncoded(any(X509Certificate.class))).thenReturn(
-            "x509cert".getBytes());
-        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn(
-            "priv".getBytes());
+        when(this.pemEncoder.encodeAsString(any(X509Certificate.class))).thenReturn("x509cert");
+        when(this.pemEncoder.encodeAsString(any(PrivateKey.class))).thenReturn("priv");
         when(identityCertificateCurator.create(any(IdentityCertificate.class)))
             .thenAnswer((Answer<IdentityCertificate>) invocation -> {
                 Object[] args = invocation.getArguments();
@@ -217,10 +217,8 @@ public class DefaultIdentityCertServiceAdapterTest {
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class)))
             .thenReturn(mock(X509Certificate.class));
-        when(pki.getPemEncoded(any(X509Certificate.class))).thenReturn(
-            "x509cert".getBytes());
-        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn(
-            "priv".getBytes());
+        when(this.pemEncoder.encodeAsString(any(X509Certificate.class))).thenReturn("x509cert");
+        when(this.pemEncoder.encodeAsString(any(PrivateKey.class))).thenReturn("priv");
         when(identityCertificateCurator.create(any(IdentityCertificate.class)))
             .thenAnswer((Answer<IdentityCertificate>) invocation -> {
                 Object[] args = invocation.getArguments();
