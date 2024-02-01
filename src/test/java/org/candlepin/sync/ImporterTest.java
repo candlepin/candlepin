@@ -67,7 +67,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.impl.Signer;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.Importer.ImportFile;
@@ -143,7 +143,7 @@ public class ImporterTest {
     @Mock
     private RulesImporter mockRulesImporter;
     @Mock
-    private PKIUtility mockPKIUtility;
+    private Signer signer;
     @Mock
     private EventSink mockEventSink;
     @Mock
@@ -191,7 +191,7 @@ public class ImporterTest {
     private Importer buildImporter() {
         return new Importer(this.mockConsumerTypeCurator, this.mockRulesImporter,
             this.mockOwnerCurator, this.mockIdentityCertCurator, this.refresherFactory,
-            this.mockPKIUtility, this.mockExporterMetadataCurator,
+            this.signer, this.mockExporterMetadataCurator,
             this.mockCertSerialCurator, this.mockEventSink, this.i18n, this.mockDistributorVersionCurator,
             this.mockCdnCurator, this.syncUtils, this.mapper, this.mockImportRecordCurator,
             this.mockSubscriptionReconciler, this.modelTranslator);
@@ -537,9 +537,7 @@ public class ImporterTest {
     @Test
     public void testImportBadConsumerZip() throws Exception {
         // Mock a passed signature check:
-        doReturn(true)
-            .when(this.mockPKIUtility)
-            .verifySHA256WithRSAHashAgainstCACerts(any(File.class), any(byte[].class));
+        when(this.signer.verifySignature(any(File.class), any(byte[].class))).thenReturn(true);
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
@@ -568,9 +566,7 @@ public class ImporterTest {
     @Test
     public void testImportZipSigAndEmptyConsumerZip() throws Exception {
         // Mock a passed signature check:
-        doReturn(true)
-            .when(this.mockPKIUtility)
-            .verifySHA256WithRSAHashAgainstCACerts(any(File.class), any(byte[].class));
+        when(this.signer.verifySignature(any(File.class), any(byte[].class))).thenReturn(true);
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);

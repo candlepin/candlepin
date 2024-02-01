@@ -57,7 +57,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.impl.Signer;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.test.MockResultIterator;
@@ -81,7 +81,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -118,7 +117,7 @@ public class ExporterTest {
     private CdnExporter cdne;
     private EntitlementExporter ee;
     private EnvironmentCurator mockEnvironmentCurator;
-    private PKIUtility pki;
+    private Signer signer;
     private DevConfig config;
     private ExportRules exportRules;
     private PrincipalProvider pprov;
@@ -141,7 +140,7 @@ public class ExporterTest {
         pe = new ProductExporter(translator);
         ec = mock(EntitlementCurator.class);
         ee = new EntitlementExporter(translator);
-        pki = mock(PKIUtility.class);
+        signer = mock(Signer.class);
         config = TestConfig.defaults();
         exportRules = mock(ExportRules.class);
         pprov = mock(PrincipalProvider.class);
@@ -220,7 +219,7 @@ public class ExporterTest {
 
         when(ent.getPool()).thenReturn(pool);
         when(mrules.getRules()).thenReturn("foobar");
-        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
+        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(consumer.getEntitlements()).thenReturn(entitlements);
         when(pprov.get()).thenReturn(principal);
@@ -236,12 +235,12 @@ public class ExporterTest {
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(cqmock.iterator()).thenReturn(List.of(new ConsumerType("system")).iterator());
         when(ctc.listAll()).thenReturn(cqmock);
 
         CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
-        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
-        when(emptyIteratorMock.iterator()).thenReturn(Arrays.asList().iterator());
+        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Collections.emptyIterator()));
+        when(emptyIteratorMock.iterator()).thenReturn(Collections.emptyIterator());
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
         when(ctc.listAll()).thenReturn(emptyIteratorMock);
 
@@ -251,7 +250,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
 
         File export = e.getFullExport(consumer, null, null, null);
@@ -283,7 +282,7 @@ public class ExporterTest {
         List<Entitlement> entitlements = new ArrayList<>();
         entitlements.add(ent);
 
-        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
+        when(this.signer.sign(any(InputStream.class))).thenReturn(
             "signature".getBytes());
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
@@ -301,12 +300,12 @@ public class ExporterTest {
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(cqmock.iterator()).thenReturn(List.of(new ConsumerType("system")).iterator());
         when(ctc.listAll()).thenReturn(cqmock);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
 
         assertThrows(ExportCreationException.class, () -> e.getFullExport(consumer, null, null, null));
@@ -322,7 +321,7 @@ public class ExporterTest {
         IdentityCertificate idcert = new IdentityCertificate();
 
         when(mrules.getRules()).thenReturn("foobar");
-        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
+        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
@@ -338,17 +337,17 @@ public class ExporterTest {
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(cqmock.iterator()).thenReturn(List.of(new ConsumerType("system")).iterator());
         when(ctc.listAll()).thenReturn(cqmock);
 
         CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
-        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
+        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Collections.emptyIterator()));
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null);
 
@@ -371,7 +370,7 @@ public class ExporterTest {
         Principal principal = mock(Principal.class);
 
         when(mrules.getRules()).thenReturn("foobar");
-        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
+        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
@@ -389,18 +388,18 @@ public class ExporterTest {
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(cqmock.iterator()).thenReturn(List.of(new ConsumerType("system")).iterator());
         when(ctc.listAll()).thenReturn(cqmock);
 
         CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
-        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
-        when(emptyIteratorMock.iterator()).thenReturn(Arrays.asList().iterator());
+        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Collections.emptyIterator()));
+        when(emptyIteratorMock.iterator()).thenReturn(Collections.emptyIterator());
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null);
 
@@ -420,7 +419,7 @@ public class ExporterTest {
         Principal principal = mock(Principal.class);
 
         when(mrules.getRules()).thenReturn("foobar");
-        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
+        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
@@ -448,17 +447,17 @@ public class ExporterTest {
         when(ctc.get(ctype.getId())).thenReturn(ctype);
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(cqmock.iterator()).thenReturn(List.of(new ConsumerType("system")).iterator());
         when(ctc.listAll()).thenReturn(cqmock);
 
         CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
-        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
+        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Collections.emptyIterator()));
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null);
 
@@ -475,7 +474,7 @@ public class ExporterTest {
         Principal principal = mock(Principal.class);
 
         when(mrules.getRules()).thenReturn("foobar");
-        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
+        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
@@ -510,19 +509,19 @@ public class ExporterTest {
         when(dvc.findAll()).thenReturn(dvList);
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(cqmock.iterator()).thenReturn(List.of(new ConsumerType("system")).iterator());
         when(ctc.listAll()).thenReturn(cqmock);
 
         CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
-        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
-        when(emptyIteratorMock.iterator()).thenReturn(Arrays.asList().iterator());
+        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Collections.emptyIterator()));
+        when(emptyIteratorMock.iterator()).thenReturn(Collections.emptyIterator());
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
         when(ctc.listAll()).thenReturn(emptyIteratorMock);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null);
 
@@ -546,7 +545,7 @@ public class ExporterTest {
         when(ctc.getConsumerType(consumer)).thenReturn(ctype);
         when(ctc.get(ctype.getId())).thenReturn(ctype);
 
-        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
+        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
 
         // Setup principal
         Principal principal = mock(Principal.class);
@@ -569,12 +568,12 @@ public class ExporterTest {
         cac.setCert("content-access-cert");
         cac.setKey("content-access-key");
 
-        when(ecsa.listForConsumer(consumer)).thenReturn(Arrays.asList(entCert));
+        when(ecsa.listForConsumer(consumer)).thenReturn(List.of(entCert));
         when(contentAccessManager.getCertificate(consumer)).thenReturn(cac);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getEntitlementExport(consumer, null);
 
@@ -605,7 +604,7 @@ public class ExporterTest {
         doReturn(ctype).when(ctc).getConsumerType(consumer);
         doReturn(ctype).when(ctc).get(ctype.getId());
 
-        doReturn("signature".getBytes()).when(pki).getSHA256WithRSAHash(any(InputStream.class));
+        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
 
         // Setup principal
         Principal principal = mock(Principal.class);
@@ -628,12 +627,12 @@ public class ExporterTest {
         cac.setCert("content-access-cert");
         cac.setKey("content-access-key");
 
-        doReturn(Arrays.asList(entCert)).when(ecsa).listForConsumer(consumer);
+        doReturn(List.of(entCert)).when(ecsa).listForConsumer(consumer);
         doReturn(cac).when(contentAccessManager).getCertificate(consumer);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         Set<Long> serials = new HashSet<>();
         serials.add(12345678910L);
@@ -666,7 +665,7 @@ public class ExporterTest {
         doReturn(ctype).when(ctc).getConsumerType(consumer);
         doReturn(ctype).when(ctc).get(ctype.getId());
 
-        doReturn("signature".getBytes()).when(pki).getSHA256WithRSAHash(any(InputStream.class));
+        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
 
         // Setup principal
         Principal principal = mock(Principal.class);
@@ -689,12 +688,12 @@ public class ExporterTest {
         cac.setCert("content-access-cert");
         cac.setKey("content-access-key");
 
-        doReturn(Arrays.asList(entCert)).when(ecsa).listForConsumer(consumer);
+        doReturn(List.of(entCert)).when(ecsa).listForConsumer(consumer);
         doReturn(cac).when(contentAccessManager).getCertificate(consumer);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         Set<Long> serials = new HashSet<>();
         serials.add(entSerial.getId());
@@ -727,7 +726,7 @@ public class ExporterTest {
         doReturn(ctype).when(ctc).getConsumerType(consumer);
         doReturn(ctype).when(ctc).get(ctype.getId());
 
-        doReturn("signature".getBytes()).when(pki).getSHA256WithRSAHash(any(InputStream.class));
+        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
 
         // Setup principal
         Principal principal = mock(Principal.class);
@@ -750,12 +749,12 @@ public class ExporterTest {
         cac.setCert("content-access-cert");
         cac.setKey("content-access-key");
 
-        doReturn(Arrays.asList(entCert)).when(ecsa).listForConsumer(consumer);
+        doReturn(List.of(entCert)).when(ecsa).listForConsumer(consumer);
         doReturn(cac).when(contentAccessManager).getCertificate(consumer);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
+            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         Set<Long> serials = new HashSet<>();
         serials.add(cacSerial.getId());

@@ -81,6 +81,7 @@ import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.Signer;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
@@ -161,6 +162,7 @@ public class ContentAccessManagerTest {
     private KeyPairGenerator keyPairGenerator;
 
     private PemEncoder pemEncoder;
+    private Signer signer;
     private ObjectMapper objectMapper;
     private PKIUtility pkiUtility;
     private X509V3ExtensionUtil x509V3ExtensionUtil;
@@ -193,6 +195,7 @@ public class ContentAccessManagerTest {
         CertificateReader certReader = new CertificateReader(this.config, keyReader);
         SubjectKeyIdentifierWriter keyIdWriter = new BouncyCastleSubjectKeyIdentifierWriter();
         this.pemEncoder = new BouncyCastlePemEncoder();
+        this.signer = new Signer(certReader);
         this.pkiUtility = spy(new BouncyCastlePKIUtility(new BouncyCastleSecurityProvider(), certReader,
             keyIdWriter, this.config, this.mockKeyPairDataCurator));
 
@@ -251,7 +254,7 @@ public class ContentAccessManagerTest {
             this.mockConsumerCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
             this.mockContentAccessCertCurator, this.mockEventSink, this.mockAnonCloudConsumerCurator,
             this.mockAnonContentAccessCertCurator, this.mockProdAdapter, this.cache, this.keyPairGenerator,
-            this.pemEncoder);
+            this.pemEncoder, this.signer);
     }
 
     private ContentAccessManager createManager() {

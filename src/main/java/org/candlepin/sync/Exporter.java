@@ -35,7 +35,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ResultIterator;
-import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.impl.Signer;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.version.VersionUtil;
@@ -73,7 +73,6 @@ import javax.inject.Named;
  */
 public class Exporter {
     private static final Logger log = LoggerFactory.getLogger(Exporter.class);
-    private static final String LEGACY_RULES_FILE = "/rules/default-rules.js";
 
     private final ObjectMapper mapper;
     private final MetaExporter meta;
@@ -89,7 +88,7 @@ public class Exporter {
     private final ConsumerTypeCurator consumerTypeCurator;
     private final EntitlementCertServiceAdapter entCertAdapter;
     private final EntitlementCurator entitlementCurator;
-    private final PKIUtility pki;
+    private final Signer signer;
     private final Configuration config;
     private final ExportRules exportRules;
     private final PrincipalProvider principalProvider;
@@ -103,7 +102,7 @@ public class Exporter {
         RulesExporter rules,
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter,
-        PKIUtility pki, Configuration config, ExportRules exportRules,
+        Signer signer, Configuration config, ExportRules exportRules,
         PrincipalProvider principalProvider, DistributorVersionCurator distVerCurator,
         DistributorVersionExporter distVerExporter,
         CdnCurator cdnCurator,
@@ -122,7 +121,7 @@ public class Exporter {
         this.productExporter = Objects.requireNonNull(productExporter);
         this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
         this.entExporter = Objects.requireNonNull(entExporter);
-        this.pki = Objects.requireNonNull(pki);
+        this.signer = Objects.requireNonNull(signer);
         this.config = Objects.requireNonNull(config);
         this.exportRules = Objects.requireNonNull(exportRules);
         this.principalProvider = Objects.requireNonNull(principalProvider);
@@ -196,35 +195,21 @@ public class Exporter {
      * @param exportDir Directory where Candlepin data was exported.
      * @return File reference to the new archive zip.
      */
-    private File makeArchive(Consumer consumer, File tempDir, File exportDir)
-        throws IOException {
+    private File makeArchive(Consumer consumer, File tempDir, File exportDir) throws IOException {
         String exportFileName = String.format("%s-%s.zip", consumer.getUuid(), exportDir.getName());
-        log.info("Creating archive of " + exportDir.getAbsolutePath() + " in: " +
-            exportFileName);
+        log.info("Creating archive of {} in: {}", exportDir.getAbsolutePath(), exportFileName);
 
         File archive = createZipArchiveWithDir(tempDir, exportDir, "consumer_export.zip",
             "Candlepin export for " + consumer.getUuid());
 
-        InputStream archiveInputStream = null;
-        try {
-            archiveInputStream = new FileInputStream(archive);
+        try (InputStream archiveInputStream = new FileInputStream(archive)) {
             File signedArchive = createSignedZipArchive(
                 tempDir, archive, exportFileName,
-                pki.getSHA256WithRSAHash(archiveInputStream),
+                this.signer.sign(archiveInputStream),
                 "signed Candlepin export for " + consumer.getUuid());
 
-            log.debug("Returning file: " + archive.getAbsolutePath());
+            log.debug("Returning file: {}", archive.getAbsolutePath());
             return signedArchive;
-        }
-        finally {
-            if (archiveInputStream != null) {
-                try {
-                    archiveInputStream.close();
-                }
-                catch (Exception e) {
-                    // nothing to do
-                }
-            }
         }
     }
 

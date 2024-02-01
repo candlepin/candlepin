@@ -44,6 +44,7 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.pki.certs.X509StringExtension;
+import org.candlepin.pki.impl.Signer;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
@@ -95,6 +96,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private final EnvironmentCurator environmentCurator;
     private final KeyPairGenerator keyPairGenerator;
     private final PemEncoder pemEncoder;
+    private final Signer signer;
 
     @Inject
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki,
@@ -108,7 +110,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         ConsumerTypeCurator consumerTypeCurator,
         EnvironmentCurator environmentCurator,
         KeyPairGenerator keyPairGenerator,
-        PemEncoder pemEncoder) {
+        PemEncoder pemEncoder,
+        Signer signer) {
 
         this.pki = Objects.requireNonNull(pki);
         this.extensionUtil = Objects.requireNonNull(extensionUtil);
@@ -123,6 +126,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         this.environmentCurator = Objects.requireNonNull(environmentCurator);
         this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
+        this.signer = Objects.requireNonNull(signer);
     }
 
 
@@ -434,7 +438,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 payload += Util.toBase64(payloadBytes);
                 payload += "-----END ENTITLEMENT DATA-----\n";
 
-                byte[] bytes = pki.getSHA256WithRSAHash(new ByteArrayInputStream(payloadBytes));
+                byte[] bytes = this.signer.sign(new ByteArrayInputStream(payloadBytes));
                 String signature = "-----BEGIN RSA SIGNATURE-----\n";
                 signature += Util.toBase64(bytes);
                 signature += "-----END RSA SIGNATURE-----\n";
