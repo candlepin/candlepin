@@ -26,7 +26,6 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
-import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
@@ -39,9 +38,9 @@ import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Role;
 import org.candlepin.model.UeberCertificateCurator;
-import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.User;
 import org.candlepin.paging.PagingUtilFactory;
+import org.candlepin.pki.certs.UeberCertificateGenerator;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.validation.DTOValidator;
@@ -56,14 +55,12 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 
 
-
 public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     private static final String OWNER_NAME = "Jar_Jar_Binks";
 
     private PoolManager poolManager;
     private UeberCertificateGenerator ueberCertGenerator;
     private UeberCertificateCurator ueberCertCurator;
-    private PermissionFactory permFactory;
     private ServiceLevelValidator serviceLevelValidator;
     private ContentOverrideValidator contentOverrideValidator;
     private PoolService poolService;
@@ -92,7 +89,6 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         poolManager = this.injector.getInstance(PoolManager.class);
         ueberCertGenerator = this.injector.getInstance(UeberCertificateGenerator.class);
         ueberCertCurator = this.injector.getInstance(UeberCertificateCurator.class);
-        permFactory = this.injector.getInstance(PermissionFactory.class);
         serviceLevelValidator = this.injector.getInstance(ServiceLevelValidator.class);
         contentOverrideValidator = this.injector.getInstance(ContentOverrideValidator.class);
         poolService = this.injector.getInstance(PoolService.class);

@@ -105,13 +105,13 @@ import org.candlepin.model.Role;
 import org.candlepin.model.SystemPurposeAttributeType;
 import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateCurator;
-import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.PagingUtilFactory;
+import org.candlepin.pki.certs.UeberCertificateGenerator;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.validation.DTOValidator;
@@ -341,7 +341,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         // Generate an ueber certificate for the Owner. This will need to
         // be cleaned up along with the owner deletion.
-        UeberCertificate uCert = ueberCertGenerator.generate(owner.getKey(), setupAdminPrincipal("test"));
+        UeberCertificate uCert = ueberCertGenerator.generate(owner.getKey(),
+            setupAdminPrincipal("test").getUsername());
         assertNotNull(uCert);
 
         ownerResource.deleteOwner(owner.getKey(), true, true);
@@ -448,7 +449,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCanFilterPoolsByAttribute() throws Exception {
+    public void testCanFilterPoolsByAttribute() {
         Principal principal = setupPrincipal(owner, Access.ALL);
 
         Product p = this.createProduct();
@@ -673,13 +674,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ctype.setId("test_ctype-" + rnd);
         ctype.setLabel("ctype_label-" + rnd);
 
-        doReturn(ctype).when(this.mockConsumerTypeCurator).getByLabel(eq(ctype.getLabel()));
+        doReturn(ctype).when(this.mockConsumerTypeCurator).getByLabel(ctype.getLabel());
         doReturn(ctype).when(this.mockConsumerTypeCurator).getByLabel(eq(ctype.getLabel()), anyBoolean());
-        doReturn(ctype).when(this.mockConsumerTypeCurator).get(eq(ctype.getId()));
+        doReturn(ctype).when(this.mockConsumerTypeCurator).get(ctype.getId());
 
         doAnswer(new Answer<ConsumerType>() {
             @Override
-            public ConsumerType answer(InvocationOnMock invocation) throws Throwable {
+            public ConsumerType answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
                 Consumer consumer = (Consumer) args[0];
                 ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
@@ -710,7 +711,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             .setKey(ownerKey)
             .setDisplayName("Test Owner " + rnd);
 
-        doReturn(owner).when(this.mockOwnerCurator).getByKey(eq(owner.getKey()));
+        doReturn(owner).when(this.mockOwnerCurator).getByKey(owner.getKey());
         return owner;
     }
 
@@ -726,9 +727,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         consumer.setId("test_consumer-" + rnd);
         consumer.ensureUUID();
 
-        doReturn(consumer).when(this.mockConsumerCurator).verifyAndLookupConsumer(eq(consumer.getUuid()));
+        doReturn(consumer).when(this.mockConsumerCurator).verifyAndLookupConsumer(consumer.getUuid());
         doReturn(consumer).when(this.mockConsumerCurator)
-            .verifyAndLookupConsumerWithEntitlements(eq(consumer.getUuid()));
+            .verifyAndLookupConsumerWithEntitlements(consumer.getUuid());
 
         return consumer;
     }
@@ -887,7 +888,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         doAnswer(new Answer<List<ConsumerType>>() {
             @Override
-            public List<ConsumerType> answer(InvocationOnMock iom) throws Throwable {
+            public List<ConsumerType> answer(InvocationOnMock iom) {
                 Set<String> labels = (Set<String>) iom.getArguments()[0];
                 List<ConsumerType> output = new ArrayList<>();
 
@@ -1448,10 +1449,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testConflictOnDelete() {
         Owner o = mock(Owner.class);
 
-        when(this.mockOwnerCurator.getByKey(eq("testOwner"))).thenReturn(o);
+        when(this.mockOwnerCurator.getByKey("testOwner")).thenReturn(o);
         ConstraintViolationException ce = new ConstraintViolationException(null, null, null);
         PersistenceException pe = new PersistenceException(ce);
-        Mockito.doThrow(pe).when(this.ownerManager).cleanupAndDelete(eq(o), eq(true));
+        Mockito.doThrow(pe).when(this.ownerManager).cleanupAndDelete(o, true);
 
         OwnerResource resource = this.buildOwnerResource();
 
@@ -1466,8 +1467,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner o = mock(Owner.class);
 
         when(ak.getName()).thenReturn("testKey");
-        when(this.mockActivationKeyCurator.getByKeyName(eq(o), eq("testKey"))).thenReturn(akOld);
-        when(this.mockOwnerCurator.getByKey(eq("testOwner"))).thenReturn(o);
+        when(this.mockActivationKeyCurator.getByKeyName(o, "testKey")).thenReturn(akOld);
+        when(this.mockOwnerCurator.getByKey("testOwner")).thenReturn(o);
 
         OwnerResource resource = this.buildOwnerResource();
 
@@ -1736,7 +1737,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(this.mockManifestManager.importManifestAsync(eq(owner), any(File.class), eq("test_file.zip"),
             any(ConflictOverrides.class))).thenReturn(job);
         when(this.mockOwnerCurator.getByKey(anyString())).thenReturn(owner);
-        when(this.mockJobManager.queueJob(eq(job))).thenReturn(asyncJobStatus);
+        when(this.mockJobManager.queueJob(job)).thenReturn(asyncJobStatus);
 
         AsyncJobStatusDTO dto = thisOwnerResource
             .importManifestAsync(owner.getKey(), new ArrayList<>(), input);
@@ -1755,7 +1756,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource resource = this.buildOwnerResource();
 
-        when(this.mockOwnerCurator.getByKey(eq("admin"))).thenReturn(owner);
+        when(this.mockOwnerCurator.getByKey("admin")).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);
         when(this.principalProvider.get()).thenReturn(p);
         List<UpstreamConsumerDTOArrayElement> results = resource.getUpstreamConsumers("admin");
@@ -1774,7 +1775,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerResource.setLogLevel(owner.getKey(), "ALL");
 
         owner = ownerCurator.getByKey(owner.getKey());
-        assertEquals(owner.getLogLevel(), "ALL");
+        assertEquals("ALL", owner.getLogLevel());
 
         ownerResource.deleteLogLevel(owner.getKey());
         owner = ownerCurator.getByKey(owner.getKey());
@@ -2046,10 +2047,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner owner = TestUtil.createOwner();
         UeberCertificate entCert = mock(UeberCertificate.class);
 
-        when(this.mockOwnerCurator.getByKey(eq("admin")))
+        when(this.mockOwnerCurator.getByKey("admin"))
             .thenReturn(owner);
 
-        when(this.mockUeberCertificateGenerator.generate(eq(owner.getKey()), eq(principal)))
+        when(this.mockUeberCertificateGenerator.generate(owner.getKey(), principal.getUsername()))
             .thenReturn(entCert);
         when(this.principalProvider.get()).thenReturn(principal);
 
@@ -2068,7 +2069,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource resource = this.buildOwnerResource();
 
-        when(this.mockUeberCertificateGenerator.generate(eq(owner.getKey()), eq(principal)))
+        when(this.mockUeberCertificateGenerator.generate(owner.getKey(), principal.getUsername()))
             .thenReturn(entCert);
         when(this.principalProvider.get()).thenReturn(principal);
 
@@ -2079,16 +2080,16 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testReturnProductSysPurposeValuesForOwner() throws Exception {
+    public void testReturnProductSysPurposeValuesForOwner() {
         Owner owner = TestUtil.createOwner();
 
         OwnerResource resource = this.buildOwnerResource();
 
-        when(this.mockOwnerCurator.getByKey(eq(owner.getKey())))
+        when(this.mockOwnerCurator.getByKey(owner.getKey()))
             .thenReturn(owner);
 
         Map<String, Set<String>> mockMap = new HashMap<>();
-        when(this.mockPoolCurator.getSyspurposeAttributesByOwner(eq(owner)))
+        when(this.mockPoolCurator.getSyspurposeAttributesByOwner(owner))
             .thenReturn(mockMap);
 
         Set<String> mockAddons = new HashSet<>();
@@ -2118,14 +2119,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testReturnNoProductSysPurposeValuesForOwner() throws Exception {
+    public void testReturnNoProductSysPurposeValuesForOwner() {
         Owner owner = TestUtil.createOwner();
         OwnerResource resource = this.buildOwnerResource();
-        when(this.mockOwnerCurator.getByKey(eq(owner.getKey())))
+        when(this.mockOwnerCurator.getByKey(owner.getKey()))
             .thenReturn(owner);
 
         Map<String, Set<String>> mockMap = new HashMap<>();
-        when(this.mockPoolCurator.getSyspurposeAttributesByOwner(eq(owner)))
+        when(this.mockPoolCurator.getSyspurposeAttributesByOwner(owner))
             .thenReturn(mockMap);
         SystemPurposeAttributesDTO result = resource.getSyspurpose(owner.getKey());
         Map<String, Set<String>> returned = result.getSystemPurposeAttributes();
@@ -2133,23 +2134,23 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testReturnProductSysPurposeValuesForNoOwnerForId() throws Exception {
+    public void testReturnProductSysPurposeValuesForNoOwnerForId() {
         OwnerResource resource = this.buildOwnerResource();
         when(this.mockOwnerCurator.getByKey(any(String.class))).thenReturn(null);
         assertThrows(NotFoundException.class, () -> resource.getSyspurpose(owner.getKey()));
     }
 
     @Test
-    public void testReturnProductSysPurposeValuesForNoOwnerId() throws Exception {
+    public void testReturnProductSysPurposeValuesForNoOwnerId() {
         OwnerResource resource = this.buildOwnerResource();
         assertThrows(BadRequestException.class, () -> resource.getSyspurpose(""));
     }
 
     @Test
-    public void testReturnConsumerSysPurposeValuesForOwner() throws Exception {
+    public void testReturnConsumerSysPurposeValuesForOwner() {
         Owner owner = TestUtil.createOwner();
 
-        when(this.mockOwnerCurator.getByKey(eq(owner.getKey())))
+        when(this.mockOwnerCurator.getByKey(owner.getKey()))
             .thenReturn(owner);
 
         List<String> mockRoles = new ArrayList<>();
@@ -2177,16 +2178,16 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         mockServiceType.add("serviceType2");
         mockServiceType.add("serviceType3");
 
-        when(this.mockConsumerCurator.getDistinctSyspurposeValuesByOwner(eq(owner),
-            eq(SystemPurposeAttributeType.ROLES))).thenReturn(mockRoles);
-        when(this.mockConsumerCurator.getDistinctSyspurposeValuesByOwner(eq(owner),
-            eq(SystemPurposeAttributeType.SERVICE_LEVEL))).thenReturn(mockSLAs);
-        when(this.mockConsumerCurator.getDistinctSyspurposeValuesByOwner(eq(owner),
-            eq(SystemPurposeAttributeType.USAGE))).thenReturn(mockUsages);
-        when(this.mockConsumerCurator.getDistinctSyspurposeAddonsByOwner(eq(owner)))
+        when(this.mockConsumerCurator.getDistinctSyspurposeValuesByOwner(owner,
+            SystemPurposeAttributeType.ROLES)).thenReturn(mockRoles);
+        when(this.mockConsumerCurator.getDistinctSyspurposeValuesByOwner(owner,
+            SystemPurposeAttributeType.SERVICE_LEVEL)).thenReturn(mockSLAs);
+        when(this.mockConsumerCurator.getDistinctSyspurposeValuesByOwner(owner,
+            SystemPurposeAttributeType.USAGE)).thenReturn(mockUsages);
+        when(this.mockConsumerCurator.getDistinctSyspurposeAddonsByOwner(owner))
             .thenReturn(mockAddons);
-        when(this.mockConsumerCurator.getDistinctSyspurposeValuesByOwner(eq(owner),
-            eq(SystemPurposeAttributeType.SERVICE_TYPE))).thenReturn(mockServiceType);
+        when(this.mockConsumerCurator.getDistinctSyspurposeValuesByOwner(owner,
+            SystemPurposeAttributeType.SERVICE_TYPE)).thenReturn(mockServiceType);
 
         OwnerResource resource = this.buildOwnerResource();
 
@@ -2468,7 +2469,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         String expectedMode = "owner-ca-mode";
         List<String> expectedModeList = Collections.singletonList(expectedMode);
         OwnerContentAccess access = new OwnerContentAccess(expectedMode, expectedMode);
-        when(mockOwnerCurator.getOwnerContentAccess(eq(ownerKey)))
+        when(mockOwnerCurator.getOwnerContentAccess(ownerKey))
             .thenReturn(access);
 
         OwnerResource resource = this.buildOwnerResource();

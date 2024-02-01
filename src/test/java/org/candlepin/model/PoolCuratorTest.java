@@ -38,6 +38,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
+import org.candlepin.pki.certs.UeberCertificateGenerator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
@@ -193,7 +194,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool);
 
-        ueberCertGenerator.generate(owner.getKey(), new NoAuthPrincipal());
+        ueberCertGenerator.generate(owner.getKey(), new NoAuthPrincipal().getUsername());
 
         List<Pool> results = poolCurator.listAvailableEntitlementPools(
             consumer, consumer.getOwnerId(), null, null);
@@ -611,7 +612,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void testFuzzyProductMatchingWithoutSubscription() {
         Product product = this.createProduct();
         Product parentProduct = TestUtil.createProduct("productId", "testProductName");
-        parentProduct.setProvidedProducts(Arrays.asList(product));
+        parentProduct.setProvidedProducts(Collections.singletonList(product));
         Product parent = this.createProduct(parentProduct);
 
         Pool p = TestUtil.createPool(owner, parent, 5);
@@ -1345,7 +1346,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool dpool5 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId2);
         Pool dpool6 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId3);
 
-        Collection<Pool> pools = this.poolCurator.getSubPoolsForStackIds(consumer1, Arrays.asList(stackId1));
+        Collection<Pool> pools = this.poolCurator.getSubPoolsForStackIds(consumer1, List.of(stackId1));
 
         assertNotNull(pools);
         assertEquals(1, pools.size());
@@ -1402,7 +1403,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool dpool9 = this.setupHostLimitedVirtPoolStack(owner, consumer3, stackId3);
 
         Collection<Pool> pools = this.poolCurator
-            .getSubPoolsForStackIds(Arrays.asList(consumer1, consumer2, consumer4), Arrays.asList(stackId1));
+            .getSubPoolsForStackIds(Arrays.asList(consumer1, consumer2, consumer4), List.of(stackId1));
 
         assertNotNull(pools);
         assertEquals(2, pools.size());
@@ -2392,7 +2393,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool2.setSourceEntitlement(e);
         poolCurator.create(pool2);
 
-        this.poolCurator.clearPoolSourceEntitlementRefs(Arrays.asList(pool2.getId()));
+        this.poolCurator.clearPoolSourceEntitlementRefs(Collections.singletonList(pool2.getId()));
 
         this.poolCurator.refresh(pool2);
         assertNull(pool2.getSourceEntitlement());
@@ -2414,7 +2415,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool2.setSourceEntitlement(e);
         poolCurator.create(pool2);
 
-        this.poolCurator.clearPoolSourceEntitlementRefs(Arrays.asList(pool1.getId()));
+        this.poolCurator.clearPoolSourceEntitlementRefs(Collections.singletonList(pool1.getId()));
 
         this.poolCurator.refresh(pool2);
         assertSame(e, pool2.getSourceEntitlement());
@@ -2575,7 +2576,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(output.get(consumer1.getId()), Util.asSet(pool1.getId(), pool2.getId()));
         assertEquals(output.get(consumer2.getId()), Util.asSet(pool4.getId(), pool5.getId()));
 
-        output = this.poolCurator.getConsumerStackDerivedPoolIdMap(Arrays.asList(stackId1));
+        output = this.poolCurator.getConsumerStackDerivedPoolIdMap(List.of(stackId1));
 
         assertNotNull(output);
         assertEquals(2, output.size());
@@ -2757,14 +2758,14 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(output, Util.asSet(pool1.getId(), pool2.getId(), pool3.getId(), pool7.getId()));
 
         // Filtering entitlements should not pull pools if more entitlements remain
-        output = this.poolCurator.getUnentitledStackDerivedPoolIds(Arrays.asList(ent1a.getId()));
+        output = this.poolCurator.getUnentitledStackDerivedPoolIds(Collections.singletonList(ent1a.getId()));
 
         assertNotNull(output);
         assertEquals(1, output.size());
         assertEquals(output, Util.asSet(pool7.getId()));
 
         // Filtering entitlements should not pull pools if more entitlements remain
-        output = this.poolCurator.getUnentitledStackDerivedPoolIds(Arrays.asList(ent1b.getId()));
+        output = this.poolCurator.getUnentitledStackDerivedPoolIds(Collections.singletonList(ent1b.getId()));
 
         assertNotNull(output);
         assertEquals(1, output.size());
@@ -2778,7 +2779,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(4, output.size());
         assertEquals(output, Util.asSet(pool1.getId(), pool2.getId(), pool3.getId(), pool7.getId()));
 
-        output = this.poolCurator.getUnentitledStackDerivedPoolIds(Arrays.asList("bad_ent_id"));
+        output = this.poolCurator.getUnentitledStackDerivedPoolIds(List.of("bad_ent_id"));
 
         assertNotNull(output);
         assertEquals(1, output.size());
@@ -3015,7 +3016,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Product childProduct = this.createProduct("2", "product-2");
 
         Product parentProduct = TestUtil.createProduct("1", "product-1");
-        parentProduct.setProvidedProducts(Arrays.asList(childProduct));
+        parentProduct.setProvidedProducts(Collections.singletonList(childProduct));
 
         parentProduct = this.createProduct(parentProduct);
         Pool pool = TestUtil.createPool(owner, parentProduct, 5);

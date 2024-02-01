@@ -100,7 +100,6 @@ import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.SystemPurposeAttributeType;
 import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateCurator;
-import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
@@ -108,6 +107,7 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.PagingUtilFactory;
+import org.candlepin.pki.certs.UeberCertificateGenerator;
 import org.candlepin.resource.server.v1.OwnerApi;
 import org.candlepin.resource.util.AttachedFile;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
@@ -1600,7 +1600,7 @@ public class OwnerResource implements OwnerApi {
     public UeberCertificateDTO createUeberCertificate(
         @Verify(Owner.class) String ownerKey) {
         Principal principal = this.principalProvider.get();
-        UeberCertificate ueberCert = ueberCertGenerator.generate(ownerKey, principal);
+        UeberCertificate ueberCert = ueberCertGenerator.generate(ownerKey, principal.getUsername());
 
         return this.translator.translate(ueberCert, UeberCertificateDTO.class);
     }
