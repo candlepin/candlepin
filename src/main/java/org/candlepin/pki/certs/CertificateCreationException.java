@@ -15,11 +15,11 @@
 
 package org.candlepin.pki.certs;
 
+/**
+ * Exception thrown when there is a problem during certificate creation
+ * in one of the certificate generators.
+ */
 public class CertificateCreationException extends RuntimeException {
-    public CertificateCreationException(String message) {
-        super(message);
-    }
-
     public CertificateCreationException(String message, Throwable cause) {
         super(message, cause);
     }

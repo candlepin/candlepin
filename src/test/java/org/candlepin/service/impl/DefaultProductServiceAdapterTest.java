@@ -16,16 +16,9 @@ package org.candlepin.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -34,23 +27,15 @@ import org.candlepin.config.Configuration;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.pki.KeyPairGenerator;
-import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.PemEncoder;
-import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
+import org.candlepin.pki.certs.ProductCertificateGenerator;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.X509ExtensionUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.List;
 import java.util.Map;
 
@@ -63,24 +48,17 @@ public class DefaultProductServiceAdapterTest {
     private static final String SOME_ID = "deadbeef";
 
     private ProductCurator productCurator;
-    private ProductCertificateCurator productCertificateCurator;
-    private KeyPairGenerator keyPairGenerator;
+    private ProductCertificateGenerator productCertificateGenerator;
     private DefaultProductServiceAdapter adapter;
-    private PemEncoder pemEncoder;
 
     @BeforeEach
     public void init() {
         Configuration config = mock(Configuration.class);
         when(config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING)).thenReturn(false);
 
-        X509ExtensionUtil extUtil = new X509ExtensionUtil(config);
-        PKIUtility pki = mock(PKIUtility.class);
         this.productCurator = mock(ProductCurator.class);
-        this.keyPairGenerator = mock(BouncyCastleKeyPairGenerator.class);
-        this.pemEncoder = mock(PemEncoder.class);
-        this.productCertificateCurator = spy(new ProductCertificateCurator(
-            pki, extUtil, keyPairGenerator, this.pemEncoder));
-        this.adapter = new DefaultProductServiceAdapter(productCurator, productCertificateCurator);
+        this.productCertificateGenerator = mock(ProductCertificateGenerator.class);
+        this.adapter = new DefaultProductServiceAdapter(productCurator, productCertificateGenerator);
     }
 
     @Test
@@ -88,45 +66,26 @@ public class DefaultProductServiceAdapterTest {
         Owner owner = TestUtil.createOwner("test_owner");
 
         Map<String, Product> result = Map.of();
-        when(productCurator.resolveProductIds(nullable(String.class), anyCollection())).thenReturn(result);
+        when(this.productCurator.resolveProductIds(nullable(String.class), anyCollection()))
+            .thenReturn(result);
         List<String> ids = List.of(SOME_ID);
 
-        adapter.getProductsByIds(owner.getKey(), ids);
+        this.adapter.getProductsByIds(owner.getKey(), ids);
 
-        verify(productCurator).resolveProductIds(owner.getKey(), ids);
+        verify(this.productCurator).resolveProductIds(owner.getKey(), ids);
     }
 
     @Test
-    public void productCertificateExists() {
+    public void shouldRetrieveProductCertificate() {
         Owner owner = TestUtil.createOwner("test_owner");
         Product product = TestUtil.createProduct("test_product");
         ProductCertificate cert = mock(ProductCertificate.class);
+        when(this.productCurator.resolveProductId(owner.getKey(), product.getId())).thenReturn(product);
+        when(this.productCertificateGenerator.getCertificate(product)).thenReturn(cert);
 
-        when(productCurator.resolveProductId(owner.getKey(), product.getId())).thenReturn(product);
-        doReturn(cert).when(productCertificateCurator).findForProduct(product);
-
-        CertificateInfo result = adapter.getProductCertificate(owner.getKey(), product.getId());
-        verify(productCertificateCurator, never()).create(cert);
+        CertificateInfo result = this.adapter.getProductCertificate(owner.getKey(), product.getId());
 
         assertEquals(cert, result);
-    }
-
-    @Test
-    public void productCertificateNew() {
-        Owner owner = TestUtil.createOwner("test_owner");
-        Product product = TestUtil.createProduct("123");
-        ProductCertificate cert = mock(ProductCertificate.class);
-
-        when(productCurator.resolveProductId(owner.getKey(), product.getId())).thenReturn(product);
-        doAnswer(returnsFirstArg()).when(productCertificateCurator).create(any(ProductCertificate.class));
-        doReturn(null).when(productCertificateCurator).findForProduct(product);
-
-        KeyPair kp = createKeyPair();
-        when(keyPairGenerator.generateKeyPair()).thenReturn(kp);
-        when(pemEncoder.encodeAsBytes(any(PrivateKey.class))).thenReturn("junk".getBytes());
-
-        CertificateInfo result = adapter.getProductCertificate(owner.getKey(), product.getId());
-        assertNotNull(result);
     }
 
     @Test
@@ -138,10 +97,4 @@ public class DefaultProductServiceAdapterTest {
             .isEmpty();
     }
 
-    // can't mock a final class, so create a dummy one
-    private KeyPair createKeyPair() {
-        PublicKey pk = mock(PublicKey.class);
-        PrivateKey ppk = mock(PrivateKey.class);
-        return new KeyPair(pk, ppk);
-    }
 }

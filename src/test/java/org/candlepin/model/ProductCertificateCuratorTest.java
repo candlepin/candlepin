@@ -22,10 +22,6 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.junit.jupiter.api.Test;
 
 
-
-/**
- * ProductCertificateCuratorTest
- */
 public class ProductCertificateCuratorTest extends DatabaseTestFixture {
 
     @Test
