@@ -15,28 +15,18 @@
 package org.candlepin.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.nullable;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.model.CertificateSerial;
-import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
-import org.candlepin.model.Owner;
-import org.candlepin.pki.DistinguishedName;
-import org.candlepin.pki.KeyPairGenerator;
-import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.PemEncoder;
+import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.ExpiryDateFunction;
-import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,17 +35,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.mockito.stubbing.Answer;
-
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.cert.X509Certificate;
-import java.util.Date;
-import java.util.Set;
 
 /**
  * DefaultIdentityCertServiceAdapterTest
@@ -65,186 +44,70 @@ import java.util.Set;
 public class DefaultIdentityCertServiceAdapterTest {
 
     @Mock
-    private PKIUtility pki;
-    @Mock
     private IdentityCertificateCurator identityCertificateCurator;
     @Mock
-    private CertificateSerialCurator serialCurator;
-    @Mock
-    private KeyPairGenerator keyPairGenerator;
-    @Mock
-    private PemEncoder pemEncoder;
+    private IdentityCertificateGenerator identityCertificateGenerator;
     private DefaultIdentityCertServiceAdapter adapter;
 
 
     @BeforeEach
     public void setUp() {
-        adapter = new DefaultIdentityCertServiceAdapter(pki, identityCertificateCurator,
-            serialCurator, keyPairGenerator, pemEncoder, new ExpiryDateFunction(1));
+        this.adapter = new DefaultIdentityCertServiceAdapter(
+            this.identityCertificateCurator, this.identityCertificateGenerator);
     }
 
     @Test
-    public void testGenerate() throws GeneralSecurityException, IOException {
-        Consumer consumer = mock(Consumer.class);
-        when(consumer.getId()).thenReturn("42");
-        when(consumer.getUuid()).thenReturn(Util.generateUUID());
-        Owner owner = mock(Owner.class);
-        when(owner.getKey()).thenReturn(TestUtil.randomString());
-        when(consumer.getOwner()).thenReturn(owner);
-        KeyPair kp = createKeyPair();
-        when(keyPairGenerator.getKeyPair(consumer)).thenReturn(kp);
-        when(identityCertificateCurator.get(consumer.getId())).thenReturn(null);
-        when(serialCurator.create(any(CertificateSerial.class)))
-            .thenAnswer((Answer<CertificateSerial>) invocation -> {
-                Object[] args = invocation.getArguments();
-                CertificateSerial cs = (CertificateSerial) args[0];
-                cs.setId(42L);
-                return cs;
-            });
-        when(pki.createX509Certificate(any(DistinguishedName.class), nullable(Set.class),
-            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
-            nullable(String.class)))
-            .thenReturn(mock(X509Certificate.class));
-        when(this.pemEncoder.encodeAsString(any(X509Certificate.class))).thenReturn("x509cert");
-        when(this.pemEncoder.encodeAsString(any(PrivateKey.class))).thenReturn("priv");
-        when(identityCertificateCurator.create(any(IdentityCertificate.class)))
-            .thenAnswer((Answer<IdentityCertificate>) invocation -> {
-                Object[] args = invocation.getArguments();
-                IdentityCertificate ic = (IdentityCertificate) args[0];
-                ic.setId("42");
-                return ic;
-            });
+    public void shouldDeleteCertificate() {
+        IdentityCertificate certificate = createIdentityCertificate();
+        Consumer consumer = new Consumer().setIdCert(certificate);
+        when(this.identityCertificateCurator.get(anyString())).thenReturn(certificate);
 
-        IdentityCertificate ic = adapter.generateIdentityCert(consumer);
+        this.adapter.deleteIdentityCert(consumer);
 
-        assertNotNull(ic);
-        assertEquals("priv", ic.getKey());
-        assertEquals("x509cert", ic.getCert());
-        assertNotNull(ic.getCertAsBytes());
-        assertNotNull(ic.getKeyAsBytes());
-        verify(consumer).setIdCert(ic);
-        verify(serialCurator).create(any(CertificateSerial.class));
+        verify(this.identityCertificateCurator).delete(certificate);
     }
 
     @Test
-    public void testReturnExisting() throws GeneralSecurityException, IOException {
-        Consumer consumer = mock(Consumer.class);
-        IdentityCertificate mockic = mock(IdentityCertificate.class);
+    public void shouldReturnCachedCert() {
+        IdentityCertificate certificate = createIdentityCertificate();
+        Consumer consumer = new Consumer().setIdCert(certificate);
+        when(this.identityCertificateCurator.get(anyString())).thenReturn(certificate);
 
-        when(consumer.getIdCert()).thenReturn(mockic);
-        when(identityCertificateCurator.get(mockic.getId())).thenReturn(mockic);
-        when(identityCertificateCurator.get(consumer.getId())).thenReturn(mockic);
+        IdentityCertificate result = this.adapter.generateIdentityCert(consumer);
 
-        IdentityCertificate ic = adapter.generateIdentityCert(consumer);
-
-        assertNotNull(ic);
-        assertEquals(ic, mockic);
+        assertEquals(certificate, result);
+        verifyNoInteractions(this.identityCertificateGenerator);
     }
 
     @Test
-    public void testRegenerateCallsDeletes() throws GeneralSecurityException, IOException {
-        Consumer consumer = mock(Consumer.class);
-        IdentityCertificate mockic = mock(IdentityCertificate.class);
-        when(consumer.getIdCert()).thenReturn(mockic);
-        when(consumer.getUuid()).thenReturn("test_uuid");
-        Owner owner = mock(Owner.class);
-        when(owner.getKey()).thenReturn(TestUtil.randomString());
-        when(consumer.getOwner()).thenReturn(owner);
-        when(mockic.getId()).thenReturn("43");
-        when(identityCertificateCurator.get(mockic.getId())).thenReturn(mockic);
+    public void shouldGenerateMissingCertificate() {
+        IdentityCertificate certificate = createIdentityCertificate();
+        Consumer consumer = new Consumer().setIdCert(certificate);
+        when(this.identityCertificateGenerator.generate(any(Consumer.class))).thenReturn(certificate);
 
+        IdentityCertificate result = this.adapter.generateIdentityCert(consumer);
 
-        KeyPair kp = createKeyPair();
-        when(keyPairGenerator.getKeyPair(consumer)).thenReturn(kp);
-        when(serialCurator.create(any(CertificateSerial.class)))
-            .thenAnswer((Answer<CertificateSerial>) invocation -> {
-                Object[] args = invocation.getArguments();
-                CertificateSerial cs = (CertificateSerial) args[0];
-                cs.setId(42L);
-                return cs;
-            });
-        when(pki.createX509Certificate(any(DistinguishedName.class), nullable(Set.class),
-            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
-            nullable(String.class)))
-            .thenReturn(mock(X509Certificate.class));
-        when(this.pemEncoder.encodeAsString(any(X509Certificate.class))).thenReturn("x509cert");
-        when(this.pemEncoder.encodeAsString(any(PrivateKey.class))).thenReturn("priv");
-        when(identityCertificateCurator.create(any(IdentityCertificate.class)))
-            .thenAnswer((Answer<IdentityCertificate>) invocation -> {
-                Object[] args = invocation.getArguments();
-                IdentityCertificate ic = (IdentityCertificate) args[0];
-                ic.setId("42");
-                return ic;
-            });
-
-        IdentityCertificate ic = adapter.regenerateIdentityCert(consumer);
-
-        verify(consumer).setIdCert(null);
-        verify(identityCertificateCurator).delete(mockic);
-        assertNotSame(ic, mockic);
-        assertEquals("priv", ic.getKey());
-        assertEquals("x509cert", ic.getCert());
-        assertNotNull(ic.getCertAsBytes());
-        assertNotNull(ic.getKeyAsBytes());
-        verify(consumer).setIdCert(ic);
-        verify(serialCurator).create(any(CertificateSerial.class));
-
+        assertEquals(certificate, result);
     }
 
     @Test
-    public void testRegenerate() throws GeneralSecurityException, IOException {
-        Consumer consumer = mock(Consumer.class);
-        when(consumer.getId()).thenReturn("42L");
-        when(consumer.getUuid()).thenReturn(Util.generateUUID());
-        Owner owner = mock(Owner.class);
-        when(owner.getKey()).thenReturn(TestUtil.randomString());
-        when(consumer.getOwner()).thenReturn(owner);
+    public void regenerateShouldDeleteOldCertificate() {
+        IdentityCertificate certificate = createIdentityCertificate();
+        Consumer consumer = new Consumer().setIdCert(certificate);
+        when(this.identityCertificateCurator.get(anyString())).thenReturn(certificate);
+        when(this.identityCertificateGenerator.generate(any(Consumer.class)))
+            .thenReturn(createIdentityCertificate());
 
-        when(identityCertificateCurator.get(consumer.getId())).thenReturn(null);
+        IdentityCertificate result = this.adapter.regenerateIdentityCert(consumer);
 
-
-        KeyPair kp = createKeyPair();
-        when(keyPairGenerator.getKeyPair(consumer)).thenReturn(kp);
-        when(serialCurator.create(any(CertificateSerial.class)))
-            .thenAnswer((Answer<CertificateSerial>) invocation -> {
-                Object[] args = invocation.getArguments();
-                CertificateSerial cs = (CertificateSerial) args[0];
-                cs.setId(42L);
-                return cs;
-            });
-
-        when(pki.createX509Certificate(any(DistinguishedName.class), nullable(Set.class),
-            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
-            nullable(String.class)))
-            .thenReturn(mock(X509Certificate.class));
-        when(this.pemEncoder.encodeAsString(any(X509Certificate.class))).thenReturn("x509cert");
-        when(this.pemEncoder.encodeAsString(any(PrivateKey.class))).thenReturn("priv");
-        when(identityCertificateCurator.create(any(IdentityCertificate.class)))
-            .thenAnswer((Answer<IdentityCertificate>) invocation -> {
-                Object[] args = invocation.getArguments();
-                IdentityCertificate ic = (IdentityCertificate) args[0];
-                ic.setId("42");
-                return ic;
-            });
-
-        IdentityCertificate ic = adapter.regenerateIdentityCert(consumer);
-
-        assertNotNull(ic);
-        verify(consumer, never()).setIdCert(null);
-        verify(identityCertificateCurator, never()).delete(any(IdentityCertificate.class));
-        assertEquals("priv", ic.getKey());
-        assertEquals("x509cert", ic.getCert());
-        assertNotNull(ic.getCertAsBytes());
-        assertNotNull(ic.getKeyAsBytes());
-        verify(consumer).setIdCert(ic);
-        verify(serialCurator).create(any(CertificateSerial.class));
-
+        assertNotEquals(certificate, result);
+        verify(this.identityCertificateCurator).delete(certificate);
     }
 
-    // can't mock a final class, so create a dummy one
-    private KeyPair createKeyPair() {
-        PublicKey pk = mock(PublicKey.class);
-        PrivateKey ppk = mock(PrivateKey.class);
-        return new KeyPair(pk, ppk);
+    private static IdentityCertificate createIdentityCertificate() {
+        IdentityCertificate certificate = new IdentityCertificate();
+        certificate.setId(TestUtil.randomString("id_cert"));
+        return certificate;
     }
+
 }
