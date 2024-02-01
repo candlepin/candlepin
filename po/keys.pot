@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-25 07:08+0000\n"
+"POT-Creation-Date: 2024-02-01 07:25+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -190,7 +190,7 @@ msgid "Compliance recalculated for consumer {1}"
 msgstr ""
 
 #: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:70
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1418
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1432
 #, java-format
 msgid "Organization {0} does not exist."
 msgstr ""
@@ -200,12 +200,12 @@ msgid "None of the activation keys specified exist for this org."
 msgstr ""
 
 #: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:93
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1175
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1189
 msgid "Org required to register with activation keys."
 msgstr ""
 
 #: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:97
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1179
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1193
 msgid "Cannot specify username with activation keys."
 msgstr ""
 
@@ -249,7 +249,7 @@ msgid "Invalid Certificate Type"
 msgstr ""
 
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1346
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1360
 #: src/main/java/org/candlepin/resource/RoleResource.java:113
 #: src/main/java/org/candlepin/resource/UserResource.java:90
 #, java-format
@@ -792,36 +792,40 @@ msgstr ""
 msgid "No such content delivery network: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:93
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:110
 msgid "No cloud registration information provided"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:98
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:115
 msgid "Request is missing cloud provider type (e.g. amazon, gcp, azure)"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:114
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:131
 msgid ""
 "cloud provider or account details could not be resolved to an organization"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:138
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:155
 msgid "unknown cloud authorization version"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:143
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:160
 msgid "Cloud registration is not supported by this Candlepin instance"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:147
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:164
 msgid ""
 "Cloud registration is not supported for the type of offering the client is "
 "using"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:182
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2481
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2822
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:180
+msgid "Cloud account ID is null or empty"
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:257
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2495
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2836
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:428
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:126
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:156
@@ -832,23 +836,23 @@ msgstr ""
 msgid "An unexpected exception occurred while scheduling job \"{0}\""
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:258
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:333
 msgid "cloud account ID could not be resolved"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:265
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:340
 msgid "cloud instance ID could not be resolved"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:272
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:347
 msgid "cloud provider could not be resolved"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:279
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:354
 msgid "offer ID could not be resolved"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:286
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:361
 msgid "product IDs could not be resolved"
 msgstr ""
 
@@ -883,179 +887,179 @@ msgstr ""
 msgid "No UUIDs provided."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:947
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:961
 msgid "Unit type must be specified."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:952
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:966
 #, java-format
 msgid "Invalid unit type: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1078
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1092
 #, java-format
 msgid "Problem creating unit {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1158
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1172
 msgid "The consumer cannot use the supplied content access mode."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1167
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1181
 msgid "The consumer cannot be assigned a content access mode."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1189
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1203
 msgid "A unit type of \"person\" cannot be used with activation keys"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1193
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1200
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1207
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1214
 msgid "System name cannot contain most special characters."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1209
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1223
 msgid "You may not create a manifest consumer via Subscription Manager."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1305
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1319
 msgid "System name cannot begin with # character"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1352
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1366
 #, java-format
 msgid "User \"{0}\" has no roles for organization \"{1}\""
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1365
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1379
 #, java-format
 msgid "User \"{0}\" has already registered a personal consumer"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1392
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1406
 msgid "You must specify an organization for new units."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1409
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1423
 msgid "Client is not authorized to register with any organization"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1439
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1453
 #, java-format
 msgid "{0} is not authorized to register with organization {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1443
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1457
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:170
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1321
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1540
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1554
 #, java-format
 msgid "Problem updating unit {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1626
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1640
 msgid "This consumer cannot be assigned a content access mode"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1632
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1646
 #, java-format
 msgid "This consumer cannot use the supplied content access mode: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1722
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1736
 #, java-format
 msgid "Environment with ID \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1731
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1745
 #, java-format
 msgid "Environment with name \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1735
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1749
 msgid "Environment could not be found using provided details."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1740
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1754
 #, java-format
 msgid "Environment \"{0}\" specified more than once."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1849
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1863
 #, java-format
 msgid "Problem updating unit {0}. Hypervisor id: {1} is already used."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2058
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2069
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2072
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2083
 #, java-format
 msgid "Consumer with UUID {0} was already deleted."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2085
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2099
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:203
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2194
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2208
 msgid ""
 "Unable to retrieve or create anonymous content access certificate for "
 "consumer"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2246
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2260
 msgid "Content access mode does not allow this request."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2264
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2278
 msgid "Cannot retrieve content access certificate"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2293
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2307
 msgid "Cannot create export for anonymous cloud consumer"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2317
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2331
 msgid "Unable to create entitlement certificate archive"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2383
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2397
 msgid "Cannot bind by multiple parameters."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2387
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2401
 msgid "Cannot specify a quantity when auto-binding."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2431
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2445
 #, java-format
 msgid "You must first accept Red Hat''s Terms and conditions. Please visit {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2520
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2534
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2525
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2539
 #, java-format
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
 "the hypervisor autobind setting."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2566
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2580
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2689
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2726
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2703
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2740
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:188
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:204
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:233
@@ -1065,32 +1069,32 @@ msgstr ""
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2703
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2717
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2719
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2733
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2789
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2803
 msgid "Unable to create export archive"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2939
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2944
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2953
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2958
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2978
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2992
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3055
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3069
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr ""
@@ -1779,11 +1783,11 @@ msgstr ""
 msgid "Expected a positive integer."
 msgstr ""
 
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:265
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:266
 msgid "Organization"
 msgstr ""
 
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:286
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:287
 #, java-format
 msgid "{0} with ID(s) {1} could not be found."
 msgstr ""
