@@ -16,13 +16,11 @@ package org.candlepin.guice;
 
 import static org.candlepin.config.ConfigProperties.ACTIVEMQ_ENABLED;
 import static org.candlepin.config.ConfigProperties.DB_MANAGE_ON_START;
-import static org.candlepin.config.ConfigProperties.ENCRYPTED_PROPERTIES;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.ActiveMQContextListener;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.config.LegacyEncryptedInterceptor;
 import org.candlepin.config.RyeConfig;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.logging.LoggingConfigurator;
@@ -307,7 +305,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         SmallRyeConfigBuilder configBuilder = new SmallRyeConfigBuilder()
             .addDefaultSources()
             .addDefaultInterceptors()
-            .withInterceptors(new LegacyEncryptedInterceptor(ENCRYPTED_PROPERTIES))
             .withDefaultValues(ConfigProperties.DEFAULT_PROPERTIES);
 
         // Read config from /etc/candlepin/candlepin.conf

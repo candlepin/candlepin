@@ -182,10 +182,6 @@ public class ConfigProperties {
     public static final String CACHE_ANON_CERT_CONTENT_MAX_ENTRIES =
         "candlepin.cache.anonymous.cert.content.max_entries";
 
-    public static final String[] ENCRYPTED_PROPERTIES = new String[] {
-        DB_PASSWORD,
-    };
-
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
 
     /**
