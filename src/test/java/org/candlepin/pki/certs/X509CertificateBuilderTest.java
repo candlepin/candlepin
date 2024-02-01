@@ -15,12 +15,15 @@
 
 package org.candlepin.pki.certs;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.X509Extension;
-import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.test.CertificateReaderForTesting;
 
@@ -42,7 +45,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -56,7 +58,6 @@ import java.security.spec.RSAPublicKeySpec;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Date;
 import java.util.Set;
 
 class X509CertificateBuilderTest {

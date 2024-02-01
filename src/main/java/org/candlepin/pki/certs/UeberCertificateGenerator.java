@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,16 +12,28 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.model;
+package org.candlepin.pki.certs;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.controller.util.ContentPathBuilder;
 import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Content;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
+import org.candlepin.model.UeberCertificate;
+import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
-import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.service.UniqueIdGenerator;
@@ -33,26 +45,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.IOException;
 import java.math.BigInteger;
-import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TimeZone;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 
-
-/**
- * UeberCertificateGenerator
- */
 public class UeberCertificateGenerator {
     private static final String UEBER_CERT_CONSUMER_TYPE = "uebercert";
     private static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
@@ -62,7 +70,6 @@ public class UeberCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(UeberCertificateGenerator.class);
 
     private final UniqueIdGenerator idGenerator;
-    private final PKIUtility pki;
     private final KeyPairGenerator keyPairGenerator;
     private final CertificateSerialCurator serialCurator;
     private final X509ExtensionUtil extensionUtil;
@@ -71,11 +78,11 @@ public class UeberCertificateGenerator {
     private final ConsumerTypeCurator consumerTypeCurator;
     private final I18n i18n;
     private final PemEncoder pemEncoder;
+    private final Provider<X509CertificateBuilder> certificateBuilder;
 
     @Inject
     public UeberCertificateGenerator(
         UniqueIdGenerator idGenerator,
-        PKIUtility pki,
         X509ExtensionUtil extensionUtil,
         CertificateSerialCurator serialCurator,
         OwnerCurator ownerCurator,
@@ -83,10 +90,10 @@ public class UeberCertificateGenerator {
         ConsumerTypeCurator consumerTypeCurator,
         KeyPairGenerator keyPairGenerator,
         PemEncoder pemEncoder,
-        I18n i18n) {
+        I18n i18n,
+        Provider<X509CertificateBuilder> certificateBuilder) {
 
         this.idGenerator = Objects.requireNonNull(idGenerator);
-        this.pki = Objects.requireNonNull(pki);
         this.serialCurator = Objects.requireNonNull(serialCurator);
         this.extensionUtil = Objects.requireNonNull(extensionUtil);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
@@ -95,6 +102,7 @@ public class UeberCertificateGenerator {
         this.i18n = Objects.requireNonNull(i18n);
         this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
+        this.certificateBuilder = Objects.requireNonNull(certificateBuilder);
     }
 
     @Transactional
@@ -118,7 +126,7 @@ public class UeberCertificateGenerator {
         }
     }
 
-    private UeberCertificate generateUeberCert(Owner owner, String generatedByUsername) throws Exception {
+    private UeberCertificate generateUeberCert(Owner owner, String generatedByUsername) {
         ConsumerType ueberCertType = this.consumerTypeCurator.getByLabel(UEBER_CERT_CONSUMER_TYPE, true);
 
         UeberCertData ueberCertData = new UeberCertData(owner, generatedByUsername, ueberCertType);
@@ -143,8 +151,8 @@ public class UeberCertificateGenerator {
         return ueberCert;
     }
 
-    private X509Certificate createX509Certificate(UeberCertData data, BigInteger serialNumber,
-        KeyPair keyPair) throws GeneralSecurityException, IOException {
+    private X509Certificate createX509Certificate(UeberCertData data,
+        BigInteger serialNumber, KeyPair keyPair) {
         ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(null, List.of());
         Set<X509Extension> extensions = new LinkedHashSet<>(
             extensionUtil.productExtensions(data.getProduct()));
@@ -162,8 +170,13 @@ public class UeberCertificateGenerator {
         }
 
         DistinguishedName dn = new DistinguishedName(null, data.getOwner());
-        return this.pki.createX509Certificate(dn, extensions,  data.getStartDate(),
-            data.getEndDate(), keyPair, serialNumber, null);
+        return this.certificateBuilder.get()
+            .withDN(dn)
+            .withSerial(serialNumber)
+            .withValidity(data.startDate.toInstant(), data.endDate.toInstant())
+            .withKeyPair(keyPair)
+            .withExtensions(extensions)
+            .build();
     }
 
     /**
@@ -173,16 +186,15 @@ public class UeberCertificateGenerator {
      *
      */
     private class UeberCertData {
-        private Owner owner;
-        private ConsumerType ueberCertType;
-        private Consumer consumer;
-        private Product product;
-        private Content content;
-        private Pool pool;
-        private Entitlement entitlement;
-
-        private Date startDate;
-        private Date endDate;
+        private final Owner owner;
+        private final ConsumerType ueberCertType;
+        private final Consumer consumer;
+        private final Product product;
+        private final Content content;
+        private final Pool pool;
+        private final Entitlement entitlement;
+        private final Date startDate;
+        private final Date endDate;
 
         public UeberCertData(Owner owner, String generatedByUsername, ConsumerType ueberCertType) {
             startDate = Calendar.getInstance().getTime();
@@ -251,7 +263,7 @@ public class UeberCertificateGenerator {
         }
 
         private Content createUeberContent(UniqueIdGenerator idGenerator, Owner owner, Product product) {
-            Content ueberContent = new Content()
+            return new Content()
                 .setId(idGenerator.generateId())
                 .setName(UEBER_CONTENT_NAME)
                 .setType("yum")
@@ -260,8 +272,6 @@ public class UeberCertificateGenerator {
                 .setContentUrl("/" + owner.getKey())
                 .setGpgUrl("")
                 .setArches("");
-
-            return ueberContent;
         }
 
         /*
@@ -286,11 +296,9 @@ public class UeberCertificateGenerator {
          * See https://bugzilla.redhat.com/show_bug.cgi?id=1242310
          */
         private Date lateIn2049() {
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
             // December 1, 2049 at 13:00 GMT
-            cal.set(1900 + 149, Calendar.DECEMBER, 1, 13, 0, 0);
-            Date late2049 = cal.getTime();
-            return late2049;
+            OffsetDateTime late2049 = OffsetDateTime.of(2049, 12, 1, 13, 0, 0, 0, ZoneOffset.UTC);
+            return Date.from(late2049.toInstant());
         }
     }
 }
