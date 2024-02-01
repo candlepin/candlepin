@@ -41,6 +41,7 @@ import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.pki.certs.X509StringExtension;
 import org.candlepin.util.CertificateSizeException;
@@ -93,6 +94,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private final ConsumerTypeCurator consumerTypeCurator;
     private final EnvironmentCurator environmentCurator;
     private final KeyPairGenerator keyPairGenerator;
+    private final PemEncoder pemEncoder;
 
     @Inject
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki,
@@ -105,7 +107,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         Configuration config,
         ConsumerTypeCurator consumerTypeCurator,
         EnvironmentCurator environmentCurator,
-        KeyPairGenerator keyPairGenerator) {
+        KeyPairGenerator keyPairGenerator,
+        PemEncoder pemEncoder) {
 
         this.pki = Objects.requireNonNull(pki);
         this.extensionUtil = Objects.requireNonNull(extensionUtil);
@@ -119,6 +122,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.environmentCurator = Objects.requireNonNull(environmentCurator);
         this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
+        this.pemEncoder = Objects.requireNonNull(pemEncoder);
     }
 
 
@@ -369,7 +373,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
         log.debug("Generating entitlement cert for entitlements");
         KeyPair keyPair = this.keyPairGenerator.getKeyPair(consumer);
-        byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
+        byte[] pemEncodedKeyPair = this.pemEncoder.encodeAsBytes(keyPair.getPrivate());
 
         Map<String, CertificateSerial> serialMap = new HashMap<>();
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
@@ -418,7 +422,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 BigInteger.valueOf(serial.getId()), keyPair, promotedContent, entitledPools);
 
             log.debug("Getting PEM encoded cert.");
-            String pem = new String(this.pki.getPemEncoded(x509Cert));
+            String pem = this.pemEncoder.encodeAsString(x509Cert);
 
             if (shouldGenerateV3(consumer)) {
                 log.debug("Generating v3 entitlement data");

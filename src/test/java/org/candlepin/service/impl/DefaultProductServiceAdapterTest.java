@@ -38,6 +38,7 @@ import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.ProductInfo;
@@ -63,20 +64,22 @@ public class DefaultProductServiceAdapterTest {
 
     private ProductCurator productCurator;
     private ProductCertificateCurator productCertificateCurator;
-    private PKIUtility pki;
     private KeyPairGenerator keyPairGenerator;
     private DefaultProductServiceAdapter adapter;
+    private PemEncoder pemEncoder;
 
     @BeforeEach
     public void init() {
         Configuration config = mock(Configuration.class);
         when(config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING)).thenReturn(false);
 
-        this.productCurator = mock(ProductCurator.class);
-        this.pki = mock(PKIUtility.class);
-        this.keyPairGenerator = mock(BouncyCastleKeyPairGenerator.class);
         X509ExtensionUtil extUtil = new X509ExtensionUtil(config);
-        this.productCertificateCurator = spy(new ProductCertificateCurator(pki, extUtil, keyPairGenerator));
+        PKIUtility pki = mock(PKIUtility.class);
+        this.productCurator = mock(ProductCurator.class);
+        this.keyPairGenerator = mock(BouncyCastleKeyPairGenerator.class);
+        this.pemEncoder = mock(PemEncoder.class);
+        this.productCertificateCurator = spy(new ProductCertificateCurator(
+            pki, extUtil, keyPairGenerator, this.pemEncoder));
         this.adapter = new DefaultProductServiceAdapter(productCurator, productCertificateCurator);
     }
 
@@ -109,7 +112,7 @@ public class DefaultProductServiceAdapterTest {
     }
 
     @Test
-    public void productCertificateNew() throws Exception {
+    public void productCertificateNew() {
         Owner owner = TestUtil.createOwner("test_owner");
         Product product = TestUtil.createProduct("123");
         ProductCertificate cert = mock(ProductCertificate.class);
@@ -120,7 +123,7 @@ public class DefaultProductServiceAdapterTest {
 
         KeyPair kp = createKeyPair();
         when(keyPairGenerator.generateKeyPair()).thenReturn(kp);
-        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("junk".getBytes());
+        when(pemEncoder.encodeAsBytes(any(PrivateKey.class))).thenReturn("junk".getBytes());
 
         CertificateInfo result = adapter.getProductCertificate(owner.getKey(), product.getId());
         assertNotNull(result);
