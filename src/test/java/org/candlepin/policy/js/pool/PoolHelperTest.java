@@ -246,7 +246,7 @@ public class PoolHelperTest {
         for (int i = 0; i < 3; i++) {
             assertEquals("b" + i, clone.getAttributeValue("a" + i));
         }
-        assertNotEquals(pool.getSourceSubscription(), clone);
+        assertNotEquals(pool.getSourceSubscription(), clone.getSourceSubscription());
         assertEquals(pool.getSourceSubscription().getSubscriptionId(), clone.getSubscriptionId());
         assertEquals(pool.getSourceSubscription().getSubscriptionId(),
             clone.getSourceSubscription().getSubscriptionId());

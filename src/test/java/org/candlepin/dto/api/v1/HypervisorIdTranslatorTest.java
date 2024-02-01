@@ -21,6 +21,9 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.HypervisorIdDTO;
 import org.candlepin.model.HypervisorId;
+import org.candlepin.util.Util;
+
+import java.util.Date;
 
 /**
  * Test suite for the HypervisorIdTranslator class
@@ -48,6 +51,9 @@ public class HypervisorIdTranslatorTest extends
         source.setId("test_id");
         source.setHypervisorId("test_hypervisor_id");
         source.setReporterId("test_reporter_id");
+        source.setCreated(new Date());
+        source.setUpdated(new Date());
+
         return source;
     }
 
@@ -60,8 +66,8 @@ public class HypervisorIdTranslatorTest extends
     @Override
     protected void verifyOutput(HypervisorId source, HypervisorIdDTO dto, boolean childrenGenerated) {
         if (source != null) {
-            assertEquals(source.getCreated(), dto.getCreated());
-            assertEquals(source.getUpdated(), dto.getUpdated());
+            assertEquals(Util.toDateTime(source.getCreated()), dto.getCreated());
+            assertEquals(Util.toDateTime(source.getUpdated()), dto.getUpdated());
             assertEquals(source.getId(), dto.getId());
             assertEquals(source.getHypervisorId(), dto.getHypervisorId());
             assertEquals(source.getReporterId(), dto.getReporterId());

@@ -57,6 +57,9 @@ public class ConsumerInstalledProductTranslatorTest extends
         source.setStatus("test_status");
         source.setStartDate(new Date());
         source.setEndDate(new Date());
+        source.setCreated(new Date());
+        source.setUpdated(new Date());
+
         return source;
     }
 
@@ -70,16 +73,16 @@ public class ConsumerInstalledProductTranslatorTest extends
     protected void verifyOutput(ConsumerInstalledProduct source, ConsumerInstalledProductDTO dto,
         boolean childrenGenerated) {
         if (source != null) {
-            assertEquals(source.getCreated(), dto.getCreated());
-            assertEquals(source.getUpdated(), dto.getUpdated());
+            assertEquals(Util.toDateTime(source.getCreated()), dto.getCreated());
+            assertEquals(Util.toDateTime(source.getUpdated()), dto.getUpdated());
             assertEquals(source.getId(), dto.getId());
             assertEquals(source.getProductId(), dto.getProductId());
             assertEquals(source.getProductName(), dto.getProductName());
             assertEquals(source.getVersion(), dto.getVersion());
             assertEquals(source.getArch(), dto.getArch());
             assertEquals(source.getStatus(), dto.getStatus());
-            assertEquals(source.getStartDate(), Util.toDate(dto.getStartDate()));
-            assertEquals(source.getEndDate(), Util.toDate(dto.getEndDate()));
+            assertEquals(Util.toDateTime(source.getStartDate()), dto.getStartDate());
+            assertEquals(Util.toDateTime(source.getEndDate()), dto.getEndDate());
         }
         else {
             assertNull(dto);
