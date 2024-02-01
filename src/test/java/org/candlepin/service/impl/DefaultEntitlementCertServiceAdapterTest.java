@@ -63,6 +63,7 @@ import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
@@ -180,6 +181,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private PKIUtility mockedPKI;
     @Mock
     private EnvironmentCurator mockEnvironmentCurator;
+    @Mock
+    private PemEncoder pemEncoder;
 
     private Consumer consumer;
     private Product product;
@@ -235,7 +238,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            config, this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
+            config, this.mockConsumerTypeCurator, this.pemEncoder, this.mockEnvironmentCurator);
 
         product = TestUtil.createProduct("12345", "a product");
         product.setAttribute(Product.Attributes.VERSION, "version");
@@ -406,7 +409,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            config, this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
+            config, this.mockConsumerTypeCurator, this.pemEncoder, this.mockEnvironmentCurator);
 
         PromotedContent promotedContent = new PromotedContent(prefix(owner));
         X509Certificate result = certServiceAdapter.createX509Certificate(consumer, owner, pool,
@@ -436,7 +439,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            config, this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
+            config, this.mockConsumerTypeCurator, this.pemEncoder, this.mockEnvironmentCurator);
 
         // pool start date is more than an hour ago, use it
         Calendar cal = Calendar.getInstance();
@@ -825,7 +828,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            mockConfig, this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
+            mockConfig, this.mockConsumerTypeCurator, this.pemEncoder, this.mockEnvironmentCurator);
     }
 
     @Test
@@ -1652,8 +1655,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class)))
             .thenReturn(mock(X509Certificate.class));
-        when(mockedPKI.getPemEncoded(any(X509Certificate.class))).thenReturn("".getBytes());
-        when(mockedPKI.getPemEncoded(any(PrivateKey.class))).thenReturn("".getBytes());
+        when(this.pemEncoder.encodeAsString(any(X509Certificate.class))).thenReturn("");
+        when(this.pemEncoder.encodeAsBytes(any(PrivateKey.class))).thenReturn("".getBytes());
 
         final CertificateSerial serial = mock(CertificateSerial.class);
         when(serial.getId()).thenReturn(1L);

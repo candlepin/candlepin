@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.util.X509ExtensionUtil;
 
@@ -30,6 +31,7 @@ import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -42,18 +44,20 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class ProductCertificateCurator extends AbstractHibernateCurator<ProductCertificate> {
-    private static Logger log = LoggerFactory.getLogger(ProductCertificateCurator.class);
+    private static final Logger log = LoggerFactory.getLogger(ProductCertificateCurator.class);
 
-    private PKIUtility pki;
-    private X509ExtensionUtil extensionUtil;
+    private final PKIUtility pki;
+    private final X509ExtensionUtil extensionUtil;
+    private final PemEncoder pemEncoder;
 
 
     @Inject
-    public ProductCertificateCurator(PKIUtility pki, X509ExtensionUtil extensionUtil) {
+    public ProductCertificateCurator(PKIUtility pki, X509ExtensionUtil extensionUtil, PemEncoder pemEncoder) {
         super(ProductCertificate.class);
 
-        this.pki = pki;
-        this.extensionUtil = extensionUtil;
+        this.pki = Objects.requireNonNull(pki);
+        this.extensionUtil = Objects.requireNonNull(extensionUtil);
+        this.pemEncoder = Objects.requireNonNull(pemEncoder);
     }
 
     public ProductCertificate findForProduct(Product product) {
@@ -121,8 +125,8 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
         );
 
         ProductCertificate cert = new ProductCertificate();
-        cert.setKeyAsBytes(this.pki.getPemEncoded(keyPair.getPrivate()));
-        cert.setCertAsBytes(this.pki.getPemEncoded(x509Cert));
+        cert.setKeyAsBytes(this.pemEncoder.encodeAsBytes(keyPair.getPrivate()));
+        cert.setCertAsBytes(this.pemEncoder.encodeAsBytes(x509Cert));
         cert.setProduct(product);
 
         return cert;

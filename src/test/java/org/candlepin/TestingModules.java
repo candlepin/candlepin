@@ -51,9 +51,11 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.policy.criteria.CriteriaRules;
@@ -292,6 +294,7 @@ public class TestingModules {
             bind(Enforcer.class).to(EnforcerForTesting.class); // .to(JavascriptEnforcer.class);
             bind(SubjectKeyIdentifierWriter.class).to(BouncyCastleSubjectKeyIdentifierWriter.class);
             bind(PKIUtility.class).to(BouncyCastlePKIUtility.class).asEagerSingleton();
+            bind(PemEncoder.class).to(BouncyCastlePemEncoder.class);
             bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class);
             bind(CertificateReader.class).to(CertificateReaderForTesting.class).asEagerSingleton();
 

@@ -21,6 +21,7 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.UniqueIdGenerator;
@@ -41,6 +42,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -59,14 +61,15 @@ public class UeberCertificateGenerator {
 
     private static final Logger log = LoggerFactory.getLogger(UeberCertificateGenerator.class);
 
-    private UniqueIdGenerator idGenerator;
-    private PKIUtility pki;
-    private CertificateSerialCurator serialCurator;
-    private X509ExtensionUtil extensionUtil;
-    private OwnerCurator ownerCurator;
-    private UeberCertificateCurator ueberCertCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private I18n i18n;
+    private final UniqueIdGenerator idGenerator;
+    private final PKIUtility pki;
+    private final CertificateSerialCurator serialCurator;
+    private final X509ExtensionUtil extensionUtil;
+    private final OwnerCurator ownerCurator;
+    private final UeberCertificateCurator ueberCertCurator;
+    private final ConsumerTypeCurator consumerTypeCurator;
+    private final I18n i18n;
+    private final PemEncoder pemEncoder;
 
     @Inject
     public UeberCertificateGenerator(
@@ -77,16 +80,18 @@ public class UeberCertificateGenerator {
         OwnerCurator ownerCurator,
         UeberCertificateCurator ueberCertCurator,
         ConsumerTypeCurator consumerTypeCurator,
+        PemEncoder pemEncoder,
         I18n i18n) {
 
-        this.idGenerator = idGenerator;
-        this.pki = pki;
-        this.serialCurator = serialCurator;
-        this.extensionUtil = extensionUtil;
-        this.ownerCurator = ownerCurator;
-        this.ueberCertCurator = ueberCertCurator;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.i18n = i18n;
+        this.idGenerator = Objects.requireNonNull(idGenerator);
+        this.pki = Objects.requireNonNull(pki);
+        this.serialCurator = Objects.requireNonNull(serialCurator);
+        this.extensionUtil = Objects.requireNonNull(extensionUtil);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.ueberCertCurator = Objects.requireNonNull(ueberCertCurator);
+        this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.pemEncoder = Objects.requireNonNull(pemEncoder);
     }
 
     @Transactional
@@ -119,7 +124,7 @@ public class UeberCertificateGenerator {
         serialCurator.create(serial);
 
         KeyPair keyPair = this.pki.generateKeyPair();
-        byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
+        byte[] pemEncodedKeyPair = this.pemEncoder.encodeAsBytes(keyPair.getPrivate());
         X509Certificate x509Cert =
             createX509Certificate(ueberCertData, BigInteger.valueOf(serial.getId()), keyPair);
 
@@ -127,7 +132,7 @@ public class UeberCertificateGenerator {
         ueberCert.setSerial(serial);
         ueberCert.setKeyAsBytes(pemEncodedKeyPair);
         ueberCert.setOwner(owner);
-        ueberCert.setCert(new String(this.pki.getPemEncoded(x509Cert)));
+        ueberCert.setCert(this.pemEncoder.encodeAsString(x509Cert));
         ueberCert.setCreated(ueberCertData.getStartDate());
         ueberCert.setUpdated(ueberCertData.getStartDate());
         ueberCertCurator.create(ueberCert);

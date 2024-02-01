@@ -32,6 +32,7 @@ import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.Util;
@@ -69,19 +70,14 @@ public class DefaultIdentityCertServiceAdapterTest {
     private IdentityCertificateCurator idcur;
     @Mock
     private CertificateSerialCurator csc;
+    @Mock
+    private PemEncoder pemEncoder;
     private DefaultIdentityCertServiceAdapter dicsa;
 
 
     @BeforeEach
     public void setUp() {
-        dicsa = new DefaultIdentityCertServiceAdapter(pki, idcur, csc, new ExpiryDateFunction(1));
-    }
-
-    // can't mock a final class, so create a dummy one
-    private KeyPair createKeyPair() {
-        PublicKey pk = mock(PublicKey.class);
-        PrivateKey ppk = mock(PrivateKey.class);
-        return new KeyPair(pk, ppk);
+        dicsa = new DefaultIdentityCertServiceAdapter(pki, idcur, csc, pemEncoder, new ExpiryDateFunction(1));
     }
 
     @Test
@@ -108,10 +104,8 @@ public class DefaultIdentityCertServiceAdapterTest {
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class)))
             .thenReturn(mock(X509Certificate.class));
-        when(pki.getPemEncoded(any(X509Certificate.class))).thenReturn(
-            "x509cert".getBytes());
-        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn(
-            "priv".getBytes());
+        when(this.pemEncoder.encodeAsString(any(X509Certificate.class))).thenReturn("x509cert");
+        when(this.pemEncoder.encodeAsString(any(PrivateKey.class))).thenReturn("priv");
         when(idcur.create(any(IdentityCertificate.class))).thenAnswer(
             new Answer<IdentityCertificate>() {
                 public IdentityCertificate answer(InvocationOnMock invocation) {
@@ -173,10 +167,8 @@ public class DefaultIdentityCertServiceAdapterTest {
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class)))
             .thenReturn(mock(X509Certificate.class));
-        when(pki.getPemEncoded(any(X509Certificate.class))).thenReturn(
-            "x509cert".getBytes());
-        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn(
-            "priv".getBytes());
+        when(this.pemEncoder.encodeAsString(any(X509Certificate.class))).thenReturn("x509cert");
+        when(this.pemEncoder.encodeAsString(any(PrivateKey.class))).thenReturn("priv");
         when(idcur.create(any(IdentityCertificate.class))).thenAnswer(
             new Answer<IdentityCertificate>() {
                 public IdentityCertificate answer(InvocationOnMock invocation) {
@@ -226,10 +218,8 @@ public class DefaultIdentityCertServiceAdapterTest {
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class)))
             .thenReturn(mock(X509Certificate.class));
-        when(pki.getPemEncoded(any(X509Certificate.class))).thenReturn(
-            "x509cert".getBytes());
-        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn(
-            "priv".getBytes());
+        when(this.pemEncoder.encodeAsString(any(X509Certificate.class))).thenReturn("x509cert");
+        when(this.pemEncoder.encodeAsString(any(PrivateKey.class))).thenReturn("priv");
         when(idcur.create(any(IdentityCertificate.class))).thenAnswer(
             new Answer<IdentityCertificate>() {
                 public IdentityCertificate answer(InvocationOnMock invocation) {
@@ -252,5 +242,12 @@ public class DefaultIdentityCertServiceAdapterTest {
         verify(consumer).setIdCert(ic);
         verify(csc).create(any(CertificateSerial.class));
 
+    }
+
+    // can't mock a final class, so create a dummy one
+    private KeyPair createKeyPair() {
+        PublicKey pk = mock(PublicKey.class);
+        PrivateKey ppk = mock(PrivateKey.class);
+        return new KeyPair(pk, ppk);
     }
 }

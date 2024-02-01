@@ -97,8 +97,10 @@ import org.candlepin.model.CPRestrictions;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.policy.SystemPurposeComplianceRules;
@@ -302,6 +304,7 @@ public class CandlepinModule extends AbstractModule {
         bind(X509ExtensionUtil.class);
 
         bind(BouncyCastleSecurityProvider.class);
+        bind(PemEncoder.class).to(BouncyCastlePemEncoder.class);
     }
 
     private void resources() {

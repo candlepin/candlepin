@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -32,13 +31,13 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.ProductInfo;
@@ -69,7 +68,7 @@ public class DefaultProductServiceAdapterTest {
     private UniqueIdGenerator idgen;
     private PKIUtility pki;
     private X509ExtensionUtil extUtil;
-    private ContentCurator cc;
+    private PemEncoder pemEncoder;
 
     @BeforeEach
     public void init() {
@@ -80,8 +79,8 @@ public class DefaultProductServiceAdapterTest {
         idgen = mock(UniqueIdGenerator.class);
         pki = mock(PKIUtility.class);
         extUtil = new X509ExtensionUtil(config);
-        cc = mock(ContentCurator.class);
-        pcc = spy(new ProductCertificateCurator(pki, extUtil));
+        pemEncoder = mock(PemEncoder.class);
+        pcc = spy(new ProductCertificateCurator(pki, extUtil, pemEncoder));
         dpsa = new DefaultProductServiceAdapter(pc, pcc);
     }
 
@@ -95,7 +94,7 @@ public class DefaultProductServiceAdapterTest {
         List<String> ids = List.of(someid);
 
         dpsa.getProductsByIds(owner.getKey(), ids);
-        verify(pc).resolveProductIds(eq(owner.getKey()), eq(ids));
+        verify(pc).resolveProductIds(owner.getKey(), ids);
     }
 
     @Test
@@ -104,11 +103,11 @@ public class DefaultProductServiceAdapterTest {
         Product product = TestUtil.createProduct("test_product");
         ProductCertificate cert = mock(ProductCertificate.class);
 
-        when(pc.resolveProductId(eq(owner.getKey()), eq(product.getId()))).thenReturn(product);
-        doReturn(cert).when(pcc).findForProduct(eq(product));
+        when(pc.resolveProductId(owner.getKey(), product.getId())).thenReturn(product);
+        doReturn(cert).when(pcc).findForProduct(product);
 
         CertificateInfo result = dpsa.getProductCertificate(owner.getKey(), product.getId());
-        verify(pcc, never()).create(eq(cert));
+        verify(pcc, never()).create(cert);
 
         assertEquals(cert, result);
     }
@@ -119,13 +118,13 @@ public class DefaultProductServiceAdapterTest {
         Product product = TestUtil.createProduct("test_product");
         ProductCertificate cert = mock(ProductCertificate.class);
 
-        when(pc.resolveProductId(eq(owner.getKey()), eq(product.getId()))).thenReturn(product);
+        when(pc.resolveProductId(owner.getKey(), product.getId())).thenReturn(product);
         doAnswer(returnsFirstArg()).when(pcc).create(any(ProductCertificate.class));
-        doReturn(null).when(pcc).findForProduct(eq(product));
+        doReturn(null).when(pcc).findForProduct(product);
 
         KeyPair kp = createKeyPair();
         when(pki.generateKeyPair()).thenReturn(kp);
-        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("junk".getBytes());
+        when(pemEncoder.encodeAsBytes(any(PrivateKey.class))).thenReturn("junk".getBytes());
 
         CertificateInfo result = dpsa.getProductCertificate(owner.getKey(), product.getId());
         assertNotNull(result);

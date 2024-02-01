@@ -37,7 +37,6 @@ import java.security.KeyPair;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.Objects;
@@ -72,15 +71,6 @@ public abstract class ProviderBasedPKIUtility implements PKIUtility {
         throws GeneralSecurityException, IOException;
 
     /**
-     * Take an X509Certificate object and return a byte[] of the certificate, PEM encoded
-     * @param cert
-     * @return PEM-encoded bytes of the certificate
-     * @throws IOException if there is i/o problem
-     */
-    @Override
-    public abstract byte[] getPemEncoded(X509Certificate cert) throws IOException;
-
-    /**
      * Compute a SHA256withRSA digital signature on an inputStream.  The digest is signed
      * with the CA key retrieved using CertificateReader.
      * @param input an input stream to sign
@@ -101,8 +91,7 @@ public abstract class ProviderBasedPKIUtility implements PKIUtility {
     }
 
     @Override
-    public boolean verifySHA256WithRSAHashAgainstCACerts(File input, byte[] signedHash)
-        throws CertificateException, IOException {
+    public boolean verifySHA256WithRSAHashAgainstCACerts(File input, byte[] signedHash) throws IOException {
 
         log.debug("Verify against: {}", reader.getCACert().getSerialNumber());
 

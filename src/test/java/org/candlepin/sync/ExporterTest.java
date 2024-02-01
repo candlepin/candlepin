@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -61,7 +60,6 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
@@ -81,7 +79,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.PrivateKey;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -114,7 +111,6 @@ public class ExporterTest {
     private RulesExporter re;
     private EntitlementCertServiceAdapter ecsa;
     private ProductExporter pe;
-    private ProductServiceAdapter psa;
     private EntitlementCurator ec;
     private DistributorVersionCurator dvc;
     private DistributorVersionExporter dve;
@@ -143,7 +139,6 @@ public class ExporterTest {
         re = new RulesExporter(rc);
         ecsa = mock(EntitlementCertServiceAdapter.class);
         pe = new ProductExporter(translator);
-        psa = mock(ProductServiceAdapter.class);
         ec = mock(EntitlementCurator.class);
         ee = new EntitlementExporter(translator);
         pki = mock(PKIUtility.class);
@@ -195,25 +190,25 @@ public class ExporterTest {
         prod12345.setMultiplier(1L);
         prod12345.setCreated(new Date());
         prod12345.setUpdated(new Date());
-        prod12345.setAttributes(Collections.<String, String>emptyMap());
+        prod12345.setAttributes(Collections.emptyMap());
 
         Product mktProd = TestUtil.createProduct("MKT-prod", "RHEL Product");
         mktProd.setMultiplier(1L);
         mktProd.setCreated(new Date());
         mktProd.setUpdated(new Date());
-        mktProd.setAttributes(Collections.<String, String>emptyMap());
+        mktProd.setAttributes(Collections.emptyMap());
 
         Product mktSubProd = TestUtil.createProduct("MKT-sub-prod", "Sub Product");
         mktSubProd.setMultiplier(1L);
         mktSubProd.setCreated(new Date());
         mktSubProd.setUpdated(new Date());
-        mktSubProd.setAttributes(Collections.<String, String>emptyMap());
+        mktSubProd.setAttributes(Collections.emptyMap());
 
         Product subProvidedProduct332211 = TestUtil.createProduct("332211", "Sub Product");
         subProvidedProduct332211.setMultiplier(1L);
         subProvidedProduct332211.setCreated(new Date());
         subProvidedProduct332211.setUpdated(new Date());
-        subProvidedProduct332211.setAttributes(Collections.<String, String>emptyMap());
+        subProvidedProduct332211.setAttributes(Collections.emptyMap());
 
         mktProd.addProvidedProduct(prod12345);
         mktProd.setDerivedProduct(mktSubProd);
@@ -239,7 +234,6 @@ public class ExporterTest {
 
         KeyPairData keyPairData = this.buildConsumerKeyPairData();
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
-        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
@@ -252,11 +246,11 @@ public class ExporterTest {
         when(ctc.listAll()).thenReturn(emptyIteratorMock);
 
         when(consumer.getOwnerId()).thenReturn(owner.getId());
-        when(oc.findOwnerById(eq(owner.getId()))).thenReturn(owner);
+        when(oc.findOwnerById(owner.getId())).thenReturn(owner);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
 
@@ -279,7 +273,7 @@ public class ExporterTest {
     }
 
     @Test
-    public void doNotExportDirtyEntitlements() throws Exception {
+    public void doNotExportDirtyEntitlements() {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
         Consumer consumer = mock(Consumer.class);
         Entitlement ent = mock(Entitlement.class);
@@ -305,14 +299,13 @@ public class ExporterTest {
 
         KeyPairData keyPairData = this.buildConsumerKeyPairData();
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
-        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
         when(ctc.listAll()).thenReturn(cqmock);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
 
@@ -343,7 +336,6 @@ public class ExporterTest {
 
         KeyPairData keyPairData = this.buildConsumerKeyPairData();
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
-        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
@@ -355,7 +347,7 @@ public class ExporterTest {
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null);
@@ -395,7 +387,6 @@ public class ExporterTest {
 
         KeyPairData keyPairData = this.buildConsumerKeyPairData();
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
-        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
@@ -408,7 +399,7 @@ public class ExporterTest {
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null);
@@ -420,7 +411,7 @@ public class ExporterTest {
     }
 
     @Test
-    public void exportConsumer() throws ExportCreationException, IOException {
+    public void exportConsumer() throws ExportCreationException {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
         config.setProperty(ConfigProperties.PREFIX_WEBURL, "localhost:8443/weburl");
         config.setProperty(ConfigProperties.PREFIX_APIURL, "localhost:8443/apiurl");
@@ -448,14 +439,13 @@ public class ExporterTest {
 
         KeyPairData keyPairData = this.buildConsumerKeyPairData();
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
-        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
         when(consumer.getUuid()).thenReturn("8auuid");
         when(consumer.getName()).thenReturn("consumer_name");
         when(consumer.getContentAccessMode()).thenReturn("access_mode");
         when(consumer.getTypeId()).thenReturn(ctype.getId());
 
-        when(ctc.getConsumerType(eq(consumer))).thenReturn(ctype);
-        when(ctc.get(eq(ctype.getId()))).thenReturn(ctype);
+        when(ctc.getConsumerType(consumer)).thenReturn(ctype);
+        when(ctc.get(ctype.getId())).thenReturn(ctype);
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
@@ -467,7 +457,7 @@ public class ExporterTest {
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null);
@@ -476,7 +466,7 @@ public class ExporterTest {
     }
 
     @Test
-    public void exportDistributorVersions() throws ExportCreationException, IOException {
+    public void exportDistributorVersions() throws ExportCreationException {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
         config.setProperty(ConfigProperties.PREFIX_WEBURL, "localhost:8443/weburl");
         config.setProperty(ConfigProperties.PREFIX_APIURL, "localhost:8443/apiurl");
@@ -503,12 +493,11 @@ public class ExporterTest {
 
         KeyPairData keyPairData = this.buildConsumerKeyPairData();
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
-        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
         when(consumer.getUuid()).thenReturn("8auuid");
         when(consumer.getName()).thenReturn("consumer_name");
         when(consumer.getTypeId()).thenReturn(ctype.getId());
-        when(ctc.getConsumerType(eq(consumer))).thenReturn(ctype);
-        when(ctc.get(eq(ctype.getId()))).thenReturn(ctype);
+        when(ctc.getConsumerType(consumer)).thenReturn(ctype);
+        when(ctc.get(ctype.getId())).thenReturn(ctype);
 
         DistributorVersion dv = new DistributorVersion("test-dist-ver");
         Set<DistributorVersionCapability> dvcSet = new HashSet<>();
@@ -532,7 +521,7 @@ public class ExporterTest {
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null);
@@ -542,7 +531,7 @@ public class ExporterTest {
     }
 
     @Test
-    public void testGetEntitlementExport() throws ExportCreationException, IOException {
+    public void testGetEntitlementExport() throws ExportCreationException {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
 
         // Setup consumer
@@ -551,12 +540,11 @@ public class ExporterTest {
         ctype.setId("test-ctype");
         KeyPairData keyPairData = this.buildConsumerKeyPairData();
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
-        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
         when(consumer.getUuid()).thenReturn("consumer");
         when(consumer.getName()).thenReturn("consumer_name");
         when(consumer.getTypeId()).thenReturn(ctype.getId());
-        when(ctc.getConsumerType(eq(consumer))).thenReturn(ctype);
-        when(ctc.get(eq(ctype.getId()))).thenReturn(ctype);
+        when(ctc.getConsumerType(consumer)).thenReturn(ctype);
+        when(ctc.get(ctype.getId())).thenReturn(ctype);
 
         when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
 
@@ -585,7 +573,7 @@ public class ExporterTest {
         when(contentAccessManager.getCertificate(consumer)).thenReturn(cac);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getEntitlementExport(consumer, null);
@@ -602,8 +590,7 @@ public class ExporterTest {
     }
 
     @Test
-    public void testGetEntitlementExportWithUnknownSerialId() throws ExportCreationException,
-        IOException {
+    public void testGetEntitlementExportWithUnknownSerialId() throws ExportCreationException {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
 
         // Setup consumer
@@ -612,12 +599,11 @@ public class ExporterTest {
         ctype.setId("test-ctype");
         KeyPairData keyPairData = this.buildConsumerKeyPairData();
         doReturn(keyPairData).when(consumer).getKeyPairData();
-        doReturn("privateKey".getBytes()).when(pki).getPemEncoded(any(PrivateKey.class));
         doReturn("consumer").when(consumer).getUuid();
         doReturn("consumer_name").when(consumer).getName();
         doReturn(ctype.getId()).when(consumer).getTypeId();
-        doReturn(ctype).when(ctc).getConsumerType(eq(consumer));
-        doReturn(ctype).when(ctc).get(eq(ctype.getId()));
+        doReturn(ctype).when(ctc).getConsumerType(consumer);
+        doReturn(ctype).when(ctc).get(ctype.getId());
 
         doReturn("signature".getBytes()).when(pki).getSHA256WithRSAHash(any(InputStream.class));
 
@@ -646,7 +632,7 @@ public class ExporterTest {
         doReturn(cac).when(contentAccessManager).getCertificate(consumer);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         Set<Long> serials = new HashSet<>();
@@ -665,8 +651,7 @@ public class ExporterTest {
     }
 
     @Test
-    public void testGetEntitlementExportWithValidEntitlementCertSerial() throws ExportCreationException,
-        IOException {
+    public void testGetEntitlementExportWithValidEntitlementCertSerial() throws ExportCreationException {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
 
         // Setup consumer
@@ -675,12 +660,11 @@ public class ExporterTest {
         ctype.setId("test-ctype");
         KeyPairData keyPairData = this.buildConsumerKeyPairData();
         doReturn(keyPairData).when(consumer).getKeyPairData();
-        doReturn("privateKey".getBytes()).when(pki).getPemEncoded(any(PrivateKey.class));
         doReturn("consumer").when(consumer).getUuid();
         doReturn("consumer_name").when(consumer).getName();
         doReturn(ctype.getId()).when(consumer).getTypeId();
-        doReturn(ctype).when(ctc).getConsumerType(eq(consumer));
-        doReturn(ctype).when(ctc).get(eq(ctype.getId()));
+        doReturn(ctype).when(ctc).getConsumerType(consumer);
+        doReturn(ctype).when(ctc).get(ctype.getId());
 
         doReturn("signature".getBytes()).when(pki).getSHA256WithRSAHash(any(InputStream.class));
 
@@ -709,7 +693,7 @@ public class ExporterTest {
         doReturn(cac).when(contentAccessManager).getCertificate(consumer);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         Set<Long> serials = new HashSet<>();
@@ -728,8 +712,7 @@ public class ExporterTest {
     }
 
     @Test
-    public void testGetEntitlementExportWithValidContentAccessCertSerial() throws ExportCreationException,
-        IOException {
+    public void testGetEntitlementExportWithValidContentAccessCertSerial() throws ExportCreationException {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
 
         // Setup consumer
@@ -738,12 +721,11 @@ public class ExporterTest {
         ctype.setId("test-ctype");
         KeyPairData keyPairData = this.buildConsumerKeyPairData();
         doReturn(keyPairData).when(consumer).getKeyPairData();
-        doReturn("privateKey".getBytes()).when(pki).getPemEncoded(any(PrivateKey.class));
         doReturn("consumer").when(consumer).getUuid();
         doReturn("consumer_name").when(consumer).getName();
         doReturn(ctype.getId()).when(consumer).getTypeId();
-        doReturn(ctype).when(ctc).getConsumerType(eq(consumer));
-        doReturn(ctype).when(ctc).get(eq(ctype.getId()));
+        doReturn(ctype).when(ctc).getConsumerType(consumer);
+        doReturn(ctype).when(ctc).get(ctype.getId());
 
         doReturn("signature".getBytes()).when(pki).getSHA256WithRSAHash(any(InputStream.class));
 
@@ -772,7 +754,7 @@ public class ExporterTest {
         doReturn(cac).when(contentAccessManager).getCertificate(consumer);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         Set<Long> serials = new HashSet<>();
@@ -893,7 +875,7 @@ public class ExporterTest {
     }
 
     public static class VerifyMetadata implements Verify {
-        private Date start;
+        private final Date start;
 
         public VerifyMetadata(Date start) {
             this.start = start;
@@ -924,8 +906,8 @@ public class ExporterTest {
     }
 
     public static class VerifyProduct implements Verify {
-        private String filename;
-        private Product originalProduct;
+        private final String filename;
+        private final Product originalProduct;
 
         public VerifyProduct(String filename, Product originalProduct) {
             this.filename = filename;
@@ -957,7 +939,7 @@ public class ExporterTest {
     }
 
     public static class VerifyIdentityCert implements Verify {
-        private String filename;
+        private final String filename;
 
         public VerifyIdentityCert(String filename) {
             this.filename = filename;
@@ -978,30 +960,8 @@ public class ExporterTest {
         }
     }
 
-    public static class VerifyKeyPair implements Verify {
-        private String filename;
-
-        public VerifyKeyPair(String filename) {
-            this.filename = filename;
-        }
-
-        public void verify(ZipInputStream zis, byte[] buf) throws IOException {
-            OutputStream os = new FileOutputStream("/tmp/" + filename);
-            int n;
-            while ((n = zis.read(buf, 0, 1024)) > -1) {
-                os.write(buf, 0, n);
-            }
-            os.flush();
-            os.close();
-
-            BufferedReader br = new BufferedReader(new FileReader("/tmp/" + filename));
-            assertEquals("privateKeypublicKey", br.readLine());
-            br.close();
-        }
-    }
-
     public static class VerifyConsumer implements Verify {
-        private String filename;
+        private final String filename;
 
         public VerifyConsumer(String filename) {
             this.filename = filename;
@@ -1036,7 +996,7 @@ public class ExporterTest {
     }
 
     public static class VerifyDistributorVersion implements Verify {
-        private String filename;
+        private final String filename;
 
         public VerifyDistributorVersion(String filename) {
             this.filename = filename;

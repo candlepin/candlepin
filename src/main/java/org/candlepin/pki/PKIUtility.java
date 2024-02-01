@@ -24,7 +24,6 @@ import java.security.GeneralSecurityException;
 import java.security.KeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
@@ -40,17 +39,6 @@ public interface PKIUtility {
     X509Certificate createX509Certificate(DistinguishedName dn, Set<X509ExtensionWrapper> extensions,
         Set<X509ByteExtensionWrapper> byteExtensions, Date startDate, Date endDate, KeyPair clientKeyPair,
         BigInteger serialNumber, String alternateName) throws GeneralSecurityException, IOException;
-
-    /**
-     * Take an X509Certificate object and return a byte[] of the certificate,
-     * PEM encoded
-     * @param cert
-     * @return PEM-encoded bytes of the certificate
-     * @throws IOException if there is i/o problem
-     */
-    byte[] getPemEncoded(X509Certificate cert) throws IOException;
-
-    byte[] getPemEncoded(PrivateKey key) throws IOException;
 
     byte[] getSHA256WithRSAHash(InputStream input);
 

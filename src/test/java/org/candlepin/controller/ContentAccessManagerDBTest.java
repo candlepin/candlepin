@@ -32,6 +32,7 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
@@ -90,7 +91,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
             this.caCertCurator, this.certSerialCurator, this.ownerCurator, this.contentCurator,
             this.consumerCurator, this.consumerTypeCurator, this.environmentCurator, this.caCertCurator,
             this.mockEventSink, this.anonymousCloudConsumerCurator, this.anonymousContentAccessCertCurator,
-            this.mockProdAdapter, this.cache);
+            this.mockProdAdapter, new BouncyCastlePemEncoder(), this.cache);
     }
 
     private Owner createSCAOwner() {

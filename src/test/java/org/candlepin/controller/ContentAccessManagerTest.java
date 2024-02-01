@@ -71,9 +71,11 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
@@ -153,6 +155,7 @@ public class ContentAccessManagerTest {
     private AnonymousContentAccessCertificateCurator mockAnonContentAccessCertCurator;
     @Mock
     private ProductServiceAdapter mockProdAdapter;
+    private PemEncoder pemEncoder;
 
     private ObjectMapper objectMapper;
     private PKIUtility pkiUtility;
@@ -185,6 +188,7 @@ public class ContentAccessManagerTest {
         PrivateKeyReader keyReader = new BouncyCastlePrivateKeyReader();
         CertificateReader certReader = new CertificateReader(this.config, keyReader);
         SubjectKeyIdentifierWriter keyIdWriter = new BouncyCastleSubjectKeyIdentifierWriter();
+        this.pemEncoder = new BouncyCastlePemEncoder();
         this.pkiUtility = spy(new BouncyCastlePKIUtility(new BouncyCastleSecurityProvider(), certReader,
             keyIdWriter, this.config, this.mockKeyPairDataCurator));
 
@@ -241,7 +245,7 @@ public class ContentAccessManagerTest {
             this.mockCertSerialCurator, this.mockOwnerCurator, this.mockContentCurator,
             this.mockConsumerCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
             this.mockContentAccessCertCurator, this.mockEventSink, this.mockAnonCloudConsumerCurator,
-            this.mockAnonContentAccessCertCurator, this.mockProdAdapter, this.cache);
+            this.mockAnonContentAccessCertCurator, this.mockProdAdapter, this.pemEncoder, this.cache);
     }
 
     private ContentAccessManager createManager() {
