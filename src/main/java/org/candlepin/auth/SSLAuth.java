@@ -18,7 +18,7 @@ import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.util.OIDUtil;
+import org.candlepin.pki.OID;
 
 import org.jboss.resteasy.spi.HttpRequest;
 import org.slf4j.Logger;
@@ -87,12 +87,9 @@ public class SSLAuth extends ConsumerAuth {
 
     // Disallow the use of an Entitlement or SCA certificate in place of an Identity certificate
     private void checkForInvalidCertificateType(X509Certificate cert) {
-        byte[] entitlementVersionExtension = cert.getExtensionValue(
-            OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_VERSION));
-        byte[] entitlementDataExtension = cert.getExtensionValue(
-            OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_DATA));
-        byte[] entitlementTypeExtension = cert.getExtensionValue(
-            OIDUtil.getOid(OIDUtil.Namespace.ENTITLEMENT_TYPE));
+        byte[] entitlementVersionExtension = cert.getExtensionValue(OID.EntitlementVersion.namespace());
+        byte[] entitlementDataExtension = cert.getExtensionValue(OID.EntitlementData.namespace());
+        byte[] entitlementTypeExtension = cert.getExtensionValue(OID.EntitlementType.namespace());
 
         if (entitlementVersionExtension != null || entitlementDataExtension != null ||
             entitlementTypeExtension != null) {

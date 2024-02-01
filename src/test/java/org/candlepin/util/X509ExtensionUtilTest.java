@@ -25,7 +25,7 @@ import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
-import org.candlepin.pki.X509ExtensionWrapper;
+import org.candlepin.pki.X509Extension;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,7 +54,7 @@ public class X509ExtensionUtilTest {
             .setContentUrl("/content_path");
         List<ProductContent> contents = List.of(new ProductContent(new Product(), content, true));
         PromotedContent promotedContent = new PromotedContent(contentPathBuilder());
-        Set<X509ExtensionWrapper> extensions = util
+        Set<X509Extension> extensions = util
             .contentExtensions(contents, promotedContent, null, new Product());
 
         assertFalse(extensions.isEmpty());

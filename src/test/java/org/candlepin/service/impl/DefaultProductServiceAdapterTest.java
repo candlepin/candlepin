@@ -116,7 +116,7 @@ public class DefaultProductServiceAdapterTest {
     @Test
     public void productCertificateNew() throws Exception {
         Owner owner = TestUtil.createOwner("test_owner");
-        Product product = TestUtil.createProduct("test_product");
+        Product product = TestUtil.createProduct("123");
         ProductCertificate cert = mock(ProductCertificate.class);
 
         when(pc.resolveProductId(eq(owner.getKey()), eq(product.getId()))).thenReturn(product);

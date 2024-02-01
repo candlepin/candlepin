@@ -21,8 +21,7 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.X509ByteExtensionWrapper;
-import org.candlepin.pki.X509ExtensionWrapper;
+import org.candlepin.pki.X509Extension;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.X509ExtensionUtil;
 
@@ -138,7 +137,7 @@ public class UeberCertificateGenerator {
     private X509Certificate createX509Certificate(UeberCertData data, BigInteger serialNumber,
         KeyPair keyPair) throws GeneralSecurityException, IOException {
         ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(null, List.of());
-        Set<X509ExtensionWrapper> extensions = new LinkedHashSet<>(
+        Set<X509Extension> extensions = new LinkedHashSet<>(
             extensionUtil.productExtensions(data.getProduct()));
         extensions.addAll(extensionUtil.contentExtensions(data.getProduct().getProductContent(),
             new PromotedContent(contentPathBuilder), new Consumer(), data.getProduct()));
@@ -148,14 +147,13 @@ public class UeberCertificateGenerator {
 
         if (log.isDebugEnabled()) {
             log.debug("Ueber certificate extensions for Owner: {}", data.getOwner().getKey());
-            for (X509ExtensionWrapper eWrapper : extensions) {
-                log.debug("Extension {} with value {}", eWrapper.getOid(), eWrapper.getValue());
+            for (X509Extension eWrapper : extensions) {
+                log.debug("Extension {} with value {}", eWrapper.oid(), eWrapper.value());
             }
         }
 
         DistinguishedName dn = new DistinguishedName(null, data.getOwner());
-        Set<X509ByteExtensionWrapper> byteExtensions = new LinkedHashSet<>();
-        return this.pki.createX509Certificate(dn, extensions, byteExtensions,  data.getStartDate(),
+        return this.pki.createX509Certificate(dn, extensions,  data.getStartDate(),
             data.getEndDate(), keyPair, serialNumber, null);
     }
 

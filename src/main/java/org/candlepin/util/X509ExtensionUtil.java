@@ -21,15 +21,16 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
-import org.candlepin.pki.X509ExtensionWrapper;
+import org.candlepin.pki.OID;
+import org.candlepin.pki.RepoType;
+import org.candlepin.pki.X509Extension;
+import org.candlepin.pki.certs.X509StringExtension;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -40,7 +41,7 @@ import javax.inject.Inject;
 /**
  * X509ExtensionUtil for V1 Certificates
  */
-public class X509ExtensionUtil  extends X509Util{
+public class X509ExtensionUtil extends X509Util {
 
     private static final Logger log = LoggerFactory.getLogger(X509ExtensionUtil.class);
     private final Configuration config;
@@ -55,20 +56,16 @@ public class X509ExtensionUtil  extends X509Util{
         this.config = config;
     }
 
-    public Set<X509ExtensionWrapper> consumerExtensions(Consumer consumer) {
-        Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<>();
-
-        // 1.3.6.1.4.1.2312.9.5.1
-        String consumerOid = OIDUtil.getOid(OIDUtil.Namespace.SYSTEM);
-        toReturn.add(new X509ExtensionWrapper(consumerOid + "." + OIDUtil.SYSTEM_OIDS.get(OIDUtil.UUID_KEY),
-            false, consumer.getUuid()));
-
-        return toReturn;
+    public Set<X509Extension> consumerExtensions(Consumer consumer) {
+        return Set.of(
+            // 1.3.6.1.4.1.2312.9.5.1
+            new X509StringExtension(OID.System.UUID.value(), consumer.getUuid())
+        );
     }
 
-    public Set<X509ExtensionWrapper> subscriptionExtensions(Pool pool) {
+    public Set<X509Extension> subscriptionExtensions(Pool pool) {
         SimpleDateFormat iso8601DateFormat = Util.getUTCDateFormat();
-        Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<>();
+        Set<X509Extension> toReturn = new LinkedHashSet<>();
         // Subscription/order info
         // need the sub product name, not id here
         // NOTE: order ~= subscription
@@ -79,120 +76,91 @@ public class X509ExtensionUtil  extends X509Util{
             throw new IllegalArgumentException("pool lacks a valid product");
         }
 
-        String subscriptionOid = OIDUtil.getOid(OIDUtil.Namespace.ORDER);
-
         if (poolProduct.getId() != null) {
-            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), false, poolProduct.getName()));
+            toReturn.add(new X509StringExtension(OID.Order.NAME.value(), poolProduct.getName()));
         }
 
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), false, pool.getOrderNumber()));
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SKU_KEY), false, poolProduct.getId().toString()));
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_KEY), false, pool.getQuantity().toString()));
+        toReturn.add(new X509StringExtension(OID.Order.NUMBER.value(), pool.getOrderNumber()));
+        toReturn.add(new X509StringExtension(OID.Order.SKU.value(), poolProduct.getId()));
+        toReturn.add(new X509StringExtension(OID.Order.QUANTITY.value(), pool.getQuantity().toString()));
 
         String socketLimit = pool.getProduct().getAttributeValue(Product.Attributes.SOCKETS);
         if (socketLimit != null) {
-            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SOCKETLIMIT_KEY), false, socketLimit));
+            toReturn.add(new X509StringExtension(OID.Order.SOCKET_LIMIT.value(), socketLimit));
         }
 
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + OIDUtil.ORDER_OIDS
-            .get(OIDUtil.ORDER_STARTDATE_KEY), false, iso8601DateFormat.format(pool.getStartDate())));
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + OIDUtil.ORDER_OIDS
-            .get(OIDUtil.ORDER_ENDDATE_KEY), false, iso8601DateFormat.format(pool.getEndDate())));
+        toReturn.add(new X509StringExtension(OID.Order.START_DATE.value(),
+            iso8601DateFormat.format(pool.getStartDate())));
+        toReturn.add(new X509StringExtension(OID.Order.END_DATE.value(),
+            iso8601DateFormat.format(pool.getEndDate())));
 
         String warningPeriod = poolProduct.getAttributeValue(Product.Attributes.WARNING_PERIOD);
         warningPeriod = (warningPeriod == null ? "0" : warningPeriod);
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_WARNING_PERIOD), false, warningPeriod));
+        toReturn.add(new X509StringExtension(OID.Order.WARNING_PERIOD.value(), warningPeriod));
 
         if (pool.getContractNumber() != null) {
-            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_CONTRACT_NUMBER_KEY), false, pool.getContractNumber()));
+            toReturn.add(new X509StringExtension(OID.Order.CONTRACT_NUMBER.value(),
+                pool.getContractNumber()));
         }
 
         // Add the account number
         if (pool.getAccountNumber() != null) {
-            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ACCOUNT_NUMBER_KEY), false, pool.getAccountNumber()));
+            toReturn.add(new X509StringExtension(OID.Order.ACCOUNT_NUMBER.value(), pool.getAccountNumber()));
         }
 
         // Add Smart Management, default to "not managed"
         String mgmt = poolProduct.getAttributeValue(Product.Attributes.MANAGEMENT_ENABLED);
         mgmt = (mgmt == null ? "0" : mgmt);
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_PROVIDES_MANAGEMENT_KEY), false, mgmt));
+        toReturn.add(new X509StringExtension(OID.Order.PROVIDES_MANAGEMENT.value(), mgmt));
 
         String supportLevel = poolProduct.getAttributeValue(Product.Attributes.SUPPORT_LEVEL);
         String supportType = poolProduct.getAttributeValue(Product.Attributes.SUPPORT_TYPE);
         if (supportLevel != null) {
-            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_LEVEL), false, supportLevel));
+            toReturn.add(new X509StringExtension(OID.Order.SUPPORT_LEVEL.value(), supportLevel));
         }
 
         if (supportType != null) {
-            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_TYPE), false, supportType));
+            toReturn.add(new X509StringExtension(OID.Order.SUPPORT_TYPE.value(), supportType));
         }
 
         String stackingId = pool.getProduct().getAttributeValue(Product.Attributes.STACKING_ID);
         if (stackingId != null) {
-            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STACKING_ID), false, stackingId));
+            toReturn.add(new X509StringExtension(OID.Order.STACKING_ID.value(), stackingId));
         }
 
         //code "true" as "1" so it matches other bools in the cert
         String virtOnly = pool.getAttributeValue(Product.Attributes.VIRT_ONLY);
         if (virtOnly != null && virtOnly.equals("true")) {
-            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_VIRT_ONLY_KEY), false, "1"));
+            toReturn.add(new X509StringExtension(OID.Order.VIRT_ONLY.value(), "1"));
         }
 
         return toReturn;
     }
 
-    public List<X509ExtensionWrapper> entitlementExtensions(Integer quantity) {
-        String entitlementOid = OIDUtil.getOid(OIDUtil.Namespace.ORDER);
-
-        return Collections.singletonList(new X509ExtensionWrapper(entitlementOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_USED), false, quantity.toString()));
+    public List<X509Extension> entitlementExtensions(Integer quantity) {
+        return List.of(
+            new X509StringExtension(OID.Order.QUANTITY_USED.value(), quantity.toString())
+        );
     }
 
-    public Set<X509ExtensionWrapper> productExtensions(Product product) {
-        Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<>();
-
-        String productCertOid = OIDUtil.getOid(OIDUtil.Namespace.PRODUCT_CERTIFICATE);
-
-        // XXX need to deal with non hash style IDs
-        String productOid = productCertOid + "." + product.getId();
-
-        toReturn.add(new X509ExtensionWrapper(productOid + "." +
-            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_NAME_KEY), false, product.getName()));
-
+    public Set<X509Extension> productExtensions(Product product) {
         String arch = product.getAttributeValue(Product.Attributes.ARCHITECTURE);
-        toReturn.add(new X509ExtensionWrapper(productOid + "." +
-            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_ARCH_KEY), false, arch != null ? arch : ""));
-
         String version = product.getAttributeValue(Product.Attributes.VERSION);
-        toReturn.add(new X509ExtensionWrapper(productOid + "." +
-            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_VERSION_KEY), false, version != null ? version : ""));
-
         String brandType = product.getAttributeValue(Product.Attributes.BRANDING_TYPE);
-        toReturn.add(new X509ExtensionWrapper(productOid + "." +
-            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_BRAND_TYPE_KEY), false,
-            brandType != null ? brandType : ""));
 
-        return toReturn;
+        return Set.of(
+            new X509StringExtension(OID.ProductCertificate.NAME.value(product.getId()), product.getName()),
+            new X509StringExtension(OID.ProductCertificate.ARCH.value(product.getId()), arch),
+            new X509StringExtension(OID.ProductCertificate.VERSION.value(product.getId()), version),
+            new X509StringExtension(OID.ProductCertificate.BRAND_TYPE.value(product.getId()), brandType)
+        );
     }
 
-    public Set<X509ExtensionWrapper> contentExtensions(Collection<ProductContent> productContentList,
+    public Set<X509Extension> contentExtensions(Collection<ProductContent> productContentList,
         PromotedContent promotedContent, Consumer consumer, Product skuProduct) {
 
         Set<ProductContent> productContent = new HashSet<>(productContentList);
-        Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<>();
+        Set<X509Extension> toReturn = new LinkedHashSet<>();
 
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
 
@@ -207,39 +175,36 @@ public class X509ExtensionUtil  extends X509Util{
 
             // If we get a content type we don't have content type OID for
             // skip it. see rhbz#997970
-            if (!OIDUtil.CF_REPO_TYPE.containsKey(pc.getContent().getType())) {
+            RepoType repoType = RepoType.from(pc.getContent().getType());
+            if (repoType == null) {
                 log.warn("No content type OID found for {} with content type: {}",
                     pc.getContent(), pc.getContent().getType());
 
                 continue;
             }
-            String contentOid = createOid(pc);
-            toReturn.add(new X509ExtensionWrapper(contentOid, false, pc
-                .getContent().getType()));
-            toReturn.add(new X509ExtensionWrapper(contentOid + "." +
-                OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_NAME_KEY), false, pc
-                .getContent().getName()));
-            toReturn.add(new X509ExtensionWrapper(contentOid + "." +
-                OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_LABEL_KEY), false,
+
+            String contentId = pc.getContentId();
+            toReturn.add(new X509StringExtension(OID.ChannelFamily.namespace(repoType, contentId),
+                repoType.type()));
+            toReturn.add(new X509StringExtension(OID.ChannelFamily.NAME.value(repoType, contentId),
+                pc.getContent().getName()));
+            toReturn.add(new X509StringExtension(OID.ChannelFamily.LABEL.value(repoType, contentId),
                 pc.getContent().getLabel()));
-            toReturn.add(new X509ExtensionWrapper(contentOid + "." +
-                OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_VENDOR_ID_KEY),
-                false, pc.getContent().getVendor()));
-            toReturn.add(new X509ExtensionWrapper(contentOid + "." +
-                OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_DOWNLOAD_URL_KEY),
-                false, contentPath));
-            toReturn.add(new X509ExtensionWrapper(contentOid + "." +
-                OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_GPG_URL_KEY), false,
+            toReturn.add(new X509StringExtension(OID.ChannelFamily.VENDOR_ID.value(repoType, contentId),
+                pc.getContent().getVendor()));
+            toReturn.add(new X509StringExtension(OID.ChannelFamily.DOWNLOAD_URL.value(repoType, contentId),
+                contentPath));
+            toReturn.add(new X509StringExtension(OID.ChannelFamily.GPG_URL.value(repoType, contentId),
                 pc.getContent().getGpgUrl()));
 
             Boolean enabled = pc.isEnabled();
             log.debug("default enabled flag = {}", enabled);
 
             // sku level content enable override. if on both lists, active wins.
-            if (skuDisabled.contains(pc.getContent().getId())) {
+            if (skuDisabled.contains(contentId)) {
                 enabled = false;
             }
-            if (skuEnabled.contains(pc.getContent().getId())) {
+            if (skuEnabled.contains(contentId)) {
                 enabled = true;
             }
 
@@ -254,36 +219,25 @@ public class X509ExtensionUtil  extends X509Util{
                 }
             }
 
-            toReturn.add(new X509ExtensionWrapper(contentOid + "." +
-                OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED), false,
+            toReturn.add(new X509StringExtension(OID.ChannelFamily.ENABLED.value(repoType, contentId),
                 (enabled) ? "1" : "0"));
 
             // Include metadata expiry if specified on the content:
-            if (pc.getContent().getMetadataExpiration() != null) {
-                toReturn.add(new X509ExtensionWrapper(contentOid + "." +
-                    OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_METADATA_EXPIRE),
-                    false, pc.getContent().getMetadataExpiration().toString()));
+            Long metadataExpiration = pc.getContent().getMetadataExpiration();
+            if (metadataExpiration != null) {
+                toReturn.add(new X509StringExtension(OID.ChannelFamily.METADATA_EXPIRE
+                    .value(repoType, contentId), metadataExpiration.toString()));
             }
 
             // Include required tags if specified on the content set:
             String requiredTags = pc.getContent().getRequiredTags();
-            if ((requiredTags != null) && !requiredTags.equals("")) {
-                toReturn.add(new X509ExtensionWrapper(contentOid + "." +
-                    OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_REQUIRED_TAGS),
-                    false, requiredTags));
+            if ((requiredTags != null) && !requiredTags.isBlank()) {
+                toReturn.add(new X509StringExtension(OID.ChannelFamily.REQUIRED_TAGS
+                    .value(repoType, contentId), requiredTags));
             }
 
         }
 
         return toReturn;
-    }
-
-    private String createOid(ProductContent pc) {
-        String contentId = pc.getContent().getId();
-        if (!StringUtils.isNumeric(contentId)) {
-            throw new IllegalStateException(String.format("Content id must be numeric: [%s].", contentId));
-        }
-        return OIDUtil.getOid(OIDUtil.Namespace.CHANNEL_FAMILY) + "." + contentId + "." +
-            OIDUtil.CF_REPO_TYPE.get(pc.getContent().getType());
     }
 }

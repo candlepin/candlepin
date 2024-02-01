@@ -20,8 +20,7 @@ import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.X509ByteExtensionWrapper;
-import org.candlepin.pki.X509ExtensionWrapper;
+import org.candlepin.pki.X509Extension;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +66,7 @@ public abstract class ProviderBasedPKIUtility implements PKIUtility {
 
     @Override
     public abstract X509Certificate createX509Certificate(DistinguishedName dn,
-        Set<X509ExtensionWrapper> extensions, Set<X509ByteExtensionWrapper> byteExtensions,
+        Set<X509Extension> extensions,
         Date startDate, Date endDate, KeyPair clientKeyPair, BigInteger serialNumber, String alternateName)
         throws GeneralSecurityException, IOException;
 

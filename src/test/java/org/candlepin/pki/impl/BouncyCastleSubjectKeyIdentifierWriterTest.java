@@ -38,7 +38,7 @@ public class BouncyCastleSubjectKeyIdentifierWriterTest {
     @Test
     public void getSubjectKeyIdentifier() throws Exception {
         BouncyCastleSubjectKeyIdentifierWriter writer = new BouncyCastleSubjectKeyIdentifierWriter();
-        byte[] actual = writer.getSubjectKeyIdentifier(keyPair, null);
+        byte[] actual = writer.getSubjectKeyIdentifier(keyPair);
         byte[] expected = new JcaX509ExtensionUtils()
             .createSubjectKeyIdentifier(keyPair.getPublic())
             .getEncoded();

@@ -21,18 +21,14 @@ import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.X509ByteExtensionWrapper;
-import org.candlepin.pki.X509ExtensionWrapper;
+import org.candlepin.pki.X509Extension;
 
 import com.google.common.base.Charsets;
 import com.google.inject.Inject;
 
 import org.apache.commons.codec.binary.Base64OutputStream;
 import org.bouncycastle.asn1.ASN1Encodable;
-import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
-import org.bouncycastle.asn1.DERUTF8String;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -128,8 +124,7 @@ public class BouncyCastlePKIUtility extends ProviderBasedPKIUtility {
 
     @Override
     public X509Certificate createX509Certificate(DistinguishedName dn,
-        Set<X509ExtensionWrapper> extensions, Set<X509ByteExtensionWrapper> byteExtensions,
-        Date startDate, Date endDate,
+        Set<X509Extension> extensions, Date startDate, Date endDate,
         KeyPair clientKeyPair, BigInteger serialNumber, String alternateName)
         throws GeneralSecurityException, IOException {
 
@@ -161,9 +156,8 @@ public class BouncyCastlePKIUtility extends ProviderBasedPKIUtility {
         AuthorityKeyIdentifier aki = extensionUtil.createAuthorityKeyIdentifier(caCert);
         certGen.addExtension(Extension.authorityKeyIdentifier, false, aki.getEncoded());
 
-        certGen.addExtension(Extension.subjectKeyIdentifier,
-            false,
-            subjectKeyWriter.getSubjectKeyIdentifier(clientKeyPair, extensions)
+        certGen.addExtension(Extension.subjectKeyIdentifier, false,
+            subjectKeyWriter.getSubjectKeyIdentifier(clientKeyPair)
         );
         certGen.addExtension(Extension.extendedKeyUsage, false,
             new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth));
@@ -191,23 +185,8 @@ public class BouncyCastlePKIUtility extends ProviderBasedPKIUtility {
         }
 
         if (extensions != null) {
-            for (X509ExtensionWrapper wrapper : extensions) {
-                // Bouncycastle hates null values. So, set them to blank
-                // if they are null
-                String value = wrapper.getValue() == null ? "" :  wrapper.getValue();
-                certGen.addExtension(new ASN1ObjectIdentifier(wrapper.getOid()), wrapper.isCritical(),
-                    new DERUTF8String(value));
-            }
-        }
-
-        if (byteExtensions != null) {
-            for (X509ByteExtensionWrapper wrapper : byteExtensions) {
-                // Bouncycastle hates null values. So, set them to blank
-                // if they are null
-                byte[] value = wrapper.getValue() == null ? new byte[0] :
-                    wrapper.getValue();
-                certGen.addExtension(new ASN1ObjectIdentifier(wrapper.getOid()), wrapper.isCritical(),
-                    new DEROctetString(value));
+            for (X509Extension extension : extensions) {
+                certGen.addExtension(extension.oid(), extension.critical(), extension.value());
             }
         }
 

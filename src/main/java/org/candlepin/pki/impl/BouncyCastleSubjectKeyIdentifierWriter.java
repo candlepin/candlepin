@@ -15,14 +15,12 @@
 package org.candlepin.pki.impl;
 
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.X509ExtensionWrapper;
 
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.util.Set;
 
 /**
  * Default implementation of SubjectKeyIdentifierWriter.  This implementation is exactly what you might
@@ -32,7 +30,7 @@ import java.util.Set;
 public class BouncyCastleSubjectKeyIdentifierWriter implements SubjectKeyIdentifierWriter {
 
     @Override
-    public byte[] getSubjectKeyIdentifier(KeyPair clientKeyPair, Set<X509ExtensionWrapper> extensions)
+    public byte[] getSubjectKeyIdentifier(KeyPair clientKeyPair)
         throws IOException, NoSuchAlgorithmException {
         return new JcaX509ExtensionUtils().createSubjectKeyIdentifier(clientKeyPair.getPublic()).getEncoded();
     }

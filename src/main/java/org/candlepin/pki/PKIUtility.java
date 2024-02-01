@@ -37,8 +37,8 @@ import java.util.Set;
  */
 public interface PKIUtility {
 
-    X509Certificate createX509Certificate(DistinguishedName dn, Set<X509ExtensionWrapper> extensions,
-        Set<X509ByteExtensionWrapper> byteExtensions, Date startDate, Date endDate, KeyPair clientKeyPair,
+    X509Certificate createX509Certificate(DistinguishedName dn, Set<X509Extension> extensions,
+        Date startDate, Date endDate, KeyPair clientKeyPair,
         BigInteger serialNumber, String alternateName) throws GeneralSecurityException, IOException;
 
     /**
