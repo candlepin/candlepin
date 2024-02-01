@@ -14,13 +14,10 @@
  */
 package org.candlepin.pki;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.Set;
@@ -36,8 +33,4 @@ public interface PKIUtility {
         Date startDate, Date endDate, KeyPair clientKeyPair,
         BigInteger serialNumber, String alternateName) throws GeneralSecurityException, IOException;
 
-    byte[] getSHA256WithRSAHash(InputStream input);
-
-    boolean verifySHA256WithRSAHashAgainstCACerts(File input, byte[] signedHash)
-        throws CertificateException, IOException;
 }

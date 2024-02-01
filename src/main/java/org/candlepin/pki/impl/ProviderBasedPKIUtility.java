@@ -24,16 +24,10 @@ import org.candlepin.pki.X509Extension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.Signature;
-import java.security.SignatureException;
-import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.Objects;
@@ -66,84 +60,5 @@ public abstract class ProviderBasedPKIUtility implements PKIUtility {
         Set<X509Extension> extensions,
         Date startDate, Date endDate, KeyPair clientKeyPair, BigInteger serialNumber, String alternateName)
         throws GeneralSecurityException, IOException;
-
-    /**
-     * Compute a SHA256withRSA digital signature on an inputStream.  The digest is signed
-     * with the CA key retrieved using CertificateReader.
-     * @param input an input stream to sign
-     * @return a byte array of the SHA256withRSA digital signature
-     */
-    @Override
-    public byte[] getSHA256WithRSAHash(InputStream input) {
-        try {
-            Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initSign(reader.getCaKey());
-
-            updateSignature(input, signature);
-            return signature.sign();
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public boolean verifySHA256WithRSAHashAgainstCACerts(File input, byte[] signedHash) throws IOException {
-
-        log.debug("Verify against: {}", reader.getCACert().getSerialNumber());
-
-        try (InputStream inputStream = new FileInputStream(input)) {
-            if (verifySHA256WithRSAHash(inputStream, signedHash, reader.getCACert())) {
-                return true;
-            }
-        }
-        for (X509Certificate cert : reader.getUpstreamCACerts()) {
-            log.debug("Verify against: {}", cert.getSerialNumber());
-
-            try (InputStream inputStream = new FileInputStream(input)) {
-                if (verifySHA256WithRSAHash(inputStream, signedHash, cert)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Verify a digital signature.  The method calculates a digital signature using the SHA256withRSA
-     * algorithm (and the public key from the certificate parameter) and then compares it with the signature
-     * passed in through the signedHas parameter.
-     * @param input input to verify
-     * @param signedHash an existing signature to verify
-     * @param certificate a certificate with the public key to use for verification
-     * @return if the calculated signature matches the provided signature
-     */
-    public boolean verifySHA256WithRSAHash(InputStream input, byte[] signedHash, Certificate certificate) {
-        try {
-            Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initVerify(certificate);
-
-            updateSignature(input, signature);
-            return signature.verify(signedHash);
-        }
-        catch (SignatureException se) {
-            return false;
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void updateSignature(InputStream input, Signature signature)
-        throws IOException, SignatureException {
-
-        byte[] dataBytes = new byte[4096];
-        int nread = 0;
-
-        while ((nread = input.read(dataBytes)) != -1) {
-            signature.update(dataBytes, 0, nread);
-        }
-    }
 
 }

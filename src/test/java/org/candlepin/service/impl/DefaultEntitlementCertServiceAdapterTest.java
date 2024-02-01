@@ -70,6 +70,7 @@ import org.candlepin.pki.X509Extension;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.Signer;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.CertificateSizeException;
@@ -188,6 +189,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private KeyPairGenerator keyPairGenerator;
     @Mock
     private PemEncoder pemEncoder;
+    @Mock
+    private Signer signer;
 
     private Consumer consumer;
     private Product product;
@@ -244,7 +247,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
-            this.keyPairGenerator, this.pemEncoder);
+            this.keyPairGenerator, this.pemEncoder, this.signer);
 
         product = TestUtil.createProduct("12345", "a product");
         product.setAttribute(Product.Attributes.VERSION, "version");
@@ -416,7 +419,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
-            keyPairGenerator, pemEncoder);
+            keyPairGenerator, pemEncoder, this.signer);
 
         PromotedContent promotedContent = new PromotedContent(prefix(owner));
         X509Certificate result = certServiceAdapter.createX509Certificate(consumer, owner, pool,
@@ -447,7 +450,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
-            keyPairGenerator, pemEncoder);
+            keyPairGenerator, pemEncoder, this.signer);
 
         // pool start date is more than an hour ago, use it
         Calendar cal = Calendar.getInstance();
@@ -836,7 +839,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             mockConfig, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
-            keyPairGenerator, pemEncoder);
+            keyPairGenerator, pemEncoder, this.signer);
     }
 
     @Test
