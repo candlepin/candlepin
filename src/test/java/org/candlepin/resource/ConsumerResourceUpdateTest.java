@@ -92,6 +92,7 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -106,7 +107,6 @@ import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
-import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -153,7 +153,7 @@ import java.util.Set;
 public class ConsumerResourceUpdateTest {
 
     @Mock
-    private IdentityCertServiceAdapter idCertService;
+    private IdentityCertificateGenerator identityCertificateGenerator;
     @Mock
     private ConsumerCurator consumerCurator;
     @Mock
@@ -259,7 +259,7 @@ public class ConsumerResourceUpdateTest {
             this.subscriptionServiceAdapter,
             this.productService,
             this.entitlementCurator,
-            this.idCertService,
+            this.identityCertificateGenerator,
             this.entitlementCertServiceAdapter,
             this.i18n,
             this.sink,
@@ -304,7 +304,7 @@ public class ConsumerResourceUpdateTest {
         when(this.complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),
             any(Boolean.class))).thenReturn(new ComplianceStatus(new Date()));
 
-        when(this.idCertService.regenerateIdentityCert(any(Consumer.class)))
+        when(this.identityCertificateGenerator.regenerate(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
         when(this.consumerEventBuilder.setEventData(any(Consumer.class)))

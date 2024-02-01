@@ -53,6 +53,7 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.consumer.ConsumerRules;
@@ -64,7 +65,6 @@ import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
-import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -138,7 +138,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     @Mock
     private DistributorVersionCurator distributorVersionCurator;
     @Mock
-    private IdentityCertServiceAdapter identityCertServiceAdapter;
+    private IdentityCertificateGenerator idCertGenerator;
     @Mock
     private ActivationKeyCurator activationKeyCurator;
     @Mock
@@ -199,7 +199,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             this.subscriptionServiceAdapter,
             this.mockProductServiceAdapter,
             this.entitlementCurator,
-            this.identityCertServiceAdapter,
+            this.idCertGenerator,
             this.entitlementCertServiceAdapter,
             this.i18n,
             this.sink,

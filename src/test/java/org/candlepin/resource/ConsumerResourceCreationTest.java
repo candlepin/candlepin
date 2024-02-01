@@ -82,6 +82,7 @@ import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -94,7 +95,6 @@ import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
-import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -128,7 +128,6 @@ import java.util.Locale;
 import java.util.Set;
 
 
-
 /*
  * FIXME: this seems to only test creating
  * system consumers.
@@ -144,7 +143,7 @@ public class ConsumerResourceCreationTest {
     @Mock
     protected UserServiceAdapter userService;
     @Mock
-    protected IdentityCertServiceAdapter idCertService;
+    protected IdentityCertificateGenerator idCertGenerator;
     @Mock
     protected ProductServiceAdapter productService;
     @Mock
@@ -245,7 +244,7 @@ public class ConsumerResourceCreationTest {
             this.subscriptionService,
             this.productService,
             this.entitlementCurator,
-            this.idCertService,
+            this.idCertGenerator,
             this.entitlementCertServiceAdapter,
             this.i18n,
             this.sink,
@@ -317,7 +316,7 @@ public class ConsumerResourceCreationTest {
         cert.setCert("testCert");
         cert.setId("testId");
         cert.setSerial(new CertificateSerial(new Date()));
-        when(idCertService.generateIdentityCert(any(Consumer.class))).thenReturn(cert);
+        when(idCertGenerator.generate(any(Consumer.class))).thenReturn(cert);
         when(ownerCurator.getByKey(owner.getKey())).thenReturn(owner);
         when(complianceRules.getStatus(
             any(Consumer.class), any(Date.class), any(Boolean.class), any(Boolean.class)))

@@ -697,4 +697,31 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertEquals(2, consumer.getEnvironmentIds().size());
     }
 
+    @Test
+    public void deletingConsumerShouldDeleteIdCertAsWell() {
+        Owner owner = createOwner();
+        Consumer consumer = createConsumerWithIdCert(owner);
+        this.consumerCurator.saveOrUpdate(consumer);
+
+        assertNotNull(this.identityCertificateCurator.get(consumer.getIdCert().getId()));
+
+        this.consumerCurator.delete(consumer);
+
+        assertNull(this.identityCertificateCurator.get(consumer.getIdCert().getId()));
+    }
+
+    private Consumer createConsumerWithIdCert(Owner owner) {
+        IdentityCertificate idCert = createIdCert();
+        Consumer consumer = createConsumer(owner)
+            .setIdCert(idCert);
+        return this.consumerCurator.saveOrUpdate(consumer);
+    }
+
+    private IdentityCertificate createIdCert() {
+        IdentityCertificate idCert = TestUtil.createIdCert(TestUtil.createDateOffset(2, 0, 0));
+        idCert.setId(null);
+        this.certSerialCurator.create(idCert.getSerial());
+        return this.identityCertificateCurator.create(idCert);
+    }
+
 }

@@ -213,7 +213,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
      * field is a DTO for transmission to the client carrying PEM in plain text, and is
      * not stored in the database.
      */
-    @OneToOne
+    @OneToOne(cascade = CascadeType.REMOVE)
     @JoinColumn(name = "consumer_idcert_id")
     private IdentityCertificate idCert;
 

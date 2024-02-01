@@ -60,7 +60,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
@@ -104,7 +104,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     private PoolService poolService;
     private ConsumerResource consumerResource;
-    private IdentityCertServiceAdapter icsa;
+    private IdentityCertificateGenerator idCertGenerator;
 
     private ConsumerType standardSystemType;
     private ConsumerTypeDTO standardSystemTypeDTO;
@@ -134,7 +134,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void setUp() {
         poolService = injector.getInstance(PoolService.class);
         consumerResource = injector.getInstance(ConsumerResource.class);
-        icsa = injector.getInstance(IdentityCertServiceAdapter.class);
+        idCertGenerator = injector.getInstance(IdentityCertificateGenerator.class);
 
         standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));
         standardSystemTypeDTO = modelTranslator.translate(standardSystemType, ConsumerTypeDTO.class);
@@ -572,7 +572,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         Consumer c = consumerCurator.create(toSubmit);
 
-        IdentityCertificate idCert = icsa.generateIdentityCert(c);
+        IdentityCertificate idCert = idCertGenerator.generate(c);
         c.setIdCert(idCert);
         setupPrincipal(new ConsumerPrincipal(c, owner));
         consumerResource.deleteConsumer(c.getUuid());

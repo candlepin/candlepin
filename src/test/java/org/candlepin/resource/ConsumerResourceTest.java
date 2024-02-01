@@ -108,6 +108,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.paging.PageRequest;
+import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -122,7 +123,6 @@ import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
-import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -162,7 +162,6 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.security.GeneralSecurityException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -183,7 +182,6 @@ import javax.inject.Provider;
 import javax.persistence.OptimisticLockException;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
-
 
 
 @ExtendWith(MockitoExtension.class)
@@ -234,7 +232,7 @@ public class ConsumerResourceTest {
     @Mock
     private EnvironmentCurator environmentCurator;
     @Mock
-    private IdentityCertServiceAdapter identityCertServiceAdapter;
+    private IdentityCertificateGenerator identityCertificateGenerator;
     @Mock
     private ActivationKeyCurator activationKeyCurator;
     @Mock
@@ -319,7 +317,7 @@ public class ConsumerResourceTest {
             this.subscriptionServiceAdapter,
             this.mockProductServiceAdapter,
             this.entitlementCurator,
-            this.identityCertServiceAdapter,
+            this.identityCertificateGenerator,
             this.entitlementCertServiceAdapter,
             this.i18n,
             this.sink,
@@ -527,7 +525,7 @@ public class ConsumerResourceTest {
             this.subscriptionServiceAdapter,
             this.mockProductServiceAdapter,
             this.entitlementCurator,
-            this.identityCertServiceAdapter,
+            this.identityCertificateGenerator,
             this.entitlementCertServiceAdapter,
             this.i18n,
             this.sink,
@@ -748,13 +746,13 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testRegenerateIdCerts() throws GeneralSecurityException, IOException {
+    public void testRegenerateIdCerts() {
         Consumer consumer = createConsumer(createOwner());
         consumer.setIdCert(createIdCert());
         IdentityCertificate ic = consumer.getIdCert();
         assertNotNull(ic);
 
-        when(identityCertServiceAdapter.regenerateIdentityCert(consumer)).thenReturn(createIdCert());
+        when(identityCertificateGenerator.regenerate(consumer)).thenReturn(createIdCert());
 
         ConsumerDTO fooc = consumerResource.regenerateIdentityCertificates(consumer.getUuid());
 
@@ -765,7 +763,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void expiredIdCertGetsRegenerated() throws Exception {
+    public void expiredIdCertGetsRegenerated() {
         Consumer consumer = createConsumer(createOwner());
         ComplianceStatus status = new ComplianceStatus();
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), anyBoolean()))
@@ -774,7 +772,7 @@ public class ConsumerResourceTest {
         IdentityCertificate idCert = createIdCert();
         consumer.setIdCert(idCert);
         long origserial = consumer.getIdCert().getSerial().getSerial().longValue();
-        when(identityCertServiceAdapter.regenerateIdentityCert(consumer)).thenReturn(createIdCert());
+        when(identityCertificateGenerator.regenerate(consumer)).thenReturn(createIdCert());
 
         ConsumerDTO c = consumerResource.getConsumer(consumer.getUuid());
 
@@ -796,12 +794,12 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void doesGenerateMissingIdCert() throws Exception {
+    public void doesGenerateMissingIdCert() {
         Consumer consumer = createConsumer(createOwner());
         ComplianceStatus status = new ComplianceStatus();
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), anyBoolean()))
             .thenReturn(status);
-        when(identityCertServiceAdapter.regenerateIdentityCert(consumer)).thenReturn(createIdCert());
+        when(identityCertificateGenerator.regenerate(consumer)).thenReturn(createIdCert());
 
         ConsumerDTO c = consumerResource.getConsumer(consumer.getUuid());
 
@@ -812,7 +810,7 @@ public class ConsumerResourceTest {
     public void testUnacceptedSubscriptionTerms() throws Exception {
         Owner o = createOwner();
         Consumer c = createConsumer(o);
-        String[] prodIds = { "notthere" };
+        String[] prodIds = {"notthere"};
 
         when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(o.getKey())).thenReturn(true);
         when(consumerCurator.verifyAndLookupConsumerWithEntitlements("fakeConsumer")).thenReturn(c);
@@ -822,7 +820,7 @@ public class ConsumerResourceTest {
         Response r = consumerResource.bind("fakeConsumer", null, Arrays.asList(prodIds),
             null, null, null, false, null, null);
         assertEquals(i18n.tr("You must first accept Red Hat''s Terms and conditions. Please visit {0}",
-            "https://www.redhat.com/wapps/tnc/ackrequired?site=candlepin&event=attachSubscription"),
+                "https://www.redhat.com/wapps/tnc/ackrequired?site=candlepin&event=attachSubscription"),
             ((ExceptionMessage) r.getEntity()).getDisplayMessage());
     }
 
@@ -830,7 +828,7 @@ public class ConsumerResourceTest {
     public void testUnknownSubscriptionTerms() throws Exception {
         Owner o = createOwner();
         Consumer c = createConsumer(o);
-        String[] prodIds = { "notthere" };
+        String[] prodIds = {"notthere"};
 
         when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(o.getKey()))
             .thenThrow(new SubscriptionServiceException());
@@ -840,7 +838,7 @@ public class ConsumerResourceTest {
 
         assertNull(assertThrows(SubscriptionServiceException.class, () ->
             consumerResource.bind("fakeConsumer", null, Arrays.asList(prodIds), null, null, null, false,
-            null, null))
+                null, null))
             .getMessage());
     }
 
@@ -848,7 +846,7 @@ public class ConsumerResourceTest {
     public void testUnknownProductRetrieval() throws Exception {
         Owner o = createOwner();
         Consumer c = createConsumer(o);
-        String[] prodIds = { "notthere" };
+        String[] prodIds = {"notthere"};
 
         when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(o.getKey())).thenReturn(false);
         when(consumerCurator.verifyAndLookupConsumerWithEntitlements("fakeConsumer")).thenReturn(c);
@@ -865,7 +863,7 @@ public class ConsumerResourceTest {
     public void testAutobindHypervisorDisabled() throws Exception {
         Owner o = createOwner();
         Consumer c = createConsumer(o);
-        String[] prodIds = { "notthere" };
+        String[] prodIds = {"notthere"};
 
         when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(o.getKey())).thenReturn(false);
         when(consumerCurator.verifyAndLookupConsumerWithEntitlements("fakeConsumer")).thenReturn(c);
@@ -874,8 +872,8 @@ public class ConsumerResourceTest {
         when(ownerCurator.findOwnerById(o.getId())).thenReturn(o);
 
         assertEquals(i18n.tr("Ignoring request to auto-attach. " +
-            "It is disabled for org \"{0}\" because of the hypervisor autobind setting.",
-            o.getKey()),
+                    "It is disabled for org \"{0}\" because of the hypervisor autobind setting.",
+                o.getKey()),
             assertThrows(BadRequestException.class, () -> consumerResource.bind("fakeConsumer", null,
                 Arrays.asList(prodIds), null, null, null, false, null, null)).getMessage());
     }
@@ -884,7 +882,7 @@ public class ConsumerResourceTest {
     public void testAutobindDisabledForOwner() throws Exception {
         Owner o = createOwner();
         Consumer c = createConsumer(o);
-        String[] prodIds = { "notthere" };
+        String[] prodIds = {"notthere"};
 
         when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(o.getKey())).thenReturn(false);
         when(consumerCurator.verifyAndLookupConsumerWithEntitlements("fakeConsumer")).thenReturn(c);
@@ -898,7 +896,7 @@ public class ConsumerResourceTest {
 
         o.setContentAccessMode("entitlement");
         assertEquals(i18n.tr("Ignoring request to auto-attach. " +
-            "It is disabled for org \"{0}\".", o.getKey()),
+                "It is disabled for org \"{0}\".", o.getKey()),
             assertThrows(BadRequestException.class, () -> consumerResource.bind("fakeConsumer", null,
                 Arrays.asList(prodIds), null, null, null, false, null, null)).getMessage());
     }
@@ -907,7 +905,7 @@ public class ConsumerResourceTest {
     public void testProductNoPool() throws Exception {
         Owner o = createOwner();
         Consumer c = createConsumer(o);
-        String[] prodIds = { "notthere" };
+        String[] prodIds = {"notthere"};
 
         when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(o.getKey())).thenReturn(false);
         when(consumerCurator.verifyAndLookupConsumerWithEntitlements("fakeConsumer")).thenReturn(c);
@@ -1590,7 +1588,7 @@ public class ConsumerResourceTest {
     public void testSearchConsumersRequiresNonNullSearchCriteria() {
         assertThrows(BadRequestException.class, () ->
             consumerResource.searchConsumers(null, null, null, null, null, null, null, null, null,
-            null, null));
+                null, null));
     }
 
     @Test
@@ -1598,7 +1596,7 @@ public class ConsumerResourceTest {
     public void testSearchConsumersRequiresNonEmptySearchCriteria() {
         assertThrows(BadRequestException.class, () ->
             consumerResource.searchConsumers("", Collections.emptySet(), "", Collections.emptyList(),
-                Collections.emptyList(), null,  Collections.emptyList(), null, null, null, null));
+                Collections.emptyList(), null, Collections.emptyList(), null, null, null, null));
     }
 
     @Test
