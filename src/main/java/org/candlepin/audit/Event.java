@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -136,6 +137,7 @@ public class Event {
 
         // Set the timestamp to the current date and time.
         this.timestamp = new Date();
+        this.id = UUID.randomUUID().toString();
     }
 
     public String getId() {
@@ -226,7 +228,6 @@ public class Event {
         this.entityId = entityId;
     }
 
-    @XmlTransient
     public String getEventData() {
         return eventData;
     }
