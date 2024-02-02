@@ -15,12 +15,12 @@
 
 package org.candlepin.pki.certs;
 
-public class CertificateCreationException extends RuntimeException {
-    public CertificateCreationException(String message) {
+public class CertificateExtensionException extends RuntimeException {
+    public CertificateExtensionException(String message) {
         super(message);
     }
 
-    public CertificateCreationException(String message, Throwable cause) {
+    public CertificateExtensionException(String message, Throwable cause) {
         super(message, cause);
     }
 }

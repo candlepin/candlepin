@@ -17,34 +17,18 @@ package org.candlepin.controller;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 
 import org.candlepin.audit.EventSink;
-import org.candlepin.cache.AnonymousCertContentCache;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
-import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.KeyPairGenerator;
-import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.PemEncoder;
-import org.candlepin.pki.PrivateKeyReader;
-import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
-import org.candlepin.pki.impl.BouncyCastlePKIUtility;
-import org.candlepin.pki.impl.BouncyCastlePemEncoder;
-import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
-import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
-import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
-import org.candlepin.pki.impl.Signer;
-import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.pki.certs.AnonymousCertificateGenerator;
+import org.candlepin.pki.certs.ContentAccessCertificateGenerator;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
-import org.candlepin.util.X509V3ExtensionUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,70 +49,25 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
     private static final String ENTITLEMENT_MODE = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
     private static final String ORG_ENVIRONMENT_MODE = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
-    private PKIUtility pkiUtility;
-    private X509V3ExtensionUtil x509V3ExtensionUtil;
-
-    private EventSink mockEventSink;
-    private AnonymousCertContentCache cache;
-    private KeyPairGenerator keyPairGenerator;
-    private PemEncoder pemEncoder;
-    private Signer signer;
-
     @Mock
-    private ProductServiceAdapter mockProdAdapter;
+    private EventSink mockEventSink;
+
+    private ContentAccessCertificateGenerator contentAccessCertificateGenerator;
+    private AnonymousCertificateGenerator anonymousCertificateGenerator;
 
     @BeforeEach
     public void setup() throws Exception {
-        PrivateKeyReader keyReader = new BouncyCastlePrivateKeyReader();
-        CertificateReader certReader = new CertificateReader(this.config, keyReader);
-        SubjectKeyIdentifierWriter keyIdWriter = new BouncyCastleSubjectKeyIdentifierWriter();
-        BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
-        this.pemEncoder = new BouncyCastlePemEncoder();
-        this.signer = new Signer(certReader);
-        this.keyPairGenerator = new BouncyCastleKeyPairGenerator(securityProvider, this.keyPairDataCurator);
-        this.pkiUtility = new BouncyCastlePKIUtility(securityProvider, certReader,
-            keyIdWriter, this.config, this.keyPairDataCurator);
-
-        this.x509V3ExtensionUtil = spy(new X509V3ExtensionUtil(this.config, this.entitlementCurator,
-            ObjectMapperFactory.getObjectMapper()));
-
+        this.contentAccessCertificateGenerator = this.injector
+            .getInstance(ContentAccessCertificateGenerator.class);
+        this.anonymousCertificateGenerator = this.injector
+            .getInstance(AnonymousCertificateGenerator.class);
         this.mockEventSink = mock(EventSink.class);
-        this.cache = new AnonymousCertContentCache(this.config);
     }
 
     private ContentAccessManager createManager() {
-        return new ContentAccessManager(this.config, this.pkiUtility, this.x509V3ExtensionUtil,
-            this.caCertCurator, this.certSerialCurator, this.ownerCurator, this.contentCurator,
-            this.consumerCurator, this.consumerTypeCurator, this.environmentCurator, this.caCertCurator,
-            this.mockEventSink, this.anonymousCloudConsumerCurator, this.anonymousContentAccessCertCurator,
-            this.mockProdAdapter, this.cache, this.keyPairGenerator, this.pemEncoder, this.signer);
-    }
-
-    private Owner createSCAOwner() {
-        Owner owner = this.createOwner();
-
-        owner.setContentAccessModeList(ENTITLEMENT_MODE + ", " + ORG_ENVIRONMENT_MODE);
-        owner.setContentAccessMode(ORG_ENVIRONMENT_MODE);
-
-        return this.ownerCurator.merge(owner);
-    }
-
-    private Consumer createV3Consumer(Owner owner, Environment environment) {
-        Consumer consumer = this.createConsumer(owner);
-
-        consumer.setFact("system.certificate_version", "3.0");
-        consumer.addEnvironment(environment);
-
-        return this.consumerCurator.merge(consumer);
-    }
-
-    private void scaCertGenerationTest(Consumer consumer) {
-        ContentAccessManager manager = this.createManager();
-
-        ContentAccessCertificate cert = manager.getCertificate(consumer);
-
-        assertNotNull(cert);
-        assertNotNull(consumer.getContentAccessCert());
+        return new ContentAccessManager(this.config, this.caCertCurator, this.ownerCurator,
+            this.consumerCurator, this.consumerTypeCurator, this.mockEventSink,
+            this.contentAccessCertificateGenerator, this.anonymousCertificateGenerator);
     }
 
     @Test
@@ -146,6 +85,23 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
         Consumer consumer = this.createV3Consumer(owner, environment);
 
         this.scaCertGenerationTest(consumer);
+    }
+
+    @Test
+    public void testGetCertificateRegeneratesExpiredCerts() {
+        Owner owner = this.createSCAOwner();
+        Consumer consumer = this.createV3Consumer(owner, null);
+
+        this.regenerateExpiredSCACertTest(consumer);
+    }
+
+    @Test
+    public void testGetCertificateRegeneratesExpiredCertsWithEnvironment() {
+        Owner owner = this.createSCAOwner();
+        Environment environment = this.createEnvironment(owner);
+        Consumer consumer = this.createV3Consumer(owner, environment);
+
+        this.regenerateExpiredSCACertTest(consumer);
     }
 
     private void regenerateExpiredSCACertTest(Consumer consumer) {
@@ -175,21 +131,31 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
         assertNotEquals(newCert.getSerial().getId(), oldSerial.getId());
     }
 
-    @Test
-    public void testGetCertificateRegeneratesExpiredCerts() {
-        Owner owner = this.createSCAOwner();
-        Consumer consumer = this.createV3Consumer(owner, null);
+    private Owner createSCAOwner() {
+        Owner owner = this.createOwner();
 
-        this.regenerateExpiredSCACertTest(consumer);
+        owner.setContentAccessModeList(ENTITLEMENT_MODE + ", " + ORG_ENVIRONMENT_MODE);
+        owner.setContentAccessMode(ORG_ENVIRONMENT_MODE);
+
+        return this.ownerCurator.merge(owner);
     }
 
-    @Test
-    public void testGetCertificateRegeneratesExpiredCertsWithEnvironment() {
-        Owner owner = this.createSCAOwner();
-        Environment environment = this.createEnvironment(owner);
-        Consumer consumer = this.createV3Consumer(owner, environment);
+    private Consumer createV3Consumer(Owner owner, Environment environment) {
+        Consumer consumer = this.createConsumer(owner);
 
-        this.regenerateExpiredSCACertTest(consumer);
+        consumer.setFact("system.certificate_version", "3.0");
+        consumer.addEnvironment(environment);
+
+        return this.consumerCurator.merge(consumer);
+    }
+
+    private void scaCertGenerationTest(Consumer consumer) {
+        ContentAccessManager manager = this.createManager();
+
+        ContentAccessCertificate cert = manager.getCertificate(consumer);
+
+        assertNotNull(cert);
+        assertNotNull(consumer.getContentAccessCert());
     }
 
 }

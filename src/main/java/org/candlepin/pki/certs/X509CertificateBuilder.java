@@ -15,6 +15,7 @@
 
 package org.candlepin.pki.certs;
 
+import org.candlepin.pki.CertificateCreationException;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.X509Extension;
