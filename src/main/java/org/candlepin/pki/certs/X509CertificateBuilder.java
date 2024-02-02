@@ -281,7 +281,7 @@ public class X509CertificateBuilder {
         }
     }
 
-    public ContentSigner signer() {
+    private ContentSigner signer() {
         try {
             return new JcaContentSignerBuilder(SIGNATURE_ALGORITHM)
                 .setProvider(this.securityProvider.get())

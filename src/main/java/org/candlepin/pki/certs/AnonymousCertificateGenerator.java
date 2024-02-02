@@ -77,6 +77,7 @@ public class AnonymousCertificateGenerator {
 
     private final CertificateSerialCurator serialCurator;
     private final X509V3ExtensionUtil v3extensionUtil;
+    private final EntitlementPayloadGenerator payloadGenerator;
     private final AnonymousCloudConsumerCurator anonCloudConsumerCurator;
     private final AnonymousContentAccessCertificateCurator anonContentAccessCertCurator;
     private final ProductServiceAdapter prodAdapter;
@@ -89,6 +90,7 @@ public class AnonymousCertificateGenerator {
     @Inject
     public AnonymousCertificateGenerator(
         X509V3ExtensionUtil v3extensionUtil,
+        EntitlementPayloadGenerator payloadGenerator,
         CertificateSerialCurator serialCurator,
         AnonymousCloudConsumerCurator anonCloudConsumerCurator,
         AnonymousContentAccessCertificateCurator anonContentAccessCertCurator,
@@ -100,6 +102,7 @@ public class AnonymousCertificateGenerator {
         Provider<X509CertificateBuilder> certificateBuilder) {
 
         this.serialCurator = Objects.requireNonNull(serialCurator);
+        this.payloadGenerator = Objects.requireNonNull(payloadGenerator);
         this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
         this.anonCloudConsumerCurator = Objects.requireNonNull(anonCloudConsumerCurator);
         this.anonContentAccessCertCurator = Objects.requireNonNull(anonContentAccessCertCurator);
@@ -288,12 +291,7 @@ public class AnonymousCertificateGenerator {
         List<org.candlepin.model.dto.Product> productModels = new ArrayList<>();
         productModels.add(productModel);
 
-        try {
-            return v3extensionUtil.createEntitlementDataPayload(productModels, consumerUuid, emptyPool, null);
-        }
-        catch (IOException e) {
-            throw new CertificateCreationException("Failed to prepare entitlement data payload!", e);
-        }
+        return this.payloadGenerator.generate(productModels, consumerUuid, emptyPool, null);
     }
 
     /**

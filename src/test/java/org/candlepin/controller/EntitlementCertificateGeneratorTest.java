@@ -121,8 +121,8 @@ public class EntitlementCertificateGeneratorTest {
         Map<String, PoolQuantity> poolQuantityMap = new HashMap<>();
         poolQuantityMap.put("Swift", new PoolQuantity(pool, 0));
         ecGenerator.generateEntitlementCertificate(pool, entitlement);
-        verify(mockEntCertAdapter).generateEntitlementCerts(eq(consumer), eq(poolQuantityMap), eq(expected),
-            eq(expectedProducts), eq(true));
+        verify(mockEntCertAdapter).generateEntitlementCerts(consumer, poolQuantityMap, expected,
+            expectedProducts, true);
     }
 
     @Test
@@ -142,8 +142,8 @@ public class EntitlementCertificateGeneratorTest {
         Map<String, PoolQuantity> poolQuantities = new HashMap<>();
         poolQuantities.put("Taylor", new PoolQuantity(pool, 1));
         ecGenerator.generateEntitlementCertificates(consumer, products, poolQuantities, entitlements, true);
-        verify(mockEntCertAdapter).generateEntitlementCerts(eq(consumer), eq(poolQuantities), eq
-            (entitlements), eq(products), anyBoolean());
+        verify(mockEntCertAdapter).generateEntitlementCerts(eq(consumer), eq(poolQuantities),
+            eq(entitlements), eq(products), anyBoolean());
     }
 
     @Test
@@ -340,7 +340,7 @@ public class EntitlementCertificateGeneratorTest {
         consumer.setOwner(owner);
         consumer.addEntitlement(entitlement);
 
-        when(mockOwnerCurator.findOwnerById(eq("test-owner"))).thenReturn(owner);
+        when(mockOwnerCurator.findOwnerById("test-owner")).thenReturn(owner);
         this.ecGenerator.regenerateCertificatesOf(consumer, true);
 
         assertTrue(entitlement.isDirty());
@@ -396,7 +396,7 @@ public class EntitlementCertificateGeneratorTest {
         // correctly.
         // assertTrue(entitlement.isDirty());
 
-        verify(this.mockEntitlementCurator, times(1)).markEntitlementsDirty(eq(entitlements));
+        verify(this.mockEntitlementCurator, times(1)).markEntitlementsDirty(entitlements);
 
         verifyNoInteractions(this.mockEntCertAdapter);
     }
@@ -415,7 +415,7 @@ public class EntitlementCertificateGeneratorTest {
         HashMap<String, EntitlementCertificate> ecMap = new HashMap<>();
         ecMap.put(pool.getId(), new EntitlementCertificate());
 
-        when(this.mockEntitlementCurator.get(eq(entitlement.getId()))).thenReturn(entitlement);
+        when(this.mockEntitlementCurator.get(entitlement.getId())).thenReturn(entitlement);
         when(this.mockEntCertAdapter.generateEntitlementCerts(any(Consumer.class), anyMap(),
             anyMap(), anyMap(), anyBoolean())).thenReturn(ecMap);
         when(mockEventFactory.entitlementChanged(any(Entitlement.class))).thenReturn(mock(Event.class));

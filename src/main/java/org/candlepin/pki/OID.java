@@ -80,9 +80,23 @@ public final class OID {
 
         private static final String NAMESPACE = "2";
 
+        /**
+         * 1.3.6.1.4.1.2312.9.2.{ contentId }.{ repoType }
+         *
+         * @return Channel family OID
+         */
         public static String namespace(RepoType type, String contentId) {
             validate(contentId);
             return join(REDHAT_OID, NAMESPACE, contentId, type.id());
+        }
+
+        /**
+         * 1.3.6.1.4.1.2312.9.2
+         *
+         * @return Channel family OID
+         */
+        public static String namespace() {
+            return join(REDHAT_OID, NAMESPACE);
         }
 
         private final String id;

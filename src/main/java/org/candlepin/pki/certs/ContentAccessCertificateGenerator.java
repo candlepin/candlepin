@@ -30,7 +30,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.dto.Content;
-import org.candlepin.pki.CertificateCreationException;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
@@ -69,6 +68,7 @@ public class ContentAccessCertificateGenerator {
     private final ContentCurator contentCurator;
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
     private final X509V3ExtensionUtil v3extensionUtil;
+    private final EntitlementPayloadGenerator payloadGenerator;
     private final ConsumerCurator consumerCurator;
     private final EnvironmentCurator environmentCurator;
     private final PemEncoder pemEncoder;
@@ -79,6 +79,7 @@ public class ContentAccessCertificateGenerator {
     @Inject
     public ContentAccessCertificateGenerator(
         X509V3ExtensionUtil v3extensionUtil,
+        EntitlementPayloadGenerator payloadGenerator,
         ContentAccessCertificateCurator contentAccessCertificateCurator,
         CertificateSerialCurator serialCurator,
         ContentCurator contentCurator,
@@ -92,6 +93,7 @@ public class ContentAccessCertificateGenerator {
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
         this.serialCurator = Objects.requireNonNull(serialCurator);
         this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
+        this.payloadGenerator = Objects.requireNonNull(payloadGenerator);
         this.contentCurator = Objects.requireNonNull(contentCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.environmentCurator = Objects.requireNonNull(environmentCurator);
@@ -305,12 +307,7 @@ public class ContentAccessCertificateGenerator {
         List<org.candlepin.model.dto.Product> productModels = new ArrayList<>();
         productModels.add(productModel);
 
-        try {
-            return v3extensionUtil.createEntitlementDataPayload(productModels, consumerUuid, emptyPool, null);
-        }
-        catch (IOException e) {
-            throw new CertificateCreationException("Failed to create entitlement data payload!", e);
-        }
+        return this.payloadGenerator.generate(productModels, consumerUuid, emptyPool, null);
     }
 
 }

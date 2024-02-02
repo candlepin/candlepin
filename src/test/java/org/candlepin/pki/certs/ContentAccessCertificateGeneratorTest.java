@@ -51,7 +51,6 @@ import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.Signer;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.X509V3ExtensionUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -84,15 +83,13 @@ class ContentAccessCertificateGeneratorTest {
     @Mock
     private EntitlementCurator entitlementCurator;
     private Configuration config;
-    private ObjectMapper objectMapper;
     private X509V3ExtensionUtil extensionUtil;
     private ContentAccessCertificateGenerator generator;
 
     @BeforeEach
     void setUp() throws CertificateException, IOException {
         this.config = TestConfig.defaults();
-        this.objectMapper = ObjectMapperFactory.getObjectMapper();
-        this.extensionUtil = spy(new X509V3ExtensionUtil(this.config, this.entitlementCurator, objectMapper));
+        this.extensionUtil = spy(new X509V3ExtensionUtil(this.config, this.entitlementCurator));
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
         BouncyCastleKeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(
             securityProvider, mock(KeyPairDataCurator.class));
@@ -108,6 +105,7 @@ class ContentAccessCertificateGeneratorTest {
 
         this.generator = new ContentAccessCertificateGenerator(
             this.extensionUtil,
+            new EntitlementPayloadGenerator(new ObjectMapper()),
             this.contentAccessCertificateCurator,
             this.serialCurator,
             this.contentCurator,

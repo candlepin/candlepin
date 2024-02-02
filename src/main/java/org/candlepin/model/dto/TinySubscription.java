@@ -47,82 +47,104 @@ public class TinySubscription {
     private List<String> roles;
     private List<String> addons;
 
-    /**
-     * @param sku
-     */
+    public String getSku() {
+        return sku;
+    }
+
     public void setSku(String sku) {
         this.sku = sku;
     }
 
-    /**
-     * @param name
-     */
+    public String getName() {
+        return name;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
 
-    /**
-     * @param warning
-     */
+    public Integer getWarning() {
+        return warning;
+    }
+
     public void setWarning(Integer warning) {
         this.warning = warning;
     }
 
-    /**
-     * @param sockets
-     */
+    public Integer getSockets() {
+        return sockets;
+    }
+
     public void setSockets(Integer sockets) {
         this.sockets = sockets;
     }
 
-    /**
-     * @param ram
-     */
+    public Integer getRam() {
+        return ram;
+    }
+
     public void setRam(Integer ram) {
         this.ram = ram;
     }
 
-    /**
-     * @param cores
-     */
+    public Integer getCores() {
+        return cores;
+    }
+
     public void setCores(Integer cores) {
         this.cores = cores;
     }
 
-    /**
-     * @param management
-     */
+    public Boolean getManagement() {
+        return management;
+    }
+
     public void setManagement(Boolean management) {
         this.management = management;
     }
 
-    /**
-     * @param stackingId
-     */
+    public String getStackingId() {
+        return stackingId;
+    }
+
     public void setStackingId(String stackingId) {
         this.stackingId = stackingId;
     }
 
-    /**
-     * @param virtOnly
-     */
+    public Boolean getVirtOnly() {
+        return virtOnly;
+    }
+
     public void setVirtOnly(Boolean virtOnly) {
         this.virtOnly = virtOnly;
     }
 
-    /**
-     * @param service
-     */
+    public Service getService() {
+        return service;
+    }
+
     public void setService(Service service) {
         this.service = service;
+    }
+
+    public String getUsage() {
+        return usage;
+    }
+
+    public void setUsage(String usage) {
+        this.usage = usage;
+    }
+
+    public List<String> getRoles() {
+        return roles;
     }
 
     public void setRoles(List<String> roles) {
         this.roles = roles;
     }
 
-    public void setUsage(String usage) {
-        this.usage = usage;
+    public List<String> getAddons() {
+        return addons;
     }
 
     public void setAddons(List<String> addons) {

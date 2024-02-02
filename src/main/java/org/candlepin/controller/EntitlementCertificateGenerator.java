@@ -407,7 +407,7 @@ public class EntitlementCertificateGenerator {
      *  A collection of products for which to regenerate affected certificates
      *
      * @param lazy
-     *  Whether or not to generate the certificate immediately, or mark it dirty and allow it to be
+     *  Whether to generate the certificate immediately, or mark it dirty and allow it to be
      *  regenerated on-demand
      */
     @Transactional
@@ -438,7 +438,7 @@ public class EntitlementCertificateGenerator {
                     .listAvailableEntitlementPools(null, owner, productIds, now)
                     .stream()
                     .flatMap(pool -> pool.getEntitlements().stream())
-                    .collect(Collectors.toList());
+                    .toList();
 
                 entitlements.addAll(poolEntitlements);
             }

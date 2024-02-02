@@ -120,9 +120,8 @@ public class UeberCertificateGenerator {
             return  this.generateUeberCert(owner, principal.getUsername());
         }
         catch (Exception e) {
-            log.error("Problem generating ueber cert for owner: {}", ownerKey, e);
-            throw new BadRequestException(i18n.tr("Problem generating ueber cert for owner {0}", ownerKey),
-                e);
+            throw new BadRequestException(
+                i18n.tr("Problem generating ueber cert for owner {0}", ownerKey), e);
         }
     }
 

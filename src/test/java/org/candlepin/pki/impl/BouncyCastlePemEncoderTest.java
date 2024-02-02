@@ -17,26 +17,21 @@ package org.candlepin.pki.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
 
-import org.candlepin.config.TestConfig;
-import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.pki.DistinguishedName;
-import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.SubjectKeyIdentifierWriter;
+import org.candlepin.pki.certs.X509CertificateBuilder;
 import org.candlepin.test.CertificateReaderForTesting;
 
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import java.util.Date;
+import java.time.Instant;
 
 class BouncyCastlePemEncoderTest {
 
@@ -106,13 +101,14 @@ class BouncyCastlePemEncoderTest {
         KeyPair keyPair = createKeyPair();
         BouncyCastleSecurityProvider provider = new BouncyCastleSecurityProvider();
         CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
-        SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
-        KeyPairDataCurator keypairDataCurator = mock(KeyPairDataCurator.class);
-        PKIUtility pki = new BouncyCastlePKIUtility(provider, certificateReader,
-            subjectKeyIdentifierWriter, TestConfig.defaults(), keypairDataCurator);
+        X509CertificateBuilder builder = new X509CertificateBuilder(certificateReader, provider);
 
-        return pki.createX509Certificate(new DistinguishedName("test_name"), null, new Date(),
-            new Date(), keyPair, BigInteger.valueOf(1999L), "altName");
+        return builder
+            .withValidity(Instant.now(), Instant.now())
+            .withRandomSerial()
+            .withDN(new DistinguishedName("asd123"))
+            .withKeyPair(keyPair)
+            .build();
     }
 
     private KeyPair createKeyPair() throws NoSuchAlgorithmException {

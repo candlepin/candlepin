@@ -23,45 +23,44 @@ import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.service.impl.BaseEntitlementCertServiceAdapter;
+import org.candlepin.service.EntitlementCertServiceAdapter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
 /**
- * StubEntitlementCertServiceAdapter
- *
  * Generating an entitlement cert is expensive, this class stubs the process out.
  */
-public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServiceAdapter {
+public class StubEntitlementCertServiceAdapter implements EntitlementCertServiceAdapter {
 
-    private static Logger log =
-        LoggerFactory.getLogger(StubEntitlementCertServiceAdapter.class);
-    private CertificateSerialCurator serialCurator;
+    private static final Logger log = LoggerFactory.getLogger(StubEntitlementCertServiceAdapter.class);
+    protected EntitlementCertificateCurator entCertCurator;
+    private final CertificateSerialCurator serialCurator;
 
     @Inject
     public StubEntitlementCertServiceAdapter(
         EntitlementCertificateCurator entCertCurator,
         CertificateSerialCurator serialCurator) {
 
-        this.entCertCurator = entCertCurator;
-        this.serialCurator = serialCurator;
+        this.entCertCurator = Objects.requireNonNull(entCertCurator);
+        this.serialCurator = Objects.requireNonNull(serialCurator);
     }
 
     @Override
-    public EntitlementCertificate generateEntitlementCert(Entitlement entitlement,
-        Product product)
-        throws GeneralSecurityException, IOException {
+    public List<EntitlementCertificate> listForConsumer(Consumer consumer) {
+        return entCertCurator.listForConsumer(consumer);
+    }
 
+    @Override
+    public EntitlementCertificate generateEntitlementCert(Entitlement entitlement, Product product) {
         Map<String, Entitlement> ents = new HashMap<>();
         Map<String, PoolQuantity> poolQuantityMap = new HashMap<>();
         Map<String, Product> productMap = new HashMap<>();
@@ -78,7 +77,7 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
     @Override
     public Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
         Map<String, PoolQuantity> poolQuantityMap, Map<String, Entitlement> entitlements,
-        Map<String, Product> products, boolean save) throws GeneralSecurityException, IOException {
+        Map<String, Product> products, boolean save) {
         Map<String, EntitlementCertificate> result = new HashMap<>();
 
         for (Entry<String, Entitlement> entry: entitlements.entrySet()) {

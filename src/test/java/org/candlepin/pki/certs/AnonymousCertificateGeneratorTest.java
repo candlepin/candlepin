@@ -89,7 +89,7 @@ class AnonymousCertificateGeneratorTest {
     void setUp() throws CertificateException, IOException {
         this.config = TestConfig.defaults();
         this.objectMapper = ObjectMapperFactory.getObjectMapper();
-        this.extensionUtil = spy(new X509V3ExtensionUtil(this.config, this.entitlementCurator, objectMapper));
+        this.extensionUtil = spy(new X509V3ExtensionUtil(this.config, this.entitlementCurator));
         this.contentCache = mock(AnonymousCertContentCache.class);
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
         BouncyCastleKeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(
@@ -97,6 +97,7 @@ class AnonymousCertificateGeneratorTest {
         CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
         this.generator = new AnonymousCertificateGenerator(
             this.extensionUtil,
+            new EntitlementPayloadGenerator(objectMapper),
             this.serialCurator,
             this.anonConsumerCurator,
             this.anonymousCertificateCurator,
