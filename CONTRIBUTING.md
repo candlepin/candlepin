@@ -39,6 +39,8 @@ git config --global user.email your.email@example.com
 All submissions, including submissions by project members, need to be reviewed before being merged.
 
 ### Coding Guidelines
+
+#### Language
 In the interest of supporting Red Hat's Conscious Language Initiative, we are discouraging the use of the
 following terms in the code, messages, or comments. Note the alternatives we will accept:
 
@@ -50,6 +52,25 @@ following terms in the code, messages, or comments. Note the alternatives we wil
    * initiator, requester / responder
    * controller, host / device, worker, proxy
    * director / performer
+
+#### Git Commits
+
+##### Rules for Git Commit Message Style
+- Separate subject from the body with a blank line
+- Use past tense verbs
+- Wrap the lines at 72 characters
+- Use the body to explain what changed
+  - In the few cases it makes sense, please include reason the change was needed, or why it was implemented in a certain way
+- Prefix the subject to include the Jira card number if it exists (CANDLEPIN-1234:)
+- Prefix the subject to include the Bugzilla number if it exists (12345678:)
+
+Example:
+```
+CANDLEPIN-1234: short summary
+
+- detail 1
+- detail 2
+```
 
 ### Continuous Integration
 TODO
