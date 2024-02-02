@@ -14,7 +14,7 @@
  */
 package org.candlepin.bind;
 
-import org.candlepin.controller.EntitlementCertificateGenerator;
+import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -40,19 +41,19 @@ import javax.inject.Inject;
  */
 public class HandleCertificatesOp implements BindOperation {
 
-    private EntitlementCertificateGenerator ecGenerator;
-    private EntitlementCertificateCurator ecCurator;
-    private EntitlementCurator eCurator;
+    private final EntitlementCertificateService entitlementCertificateService;
+    private final EntitlementCertificateCurator entitlementCertificateCurator;
+    private final EntitlementCurator entitlementCurator;
     private Map<String, EntitlementCertificate> certs;
     private Collection<String> modifyingEnts;
 
     @Inject
-    public HandleCertificatesOp(EntitlementCertificateGenerator ecGenerator, EntitlementCertificateCurator
-        ecCurator, EntitlementCurator eCurator) {
+    public HandleCertificatesOp(EntitlementCertificateService entitlementCertificateService,
+        EntitlementCertificateCurator entitlementCertificateCurator, EntitlementCurator entitlementCurator) {
 
-        this.ecGenerator = ecGenerator;
-        this.ecCurator = ecCurator;
-        this.eCurator = eCurator;
+        this.entitlementCertificateService = Objects.requireNonNull(entitlementCertificateService);
+        this.entitlementCertificateCurator = Objects.requireNonNull(entitlementCertificateCurator);
+        this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
     }
 
     /**
@@ -72,13 +73,14 @@ public class HandleCertificatesOp implements BindOperation {
             poolIds.add(pool.getId());
         }
 
-        certs = ecGenerator.generateEntitlementCertificates(context.getConsumer(),
+        this.certs = this.entitlementCertificateService.generateEntitlementCertificates(context.getConsumer(),
             products,
             poolQuantities,
             context.getEntitlementMap(),
             false);
 
-        modifyingEnts = this.eCurator.getDependentEntitlementIdsForPools(context.getConsumer(), poolIds);
+        this.modifyingEnts = this.entitlementCurator
+            .getDependentEntitlementIdsForPools(context.getConsumer(), poolIds);
 
         return true;
     }
@@ -95,9 +97,9 @@ public class HandleCertificatesOp implements BindOperation {
             ent.addCertificate(cert);
             cert.setEntitlement(ent);
         }
-        ecCurator.saveAll(certs.values(), false, false);
-        eCurator.saveOrUpdateAll(ents.values(), false, false);
-        this.ecGenerator.regenerateCertificatesByEntitlementIds(modifyingEnts, true);
+        entitlementCertificateCurator.saveAll(certs.values(), false, false);
+        entitlementCurator.saveOrUpdateAll(ents.values(), false, false);
+        this.entitlementCertificateService.regenerateCertificatesByEntitlementIds(modifyingEnts, true);
         return true;
     }
 }

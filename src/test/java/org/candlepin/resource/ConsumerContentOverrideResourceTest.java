@@ -28,7 +28,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.EntitlementCertificateGenerator;
+import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -51,7 +51,6 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.pki.certs.AnonymousCertificateGenerator;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
@@ -65,7 +64,6 @@ import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
-import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -166,11 +164,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     @Mock
     private EnvironmentContentCurator environmentContentCurator;
     @Mock
-    private EntitlementCertificateGenerator entCertGenerator;
-    @Mock
-    private CloudRegistrationAdapter cloudAdapter;
-    @Mock
-    private PoolCurator poolCurator;
+    private EntitlementCertificateService entCertService;
     @Mock
     private AnonymousCloudConsumerCurator anonymousConsumerCurator;
     @Mock
@@ -237,7 +231,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             this.principalProvider,
             this.contentOverrideValidator,
             this.consumerContentOverrideCurator,
-            this.entCertGenerator,
+            this.entCertService,
             this.poolService,
             this.environmentContentCurator,
             this.anonymousConsumerCurator,

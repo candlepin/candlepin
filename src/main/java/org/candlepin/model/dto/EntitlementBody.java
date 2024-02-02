@@ -34,37 +34,38 @@ public class EntitlementBody {
     private List<Product> products;
     private Pool pool;
 
-    /**
-     * @param uuid
-     */
+    public String getConsumer() {
+        return consumer;
+    }
+
     public void setConsumer(String uuid) {
         this.consumer = uuid;
     }
 
-    /**
-     * @param quantity
-     */
+    public Integer getQuantity() {
+        return quantity;
+    }
+
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
-    /**
-     * @param subscription
-     */
+    public TinySubscription getSubscription() {
+        return subscription;
+    }
+
     public void setSubscription(TinySubscription subscription) {
         this.subscription = subscription;
     }
 
-    /**
-     * @param order
-     */
+    public Order getOrder() {
+        return order;
+    }
+
     public void setOrder(Order order) {
         this.order = order;
     }
 
-    /**
-     * @param products
-     */
     public void setProducts(List<Product> products) {
         this.products = products;
     }
@@ -73,9 +74,10 @@ public class EntitlementBody {
         return this.products;
     }
 
-    /**
-     * @param pool the pool to set
-     */
+    public Pool getPool() {
+        return pool;
+    }
+
     public void setPool(Pool pool) {
         this.pool = pool;
     }

@@ -55,7 +55,7 @@ import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessMode;
-import org.candlepin.controller.EntitlementCertificateGenerator;
+import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -102,7 +102,6 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.SCACertificate;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
@@ -123,7 +122,6 @@ import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
-import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -268,13 +266,9 @@ public class ConsumerResourceTest {
     @Mock
     private EnvironmentContentCurator environmentContentCurator;
     @Mock
-    private EntitlementCertificateGenerator entCertGenerator;
+    private EntitlementCertificateService entCertService;
     @Mock
     private PoolService poolService;
-    @Mock
-    private PoolCurator poolCurator;
-    @Mock
-    private CloudRegistrationAdapter cloudRegistrationAdapter;
     @Mock
     private AnonymousCloudConsumerCurator anonymousConsumerCurator;
     @Mock
@@ -355,7 +349,7 @@ public class ConsumerResourceTest {
             this.principalProvider,
             this.contentOverrideValidator,
             this.consumerContentOverrideCurator,
-            this.entCertGenerator,
+            this.entCertService,
             this.poolService,
             this.environmentContentCurator,
             this.anonymousConsumerCurator,
@@ -517,7 +511,7 @@ public class ConsumerResourceTest {
         when(e.getPool()).thenReturn(p);
         when(p.getSubscriptionId()).thenReturn("4444");
 
-        doThrow(RuntimeException.class).when(entCertGenerator)
+        doThrow(RuntimeException.class).when(entCertService)
             .regenerateCertificatesOf(any(Entitlement.class), anyBoolean());
         when(entitlementCurator.get("9999")).thenReturn(e);
         when(subscriptionServiceAdapter.getSubscription("4444")).thenReturn(s);
@@ -563,7 +557,7 @@ public class ConsumerResourceTest {
             this.principalProvider,
             this.contentOverrideValidator,
             this.consumerContentOverrideCurator,
-            this.entCertGenerator,
+            this.entCertService,
             this.poolService,
             this.environmentContentCurator,
             this.anonymousConsumerCurator,
@@ -599,7 +593,7 @@ public class ConsumerResourceTest {
         Consumer consumer = createConsumer(createOwner());
 
         consumerResource.regenerateEntitlementCertificates(consumer.getUuid(), null, true, false);
-        verify(entCertGenerator, Mockito.times(1)).regenerateCertificatesOf(consumer, true);
+        verify(entCertService, Mockito.times(1)).regenerateCertificatesOf(consumer, true);
     }
 
     /**

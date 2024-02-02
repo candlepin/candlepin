@@ -86,16 +86,16 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
     private ContentManager contentManager;
     private ContentAccessManager mockContentAccessManager;
-    private EntitlementCertificateGenerator mockEntCertGenerator;
+    private EntitlementCertificateService mockEntCertService;
     private ProductManager productManager;
 
     @BeforeEach
     public void setup() throws Exception {
         this.mockContentAccessManager = mock(ContentAccessManager.class);
-        this.mockEntCertGenerator = mock(EntitlementCertificateGenerator.class);
+        this.mockEntCertService = mock(EntitlementCertificateService.class);
 
         this.contentManager = new ContentManager(this.mockContentAccessManager,
-            this.mockEntCertGenerator, this.productCurator, this.contentCurator, this.environmentCurator);
+            this.mockEntCertService, this.productCurator, this.contentCurator, this.environmentCurator);
     }
 
     @Test
@@ -151,7 +151,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         assertEquals(output.getUuid(), content.getUuid());
         assertEquals(output, content);
 
-        verifyNoInteractions(this.mockEntCertGenerator);
+        verifyNoInteractions(this.mockEntCertService);
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
@@ -174,13 +174,13 @@ public class ContentManagerTest extends DatabaseTestFixture {
         assertNotNull(this.contentCurator.getContentById(owner.getKey(), content.getId()));
 
         if (regenCerts) {
-            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
+            verify(this.mockEntCertService, times(1)).regenerateCertificatesOf(
                 argThat(new CollectionContentMatcher<Owner>(owner)),
                 argThat(new CollectionContentMatcher<Product>(product)),
                 eq(true));
         }
         else {
-            verifyNoInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertService);
         }
     }
 
@@ -214,13 +214,13 @@ public class ContentManagerTest extends DatabaseTestFixture {
         assertNull(this.contentCurator.get(content.getUuid()));
 
         if (regenCerts) {
-            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
+            verify(this.mockEntCertService, times(1)).regenerateCertificatesOf(
                 argThat(new CollectionContentMatcher<Owner>(owner)),
                 argThat(new CollectionContentMatcher<Product>(product)),
                 eq(true));
         }
         else {
-            verifyNoInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertService);
         }
     }
 

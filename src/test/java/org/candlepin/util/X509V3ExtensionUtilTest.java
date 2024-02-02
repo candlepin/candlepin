@@ -30,11 +30,9 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.dto.TinySubscription;
 import org.candlepin.pki.huffman.Huffman;
 import org.candlepin.test.TestUtil;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -57,7 +55,7 @@ public class X509V3ExtensionUtilTest {
 
         Configuration config = mock(Configuration.class);
         EntitlementCurator ec = mock(EntitlementCurator.class);
-        util = new X509V3ExtensionUtil(config, ec, this.mapper, new Huffman());
+        util = new X509V3ExtensionUtil(config, ec, new Huffman());
     }
 
     @Test
@@ -243,32 +241,6 @@ public class X509V3ExtensionUtilTest {
 
     private static ContentPathBuilder contentPathBuilder() {
         return ContentPathBuilder.from(new Owner(), List.of());
-    }
-
-    @Test
-    public void subscriptionWithSysPurposeAttributes() throws JsonProcessingException {
-        Owner owner = new Owner()
-            .setKey("Test Corporation")
-            .setDisplayName("Test Corporation");
-        Product mktProd = new Product("mkt", "MKT SKU");
-        mktProd.setAttribute(Product.Attributes.USAGE, "my_usage");
-        mktProd.setAttribute(Product.Attributes.SUPPORT_LEVEL, "my_support_level");
-        mktProd.setAttribute(Product.Attributes.SUPPORT_TYPE, "my_support_type");
-        mktProd.setAttribute(Product.Attributes.ROLES, " my_role1, my_role2 , my_role3 ");
-        mktProd.setAttribute(Product.Attributes.ADDONS, " my_addon1, my_addon2 , my_addon3 ");
-        Pool pool = TestUtil.createPool(owner, mktProd);
-
-        TinySubscription subscription = util.createSubscription(pool);
-        String output = this.mapper.writeValueAsString(subscription);
-        assertTrue(output.contains("my_usage"), "The serialized data should contain usage!");
-        assertTrue(output.contains("my_support_level"), "The serialized data should contain support level!");
-        assertTrue(output.contains("my_support_type"), "The serialized data should contain support type!");
-        assertTrue(output.contains("my_role1"), "The serialized data should contain role!");
-        assertTrue(output.contains("my_role2"), "The serialized data should contain role!");
-        assertTrue(output.contains("my_role3"), "The serialized data should contain role!");
-        assertTrue(output.contains("my_addon1"), "The serialized data should contain addon!");
-        assertTrue(output.contains("my_addon2"), "The serialized data should contain addon!");
-        assertTrue(output.contains("my_addon3"), "The serialized data should contain addon!");
     }
 
 }

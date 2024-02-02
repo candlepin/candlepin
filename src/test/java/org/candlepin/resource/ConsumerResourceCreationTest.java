@@ -44,7 +44,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.EntitlementCertificateGenerator;
+import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -205,7 +205,7 @@ public class ConsumerResourceCreationTest {
     @Mock
     private EnvironmentContentCurator environmentContentCurator;
     @Mock
-    private EntitlementCertificateGenerator entCertGenerator;
+    private EntitlementCertificateService entCertService;
     @Mock
     private PoolService poolService;
     @Mock
@@ -276,7 +276,7 @@ public class ConsumerResourceCreationTest {
             this.principalProvider,
             this.contentOverrideValidator,
             this.consumerContentOverrideCurator,
-            this.entCertGenerator,
+            this.entCertService,
             this.poolService,
             this.environmentContentCurator,
             this.anonymousConsumerCurator,

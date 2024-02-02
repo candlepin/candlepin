@@ -62,7 +62,7 @@ public class ProductManager {
     private static final Logger log = LoggerFactory.getLogger(ProductManager.class);
 
     private final ContentAccessManager contentAccessManager;
-    private final EntitlementCertificateGenerator entitlementCertGenerator;
+    private final EntitlementCertificateService entitlementCertService;
     private final PoolCurator poolCurator;
     private final ProductCurator productCurator;
     private final ContentCurator contentCurator;
@@ -70,12 +70,12 @@ public class ProductManager {
 
     @Inject
     public ProductManager(ContentAccessManager contentAccessManager,
-        EntitlementCertificateGenerator entitlementCertGenerator, PoolCurator poolCurator,
+        EntitlementCertificateService entitlementCertService, PoolCurator poolCurator,
         ProductCurator productCurator, ContentCurator contentCurator,
         ActivationKeyCurator activationKeyCurator) {
 
         this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
-        this.entitlementCertGenerator = Objects.requireNonNull(entitlementCertGenerator);
+        this.entitlementCertService = Objects.requireNonNull(entitlementCertService);
         this.poolCurator = Objects.requireNonNull(poolCurator);
         this.productCurator = Objects.requireNonNull(productCurator);
         this.contentCurator = Objects.requireNonNull(contentCurator);
@@ -316,7 +316,7 @@ public class ProductManager {
 
             if (regenCerts) {
                 log.debug("Flagging entitlement certificates of 1 affected product for regeneration");
-                this.entitlementCertGenerator.regenerateCertificatesOf(owner, product.getId(), true);
+                this.entitlementCertService.regenerateCertificatesOf(owner, product.getId(), true);
             }
         }
 
@@ -386,7 +386,7 @@ public class ProductManager {
 
         if (!entitlements.isEmpty()) {
             log.debug("Flagging {} affected entitlement certificates for regeneration", entitlements.size());
-            this.entitlementCertGenerator.regenerateCertificatesOf(entitlements, true);
+            this.entitlementCertService.regenerateCertificatesOf(entitlements, true);
         }
 
         return product;

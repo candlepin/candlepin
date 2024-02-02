@@ -19,6 +19,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.pki.certs.CertificateCreationException;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -39,10 +40,10 @@ public interface EntitlementCertServiceAdapter {
      * @param product The Products being consumed.
      * @return Client entitlement certificates.
      * @throws IOException thrown if there's a problem reading the cert.
-     * @throws GeneralSecurityException thrown security problem
+     * @throws CertificateCreationException thrown security problem
      */
     EntitlementCertificate generateEntitlementCert(Entitlement entitlement, Product product)
-        throws GeneralSecurityException, IOException;
+        throws IOException;
 
     /**
      * Generate entitlement certificates, used to grant access to some

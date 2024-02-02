@@ -168,9 +168,13 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
 
     /**
      * @param ownerIn the owner to set
+     *
+     * @return
+     *  a reference to this Entitlement instance
      */
-    public void setOwner(Owner ownerIn) {
+    public Entitlement setOwner(Owner ownerIn) {
         this.owner = ownerIn;
+        return this;
     }
 
     /**
@@ -253,9 +257,12 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
     /**
      * associates the given consumer with this entitlement.
      * @param consumer consumer to associate.
+     * @return
+     *  a reference to this Entitlement instance
      */
-    public void setConsumer(Consumer consumer) {
+    public Entitlement setConsumer(Consumer consumer) {
         this.consumer = consumer;
+        return this;
     }
 
     public Integer getQuantity() {

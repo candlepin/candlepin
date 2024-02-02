@@ -54,7 +54,6 @@ import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
@@ -93,9 +92,8 @@ class AnonymousCertificateGeneratorTest {
     void setUp() throws CertificateException, IOException {
         this.config = TestConfig.defaults();
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
-        ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
         X509V3ExtensionUtil extensionUtil = spy(new X509V3ExtensionUtil(
-            config, this.entitlementCurator, objectMapper, new Huffman()));
+            config, this.entitlementCurator, new Huffman()));
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
         BouncyCastleKeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(
             securityProvider, mock(KeyPairDataCurator.class));
@@ -103,6 +101,7 @@ class AnonymousCertificateGeneratorTest {
         this.generator = new AnonymousCertificateGenerator(
             config,
             extensionUtil,
+            new EntitlementPayloadGenerator(new ObjectMapper()),
             this.serialCurator,
             this.anonConsumerCurator,
             this.anonymousCertificateCurator,
