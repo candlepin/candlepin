@@ -67,7 +67,7 @@ class ProductCertificateGeneratorTest {
 
     @Test
     void shouldHandleNullGracefully() {
-        assertNull(this.productCertificateGenerator.getCertificate(null));
+        assertNull(this.productCertificateGenerator.generate(null));
     }
 
     @Test
@@ -76,7 +76,7 @@ class ProductCertificateGeneratorTest {
             .thenReturn(mock(ProductCertificate.class));
         Product product = new Product();
 
-        ProductCertificate certificate = this.productCertificateGenerator.getCertificate(product);
+        ProductCertificate certificate = this.productCertificateGenerator.generate(product);
 
         assertNotNull(certificate);
         verify(this.productCertificateCurator).findForProduct(any(Product.class));
@@ -87,7 +87,7 @@ class ProductCertificateGeneratorTest {
     void shouldCreateMissingProductCertificates() {
         Product product = new Product().setId("123");
 
-        ProductCertificate certificate = this.productCertificateGenerator.getCertificate(product);
+        ProductCertificate certificate = this.productCertificateGenerator.generate(product);
 
         assertNotNull(certificate);
         verify(this.productCertificateCurator).create(any(ProductCertificate.class));

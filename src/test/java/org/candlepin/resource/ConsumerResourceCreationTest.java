@@ -77,12 +77,13 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PermissionBlueprint;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.pki.certs.AnonymousCertificateGenerator;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
+import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -93,7 +94,6 @@ import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
-import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -209,9 +209,9 @@ public class ConsumerResourceCreationTest {
     @Mock
     private PoolService poolService;
     @Mock
-    private PoolCurator poolCurator;
+    private SCACertificateGenerator scaCertificateGenerator;
     @Mock
-    private CloudRegistrationAdapter cloudRegistrationAdapter;
+    private AnonymousCertificateGenerator anonymousCertificateGenerator;
     @Mock
     private AnonymousCloudConsumerCurator anonymousConsumerCurator;
     @Mock
@@ -279,11 +279,11 @@ public class ConsumerResourceCreationTest {
             this.entCertGenerator,
             this.poolService,
             this.environmentContentCurator,
-            this.cloudRegistrationAdapter,
-            this.poolCurator,
             this.anonymousConsumerCurator,
             this.anonymousCertCurator,
-            this.ownerService
+            this.ownerService,
+            this.scaCertificateGenerator,
+            this.anonymousCertificateGenerator
         );
 
         this.system = this.initConsumerType();

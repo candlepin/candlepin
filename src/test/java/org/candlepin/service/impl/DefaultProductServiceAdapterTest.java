@@ -81,7 +81,7 @@ public class DefaultProductServiceAdapterTest {
         Product product = TestUtil.createProduct("test_product");
         ProductCertificate cert = mock(ProductCertificate.class);
         when(this.productCurator.resolveProductId(owner.getKey(), product.getId())).thenReturn(product);
-        when(this.productCertificateGenerator.getCertificate(product)).thenReturn(cert);
+        when(this.productCertificateGenerator.generate(product)).thenReturn(cert);
 
         CertificateInfo result = this.adapter.getProductCertificate(owner.getKey(), product.getId());
 

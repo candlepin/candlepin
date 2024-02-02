@@ -74,7 +74,7 @@ public class ProductCertificateGenerator {
      *  the stored or created {@link ProductCertificate}, or null if the product cannot have
      *  certificates
      */
-    public ProductCertificate getCertificate(Product product) {
+    public ProductCertificate generate(Product product) {
         if (product == null) {
             log.warn("Cannot generate certificate for null product!");
             return null;

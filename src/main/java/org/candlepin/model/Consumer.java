@@ -219,7 +219,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cont_acc_cert_id")
-    private ContentAccessCertificate contentAccessCert;
+    private SCACertificate contentAccessCert;
 
     // Reference to the ConsumerType by ID
     @Column(name = "type_id")
@@ -401,11 +401,11 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
         return this;
     }
 
-    public ContentAccessCertificate getContentAccessCert() {
+    public SCACertificate getContentAccessCert() {
         return contentAccessCert;
     }
 
-    public Consumer setContentAccessCert(ContentAccessCertificate contentAccessCert) {
+    public Consumer setContentAccessCert(SCACertificate contentAccessCert) {
         this.contentAccessCert = contentAccessCert;
         return this;
     }

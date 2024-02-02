@@ -28,7 +28,6 @@ import org.candlepin.auth.Principal;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
-import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
@@ -41,7 +40,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
@@ -57,6 +55,8 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.model.SCACertificate;
+import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.pki.impl.Signer;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -70,6 +70,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -99,57 +104,58 @@ import java.util.zip.ZipInputStream;
 /**
  * ExporterTest
  */
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class ExporterTest {
-
+    @Mock
     private ConsumerTypeCurator ctc;
+    @Mock
     private OwnerCurator oc;
+    @Mock
+    private RulesCurator rc;
+    @Mock
+    private EntitlementCertServiceAdapter ecsa;
+    @Mock
+    private EntitlementCurator ec;
+    @Mock
+    private DistributorVersionCurator dvc;
+    @Mock
+    private CdnCurator cdnc;
+    @Mock
+    private EnvironmentCurator mockEnvironmentCurator;
+    @Mock
+    private Signer signer;
+    @Mock
+    private ExportRules exportRules;
+    @Mock
+    private PrincipalProvider pprov;
+    @Mock
+    private SCACertificateGenerator scaCertificateGenerator;
+    private ModelTranslator translator;
+    private SyncUtils su;
+    private DevConfig config;
     private MetaExporter me;
     private ConsumerExporter ce;
     private ConsumerTypeExporter cte;
-    private RulesCurator rc;
     private RulesExporter re;
-    private EntitlementCertServiceAdapter ecsa;
     private ProductExporter pe;
-    private EntitlementCurator ec;
-    private DistributorVersionCurator dvc;
-    private DistributorVersionExporter dve;
-    private CdnCurator cdnc;
     private CdnExporter cdne;
+    private DistributorVersionExporter dve;
     private EntitlementExporter ee;
-    private EnvironmentCurator mockEnvironmentCurator;
-    private Signer signer;
-    private DevConfig config;
-    private ExportRules exportRules;
-    private PrincipalProvider pprov;
-    private SyncUtils su;
-    private ModelTranslator translator;
-    private ContentAccessManager contentAccessManager;
 
     @BeforeEach
     public void setUp() {
-        ctc = mock(ConsumerTypeCurator.class);
-        mockEnvironmentCurator = mock(EnvironmentCurator.class);
-        oc = mock(OwnerCurator.class);
         me = new MetaExporter();
         translator = new StandardTranslator(ctc, mockEnvironmentCurator, oc);
         ce = new ConsumerExporter(translator);
         cte = new ConsumerTypeExporter(translator);
-        rc = mock(RulesCurator.class);
         re = new RulesExporter(rc);
-        ecsa = mock(EntitlementCertServiceAdapter.class);
         pe = new ProductExporter(translator);
-        ec = mock(EntitlementCurator.class);
         ee = new EntitlementExporter(translator);
-        signer = mock(Signer.class);
         config = TestConfig.defaults();
-        exportRules = mock(ExportRules.class);
-        pprov = mock(PrincipalProvider.class);
-        dvc = mock(DistributorVersionCurator.class);
         dve = new DistributorVersionExporter(translator);
-        cdnc = mock(CdnCurator.class);
         cdne = new CdnExporter(translator);
         su = new SyncUtils(config);
-        contentAccessManager = mock(ContentAccessManager.class);
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
     }
 
@@ -251,7 +257,7 @@ public class ExporterTest {
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, contentAccessManager);
+            translator, scaCertificateGenerator);
 
         File export = e.getFullExport(consumer, null, null, null);
 
@@ -306,7 +312,7 @@ public class ExporterTest {
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, contentAccessManager);
+            translator, scaCertificateGenerator);
 
         assertThrows(ExportCreationException.class, () -> e.getFullExport(consumer, null, null, null));
     }
@@ -348,7 +354,7 @@ public class ExporterTest {
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, contentAccessManager);
+            translator, scaCertificateGenerator);
         File export = e.getFullExport(consumer, null, null, null);
 
         // VERIFY
@@ -400,7 +406,7 @@ public class ExporterTest {
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, contentAccessManager);
+            translator, scaCertificateGenerator);
         File export = e.getFullExport(consumer, null, null, null);
 
         // VERIFY
@@ -458,7 +464,7 @@ public class ExporterTest {
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, contentAccessManager);
+            translator, scaCertificateGenerator);
         File export = e.getFullExport(consumer, null, null, null);
 
         verifyContent(export, "export/consumer.json", new VerifyConsumer("consumer.json"));
@@ -522,7 +528,7 @@ public class ExporterTest {
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, contentAccessManager);
+            translator, scaCertificateGenerator);
         File export = e.getFullExport(consumer, null, null, null);
 
         verifyContent(export, "export/distributor_version/test-dist-ver.json",
@@ -561,7 +567,7 @@ public class ExporterTest {
         entCert.setKey("ent-cert-key");
 
         // Create dummy content access cert
-        ContentAccessCertificate cac = new ContentAccessCertificate();
+        SCACertificate cac = new SCACertificate();
         CertificateSerial cacSerial = new CertificateSerial();
         cacSerial.setId(654321L);
         cac.setSerial(cacSerial);
@@ -569,12 +575,12 @@ public class ExporterTest {
         cac.setKey("content-access-key");
 
         when(ecsa.listForConsumer(consumer)).thenReturn(List.of(entCert));
-        when(contentAccessManager.getCertificate(consumer)).thenReturn(cac);
+        when(scaCertificateGenerator.generate(consumer)).thenReturn(cac);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, contentAccessManager);
+            translator, scaCertificateGenerator);
         File export = e.getEntitlementExport(consumer, null);
 
         // Verify
@@ -620,7 +626,7 @@ public class ExporterTest {
         entCert.setKey("ent-cert-key");
 
         // Create dummy content access cert
-        ContentAccessCertificate cac = new ContentAccessCertificate();
+        SCACertificate cac = new SCACertificate();
         CertificateSerial cacSerial = new CertificateSerial();
         cacSerial.setId(654321L);
         cac.setSerial(cacSerial);
@@ -628,12 +634,12 @@ public class ExporterTest {
         cac.setKey("content-access-key");
 
         doReturn(List.of(entCert)).when(ecsa).listForConsumer(consumer);
-        doReturn(cac).when(contentAccessManager).getCertificate(consumer);
+        doReturn(cac).when(scaCertificateGenerator).generate(consumer);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, contentAccessManager);
+            translator, scaCertificateGenerator);
         Set<Long> serials = new HashSet<>();
         serials.add(12345678910L);
         File export = e.getEntitlementExport(consumer, serials);
@@ -681,7 +687,7 @@ public class ExporterTest {
         entCert.setKey("ent-cert-key");
 
         // Create dummy content access cert
-        ContentAccessCertificate cac = new ContentAccessCertificate();
+        SCACertificate cac = new SCACertificate();
         CertificateSerial cacSerial = new CertificateSerial();
         cacSerial.setId(654321L);
         cac.setSerial(cacSerial);
@@ -689,12 +695,12 @@ public class ExporterTest {
         cac.setKey("content-access-key");
 
         doReturn(List.of(entCert)).when(ecsa).listForConsumer(consumer);
-        doReturn(cac).when(contentAccessManager).getCertificate(consumer);
+        doReturn(cac).when(scaCertificateGenerator).generate(consumer);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, contentAccessManager);
+            translator, scaCertificateGenerator);
         Set<Long> serials = new HashSet<>();
         serials.add(entSerial.getId());
         File export = e.getEntitlementExport(consumer, serials);
@@ -742,7 +748,7 @@ public class ExporterTest {
         entCert.setKey("ent-cert-key");
 
         // Create dummy content access cert
-        ContentAccessCertificate cac = new ContentAccessCertificate();
+        SCACertificate cac = new SCACertificate();
         CertificateSerial cacSerial = new CertificateSerial();
         cacSerial.setId(654321L);
         cac.setSerial(cacSerial);
@@ -750,12 +756,12 @@ public class ExporterTest {
         cac.setKey("content-access-key");
 
         doReturn(List.of(entCert)).when(ecsa).listForConsumer(consumer);
-        doReturn(cac).when(contentAccessManager).getCertificate(consumer);
+        doReturn(cac).when(scaCertificateGenerator).generate(consumer);
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
             ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, contentAccessManager);
+            translator, scaCertificateGenerator);
         Set<Long> serials = new HashSet<>();
         serials.add(cacSerial.getId());
         File export = e.getEntitlementExport(consumer, serials);

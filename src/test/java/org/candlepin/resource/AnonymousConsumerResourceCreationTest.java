@@ -71,7 +71,9 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.pki.certs.AnonymousCertificateGenerator;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
+import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -192,6 +194,10 @@ public class AnonymousConsumerResourceCreationTest {
     private AnonymousContentAccessCertificateCurator anonymousCertCurator;
     @Mock
     private OwnerServiceAdapter ownerService;
+    @Mock
+    private SCACertificateGenerator scaCertificateGenerator;
+    @Mock
+    private AnonymousCertificateGenerator anonymousCertificateGenerator;
 
     protected ModelTranslator modelTranslator;
 
@@ -225,8 +231,8 @@ public class AnonymousConsumerResourceCreationTest {
             Providers.of(new GuestMigration(consumerCurator)), this.modelTranslator, this.jobManager,
             this.dtoValidator, this.principalProvider, this.contentOverrideValidator,
             this.consumerContentOverrideCurator, this.entCertGenerator, this.poolService,
-            this.environmentContentCurator, this.cloudRegistrationAdapter, this.poolCurator,
-            this.anonymousConsumerCurator, this.anonymousCertCurator, ownerService
+            this.environmentContentCurator, this.anonymousConsumerCurator, this.anonymousCertCurator,
+            this.ownerService, this.scaCertificateGenerator, this.anonymousCertificateGenerator
         );
 
         this.system = this.initConsumerType();

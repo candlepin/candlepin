@@ -32,7 +32,7 @@ import javax.validation.constraints.NotNull;
  */
 @Entity
 @Table(name = "cp_cont_access_cert")
-public class ContentAccessCertificate extends RevocableCertificate<ContentAccessCertificate> {
+public class SCACertificate extends RevocableCertificate<SCACertificate> {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -85,7 +85,7 @@ public class ContentAccessCertificate extends RevocableCertificate<ContentAccess
         if (obj == null || (getClass() != obj.getClass())) {
             return false;
         }
-        ContentAccessCertificate other = (ContentAccessCertificate) obj;
+        SCACertificate other = (SCACertificate) obj;
         if (id == other.id &&
             other.getConsumer().getId().equals(this.getConsumer().getId())) {
 

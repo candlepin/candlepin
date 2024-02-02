@@ -47,7 +47,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EntitlementCurator;
@@ -56,6 +55,7 @@ import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.SCACertificate;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.RdbmsExceptionTranslator;
@@ -295,8 +295,8 @@ class EnvironmentResourceTest {
             .addEnvironment(environment);
     }
 
-    private ContentAccessCertificate createContentAccessCert() {
-        ContentAccessCertificate certificate = new ContentAccessCertificate();
+    private SCACertificate createContentAccessCert() {
+        SCACertificate certificate = new SCACertificate();
         certificate.setKey("crt_key");
         certificate.setSerial(new CertificateSerial());
         certificate.setCert("cert_1");

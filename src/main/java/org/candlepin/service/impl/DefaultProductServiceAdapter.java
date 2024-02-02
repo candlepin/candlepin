@@ -54,7 +54,7 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         // Given the task here, we can't possibly know what namespace the product may exist in, so
         // we'll need to check both.
         Product entity = this.productCurator.resolveProductId(ownerKey, productId);
-        return this.productCertificateGenerator.getCertificate(entity);
+        return this.productCertificateGenerator.generate(entity);
     }
 
     @Override

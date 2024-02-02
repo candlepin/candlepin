@@ -37,7 +37,6 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EntitlementCurator;
@@ -47,6 +46,7 @@ import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
+import org.candlepin.model.SCACertificate;
 import org.candlepin.resource.server.v1.EnvironmentApi;
 import org.candlepin.resource.util.EntitlementEnvironmentFilter;
 import org.candlepin.resource.util.EnvironmentUpdates;
@@ -232,7 +232,7 @@ public class EnvironmentResource implements EnvironmentApi {
                 idCertsToDelete.add(idCert.getId());
                 serialsToRevoke.add(idCert.getSerial().getId());
             }
-            ContentAccessCertificate contentAccessCert = consumer.getContentAccessCert();
+            SCACertificate contentAccessCert = consumer.getContentAccessCert();
             if (contentAccessCert != null) {
                 caCertsToDelete.add(contentAccessCert.getId());
                 serialsToRevoke.add(contentAccessCert.getSerial().getId());

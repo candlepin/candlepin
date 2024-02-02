@@ -1924,8 +1924,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetSerialIdsForCertsWithExistingSerials() {
-        ContentAccessCertificate caCert1 = createContentAccessCertificate();
-        ContentAccessCertificate caCert2 = createContentAccessCertificate();
+        SCACertificate caCert1 = createContentAccessCertificate();
+        SCACertificate caCert2 = createContentAccessCertificate();
         IdentityCertificate idCert1 = createIdCert();
         IdentityCertificate idCert2 = createIdCert();
         List<String> caCertIds = Arrays.asList(caCert1.getId(), caCert2.getId(), "unknown-id");
@@ -2160,8 +2160,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             .setUsername("testUser2")
             .setOwner(owner)
             .setType(ct);
-        ContentAccessCertificate caCert1 = createExpiredContentAccessCert(consumer);
-        ContentAccessCertificate caCert2 = createExpiredContentAccessCert(consumer2);
+        SCACertificate caCert1 = createExpiredContentAccessCert(consumer);
+        SCACertificate caCert2 = createExpiredContentAccessCert(consumer2);
         consumer.setContentAccessCert(caCert1);
         consumer2.setContentAccessCert(caCert2);
         consumerCurator.create(consumer);
@@ -2228,8 +2228,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         return saveCert(idCert);
     }
 
-    private ContentAccessCertificate createContentAccessCertificate() {
-        ContentAccessCertificate certificate = new ContentAccessCertificate();
+    private SCACertificate createContentAccessCertificate() {
+        SCACertificate certificate = new SCACertificate();
         certificate.setKey("crt_key");
         certificate.setSerial(new CertificateSerial(Util.addDaysToDt(10)));
         certificate.setCert("cert_1");
@@ -2237,8 +2237,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         return saveCert(certificate);
     }
 
-    private ContentAccessCertificate createExpiredContentAccessCert(Consumer consumer) {
-        ContentAccessCertificate certificate = new ContentAccessCertificate();
+    private SCACertificate createExpiredContentAccessCert(Consumer consumer) {
+        SCACertificate certificate = new SCACertificate();
         certificate.setKey("crt_key");
         certificate.setSerial(new CertificateSerial(Util.yesterday()));
         certificate.setCert("cert_1");
@@ -2253,7 +2253,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         return identityCertificateCurator.create(cert);
     }
 
-    private ContentAccessCertificate saveCert(ContentAccessCertificate cert) {
+    private SCACertificate saveCert(SCACertificate cert) {
         cert.setId(null);
         certSerialCurator.create(cert.getSerial());
         return caCertCurator.create(cert);
