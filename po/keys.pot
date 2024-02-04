@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-01 07:25+0000\n"
+"POT-Creation-Date: 2024-02-04 07:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -244,7 +244,7 @@ msgstr ""
 msgid "Error getting OAuth unit key"
 msgstr ""
 
-#: src/main/java/org/candlepin/auth/SSLAuth.java:99
+#: src/main/java/org/candlepin/auth/SSLAuth.java:96
 msgid "Invalid Certificate Type"
 msgstr ""
 
@@ -476,12 +476,12 @@ msgstr ""
 msgid "No rules file found in the database"
 msgstr ""
 
-#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:96
+#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:95
 #, java-format
 msgid "Unable to find an owner with key: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:108
+#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:107
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
 msgstr ""
@@ -1792,7 +1792,7 @@ msgstr ""
 msgid "{0} with ID(s) {1} could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:316
+#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:315
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
@@ -1886,7 +1886,7 @@ msgid "Failed to import archive"
 msgstr ""
 
 #: src/main/java/org/candlepin/sync/Importer.java:443
-#: src/main/java/org/candlepin/sync/Importer.java:811
+#: src/main/java/org/candlepin/sync/Importer.java:818
 msgid "Unable to extract export archive"
 msgstr ""
 
@@ -1913,6 +1913,11 @@ msgstr ""
 #: src/main/java/org/candlepin/sync/Importer.java:718
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
+msgstr ""
+
+#: src/main/java/org/candlepin/sync/Importer.java:731
+#, java-format
+msgid "Entry is outside of the target directory: {0}"
 msgstr ""
 
 #: src/main/java/org/candlepin/util/ContentOverrideValidator.java:113
