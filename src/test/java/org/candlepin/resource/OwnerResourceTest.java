@@ -337,7 +337,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolManager.entitleByPools(c1, pQs);
         assertEquals(2, consumerCurator.listByOwner(owner).list().size());
         assertEquals(1, poolCurator.listByOwner(owner).size());
-        assertEquals(1, entitlementCurator.listByOwner(owner).list().size());
+        assertEquals(1, entitlementCurator.listByOwner(owner).size());
 
         // Generate an ueber certificate for the Owner. This will need to
         // be cleaned up along with the owner deletion.
@@ -350,7 +350,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNull(consumerCurator.findByUuid(c1.getUuid()));
         assertNull(consumerCurator.findByUuid(c2.getUuid()));
         assertEquals(0, poolCurator.listByOwner(owner).size());
-        assertEquals(0, entitlementCurator.listByOwner(owner).list().size());
+        assertEquals(0, entitlementCurator.listByOwner(owner).size());
         assertNull(ueberCertificateCurator.findForOwner(owner));
     }
 
