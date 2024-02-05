@@ -21,14 +21,12 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyCollection;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.server.v1.DateRange;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -930,12 +928,8 @@ public class InstalledProductStatusCalculatorTest {
     private void mockConsumerEntitlements(Consumer consumer, Collection<Entitlement> entitlements) {
         List<Entitlement> entList = new LinkedList(entitlements);
 
-        CandlepinQuery mockCPQuery = mock(CandlepinQuery.class);
-        when(mockCPQuery.list()).thenReturn(entList);
-        when(mockCPQuery.iterator()).thenReturn(entitlements.iterator());
-
         when(entCurator.listByConsumer(consumer)).thenReturn(entList);
-        when(entCurator.listByConsumerAndDate(eq(consumer), any(Date.class))).thenReturn(mockCPQuery);
+        when(entCurator.listByConsumerAndDate(eq(consumer), any(Date.class))).thenReturn(entList);
     }
 
     private Map<String, String> getActiveGuestAttrs() {

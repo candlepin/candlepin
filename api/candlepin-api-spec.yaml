@@ -1903,7 +1903,7 @@ paths:
         - guest_ids
       operationId: getGuestIds
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       security: []
       parameters:

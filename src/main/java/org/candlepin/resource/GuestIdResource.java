@@ -28,7 +28,6 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -36,6 +35,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.VirtConsumerMap;
+import org.candlepin.paging.PagingUtilFactory;
 import org.candlepin.resource.server.v1.GuestIdsApi;
 import org.candlepin.resource.util.GuestMigration;
 
@@ -45,6 +45,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -61,6 +62,7 @@ public class GuestIdResource implements GuestIdsApi {
     private final ConsumerTypeCurator consumerTypeCurator;
     private final Provider<GuestMigration> migrationProvider;
     private final ConsumerResource consumerResource;
+    private PagingUtilFactory pagingUtilFactory;
 
     @Inject
     @SuppressWarnings({"checkstyle:parameternumber"})
@@ -73,7 +75,8 @@ public class GuestIdResource implements GuestIdsApi {
         Provider<GuestMigration> migrationProvider,
         ModelTranslator translator,
         PrincipalProvider principalProvider,
-        ConsumerResource consumerResource) {
+        ConsumerResource consumerResource,
+        PagingUtilFactory  pagingUtilFactory) {
 
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.guestIdCurator = guestIdCurator;
@@ -85,6 +88,7 @@ public class GuestIdResource implements GuestIdsApi {
         this.translator = Objects.requireNonNull(translator);
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.consumerResource = consumerResource;
+        this.pagingUtilFactory = pagingUtilFactory;
     }
 
     @Override
@@ -141,10 +145,16 @@ public class GuestIdResource implements GuestIdsApi {
 
     @Override
     @RootResource.LinkedResource
-    public CandlepinQuery<GuestIdDTOArrayElement> getGuestIds(@Verify(Consumer.class) String consumerUuid) {
+    public Stream<GuestIdDTOArrayElement> getGuestIds(@Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
-        return translator.translateQuery(guestIdCurator.listByConsumer(consumer),
-            GuestIdDTOArrayElement.class);
+        List<GuestId> guestIds = guestIdCurator.listByConsumer(consumer);
+        if (guestIds != null) {
+            Stream<GuestIdDTOArrayElement> stream = guestIds.stream()
+                .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTOArrayElement.class));
+            return this.pagingUtilFactory.forClass(GuestIdDTOArrayElement.class)
+                .applyPaging(stream, guestIds.size());
+        }
+        return Stream.empty();
     }
 
     @Override
