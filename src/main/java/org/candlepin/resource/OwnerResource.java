@@ -1018,14 +1018,15 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public CandlepinQuery<ActivationKeyDTO> ownerActivationKeys(
+    public Stream<ActivationKeyDTO> ownerActivationKeys(
         @Verify(value = Owner.class, subResource = SubResource.ACTIVATION_KEYS) String ownerKey,
         String keyName) {
 
         Owner owner = findOwnerByKey(ownerKey);
 
-        CandlepinQuery<ActivationKey> keys = this.activationKeyCurator.listByOwner(owner, keyName);
-        return translator.translateQuery(keys, ActivationKeyDTO.class);
+        List<ActivationKey> keys = this.activationKeyCurator.listByOwner(owner, keyName);
+        return keys.stream()
+            .map(this.translator.getStreamMapper(ActivationKey.class, ActivationKeyDTO.class));
     }
 
     @Override

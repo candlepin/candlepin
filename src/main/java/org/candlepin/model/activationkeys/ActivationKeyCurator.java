@@ -15,14 +15,12 @@
 package org.candlepin.model.activationkeys;
 
 import org.candlepin.model.AbstractHibernateCurator;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.hibernate.annotations.QueryHints;
-import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +33,10 @@ import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 
 @Singleton
@@ -46,18 +47,26 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
         super(ActivationKey.class);
     }
 
-    public CandlepinQuery<ActivationKey> listByOwner(Owner owner, String keyName) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(ActivationKey.class)
-            .add(Restrictions.eq("owner", owner));
+    public List<ActivationKey> listByOwner(Owner owner, String keyName) {
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+        CriteriaQuery<ActivationKey> criteriaQuery = criteriaBuilder.createQuery(ActivationKey.class);
+        Root<ActivationKey> key = criteriaQuery.from(ActivationKey.class);
+        criteriaQuery.select(key);
 
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(criteriaBuilder.equal(key.get(ActivationKey_.OWNER), owner));
         if (keyName != null) {
-            criteria.add(Restrictions.eq("name", keyName));
+            predicates.add(criteriaBuilder.equal(key.get(ActivationKey_.NAME), keyName));
         }
+        Predicate[] predicateArray = new Predicate[predicates.size()];
+        criteriaQuery.where(predicates.toArray(predicateArray));
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        return em.createQuery(criteriaQuery)
+            .getResultList();
     }
 
-    public CandlepinQuery<ActivationKey> listByOwner(Owner owner) {
+    public List<ActivationKey> listByOwner(Owner owner) {
         return this.listByOwner(owner, null);
     }
 
