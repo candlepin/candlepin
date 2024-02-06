@@ -82,6 +82,7 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
@@ -1543,12 +1544,13 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public Iterable<ImportRecordDTO> getImports(
+    public Stream<ImportRecordDTO> getImports(
         @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
 
-        return this.translator.translateQuery(this.importRecordCurator.findRecords(owner),
-            ImportRecordDTO.class);
+        return this.importRecordCurator.findRecords(owner)
+            .stream()
+            .map(this.translator.getStreamMapper(ImportRecord.class, ImportRecordDTO.class));
     }
 
     @Override

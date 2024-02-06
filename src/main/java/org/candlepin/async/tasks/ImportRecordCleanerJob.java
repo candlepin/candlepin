@@ -75,7 +75,7 @@ public class ImportRecordCleanerJob implements AsyncJob {
 
         int deleted = 0;
         for (Owner owner : this.ownerCurator.listAll().list()) {
-            List<ImportRecord> records = this.importRecordCurator.findRecords(owner).list();
+            List<ImportRecord> records = this.importRecordCurator.findRecords(owner);
 
             if (toKeep < records.size()) {
                 // records are already sorted by date, so just shave off of the end
