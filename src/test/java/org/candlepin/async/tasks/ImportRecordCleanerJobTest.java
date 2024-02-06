@@ -99,7 +99,7 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
         verify(context, times(1)).setJobResult(captor.capture());
         Object result = captor.getValue();
 
-        List<ImportRecord> records = this.importRecordCurator.findRecords(owner).list();
+        List<ImportRecord> records = this.importRecordCurator.findRecords(owner);
 
         assertEquals(10, records.size());
         assertEquals("Deleted 3 import records.", result);
@@ -128,7 +128,7 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
         verify(context, times(1)).setJobResult(captor.capture());
         Object result = captor.getValue();
 
-        List<ImportRecord> records = this.importRecordCurator.findRecords(owner).list();
+        List<ImportRecord> records = this.importRecordCurator.findRecords(owner);
 
         assertEquals(7, records.size());
         assertEquals("No import records were deleted.", result);
@@ -168,8 +168,8 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
         verify(context, times(1)).setJobResult(captor.capture());
         Object result = captor.getValue();
 
-        assertEquals(10, importRecordCurator.findRecords(owner1).list().size());
-        assertEquals(4, importRecordCurator.findRecords(owner2).list().size());
+        assertEquals(10, importRecordCurator.findRecords(owner1).size());
+        assertEquals(4, importRecordCurator.findRecords(owner2).size());
         assertEquals("Deleted 13 import records.", result);
     }
 
@@ -237,7 +237,7 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
         int expectedDeletedRecords = existingRecords - keep;
         int expectedKeptRecords = existingRecords > keep ? keep : existingRecords;
 
-        assertEquals(expectedKeptRecords, importRecordCurator.findRecords(owner).list().size());
+        assertEquals(expectedKeptRecords, importRecordCurator.findRecords(owner).size());
         if (expectedDeletedRecords > 0) {
             assertEquals("Deleted " + expectedDeletedRecords + " import records.", result);
         }

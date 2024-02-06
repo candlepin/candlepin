@@ -14,9 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+import java.util.List;
 
 import javax.inject.Singleton;
 
@@ -39,11 +37,14 @@ public class ImportRecordCurator extends AbstractHibernateCurator<ImportRecord> 
      * @param owner the {@link Owner}
      * @return the import records
      */
-    public CandlepinQuery<ImportRecord> findRecords(Owner owner) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(ImportRecord.class)
-            .add(Restrictions.eq("owner", owner))
-            .addOrder(Order.desc("created"));
+    public List<ImportRecord> findRecords(Owner owner) {
+        String jpql = "SELECT ir FROM ImportRecord ir " +
+            "WHERE ir.owner.id = :owner_id " +
+            "ORDER BY created DESC";
 
-        return this.cpQueryFactory.<ImportRecord>buildQuery(this.currentSession(), criteria);
+        return this.getEntityManager()
+            .createQuery(jpql, ImportRecord.class)
+            .setParameter("owner_id", owner.getId())
+            .getResultList();
     }
 }

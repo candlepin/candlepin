@@ -5228,7 +5228,7 @@ paths:
       operationId: getImports
       security: []
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       parameters:
         - name: owner_key

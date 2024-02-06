@@ -14,10 +14,10 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
-import javax.inject.Inject;
+import java.util.List;
+
 import javax.inject.Singleton;
 
 
@@ -28,20 +28,19 @@ import javax.inject.Singleton;
 @Singleton
 public class RoleCurator extends AbstractHibernateCurator<Role> {
 
-    private CandlepinQueryFactory cpQueryFactory;
-
-    @Inject
-    public RoleCurator(CandlepinQueryFactory cpQueryFactory) {
+    public RoleCurator() {
         super(Role.class);
-        this.cpQueryFactory = cpQueryFactory;
     }
 
-    public CandlepinQuery<Role> listForOwner(Owner o) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Role.class)
-            .createCriteria("permissions")
-            .add(Restrictions.eq("owner", o));
+    public List<Role> listForOwner(Owner owner) {
+        String jpql = "SELECT r FROM PermissionBlueprint pb " +
+            "JOIN Role r ON r.id = pb.role.id " +
+            "WHERE pb.owner.id = :owner_id";
 
-        return this.cpQueryFactory.<Role>buildQuery(this.currentSession(), criteria);
+        return this.getEntityManager()
+            .createQuery(jpql, Role.class)
+            .setParameter("owner_id", owner.getId())
+            .getResultList();
     }
 
     /**
