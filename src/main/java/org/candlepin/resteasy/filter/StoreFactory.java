@@ -112,7 +112,7 @@ public class StoreFactory {
 
         @Override
         public List<Owner> lookup(Collection<String> keys) {
-            return this.ownerCurator.getByKeys(keys).list();
+            return this.ownerCurator.getByKeys(keys);
         }
 
         @Override
@@ -137,7 +137,7 @@ public class StoreFactory {
 
         @Override
         public List<Environment> lookup(Collection<String> keys) {
-            return envCurator.listAllByIds(keys).list();
+            return envCurator.listAllByIds(keys);
         }
 
         @Override
@@ -241,7 +241,7 @@ public class StoreFactory {
 
         @Override
         public List<Entitlement> lookup(Collection<String> keys) {
-            return entitlementCurator.listAllByIds(keys).list();
+            return entitlementCurator.listAllByIds(keys);
         }
 
         @Override
@@ -266,7 +266,7 @@ public class StoreFactory {
 
         @Override
         public List<Pool> lookup(Collection<String> keys) {
-            return poolCurator.listAllByIds(keys).list();
+            return poolCurator.listAllByIds(keys);
         }
 
         @Override
@@ -291,7 +291,7 @@ public class StoreFactory {
 
         @Override
         public List<ActivationKey> lookup(Collection<String> keys) {
-            return activationKeyCurator.listAllByIds(keys).list();
+            return activationKeyCurator.listAllByIds(keys);
         }
 
         @Override
@@ -316,7 +316,7 @@ public class StoreFactory {
 
         @Override
         public List<AsyncJobStatus> lookup(Collection<String> jobIds) {
-            return jobCurator.listAllByIds(jobIds).list();
+            return jobCurator.listAllByIds(jobIds);
         }
 
         @Override

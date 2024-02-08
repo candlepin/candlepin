@@ -16,13 +16,15 @@ package org.candlepin.resource;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.DeletedConsumerDTO;
-import org.candlepin.model.CandlepinQuery;
+import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.resource.server.v1.DeletedConsumerApi;
 import org.candlepin.util.Util;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -41,9 +43,11 @@ public class DeletedConsumerResource implements DeletedConsumerApi {
     }
 
     @Override
-    public CandlepinQuery<DeletedConsumerDTO> listByDate(OffsetDateTime date) {
-        return this.translator.translateQuery(date != null ?
+    public Stream<DeletedConsumerDTO> listByDate(OffsetDateTime date) {
+        List<DeletedConsumer> deletedConsumers = date != null ?
             this.deletedConsumerCurator.findByDate(Util.toDate(date)) :
-            this.deletedConsumerCurator.listAll(), DeletedConsumerDTO.class);
+            this.deletedConsumerCurator.listAll();
+        return deletedConsumers.stream()
+            .map(this.translator.getStreamMapper(DeletedConsumer.class, DeletedConsumerDTO.class));
     }
 }

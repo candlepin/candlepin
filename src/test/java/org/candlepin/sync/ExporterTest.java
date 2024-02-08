@@ -35,7 +35,6 @@ import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
@@ -62,7 +61,6 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.version.VersionUtil;
@@ -88,6 +86,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -241,15 +240,10 @@ public class ExporterTest {
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
         when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
-        when(ctc.listAll()).thenReturn(cqmock);
+        when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
 
-        CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
-        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
-        when(emptyIteratorMock.iterator()).thenReturn(Arrays.asList().iterator());
-        when(cdnc.listAll()).thenReturn(emptyIteratorMock);
-        when(ctc.listAll()).thenReturn(emptyIteratorMock);
+        when(cdnc.listAll()).thenReturn(new LinkedList<>());
+        when(ctc.listAll()).thenReturn(new LinkedList<>());
 
         when(consumer.getOwnerId()).thenReturn(owner.getId());
         when(oc.findOwnerById(eq(owner.getId()))).thenReturn(owner);
@@ -307,9 +301,7 @@ public class ExporterTest {
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
         when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
-        when(ctc.listAll()).thenReturn(cqmock);
+        when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
@@ -345,13 +337,9 @@ public class ExporterTest {
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
         when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
-        when(ctc.listAll()).thenReturn(cqmock);
+        when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
 
-        CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
-        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
-        when(cdnc.listAll()).thenReturn(emptyIteratorMock);
+        when(cdnc.listAll()).thenReturn(new LinkedList<>());
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
@@ -397,14 +385,9 @@ public class ExporterTest {
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
         when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
-        when(ctc.listAll()).thenReturn(cqmock);
+        when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
 
-        CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
-        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
-        when(emptyIteratorMock.iterator()).thenReturn(Arrays.asList().iterator());
-        when(cdnc.listAll()).thenReturn(emptyIteratorMock);
+        when(cdnc.listAll()).thenReturn(new LinkedList<>());
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
@@ -457,13 +440,9 @@ public class ExporterTest {
         when(ctc.getConsumerType(eq(consumer))).thenReturn(ctype);
         when(ctc.get(eq(ctype.getId()))).thenReturn(ctype);
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
-        when(ctc.listAll()).thenReturn(cqmock);
+        when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
 
-        CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
-        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
-        when(cdnc.listAll()).thenReturn(emptyIteratorMock);
+        when(cdnc.listAll()).thenReturn(new LinkedList<>());
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
@@ -520,15 +499,10 @@ public class ExporterTest {
         dvList.add(dv);
         when(dvc.findAll()).thenReturn(dvList);
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
-        when(ctc.listAll()).thenReturn(cqmock);
+        when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
 
-        CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
-        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
-        when(emptyIteratorMock.iterator()).thenReturn(Arrays.asList().iterator());
-        when(cdnc.listAll()).thenReturn(emptyIteratorMock);
-        when(ctc.listAll()).thenReturn(emptyIteratorMock);
+        when(cdnc.listAll()).thenReturn(new LinkedList<>());
+        when(ctc.listAll()).thenReturn(new LinkedList<>());
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy

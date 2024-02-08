@@ -98,8 +98,10 @@ public class ProductResource implements ProductsApi {
     }
 
     @Override
-    public Iterable<ProductDTO> getProducts() {
-        return this.translator.translateQuery(this.productCurator.listAll(), ProductDTO.class);
+    public Stream<ProductDTO> getProducts() {
+        return this.productCurator.listAll()
+            .stream()
+            .map(this.translator.getStreamMapper(Product.class, ProductDTO.class));
     }
 
     @Override

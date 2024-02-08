@@ -205,7 +205,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
      */
     @Override
     public List<? extends UserInfo> listUsers() {
-        return this.userCurator.listAll().list();
+        return this.userCurator.listAll();
     }
 
     /**
@@ -260,7 +260,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
         if (entity.isSuperAdmin() != null && entity.isSuperAdmin()) {
             // Super admins can see everything
-            return this.ownerCurator.listAll().list();
+            return this.ownerCurator.listAll();
         }
         else {
             // We need to pair this down to just accessible owners...
@@ -591,6 +591,6 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
      */
     @Override
     public List<? extends RoleInfo> listRoles() {
-        return this.roleCurator.listAll().list();
+        return this.roleCurator.listAll();
     }
 }

@@ -53,9 +53,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -70,6 +72,7 @@ import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.From;
+import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
@@ -255,17 +258,48 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     /**
      * @return all entities for a particular type.
      */
-    public CandlepinQuery<E> listAll() {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria();
+    public List<E> listAll() {
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+        CriteriaQuery<E> criteriaQuery = criteriaBuilder.createQuery(this.entityType);
+        Root<E> root = criteriaQuery.from(this.entityType);
+        criteriaQuery.select(root);
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        Predicate securityPredicate = this.getSecurityPredicate(this.entityType, criteriaBuilder, root);
+        if (securityPredicate != null) {
+            criteriaQuery.where(securityPredicate);
+        }
+
+        return em.createQuery(criteriaQuery).getResultList();
     }
 
-    public CandlepinQuery<E> listAllByIds(Collection<? extends Serializable> ids) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(CPRestrictions.in("id", ids));
+    public List<E> listAllByIds(Collection<? extends Serializable> ids) {
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+        CriteriaQuery<E> criteriaQuery = criteriaBuilder.createQuery(this.entityType);
+        Root<E> root = criteriaQuery.from(this.entityType);
+        criteriaQuery.select(root);
 
-        return this.cpQueryFactory.<E>buildQuery(this.currentSession(), criteria);
+        ParameterExpression<Collection> idList = criteriaBuilder.parameter(Collection.class);
+        Predicate predicate = root.get("id").in(idList);
+
+        Predicate securityPredicate = this.getSecurityPredicate(this.entityType, criteriaBuilder, root);
+        if (securityPredicate != null) {
+            predicate = criteriaBuilder.and(predicate, securityPredicate);
+        }
+        criteriaQuery.where(predicate);
+        TypedQuery<E> query = em.createQuery(criteriaQuery);
+
+        // to ensure uniqueness of the members of the input collection
+        if (!(ids instanceof Set)) {
+            ids = new HashSet<>(ids);
+        }
+
+        List<E> result = new ArrayList<>();
+        for (List block : this.partition(ids)) {
+            result.addAll(query.setParameter(idList, block).getResultList());
+        }
+        return result;
     }
 
     @SuppressWarnings("unchecked")
@@ -308,7 +342,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             page.setPageRequest(pageRequest);
         }
         else {
-            List<E> pageData = this.listAll().list();
+            List<E> pageData = this.listAll();
             page.setMaxRecords(pageData.size());
             page.setPageData(pageData);
         }
@@ -1447,7 +1481,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     /**
      * Builds a collection of order instances to be used with the JPA criteria query API.
      *
-     * @param critBuilder
+     * @param criteriaBuilder
      *  the CriteriaBuilder instance to use to create order
 
      * @param root
