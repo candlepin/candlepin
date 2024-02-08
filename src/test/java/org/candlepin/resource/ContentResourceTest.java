@@ -30,13 +30,13 @@ import org.candlepin.dto.api.v1.ContentTranslator;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
-import org.candlepin.model.EmptyCandlepinQuery;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.util.LinkedList;
 import java.util.Locale;
 
 
@@ -62,7 +62,7 @@ public class ContentResourceTest {
 
     @Test
     public void testGetContents() {
-        when(cc.listAll()).thenReturn(new EmptyCandlepinQuery<>());
+        when(cc.listAll()).thenReturn(new LinkedList<>());
 
         resource.getContents();
         verify(cc, atLeastOnce()).listAll();

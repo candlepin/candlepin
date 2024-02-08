@@ -70,7 +70,7 @@ public class EntitlementCertificateCuratorTest extends DatabaseTestFixture {
         this.entitlementCertificateCurator.clear();
 
         // Verify that we can fetch all three certs generally
-        Collection<EntitlementCertificate> certs = this.entitlementCertificateCurator.listAll().list();
+        Collection<EntitlementCertificate> certs = this.entitlementCertificateCurator.listAll();
         assertNotNull(certs);
         assertEquals(3, certs.size());
 
@@ -81,7 +81,7 @@ public class EntitlementCertificateCuratorTest extends DatabaseTestFixture {
         assertEquals(1, count);
 
         // Verify state after deletion
-        certs = this.entitlementCertificateCurator.listAll().list();
+        certs = this.entitlementCertificateCurator.listAll();
         assertNotNull(certs);
         assertEquals(2, certs.size());
 
@@ -124,7 +124,7 @@ public class EntitlementCertificateCuratorTest extends DatabaseTestFixture {
         this.entitlementCertificateCurator.clear();
 
         // Verify that we can fetch all three certs generally
-        Collection<EntitlementCertificate> certs = this.entitlementCertificateCurator.listAll().list();
+        Collection<EntitlementCertificate> certs = this.entitlementCertificateCurator.listAll();
         assertNotNull(certs);
         assertEquals(3, certs.size());
 
@@ -135,7 +135,7 @@ public class EntitlementCertificateCuratorTest extends DatabaseTestFixture {
         assertEquals(2, count);
 
         // Verify state after deletion
-        certs = this.entitlementCertificateCurator.listAll().list();
+        certs = this.entitlementCertificateCurator.listAll();
         assertNotNull(certs);
         assertEquals(1, certs.size());
 

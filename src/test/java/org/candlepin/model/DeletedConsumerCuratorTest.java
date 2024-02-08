@@ -128,15 +128,15 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void findByDate() throws InterruptedException {
-        assertEquals(2, deletedConsumerCurator.findByDate(twoResultsDate).list().size());
-        assertEquals(1, deletedConsumerCurator.findByDate(oneResultDate).list().size());
+        assertEquals(2, deletedConsumerCurator.findByDate(twoResultsDate).size());
+        assertEquals(1, deletedConsumerCurator.findByDate(oneResultDate).size());
         Thread.sleep(2000);
-        assertEquals(0, deletedConsumerCurator.findByDate(new Date()).list().size());
+        assertEquals(0, deletedConsumerCurator.findByDate(new Date()).size());
     }
 
     @Test
     public void descOrderByDate() {
-        DeletedConsumer newest = deletedConsumerCurator.findByDate(twoResultsDate).list().get(0);
+        DeletedConsumer newest = deletedConsumerCurator.findByDate(twoResultsDate).get(0);
         assertEquals("klmno", newest.getConsumerUuid());
     }
 

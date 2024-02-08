@@ -154,11 +154,13 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     }
 
     @Transactional
-    public CandlepinQuery<Owner> getByKeys(Collection<String> keys) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(CPRestrictions.in("key", keys));
+    public List<Owner> getByKeys(Collection<String> keys) {
+        String jpql = "SELECT o FROM Owner o WHERE o.key in (:keys)";
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        return this.getEntityManager()
+            .createQuery(jpql, Owner.class)
+            .setParameter("keys", keys)
+            .getResultList();
     }
 
     public Owner getByUpstreamUuid(String upstreamUuid) {

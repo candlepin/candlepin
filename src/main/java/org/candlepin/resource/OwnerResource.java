@@ -776,12 +776,13 @@ public class OwnerResource implements OwnerApi {
 
     @Override
     @Wrapped(element = "owners")
-    public CandlepinQuery<OwnerDTO> listOwners(String keyFilter) {
-        CandlepinQuery<Owner> query = keyFilter != null ?
+    public Stream<OwnerDTO> listOwners(String keyFilter) {
+        List<Owner> query = keyFilter != null ?
             this.ownerCurator.getByKeys(Arrays.asList(keyFilter)) :
             this.ownerCurator.listAll();
 
-        return this.translator.translateQuery(query, OwnerDTO.class);
+        return query.stream()
+            .map(this.translator.getStreamMapper(Owner.class, OwnerDTO.class));
     }
 
     @Override

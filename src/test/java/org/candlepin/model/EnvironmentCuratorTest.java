@@ -45,7 +45,7 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
     @Test
     public void create() {
         Environment environment = environmentCurator.create(new Environment("env1", "Env 1", owner));
-        assertEquals(1, environmentCurator.listAll().list().size());
+        assertEquals(1, environmentCurator.listAll().size());
         Environment e = environmentCurator.get("env1");
         assertEquals(owner, e.getOwner());
     }
@@ -54,7 +54,7 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
     public void delete() {
         Environment environment = environmentCurator.create(new Environment("env1", "Env 1", owner));
         environmentCurator.delete(environment);
-        assertEquals(0, environmentCurator.listAll().list().size());
+        assertEquals(0, environmentCurator.listAll().size());
     }
 
     @ParameterizedTest

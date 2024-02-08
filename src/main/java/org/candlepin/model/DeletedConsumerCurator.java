@@ -24,10 +24,14 @@ import org.hibernate.criterion.Restrictions;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
 
 /**
@@ -100,11 +104,18 @@ public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedCons
     }
 
     @SuppressWarnings("unchecked")
-    public CandlepinQuery<DeletedConsumer> findByDate(Date date) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(DeletedConsumer.class)
-            .add(Restrictions.ge("created", date))
-            .addOrder(Order.desc("created"));
+    public List<DeletedConsumer> findByDate(Date date) {
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+        CriteriaQuery<DeletedConsumer> criteriaQuery = criteriaBuilder.createQuery(DeletedConsumer.class);
+        Root<DeletedConsumer> consumer = criteriaQuery.from(DeletedConsumer.class);
+        criteriaQuery.select(consumer);
 
-        return this.cpQueryFactory.<DeletedConsumer>buildQuery(this.currentSession(), criteria);
+        criteriaQuery.where(criteriaBuilder.greaterThanOrEqualTo(
+            consumer.get(DeletedConsumer_.CREATED), date));
+        criteriaQuery.orderBy(criteriaBuilder.desc(consumer.get(DeletedConsumer_.CREATED)));
+
+        return em.createQuery(criteriaQuery)
+            .getResultList();
     }
 }

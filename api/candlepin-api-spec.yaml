@@ -82,7 +82,7 @@ paths:
         - activation_key
       operationId: findActivationKey
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       security: []
       responses:
@@ -2609,7 +2609,7 @@ paths:
           - consumer_type
       operationId: getConsumerTypes
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       security: []
       responses:
@@ -2752,7 +2752,7 @@ paths:
         - cdn
       operationId: getContentDeliveryNetworks
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       security: []
       responses:
@@ -2872,7 +2872,7 @@ paths:
       description: Retrieves list of Content
       operationId: getContents
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       security: []
       responses:
@@ -2953,7 +2953,7 @@ paths:
             format: date-time
           description: Filter deleted consumers to those on or after this date
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       security: []
       responses:
@@ -4184,7 +4184,7 @@ paths:
         - owner
       operationId: listOwners
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       parameters:
         - name: key
@@ -6736,7 +6736,7 @@ paths:
       description: Retrieves list containing all known products
       operationId: getProducts
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       security: []
       responses:

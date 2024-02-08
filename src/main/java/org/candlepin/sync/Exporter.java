@@ -32,7 +32,6 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ResultIterator;
 import org.candlepin.model.SCACertificate;
 import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.pki.impl.Signer;
@@ -576,33 +575,20 @@ public class Exporter {
     }
 
     private void exportContentDeliveryNetworks(File baseDir) throws IOException {
-        ResultIterator<Cdn> iterator = this.cdnCurator.listAll().iterate();
+        List<Cdn> cdns = this.cdnCurator.listAll();
 
-        try {
-            if (iterator.hasNext()) {
-                File cdnDir = new File(baseDir.getCanonicalPath(), "content_delivery_network");
-                cdnDir.mkdir();
+        if (cdns != null && !cdns.isEmpty()) {
+            File cdnDir = new File(baseDir.getCanonicalPath(), "content_delivery_network");
+            cdnDir.mkdir();
 
-                while (iterator.hasNext()) {
-                    Cdn cdn = iterator.next();
-                    log.debug("Exporting CDN: {}", cdn.getName());
+            for (Cdn cdn : cdns) {
+                log.debug("Exporting CDN: {}", cdn.getName());
+                File file = new File(cdnDir.getCanonicalPath(), cdn.getLabel() + ".json");
 
-                    FileWriter writer = null;
-                    try {
-                        File file = new File(cdnDir.getCanonicalPath(), cdn.getLabel() + ".json");
-                        writer = new FileWriter(file);
-                        cdnExporter.export(mapper, writer, cdn);
-                    }
-                    finally {
-                        if (writer != null) {
-                            writer.close();
-                        }
-                    }
+                try (FileWriter writer = new FileWriter(file)) {
+                    cdnExporter.export(mapper, writer, cdn);
                 }
             }
-        }
-        finally {
-            iterator.close();
         }
     }
 }

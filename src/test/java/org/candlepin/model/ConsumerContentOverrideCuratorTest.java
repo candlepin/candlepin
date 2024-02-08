@@ -154,11 +154,11 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
 
         this.consumerContentOverrideCurator.flush();
 
-        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll().list();
+        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll();
         assertEquals(2, ccoList.size());
 
         consumerContentOverrideCurator.removeByContentLabel(consumer, "test-content");
-        List<ConsumerContentOverride> ccoList2 = consumerContentOverrideCurator.listAll().list();
+        List<ConsumerContentOverride> ccoList2 = consumerContentOverrideCurator.listAll();
         assertEquals(0, ccoList2.size());
     }
 
@@ -170,11 +170,11 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
         consumerContentOverrideCurator.create(cco2);
 
         this.consumerContentOverrideCurator.flush();
-        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll().list();
+        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll();
         assertEquals(2, ccoList.size());
 
         consumerContentOverrideCurator.removeByParent(consumer);
-        List<ConsumerContentOverride> ccoList2 = consumerContentOverrideCurator.listAll().list();
+        List<ConsumerContentOverride> ccoList2 = consumerContentOverrideCurator.listAll();
         assertEquals(0, ccoList2.size());
     }
 
@@ -199,7 +199,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
         this.consumerContentOverrideCurator.flush();
         this.consumerContentOverrideCurator.clear();
 
-        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll().list();
+        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll();
         assertEquals(1, ccoList.size());
         assertEquals(cco2.getValue(), ccoList.get(0).getValue());
     }
@@ -224,7 +224,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
         this.consumerContentOverrideCurator.flush();
         this.consumerContentOverrideCurator.clear();
 
-        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll().list();
+        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll();
         assertEquals(2, ccoList.size());
     }
 
