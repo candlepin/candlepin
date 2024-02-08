@@ -427,7 +427,7 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
      * Builds a collection of predicates to be used for querying jobs using the JPA criteria query
      * API.
      *
-     * @param critBuilder
+     * @param criteriaBuilder
      *  the CriteriaBuilder instance to use to create predicates
 
      * @param root

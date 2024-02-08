@@ -75,7 +75,7 @@ public class OwnerInfoCurator {
         // TODO:
         // Make sure this doesn't choke on MySQL, since we're doing queries with the cursor open.
 
-        List<ConsumerType> types = consumerTypeCurator.listAll().list();
+        List<ConsumerType> types = consumerTypeCurator.listAll();
         HashMap<String, ConsumerType> typeHash = new HashMap<>();
         for (ConsumerType type : types) {
             // Store off the type for later use

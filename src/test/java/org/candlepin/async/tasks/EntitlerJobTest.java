@@ -35,7 +35,6 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.exceptions.ForbiddenException;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
@@ -55,7 +54,6 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -231,9 +229,8 @@ public class EntitlerJobTest {
 
     private void stubPoolCuratorPoolsById() {
         final Pool pool = createPool("hello");
-        final CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Collections.singletonList(pool).iterator());
-        when(poolCurator.listAllByIds(anySet())).thenReturn(cqmock);
+        final List<Pool> pools = List.of(pool);
+        when(poolCurator.listAllByIds(anySet())).thenReturn(pools);
     }
 
     private JobExecutionContext createJobContext(final JobConfig config) {
@@ -254,7 +251,7 @@ public class EntitlerJobTest {
         final Entitlement entitlement = new Entitlement();
         entitlement.setPool(pool);
         entitlement.setQuantity(100);
-        final List<Entitlement> entitlements = Collections.singletonList(entitlement);
+        final List<Entitlement> entitlements = List.of(entitlement);
         doReturn(entitlements)
             .when(entitler)
             .bindByPoolQuantities(eq(CONSUMER_UUID), anyMap());

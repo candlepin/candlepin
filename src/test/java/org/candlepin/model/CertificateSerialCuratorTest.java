@@ -153,7 +153,7 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         certSerialCurator.flush();
         certSerialCurator.clear();
 
-        for (CertificateSerial serial : certSerialCurator.listAll().list()) {
+        for (CertificateSerial serial : certSerialCurator.listAll()) {
             assertTrue(serial.isRevoked());
         }
     }

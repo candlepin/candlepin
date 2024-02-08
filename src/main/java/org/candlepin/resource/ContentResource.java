@@ -24,6 +24,7 @@ import org.candlepin.resource.server.v1.ContentApi;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -41,8 +42,10 @@ public class ContentResource implements ContentApi {
     }
 
     @Override
-    public Iterable<ContentDTO> getContents() {
-        return this.modelTranslator.translateQuery(this.contentCurator.listAll(), ContentDTO.class);
+    public Stream<ContentDTO> getContents() {
+        return this.contentCurator.listAll()
+            .stream()
+            .map(this.modelTranslator.getStreamMapper(Content.class, ContentDTO.class));
     }
 
     @Override

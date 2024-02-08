@@ -2200,7 +2200,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         this.consumerCurator.flush();
         this.consumerCurator.clear();
 
-        List<Consumer> consumers = this.consumerCurator.listAllByIds(consumerIds).list();
+        List<Consumer> consumers = this.consumerCurator.listAllByIds(consumerIds);
         Assertions.assertThat(consumers)
             .hasSize(2)
             .extracting(Consumer::getOwnerId)

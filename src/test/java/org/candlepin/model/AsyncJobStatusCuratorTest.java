@@ -1207,7 +1207,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(expected.size(), deleted);
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1244,7 +1244,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(expected.size(), deleted);
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1275,7 +1275,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1306,7 +1306,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1342,7 +1342,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1373,7 +1373,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1404,7 +1404,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1440,7 +1440,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1475,7 +1475,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1510,7 +1510,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1550,7 +1550,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1586,7 +1586,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1623,7 +1623,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1654,7 +1654,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1685,7 +1685,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1718,7 +1718,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1749,7 +1749,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(toDelete.size(), deleted);
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - toDelete.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1780,7 +1780,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(toDelete.size(), deleted);
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - toDelete.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1811,7 +1811,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(toDelete.size(), deleted);
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - toDelete.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1870,7 +1870,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size() - expected.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1893,7 +1893,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         // The sanity check should cause this to delete nothing.
         assertEquals(0, deleted);
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
@@ -1914,7 +1914,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         // The sanity check should cause this to delete nothing.
         assertEquals(0, deleted);
 
-        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
+        List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll();
         assertEquals(created.size(), remaining.size());
 
         for (AsyncJobStatus job : remaining) {
