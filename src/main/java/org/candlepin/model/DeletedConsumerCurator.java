@@ -17,8 +17,6 @@ package org.candlepin.model;
 import org.candlepin.auth.Principal;
 import org.candlepin.guice.PrincipalProvider;
 
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
@@ -58,17 +56,19 @@ public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedCons
             .uniqueResult();
     }
 
-    public CandlepinQuery<DeletedConsumer> findByOwner(Owner o) {
+    public List<DeletedConsumer> findByOwner(Owner o) {
         return findByOwnerId(o.getId());
     }
 
     @SuppressWarnings("unchecked")
-    public CandlepinQuery<DeletedConsumer> findByOwnerId(String oid) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(DeletedConsumer.class)
-            .add(Restrictions.eq("ownerId", oid))
-            .addOrder(Order.desc("created"));
+    public List<DeletedConsumer> findByOwnerId(String oid) {
+        String jpql = "SELECT dc from DeletedConsumer dc WHERE dc.ownerId = :owner_id " +
+            "ORDER BY created desc";
 
-        return this.cpQueryFactory.<DeletedConsumer>buildQuery(this.currentSession(), criteria);
+        return this.getEntityManager()
+            .createQuery(jpql)
+            .setParameter("owner_id", oid)
+            .getResultList();
     }
 
     public int countByConsumer(Consumer c) {
