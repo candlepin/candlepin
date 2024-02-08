@@ -96,7 +96,7 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void byOwnerId() {
-        List<DeletedConsumer> found = deletedConsumerCurator.findByOwnerId("10").list();
+        List<DeletedConsumer> found = deletedConsumerCurator.findByOwnerId("10");
         assertEquals(2, found.size());
     }
 
@@ -104,7 +104,7 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
     public void byOwner() {
         Owner o = mock(Owner.class);
         when(o.getId()).thenReturn("20");
-        List<DeletedConsumer> found = deletedConsumerCurator.findByOwner(o).list();
+        List<DeletedConsumer> found = deletedConsumerCurator.findByOwner(o);
         assertEquals(1, found.size());
     }
 
@@ -142,7 +142,7 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void descOrderByOwnerId() {
-        DeletedConsumer newest = deletedConsumerCurator.findByOwnerId("10").list().get(0);
+        DeletedConsumer newest = deletedConsumerCurator.findByOwnerId("10").get(0);
         assertEquals("fghij", newest.getConsumerUuid());
     }
 
