@@ -54,7 +54,7 @@ import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
-import org.candlepin.controller.EntitlementCertificateGenerator;
+import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -265,7 +265,7 @@ public class ConsumerResourceTest {
     @Mock
     private EnvironmentContentCurator environmentContentCurator;
     @Mock
-    private EntitlementCertificateGenerator entCertGenerator;
+    private EntitlementCertificateService entCertGenerator;
     @Mock
     private PoolService poolService;
     @Mock

@@ -53,10 +53,12 @@ import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.RepoType;
+import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.huffman.Huffman;
 import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
+import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.Signer;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.TestUtil;
@@ -105,7 +107,7 @@ import java.util.stream.Stream;
 
 
 @ExtendWith(MockitoExtension.class)
-public class EntCertGeneratorTest {
+public class EntitlementCertificateGeneratorTest {
     private static final List<String> TEST_URLS = List.of(
         "/content/dist/rhel/$releasever/$basearch/os",
         "/content/dist/rhel/$releasever/$basearch/debug",
@@ -117,16 +119,12 @@ public class EntCertGeneratorTest {
     );
     private static final String CONTENT_LABEL = "label";
     private static final String CONTENT_ID = "1234";
-    private static final String CONTENT_ID_FILE = "2456";
-    private static final String CONTENT_ID_KICKSTART = "2457";
-    private static final String CONTENT_ID_UNKNOWN = "2458";
     private static final String CONTENT_TYPE = "yum";
     private static final String CONTENT_TYPE_KICKSTART = "kickstart";
     private static final String CONTENT_TYPE_FILE = "file";
     private static final String CONTENT_TYPE_UNKNOWN = "unknown content type";
     private static final String CONTENT_GPG_URL = "gpgUrl";
     private static final String CONTENT_URL = "/content/dist/rhel/$releasever/$basearch/os";
-    private static final String CONTENT_URL_UNKNOWN_TYPE = "/unknown/content/type";
     private static final String CONTENT_VENDOR = "vendor";
     private static final String CONTENT_NAME = "name";
     private static final Long CONTENT_METADATA_EXPIRE = 3200L;
@@ -151,7 +149,7 @@ public class EntCertGeneratorTest {
     private Owner owner;
     private I18n i18n;
     private KeyPairGenerator keyPairGenerator;
-    private EntCertGenerator generator;
+    private EntitlementCertificateGenerator generator;
 
     @BeforeEach
     public void setUp() throws CertificateException, IOException {
@@ -179,9 +177,10 @@ public class EntCertGeneratorTest {
         PemEncoder pemEncoder = new BouncyCastlePemEncoder();
         CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
         Signer signer = new Signer(certificateReader);
+        SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
         X509CertificateBuilder certificateBuilder = new X509CertificateBuilder(
-            certificateReader, securityProvider);
-        this.generator = new EntCertGenerator(
+            certificateReader, securityProvider, subjectKeyIdentifierWriter);
+        this.generator = new EntitlementCertificateGenerator(
             x509ExtensionUtil,
             x509V3ExtensionUtil,
             new EntitlementPayloadGenerator(mapper),
@@ -201,7 +200,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void temporaryCertificateForUnmappedGuests() throws Exception {
+    public void temporaryCertificateForUnmappedGuests() {
         Consumer consumer = createConsumer(owner);
         Product product = createProduct();
         Subscription subscription = createSubscription(product);
@@ -229,7 +228,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void certificateShouldUsePreDatedPoolIfOlderThanHour() throws Exception {
+    public void certificateShouldUsePreDatedPoolIfOlderThanHour() {
         Consumer consumer = createConsumer(owner);
         Product product = createProduct();
         Subscription subscription = createSubscription(product);
@@ -246,7 +245,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void certificateShouldUsePastHourIfPooIsYoungerThanHour() throws Exception {
+    public void certificateShouldUsePastHourIfPooIsYoungerThanHour() {
         Consumer consumer = createConsumer(owner);
         Product product = createProduct();
         Subscription subscription = createSubscription(product);
@@ -298,7 +297,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void contentExtensionCreation() throws IOException {
+    public void contentExtensionCreation() {
         Consumer consumer = createConsumer(owner);
         Product productWithContent = createProductWithContent(3);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -314,7 +313,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void contentExtensionsShouldIncludePromotedContent() throws IOException {
+    public void contentExtensionsShouldIncludePromotedContent() {
         Product productWithContent = createProductWithContent(3);
         Environment environment = createEnvironment(productWithContent);
         Consumer consumer = createConsumer(owner);
@@ -333,7 +332,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void contentExtensionsShouldIncludePromotedContentFromMultipleEnvs() throws IOException {
+    public void contentExtensionsShouldIncludePromotedContentFromMultipleEnvs() {
         Product productWithContent1 = createProductWithContent(3);
         Product productWithContent2 = createProductWithContent(3);
         Environment environment1 = createEnvironment(productWithContent1);
@@ -357,7 +356,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void shouldContainContentRequiredTagsExtension() throws IOException {
+    public void shouldContainContentRequiredTagsExtension() {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -375,7 +374,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void shouldContainContentUrls() throws IOException {
+    public void shouldContainContentUrls() {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -393,7 +392,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void contentExtensionsShouldBeAddedDuringCertificateGeneration() throws IOException {
+    public void contentExtensionsShouldBeAddedDuringCertificateGeneration() {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -416,7 +415,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void managementDisabledByDefault() throws IOException {
+    public void managementDisabledByDefault() {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -434,7 +433,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void managementEnabledByAttribute() throws IOException {
+    public void managementEnabledByAttribute() {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -453,7 +452,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void stackingIdByAttribute() throws IOException {
+    public void stackingIdByAttribute() {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -472,7 +471,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void virtOnlyByAttribute() throws IOException {
+    public void virtOnlyByAttribute() {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -492,7 +491,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void orderNumberAttribute() throws IOException {
+    public void orderNumberAttribute() {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -512,7 +511,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void supportValuesPresentOnCertIfAttributePresent() throws IOException {
+    public void supportValuesPresentOnCertIfAttributePresent() {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -533,7 +532,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void supportValuesAbsentOnCertIfNoSupportAttributes() throws IOException {
+    public void supportValuesAbsentOnCertIfNoSupportAttributes() {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -557,8 +556,7 @@ public class EntCertGeneratorTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"3.0", "3.1", "3.2", "3.3", "3.4"})
-    public void ensureV3CertificateCreationOkWhenConsumerSupportsV3Certs(String certVersion)
-        throws IOException {
+    public void ensureV3CertificateCreationOkWhenConsumerSupportsV3Certs(String certVersion) {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, certVersion);
@@ -580,7 +578,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void ensureV3CertIsCreatedWhenV3CapabilityPresent() throws IOException {
+    public void ensureV3CertIsCreatedWhenV3CapabilityPresent() {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner, ConsumerType.ConsumerTypeEnum.CANDLEPIN);
         consumer.setCapabilities(Set.of(new ConsumerCapability("cert_v3")));
@@ -602,7 +600,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void ensureV1CertIsCreatedWhenV3factNotPresent() throws IOException {
+    public void ensureV1CertIsCreatedWhenV3factNotPresent() {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -622,7 +620,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void ensureV3CertIsCreatedWhenHypervisor() throws IOException {
+    public void ensureV3CertIsCreatedWhenHypervisor() {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner, ConsumerType.ConsumerTypeEnum.HYPERVISOR);
         consumer.setCapabilities(Set.of(new ConsumerCapability("cert_v3")));
@@ -644,7 +642,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void shouldFilterProductContent() throws IOException {
+    public void shouldFilterProductContent() {
         Product productWithContent1 = createProductWithContent(3);
         Product productWithContent2 = createProductWithContent(3);
         Environment environment1 = createEnvironment(productWithContent1);
@@ -683,7 +681,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void testPrepareV1Extensions() throws IOException {
+    public void testPrepareV1Extensions() {
         Consumer consumer = createConsumer(owner);
         Product productWithContent1 = createProductWithContent(1);
         Product productWithContent2 = createProductWithContent(1, CONTENT_TYPE_FILE);
@@ -694,8 +692,8 @@ public class EntCertGeneratorTest {
         Entitlement entitlement = createEntitlement(pool, consumer, owner);
 
         Map<String, EntitlementCertificate> result = generateCertificate(consumer, entitlement, product);
-        String yumContent = getContentIds(productWithContent1).getFirst();
-        String fileContent = getContentIds(productWithContent2).getFirst();
+        String yumContent = getContentIds(productWithContent1).get(0);
+        String fileContent = getContentIds(productWithContent2).get(0);
         String yumOid = OID.ChannelFamily.DOWNLOAD_URL.value(RepoType.YUM, yumContent);
         String fileOid = OID.ChannelFamily.DOWNLOAD_URL.value(RepoType.FILE, fileContent);
 
@@ -706,7 +704,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void testPrepareV1ExtensionsBrandedProduct() throws IOException {
+    public void testPrepareV1ExtensionsBrandedProduct() {
         Consumer consumer = createConsumer(owner);
         Product product = createProduct()
             .setAttribute(Product.Attributes.BRANDING_TYPE, "os");
@@ -723,7 +721,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void testPrepareV1ExtensionsNoCompatibleArch() throws IOException {
+    public void testPrepareV1ExtensionsNoCompatibleArch() {
         Consumer consumer = createConsumer(owner);
         consumer.setFact(Consumer.Facts.UNAME_MACHINE, "x86_64");
         String wrongArches = "s390x,s390,ppc64,ia64";
@@ -748,7 +746,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void testPrepareV1ExtensionsKickstartContent() throws IOException {
+    public void testPrepareV1ExtensionsKickstartContent() {
         Consumer consumer = createConsumer(owner);
         Content wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE_KICKSTART, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABEL);
@@ -771,7 +769,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void testPrepareV1ExtensionsFileContent() throws IOException {
+    public void testPrepareV1ExtensionsFileContent() {
         Consumer consumer = createConsumer(owner);
         Content wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE_FILE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABEL);
@@ -794,7 +792,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void testPrepareV1ExtensionsFileUnknownContentType() throws IOException {
+    public void testPrepareV1ExtensionsFileUnknownContentType() {
         Consumer consumer = createConsumer(owner);
         Content wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE_UNKNOWN, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABEL);
@@ -818,8 +816,7 @@ public class EntCertGeneratorTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"ns-1", "ns-2", "some long namespace"})
-    public void testPrepareV3ExtensionsIncludesEntitlementNamespaceForNamespacedProducts(String namespace)
-        throws IOException {
+    public void testPrepareV3ExtensionsIncludesEntitlementNamespaceForNamespacedProducts(String namespace) {
         Consumer consumer = createConsumer(owner);
         consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, "3.4");
         Product productWithContent = createProductWithContent(1);
@@ -840,8 +837,7 @@ public class EntCertGeneratorTest {
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {" ", "   "})
-    public void testPrepareV3ExtensionsOmitsEntitlementNamespaceForGlobalProducts(String namespace)
-        throws IOException {
+    public void testPrepareV3ExtensionsOmitsEntitlementNamespaceForGlobalProducts(String namespace) {
         Consumer consumer = createConsumer(owner);
         consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, "3.4");
         Product productWithContent = createProductWithContent(1);
@@ -859,7 +855,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void testDetachedEntitlementDataNotAddedToCertV1() throws IOException {
+    public void testDetachedEntitlementDataNotAddedToCertV1() {
         Consumer consumer = createConsumer(owner);
         Product productWithContent = createProductWithContent(1);
         Product product = createProduct().setProvidedProducts(Set.of(productWithContent));
@@ -874,7 +870,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void testContentExtensionConsumerNoArchFact() throws IOException {
+    public void testContentExtensionConsumerNoArchFact() {
         owner.setContentPrefix("");
         Consumer consumer = createConsumer(owner);
         consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, "3.4");
@@ -903,7 +899,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void testSingleSegmentContent() throws IOException {
+    public void testSingleSegmentContent() {
         Consumer consumer = createConsumer(owner);
         consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, "3.4");
         Product product = createProduct();
@@ -922,7 +918,7 @@ public class EntCertGeneratorTest {
     }
 
     @Test
-    public void testContentExtensionLargeSet() throws IOException {
+    public void testContentExtensionLargeSet() {
         Consumer consumer = createConsumer(owner);
         consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, "3.4");
         Product product = createProduct();
@@ -1088,14 +1084,14 @@ public class EntCertGeneratorTest {
 
     private EntitlementCertificate getCertificate(Map<String, EntitlementCertificate> certificates) {
         return certificates.values().stream()
-            .toList().getFirst();
+            .toList().get(0);
     }
 
     private X509Certificate getX509Certificate(Map<String, EntitlementCertificate> certificates) {
         return certificates.values().stream()
             .map(AbstractCertificate::getCertificate)
             .map(this::toCert)
-            .toList().getFirst();
+            .toList().get(0);
     }
 
     private Map<String, String> getExtensions(X509Certificate certificate) {
@@ -1107,7 +1103,7 @@ public class EntCertGeneratorTest {
     }
 
     private Map<String, EntitlementCertificate> generateCertificate(
-        Consumer consumer, Entitlement entitlement, Product product) throws IOException {
+        Consumer consumer, Entitlement entitlement, Product product) {
         Map<String, PoolQuantity> poolQuantities = Map.of(
             entitlement.getPool().getId(), new PoolQuantity(entitlement.getPool(), 10)
         );

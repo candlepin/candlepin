@@ -25,7 +25,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.EntitlementCertificateGenerator;
+import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -160,7 +160,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     @Mock
     private EnvironmentContentCurator environmentContentCurator;
     @Mock
-    private EntitlementCertificateGenerator entCertGenerator;
+    private EntitlementCertificateService entCertGenerator;
     @Mock
     private CloudRegistrationAdapter cloudAdapter;
     @Mock

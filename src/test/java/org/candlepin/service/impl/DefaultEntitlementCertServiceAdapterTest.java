@@ -25,7 +25,7 @@ import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.pki.certs.EntCertGenerator;
+import org.candlepin.pki.certs.EntitlementCertificateGenerator;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +45,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Mock
     private EntitlementCertificateCurator entitlementCertificateCurator;
     @Mock
-    private EntCertGenerator entitlementCertificateGenerator;
+    private EntitlementCertificateGenerator entitlementCertificateGenerator;
     private DefaultEntitlementCertServiceAdapter certServiceAdapter;
 
     @BeforeEach
@@ -66,6 +66,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         this.certServiceAdapter.generateEntitlementCert(entitlement, product);
 
         verify(this.entitlementCertificateGenerator)
-            .generate(eq(consumer), anyMap(), anyMap(), anyMap(), eq(false));
+            .generate(eq(consumer), anyMap(), anyMap(), anyMap(), eq(true));
     }
 }

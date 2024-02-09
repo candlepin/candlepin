@@ -18,6 +18,7 @@ package org.candlepin.pki.certs;
 import org.candlepin.pki.CertificateCreationException;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.DistinguishedName;
+import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509Extension;
 
 import org.bouncycastle.asn1.ASN1Encodable;
@@ -34,7 +35,6 @@ import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
-import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
@@ -65,11 +65,11 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 public class X509CertificateBuilder {
-
     private static final String SIGNATURE_ALGORITHM = "SHA256WithRSA";
 
     private final Provider<BouncyCastleProvider> securityProvider;
     private final CertificateReader certificateAuthority;
+    private final SubjectKeyIdentifierWriter subjectKeyIdentifierWriter;
     private final List<X509Extension> certExtensions;
 
     private DistinguishedName distinguishedName;
@@ -81,9 +81,11 @@ public class X509CertificateBuilder {
 
     @Inject
     public X509CertificateBuilder(CertificateReader certificateAuthority,
-        Provider<BouncyCastleProvider> securityProvider) {
+        Provider<BouncyCastleProvider> securityProvider,
+        SubjectKeyIdentifierWriter subjectKeyIdentifierWriter) {
         this.certificateAuthority = Objects.requireNonNull(certificateAuthority);
         this.securityProvider = Objects.requireNonNull(securityProvider);
+        this.subjectKeyIdentifierWriter = Objects.requireNonNull(subjectKeyIdentifierWriter);
 
         this.certExtensions = new ArrayList<>();
     }
@@ -164,14 +166,13 @@ public class X509CertificateBuilder {
         this.addSSLCertificateType(builder);
         this.addKeyUsage(builder);
         this.addAuthorityKeyIdentifier(builder, caCertificate);
-        this.addSubjectKeyIdentifier(builder, clientPubKey);
+        this.addSubjectKeyIdentifier(builder, this.keyPair);
         this.addSubjectAltName(builder, this.distinguishedName, this.subjectAltName);
         this.addBasicConstraints(builder);
         this.addExtensions(builder, this.certExtensions);
 
         return buildCertificate(builder, this.signer());
     }
-
 
     private void addSSLCertificateType(X509v3CertificateBuilder builder) {
         NetscapeCertType type = new NetscapeCertType(NetscapeCertType.sslClient | NetscapeCertType.smime);
@@ -199,12 +200,12 @@ public class X509CertificateBuilder {
         }
     }
 
-    private void addSubjectKeyIdentifier(X509v3CertificateBuilder builder, PublicKey publicKey) {
-        SubjectKeyIdentifier ski = extensionUtil().createSubjectKeyIdentifier(publicKey);
+    private void addSubjectKeyIdentifier(X509v3CertificateBuilder builder, KeyPair keyPair) {
         try {
-            builder.addExtension(Extension.subjectKeyIdentifier, false, ski.getEncoded());
+            byte[] ski = this.subjectKeyIdentifierWriter.getSubjectKeyIdentifier(keyPair);
+            builder.addExtension(Extension.subjectKeyIdentifier, false, ski);
         }
-        catch (IOException e) {
+        catch (NoSuchAlgorithmException | IOException e) {
             throw new CertificateCreationException("Failed to encode subject key identifier.", e);
         }
     }

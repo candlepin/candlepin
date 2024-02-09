@@ -76,7 +76,7 @@ import java.util.Set;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class EntitlementCertificateGeneratorTest {
+public class EntitlementCertificateServiceTest {
     @Mock private ContentAccessManager mockContentAccessManager;
     @Mock private EntitlementCertServiceAdapter mockEntCertAdapter;
     @Mock private EntitlementCertificateCurator mockEntCertCurator;
@@ -90,11 +90,11 @@ public class EntitlementCertificateGeneratorTest {
     @Captor private ArgumentCaptor<Map<String, Product>> productMapCaptor;
     @Captor private ArgumentCaptor<Map<String, PoolQuantity>> poolQuantityMapCaptor;
 
-    private EntitlementCertificateGenerator ecGenerator;
+    private EntitlementCertificateService ecGenerator;
 
     @BeforeEach
     public void init() throws Exception {
-        this.ecGenerator = new EntitlementCertificateGenerator(
+        this.ecGenerator = new EntitlementCertificateService(
             this.mockEntCertCurator, this.mockEntCertAdapter, this.mockEntitlementCurator,
             this.mockPoolCurator, this.mockEventSink, this.mockEventFactory,
             this.mockContentAccessManager, this.mockOwnerCurator);
@@ -102,7 +102,7 @@ public class EntitlementCertificateGeneratorTest {
 
     @Test
     public void testGenerateEntitlementCertificate() throws GeneralSecurityException, IOException {
-        this.ecGenerator = new EntitlementCertificateGenerator(this.mockEntCertCurator,
+        this.ecGenerator = new EntitlementCertificateService(this.mockEntCertCurator,
                 this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
                 this.mockEventSink, this.mockEventFactory,
                 this.mockContentAccessManager, this.mockOwnerCurator);
@@ -127,7 +127,7 @@ public class EntitlementCertificateGeneratorTest {
 
     @Test
     public void testGenerateEntitlementCertificates() throws GeneralSecurityException, IOException {
-        this.ecGenerator = new EntitlementCertificateGenerator(this.mockEntCertCurator,
+        this.ecGenerator = new EntitlementCertificateService(this.mockEntCertCurator,
             this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
             this.mockEventSink, this.mockEventFactory,
             this.mockContentAccessManager, this.mockOwnerCurator);

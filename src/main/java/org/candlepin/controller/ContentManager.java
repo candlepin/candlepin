@@ -46,7 +46,7 @@ public class ContentManager {
     private static final Logger log = LoggerFactory.getLogger(ContentManager.class);
 
     private final ContentAccessManager contentAccessManager;
-    private final EntitlementCertificateGenerator entitlementCertGenerator;
+    private final EntitlementCertificateService entitlementCertificateService;
 
     private final ProductCurator productCurator;
     private final ContentCurator contentCurator;
@@ -54,11 +54,11 @@ public class ContentManager {
 
     @Inject
     public ContentManager(ContentAccessManager contentAccessManager,
-        EntitlementCertificateGenerator entitlementCertGenerator, ProductCurator productCurator,
+        EntitlementCertificateService entitlementCertificateService, ProductCurator productCurator,
         ContentCurator contentCurator, EnvironmentCurator environmentCurator) {
 
         this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
-        this.entitlementCertGenerator = Objects.requireNonNull(entitlementCertGenerator);
+        this.entitlementCertificateService = Objects.requireNonNull(entitlementCertificateService);
 
         this.productCurator = Objects.requireNonNull(productCurator);
         this.contentCurator = Objects.requireNonNull(contentCurator);
@@ -185,7 +185,7 @@ public class ContentManager {
                 log.debug("Flagging entitlement certificates of {} affected product(s) for regeneration",
                     affectedProducts.size());
 
-                this.entitlementCertGenerator
+                this.entitlementCertificateService
                     .regenerateCertificatesOf(List.of(owner), affectedProducts, true);
             }
         }
@@ -249,7 +249,8 @@ public class ContentManager {
             log.debug("Flagging entitlement certificates of {} affected product(s) for regeneration",
                 affectedProducts.size());
 
-            this.entitlementCertGenerator.regenerateCertificatesOf(List.of(owner), affectedProducts, true);
+            this.entitlementCertificateService
+                .regenerateCertificatesOf(List.of(owner), affectedProducts, true);
         }
 
         return content;

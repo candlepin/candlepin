@@ -21,7 +21,7 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.pki.certs.EntCertGenerator;
+import org.candlepin.pki.certs.EntitlementCertificateGenerator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 
 import java.io.IOException;
@@ -38,13 +38,13 @@ import javax.inject.Inject;
 public class DefaultEntitlementCertServiceAdapter implements EntitlementCertServiceAdapter {
     private final EntitlementCertificateCurator entCertCurator;
     private final CertificateSerialCurator serialCurator;
-    private final EntCertGenerator entitlementCertificateGenerator;
+    private final EntitlementCertificateGenerator entitlementCertificateGenerator;
 
     @Inject
     public DefaultEntitlementCertServiceAdapter(
         EntitlementCertificateCurator entCertCurator,
         CertificateSerialCurator serialCurator,
-        EntCertGenerator entitlementCertificateGenerator) {
+        EntitlementCertificateGenerator entitlementCertificateGenerator) {
 
         this.entCertCurator = Objects.requireNonNull(entCertCurator);
         this.serialCurator = Objects.requireNonNull(serialCurator);

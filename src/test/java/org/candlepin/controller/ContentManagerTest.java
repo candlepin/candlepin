@@ -86,13 +86,13 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
     private ContentManager contentManager;
     private ContentAccessManager mockContentAccessManager;
-    private EntitlementCertificateGenerator mockEntCertGenerator;
+    private EntitlementCertificateService mockEntCertGenerator;
     private ProductManager productManager;
 
     @BeforeEach
     public void setup() throws Exception {
         this.mockContentAccessManager = mock(ContentAccessManager.class);
-        this.mockEntCertGenerator = mock(EntitlementCertificateGenerator.class);
+        this.mockEntCertGenerator = mock(EntitlementCertificateService.class);
 
         this.contentManager = new ContentManager(this.mockContentAccessManager,
             this.mockEntCertGenerator, this.productCurator, this.contentCurator, this.environmentCurator);

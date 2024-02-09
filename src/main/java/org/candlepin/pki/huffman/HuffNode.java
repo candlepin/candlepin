@@ -60,6 +60,7 @@ public class HuffNode {
         return this.id;
     }
 
+    @Override
     public String toString() {
         return "ID: " + id +
             ", Value: " + value +

@@ -41,7 +41,7 @@ import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
-import org.candlepin.controller.EntitlementCertificateGenerator;
+import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -242,7 +242,7 @@ public class ConsumerResource implements ConsumerApi {
     private final PrincipalProvider principalProvider;
     private final ContentOverrideValidator coValidator;
     private final ConsumerContentOverrideCurator ccoCurator;
-    private final EntitlementCertificateGenerator entCertGenerator;
+    private final EntitlementCertificateService entCertGenerator;
     private final AnonymousCloudConsumerCurator anonymousConsumerCurator;
     private final AnonymousContentAccessCertificateCurator anonymousCertCurator;
 
@@ -290,7 +290,7 @@ public class ConsumerResource implements ConsumerApi {
         PrincipalProvider principalProvider,
         ContentOverrideValidator coValidator,
         ConsumerContentOverrideCurator ccoCurator,
-        EntitlementCertificateGenerator entCertGenerator,
+        EntitlementCertificateService entCertGenerator,
         PoolService poolService,
         EnvironmentContentCurator environmentContentCurator,
         CloudRegistrationAdapter cloudAdapter,

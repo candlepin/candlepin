@@ -26,7 +26,6 @@ import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.dto.Content;
@@ -68,8 +67,7 @@ import javax.inject.Provider;
 
 
 /**
- * The ContentAccessManager provides management operations for organization and consumer level
- * content access modes.
+ * This generator is responsible for generation of anonymous content access certificates.
  */
 public class AnonymousCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(AnonymousCertificateGenerator.class);
@@ -174,7 +172,7 @@ public class AnonymousCertificateGenerator {
 
         org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
         container.setContent(certificateContent);
-        X509Certificate x509Cert = createX509Cert(consumer.getUuid(), null,
+        X509Certificate x509Cert = createX509Cert(consumer.getUuid(),
             serial, keyPair, container, start, end);
 
         AnonymousContentAccessCertificate caCert = new AnonymousContentAccessCertificate();
@@ -208,14 +206,14 @@ public class AnonymousCertificateGenerator {
         return serial;
     }
 
-    private X509Certificate createX509Cert(String consumerUuid, Owner owner, CertificateSerial serial,
+    private X509Certificate createX509Cert(String consumerUuid, CertificateSerial serial,
         KeyPair keyPair, org.candlepin.model.dto.Product product, OffsetDateTime start, OffsetDateTime end) {
 
         log.info("Generating X509 certificate for consumer \"{}\"...", consumerUuid);
         Set<X509Extension> extensions = new HashSet<>(
             prepareV3Extensions(AnonymousCertificateGenerator.BASIC_ENTITLEMENT_TYPE));
         extensions.addAll(prepareV3ByteExtensions(product));
-        DistinguishedName dn = new DistinguishedName(consumerUuid, owner);
+        DistinguishedName dn = new DistinguishedName(consumerUuid);
 
         return this.certificateBuilder.get()
             .withDN(dn)
@@ -226,7 +224,6 @@ public class AnonymousCertificateGenerator {
             .build();
     }
 
-    // todo Unify payload creation
     private String createPayloadAndSignature(byte[] payloadBytes) {
         String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
         payload += Util.toBase64(payloadBytes);
@@ -342,7 +339,6 @@ public class AnonymousCertificateGenerator {
             })
             .toList();
     }
-
 
     /**
      * Converts {@link ContentInfo} into {@link Content}

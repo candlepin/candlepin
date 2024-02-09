@@ -17,9 +17,6 @@ package org.candlepin.pki.impl;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PemEncodingException;
 
-import com.google.common.base.Charsets;
-import com.google.inject.Inject;
-
 import org.apache.commons.codec.binary.Base64OutputStream;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 
@@ -28,15 +25,12 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
 public class BouncyCastlePemEncoder implements PemEncoder {
     private static final byte[] LINE_SEPARATOR = String.format("%n").getBytes();
-
-    @Inject
-    public BouncyCastlePemEncoder() {
-    }
 
     @Override
     public byte[] encodeAsBytes(X509Certificate certificate) {
@@ -89,7 +83,7 @@ public class BouncyCastlePemEncoder implements PemEncoder {
         }
 
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            out.write(("-----BEGIN PRIVATE KEY-----\n").getBytes(Charsets.UTF_8));
+            out.write(("-----BEGIN PRIVATE KEY-----\n").getBytes(StandardCharsets.UTF_8));
 
             // Write base64 encoded DER. Does not close the underlying stream.
             Base64OutputStream b64Out = new Base64OutputStream(out, true, 64, LINE_SEPARATOR);
@@ -97,7 +91,7 @@ public class BouncyCastlePemEncoder implements PemEncoder {
             b64Out.eof();
             b64Out.flush();
 
-            out.write(("-----END PRIVATE KEY-----\n").getBytes(Charsets.UTF_8));
+            out.write(("-----END PRIVATE KEY-----\n").getBytes(StandardCharsets.UTF_8));
             return out.toByteArray();
         }
         catch (IOException e) {

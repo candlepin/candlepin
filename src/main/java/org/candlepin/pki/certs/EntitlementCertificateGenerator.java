@@ -37,6 +37,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
+import org.candlepin.pki.CertificateCreationException;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
@@ -76,9 +77,12 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-// TODO rename
-public class EntCertGenerator {
-    private static final Logger log = LoggerFactory.getLogger(EntCertGenerator.class);
+
+/**
+ * This generator is responsible for generation of entitlement certificates.
+ */
+public class EntitlementCertificateGenerator {
+    private static final Logger log = LoggerFactory.getLogger(EntitlementCertificateGenerator.class);
 
     private final EntitlementCertificateCurator entCertCurator;
     private final X509ExtensionUtil extensionUtil;
@@ -97,7 +101,7 @@ public class EntCertGenerator {
     private final Provider<X509CertificateBuilder> certificateBuilder;
 
     @Inject
-    public EntCertGenerator(
+    public EntitlementCertificateGenerator(
         X509ExtensionUtil extensionUtil,
         X509V3ExtensionUtil v3extensionUtil,
         EntitlementPayloadGenerator payloadGenerator,
@@ -130,13 +134,127 @@ public class EntCertGenerator {
         this.certificateBuilder = Objects.requireNonNull(certificateBuilder);
     }
 
+    /**
+     * @param consumer
+     *  The consumer to use for certificate generation.
+     * @param poolQuantities
+     *  Pools and their quantities to use for certificate generation.
+     * @param entitlements
+     *  A map of entitlements indexed by pool ids to generate the certs.
+     * @param products
+     *  A map of respective products indexed by pool id.
+     * @param save
+     *  map of respective products indexed by pool id.
+     * @return The respective entitlement certs indexed by pool id
+     */
     public Map<String, EntitlementCertificate> generate(Consumer consumer,
         Map<String, PoolQuantity> poolQuantities,
         Map<String, Entitlement> entitlements,
         Map<String, Product> products,
-        boolean save) throws IOException {
+        boolean save) {
 
-        return doEntitlementCertGeneration(consumer, products, poolQuantities, entitlements, save);
+        Owner owner = this.ownerCurator.findOwnerById(consumer.getOwnerId());
+
+        log.debug("Generating entitlement cert for entitlements");
+        KeyPair keyPair = this.keyPairGenerator.getKeyPair(consumer);
+        byte[] pemEncodedKeyPair = this.pemEncoder.encodeAsBytes(keyPair.getPrivate());
+
+        Map<String, CertificateSerial> serialMap = createSerials(poolQuantities);
+        Set<Pool> entitledPools = poolQuantities.values().stream()
+            .map(PoolQuantity::getPool)
+            .collect(Collectors.toSet());
+
+        List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
+        ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(owner, environments);
+        PromotedContent promotedContent = new PromotedContent(contentPathBuilder)
+            .withAll(environments);
+
+        Map<String, EntitlementCertificate> entitlementCerts = new HashMap<>();
+        boolean shouldCreateV3Certificate = shouldGenerateV3(consumer);
+        for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
+            Pool pool = entry.getValue().getPool();
+            Entitlement ent = entitlements.get(entry.getKey());
+            CertificateSerial serial = serialMap.get(entry.getKey());
+            Product product = products.get(entry.getKey());
+
+            log.info("Generating entitlement cert for pool: {} quantity: {} entitlement id: {}",
+                pool,
+                ent.getQuantity(),
+                ent.getId());
+
+            Set<Product> providedProducts = new HashSet<>(pool.getProduct().getProvidedProducts());
+
+            // If creating a certificate for a distributor, we need
+            // to add any derived products as well so that their content
+            // is available in the upstream certificate.
+            providedProducts.addAll(getDerivedProductsForDistributor(pool, consumer));
+            providedProducts.add(product);
+
+            log.info("Creating X509 cert for product: {}", product);
+            log.debug("Provided products: {}", providedProducts);
+            List<org.candlepin.model.dto.Product> productModels = v3extensionUtil.createProducts(product,
+                providedProducts, promotedContent, consumer, pool, entitledPools);
+
+            providedProducts.add(product);
+            Set<X509Extension> extensions = prepareExtensions(consumer, pool, productModels,
+                providedProducts, ent, promotedContent, entitledPools);
+            X509Certificate x509Cert = createX509Certificate(consumer, owner, pool, ent,
+                BigInteger.valueOf(serial.getId()), keyPair, extensions);
+
+            log.debug("Getting PEM encoded cert.");
+            String pem = this.pemEncoder.encodeAsString(x509Cert);
+
+            if (shouldCreateV3Certificate) {
+                pem = createPayloadAndSignature(consumer, productModels, pool, ent, pem);
+            }
+
+            // Build a skeleton cert as part of the entitlement processing.
+            EntitlementCertificate cert = new EntitlementCertificate();
+            cert.setKeyAsBytes(pemEncodedKeyPair);
+            cert.setCert(pem);
+            if (save) {
+                cert.setEntitlement(ent);
+            }
+
+            if (log.isDebugEnabled()) {
+                log.debug("Generated cert serial number: {}", serial.getId());
+                log.debug("Key: {}", cert.getKey());
+                log.debug("Cert: {}", cert.getCert());
+            }
+
+            entitlementCerts.put(entry.getKey(), cert);
+        }
+
+        // Now that the serials have been saved, update the newly created
+        // certs with their serials and add them to the entitlements.
+        for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
+            CertificateSerial nextSerial = serialMap.get(entry.getKey());
+            if (nextSerial == null) {
+                // This should never happen, but checking to be safe.
+                throw new CertificateCreationException(
+                    "Certificate serial not found for entitlement during cert generation.");
+            }
+
+            EntitlementCertificate nextCert = entitlementCerts.get(entry.getKey());
+            if (nextCert == null) {
+                // This should never happen, but checking to be safe.
+                throw new CertificateCreationException(
+                    "Entitlement certificate not found for entitlement during cert generation");
+            }
+
+            nextCert.setSerial(nextSerial);
+            if (save) {
+                Entitlement ent = entitlements.get(entry.getKey());
+                ent.addCertificate(nextCert);
+            }
+        }
+
+        if (save) {
+            log.info("Persisting certs.");
+            entCertCurator.saveOrUpdateAll(entitlementCerts.values(), false, false);
+        }
+
+        return entitlementCerts;
     }
 
     private Set<Product> getDerivedProductsForDistributor(Pool pool, Consumer consumer) {
@@ -154,27 +272,8 @@ public class EntCertGenerator {
         return derivedProducts;
     }
 
-    // TODO: productModels not used by V1 certificates. This whole v1/v3 split needs
-    // a re-org. Passing them here because it eliminates a substantial performance hit
-    // recalculating this for the entitlement body in v3 certs.
-    private X509Certificate createX509Certificate(Consumer consumer, Owner owner, Pool pool,
-        Entitlement ent, Product product, Set<Product> products,
-        List<org.candlepin.model.dto.Product> productModels, BigInteger serialNumber,
-        KeyPair keyPair, PromotedContent promotedContent, Set<Pool> entitledPools)
-        throws IOException {
-
-        // oidutil is busted at the moment, so do this manually
-        Set<X509Extension> extensions = new HashSet<>();
-        products.add(product);
-
-        if (shouldGenerateV3(consumer)) {
-            extensions.addAll(prepareV3Extensions(pool));
-            extensions.addAll(this.v3extensionUtil.getByteExtensions(productModels));
-        }
-        else {
-            extensions = prepareV1Extensions(products, pool, consumer, ent.getQuantity(),
-                promotedContent, entitledPools);
-        }
+    private X509Certificate createX509Certificate(Consumer consumer, Owner owner, Pool pool, Entitlement ent,
+        BigInteger serialNumber, KeyPair keyPair, Set<X509Extension> extensions) {
 
         Date endDate = setupEntitlementEndDate(pool, consumer);
         ent.setEndDateOverride(endDate);
@@ -195,6 +294,15 @@ public class EntCertGenerator {
             .withKeyPair(keyPair)
             .withExtensions(extensions)
             .build();
+    }
+
+    private Set<X509Extension> prepareV3ByteExtensions(List<org.candlepin.model.dto.Product> productModels) {
+        try {
+            return this.v3extensionUtil.getByteExtensions(productModels);
+        }
+        catch (IOException e) {
+            throw new CertificateCreationException("Failed to create extensions!", e);
+        }
     }
 
     private Date setupEntitlementEndDate(Pool pool, Consumer consumer) {
@@ -269,6 +377,21 @@ public class EntCertGenerator {
         return false;
     }
 
+    private Set<X509Extension> prepareExtensions(Consumer consumer, Pool pool,
+        List<org.candlepin.model.dto.Product> productModels, Set<Product> products, Entitlement ent,
+        PromotedContent promotedContent, Set<Pool> entitledPools) {
+        Set<X509Extension> extensions = new HashSet<>();
+        if (shouldGenerateV3(consumer)) {
+            extensions.addAll(prepareV3Extensions(pool));
+            extensions.addAll(prepareV3ByteExtensions(productModels));
+        }
+        else {
+            extensions.addAll(prepareV1Extensions(products, pool, consumer, ent.getQuantity(),
+                promotedContent, entitledPools));
+        }
+        return extensions;
+    }
+
     private Set<X509Extension> prepareV1Extensions(Set<Product> products, Pool pool, Consumer consumer,
         Integer quantity, PromotedContent promotedContent, Set<Pool> entitledPools) {
         Set<X509Extension> result = new LinkedHashSet<>();
@@ -334,122 +457,6 @@ public class EntCertGenerator {
         }
 
         return result;
-    }
-
-    /**
-     * @param entitlements a map of entitlements indexed by pool ids to generate
-     *        the certs of
-     * @param productMap a map of respective products indexed by pool id
-     * @throws IOException
-     * @return entitlementCerts the respective entitlement certs indexed by pool
-     *         id
-     */
-    private Map<String, EntitlementCertificate> doEntitlementCertGeneration(Consumer consumer,
-        Map<String, Product> productMap,
-        Map<String, PoolQuantity> poolQuantities,
-        Map<String, Entitlement> entitlements,
-        boolean save) throws IOException {
-
-        Owner owner = this.ownerCurator.findOwnerById(consumer.getOwnerId());
-
-        log.debug("Generating entitlement cert for entitlements");
-        KeyPair keyPair = this.keyPairGenerator.getKeyPair(consumer);
-        byte[] pemEncodedKeyPair = this.pemEncoder.encodeAsBytes(keyPair.getPrivate());
-
-        Map<String, CertificateSerial> serialMap = createSerials(poolQuantities);
-        Set<Pool> entitledPools = poolQuantities.values().stream()
-            .map(PoolQuantity::getPool)
-            .collect(Collectors.toSet());
-
-        List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
-        ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(owner, environments);
-        PromotedContent promotedContent = new PromotedContent(contentPathBuilder)
-            .withAll(environments);
-
-        Map<String, EntitlementCertificate> entitlementCerts = new HashMap<>();
-        boolean shouldCreateV3Certificate = shouldGenerateV3(consumer);
-        for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
-            Pool pool = entry.getValue().getPool();
-            Entitlement ent = entitlements.get(entry.getKey());
-            CertificateSerial serial = serialMap.get(entry.getKey());
-            Product product = productMap.get(entry.getKey());
-
-            log.info("Generating entitlement cert for pool: {} quantity: {} entitlement id: {}",
-                pool,
-                ent.getQuantity(),
-                ent.getId());
-
-            Set<Product> products = new HashSet<>(pool.getProduct().getProvidedProducts());
-
-            // If creating a certificate for a distributor, we need
-            // to add any derived products as well so that their content
-            // is available in the upstream certificate.
-            products.addAll(getDerivedProductsForDistributor(pool, consumer));
-            products.add(product);
-
-            log.info("Creating X509 cert for product: {}", product);
-            log.debug("Provided products: {}", products);
-            List<org.candlepin.model.dto.Product> productModels = v3extensionUtil.createProducts(product,
-                products, promotedContent, consumer, pool, entitledPools);
-
-            X509Certificate x509Cert = createX509Certificate(consumer, owner, pool, ent,
-                product, products, productModels,
-                BigInteger.valueOf(serial.getId()), keyPair, promotedContent, entitledPools);
-
-            log.debug("Getting PEM encoded cert.");
-            String pem = this.pemEncoder.encodeAsString(x509Cert);
-
-            if (shouldCreateV3Certificate) {
-                pem = createPayloadAndSignature(consumer, productModels, pool, ent, pem);
-            }
-
-            // Build a skeleton cert as part of the entitlement processing.
-            EntitlementCertificate cert = new EntitlementCertificate();
-            cert.setKeyAsBytes(pemEncodedKeyPair);
-            cert.setCert(pem);
-            if (save) {
-                cert.setEntitlement(ent);
-            }
-
-            if (log.isDebugEnabled()) {
-                log.debug("Generated cert serial number: {}", serial.getId());
-                log.debug("Key: {}", cert.getKey());
-                log.debug("Cert: {}", cert.getCert());
-            }
-
-            entitlementCerts.put(entry.getKey(), cert);
-        }
-
-        // Now that the serials have been saved, update the newly created
-        // certs with their serials and add them to the entitlements.
-        for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
-            CertificateSerial nextSerial = serialMap.get(entry.getKey());
-            if (nextSerial == null) {
-                // This should never happen, but checking to be safe.
-                throw new RuntimeException(
-                    "Certificate serial not found for entitlement during cert generation.");
-            }
-
-            EntitlementCertificate nextCert = entitlementCerts.get(entry.getKey());
-            if (nextCert == null) {
-                // This should never happen, but checking to be safe.
-                throw new RuntimeException(
-                    "Entitlement certificate not found for entitlement during cert generation");
-            }
-
-            nextCert.setSerial(nextSerial);
-            if (save) {
-                Entitlement ent = entitlements.get(entry.getKey());
-                ent.addCertificate(nextCert);
-            }
-        }
-
-        if (save) {
-            log.info("Persisting certs.");
-            entCertCurator.saveOrUpdateAll(entitlementCerts.values(), false, false);
-        }
-
-        return entitlementCerts;
     }
 
     private String createPayloadAndSignature(Consumer consumer,

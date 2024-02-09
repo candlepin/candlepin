@@ -110,7 +110,7 @@ public class PoolManager {
     private final EntitlementCurator entitlementCurator;
     private final ConsumerCurator consumerCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
-    private final EntitlementCertificateGenerator ecGenerator;
+    private final EntitlementCertificateService ecGenerator;
     private final ComplianceRules complianceRules;
     private final AutobindRules autobindRules;
     private final ActivationKeyRules activationKeyRules;
@@ -133,7 +133,7 @@ public class PoolManager {
         EntitlementCurator entitlementCurator,
         ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        EntitlementCertificateGenerator ecGenerator,
+        EntitlementCertificateService ecGenerator,
         ComplianceRules complianceRules,
         AutobindRules autobindRules,
         ActivationKeyRules activationKeyRules,

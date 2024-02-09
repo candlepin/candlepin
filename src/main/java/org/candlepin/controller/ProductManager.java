@@ -62,7 +62,7 @@ public class ProductManager {
     private static final Logger log = LoggerFactory.getLogger(ProductManager.class);
 
     private final ContentAccessManager contentAccessManager;
-    private final EntitlementCertificateGenerator entitlementCertGenerator;
+    private final EntitlementCertificateService entitlementCertGenerator;
     private final PoolCurator poolCurator;
     private final ProductCurator productCurator;
     private final ContentCurator contentCurator;
@@ -70,7 +70,7 @@ public class ProductManager {
 
     @Inject
     public ProductManager(ContentAccessManager contentAccessManager,
-        EntitlementCertificateGenerator entitlementCertGenerator, PoolCurator poolCurator,
+        EntitlementCertificateService entitlementCertGenerator, PoolCurator poolCurator,
         ProductCurator productCurator, ContentCurator contentCurator,
         ActivationKeyCurator activationKeyCurator) {
 

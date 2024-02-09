@@ -26,7 +26,7 @@ import static org.mockito.Mockito.verify;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
-import org.candlepin.controller.EntitlementCertificateGenerator;
+import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
@@ -45,7 +45,7 @@ import java.util.Set;
 public class RegenEnvEntitlementCertsJobTest {
 
     @Mock private Owner owner;
-    @Mock private EntitlementCertificateGenerator certGenerator;
+    @Mock private EntitlementCertificateService certGenerator;
     private Environment environment;
     private Set<String> content;
     private RegenEnvEntitlementCertsJob job;

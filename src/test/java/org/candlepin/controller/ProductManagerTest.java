@@ -57,13 +57,13 @@ import java.util.Set;
  */
 public class ProductManagerTest extends DatabaseTestFixture {
 
-    private EntitlementCertificateGenerator mockEntCertGenerator;
+    private EntitlementCertificateService mockEntCertGenerator;
     private ContentAccessManager mockContentAccessManager;
     private ProductManager productManager;
 
     @BeforeEach
     public void setup() {
-        this.mockEntCertGenerator = mock(EntitlementCertificateGenerator.class);
+        this.mockEntCertGenerator = mock(EntitlementCertificateService.class);
         this.mockContentAccessManager = mock(ContentAccessManager.class);
 
         this.productManager = new ProductManager(this.mockContentAccessManager, this.mockEntCertGenerator,

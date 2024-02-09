@@ -23,8 +23,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.OID;
+import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
+import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.test.CertificateReaderForTesting;
 
 import org.bouncycastle.asn1.ASN1OctetString;
@@ -70,8 +72,10 @@ class X509CertificateBuilderTest {
     @BeforeEach
     void setUp() throws CertificateException, IOException {
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
+        SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
         this.certificateAuthority = new CertificateReaderForTesting();
-        this.builder = new X509CertificateBuilder(certificateAuthority, securityProvider);
+        this.builder = new X509CertificateBuilder(
+            this.certificateAuthority, securityProvider, subjectKeyIdentifierWriter);
     }
 
     @Test

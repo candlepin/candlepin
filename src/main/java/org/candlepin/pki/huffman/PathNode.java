@@ -69,17 +69,15 @@ public class PathNode {
         if (this.getChildren().size() != that.getChildren().size()) {
             return false;
         }
-        for (NodePair thisnp : this.getChildren()) {
+        for (NodePair thisNodePair : this.getChildren()) {
             boolean found = false;
-            for (NodePair thatnp : that.getChildren()) {
-                if (thisnp.getName().equals(thatnp.getName())) {
-                    if (thisnp.getConnection().isEquivalentTo(thatnp.getConnection())) {
-                        found = true;
-                        break;
-                    }
-                    else {
-                        return false;
-                    }
+            for (NodePair thatNodePair : that.getChildren()) {
+                if (areNodesEquivalent(thisNodePair, thatNodePair)) {
+                    found = true;
+                    break;
+                }
+                else {
+                    return false;
                 }
             }
             if (!found) {
@@ -89,6 +87,12 @@ public class PathNode {
         return true;
     }
 
+    private boolean areNodesEquivalent(NodePair thisNodePair, NodePair thatNodePair) {
+        return thisNodePair.getName().equals(thatNodePair.getName()) &&
+            thisNodePair.getConnection().isEquivalentTo(thatNodePair.getConnection());
+    }
+
+    @Override
     public String toString() {
         StringBuilder parentList = new StringBuilder("ID: ");
         parentList.append(id).append(", Parents");

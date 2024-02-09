@@ -40,6 +40,9 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 
+/**
+ * This generator is responsible for generation of consumer identity certificates.
+ */
 public class IdentityCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(IdentityCertificateGenerator.class);
     private final KeyPairGenerator keyPairGenerator;

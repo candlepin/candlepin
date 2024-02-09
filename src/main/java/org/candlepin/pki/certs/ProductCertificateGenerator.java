@@ -40,6 +40,9 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 
+/**
+ * This generator is responsible for generation of product certificates.
+ */
 public class ProductCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(ProductCertificateGenerator.class);
 
@@ -94,7 +97,6 @@ public class ProductCertificateGenerator {
                     product, e);
             }
             catch (Exception e) {
-                log.error("Error creating product certificate!", e);
                 throw new CertificateCreationException("Unable to generate product certificate", e);
             }
         }

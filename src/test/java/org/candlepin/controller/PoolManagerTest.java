@@ -179,7 +179,7 @@ public class PoolManagerTest {
     @Mock
     private EntitlementCertificateCurator certCurator;
     @Mock
-    private EntitlementCertificateGenerator mockECGenerator;
+    private EntitlementCertificateService mockECGenerator;
     @Mock
     private Enforcer enforcer;
     @Mock

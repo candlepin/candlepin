@@ -30,7 +30,7 @@ import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.controller.EntitlementCertificateGenerator;
+import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.util.Util;
@@ -44,12 +44,12 @@ import java.util.Set;
 
 public class RegenProductEntitlementCertsJobTest {
 
-    private EntitlementCertificateGenerator ecGenerator;
+    private EntitlementCertificateService ecGenerator;
     private OwnerCurator ownerCurator;
 
     @BeforeEach
     public void setUp() {
-        this.ecGenerator = mock(EntitlementCertificateGenerator.class);
+        this.ecGenerator = mock(EntitlementCertificateService.class);
         this.ownerCurator = mock(OwnerCurator.class);
     }
 

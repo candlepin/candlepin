@@ -28,9 +28,11 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
+import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
+import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.util.X509ExtensionUtil;
 
@@ -51,13 +53,14 @@ class ProductCertificateGeneratorTest {
     @BeforeEach
     public void init() throws CertificateException, IOException {
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
+        SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
         this.extensionUtil = mock(X509ExtensionUtil.class);
         this.productCertificateCurator = mock(ProductCertificateCurator.class);
         this.keyPairGenerator = new BouncyCastleKeyPairGenerator(
             securityProvider, mock(KeyPairDataCurator.class));
         this.pemEncoder = new BouncyCastlePemEncoder();
         this.certificateBuilder = new X509CertificateBuilder(
-            new CertificateReaderForTesting(), securityProvider);
+            new CertificateReaderForTesting(), securityProvider, subjectKeyIdentifierWriter);
         this.productCertificateGenerator = new ProductCertificateGenerator(
             this.productCertificateCurator,
             this.extensionUtil,

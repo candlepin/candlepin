@@ -31,9 +31,11 @@ import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
+import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
+import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.test.CertificateReaderForTesting;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -53,13 +55,14 @@ class IdentityCertificateGeneratorTest {
     @BeforeEach
     public void setUp() throws CertificateException, IOException {
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
+        SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
         this.identityCertificateCurator = mock(IdentityCertificateCurator.class);
         this.serialCurator = mock(CertificateSerialCurator.class);
         this.keyPairGenerator = new BouncyCastleKeyPairGenerator(
             securityProvider, mock(KeyPairDataCurator.class));
         this.pemEncoder = new BouncyCastlePemEncoder();
         this.certificateBuilder = new X509CertificateBuilder(
-            new CertificateReaderForTesting(), securityProvider);
+            new CertificateReaderForTesting(), securityProvider, subjectKeyIdentifierWriter);
         this.identityCertificateGenerator = new IdentityCertificateGenerator(
             TestConfig.defaults(),
             this.pemEncoder,

@@ -15,7 +15,6 @@
 package org.candlepin.pki.huffman;
 
 import org.candlepin.model.dto.Content;
-import org.candlepin.util.X509Util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,21 +36,14 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterOutputStream;
 
-import javax.inject.Inject;
 
-
-public class Huffman extends X509Util {
+public class Huffman {
     private static final Logger log = LoggerFactory.getLogger(Huffman.class);
     private static final Object END_NODE = new Object();
     private static final boolean TREE_DEBUG = false;
 
     private long pathNodeId = 0;
     private long huffNodeId = 0;
-
-    @Inject
-    public Huffman() {
-        // empty
-    }
 
     public byte[] retrieveContentValue(List<Content> contentList) throws IOException {
         PathNode treeRoot = makePathTree(contentList, new PathNode(this.pathNodeId++));
@@ -502,15 +494,15 @@ public class Huffman extends X509Util {
         ios.finish();
         long read = i.getBytesRead();
 
-        String name = "";
+        StringBuilder name = new StringBuilder();
         int weight = 1;
         for (byte b : baos.toByteArray()) {
             if (b == '\0') {
-                pathDictionary.add(new HuffNode(this.huffNodeId++, name, weight++));
-                name = "";
+                pathDictionary.add(new HuffNode(this.huffNodeId++, name.toString(), weight++));
+                name = new StringBuilder();
             }
             else {
-                name += (char) b;
+                name.append((char) b);
             }
         }
 
@@ -518,7 +510,7 @@ public class Huffman extends X509Util {
         List<HuffNode> triePathDictionary = new ArrayList<>(pathDictionary);
         HuffNode pathTrie = makeTrie(triePathDictionary);
 
-        StringBuffer nodeBits = new StringBuffer();
+        StringBuilder nodeBits = new StringBuilder();
         ByteArrayInputStream bais = new ByteArrayInputStream(payload, (int) read,
             (int) (payload.length - read));
 
@@ -554,9 +546,7 @@ public class Huffman extends X509Util {
         value = bais.read();
         while (value != -1) {
             String someBits = Integer.toString(value, 2);
-            for (int pad = 0; pad < 8 - someBits.length(); pad++) {
-                nodeBits.append("0");
-            }
+            nodeBits.append("0".repeat(Math.max(0, 8 - someBits.length())));
             nodeBits.append(someBits);
             value = bais.read();
         }
@@ -574,14 +564,14 @@ public class Huffman extends X509Util {
         // added child check because we have a blank placeholder node for the single segment case
         PathNode root = null;
         for (PathNode pn : pathNodes) {
-            if (pn.getParents().size() == 0 && pn.getChildren().size() > 0) {
+            if (pn.getParents().isEmpty() && !pn.getChildren().isEmpty()) {
                 root = pn;
                 break;
             }
         }
         // time to make the doughnuts
         List<String> urls = new ArrayList<>();
-        StringBuffer aPath = new StringBuffer();
+        StringBuilder aPath = new StringBuilder();
         makeURLs(root, urls, aPath);
         return urls;
     }
@@ -590,7 +580,7 @@ public class Huffman extends X509Util {
         HuffNode left = trie.getLeft();
         HuffNode right = trie.getRight();
 
-        if (bits.length() == 0) {
+        if (bits.isEmpty()) {
             return trie.getValue();
         }
 
@@ -611,7 +601,7 @@ public class Huffman extends X509Util {
     }
 
     private Set<PathNode> populatePathNodes(List<HuffNode> nodeDictionary,
-        HuffNode pathTrie, HuffNode nodeTrie, StringBuffer nodeBits) {
+        HuffNode pathTrie, HuffNode nodeTrie, StringBuilder nodeBits) {
         Set<PathNode> pathNodes = new HashSet<>();
         for (HuffNode node : nodeDictionary) {
             pathNodes.add((PathNode) node.getValue());
@@ -633,7 +623,7 @@ public class Huffman extends X509Util {
                         }
                         nameValue = (String) lookupValue;
                     }
-                    if (nodeBits.length() == 0) {
+                    if (nodeBits.isEmpty()) {
                         stillNode = false;
                     }
                 }
@@ -651,7 +641,7 @@ public class Huffman extends X509Util {
                         ((PathNode) node.getValue()).addChild(
                             new NodePair(nameValue, nodeValue));
                     }
-                    if (nodeBits.length() == 0) {
+                    if (nodeBits.isEmpty()) {
                         stillNode = false;
                     }
                 }
@@ -660,18 +650,18 @@ public class Huffman extends X509Util {
         return pathNodes;
     }
 
-    private void makeURLs(PathNode root, List<String> urls, StringBuffer aPath) {
+    private void makeURLs(PathNode root, List<String> urls, StringBuilder aPath) {
         if (root == null) {
             // if no PathNode, we just bail. No need to cause an NPE.
             return;
         }
 
-        if (root.getChildren().size() == 0) {
+        if (root.getChildren().isEmpty()) {
             urls.add(aPath.toString());
         }
 
         for (NodePair child : root.getChildren()) {
-            StringBuffer childPath = new StringBuffer(aPath.substring(0));
+            StringBuilder childPath = new StringBuilder(aPath.substring(0));
             childPath.append("/");
             childPath.append(child.getName());
             makeURLs(child.getConnection(), urls, childPath);

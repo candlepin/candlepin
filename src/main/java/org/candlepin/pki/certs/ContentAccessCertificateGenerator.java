@@ -30,6 +30,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.dto.Content;
+import org.candlepin.pki.CertificateCreationException;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
@@ -59,6 +60,9 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 
+/**
+ * This generator is responsible for generation of content access certificates.
+ */
 public class ContentAccessCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(ContentAccessCertificateGenerator.class);
 
@@ -269,7 +273,7 @@ public class ContentAccessCertificateGenerator {
             return v3extensionUtil.getByteExtensions(products);
         }
         catch (IOException e) {
-            throw new CertificateExtensionException("Failed to prepare extensions", e);
+            throw new CertificateCreationException("Failed to prepare extensions", e);
         }
     }
 

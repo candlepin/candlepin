@@ -100,7 +100,7 @@ import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.certs.AnonymousCertificateGenerator;
 import org.candlepin.pki.certs.ContentAccessCertificateGenerator;
-import org.candlepin.pki.certs.EntCertGenerator;
+import org.candlepin.pki.certs.EntitlementCertificateGenerator;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.pki.certs.ProductCertificateGenerator;
 import org.candlepin.pki.certs.UeberCertificateGenerator;
@@ -316,7 +316,7 @@ public class CandlepinModule extends AbstractModule {
 
         bind(AnonymousCertificateGenerator.class);
         bind(ContentAccessCertificateGenerator.class);
-        bind(EntCertGenerator.class);
+        bind(EntitlementCertificateGenerator.class);
         bind(IdentityCertificateGenerator.class);
         bind(ProductCertificateGenerator.class);
         bind(UeberCertificateGenerator.class);

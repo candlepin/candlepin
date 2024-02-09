@@ -16,6 +16,7 @@
 package org.candlepin.pki.certs;
 
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.SubjectKeyIdentifierWriter;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -27,17 +28,20 @@ import javax.inject.Provider;
 public class X509CertificateBuilderProvider implements Provider<X509CertificateBuilder> {
     private final Provider<BouncyCastleProvider> securityProvider;
     private final CertificateReader certificateAuthority;
+    private final SubjectKeyIdentifierWriter subjectKeyIdentifierWriter;
 
     @Inject
     public X509CertificateBuilderProvider(Provider<BouncyCastleProvider> securityProvider,
-        CertificateReader certificateAuthority) {
+        CertificateReader certificateAuthority, SubjectKeyIdentifierWriter subjectKeyIdentifierWriter) {
         this.securityProvider = Objects.requireNonNull(securityProvider);
         this.certificateAuthority = Objects.requireNonNull(certificateAuthority);
+        this.subjectKeyIdentifierWriter = Objects.requireNonNull(subjectKeyIdentifierWriter);
     }
 
     @Override
     public X509CertificateBuilder get() {
-        return new X509CertificateBuilder(this.certificateAuthority, this.securityProvider);
+        return new X509CertificateBuilder(
+            this.certificateAuthority, this.securityProvider, this.subjectKeyIdentifierWriter);
     }
 
 }

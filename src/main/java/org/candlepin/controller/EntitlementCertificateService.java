@@ -61,8 +61,8 @@ import javax.inject.Inject;
  * duration. Usage of these methods should be carefully evaluated, and bulk operations should be
  * preferred to singular ones.
  */
-public class EntitlementCertificateGenerator {
-    private static final Logger log = LoggerFactory.getLogger(EntitlementCertificateGenerator.class);
+public class EntitlementCertificateService {
+    private static final Logger log = LoggerFactory.getLogger(EntitlementCertificateService.class);
 
     private final EntitlementCertificateCurator entitlementCertificateCurator;
     private final EntitlementCertServiceAdapter entCertServiceAdapter;
@@ -75,7 +75,7 @@ public class EntitlementCertificateGenerator {
 
 
     @Inject
-    public EntitlementCertificateGenerator(EntitlementCertificateCurator entitlementCertificateCurator,
+    public EntitlementCertificateService(EntitlementCertificateCurator entitlementCertificateCurator,
         EntitlementCertServiceAdapter entCertServiceAdapter, EntitlementCurator entitlementCurator,
         PoolCurator poolCurator, EventSink eventSink, EventFactory eventFactory,
         ContentAccessManager contentAccessManager, OwnerCurator ownerCurator) {

@@ -49,7 +49,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.EntitlementCertificateGenerator;
+import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -224,7 +224,7 @@ public class ConsumerResourceUpdateTest {
     @Mock
     private EnvironmentContentCurator environmentContentCurator;
     @Mock
-    private EntitlementCertificateGenerator entCertGenerator;
+    private EntitlementCertificateService entCertGenerator;
     @Mock
     private PoolCurator poolCurator;
     @Mock

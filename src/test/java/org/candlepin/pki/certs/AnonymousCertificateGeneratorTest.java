@@ -40,9 +40,11 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.dto.Content;
 import org.candlepin.pki.CertificateCreationException;
+import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
+import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.Signer;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
@@ -95,6 +97,7 @@ class AnonymousCertificateGeneratorTest {
         BouncyCastleKeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(
             securityProvider, mock(KeyPairDataCurator.class));
         CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
+        SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
         this.generator = new AnonymousCertificateGenerator(
             this.extensionUtil,
             new EntitlementPayloadGenerator(objectMapper),
@@ -106,7 +109,7 @@ class AnonymousCertificateGeneratorTest {
             new BouncyCastlePemEncoder(),
             keyPairGenerator,
             new Signer(certificateReader),
-            () -> new X509CertificateBuilder(certificateReader, securityProvider)
+            () -> new X509CertificateBuilder(certificateReader, securityProvider, subjectKeyIdentifierWriter)
         );
     }
 

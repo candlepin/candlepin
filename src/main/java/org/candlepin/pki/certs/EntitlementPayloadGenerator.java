@@ -76,7 +76,6 @@ public class EntitlementPayloadGenerator extends X509Util {
         return toReturn;
     }
 
-
     private TinySubscription createSubscription(Pool pool) {
         TinySubscription toReturn = new TinySubscription();
         Product product = pool.getProduct();

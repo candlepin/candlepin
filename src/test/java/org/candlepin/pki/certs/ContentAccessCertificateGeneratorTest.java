@@ -45,9 +45,11 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.dto.Product;
+import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
+import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.Signer;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.TestUtil;
@@ -94,6 +96,7 @@ class ContentAccessCertificateGeneratorTest {
         BouncyCastleKeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(
             securityProvider, mock(KeyPairDataCurator.class));
         CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
+        SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
 
         when(this.contentAccessCertificateCurator.create(any(ContentAccessCertificate.class)))
             .thenAnswer(returnsFirstArg());
@@ -114,7 +117,7 @@ class ContentAccessCertificateGeneratorTest {
             new BouncyCastlePemEncoder(),
             keyPairGenerator,
             new Signer(certificateReader),
-            () -> new X509CertificateBuilder(certificateReader, securityProvider)
+            () -> new X509CertificateBuilder(certificateReader, securityProvider, subjectKeyIdentifierWriter)
         );
     }
 

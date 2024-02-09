@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.EntitlementCertificateGenerator;
+import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.controller.PoolService;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.SimpleModelTranslator;
@@ -109,7 +109,7 @@ class EnvironmentResourceTest {
     @Mock
     private EntitlementCurator entitlementCurator;
     @Mock
-    private EntitlementCertificateGenerator entCertGenerator;
+    private EntitlementCertificateService entCertGenerator;
     private I18n i18n;
     private ModelTranslator translator;
 

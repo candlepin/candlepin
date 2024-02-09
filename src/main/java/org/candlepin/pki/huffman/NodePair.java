@@ -15,7 +15,7 @@
 
 package org.candlepin.pki.huffman;
 
-public class NodePair implements Comparable {
+public class NodePair implements Comparable<NodePair> {
     private String name;
     private PathNode connection;
 
@@ -36,18 +36,12 @@ public class NodePair implements Comparable {
         this.connection = connection;
     }
 
-    public String toString() {
-        return "Name: " + name + ", Connection: " + connection.getId();
-    }
-
-    /* (non-Javadoc)
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
-     */
     @Override
-    public int compareTo(Object other) {
-        return this.name.compareTo(((NodePair) other).name);
+    public int compareTo(NodePair other) {
+        return this.name.compareTo(other.name);
     }
 
+    @Override
     public boolean equals(Object other) {
         if (this == other) {
             return true;
@@ -60,7 +54,13 @@ public class NodePair implements Comparable {
         return this.name.equals(((NodePair) other).getName());
     }
 
+    @Override
     public int hashCode() {
         return name.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Name: " + name + ", Connection: " + connection.getId();
     }
 }
