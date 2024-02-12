@@ -16,7 +16,7 @@ buildscript {
 }
 
 plugins {
-    id "nebula.lint" version "16.2.3"
+    id "nebula.lint" version "18.0.3"
     /*
     The Versions plugin is used to provide the dependencyUpdates task which is used
     to look for libraries that have newer versions available.
@@ -25,18 +25,20 @@ plugins {
     // Openapi version is set in the buildscript block for use in the pom generation as well
     id "org.openapi.generator" version '5.2.1'
     id "java"
-    id "maven"
+    id "distribution"
+    id "maven-publish"
     id "war"
     id "checkstyle"
     id 'org.owasp.dependencycheck' version '6.2.2'
     id "jacoco"
-    id "org.sonarqube" version "3.2.0"
+    id "org.sonarqube" version "4.0.0.2929"
 
 
     // The following are plugins are plugins we wrote in the buildSrc folder
     id 'org.candlepin.gradle.gettext'
     id 'org.candlepin.gradle.msgfmt'
     id "org.candlepin.gradle.SpecVersion"
+    id "org.candlepin.gradle.PomToolkit"
 }
 
 group = "org.candlepin"
@@ -204,7 +206,7 @@ dependencies {
     runtimeOnly "mysql:mysql-connector-java:8.0.20"
     runtimeOnly "org.mariadb.jdbc:mariadb-java-client:2.3.0"
 
-    testRuntime "org.hsqldb:hsqldb:2.6.1"
+    testRuntimeOnly "org.hsqldb:hsqldb:2.6.1"
     testRuntimeOnly "org.glassfish:javax.el:3.0.0"
 
     // Core testing libraries
@@ -271,8 +273,8 @@ openApiGenerate {
     outputDir = "$buildDir/generated/api"
     configOptions = [
             interfaceOnly: 'true',
-            generatePom: 'false',
-            dateLibrary: "java8"
+            generatePom  : 'false',
+            dateLibrary  : "java8"
     ]
     templateDir = "$rootDir/buildSrc/src/main/resources/templates"
 }
@@ -336,9 +338,9 @@ test {
     testLogging {
         // set options for log level LIFECYCLE
         events TestLogEvent.FAILED,
-            TestLogEvent.PASSED,
-            TestLogEvent.SKIPPED
-            // TestLogEvent.STANDARD_OUT
+                TestLogEvent.PASSED,
+                TestLogEvent.SKIPPED
+        // TestLogEvent.STANDARD_OUT
         exceptionFormat TestExceptionFormat.FULL
         showExceptions true
         showCauses true
@@ -347,11 +349,11 @@ test {
         // set options for log level DEBUG and INFO
         debug {
             events TestLogEvent.STARTED,
-                TestLogEvent.FAILED,
-                TestLogEvent.PASSED,
-                TestLogEvent.SKIPPED,
-                TestLogEvent.STANDARD_ERROR,
-                TestLogEvent.STANDARD_OUT
+                    TestLogEvent.FAILED,
+                    TestLogEvent.PASSED,
+                    TestLogEvent.SKIPPED,
+                    TestLogEvent.STANDARD_ERROR,
+                    TestLogEvent.STANDARD_OUT
             exceptionFormat TestExceptionFormat.FULL
         }
         info.events = debug.events
@@ -370,7 +372,7 @@ test {
 
 jacocoTestReport {
     reports {
-        xml.enabled true
+        xml.required = true
     }
 
     doLast {
@@ -400,6 +402,7 @@ clean.doFirst {
 // substitute the version & release in the version.properties used by the status resource at runtime
 processResources {
     from("src/main/resources") {
+        duplicatesStrategy = "include"
         include "version.properties"
         expand([version: project.getVersion(), release: project.findProperty("release")])
     }
@@ -494,17 +497,36 @@ tasks.withType(Checkstyle) {
 }
 
 task pom {
-    doLast {
-        conf2ScopeMappings.addMapping(MavenPlugin.COMPILE_PRIORITY + 1, configurations.compileOnly, 'provided')
-        conf2ScopeMappings.addMapping(MavenPlugin.COMPILE_PRIORITY + 1, configurations.runtimeOnly, 'runtime')
-        conf2ScopeMappings.addMapping(MavenPlugin.COMPILE_PRIORITY + 1, configurations.implementation, 'compile')
+    dependsOn "generatePomFileForLocalPublication"
+}
 
-        pom {
-            project {
-                description "The Candlepin Entitlement Engine"
-                groupId "org.candlepin"
-                artifactId "candlepin"
-                packaging "war"
+publishing {
+    publications {
+        // Publish the candlepin war
+        warArtifact(MavenPublication) {
+            from components.web
+
+            groupId 'org.candlepin'
+            artifactId 'candlepin'
+        }
+
+        // Publish the candlepin-api jar
+        jarArtifact(MavenPublication) {
+            artifact tasks.apiJar
+
+            groupId = 'org.candlepin'
+            artifactId = 'candlepin-api'
+        }
+
+        local(MavenPublication) {
+
+            generatePomFileForLocalPublication {
+                destination = file("./pom.xml")
+            }
+
+            pom {
+                description = 'The Candlepin Entitlement Engine'
+                packaging = 'war'
                 licenses {
                     license {
                         name = 'GNU Public License (GPL) version 2.0'
@@ -512,266 +534,29 @@ task pom {
                         distribution = 'repo'
                     }
                 }
+
                 scm {
                     connection = 'scm:git:git://github.com/candlepin/candlepin.git'
                     developerConnection = 'scm:git:git@github.com:candlepin/candlepin.git'
                 }
-                dependencies {
-                    dependency {
-                        groupId 'org.mozilla'
-                        artifactId 'jss'
-                        version '${jssVersion}'
-                        scope 'system'
-                        systemPath '${jssLocation}'
-                    }
-                }
-                // Choose which jss library to use by activating the appropriate profile
-                // based on which version of the jss jar exists on the file system.
-                profiles {
-                    profile {
-                        id 'build-with-jss4'
-                        activation {
-                            file {
-                                exists '/usr/lib64/jss/jss4.jar'
-                            }
-                        }
-                        properties {
-                            jssVersion '4.9.1'
-                            jssLocation '/usr/lib64/jss/jss4.jar'
-                        }
-                    }
-                    profile {
-                        id 'build-with-jss5-plus'
-                        activation {
-                            file {
-                                exists '/usr/lib64/jss/jss.jar'
-                            }
-                        }
-                        properties {
-                            jssVersion '5.0.0'
-                            jssLocation '/usr/lib64/jss/jss.jar'
-                        }
-                    }
-                }
-                repositories {
-                    repository {
-                        id 'jboss'
-                        name 'JBoss'
-                        url 'https://repository.jboss.org/nexus/content/groups/public/'
-                    }
-                    repository {
-                        id 'oauth'
-                        name 'Oauth'
-                        url 'https://oauth.googlecode.com/svn/code/maven/'
-                    }
-                    repository {
-                        id 'awood'
-                        name 'awood.fedorapeople.org'
-                        url 'https://awood.fedorapeople.org/ivy/candlepin/'
-                    }
-                    repository {
-                        id 'barnabycourt'
-                        name 'barnabycourt.fedorapeople.org'
-                        url 'https://barnabycourt.fedorapeople.org/repo/candlepin/'
-                    }
-                }
-                build([:]) {
-                    resources {
-                        resource {
-                            directory 'src/main/resources'
-                            filtering 'true'
-                        }
-                        resource {
-                            directory '${project.build.directory}/generated-resources'
-                            filtering 'true'
-                        }
-                    }
-                    testResources {
-                        testResource {
-                            directory 'src/test/resources'
-                            // Do not filter test resources.  It will corrupt the binary CRL files.
-                            filtering 'false'
-                        }
-                    }
-                    plugins {
-                        plugin {
-                            groupId 'org.openapitools'
-                            artifactId 'openapi-generator-maven-plugin'
-                            version "$openapi_version"
-                            executions {
-                                execution {
-                                    goals {
-                                        goal 'generate'
-                                    }
-                                    configuration {
-                                        inputSpec '${project.basedir}/api/candlepin-api-spec.yaml'
-                                        generatorName 'jaxrs-spec'
-                                        configurationFile '${project.basedir}/api/candlepin-api-config.json'
-                                        configOptions {
-                                            interfaceOnly 'true'
-                                            generatePom 'false'
-                                            dateLibrary 'java8'
-                                            sourceFolder 'src/gen/java/main'
-                                        }
-                                        templateDirectory '${project.basedir}/buildSrc/src/main/resources/templates'
-                                    }
-                                }
-                            }
-                        }
-                        plugin {
-                            groupId 'org.bsc.maven'
-                            artifactId 'maven-processor-plugin'
-                            version '5.0-jdk8-rc1'
-                            executions {
-                                execution {
-                                    id 'process'
-                                    phase 'generate-sources'
-                                    goals {
-                                        goal 'process'
-                                    }
-                                    configuration {
-                                        outputDirectory '${project.build.directory}/generated-sources/jpamodel/gen/java'
-                                        processors {
-                                            processor 'org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor'
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        plugin {
-                            groupId 'org.codehaus.mojo'
-                            artifactId 'build-helper-maven-plugin'
-                            version '3.2.0'
-                            executions {
-                                execution {
-                                    id 'add-source'
-                                    phase 'generate-sources'
-                                    goals {
-                                        goal 'add-source'
-                                    }
-                                    configuration {
-                                        sources {
-                                            source '${project.build.directory}/generated-sources/jpamodel/gen/java'
-                                            source '${project.build.directory}/generated-sources/openapi/src/gen/java'
-                                            source 'src/main/java'
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        plugin {
-                            groupId 'com.googlecode.gettext-commons'
-                            artifactId 'gettext-maven-plugin'
-                            version '1.2.4'
-                            executions {
-                                execution {
-                                    phase 'generate-resources'
-                                    goals {
-                                        goal 'dist'
-                                    }
-                                }
-                            }
-                            configuration {
-                                targetBundle 'org.candlepin.common.i18n.Messages'
-                                poDirectory 'po'
-                            }
-                        }
-                        plugin {
-                            groupId 'org.apache.maven.plugins'
-                            artifactId 'maven-resources-plugin'
-                            version '3.1.0'
-                            executions {
-                                execution {
-                                    phase 'validate'
-                                    goals {
-                                        goal 'copy-resources'
-                                    }
-                                    configuration {
-                                        outputDirectory 'src/main/webapp/docs/'
-                                        resources {
-                                            resource {
-                                                directory '${basedir}/api'
-                                                includes {
-                                                    include 'candlepin-api-spec.yaml'
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        plugin {
-                            groupId 'org.apache.maven.plugins'
-                            artifactId 'maven-compiler-plugin'
-                            version '3.8.0'
-                            configuration {
-                                source '11'
-                                target '11'
-                                debug 'true'
-                                debuglevel 'lines,vars,source'
-                                compilerArgument '-proc:none'
-                            }
-                        }
-                        plugin {
-                            groupId 'org.apache.maven.plugins'
-                            artifactId 'maven-surefire-plugin'
-                            version '2.22.1'
-                            configuration {
-                                skipTests 'true'
-                            }
-                        }
-                        plugin {
-                            groupId 'org.apache.maven.plugins'
-                            artifactId 'maven-assembly-plugin'
-                            version '2.4'
-                            executions {
-                                execution {
-                                    id 'create-archive'
-                                    phase 'package'
-                                    goals {
-                                        goal 'single'
-                                    }
-                                }
-                            }
-                            configuration {
-                                descriptors {
-                                    descriptor '${project.basedir}/assembly.xml'
-                                }
-                            }
-                        }
-                        plugin {
-                            artifactId 'maven-clean-plugin'
-                            version '3.1.0'
-                            configuration {
-                                filesets {
-                                    fileset {
-                                        directory 'src/main/webapp/docs/'
-                                        includes {
-                                            include 'candlepin-api-spec.yaml'
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        // This helps debugging by printing out which profiles
-                        // are active during the compilation phase
-                        plugin {
-                            groupId 'org.apache.maven.plugins'
-                            artifactId 'maven-help-plugin'
-                            version '3.2.0'
-                            executions {
-                                execution {
-                                    id 'show-profiles'
-                                    phase 'compile'
-                                    goals {
-                                        goal 'active-profiles'
-                                    }
-                                }
-                            }
-                        }
-                    }
+
+                pom.withXml {
+                    PomToolkit.generatePomDependencies(
+                            asNode(),
+                            configurations.annotationProcessor.dependencies,
+                            configurations.compileOnly.dependencies,
+                            configurations.implementation.dependencies,
+                            configurations.providedCompile.dependencies,
+                            configurations.runtimeOnly.dependencies,
+                            configurations.testImplementation.dependencies,
+                            configurations.testRuntimeOnly.dependencies
+                    )
+
+                    PomToolkit.generateRepositories(asNode())
+                    PomToolkit.generateBuild(asNode())
+                    PomToolkit.generateProfiles(asNode())
                 }
             }
-        }.writeTo("pom.xml")
+        }
     }
 }
