@@ -186,14 +186,10 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
      */
     @Override
     public CloudAccountData setupCloudAccountOrg(String cloudAccountID, String cloudOfferingID,
-        String cloudProviderShortName, String ownerKey)
+        String cloudProviderShortName)
         throws CouldNotAcquireCloudAccountLockException, CouldNotEntitleOrganizationException {
 
-        if (ownerKey == null) {
-            ownerKey = Util.generateUUID();
-        }
-
-        return new CloudAccountData(ownerKey, false);
+        return new CloudAccountData(Util.generateUUID(), false);
     }
 
     /**
