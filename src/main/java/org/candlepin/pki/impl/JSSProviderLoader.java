@@ -14,7 +14,6 @@
  */
 package org.candlepin.pki.impl;
 
-import org.apache.commons.lang3.StringUtils;
 import org.mozilla.jss.CertDatabaseException;
 import org.mozilla.jss.JSSProvider;
 import org.mozilla.jss.KeyDatabaseException;
@@ -140,6 +139,53 @@ public class JSSProviderLoader {
             addProviderReturn);
     }
 
+    /**
+     * Performs a comparison of the JSS version string against a required major and minor semantic
+     * version numbers. Returns a negative, zero, or positive integer depending on if the JSS
+     * version in the given version string is less than, equal to, or greater than the required
+     * major and minor versions.
+     *
+     * @param jssVersion
+     *  the JSS version string to compare
+     *
+     * @param reqMajor
+     *  the required major version to test against
+     *
+     * @param reqMinor
+     *  the required minor version to test against
+     *
+     * @throws IllegalArgumentException
+     *  if the JSS version string is null or cannot be parsed
+     *
+     * @return
+     *  a negative, zero, or positive integer depending on if the given JSS version is less than,
+     *  equal to, or greater than the required major and minor semantic version values,
+     *  respectively.
+     */
+    public static int compareJSSVersionString(String jssVersion, int reqMajor, int reqMinor) {
+        if (jssVersion == null) {
+            throw new IllegalArgumentException("Unable to parse JSS version");
+        }
+
+        // Impl note: this will still have issues if the JSS version string ever starts including
+        // non-numeric values in the first two segments (i.e. 5.0-beta).
+        String[] chunks = jssVersion.split("\\.");
+
+        try {
+            int jssMajorCmp = Integer.compare(Integer.parseInt(chunks[0]), reqMajor);
+
+            if (jssMajorCmp == 0 && chunks.length > 1) {
+                return Integer.compare(Integer.parseInt(chunks[1]), reqMinor);
+            }
+
+            return jssMajorCmp;
+        }
+        catch (NumberFormatException nfe) {
+            throw new IllegalArgumentException("Unable to parse major/minor version from JSS version: " +
+                jssVersion, nfe);
+        }
+    }
+
     /*
      * Load the appropriate InitializationValues class, depending on JSS version,
      * and return an instance of it. We load:
@@ -150,28 +196,31 @@ public class JSSProviderLoader {
         String jssVersionStr = JSSProvider.class.getPackage().getSpecificationVersion();
         log.info("Using JSS version {}", jssVersionStr);
 
-        float jssVersion;
-        // Get the X.Y out of the version, even if it is in the format X.Y.Z
-        if (StringUtils.countMatches(jssVersionStr, ".") == 1) {
-            jssVersion = new Float(jssVersionStr);
-        }
-        else {
-            int indexOfLastPeriod = jssVersionStr.lastIndexOf(".");
-            jssVersion = new Float(jssVersionStr.substring(0, indexOfLastPeriod));
-        }
-
         try {
             String ivsClassName;
-            if (Float.compare(jssVersion, 4.4f) == 0) {
-                ivsClassName = "org.mozilla.jss.CryptoManager$InitializationValues";
+
+            try {
+                int jssVersionCmp = compareJSSVersionString(jssVersionStr, 4, 4);
+                if (jssVersionCmp == 0) {
+                    ivsClassName = "org.mozilla.jss.CryptoManager$InitializationValues";
+                }
+                else if (jssVersionCmp > 0) {
+                    ivsClassName = "org.mozilla.jss.InitializationValues";
+                }
+                else {
+                    throw new JSSLoaderException("Candlepin does not support JSS versions less than 4.4!");
+                }
             }
-            else if (Float.compare(jssVersion, 4.4f) > 0) {
+            catch (IllegalArgumentException iae) {
+                // If we failed to parse the version string, just assume that means it was something
+                // newer than what we're hard-coded against and attempt to load based on that.
+                log.warn("JSS version string parsing failed; assuming version is higher than 4.4.x", iae);
                 ivsClassName = "org.mozilla.jss.InitializationValues";
             }
-            else {
-                throw new JSSLoaderException("Candlepin does not support JSS versions less than 4.4!");
-            }
-            return loader.loadClass(ivsClassName).getConstructor(String.class).newInstance(NSS_DB_LOCATION);
+
+            return loader.loadClass(ivsClassName)
+                .getConstructor(String.class)
+                .newInstance(NSS_DB_LOCATION);
         }
         catch (InstantiationException | ClassNotFoundException | IllegalAccessException |
             NoSuchMethodException | InvocationTargetException e) {

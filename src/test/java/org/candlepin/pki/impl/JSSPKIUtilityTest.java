@@ -49,6 +49,9 @@ import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mozilla.jss.netscape.security.x509.AuthorityKeyIdentifierExtension;
 import org.mozilla.jss.netscape.security.x509.KeyIdentifier;
 
@@ -67,6 +70,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -193,5 +197,36 @@ public class JSSPKIUtilityTest {
             .getIdentifier();
 
         assertArrayEquals(expectedKeyIdentifier, actualKeyIdentifier);
+    }
+
+    public static Stream<Arguments> jssProviderVersionTestData() {
+        return Stream.of(
+            Arguments.of("4.1", 4, 4, -1),
+            Arguments.of("4.10.1", 4, 4, 1),
+            Arguments.of("5.0.0.1", 4, 4, 1),
+            Arguments.of("4.4", 4, 4, 0),
+            Arguments.of("3.1", 4, 4, -1)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("jssProviderVersionTestData")
+    public void testJSSProviderVersionComparison(String jssVersion, int requiredMajor, int requiredMinor,
+        int expected) {
+
+        int actual = JSSProviderLoader.compareJSSVersionString(jssVersion, requiredMajor, requiredMinor);
+
+        // Impl note:
+        // the actual comparison function returns negative, zero, or positive. We don't know what
+        // the actual value is supposed to be, so we can't use assertions for equality here.
+        if (expected < 0) {
+            assertTrue(actual < 0);
+        }
+        else if (expected == 0) {
+            assertTrue(actual == 0);
+        }
+        else {
+            assertTrue(actual > 0);
+        }
     }
 }
