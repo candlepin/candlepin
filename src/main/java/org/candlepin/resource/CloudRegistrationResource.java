@@ -249,10 +249,6 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
                 .setCloudOfferingId(authResult.getOfferId())
                 .setCloudProvider(authResult.getCloudProvider());
 
-            if (ownerKey != null && !ownerKey.isBlank()) {
-                jobConfig.setOwnerKey(ownerKey);
-            }
-
             try {
                 this.jobManager.queueJob(jobConfig);
             }

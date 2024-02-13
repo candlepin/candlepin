@@ -39,7 +39,7 @@ public class DefaultCloudRegistrationAdapter implements CloudRegistrationAdapter
 
     @Override
     public CloudAccountData setupCloudAccountOrg(String cloudAccountID, String cloudOfferingID,
-        String cloudProviderShortName, String ownerKey) {
+        String cloudProviderShortName) {
         throw new UnsupportedOperationException();
     }
 

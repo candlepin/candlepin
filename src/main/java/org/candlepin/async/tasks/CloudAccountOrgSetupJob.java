@@ -52,7 +52,6 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
     protected static final String CLOUD_ACCOUNT_ID = "cloud_account_id";
     protected static final String OFFERING_ID = "offering_id";
     protected static final String CLOUD_PROVIDER = "cloud_provider";
-    protected static final String OWNER_KEY = "owner_key";
 
     private final CloudRegistrationAdapter cloudAdapter;
     private OwnerCurator ownerCurator;
@@ -79,12 +78,11 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
 
         String accountId = args.getAsString(CLOUD_ACCOUNT_ID);
         String offeringId = args.getAsString(OFFERING_ID);
-        String ownerKey = args.getAsString(OWNER_KEY);
         String cloudProviderShortName = args.getAsString(CLOUD_PROVIDER);
 
         try {
             CloudAccountData accountData = this.cloudAdapter.setupCloudAccountOrg(
-                accountId, offeringId, cloudProviderShortName, ownerKey);
+                accountId, offeringId, cloudProviderShortName);
 
             Owner owner = ownerCurator.getByKey(accountData.ownerKey());
             if (owner == null) {
@@ -197,23 +195,6 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
             return this;
         }
 
-        /**
-         * Sets the owner key for this job
-         *
-         * @param ownerKey
-         *     the owner key to set for this job
-         * @return a reference to this job config
-         */
-        public CloudAccountOrgSetupJobConfig setOwnerKey(String ownerKey) {
-            if (ownerKey != null && ownerKey.isBlank()) {
-                throw new IllegalArgumentException("ownerKey is empty");
-            }
-
-            this.setJobArgument(OWNER_KEY, ownerKey);
-
-            return this;
-        }
-
         @Override
         public void validate() throws JobConfigValidationException {
             super.validate();
@@ -224,7 +205,6 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
                 String accountId = arguments.getAsString(CLOUD_ACCOUNT_ID);
                 String offeringId = arguments.getAsString(OFFERING_ID);
                 String cloudProviderShortName = arguments.getAsString(CLOUD_PROVIDER);
-                String ownerKey = arguments.getAsString(OWNER_KEY);
 
                 if (accountId == null || accountId.isBlank()) {
                     String errmsg = "Cloud Account ID has not been set, or is empty";
@@ -238,11 +218,6 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
 
                 if (cloudProviderShortName == null) {
                     String errmsg = "Cloud provider has not been set";
-                    throw new JobConfigValidationException(errmsg);
-                }
-
-                if (ownerKey != null && ownerKey.isBlank()) {
-                    String errmsg = "Owner key is empty";
                     throw new JobConfigValidationException(errmsg);
                 }
             }
