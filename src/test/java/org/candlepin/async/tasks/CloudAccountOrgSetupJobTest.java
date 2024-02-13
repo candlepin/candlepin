@@ -14,8 +14,15 @@
  */
 package org.candlepin.async.tasks;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
@@ -96,24 +103,9 @@ class CloudAccountOrgSetupJobTest {
     }
 
     @Test
-    void testJobConfigSetOwnerKey() {
-        String ownerKey = TestUtil.randomString();
-        JobConfig config = CloudAccountOrgSetupJob.createJobConfig()
-            .setOwnerKey(ownerKey);
-
-        JobArguments args = config.getJobArguments();
-
-        assertThrows(IllegalArgumentException.class, () -> CloudAccountOrgSetupJob.createJobConfig()
-            .setOwnerKey(""));
-
-        assertTrue(args.containsKey(CloudAccountOrgSetupJob.OWNER_KEY));
-        assertEquals(ownerKey, args.getAsString(CloudAccountOrgSetupJob.OWNER_KEY));
-    }
-
-    @Test
     void ensureJobSuccessWithNewAnonymousOrganization()
         throws JobExecutionException, CouldNotAcquireCloudAccountLockException {
-        when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any(), anyString()))
+        when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any()))
             .thenReturn(new CloudAccountData("owner_key", true));
 
         CloudAccountOrgSetupJob regJob = new CloudAccountOrgSetupJob(cloudReg, ownerCurator);
@@ -123,8 +115,7 @@ class CloudAccountOrgSetupJobTest {
             CloudAccountOrgSetupJob.createJobConfig()
             .setCloudAccountId(TestUtil.randomString())
             .setCloudOfferingId(offering)
-            .setCloudProvider(TestUtil.randomString())
-            .setOwnerKey(TestUtil.randomString());
+            .setCloudProvider(TestUtil.randomString());
 
         AsyncJobStatus status = mock(AsyncJobStatus.class);
         JobExecutionContext context = spy(new JobExecutionContext(status));
@@ -144,7 +135,7 @@ class CloudAccountOrgSetupJobTest {
     @Test
     void ensureJobSuccessWithNewNonAnonymousOrganization()
         throws JobExecutionException, CouldNotAcquireCloudAccountLockException {
-        when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any(), anyString()))
+        when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any()))
             .thenReturn(new CloudAccountData("owner_key", false));
 
         CloudAccountOrgSetupJob regJob = new CloudAccountOrgSetupJob(cloudReg, ownerCurator);
@@ -154,8 +145,7 @@ class CloudAccountOrgSetupJobTest {
             CloudAccountOrgSetupJob.createJobConfig()
             .setCloudAccountId(TestUtil.randomString())
             .setCloudOfferingId(offering)
-            .setCloudProvider(TestUtil.randomString())
-            .setOwnerKey(TestUtil.randomString());
+            .setCloudProvider(TestUtil.randomString());
 
         AsyncJobStatus status = mock(AsyncJobStatus.class);
         JobExecutionContext context = spy(new JobExecutionContext(status));
@@ -174,7 +164,7 @@ class CloudAccountOrgSetupJobTest {
 
     @Test
     void ensureJobExceptionThrownIfLockIsNotAcquired() throws CouldNotAcquireCloudAccountLockException {
-        when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any(), anyString())).thenThrow(
+        when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any())).thenThrow(
             CouldNotAcquireCloudAccountLockException.class);
 
         CloudAccountOrgSetupJob regJob = new CloudAccountOrgSetupJob(cloudReg, ownerCurator);
@@ -183,8 +173,7 @@ class CloudAccountOrgSetupJobTest {
             CloudAccountOrgSetupJob.createJobConfig()
             .setCloudAccountId(TestUtil.randomString())
             .setCloudOfferingId(TestUtil.randomString())
-            .setCloudProvider(TestUtil.randomString())
-            .setOwnerKey(TestUtil.randomString());
+            .setCloudProvider(TestUtil.randomString());
 
         AsyncJobStatus status = mock(AsyncJobStatus.class);
         JobExecutionContext context = spy(new JobExecutionContext(status));
@@ -196,7 +185,7 @@ class CloudAccountOrgSetupJobTest {
     @Test
     void ensureJobExceptionThrownIfCouldNotEntitleOrganization()
         throws CouldNotAcquireCloudAccountLockException {
-        when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any(), anyString())).thenThrow(
+        when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any())).thenThrow(
             CouldNotEntitleOrganizationException.class);
 
         CloudAccountOrgSetupJob regJob = new CloudAccountOrgSetupJob(cloudReg, ownerCurator);
@@ -205,8 +194,7 @@ class CloudAccountOrgSetupJobTest {
             CloudAccountOrgSetupJob.createJobConfig()
             .setCloudAccountId(TestUtil.randomString())
             .setCloudOfferingId(TestUtil.randomString())
-            .setCloudProvider(TestUtil.randomString())
-            .setOwnerKey(TestUtil.randomString());
+            .setCloudProvider(TestUtil.randomString());
 
 
         AsyncJobStatus status = mock(AsyncJobStatus.class);
@@ -219,7 +207,7 @@ class CloudAccountOrgSetupJobTest {
     @Test
     void shouldThrowJobExceptionWhenCloudAccountOrgMismatchHappens()
         throws CouldNotAcquireCloudAccountLockException {
-        when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any(), anyString())).thenThrow(
+        when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any())).thenThrow(
             CloudAccountOrgMismatchException.class);
 
         CloudAccountOrgSetupJob regJob = new CloudAccountOrgSetupJob(cloudReg, ownerCurator);
@@ -228,8 +216,7 @@ class CloudAccountOrgSetupJobTest {
             CloudAccountOrgSetupJob.createJobConfig()
             .setCloudAccountId(TestUtil.randomString())
             .setCloudOfferingId(TestUtil.randomString())
-            .setCloudProvider(TestUtil.randomString())
-            .setOwnerKey(TestUtil.randomString());
+            .setCloudProvider(TestUtil.randomString());
 
         AsyncJobStatus status = mock(AsyncJobStatus.class);
         JobExecutionContext context = spy(new JobExecutionContext(status));
@@ -240,7 +227,7 @@ class CloudAccountOrgSetupJobTest {
 
     @Test
     void ensureJobExceptionThrownIllegalState() throws CouldNotAcquireCloudAccountLockException {
-        when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any(), anyString()))
+        when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any()))
             .thenReturn(new CloudAccountData("owner_key", null));
 
         CloudAccountOrgSetupJob regJob = new CloudAccountOrgSetupJob(cloudReg, ownerCurator);
@@ -249,8 +236,7 @@ class CloudAccountOrgSetupJobTest {
             CloudAccountOrgSetupJob.createJobConfig()
                 .setCloudAccountId(TestUtil.randomString())
                 .setCloudOfferingId(TestUtil.randomString())
-                .setCloudProvider(TestUtil.randomString())
-                .setOwnerKey(TestUtil.randomString());
+                .setCloudProvider(TestUtil.randomString());
 
 
         AsyncJobStatus status = mock(AsyncJobStatus.class);
@@ -266,8 +252,7 @@ class CloudAccountOrgSetupJobTest {
             .createJobConfig()
             .setCloudAccountId(TestUtil.randomString())
             .setCloudOfferingId(TestUtil.randomString())
-            .setCloudProvider(TestUtil.randomString())
-            .setOwnerKey(TestUtil.randomString());
+            .setCloudProvider(TestUtil.randomString());
         jobConfig.validate();
     }
 

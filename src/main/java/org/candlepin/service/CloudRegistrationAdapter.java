@@ -63,9 +63,6 @@ public interface CloudRegistrationAdapter {
      * @param cloudProviderShortName
      *     Shortcut of the cloud provider from which the offering came
      *
-     * @param ownerKey
-     *     An optional param if we have already paired organization with accountId
-     *
      * @throws CouldNotAcquireCloudAccountLockException
      *     Organization is already being created and/or entitled
      *
@@ -75,7 +72,7 @@ public interface CloudRegistrationAdapter {
      * @return key of the organization with entitled offering
      */
     CloudAccountData setupCloudAccountOrg(String cloudAccountID, String cloudOfferingID,
-        String cloudProviderShortName, String ownerKey)
+        String cloudProviderShortName)
         throws CouldNotAcquireCloudAccountLockException, CouldNotEntitleOrganizationException,
             CloudAccountOrgMismatchException;
 
