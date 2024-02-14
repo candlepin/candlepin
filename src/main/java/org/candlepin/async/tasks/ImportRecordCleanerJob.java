@@ -74,7 +74,7 @@ public class ImportRecordCleanerJob implements AsyncJob {
         }
 
         int deleted = 0;
-        for (Owner owner : this.ownerCurator.listAll().list()) {
+        for (Owner owner : this.ownerCurator.listAll()) {
             List<ImportRecord> records = this.importRecordCurator.findRecords(owner);
 
             if (toKeep < records.size()) {

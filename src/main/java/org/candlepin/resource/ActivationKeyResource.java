@@ -52,6 +52,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -263,9 +264,10 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
-    public CandlepinQuery<ActivationKeyDTO> findActivationKey() {
-        CandlepinQuery<ActivationKey> query = this.activationKeyCurator.listAll();
-        return this.translator.translateQuery(query, ActivationKeyDTO.class);
+    public Stream<ActivationKeyDTO> findActivationKey() {
+        return this.activationKeyCurator.listAll()
+            .stream()
+            .map(this.translator.getStreamMapper(ActivationKey.class, ActivationKeyDTO.class));
     }
 
     @Override

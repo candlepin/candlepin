@@ -1162,9 +1162,7 @@ public class PoolManagerTest {
             eq(false), nullable(Date.class)))
             .thenReturn(page);
 
-        CandlepinQuery mockQuery = mock(CandlepinQuery.class);
-        when(poolCurator.listAllByIds(nullable(Set.class))).thenReturn(mockQuery);
-        when(mockQuery.iterator()).thenReturn(Collections.singletonList(pool1).listIterator());
+        when(poolCurator.listAllByIds(nullable(Set.class))).thenReturn(List.of(pool1));
         when(enforcer.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
             any(CallerType.class))).thenReturn(result);
 
@@ -1224,11 +1222,7 @@ public class PoolManagerTest {
         doAnswer(iom -> iom.getArgument(1)).when(enforcer)
             .filterPools(eq(consumer), anyList(), anyBoolean());
 
-        CandlepinQuery mockQuery = mock(CandlepinQuery.class);
-        when(poolCurator.listAllByIds(nullable(Set.class))).thenReturn(mockQuery);
-
-        List<Pool> poolList = List.of(pool1);
-        doAnswer(iom -> poolList.iterator()).when(mockQuery).iterator();
+        when(poolCurator.listAllByIds(nullable(Set.class))).thenReturn(new LinkedList<>());
 
         when(enforcer.preEntitlement(any(Consumer.class), any(Pool.class), any(Integer.class),
             any(CallerType.class))).thenReturn(validationResult);
@@ -1294,12 +1288,9 @@ public class PoolManagerTest {
         List<Entitlement> poolEntitlements = List.of(ent);
 
         when(poolCurator.getEntitlementIdsForPools(anyCollection()))
-            .thenReturn(Collections.singletonList(ent.getId()));
+            .thenReturn(List.of(ent.getId()));
 
-        CandlepinQuery<Entitlement> cqmockEnt = mock(CandlepinQuery.class);
-        when(cqmockEnt.list()).thenReturn(poolEntitlements);
-        when(cqmockEnt.iterator()).thenReturn(poolEntitlements.iterator());
-        when(entitlementCurator.listAllByIds(anyCollection())).thenReturn(cqmockEnt);
+        when(entitlementCurator.listAllByIds(anyCollection())).thenReturn(poolEntitlements);
 
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
@@ -1441,9 +1432,8 @@ public class PoolManagerTest {
             nullable(String.class), nullable(String.class), nullable(String.class), eq(now),
             any(PoolFilterBuilder.class), nullable(PageRequest.class), anyBoolean(), anyBoolean(),
             anyBoolean(), nullable(Date.class))).thenReturn(page);
-        CandlepinQuery mockQuery = mock(CandlepinQuery.class);
-        when(poolCurator.listAllByIds(anyList())).thenReturn(mockQuery);
-        when(mockQuery.iterator()).thenReturn(Collections.singletonList(pool1).listIterator());
+
+        when(poolCurator.listAllByIds(anyList())).thenReturn(List.of(pool1));
 
         when(enforcer.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
             any(CallerType.class))).thenReturn(result);
@@ -1795,7 +1785,7 @@ public class PoolManagerTest {
         assertEquals(3, derivedPool.getConsumed().intValue());
         assertEquals(1, derivedPool.getEntitlements().size());
 
-        Collection<Pool> overPools = Collections.singletonList(derivedPool);
+        Collection<Pool> overPools = List.of(derivedPool);
         when(poolCurator.lock(anyCollection())).thenReturn(overPools);
         when(poolCurator.lockAndLoad(pool)).thenReturn(pool);
         when(enforcer.update(any(Consumer.class), any(Entitlement.class), any(Integer.class)))
@@ -1803,9 +1793,9 @@ public class PoolManagerTest {
         when(enforcer.postEntitlement(any(Consumer.class), anyMap(),
             anyList(), eq(true), anyMap())).thenReturn(new PoolOperations());
         when(poolCurator.getOversubscribedBySubscriptionIds(any(String.class), anyMap()))
-            .thenReturn(Collections.singletonList(derivedPool));
+            .thenReturn(List.of(derivedPool));
         when(poolCurator.retrieveOrderedEntitlementsOf(anyList()))
-            .thenReturn(Collections.singletonList(derivedEnt));
+            .thenReturn(List.of(derivedEnt));
         when(poolCurator.lockAndLoad(derivedPool)).thenReturn(derivedPool);
         pool.setId("primarypool");
 
