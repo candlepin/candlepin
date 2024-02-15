@@ -7,7 +7,7 @@ jackson = "2.16.1"
 jaxb = "4.0.4"
 junit = "5.10.2"
 okhttp3 = "4.12.0"
-openapi-generator = "7.2.0"
+openapi-generator = "7.3.0"
 resteasy = "4.7.9.Final"
 slf4j = "2.0.12"
 test-logger = "4.0.0"
@@ -82,6 +82,7 @@ okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp3" }
 okhttp-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp3" }
 okhttp-tls = { module = "com.squareup.okhttp3:okhttp-tls", version.ref = "okhttp3" }
 openapi = { module = "org.openapitools:openapi-generator", version.ref = "openapi-generator" }
+openapi-databind-nullable = { module = "org.openapitools:jackson-databind-nullable", version = "0.2.6" }
 otel-annotation = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations", version = "2.0.0" }
 picocli = { module = "info.picocli:picocli", version = "4.7.5" }
 postgresql = { module = "org.postgresql:postgresql", version = "42.7.1" }

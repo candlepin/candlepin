@@ -11,12 +11,14 @@ repositories {
 }
 
 dependencies {
+    implementation(libs.commons.lang)
     implementation(libs.gson)
     implementation(libs.gsonfire)
     implementation(libs.javax.annotation)
     implementation(libs.javax.rs)
     implementation(libs.okhttp)
     implementation(libs.okhttp.interceptor)
+    implementation(libs.openapi.databind.nullable)
     implementation(libs.spotbugs)
     implementation(libs.swagger)
 }
