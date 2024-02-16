@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.22
+Version: 4.1.23
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -249,6 +249,32 @@ fi
 
 #raw
 %changelog
+* Fri Feb 16 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.23-1
+- Adjust .tar.gz filename in spec file to work with PNC (nmoumoul@redhat.com)
+- Remove unused selinux_policyver variable (nmoumoul@redhat.com)
+- Fixed a bug with the JSS version detection logic (crog@redhat.com)
+- Build Github actions spec test containers using docker compose build -
+  Removed the Github actions build_image job - Added build section to spec
+  Github actions docker-compose files (joshmalbrecht@gmail.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- Remove jenkins pipeline (nmoumoul@redhat.com)
+- Allow PNC to generate the candlepin-api.jar (nmoumoul@redhat.com)
+- CANDLEPIN-637: Backport GH Actions (sbakaj@redhat.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- During i18n job, only check for diffs on the .pot file (nmoumoul@redhat.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- CANDLEPIN-613: Updated Gettext.groovy to main version
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-613: Added i18n.sh script for GH actions job
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-226: Port branch 4.1 to use PNC (ojanus@redhat.com)
+- CANDLEPIN-518: Update for renamed default branch in fh-pipeline-library
+  (wpoteat@redhat.com)
+- CANDLEPIN-509: Link to cp-test file in branch (wpoteat@redhat.com)
+
 * Tue Feb 28 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.22-1
 - Revert accidental openapi maven plugin upgrade (nmoumoul@redhat.com)
 
