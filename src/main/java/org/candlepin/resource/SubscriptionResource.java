@@ -38,9 +38,9 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
@@ -79,9 +79,10 @@ public class SubscriptionResource implements SubscriptionApi {
     }
 
     @Override
-    public List<SubscriptionDTO> getSubscriptions() {
-        return this.translator.translateQuery(this.poolManager.getPrimaryPools(), SubscriptionDTO.class)
-            .list();
+    public Stream<SubscriptionDTO> getSubscriptions() {
+        return this.poolManager.getPrimaryPools()
+            .stream()
+            .map(this.translator.getStreamMapper(Pool.class, SubscriptionDTO.class));
     }
 
     @Override

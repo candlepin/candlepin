@@ -22,7 +22,7 @@ import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.server.v1.PoolDTO;
 import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.model.CandlepinQuery;
+import org.candlepin.model.ContentOverride;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -278,18 +278,19 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
-    public Iterable<ContentOverrideDTO> listActivationKeyContentOverrides(
+    public Stream<ContentOverrideDTO> listActivationKeyContentOverrides(
         @Verify(value = ActivationKey.class, require = Access.READ_ONLY) String activationKeyId) {
 
         ActivationKey key = this.fetchActivationKey(activationKeyId);
 
-        CandlepinQuery<ActivationKeyContentOverride> query = this.contentOverrideCurator.getList(key);
-        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+        return this.contentOverrideCurator.getList(key)
+            .stream()
+            .map(this.translator.getStreamMapper(ContentOverride.class, ContentOverrideDTO.class));
     }
 
     @Override
     @Transactional
-    public Iterable<ContentOverrideDTO> addActivationKeyContentOverrides(
+    public Stream<ContentOverrideDTO> addActivationKeyContentOverrides(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         List<ContentOverrideDTO> entries) {
 
@@ -330,13 +331,16 @@ public class ActivationKeyResource implements ActivationKeyApi {
         // Hibernate typically persists automatically before executing a query against a table with
         // pending changes, but if it doesn't, we can add a flush here to make sure this outputs the
         // correct values
-        CandlepinQuery<ActivationKeyContentOverride> query = this.contentOverrideCurator.getList(key);
-        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+
+        return this.contentOverrideCurator.getList(key)
+            .stream()
+            .map(this.translator.getStreamMapper(ActivationKeyContentOverride.class,
+                ContentOverrideDTO.class));
     }
 
     @Override
     @Transactional
-    public Iterable<ContentOverrideDTO> deleteActivationKeyContentOverrides(
+    public Stream<ContentOverrideDTO> deleteActivationKeyContentOverrides(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         List<ContentOverrideDTO> entries) {
 
@@ -363,8 +367,9 @@ public class ActivationKeyResource implements ActivationKeyApi {
             }
         }
 
-        CandlepinQuery<ActivationKeyContentOverride> query = this.contentOverrideCurator.getList(key);
-        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+        return this.contentOverrideCurator.getList(key)
+            .stream()
+            .map(this.translator.getStreamMapper(ContentOverride.class, ContentOverrideDTO.class));
     }
 
     private Pool findPool(String poolId) {
