@@ -125,8 +125,8 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         // Verify initial state
         assertEquals(
             Arrays.asList(pool1, pool2, pool3, pool4, pool5, pool6),
-            this.poolService.listPoolsByOwner(owner1).list());
-        assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolService.listPoolsByOwner(owner2).list());
+            this.poolService.listPoolsByOwner(owner1));
+        assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolService.listPoolsByOwner(owner2));
         assertEquals(metadata1, exportCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner1));
         assertEquals(metadata2, exportCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner2));
         assertEquals(0, this.importRecordCurator.findRecords(owner1).size());
@@ -146,9 +146,9 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
 
         // Verify deletions -- Ueber pools should not get deleted.
         assertEquals(List.of(pool3, pool4, pool5, pool6),
-            this.poolService.listPoolsByOwner(owner1).list());
+            this.poolService.listPoolsByOwner(owner1));
 
-        assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolService.listPoolsByOwner(owner2).list());
+        assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolService.listPoolsByOwner(owner2));
         assertNull(exportCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner1));
         assertEquals(metadata2, exportCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner2));
         assertNull(owner1.getUpstreamConsumer());

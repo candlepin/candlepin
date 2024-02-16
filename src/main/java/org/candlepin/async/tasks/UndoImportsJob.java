@@ -112,7 +112,7 @@ public class UndoImportsJob implements AsyncJob {
 
         // We want to delete any pools which are managed, but *aren't* derived. Derived pools that
         // should be deleted here will be deleted by the cascading effect of deleting their parents
-        List<Pool> pools = this.poolService.listPoolsByOwner(owner).list()
+        List<Pool> pools = this.poolService.listPoolsByOwner(owner)
             .stream()
             .filter(pool -> pool.isManaged())
             .filter(pool -> !pool.getType().isDerivedType())

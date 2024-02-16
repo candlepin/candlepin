@@ -29,7 +29,6 @@ import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.Hibernate;
 import org.hibernate.ReplicationMode;
-import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
@@ -66,6 +65,10 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 
 
@@ -95,7 +98,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return pools owned by the given Owner.
      */
     @Transactional
-    public CandlepinQuery<Pool> listByOwner(Owner owner) {
+    public List<Pool> listByOwner(Owner owner) {
         return listByOwner(owner, null);
     }
 
@@ -106,17 +109,26 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return pools owned by the given Owner.
      */
     @Transactional
-    public CandlepinQuery<Pool> listByOwner(Owner owner, Date activeOn) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Pool.class)
-            .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("activeSubscription", Boolean.TRUE));
+    public List<Pool> listByOwner(Owner owner, Date activeOn) {
+        CriteriaBuilder cb = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Pool> query = cb.createQuery(this.entityType());
+        Root<Pool> root = query.from(this.entityType());
+        query.select(root);
+
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(cb.equal(root.get(Pool_.owner), owner));
+        predicates.add(cb.equal(root.get(Pool_.activeSubscription), true));
 
         if (activeOn != null) {
-            criteria.add(Restrictions.le("startDate", activeOn))
-                .add(Restrictions.ge("endDate", activeOn));
+            predicates.add(cb.lessThanOrEqualTo(root.get(Pool_.startDate), activeOn));
+            predicates.add(cb.greaterThanOrEqualTo(root.get(Pool_.endDate), activeOn));
         }
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        query.where(predicates.toArray(new Predicate[predicates.size()]));
+
+        return this.getEntityManager()
+            .createQuery(query)
+            .getResultList();
     }
 
     /**
@@ -152,11 +164,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param e Entitlement
      * @return Pools created as a result of this entitlement.
      */
-    public CandlepinQuery<Pool> listBySourceEntitlement(Entitlement e) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(Restrictions.eq("sourceEntitlement", e));
+    public List<Pool> listBySourceEntitlement(Entitlement e) {
+        String jpql = "SELECT p FROM Pool p WHERE p.sourceEntitlement.id = :ent_id";
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        return this.getEntityManager()
+            .createQuery(jpql, Pool.class)
+            .setParameter("ent_id", e.getId())
+            .getResultList();
     }
 
     /**
@@ -1426,46 +1440,36 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return output;
     }
 
-    @SuppressWarnings("unchecked")
-    public CandlepinQuery<Pool> getPoolsBySubscriptionId(String subId) {
-        String jpql = "SELECT DISTINCT ss.pool.id FROM SourceSubscription ss WHERE ss.subscriptionId = :sid";
-
-        List<String> ids = this.getEntityManager()
-            .createQuery(jpql, String.class)
-            .setParameter("sid", subId)
-            .getResultList();
-
-        if (ids != null && !ids.isEmpty()) {
-            DetachedCriteria criteria = this.createSecureDetachedCriteria(Pool.class, null)
-                .add(CPRestrictions.in("id", ids))
-                .addOrder(Order.asc("id"));
-
-            return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+    public List<Pool> getPoolsBySubscriptionId(String subId) {
+        if (subId == null || subId.isBlank()) {
+            return new ArrayList<>();
         }
 
-        return this.cpQueryFactory.buildQuery();
+        return getPoolsBySubscriptionIds(List.of(subId));
     }
 
-    @SuppressWarnings("unchecked")
-    public CandlepinQuery<Pool> getPoolsBySubscriptionIds(Collection<String> subIds) {
-        if (subIds != null && !subIds.isEmpty()) {
-            Session session = this.currentSession();
-
-            List<String> ids = session.createCriteria(SourceSubscription.class)
-                .add(CPRestrictions.in("subscriptionId", subIds))
-                .setProjection(Projections.distinct(Projections.property("pool.id")))
-                .list();
-
-            if (ids != null && !ids.isEmpty()) {
-                DetachedCriteria criteria = this.createSecureDetachedCriteria(Pool.class, null)
-                    .add(CPRestrictions.in("id", ids))
-                    .addOrder(Order.asc("id"));
-
-                return this.cpQueryFactory.buildQuery(session, criteria);
-            }
+    public List<Pool> getPoolsBySubscriptionIds(Collection<String> subIds) {
+        if (subIds == null || subIds.isEmpty()) {
+            return new ArrayList<>();
         }
 
-        return this.cpQueryFactory.buildQuery();
+        String jpql = "SELECT DISTINCT p FROM SourceSubscription ss " +
+            "JOIN Pool p ON p.id = ss.pool.id " +
+            "WHERE ss.subscriptionId IN (:subIds) " +
+            "ORDER BY p.id ASC";
+
+        TypedQuery<Pool> query = this.getEntityManager()
+            .createQuery(jpql, Pool.class);
+
+        List<Pool> pools = new ArrayList<>();
+        for (List<String> block : this.partition(subIds)) {
+            List<Pool> result = query.setParameter("subIds", block)
+                .getResultList();
+
+            pools.addAll(result);
+        }
+
+        return pools;
     }
 
     @SuppressWarnings("unchecked")
@@ -1484,12 +1488,12 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return
      *  A query to fetch all known primary pools
      */
-    public CandlepinQuery<Pool> getPrimaryPools() {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Pool.class)
-            .createAlias("sourceSubscription", "srcsub")
-            .add(Restrictions.eq("srcsub.subscriptionSubKey", "master"));
+    public List<Pool> getPrimaryPools() {
+        String jpql = "SELECT p FROM Pool p WHERE p.sourceSubscription.subscriptionSubKey = 'master'";
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        return this.getEntityManager()
+            .createQuery(jpql, Pool.class)
+            .getResultList();
     }
 
     @SuppressWarnings("checkstyle:indentation")

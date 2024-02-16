@@ -17,7 +17,6 @@ package org.candlepin.resource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -31,10 +30,8 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.exceptions.ServiceUnavailableException;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.Pool;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -83,9 +80,7 @@ public class SubscriptionResourceTest {
 
     @Test
     public void testInvalidIdOnDelete() {
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Collections.emptyIterator());
-        when(poolManager.getPoolsBySubscriptionId(anyString())).thenReturn(cqmock);
+        when(poolManager.getPoolsBySubscriptionId(anyString())).thenReturn(Collections.emptyList());
 
         assertThrows(NotFoundException.class,
             () -> subResource.deleteSubscription("JarJarBinks"));
