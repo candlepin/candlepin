@@ -16,8 +16,6 @@ package org.candlepin.util;
 
 import static org.candlepin.util.X509Util.ARCH_FACT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -33,9 +31,8 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.dto.TinySubscription;
+import org.candlepin.pki.huffman.Huffman;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.X509V3ExtensionUtil.NodePair;
-import org.candlepin.util.X509V3ExtensionUtil.PathNode;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -60,47 +57,7 @@ public class X509V3ExtensionUtilTest {
 
         Configuration config = mock(Configuration.class);
         EntitlementCurator ec = mock(EntitlementCurator.class);
-        util = new X509V3ExtensionUtil(config, ec, this.mapper);
-    }
-
-    @Test
-    public void compareToEquals() {
-        PathNode pn = util.new PathNode();
-        NodePair np = new NodePair("name", pn);
-        NodePair np1 = new NodePair("name", pn);
-        assertEquals(0, np.compareTo(np1));
-        assertEquals(np, np1);
-    }
-
-    @Test
-    public void nullCompareTo() {
-        PathNode pn = util.new PathNode();
-        NodePair np = new NodePair("name", pn);
-
-        assertThrows(NullPointerException.class, () -> np.compareTo(null));
-    }
-
-    @Test
-    public void nullEquals() {
-        PathNode pn = util.new PathNode();
-        NodePair np = new NodePair("name", pn);
-        assertNotEquals(null, np);
-    }
-
-    @Test
-    public void otherObjectEquals() {
-        PathNode pn = util.new PathNode();
-        NodePair np = new NodePair("name", pn);
-        assertNotEquals(np, pn);
-    }
-
-    @Test
-    public void notEqualNodes() {
-        PathNode pn = util.new PathNode();
-        NodePair np = new NodePair("name", pn);
-        NodePair np1 = new NodePair("diff", pn);
-        assertTrue(np.compareTo(np1) > 0);
-        assertNotEquals(np, np1);
+        util = new X509V3ExtensionUtil(config, ec, this.mapper, new Huffman());
     }
 
     @Test
