@@ -16,10 +16,13 @@ package org.candlepin.model;
 
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.List;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
 
 
@@ -42,12 +45,16 @@ public abstract class ContentOverrideCurator<T extends ContentOverride<T, Parent
         this.parentAttr = parentAttrName;
     }
 
-    @SuppressWarnings("unchecked")
-    public CandlepinQuery<T> getList(Parent parent) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(this.entityType())
-            .add(Restrictions.eq(parentAttr, parent));
+    public List<T> getList(Parent parent) {
+        CriteriaBuilder cb = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<T> query = cb.createQuery(this.entityType());
+        Root<T> root = query.from(this.entityType());
+        query.select(root);
+        query.where(cb.equal(root.get(parentAttr), parent));
 
-        return this.cpQueryFactory.<T>buildQuery(this.currentSession(), criteria);
+        return this.getEntityManager()
+            .createQuery(query)
+            .getResultList();
     }
 
     public void removeByName(Parent parent, String contentLabel, String name) {

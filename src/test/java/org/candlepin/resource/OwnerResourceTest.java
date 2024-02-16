@@ -322,7 +322,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         pQs.put(pool.getId(), 1);
         poolManager.entitleByPools(c1, pQs);
         assertEquals(2, consumerCurator.listByOwner(owner).list().size());
-        assertEquals(1, poolCurator.listByOwner(owner).list().size());
+        assertEquals(1, poolCurator.listByOwner(owner).size());
         assertEquals(1, entitlementCurator.listByOwner(owner).list().size());
 
         // Generate an ueber certificate for the Owner. This will need to
@@ -336,7 +336,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(0, consumerCurator.listByOwner(owner).list().size());
         assertNull(consumerCurator.findByUuid(c1.getUuid()));
         assertNull(consumerCurator.findByUuid(c2.getUuid()));
-        assertEquals(0, poolCurator.listByOwner(owner).list().size());
+        assertEquals(0, poolCurator.listByOwner(owner).size());
         assertEquals(0, entitlementCurator.listByOwner(owner).list().size());
         assertNull(ueberCertificateCurator.findForOwner(owner));
     }
@@ -1788,10 +1788,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Pool pool = TestUtil.createPool(owner, prod);
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
 
-        assertEquals(0, poolCurator.listByOwner(owner).list().size());
+        assertEquals(0, poolCurator.listByOwner(owner).size());
 
         PoolDTO createdPoolDto = ownerResource.createPool(owner.getKey(), poolDto);
-        assertEquals(1, poolCurator.listByOwner(owner).list().size());
+        assertEquals(1, poolCurator.listByOwner(owner).size());
         assertNotNull(createdPoolDto.getId());
     }
 
@@ -1801,7 +1801,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class)
             .productId("invalid_product_id");
 
-        assertEquals(0, poolCurator.listByOwner(owner).list().size());
+        assertEquals(0, poolCurator.listByOwner(owner).size());
 
         assertThrows(NotFoundException.class, () -> ownerResource.createPool(owner.getKey(), poolDto));
     }
@@ -1812,7 +1812,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Pool pool = TestUtil.createPool(owner, prod);
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
 
-        assertEquals(0, poolCurator.listByOwner(owner).list().size());
+        assertEquals(0, poolCurator.listByOwner(owner).size());
 
         assertThrows(ForbiddenException.class, () -> ownerResource.createPool(owner.getKey(), poolDto));
     }
@@ -1828,13 +1828,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
 
         poolDto = ownerResource.createPool(owner.getKey(), poolDto);
-        List<Pool> createdPools = poolCurator.listByOwner(owner).list();
+        List<Pool> createdPools = poolCurator.listByOwner(owner);
         assertEquals(1, createdPools.size());
         assertEquals(pool.getQuantity(), createdPools.get(0).getQuantity());
 
         poolDto.setQuantity(10L);
         ownerResource.updatePool(owner.getKey(), poolDto);
-        List<Pool> updatedPools = poolCurator.listByOwner(owner).list();
+        List<Pool> updatedPools = poolCurator.listByOwner(owner);
         assertEquals(1, updatedPools.size());
         assertEquals(10L, updatedPools.get(0).getQuantity().longValue());
     }
@@ -1877,12 +1877,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setUpstreamPoolId("upstream-" + pool.getId());
-        assertEquals(0, poolCurator.listByOwner(owner).list().size());
+        assertEquals(0, poolCurator.listByOwner(owner).size());
 
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
         ownerResource.createPool(owner.getKey(), poolDto);
 
-        List<Pool> pools = poolCurator.listByOwner(owner).list();
+        List<Pool> pools = poolCurator.listByOwner(owner);
         assertEquals(2, pools.size());
         assertTrue(pools.get(0).getSubscriptionSubKey().startsWith(PRIMARY_POOL_SUB_KEY) ||
             pools.get(1).getSubscriptionSubKey().startsWith(PRIMARY_POOL_SUB_KEY));
@@ -1906,7 +1906,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolDto.setQuantity(100L);
         ownerResource.updatePool(owner.getKey(), poolDto);
 
-        List<Pool> pools = poolCurator.listByOwner(owner).list();
+        List<Pool> pools = poolCurator.listByOwner(owner);
         assertEquals(2, pools.size());
         assertTrue(pools.get(0).getSubscriptionSubKey().startsWith(PRIMARY_POOL_SUB_KEY) ||
             pools.get(1).getSubscriptionSubKey().startsWith(PRIMARY_POOL_SUB_KEY));
@@ -1929,13 +1929,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
         poolDto = ownerResource.createPool(owner.getKey(), poolDto);
 
-        List<Pool> pools = poolCurator.listByOwner(owner).list();
+        List<Pool> pools = poolCurator.listByOwner(owner);
         assertEquals(2, pools.size());
 
         poolDto.setStartDate(Util.toDateTime(new Date(System.currentTimeMillis() - 5 * 24 * 60 * 60 * 1000)));
         poolDto.setEndDate(Util.toDateTime(new Date(System.currentTimeMillis() - 3 * 24 * 60 * 60 * 1000)));
         ownerResource.updatePool(owner.getKey(), poolDto);
-        pools = poolCurator.listByOwner(owner).list();
+        pools = poolCurator.listByOwner(owner);
         assertEquals(0, pools.size());
     }
 
@@ -1952,7 +1952,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
         ownerResource.createPool(owner.getKey(), poolDto);
 
-        List<Pool> pools = poolCurator.listByOwner(owner).list();
+        List<Pool> pools = poolCurator.listByOwner(owner);
 
         Pool bonusPool = null;
         for (Pool p : pools) {
@@ -1978,11 +1978,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setQuantity(100L);
-        assertEquals(0, poolCurator.listByOwner(owner).list().size());
+        assertEquals(0, poolCurator.listByOwner(owner).size());
 
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
         ownerResource.createPool(owner.getKey(), poolDto);
-        List<Pool> pools = poolCurator.listByOwner(owner).list();
+        List<Pool> pools = poolCurator.listByOwner(owner);
         assertEquals(1, pools.size());
         assertTrue(Boolean.parseBoolean(pools.get(0).getAttributeValue(Product.Attributes.VIRT_ONLY)));
         assertEquals(200L, pools.get(0).getQuantity().intValue());

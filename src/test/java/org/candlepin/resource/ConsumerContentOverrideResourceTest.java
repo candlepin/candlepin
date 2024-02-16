@@ -308,16 +308,18 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
                 ConsumerContentOverride.class, ContentOverrideDTO.class))
             .collect(Collectors.toList());
 
-        Iterable<ContentOverrideDTO> actual = this.resource
-            .listConsumerContentOverrides(this.consumer.getUuid());
+        List<ContentOverrideDTO> actual = this.resource
+            .listConsumerContentOverrides(this.consumer.getUuid())
+            .toList();
 
         this.compareOverrideDTOs(expected, actual);
     }
 
     @Test
     public void testGetOverridesEmptyList() {
-        Iterable<ContentOverrideDTO> actual = this.resource
-            .listConsumerContentOverrides(this.consumer.getUuid());
+        List<ContentOverrideDTO> actual = this.resource
+            .listConsumerContentOverrides(this.consumer.getUuid())
+            .toList();
 
         assertEquals(0, sizeOf(actual));
     }
@@ -336,8 +338,9 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
                 ConsumerContentOverride.class, ContentOverrideDTO.class))
             .collect(Collectors.toList());
 
-        Iterable<ContentOverrideDTO> actual = this.resource
-            .deleteConsumerContentOverrides(this.consumer.getUuid(), Arrays.asList(toDeleteDTO));
+        List<ContentOverrideDTO> actual = this.resource
+            .deleteConsumerContentOverrides(this.consumer.getUuid(), Arrays.asList(toDeleteDTO))
+            .toList();
 
         this.compareOverrideDTOs(expected, actual);
     }
@@ -355,35 +358,38 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
                 ConsumerContentOverride.class, ContentOverrideDTO.class))
             .collect(Collectors.toList());
 
-        Iterable<ContentOverrideDTO> actual = this.resource
-            .deleteConsumerContentOverrides(this.consumer.getUuid(), Arrays.asList(toDeleteDTO));
+        List<ContentOverrideDTO> actual = this.resource
+            .deleteConsumerContentOverrides(this.consumer.getUuid(), Arrays.asList(toDeleteDTO))
+            .toList();
 
         this.compareOverrideDTOs(expected, actual);
     }
 
     @Test
     public void testDeleteAllOverridesUsingEmptyList() {
-        List<ConsumerContentOverride> overrides = this.createOverrides(this.consumer, 1, 3);
+        this.createOverrides(this.consumer, 1, 3);
 
-        Iterable<ContentOverrideDTO> actual = this.resource
-            .deleteConsumerContentOverrides(this.consumer.getUuid(), Collections.emptyList());
+        List<ContentOverrideDTO> actual = this.resource
+            .deleteConsumerContentOverrides(this.consumer.getUuid(), Collections.emptyList())
+            .toList();
 
         assertEquals(0, sizeOf(actual));
     }
 
     @Test
     public void testDeleteAllOverridesUsingEmptyContentLabel() {
-        List<ConsumerContentOverride> overrides = this.createOverrides(this.consumer, 1, 3);
+        this.createOverrides(this.consumer, 1, 3);
 
-        Iterable<ContentOverrideDTO> actual = this.resource
-            .deleteConsumerContentOverrides(this.consumer.getUuid(), Collections.emptyList());
+        List<ContentOverrideDTO> actual = this.resource
+            .deleteConsumerContentOverrides(this.consumer.getUuid(), Collections.emptyList())
+            .toList();
 
         assertEquals(0, sizeOf(actual));
     }
 
     @Test
     public void testAddOverride() {
-        ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -393,8 +399,9 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        Iterable<ContentOverrideDTO> actual = this.resource
-            .addConsumerContentOverrides(this.consumer.getUuid(), overrides);
+        List<ContentOverrideDTO> actual = this.resource
+            .addConsumerContentOverrides(this.consumer.getUuid(), overrides)
+            .toList();
 
         this.compareOverrideDTOs(overrides, actual);
 
@@ -406,14 +413,15 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        actual = this.resource.addConsumerContentOverrides(this.consumer.getUuid(), Arrays.asList(dto));
+        actual = this.resource.addConsumerContentOverrides(this.consumer.getUuid(), Arrays.asList(dto))
+            .toList();
 
         this.compareOverrideDTOs(overrides, actual);
     }
 
     @Test
     public void testAddOverrideOverwritesExistingWhenMatched() {
-        ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -424,7 +432,8 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         overrides.add(dto);
 
         Iterable<ContentOverrideDTO> actual = this.resource
-            .addConsumerContentOverrides(this.consumer.getUuid(), overrides);
+            .addConsumerContentOverrides(this.consumer.getUuid(), overrides)
+            .toList();
 
         this.compareOverrideDTOs(overrides, actual);
 
@@ -438,14 +447,15 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         overrides.clear();
         overrides.add(dto);
 
-        actual = this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides);
+        actual = this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides)
+            .toList();
 
         this.compareOverrideDTOs(overrides, actual);
     }
 
     @Test
     public void testAddOverrideFailsValidationWithNoParent() {
-        ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -456,14 +466,15 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         overrides.add(dto);
 
         Iterable<ContentOverrideDTO> actual = this.resource
-            .addConsumerContentOverrides(this.consumer.getUuid(), overrides);
+            .addConsumerContentOverrides(this.consumer.getUuid(), overrides)
+            .toList();
 
         this.compareOverrideDTOs(overrides, actual);
     }
 
     @Test
     public void testAddOverrideFailsValidationWithNullLabel() {
-        ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -479,7 +490,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testAddOverrideFailsValidationWithEmptyLabel() {
-        ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -495,7 +506,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testAddOverrideFailsValidationWithLongLabel() {
-        ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -511,7 +522,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testAddOverrideFailsValidationWithNullName() {
-        ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -527,7 +538,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testAddOverrideFailsValidationWithEmptyName() {
-        ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -543,7 +554,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testAddOverrideFailsValidationWithLongName() {
-        ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -559,7 +570,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testAddOverrideFailsValidationWithNullValue() {
-        ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -575,7 +586,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testAddOverrideFailsValidationWithEmptyValue() {
-        ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -591,7 +602,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testAddOverrideFailsValidationWithLongValue() {
-        ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()

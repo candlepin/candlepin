@@ -237,7 +237,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testEntitlementPoolsCreated() {
-        List<Pool> pools = poolCurator.listByOwner(o).list();
+        List<Pool> pools = poolCurator.listByOwner(o);
         assertTrue(pools.size() > 0);
 
         Pool virtHostPool = poolCurator.listByOwnerAndProduct(o, virtHost.getId()).get(0);
@@ -274,7 +274,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testFabricateWithBranding() {
-        List<Pool> primaryPools = poolManager.getPoolsBySubscriptionId(sub4.getId()).list();
+        List<Pool> primaryPools = poolManager.getPoolsBySubscriptionId(sub4.getId());
         Pool primaryPool = null;
         for (Pool pool : primaryPools) {
             if (pool.getType() == Pool.PoolType.NORMAL) {
@@ -1063,7 +1063,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod, prod2);
         this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
-        List<Pool> pools = poolCurator.listByOwner(owner).list();
+        List<Pool> pools = poolCurator.listByOwner(owner);
         assertEquals(2, pools.size());
     }
 

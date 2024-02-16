@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.model.SourceSubscription.DERIVED_POOL_SUB_KEY;
 import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -54,6 +55,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -759,7 +762,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
         poolCurator.create(pool3);
 
-        assertEquals(2, poolCurator.listBySourceEntitlement(e).list().size());
+        assertEquals(2, poolCurator.listBySourceEntitlement(e).size());
     }
 
     @Test
@@ -1649,7 +1652,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Pool pool = createPool(owner2, "id123");
 
-        List<Pool> result = poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId()).list();
+        List<Pool> result = poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId());
         assertEquals(1, result.size());
         assertEquals(pool, result.get(0));
     }
@@ -1661,7 +1664,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         createPool(owner2, "id123");
 
-        List<Pool> result = poolCurator.getPoolsBySubscriptionId(null).list();
+        List<Pool> result = poolCurator.getPoolsBySubscriptionId(null);
         assertTrue(result.isEmpty());
     }
 
@@ -1915,7 +1918,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         expected.add(pools.get(1));
         expected.add(pools.get(4));
 
-        List<Pool> actual = this.poolCurator.getPrimaryPools().list();
+        List<Pool> actual = this.poolCurator.getPrimaryPools();
         assertEquals(expected, actual);
     }
 
@@ -3397,6 +3400,100 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertFalse(pool4.hasDirtyProduct());
         assertFalse(pool5.hasDirtyProduct());
         assertFalse(pool6.hasDirtyProduct());
+    }
+
+    @Test
+    public void testListByOwner() {
+        Owner owner1 = this.createOwner(TestUtil.randomString());
+        Owner owner2 = this.createOwner(TestUtil.randomString());
+        Owner owner3 = this.createOwner(TestUtil.randomString());
+
+        Product prod1 = this.createProduct(TestUtil.randomString());
+        Product prod2 = this.createProduct(TestUtil.randomString());
+
+        Pool pool1 = this.createPool(owner1, prod1);
+        this.createPool(owner2, prod2);
+
+        assertThat(this.poolCurator.listByOwner(owner1))
+            .isNotNull()
+            .singleElement()
+            .isEqualTo(pool1);
+
+        assertThat(this.poolCurator.listByOwner(owner3))
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testListByOwnerWithActiveOn() {
+        Owner owner = this.createOwner(TestUtil.randomString());
+        Product prod = this.createProduct(TestUtil.randomString());
+
+        Instant now = Instant.now();
+        Date poolStartDate = Date.from(now.minus(3, ChronoUnit.DAYS));
+        Date poolEndDate = Date.from(now.plus(3, ChronoUnit.DAYS));
+
+        Pool pool = this.createPool(owner, prod, 10L, poolStartDate, poolEndDate);
+
+        assertThat(this.poolCurator.listByOwner(owner, Date.from(now)))
+            .isNotNull()
+            .singleElement()
+            .isEqualTo(pool);
+
+        // Active on date greater than the pool end date
+        assertThat(this.poolCurator.listByOwner(owner, Date.from(now.plus(4, ChronoUnit.DAYS))))
+            .isNotNull()
+            .isEmpty();
+
+        // Active on date less than the pool start date
+        assertThat(this.poolCurator.listByOwner(owner, Date.from(now.minus(4, ChronoUnit.DAYS))))
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetPoolsBySubscriptionIds() {
+        Owner owner1 = this.createOwner(TestUtil.randomString());
+        Owner owner2 = this.createOwner(TestUtil.randomString());
+        Owner owner3 = this.createOwner(TestUtil.randomString());
+
+        Product prod1 = this.createProduct(TestUtil.randomString());
+        Product prod2 = this.createProduct(TestUtil.randomString());
+        Product prod3 = this.createProduct(TestUtil.randomString());
+
+        Subscription sub1 = TestUtil.createSubscription(owner1, prod1);
+        sub1.setId(Util.generateDbUUID());
+        sub1.setQuantity(16L);
+        sub1.setStartDate(Date.from(Instant.now().minus(3, ChronoUnit.DAYS)));
+        sub1.setEndDate(Date.from(Instant.now().plus(3, ChronoUnit.DAYS)));
+        sub1.setModified(new Date());
+        Pool pool1 = poolManager.createAndEnrichPools(sub1).get(0);
+
+        Subscription sub2 = TestUtil.createSubscription(owner2, prod2);
+        sub2.setId(Util.generateDbUUID());
+        sub2.setQuantity(16L);
+        sub2.setStartDate(Date.from(Instant.now().minus(3, ChronoUnit.DAYS)));
+        sub2.setEndDate(Date.from(Instant.now().plus(3, ChronoUnit.DAYS)));
+        sub2.setModified(new Date());
+        Pool pool2 = poolManager.createAndEnrichPools(sub2).get(0);
+
+        Subscription sub3 = TestUtil.createSubscription(owner3, prod3);
+        sub3.setId(Util.generateDbUUID());
+        sub3.setQuantity(16L);
+        sub3.setStartDate(Date.from(Instant.now().minus(3, ChronoUnit.DAYS)));
+        sub3.setEndDate(Date.from(Instant.now().plus(3, ChronoUnit.DAYS)));
+        sub3.setModified(new Date());
+        poolManager.createAndEnrichPools(sub3).get(0);
+
+        String sourceSubId1 = pool1.getSourceSubscription().getSubscriptionId();
+        String sourceSubId2 = pool2.getSourceSubscription().getSubscriptionId();
+
+        List<Pool> actual = this.poolCurator
+            .getPoolsBySubscriptionIds(List.of(sourceSubId1, sourceSubId2));
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactly(pool1, pool2);
     }
 
 }

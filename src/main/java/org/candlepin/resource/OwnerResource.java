@@ -1301,7 +1301,7 @@ public class OwnerResource implements OwnerApi {
         Owner owner = this.findOwnerByKey(ownerKey);
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
 
-        for (Pool pool : this.poolService.listPoolsByOwner(owner).list()) {
+        for (Pool pool : this.poolService.listPoolsByOwner(owner)) {
 
             SourceSubscription srcsub = pool.getSourceSubscription();
             if (srcsub != null && PRIMARY_POOL_SUB_KEY.equalsIgnoreCase(srcsub.getSubscriptionSubKey())) {

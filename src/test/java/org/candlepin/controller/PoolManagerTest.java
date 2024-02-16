@@ -71,7 +71,6 @@ import org.candlepin.controller.refresher.RefreshResult;
 import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.RefreshWorker;
 import org.candlepin.model.Branding;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -785,9 +784,7 @@ public class PoolManagerTest {
 
         when(poolCurator.listByOwnerAndTypes(eq(owner.getId()), any(PoolType.class))).thenReturn(pools);
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(Collections.emptyList());
-        when(poolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(cqmock);
+        when(poolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(Collections.emptyList());
 
         this.mockRefresh(owner, List.of(product), Collections.emptyList());
 
@@ -824,9 +821,7 @@ public class PoolManagerTest {
 
         when(poolCurator.listByOwnerAndTypes(eq(owner.getId()), any(PoolType.class))).thenReturn(pools);
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(Collections.emptyList());
-        when(poolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(cqmock);
+        when(poolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(Collections.emptyList());
 
         this.refresherFactory.getRefresher(mockSubAdapter, mockProdAdapter).add(owner).run();
         List<Pool> delPools = List.of(pool);
@@ -970,13 +965,9 @@ public class PoolManagerTest {
 
         when(poolCurator.listByOwnerAndTypes(eq(owner.getId()), any(PoolType.class))).thenReturn(pools);
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(Collections.emptyList());
-        when(poolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(cqmock);
+        when(poolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(Collections.emptyList());
 
-        cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(Collections.emptyList());
-        when(poolCurator.getPoolsBySubscriptionId(anyString())).thenReturn(cqmock);
+        when(poolCurator.getPoolsBySubscriptionId(anyString())).thenReturn(Collections.emptyList());
 
         this.refresherFactory.getRefresher(mockSubAdapter, mockProdAdapter).add(owner).run();
 
@@ -1089,10 +1080,7 @@ public class PoolManagerTest {
         Entitlement e = new Entitlement(pool, TestUtil.createConsumer(owner), owner, 1);
         List<Pool> poolsWithSource = createPoolsWithSourceEntitlement(e, product);
 
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(poolsWithSource);
-
-        when(poolCurator.listBySourceEntitlement(e)).thenReturn(cqmock);
+        when(poolCurator.listBySourceEntitlement(e)).thenReturn(poolsWithSource);
         PreUnbindHelper preHelper = mock(PreUnbindHelper.class);
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
@@ -1300,9 +1288,7 @@ public class PoolManagerTest {
 
         when(poolCurator.listByOwnerAndTypes(eq(owner.getId()), any(PoolType.class))).thenReturn(pools);
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(Collections.emptyList());
-        when(poolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(cqmock);
+        when(poolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(Collections.emptyList());
 
         when(consumerCuratorMock.getConsumers(anyCollection())).thenReturn(Collections.emptyList());
 
@@ -1538,9 +1524,7 @@ public class PoolManagerTest {
         }
 
         for (String subid : subToPools.keySet()) {
-            CandlepinQuery cqmock = mock(CandlepinQuery.class);
-            when(cqmock.list()).thenReturn(subToPools.get(subid));
-            when(poolCurator.getPoolsBySubscriptionId(subid)).thenReturn(cqmock);
+            when(poolCurator.getPoolsBySubscriptionId(subid)).thenReturn(subToPools.get(subid));
         }
 
         doAnswer(iom -> {
