@@ -212,7 +212,7 @@ paths:
           schema:
             type: string
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       responses:
         200:
@@ -267,7 +267,7 @@ paths:
               items:
                 $ref: '#/components/schemas/ContentOverrideDTO'
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       responses:
         200:
@@ -322,7 +322,7 @@ paths:
               items:
                 $ref: '#/components/schemas/ContentOverrideDTO'
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       responses:
         200:
@@ -1354,7 +1354,7 @@ paths:
           schema:
             type: string
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       responses:
         200:
@@ -1409,7 +1409,7 @@ paths:
               items:
                 $ref: '#/components/schemas/ContentOverrideDTO'
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       responses:
         200:
@@ -1478,7 +1478,7 @@ paths:
               items:
                 $ref: '#/components/schemas/ContentOverrideDTO'
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       responses:
         200:
@@ -7632,6 +7632,9 @@ paths:
         - subscription
       operationId: getSubscriptions
       security: []
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
       responses:
         200:
           description: A list of subscriptions

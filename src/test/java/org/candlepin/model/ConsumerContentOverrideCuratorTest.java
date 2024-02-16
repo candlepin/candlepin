@@ -344,7 +344,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
 
         this.consumerContentOverrideCurator.flush();
 
-        List<ConsumerContentOverride> remaining = consumerContentOverrideCurator.getList(consumer).list();
+        List<ConsumerContentOverride> remaining = consumerContentOverrideCurator.getList(consumer);
         assertEquals(1, remaining.size());
         assertEquals(override2.getName(), remaining.get(0).getName());
     }
@@ -371,7 +371,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
 
         this.consumerContentOverrideCurator.flush();
 
-        List<ConsumerContentOverride> remaining = consumerContentOverrideCurator.getList(consumer).list();
+        List<ConsumerContentOverride> remaining = consumerContentOverrideCurator.getList(consumer);
         assertEquals(1, remaining.size());
         assertEquals(override2.getName(), remaining.get(0).getName());
     }
@@ -405,7 +405,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
 
         this.consumerContentOverrideCurator.flush();
 
-        List<ConsumerContentOverride> remaining = consumerContentOverrideCurator.getList(consumer).list();
+        List<ConsumerContentOverride> remaining = consumerContentOverrideCurator.getList(consumer);
         assertEquals(1, remaining.size());
         assertEquals(override3.getContentLabel(), remaining.get(0).getContentLabel());
         assertEquals(override3.getName(), remaining.get(0).getName());
@@ -441,7 +441,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
         this.consumerContentOverrideCurator.removeByParent(this.consumer);
         this.consumerContentOverrideCurator.flush();
 
-        assertTrue(consumerContentOverrideCurator.getList(consumer).list().isEmpty());
-        assertEquals(1, consumerContentOverrideCurator.getList(consumer2).list().size());
+        assertTrue(consumerContentOverrideCurator.getList(consumer).isEmpty());
+        assertEquals(1, consumerContentOverrideCurator.getList(consumer2).size());
     }
 }

@@ -19,7 +19,6 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -139,7 +138,7 @@ public class PoolService {
         return pool;
     }
 
-    public CandlepinQuery<Pool> listPoolsByOwner(Owner owner) {
+    public List<Pool> listPoolsByOwner(Owner owner) {
         return poolCurator.listByOwner(owner);
     }
 
