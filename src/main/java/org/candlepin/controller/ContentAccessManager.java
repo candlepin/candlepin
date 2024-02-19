@@ -45,6 +45,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.dto.Content;
 import org.candlepin.pki.DistinguishedName;
+import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509Extension;
@@ -222,6 +223,7 @@ public class ContentAccessManager {
     private final AnonymousContentAccessCertificateCurator anonContentAccessCertCurator;
     private final ProductServiceAdapter prodAdapter;
     private final AnonymousCertContentCache contentCache;
+    private final KeyPairGenerator keyPairGenerator;
 
     private final boolean standalone;
 
@@ -242,7 +244,8 @@ public class ContentAccessManager {
         AnonymousCloudConsumerCurator anonCloudConsumerCurator,
         AnonymousContentAccessCertificateCurator anonContentAccessCertCurator,
         ProductServiceAdapter prodAdapter,
-        AnonymousCertContentCache contentCache) {
+        AnonymousCertContentCache contentCache,
+        KeyPairGenerator keyPairGenerator) {
 
         this.config = Objects.requireNonNull(config);
         this.pki = Objects.requireNonNull(pki);
@@ -260,6 +263,7 @@ public class ContentAccessManager {
         this.anonContentAccessCertCurator = Objects.requireNonNull(anonContentAccessCertCurator);
         this.prodAdapter = Objects.requireNonNull(prodAdapter);
         this.contentCache = Objects.requireNonNull(contentCache);
+        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
         this.standalone = this.config.getBoolean(ConfigProperties.STANDALONE);
     }
 
@@ -309,7 +313,7 @@ public class ContentAccessManager {
 
         CertificateSerial serial = createSerial(end);
 
-        KeyPair keyPair = this.pki.getConsumerKeyPair(consumer);
+        KeyPair keyPair = this.keyPairGenerator.getKeyPair(consumer);
         byte[] pemEncodedKeyPair = this.pki.getPemEncoded(keyPair.getPrivate());
         org.candlepin.model.dto.Product container = createSCAProdContainer(owner, consumer);
 
@@ -346,7 +350,7 @@ public class ContentAccessManager {
             OffsetDateTime start = OffsetDateTime.now().minusHours(1L);
             OffsetDateTime end = start.plusYears(1L);
 
-            KeyPair keyPair = this.pki.getConsumerKeyPair(consumer);
+            KeyPair keyPair = this.keyPairGenerator.getKeyPair(consumer);
             this.serialCurator.revokeById(existing.getSerial().getId());
             CertificateSerial serial = createSerial(end);
             org.candlepin.model.dto.Product container = createSCAProdContainer(owner, consumer);
@@ -921,7 +925,7 @@ public class ContentAccessManager {
         OffsetDateTime end = start.plusDays(2L);
 
         CertificateSerial serial = createSerial(end);
-        KeyPair keyPair = this.pki.generateKeyPair();
+        KeyPair keyPair = this.keyPairGenerator.generateKeyPair();
         byte[] pemEncodedKeyPair = this.pki.getPemEncoded(keyPair.getPrivate());
 
         org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();

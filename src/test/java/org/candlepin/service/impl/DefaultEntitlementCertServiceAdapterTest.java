@@ -62,6 +62,7 @@ import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.DistinguishedName;
+import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509Extension;
@@ -182,6 +183,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private PKIUtility mockedPKI;
     @Mock
     private EnvironmentCurator mockEnvironmentCurator;
+    @Mock
+    private KeyPairGenerator keyPairGenerator;
 
     private Consumer consumer;
     private Product product;
@@ -237,7 +240,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            config, this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
+            config, this.mockConsumerTypeCurator, this.mockEnvironmentCurator, this.keyPairGenerator);
 
         product = TestUtil.createProduct("12345", "a product");
         product.setAttribute(Product.Attributes.VERSION, "version");
@@ -408,7 +411,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            config, this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
+            config, this.mockConsumerTypeCurator, this.mockEnvironmentCurator, keyPairGenerator);
 
         PromotedContent promotedContent = new PromotedContent(prefix(owner));
         X509Certificate result = certServiceAdapter.createX509Certificate(consumer, owner, pool,
@@ -438,7 +441,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            config, this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
+            config, this.mockConsumerTypeCurator, this.mockEnvironmentCurator, keyPairGenerator);
 
         // pool start date is more than an hour ago, use it
         Calendar cal = Calendar.getInstance();
@@ -826,7 +829,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            mockConfig, this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
+            mockConfig, this.mockConsumerTypeCurator, this.mockEnvironmentCurator, keyPairGenerator);
     }
 
     @Test
@@ -1637,7 +1640,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testDetachedEntitlementDataNotAddedToCertV1() throws Exception {
-        when(mockedPKI.getConsumerKeyPair(any(Consumer.class))).thenReturn(keyPair);
+        when(keyPairGenerator.getKeyPair(any(Consumer.class))).thenReturn(keyPair);
         when(serialCurator.saveOrUpdateAll(any(), anyBoolean(), anyBoolean()))
             .then((Answer<Iterable<CertificateSerial>>) invocationOnMock -> {
                 Iterable<CertificateSerial> certificateSerials = invocationOnMock.getArgument(0);
