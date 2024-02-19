@@ -23,7 +23,6 @@ import com.google.inject.persist.Transactional;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.ReplicationMode;
-import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
@@ -67,17 +66,15 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private static final Logger log = LoggerFactory.getLogger(EntitlementCurator.class);
 
     private final ConsumerTypeCurator consumerTypeCurator;
-    private final CandlepinQueryFactory cpQueryFactory;
 
     /**
      * default ctor
      */
     @Inject
-    public EntitlementCurator(ConsumerTypeCurator consumerTypeCurator, CandlepinQueryFactory cpQueryFactory) {
+    public EntitlementCurator(ConsumerTypeCurator consumerTypeCurator) {
         super(Entitlement.class);
 
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
-        this.cpQueryFactory = Objects.requireNonNull(cpQueryFactory);
     }
 
     // TODO: handles addition of new entitlements only atm!
@@ -512,11 +509,13 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return this.entityManager.get().createQuery(query).getSingleResult().intValue();
     }
 
-    public CandlepinQuery<Entitlement> listByOwner(Owner owner) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Entitlement.class)
-            .add(Restrictions.eq("owner", owner));
+    public List<Entitlement> listByOwner(Owner owner) {
+        String jpql = "SELECT e FROM Entitlement e WHERE e.owner = :owner";
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        return this.getEntityManager()
+            .createQuery(jpql, Entitlement.class)
+            .setParameter("owner", owner)
+            .getResultList();
     }
 
     /**
@@ -609,7 +608,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * @param activeOn The date we want to see entitlements which are active on.
      * @return List of entitlements.
      */
-    public CandlepinQuery<Entitlement> listByConsumerAndDate(Consumer consumer, Date activeOn) {
+    public List<Entitlement> listByConsumerAndDate(Consumer consumer, Date activeOn) {
 
         /*
          * Essentially the opposite of the above query which searches for entitlement
@@ -618,13 +617,17 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
          * being granted. As such the logic is basically reversed.
          *
          */
-        DetachedCriteria criteria = DetachedCriteria.forClass(Entitlement.class)
-            .add(Restrictions.eq("consumer", consumer))
-            .createCriteria("pool")
-            .add(Restrictions.le("startDate", activeOn))
-            .add(Restrictions.ge("endDate", activeOn));
+        String jpql = "SELECT e FROM Entitlement e " +
+            "JOIN Pool p on e.pool = p.id " +
+            "WHERE e.consumer = :consumer " +
+            "AND :activeOn >= p.startDate " +
+            "AND :activeOn <= p.endDate";
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        return this.getEntityManager()
+            .createQuery(jpql, Entitlement.class)
+            .setParameter("consumer", consumer)
+            .setParameter("activeOn", activeOn)
+            .getResultList();
     }
 
     /**
@@ -1060,23 +1063,32 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return (List<Entitlement>) criteria.list();
     }
 
-    public CandlepinQuery<Entitlement> findByPoolAttribute(Consumer consumer, String attributeName,
+    public List<Entitlement> findByPoolAttribute(Consumer consumer, String attributeName,
         String value) {
 
-        DetachedCriteria criteria = DetachedCriteria.forClass(Entitlement.class)
-            .createAlias("pool", "ent_pool")
-            .createAlias("ent_pool.attributes", "attrs")
-            .add(Restrictions.eq("attrs.indices", attributeName))
-            .add(Restrictions.eq("attrs.elements", value));
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+        CriteriaQuery<Entitlement> criteriaQuery = criteriaBuilder.createQuery(Entitlement.class);
+        Root<Entitlement> entitlement = criteriaQuery.from(Entitlement.class);
+        MapJoin<Pool, String, String> attributes = entitlement.join(Entitlement_.POOL)
+            .joinMap(Pool_.ATTRIBUTES);
+        criteriaQuery.select(entitlement);
 
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(criteriaBuilder.equal(attributes.key(), attributeName));
+        predicates.add(criteriaBuilder.equal(attributes.value(), value));
         if (consumer != null) {
-            criteria.add(Restrictions.eq("consumer", consumer));
+            predicates.add(criteriaBuilder.equal(entitlement.get(Entitlement_.consumer), consumer));
         }
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        Predicate[] predicateArray = new Predicate[predicates.size()];
+        criteriaQuery.where(predicates.toArray(predicateArray));
+
+        return em.createQuery(criteriaQuery)
+            .getResultList();
     }
 
-    public CandlepinQuery<Entitlement> findByPoolAttribute(String attributeName, String value) {
+    public List<Entitlement> findByPoolAttribute(String attributeName, String value) {
         return findByPoolAttribute(null, attributeName, value);
     }
 

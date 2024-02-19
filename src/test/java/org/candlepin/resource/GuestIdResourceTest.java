@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -40,7 +39,6 @@ import org.candlepin.dto.api.server.v1.GuestIdDTOArrayElement;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -51,9 +49,9 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.paging.PagingUtilFactory;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.Util;
 
 import com.google.inject.util.Providers;
@@ -72,6 +70,9 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Stream;
+
+import javax.inject.Provider;
 
 
 /**
@@ -82,6 +83,7 @@ import java.util.Locale;
 public class GuestIdResourceTest {
 
     private I18n i18n;
+    private Provider<I18n> i18nProvider = () -> i18n;
 
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
@@ -101,7 +103,7 @@ public class GuestIdResourceTest {
     private Owner owner;
     private ConsumerType ct;
     protected ModelTranslator modelTranslator;
-
+    private PagingUtilFactory pagingUtilFactory;
     private GuestMigration testMigration;
 
     @BeforeEach
@@ -111,6 +113,7 @@ public class GuestIdResourceTest {
 
         this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
             this.ownerCurator);
+        this.pagingUtilFactory = new PagingUtilFactory(i18nProvider);
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.owner = TestUtil.createOwner();
@@ -134,7 +137,8 @@ public class GuestIdResourceTest {
             Providers.of(this.testMigration),
             this.modelTranslator,
             this.principalProvider,
-            this.consumerResource
+            this.consumerResource,
+            this.pagingUtilFactory
         );
 
         when(consumerCurator.findByUuid(consumer.getUuid())).thenReturn(consumer);
@@ -147,15 +151,12 @@ public class GuestIdResourceTest {
 
     @Test
     public void getGuestIdsEmpty() {
-        CandlepinQuery<GuestId> query = mock(CandlepinQuery.class);
-        CandlepinQuery<GuestIdDTO> dtoQuery = mock(CandlepinQuery.class);
-        when(guestIdCurator.listByConsumer(eq(consumer))).thenReturn(query);
-        when(query.transform((any(ElementTransformer.class)))).thenReturn(dtoQuery);
+        List<GuestId> queryList = new LinkedList<>();
+        List<GuestIdDTOArrayElement> dtoQueryList = new LinkedList<>();
+        when(guestIdCurator.listByConsumer(eq(consumer))).thenReturn(queryList);
 
-        CandlepinQuery<GuestIdDTOArrayElement> result = resource.getGuestIds(consumer.getUuid());
-
-        verify(query, times(1)).transform(any(ElementTransformer.class));
-        assertEquals(result, dtoQuery);
+        Stream<GuestIdDTOArrayElement> result = resource.getGuestIds(consumer.getUuid());
+        assertEquals(result.toList(), dtoQueryList);
     }
 
     @Test

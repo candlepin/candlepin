@@ -278,7 +278,7 @@ public class ComplianceRules {
 
     @SuppressWarnings("checkstyle:indentation")
     public boolean isEntitlementCompliant(Consumer consumer, Entitlement ent, Date onDate) {
-        List<Entitlement> ents = entCurator.listByConsumerAndDate(consumer, onDate).list();
+        List<Entitlement> ents = entCurator.listByConsumerAndDate(consumer, onDate);
 
         Stream<EntitlementDTO> entStream = ents == null ? Stream.empty() :
             ents.stream().map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
