@@ -49,7 +49,7 @@ public class UserInfoTranslatorTest extends AbstractTranslatorTest<UserInfo, Use
 
         user.setId("user_id");
         user.setUsername("user_username");
-        user.setPassword("user_password");
+        user.setHashedPassword("user_password");
         user.setSuperAdmin(true);
 
         return user;

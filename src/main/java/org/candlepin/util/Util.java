@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +33,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -74,6 +71,7 @@ public class Util {
     private static final Logger log = LoggerFactory.getLogger(Util.class);
     private static final ObjectMapper MAPPER = ObjectMapperFactory.getObjectMapper();
     private static final String UTC_STR = "UTC";
+
 
     private Util() {
         // default ctor
@@ -263,33 +261,6 @@ public class Util {
             }
         }
         return builder.toString();
-    }
-
-    public static String hash(String password) {
-        //This is secure because even if the salt is known, a cracker
-        //would still need to generate their own rainbow table, which
-        //is the same as brute-forcing the password in the first place.
-
-        String salt = "b669e3274a43f20769d3dedf03e9ac180e160f92";
-        String combined = salt + password;
-
-        MessageDigest md;
-        try {
-            md = MessageDigest.getInstance("SHA-1");
-        }
-        catch (NoSuchAlgorithmException nsae) {
-            throw new RuntimeException(nsae);
-        }
-
-        try {
-            md.update(combined.getBytes("UTF-8"), 0, combined.length());
-        }
-        catch (UnsupportedEncodingException uee) {
-            throw new RuntimeException(uee);
-        }
-
-        byte[] sha1hash = md.digest();
-        return new String(Hex.encodeHex(sha1hash));
     }
 
     public static String toJson(Object anObject) throws JsonProcessingException {

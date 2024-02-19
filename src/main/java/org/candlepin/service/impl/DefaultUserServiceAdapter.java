@@ -32,11 +32,12 @@ import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.PermissionBlueprintInfo;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
-import org.candlepin.util.Util;
 
+import org.bouncycastle.crypto.generators.OpenBSDBCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.SecureRandom;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -54,6 +55,10 @@ import javax.inject.Inject;
  */
 public class DefaultUserServiceAdapter implements UserServiceAdapter {
     private static final Logger log = LoggerFactory.getLogger(DefaultUserServiceAdapter.class);
+    // Bcrypt uses 128-bit (16 bytes) salts
+    private static final int SALT_LENGTH = 16;
+    // Recommended cost for the bcrypt based study from April 2023 is between 10 and 12
+    private static final int BCRYPT_COST = 12;
 
     private UserCurator userCurator;
     private RoleCurator roleCurator;
@@ -108,7 +113,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         User entity = new User();
 
         entity.setUsername(user.getUsername());
-        entity.setHashedPassword(user.getHashedPassword());
+        entity.setHashedPassword(hashPassword(generateBcryptSalt(), user.getHashedPassword()));
         entity.setSuperAdmin(user.isSuperAdmin() != null ? user.isSuperAdmin() : false);
 
         // Convert roles
@@ -182,7 +187,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
             }
 
             if (user.getHashedPassword() != null) {
-                entity.setHashedPassword(user.getHashedPassword());
+                entity.setHashedPassword(hashPassword(generateBcryptSalt(), user.getHashedPassword()));
             }
 
             if (user.isSuperAdmin() != null) {
@@ -214,10 +219,9 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     @Override
     public boolean validateUser(String username, String password) {
         User user = this.userCurator.findByLogin(username);
-        String hashedPassword = Util.hash(password);
 
-        if (user != null && password != null && hashedPassword != null) {
-            return hashedPassword.equals(user.getHashedPassword());
+        if (user != null && password != null) {
+            return OpenBSDBCrypt.checkPassword(user.getHashedPassword(), password.toCharArray());
         }
 
         return false;
@@ -592,5 +596,54 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     @Override
     public List<? extends RoleInfo> listRoles() {
         return this.roleCurator.listAll().list();
+    }
+
+    /**
+     * Hashes a password using a specified salt and the Bcrypt hashing algorithm.
+     * This method generates a hashed version of the password, which can be stored
+     * in a database for secure password management. The bcrypt cost factor used
+     * in the hashing process determines the amount of computing power required to
+     * hash the password, making it more difficult for attackers to crack the hash.
+     *
+     * @param salt
+     *  The salt to be used in the hashing process. A salt is a random value
+     *  that is used to ensure that the hash output is unique even for identical passwords. If the salt is
+     *  {@code null}, it will generate random salt.
+     *
+     * @param password
+     *  The password to be hashed. If the password is {@code null}, an empty
+     *  string will be used instead. This is to handle cases where null values might be
+     *  passed from tests or in situations where the password field is optional.
+     *
+     * @return A hashed string representation of the password, using the provided salt and
+     * the Bcrypt hashing algorithm. The bcrypt cost factor defined by {@code BCRYPT_COST}
+     * is used in the hashing process.
+     *
+     * @note It's important to compare hashed passwords using secure methods provided
+     * by cryptographic libraries to prevent timing attacks. Direct comparison of
+     * hashed values using standard string comparison methods is not recommended, as
+     * it may be vulnerable to timing attacks. Libraries like OpenBSDBCrypt
+     * provide their own comparison methods, such as {@code OpenBSDBCrypt.checkPassword},
+     * which should be used to compare a stored hash with a hash of the provided password
+     * during authentication processes.
+     */
+    private static String hashPassword(byte[] salt, String password) {
+        // We need to include a condition for an empty string, because in our tests we are using null values
+        // in the password field.
+        return OpenBSDBCrypt.generate(password == null ? "".toCharArray() : password.toCharArray(),
+            salt == null ? generateBcryptSalt() : salt, BCRYPT_COST);
+    }
+
+    /**
+     * Generate salt for Bcrypt hash algorithm.
+     *
+     * @return
+     *  The 16 bytes random salt
+     */
+    private static byte[] generateBcryptSalt() {
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[SALT_LENGTH];
+        random.nextBytes(salt);
+        return salt;
     }
 }

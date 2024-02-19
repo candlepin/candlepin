@@ -20,15 +20,12 @@ import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.Test;
 
-
-
 public class UserTest extends DatabaseTestFixture {
 
     @Test
     public void testCreate() throws Exception {
         String username = "TESTUSER";
         String password = "sekretpassword";
-        String hashedPassword = "b58db974af4ea7b7b1b51a999f93ab5b67173799";
         User user = new User(username, password);
 
         beginTransaction();
@@ -37,7 +34,7 @@ public class UserTest extends DatabaseTestFixture {
 
         User lookedUp = this.getEntityManager().find(User.class, user.getId());
         assertEquals(username, lookedUp.getUsername());
-        assertEquals(hashedPassword, lookedUp.getHashedPassword());
+        assertEquals(password, lookedUp.getHashedPassword());
     }
 
 }

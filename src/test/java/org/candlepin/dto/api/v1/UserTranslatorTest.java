@@ -47,7 +47,7 @@ public class UserTranslatorTest extends AbstractTranslatorTest<User, UserDTO, Us
 
         user.setId("user_id");
         user.setUsername("user_username");
-        user.setPassword("user_password");
+        user.setHashedPassword("user_password");
         user.setSuperAdmin(true);
 
         return user;
@@ -72,7 +72,7 @@ public class UserTranslatorTest extends AbstractTranslatorTest<User, UserDTO, Us
 
             // Under no circumstance should we be copying over the password field on translation.
             // This should always be null on the DTO.
-            assertNotNull(source.getPassword());
+            assertNotNull(source.getHashedPassword());
             assertNull(dest.getPassword());
         }
         else {
