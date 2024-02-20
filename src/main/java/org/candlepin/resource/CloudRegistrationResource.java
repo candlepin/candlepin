@@ -144,6 +144,8 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
                 CloudAuthenticationResult authResult = this.cloudRegistrationAdapter
                     .resolveCloudRegistrationDataV2(registrationData);
 
+                validateCloudAuthenticationResult(authResult);
+
                 CloudAuthenticationResultDTO resultDTO = processAdapterAuthResult(principal, authResult);
 
                 return Response.status(Response.Status.OK)
@@ -235,12 +237,14 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
 
     private CloudAuthenticationResultDTO processAdapterAuthResult(Principal principal,
         CloudAuthenticationResult authResult) {
-        validateCloudAuthenticationResult(authResult);
 
         // verify that the owner exists upstream and is entitled
         String ownerKey = authResult.getOwnerKey();
         boolean isOwnerReadyForRegistration = false;
-        if (ownerKey == null || ownerKey.isBlank() || !authResult.isEntitled()) {
+        if (authResult.isRegistrationOnly()) {
+            isOwnerReadyForRegistration = true;
+        }
+        else if (ownerKey == null || ownerKey.isBlank() || !authResult.isEntitled()) {
             CloudAccountOrgSetupJobConfig jobConfig = CloudAccountOrgSetupJob.createJobConfig()
                 .setCloudAccountId(authResult.getCloudAccountId())
                 .setCloudOfferingId(authResult.getOfferId())
@@ -318,7 +322,7 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
     }
 
     /**
-     * Validates the values of in {@link CloudAuthenticationResult}.
+     * Validates the values in {@link CloudAuthenticationResult}.
      *
      * @param result
      *  the {@link CloudAuthenticationResult} to validate
@@ -357,6 +361,14 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
             String errmsg = this.i18n.tr("product IDs could not be resolved");
 
             throw new NotAuthorizedException(errmsg);
+        }
+
+        String ownerKey = result.getOwnerKey();
+        if (result.isRegistrationOnly() && (ownerKey == null || ownerKey.isBlank())) {
+            String errmsg = this.i18n.tr("Cloud registration is not supported for the type of " +
+                "offering the client is using");
+
+            throw new NotImplementedException(errmsg);
         }
     }
 }
