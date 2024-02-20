@@ -45,6 +45,7 @@ public class HostedTestApi {
     private static final String CONTENT_ID = "content_id";
     private static final String SUBSCRIPTION_ID = "subscription_id";
     private static final String CREATE_CHILDREN_PARAM = "create_children";
+    private static final String OFFERING_TYPE_3P = "3P";
 
     private ApiClient localVarApiClient;
     private int localHostIndex;
@@ -715,7 +716,7 @@ public class HostedTestApi {
      *     the product IDs to associate to an offering ID
      */
     public void associateProductIdsToCloudOffer(String cloudOfferId, Collection<String> productIds) {
-        okhttp3.Call localVarCall = associateProductIdsToCloudOfferCall(cloudOfferId, null, productIds);
+        okhttp3.Call localVarCall = associateProductIdsToCloudOfferCall(cloudOfferId, OFFERING_TYPE_3P, productIds);
         localVarApiClient.execute(localVarCall);
     }
 
