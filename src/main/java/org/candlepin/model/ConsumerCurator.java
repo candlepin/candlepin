@@ -27,13 +27,10 @@ import com.google.inject.persist.Transactional;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.Criteria;
-import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -61,6 +58,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -507,48 +505,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return query.list();
     }
 
-    @SuppressWarnings("unchecked")
-    @Transactional
-    public CandlepinQuery<Consumer> listByOwner(Owner owner) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(Restrictions.eq("ownerId", owner.getId()));
-
-        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
-    }
-
-    /**
-     * Search for Consumers with fields matching those provided.
-     *
-     * @param userName
-     *     the username to match, or null to ignore
-     * @param types
-     *     the types to match, or null/empty to ignore
-     * @param owner
-     *     Optional owner to filter on, pass null to skip.
-     * @return a list of matching Consumers
-     */
-    @SuppressWarnings("unchecked")
-    @Transactional
-    public CandlepinQuery<Consumer> listByUsernameAndType(String userName, List<ConsumerType> types,
-        Owner owner) {
-
-        DetachedCriteria criteria = this.createSecureDetachedCriteria();
-
-        if (userName != null) {
-            criteria.add(Restrictions.eq("username", userName));
-        }
-
-        if (types != null && !types.isEmpty()) {
-            criteria.add(Restrictions.in("type", types));
-        }
-
-        if (owner != null) {
-            criteria.add(Restrictions.eq("owner", owner));
-        }
-
-        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
-    }
-
     /**
      * @param updatedConsumer
      *     updated Consumer values.
@@ -916,7 +872,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return VirtConsumerMap of hypervisor ID to it's consumer, or null if none exists.
      */
     @Transactional
-    public VirtConsumerMap getHostConsumersMap(Owner owner, Iterable<String> hypervisorIds) {
+    public VirtConsumerMap getHostConsumersMap(Owner owner, Collection<String> hypervisorIds) {
         VirtConsumerMap hypervisorMap = new VirtConsumerMap();
 
         for (Consumer consumer : this.getHypervisorsBulk(hypervisorIds, owner.getId())) {
@@ -1202,43 +1158,48 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      *     Org namespace to search
      * @return Consumer that matches the given
      */
-    @SuppressWarnings("unchecked")
     @Transactional
-    public CandlepinQuery<Consumer> getHypervisorsBulk(Iterable<String> hypervisorIds, String ownerId) {
-        if (hypervisorIds == null || !hypervisorIds.iterator().hasNext()) {
-            return this.cpQueryFactory.<Consumer>buildQuery();
+    public List<Consumer> getHypervisorsBulk(Collection<String> hypervisorIds, String ownerId) {
+        if (hypervisorIds == null || hypervisorIds.isEmpty()) {
+            return new ArrayList<>();
         }
 
-        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
-            .createAlias("hypervisorId", "hvsr")
-            .add(Restrictions.eq("ownerId", ownerId))
-            .add(this.getHypervisorIdRestriction(hypervisorIds))
-            .addOrder(org.hibernate.criterion.Order.asc("hvsr.hypervisorId"))
-            .setFetchMode("type", FetchMode.SELECT);
+        Stream<String> lowerCaseHypervisorIds = hypervisorIds.stream()
+            .distinct()
+            .map(String::toLowerCase)
+            .sorted();
 
-        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria)
-            .setLockMode(LockModeType.PESSIMISTIC_WRITE);
-    }
+        String jpql = """
+            SELECT c FROM Consumer c
+            JOIN c.hypervisorId h
+            WHERE c.ownerId = :ownerId
+                AND LOWER(h.hypervisorId) IN :lowerCaseHypervisorIds
+            ORDER BY h.hypervisorId ASC""";
 
-    private Criterion getHypervisorIdRestriction(Iterable<String> hypervisorIds) {
-        Disjunction disjunction = Restrictions.disjunction();
-        for (String hid : hypervisorIds) {
-            disjunction.add(Restrictions.eq("hvsr.hypervisorId", hid.toLowerCase()));
+        List<Consumer> consumers = new ArrayList<>();
+        for (List<String> block : this.partition(lowerCaseHypervisorIds::iterator)) {
+            List<Consumer> result = getEntityManager().createQuery(jpql, Consumer.class)
+                .setParameter("ownerId", ownerId)
+                .setParameter("lowerCaseHypervisorIds", block)
+                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                .getResultList();
+
+            consumers.addAll(result);
         }
 
-        return disjunction;
+        return consumers;
     }
 
-    @SuppressWarnings("unchecked")
     @Transactional
-    public CandlepinQuery<Consumer> getHypervisorsForOwner(String ownerId) {
+    public List<Consumer> getHypervisorsForOwner(String ownerId) {
+        String jpql = """
+            SELECT c FROM Consumer c
+            WHERE c.ownerId = :ownerId AND c.hypervisorId.hypervisorId IS NOT NULL""";
 
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .createAlias("hypervisorId", "hvsr")
-            .add(Restrictions.eq("ownerId", ownerId))
-            .add(Restrictions.isNotNull("hvsr.hypervisorId"));
-
-        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
+        return this.getEntityManager()
+            .createQuery(jpql, Consumer.class)
+            .setParameter("ownerId", ownerId)
+            .getResultList();
     }
 
     public boolean doesConsumerExist(String uuid) {

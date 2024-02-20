@@ -70,7 +70,6 @@ import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerCurator.ConsumerQueryArguments;
@@ -1634,14 +1633,16 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public CandlepinQuery<ConsumerDTOArrayElement> getHypervisors(
+    public List<ConsumerDTOArrayElement> getHypervisors(
         @Verify(Owner.class) String ownerKey, List<String> hypervisorIds) {
 
         Owner owner = ownerCurator.getByKey(ownerKey);
-        CandlepinQuery<Consumer> query = (hypervisorIds == null || hypervisorIds.isEmpty()) ?
+        List<Consumer> hypervisors = (hypervisorIds == null || hypervisorIds.isEmpty()) ?
             this.consumerCurator.getHypervisorsForOwner(owner.getId()) :
             this.consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getId());
-        return translator.translateQuery(query, ConsumerDTOArrayElement.class);
+        return hypervisors.stream()
+            .map(translator.getStreamMapper(Consumer.class, ConsumerDTOArrayElement.class))
+            .toList();
     }
 
     @Override
