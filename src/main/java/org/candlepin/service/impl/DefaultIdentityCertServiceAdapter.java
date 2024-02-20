@@ -22,6 +22,7 @@ import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.service.IdentityCertServiceAdapter;
 
 import com.google.common.base.Function;
@@ -51,6 +52,7 @@ public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAda
     private final CertificateSerialCurator serialCurator;
     private final Function<Date, Date> endDateGenerator;
     private final KeyPairGenerator keyPairGenerator;
+    private final PemEncoder pemEncoder;
 
     @SuppressWarnings("unchecked")
     @Inject
@@ -58,12 +60,14 @@ public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAda
         IdentityCertificateCurator identityCertCurator,
         CertificateSerialCurator serialCurator,
         KeyPairGenerator keyPairGenerator,
+        PemEncoder pemEncoder,
         @Named("endDateGenerator") Function endDtGen) {
         this.pki = Objects.requireNonNull(pki);
         this.idCertCurator = Objects.requireNonNull(identityCertCurator);
         this.serialCurator = Objects.requireNonNull(serialCurator);
         this.endDateGenerator = Objects.requireNonNull(endDtGen);
         this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
+        this.pemEncoder = Objects.requireNonNull(pemEncoder);
     }
 
     @Override
@@ -134,8 +138,8 @@ public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAda
             startDate, endDate, keyPair, BigInteger.valueOf(serial.getId()),
             consumer.getName());
 
-        identityCert.setCert(new String(pki.getPemEncoded(x509cert)));
-        identityCert.setKey(new String(pki.getPemEncoded(keyPair.getPrivate())));
+        identityCert.setCert(this.pemEncoder.encodeAsString(x509cert));
+        identityCert.setKey(this.pemEncoder.encodeAsString(keyPair.getPrivate()));
         identityCert.setSerial(serial);
         consumer.setIdCert(identityCert);
 

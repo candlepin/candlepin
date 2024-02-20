@@ -22,6 +22,7 @@ import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.X509ExtensionUtil;
@@ -69,6 +70,7 @@ public class UeberCertificateGenerator {
     private final UeberCertificateCurator ueberCertCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
     private final I18n i18n;
+    private final PemEncoder pemEncoder;
 
     @Inject
     public UeberCertificateGenerator(
@@ -80,6 +82,7 @@ public class UeberCertificateGenerator {
         UeberCertificateCurator ueberCertCurator,
         ConsumerTypeCurator consumerTypeCurator,
         KeyPairGenerator keyPairGenerator,
+        PemEncoder pemEncoder,
         I18n i18n) {
 
         this.idGenerator = Objects.requireNonNull(idGenerator);
@@ -91,6 +94,7 @@ public class UeberCertificateGenerator {
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.i18n = Objects.requireNonNull(i18n);
         this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
+        this.pemEncoder = Objects.requireNonNull(pemEncoder);
     }
 
     @Transactional
@@ -123,7 +127,7 @@ public class UeberCertificateGenerator {
         serialCurator.create(serial);
 
         KeyPair keyPair = this.keyPairGenerator.generateKeyPair();
-        byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
+        byte[] pemEncodedKeyPair = this.pemEncoder.encodeAsBytes(keyPair.getPrivate());
         X509Certificate x509Cert =
             createX509Certificate(ueberCertData, BigInteger.valueOf(serial.getId()), keyPair);
 
@@ -131,7 +135,7 @@ public class UeberCertificateGenerator {
         ueberCert.setSerial(serial);
         ueberCert.setKeyAsBytes(pemEncodedKeyPair);
         ueberCert.setOwner(owner);
-        ueberCert.setCert(new String(this.pki.getPemEncoded(x509Cert)));
+        ueberCert.setCert(this.pemEncoder.encodeAsString(x509Cert));
         ueberCert.setCreated(ueberCertData.getStartDate());
         ueberCert.setUpdated(ueberCertData.getStartDate());
         ueberCertCurator.create(ueberCert);
