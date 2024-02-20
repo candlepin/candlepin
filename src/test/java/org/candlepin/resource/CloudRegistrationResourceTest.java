@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.argThat;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -192,7 +192,7 @@ public class CloudRegistrationResourceTest {
 
         CloudAuthenticationResult result = buildMockAuthResult(cloudAccountId, "instanceId",
             TestUtil.randomString(),
-            "ownerKey", "offerId", Set.of("productId"), true);
+            "ownerKey", "offerId", Set.of("productId"), true, false);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -211,7 +211,7 @@ public class CloudRegistrationResourceTest {
 
         CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", instanceId,
             TestUtil.randomString(),
-            "ownerKey", "offerId", Set.of("productId"), true);
+            "ownerKey", "offerId", Set.of("productId"), true, false);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -226,7 +226,7 @@ public class CloudRegistrationResourceTest {
             .signature("test-signature");
 
         CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", "instanceId", null,
-            "ownerKey", "offerId", Set.of("productId"), true);
+            "ownerKey", "offerId", Set.of("productId"), true, false);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -244,7 +244,7 @@ public class CloudRegistrationResourceTest {
 
         CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", "instanceId",
             TestUtil.randomString(),
-            "ownerKey", offerId, Set.of("productId"), true);
+            "ownerKey", offerId, Set.of("productId"), true, false);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -259,7 +259,7 @@ public class CloudRegistrationResourceTest {
             .signature("test-signature");
 
         CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", "instanceId",
-            TestUtil.randomString(), "ownerKey", "offerId", null, true);
+            TestUtil.randomString(), "ownerKey", "offerId", null, true, false);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -274,7 +274,7 @@ public class CloudRegistrationResourceTest {
             .signature("test-signature");
 
         CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", "instanceId",
-            TestUtil.randomString(), "ownerKey", "offerId", Set.of(), true);
+            TestUtil.randomString(), "ownerKey", "offerId", Set.of(), true, false);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -291,7 +291,7 @@ public class CloudRegistrationResourceTest {
         String expectedOwnerKey = "ownerKey";
         String prodId = "productId";
         CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", "instanceId",
-            TestUtil.randomString(), expectedOwnerKey, "offerId", Set.of(prodId), true);
+            TestUtil.randomString(), expectedOwnerKey, "offerId", Set.of(prodId), true, false);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
         Owner owner = new Owner().setKey(expectedOwnerKey);
@@ -331,7 +331,7 @@ public class CloudRegistrationResourceTest {
         String accountId = "cloudAccountId";
         String offeringId = "offerId";
         CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId",
-            TestUtil.randomString(), null, offeringId, prodIds, true);
+            TestUtil.randomString(), null, offeringId, prodIds, true, false);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -375,7 +375,7 @@ public class CloudRegistrationResourceTest {
         String prodId = "productId";
         String accountId = "cloudAccountId";
         CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId",
-            TestUtil.randomString(), expectedOwnerKey, "offerId", Set.of(prodId), false);
+            TestUtil.randomString(), expectedOwnerKey, "offerId", Set.of(prodId), false, false);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
         Owner owner = new Owner().setKey(expectedOwnerKey);
@@ -422,7 +422,7 @@ public class CloudRegistrationResourceTest {
         Set<String> prodIds = Set.of("productId");
         String accountId = "cloudAccountId";
         CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId",
-            TestUtil.randomString(), expectedOwnerKey, "offerId", prodIds, true);
+            TestUtil.randomString(), expectedOwnerKey, "offerId", prodIds, true, false);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -466,7 +466,7 @@ public class CloudRegistrationResourceTest {
         String prodId = "productId";
         String accountId = "cloudAccountId";
         CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId",
-            TestUtil.randomString(), expectedOwnerKey, "offerId", Set.of(prodId), true);
+            TestUtil.randomString(), expectedOwnerKey, "offerId", Set.of(prodId), true, false);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
         Owner owner = new Owner().setKey(expectedOwnerKey);
@@ -514,7 +514,7 @@ public class CloudRegistrationResourceTest {
         String accountId = "cloudAccountId";
         String instanceId = "instanceId";
         CloudAuthenticationResult result = buildMockAuthResult(accountId, instanceId, TestUtil.randomString(),
-            expectedOwnerKey, "offerId", Set.of(prodId), true);
+            expectedOwnerKey, "offerId", Set.of(prodId), true, false);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
         Owner owner = new Owner().setKey(expectedOwnerKey);
@@ -561,7 +561,7 @@ public class CloudRegistrationResourceTest {
         String accountId = "cloudAccountId";
         String instanceId = "instanceId";
         CloudAuthenticationResult result = buildMockAuthResult(accountId, instanceId, TestUtil.randomString(),
-            null, "offerId", Set.of(prodId), true);
+            null, "offerId", Set.of(prodId), true, false);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -601,17 +601,71 @@ public class CloudRegistrationResourceTest {
             () -> cloudRegResource.cloudAuthorize(new CloudRegistrationDTO(), 100));
     }
 
-    @Test
-    public void testCloudAuthorizeV2For1POfferingNotSupported() {
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void testCloudAuthorizeV2WithRegistrationOnlyAndMissingOwnerKey(String ownerKey) {
         CloudRegistrationDTO dto = new CloudRegistrationDTO()
             .type("test-type")
             .metadata("test-metadata")
             .signature("test-signature");
 
-        doThrow(new CloudRegistrationNotSupportedForOfferingException()).when(mockCloudRegistrationAdapter)
+        CloudAuthenticationResult result = buildMockAuthResult(TestUtil.randomString(),
+            TestUtil.randomString(), TestUtil.randomString(), ownerKey, TestUtil.randomString(),
+            Set.of(TestUtil.randomString()), false, true);
+        doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
         assertThrows(NotImplementedException.class, () -> cloudRegResource.cloudAuthorize(dto, 2));
+    }
+
+    @Test
+    public void testCloudAuthorizeV2ForUnsupportedCloudOffering() {
+        CloudRegistrationDTO dto = new CloudRegistrationDTO()
+            .type("test-type")
+            .metadata("test-metadata")
+            .signature("test-signature");
+
+        doThrow(new CloudRegistrationNotSupportedForOfferingException())
+            .when(mockCloudRegistrationAdapter)
+            .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
+
+        assertThrows(NotImplementedException.class, () -> cloudRegResource.cloudAuthorize(dto, 2));
+    }
+
+    @Test
+    public void testCloudAuthorizeV2WithRegistrationOnly() {
+        CloudRegistrationDTO dto = new CloudRegistrationDTO()
+            .type("test-type")
+            .metadata("test-metadata")
+            .signature("test-signature");
+
+        String expectedOwnerKey = "ownerKey";
+        CloudAuthenticationResult result = buildMockAuthResult(TestUtil.randomString(),
+            TestUtil.randomString(), TestUtil.randomString(), expectedOwnerKey, TestUtil.randomString(),
+            Set.of(TestUtil.randomString()), false, true);
+        doReturn(result)
+            .when(mockCloudRegistrationAdapter)
+            .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
+
+        String expectedToken = TestUtil.randomString();
+        doReturn(expectedToken)
+            .when(mockTokenGenerator)
+            .buildStandardRegistrationToken(principal, expectedOwnerKey);
+
+        Response response = cloudRegResource.cloudAuthorize(dto, 2);
+
+        assertThat(response)
+            .isNotNull()
+            .returns(200, Response::getStatus)
+            .extracting(Response::getEntity)
+            .isNotNull()
+            .isInstanceOf(CloudAuthenticationResultDTO.class);
+
+        assertThat((CloudAuthenticationResultDTO) response.getEntity())
+            .returns(expectedOwnerKey, CloudAuthenticationResultDTO::getOwnerKey)
+            .returns(null, CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
+            .returns(expectedToken, CloudAuthenticationResultDTO::getToken)
+            .returns(CloudAuthTokenType.STANDARD.toString(), CloudAuthenticationResultDTO::getTokenType);
     }
 
     @Test
@@ -708,8 +762,8 @@ public class CloudRegistrationResourceTest {
     }
 
     private CloudAuthenticationResult buildMockAuthResult(String cloudAccountId, String instanceId,
-        String provider,
-        String ownerKey, String offerId, Set<String> productIds, boolean isEntitled) {
+        String provider, String ownerKey,
+        String offerId, Set<String> productIds, boolean isEntitled, boolean isRegistrationOnly) {
         CloudAuthenticationResult mockResult = mock(CloudAuthenticationResult.class);
         doReturn(cloudAccountId).when(mockResult).getCloudAccountId();
         doReturn(instanceId).when(mockResult).getCloudInstanceId();
@@ -718,6 +772,7 @@ public class CloudRegistrationResourceTest {
         doReturn(offerId).when(mockResult).getOfferId();
         doReturn(productIds).when(mockResult).getProductIds();
         doReturn(isEntitled).when(mockResult).isEntitled();
+        doReturn(isRegistrationOnly).when(mockResult).isRegistrationOnly();
 
         return mockResult;
     }
