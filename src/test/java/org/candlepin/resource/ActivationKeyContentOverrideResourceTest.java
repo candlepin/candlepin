@@ -108,7 +108,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
     }
 
     private List<ContentOverrideDTO> stripTimestamps(Iterable<ContentOverrideDTO> list) {
-        return stripTimestamps(StreamSupport.stream(list.spliterator(), false).collect(Collectors.toList()));
+        return stripTimestamps(StreamSupport.stream(list.spliterator(), false).toList());
     }
 
     private long sizeOf(Iterable<ContentOverrideDTO> list) {
@@ -139,7 +139,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
         List<ContentOverrideDTO> expected = overrides.stream()
             .map(this.modelTranslator.getStreamMapper(ActivationKeyContentOverride.class,
                 ContentOverrideDTO.class))
-            .collect(Collectors.toList());
+            .toList();
 
         List<ContentOverrideDTO> actual = this.resource
             .listActivationKeyContentOverrides(key.getId())
@@ -169,7 +169,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
         List<ContentOverrideDTO> expected = overrides.stream()
             .map(this.modelTranslator.getStreamMapper(ActivationKeyContentOverride.class,
                 ContentOverrideDTO.class))
-            .collect(Collectors.toList());
+            .toList();
 
         List<ContentOverrideDTO> actual = this.resource
             .deleteActivationKeyContentOverrides(key.getId(), Arrays.asList(toDeleteDTO))
