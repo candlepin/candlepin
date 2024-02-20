@@ -99,27 +99,27 @@ public class OwnerPermission implements Permission, Serializable {
     @Override
     public <T> Predicate getQueryRestriction(Class<T> entityClass, CriteriaBuilder builder, From<?, T> path) {
         if (Owner.class.equals(entityClass)) {
-            return builder.equal(((From<?, Owner>) path).get(Owner_.key), this.getOwner().getKey());
+            return builder.equal(((From<?, Owner>) path).get(Owner_.key), this.getOwnerKey());
         }
         else if (Consumer.class.equals(entityClass)) {
-            return builder.equal(((From<?, Consumer>) path).get(Consumer_.ownerId), this.getOwner().getId());
+            return builder.equal(((From<?, Consumer>) path).get("owner").get("key"), this.getOwnerKey());
         }
         else if (Pool.class.equals(entityClass)) {
-            return builder.equal(((From<?, Pool>) path).get(Pool_.owner), this.getOwner());
+            return builder.equal(((From<?, Pool>) path).get("owner").get("key"), this.getOwnerKey());
         }
         else if (ActivationKey.class.equals(entityClass)) {
-            return builder.equal(((From<?, ActivationKey>) path).get(ActivationKey_.owner), this.getOwner());
+            return builder.equal(((From<?, ActivationKey>) path).get("owner").get("key"), this.getOwnerKey());
         }
         else if (Environment.class.equals(entityClass)) {
-            return builder.equal(((From<?, Environment>) path).get(Environment_.owner), this.getOwner());
+            return builder.equal(((From<?, Environment>) path).get("owner").get("key"), this.getOwnerKey());
         }
 
         return null;
     }
 
     @Override
-    public Owner getOwner() {
-        return owner;
+    public String getOwnerKey() {
+        return owner.getKey();
     }
 
     public Access getAccess() {

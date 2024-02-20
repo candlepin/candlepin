@@ -677,4 +677,9 @@ public class Owner extends AbstractHibernateObject<Owner>
     public String toString() {
         return String.format("Owner [id: %s, key: %s]", this.getId(), this.getKey());
     }
+
+    @Override
+    public String getOwnerKey() {
+        return this.key;
+    }
 }

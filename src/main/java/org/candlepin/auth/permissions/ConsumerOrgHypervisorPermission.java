@@ -69,15 +69,15 @@ public class ConsumerOrgHypervisorPermission extends TypedPermission<Owner> {
      */
     @Override
     public <T> Predicate getQueryRestriction(Class<T> entityClass, CriteriaBuilder builder, From<?, T> path) {
-        if (Owner.class.equals(entityClass)) {
-            return builder.equal(((From<?, Owner>) path).get(Owner_.key), this.getOwner().getKey());
-        }
+        // if (Owner.class.equals(entityClass)) {
+        //     return builder.equal(((From<?, Owner>) path).get(Owner_.key), this.getOwner().getKey());
+        // }
 
         return null;
     }
 
     @Override
-    public Owner getOwner() {
-        return owner;
+    public String getOwnerKey() {
+        return owner.getKey();
     }
 }

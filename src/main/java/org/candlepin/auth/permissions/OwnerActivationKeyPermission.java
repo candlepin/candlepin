@@ -80,8 +80,8 @@ public class OwnerActivationKeyPermission extends TypedPermission<Owner> {
      * {@inheritDoc}
      */
     @Override
-    public Owner getOwner() {
-        return this.owner;
+    public String getOwnerKey() {
+        return this.owner.getKey();
     }
 
     /**

@@ -1306,4 +1306,9 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
         return uuid != null ? uuid.hashCode() : 0;
     }
 
+    @Override
+    public String getOwnerKey() {
+        return this.owner.getKey();
+    }
+
 }

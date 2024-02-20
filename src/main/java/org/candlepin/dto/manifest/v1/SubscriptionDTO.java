@@ -684,4 +684,9 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
 
         return this;
     }
+
+    @Override
+    public String getOwnerKey() {
+        return this.owner.getKey();
+    }
 }

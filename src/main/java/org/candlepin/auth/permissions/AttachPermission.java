@@ -75,16 +75,16 @@ public class AttachPermission extends TypedPermission<Pool> {
      */
     @Override
     public <T> Predicate getQueryRestriction(Class<T> entityClass, CriteriaBuilder builder, From<?, T> path) {
-        if (Pool.class.equals(entityClass)) {
-            return builder.equal(((From<?, Pool>) path).get(Pool_.owner), this.getOwner());
-        }
+        // if (Pool.class.equals(entityClass)) {
+        //     return builder.equal(((From<?, Pool>) path).get(Pool_.owner), this.getOwner());
+        // }
 
         return null;
     }
 
     @Override
-    public Owner getOwner() {
-        return owner;
+    public String getOwnerKey() {
+        return owner.getKey();
     }
 
 }

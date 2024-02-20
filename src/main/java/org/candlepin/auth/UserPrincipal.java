@@ -62,7 +62,7 @@ public class UserPrincipal extends Principal {
         addPermission(new UserUserPermission(username));
 
         // Allow users to check the status of their own jobs.
-        addPermission(new AsyncJobStatusPermission(getData(), this.getOwnerIds()));
+        addPermission(new AsyncJobStatusPermission(getData(), this.getOwnerKeys()));
     }
 
     public UserPrincipal(String username, Collection<? extends Permission> permissions, boolean admin,
@@ -80,7 +80,7 @@ public class UserPrincipal extends Principal {
         addPermission(new UserUserPermission(username));
 
         // Allow users to check the status of their own jobs.
-        addPermission(new AsyncJobStatusPermission(getData(), this.getOwnerIds()));
+        addPermission(new AsyncJobStatusPermission(getData(), this.getOwnerKeys()));
     }
 
     public String getUsername() {
@@ -134,21 +134,21 @@ public class UserPrincipal extends Principal {
         return this.admin;
     }
 
-    public List<String> getOwnerIds() {
-        List<String> ownerIds = new LinkedList<>();
+    // public List<String> getOwnerIds() {
+    //     List<String> ownerIds = new LinkedList<>();
 
-        for (Owner owner : getOwners()) {
-            ownerIds.add(owner.getId());
-        }
+    //     for (Owner owner : getOwners()) {
+    //         ownerIds.add(owner.getId());
+    //     }
 
-        return ownerIds;
-    }
+    //     return ownerIds;
+    // }
 
     public List<String> getOwnerKeys() {
         List<String> ownerKeys = new LinkedList<>();
 
-        for (Owner owner : getOwners()) {
-            ownerKeys.add(owner.getKey());
+        for (Permission permission : permissions) {
+            ownerKeys.add(permission.getOwnerKey());
         }
 
         return ownerKeys;
@@ -157,18 +157,18 @@ public class UserPrincipal extends Principal {
     /**
      * @return list of owners this principal has some level of access to.
      */
-    public List<Owner> getOwners() {
-        List<Owner> owners = new LinkedList<>();
+    // public List<Owner> getOwners() {
+    //     List<Owner> owners = new LinkedList<>();
 
-        for (Permission permission : permissions) {
-            Owner o = permission.getOwner();
-            if (o != null) {
-                owners.add(o);
-            }
-        }
+    //     for (Permission permission : permissions) {
+    //         Owner o = permission.getOwner();
+    //         if (o != null) {
+    //             owners.add(o);
+    //         }
+    //     }
 
-        return owners;
-    }
+    //     return owners;
+    // }
 
     /**
      * @return the primary owner this principal has some level of access to.

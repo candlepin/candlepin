@@ -267,11 +267,13 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
             Collection<Permission> permissions = this.permissionFactory.createPermissions(entity);
             Set<OwnerInfo> owners = new HashSet<>();
 
-            for (Permission permission : permissions) {
-                if (permission.canAccess(permission.getOwner(), SubResource.CONSUMERS, Access.CREATE)) {
-                    owners.add(permission.getOwner());
-                }
-            }
+            // TODO: What to do here?
+
+            // for (Permission permission : permissions) {
+            //     if (permission.canAccess(permission.getOwner(), SubResource.CONSUMERS, Access.CREATE)) {
+            //         owners.add(permission.getOwner());
+            //     }
+            // }
 
             return owners;
         }

@@ -65,8 +65,8 @@ public class OwnerPoolsPermission extends TypedPermission<Owner> {
     }
 
     @Override
-    public Owner getOwner() {
-        return owner;
+    public String getOwnerKey() {
+        return owner.getKey();
     }
 
 }

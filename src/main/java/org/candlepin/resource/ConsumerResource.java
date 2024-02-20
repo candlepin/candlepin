@@ -1448,9 +1448,9 @@ public class ConsumerResource implements ConsumerApi {
             log.warn("User {} does not have access to create consumers in org {}",
                 principal.getPrincipalName(), owner.getKey());
 
-            List<Owner> owners = ((UserPrincipal) principal).getOwners();
-            boolean isOwnerContained = owners != null && owners.stream()
-                .anyMatch(t -> t != null && t.getOwnerId().equals(owner.getOwnerId()));
+            List<String> ownerKeys = ((UserPrincipal) principal).getOwnerKeys();
+            boolean isOwnerContained = ownerKeys != null && ownerKeys.stream()
+                .anyMatch(t -> t != null && t.equals(owner.getOwnerId()));
             if (isOwnerContained) {
                 throw new ForbiddenException(i18n.tr("{0} is not authorized to register with " +
                     "organization {1}", principal.getName(), owner.getKey()));
@@ -1500,19 +1500,19 @@ public class ConsumerResource implements ConsumerApi {
             return;
         }
 
-        for (Owner owner : ((UserPrincipal) principal).getOwners()) {
-            Owner existingOwner = ownerCurator.getByKey(owner.getKey());
+        for (String ownerKey : ((UserPrincipal) principal).getOwnerKeys()) {
+            Owner existingOwner = ownerCurator.getByKey(ownerKey);
 
-            if (existingOwner == null) {
-                log.info("Principal carries permission for owner that does not exist.");
-                log.info("Creating new owner: {}", owner.getKey());
+            // if (existingOwner == null) {
+            //     log.info("Principal carries permission for owner that does not exist.");
+            //     log.info("Creating new owner: {}", owner.getKey());
 
-                existingOwner = ownerCurator.create(owner);
+            //     existingOwner = ownerCurator.create(owner);
 
-                this.refresherFactory.getRefresher(this.subAdapter, this.prodAdapter)
-                    .add(existingOwner)
-                    .run();
-            }
+            //     this.refresherFactory.getRefresher(this.subAdapter, this.prodAdapter)
+            //         .add(existingOwner)
+            //         .run();
+            // }
         }
     }
 

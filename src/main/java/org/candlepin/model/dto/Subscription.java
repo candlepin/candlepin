@@ -507,4 +507,9 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
 
         return this;
     }
+
+    @Override
+    public String getOwnerKey() {
+        return this.owner.getKey();
+    }
 }

@@ -43,17 +43,17 @@ public class AsyncJobStatusPermission extends TypedPermission<AsyncJobStatus> {
 
     private final String principalName;
     private final String principalType;
-    private final Set<String> ownerIds;
+    private final Set<String> ownerKeys;
 
-    public AsyncJobStatusPermission(PrincipalData principalData, Collection<String> ownerIds) {
+    public AsyncJobStatusPermission(PrincipalData principalData, Collection<String> ownerKeys) {
         Objects.requireNonNull(principalData);
 
         this.principalName = principalData.getName();
         this.principalType = principalData.getType();
 
-        this.ownerIds = new HashSet<>();
-        if (ownerIds != null) {
-            this.ownerIds.addAll(ownerIds);
+        this.ownerKeys = new HashSet<>();
+        if (ownerKeys != null) {
+            this.ownerKeys.addAll(ownerKeys);
         }
     }
 
@@ -63,7 +63,7 @@ public class AsyncJobStatusPermission extends TypedPermission<AsyncJobStatus> {
     }
 
     @Override
-    public Owner getOwner() {
+    public String getOwnerKey() {
         // This permission is not specific to any owner.
         return null;
     }
@@ -90,8 +90,8 @@ public class AsyncJobStatusPermission extends TypedPermission<AsyncJobStatus> {
 
         // If the job was created within the context of an org, access is only granted if
         // the principal owning this permission has access to that org
-        String contextOwnerId = target.getContextOwnerId();
-        if (contextOwnerId != null && !this.ownerIds.contains(contextOwnerId)) {
+        String contextOwnerId = target.getContextOwner().getKey();
+        if (contextOwnerId != null && !this.ownerKeys.contains(contextOwnerId)) {
             return false;
         }
 

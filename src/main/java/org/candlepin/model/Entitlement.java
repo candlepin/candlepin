@@ -392,4 +392,9 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
         this.deletedFromPool = deletedFromPool;
     }
 
+    @Override
+    public String getOwnerKey() {
+        return this.owner.getKey();
+    }
+
 }

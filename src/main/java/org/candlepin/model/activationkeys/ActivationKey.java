@@ -521,4 +521,9 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
             this.getId(), this.getName(), this.getDescription());
     }
 
+    @Override
+    public String getOwnerKey() {
+        return this.owner.getKey();
+    }
+
 }

@@ -72,5 +72,5 @@ public interface Permission {
     /**
      * @return an owner if this permission is specific to one, otherwise null
      */
-    Owner getOwner();
+    String getOwnerKey();
 }

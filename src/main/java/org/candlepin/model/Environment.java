@@ -245,4 +245,9 @@ public class Environment extends AbstractHibernateObject implements Serializable
     public String toString() {
         return String.format("Environment [id: %s, name: %s, owner: %s]", this.id, this.name, this.owner);
     }
+
+    @Override
+    public String getOwnerKey() {
+        return this.owner.getKey();
+    }
 }

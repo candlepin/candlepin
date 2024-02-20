@@ -63,7 +63,7 @@ public class AnonymousCloudConsumerPermission extends TypedPermission<AnonymousC
     }
 
     @Override
-    public Owner getOwner() {
+    public String getOwnerKey() {
         // Anonymous cloud consumers have no owner
         return null;
     }

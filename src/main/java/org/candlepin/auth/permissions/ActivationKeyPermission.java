@@ -76,8 +76,8 @@ public class ActivationKeyPermission extends TypedPermission<ActivationKey> {
      * {@inheritDoc}
      */
     @Override
-    public Owner getOwner() {
-        return this.owner;
+    public String getOwnerKey() {
+        return this.owner.getKey();
     }
 
     /**

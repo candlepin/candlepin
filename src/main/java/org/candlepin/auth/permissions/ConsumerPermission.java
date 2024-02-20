@@ -74,8 +74,8 @@ public class ConsumerPermission extends TypedPermission<Consumer> {
     }
 
     @Override
-    public Owner getOwner() {
-        return owner;
+    public String getOwnerKey() {
+        return owner.getKey();
     }
 
     public Consumer getConsumer() {

@@ -72,7 +72,7 @@ public class UserUserPermission extends TypedPermission<User> {
     }
 
     @Override
-    public Owner getOwner() {
+    public String getOwnerKey() {
         // This permission is not specific to any owner.
         return null;
     }

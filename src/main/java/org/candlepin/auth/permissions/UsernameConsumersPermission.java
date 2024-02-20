@@ -107,8 +107,8 @@ public class UsernameConsumersPermission implements Permission, Serializable {
     }
 
     @Override
-    public Owner getOwner() {
-        return owner;
+    public String getOwnerKey() {
+        return owner.getKey();
     }
 
     public String getUsername() {
