@@ -63,9 +63,9 @@ public class AttachPermission extends TypedPermission<Pool> {
 
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
-        if (entityClass.equals(Pool.class)) {
-            return Restrictions.eq("owner", owner);
-        }
+        // if (entityClass.equals(Pool.class)) {
+        //     return Restrictions.eq("owner", owner);
+        // }
 
         return null;
     }

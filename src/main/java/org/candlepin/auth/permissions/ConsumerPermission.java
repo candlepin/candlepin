@@ -55,9 +55,9 @@ public class ConsumerPermission extends TypedPermission<Consumer> {
 
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
-        if (entityClass.equals(Consumer.class)) {
-            return Restrictions.idEq(consumer.getId());
-        }
+        // if (entityClass.equals(Consumer.class)) {
+        //     return Restrictions.idEq(consumer.getId());
+        // }
         return null;
     }
 
@@ -66,9 +66,9 @@ public class ConsumerPermission extends TypedPermission<Consumer> {
      */
     @Override
     public <T> Predicate getQueryRestriction(Class<T> entityClass, CriteriaBuilder builder, From<?, T> path) {
-        if (Consumer.class.equals(entityClass)) {
-            return builder.equal(((From<?, Consumer>) path).get(Consumer_.id), this.getConsumer().getId());
-        }
+        // if (Consumer.class.equals(entityClass)) {
+        //     return builder.equal(((From<?, Consumer>) path).get(Consumer_.id), this.getConsumer().getId());
+        // }
 
         return null;
     }

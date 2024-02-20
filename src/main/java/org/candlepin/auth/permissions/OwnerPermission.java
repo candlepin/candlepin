@@ -74,21 +74,21 @@ public class OwnerPermission implements Permission, Serializable {
 
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
-        if (Owner.class.equals(entityClass)) {
-            return Restrictions.eq("key", owner.getKey());
-        }
-        else if (Consumer.class.equals(entityClass)) {
-            return Restrictions.eq("ownerId", owner.getId());
-        }
-        else if (Pool.class.equals(entityClass)) {
-            return Restrictions.eq("owner", owner);
-        }
-        else if (ActivationKey.class.equals(entityClass)) {
-            return Restrictions.eq("owner", owner);
-        }
-        else if (Environment.class.equals(entityClass)) {
-            return Restrictions.eq("owner", owner);
-        }
+        // if (Owner.class.equals(entityClass)) {
+        //     return Restrictions.eq("key", owner.getKey());
+        // }
+        // else if (Consumer.class.equals(entityClass)) {
+        //     return Restrictions.eq("ownerId", owner.getId());
+        // }
+        // else if (Pool.class.equals(entityClass)) {
+        //     return Restrictions.eq("owner", owner);
+        // }
+        // else if (ActivationKey.class.equals(entityClass)) {
+        //     return Restrictions.eq("owner", owner);
+        // }
+        // else if (Environment.class.equals(entityClass)) {
+        //     return Restrictions.eq("owner", owner);
+        // }
 
         return null;
     }
@@ -98,21 +98,21 @@ public class OwnerPermission implements Permission, Serializable {
      */
     @Override
     public <T> Predicate getQueryRestriction(Class<T> entityClass, CriteriaBuilder builder, From<?, T> path) {
-        if (Owner.class.equals(entityClass)) {
-            return builder.equal(((From<?, Owner>) path).get(Owner_.key), this.getOwnerKey());
-        }
-        else if (Consumer.class.equals(entityClass)) {
-            return builder.equal(((From<?, Consumer>) path).get("owner").get("key"), this.getOwnerKey());
-        }
-        else if (Pool.class.equals(entityClass)) {
-            return builder.equal(((From<?, Pool>) path).get("owner").get("key"), this.getOwnerKey());
-        }
-        else if (ActivationKey.class.equals(entityClass)) {
-            return builder.equal(((From<?, ActivationKey>) path).get("owner").get("key"), this.getOwnerKey());
-        }
-        else if (Environment.class.equals(entityClass)) {
-            return builder.equal(((From<?, Environment>) path).get("owner").get("key"), this.getOwnerKey());
-        }
+        // if (Owner.class.equals(entityClass)) {
+        //     return builder.equal(((From<?, Owner>) path).get(Owner_.key), this.getOwnerKey());
+        // }
+        // else if (Consumer.class.equals(entityClass)) {
+        //     return builder.equal(((From<?, Consumer>) path).get("owner").get("key"), this.getOwnerKey());
+        // }
+        // else if (Pool.class.equals(entityClass)) {
+        //     return builder.equal(((From<?, Pool>) path).get("owner").get("key"), this.getOwnerKey());
+        // }
+        // else if (ActivationKey.class.equals(entityClass)) {
+        //     return builder.equal(((From<?, ActivationKey>) path).get("owner").get("key"), this.getOwnerKey());
+        // }
+        // else if (Environment.class.equals(entityClass)) {
+        //     return builder.equal(((From<?, Environment>) path).get("owner").get("key"), this.getOwnerKey());
+        // }
 
         return null;
     }

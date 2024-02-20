@@ -166,7 +166,7 @@ public class PermissionFactory {
             // As a result of this, we need to return both permission objects with the appropriate
             // level to ensure all of the CRUD operations are covered
             return List.of(
-                new ActivationKeyPermission(resolved, accessLevel),
+                new ActivationKeyPermission(resolved.getKey(), accessLevel),
                 new OwnerActivationKeyPermission(resolved, accessLevel));
         });
 

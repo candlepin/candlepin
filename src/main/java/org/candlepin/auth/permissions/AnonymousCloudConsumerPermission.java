@@ -44,9 +44,9 @@ public class AnonymousCloudConsumerPermission extends TypedPermission<AnonymousC
 
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
-        if (AnonymousCloudConsumer.class.equals(entityClass)) {
-            return Restrictions.idEq(consumer.getId());
-        }
+        // if (AnonymousCloudConsumer.class.equals(entityClass)) {
+        //     return Restrictions.idEq(consumer.getId());
+        // }
 
         return null;
     }
@@ -54,10 +54,10 @@ public class AnonymousCloudConsumerPermission extends TypedPermission<AnonymousC
     @Override
     public <T> Predicate getQueryRestriction(Class<T> entityClass,
         CriteriaBuilder builder, From<?, T> path) {
-        if (AnonymousCloudConsumer.class.equals(entityClass)) {
-            return builder.equal(((From<?, AnonymousCloudConsumer>) path).get(AnonymousCloudConsumer_.id),
-                this.getAnonymousCloudConsumer().getId());
-        }
+        // if (AnonymousCloudConsumer.class.equals(entityClass)) {
+        //     return builder.equal(((From<?, AnonymousCloudConsumer>) path).get(AnonymousCloudConsumer_.id),
+        //         this.getAnonymousCloudConsumer().getId());
+        // }
 
         return null;
     }

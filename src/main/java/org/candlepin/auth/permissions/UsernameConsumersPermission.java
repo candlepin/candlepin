@@ -87,9 +87,9 @@ public class UsernameConsumersPermission implements Permission, Serializable {
 
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
-        if (entityClass.equals(Consumer.class)) {
-            return Restrictions.eq("username", user.getUsername());
-        }
+        // if (entityClass.equals(Consumer.class)) {
+        //     return Restrictions.eq("username", user.getUsername());
+        // }
 
         return null;
     }
@@ -99,9 +99,9 @@ public class UsernameConsumersPermission implements Permission, Serializable {
      */
     @Override
     public <T> Predicate getQueryRestriction(Class<T> entityClass, CriteriaBuilder builder, From<?, T> path) {
-        if (Consumer.class.equals(entityClass)) {
-            return builder.equal(((From<?, Consumer>) path).get(Consumer_.username), this.getUsername());
-        }
+        // if (Consumer.class.equals(entityClass)) {
+        //     return builder.equal(((From<?, Consumer>) path).get(Consumer_.username), this.getUsername());
+        // }
 
         return null;
     }

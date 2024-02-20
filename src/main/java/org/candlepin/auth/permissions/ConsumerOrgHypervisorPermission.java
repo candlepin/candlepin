@@ -57,9 +57,9 @@ public class ConsumerOrgHypervisorPermission extends TypedPermission<Owner> {
 
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
-        if (entityClass.equals(Owner.class)) {
-            return Restrictions.eq("key", owner.getKey());
-        }
+        // if (entityClass.equals(Owner.class)) {
+        //     return Restrictions.eq("key", owner.getKey());
+        // }
 
         return null;
     }

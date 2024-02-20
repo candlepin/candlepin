@@ -32,8 +32,7 @@ import javax.persistence.criteria.Predicate;
  */
 public class ActivationKeyPermission extends TypedPermission<ActivationKey> {
 
-    private final Owner owner;
-    private final String ownerId;
+    private final String ownerKey;
 
     /**
      * Creates a new permission which provides potential access to API endpoints which verify on the
@@ -49,8 +48,8 @@ public class ActivationKeyPermission extends TypedPermission<ActivationKey> {
      * @throws IllegalArgumentException
      *  if the provided owner is null or lacks an owner ID, or the provided access is null
      */
-    public ActivationKeyPermission(Owner owner, Access access) {
-        if (owner == null || owner.getId() == null) {
+    public ActivationKeyPermission(String ownerKey, Access access) {
+        if (ownerKey == null || ownerKey.isBlank()) {
             throw new IllegalArgumentException("owner is null or lacks an ID");
         }
 
@@ -58,8 +57,7 @@ public class ActivationKeyPermission extends TypedPermission<ActivationKey> {
             throw new IllegalArgumentException("access is null");
         }
 
-        this.owner = owner;
-        this.ownerId = owner.getId();
+        this.ownerKey = ownerKey;
 
         this.access = access;
     }
@@ -77,7 +75,7 @@ public class ActivationKeyPermission extends TypedPermission<ActivationKey> {
      */
     @Override
     public String getOwnerKey() {
-        return this.owner.getKey();
+        return this.ownerKey;
     }
 
     /**
@@ -85,7 +83,7 @@ public class ActivationKeyPermission extends TypedPermission<ActivationKey> {
      */
     @Override
     public boolean canAccessTarget(ActivationKey target, SubResource subresource, Access required) {
-        return target != null && this.ownerId.equals(target.getOwnerId()) &&
+        return target != null && this.getOwnerKey().equals(target.getOwnerKey()) &&
             this.access.provides(required);
     }
 

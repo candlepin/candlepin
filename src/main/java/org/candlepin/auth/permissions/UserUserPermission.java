@@ -53,9 +53,9 @@ public class UserUserPermission extends TypedPermission<User> {
 
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
-        if (entityClass.equals(User.class)) {
-            return Restrictions.eq("username", username);
-        }
+        // if (entityClass.equals(User.class)) {
+        //     return Restrictions.eq("username", username);
+        // }
         return null;
     }
 
@@ -64,9 +64,9 @@ public class UserUserPermission extends TypedPermission<User> {
      */
     @Override
     public <T> Predicate getQueryRestriction(Class<T> entityClass, CriteriaBuilder builder, From<?, T> path) {
-        if (User.class.equals(entityClass)) {
-            return builder.equal(((From<?, User>) path).get(User_.username), this.getUsername());
-        }
+        // if (User.class.equals(entityClass)) {
+        //     return builder.equal(((From<?, User>) path).get(User_.username), this.getUsername());
+        // }
 
         return null;
     }
