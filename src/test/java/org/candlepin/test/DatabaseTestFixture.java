@@ -57,6 +57,7 @@ import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContentCurator;
+import org.candlepin.model.EnvironmentContentOverrideCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.GuestIdCurator;
@@ -158,6 +159,7 @@ public class DatabaseTestFixture {
     protected EntitlementCertificateCurator entitlementCertificateCurator;
     protected EnvironmentCurator environmentCurator;
     protected EnvironmentContentCurator environmentContentCurator;
+    protected EnvironmentContentOverrideCurator environmentContentOverrideCurator;
     protected ExporterMetadataCurator exporterMetadataCurator;
     protected GuestIdCurator guestIdCurator;
     protected IdentityCertificateCurator identityCertificateCurator;
@@ -289,6 +291,8 @@ public class DatabaseTestFixture {
         entitlementCertificateCurator = this.injector.getInstance(EntitlementCertificateCurator.class);
         environmentCurator = this.injector.getInstance(EnvironmentCurator.class);
         environmentContentCurator = this.injector.getInstance(EnvironmentContentCurator.class);
+        environmentContentOverrideCurator = this.injector
+            .getInstance(EnvironmentContentOverrideCurator.class);
         exporterMetadataCurator = this.injector.getInstance(ExporterMetadataCurator.class);
         guestIdCurator = this.injector.getInstance(GuestIdCurator.class);
         identityCertificateCurator = this.injector.getInstance(IdentityCertificateCurator.class);

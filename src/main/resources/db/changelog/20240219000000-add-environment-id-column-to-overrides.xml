@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+
+    <changeSet id="20240219000000-1" author="wpoteat">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="cp_content_override" columnName="environment_id"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="cp_content_override">
+            <column name="environment_id" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

@@ -62,6 +62,96 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
             .setValue("value-" + suffix);
     }
 
+    private ConsumerContentOverride buildConsumerContentOverrideFixedName(Consumer consumer, int paramIndex) {
+        String suffix = TestUtil.randomString(8, TestUtil.CHARSET_NUMERIC_HEX);
+
+        return new ConsumerContentOverride()
+            .setConsumer(consumer)
+            .setContentLabel("test_content_label")
+            .setName("test_override_parameter" + paramIndex)
+            .setValue("value-" + suffix);
+    }
+
+    private EnvironmentContentOverride buildEnvironmentContentOverride(Environment environment,
+        int paramIndex) {
+        String suffix = TestUtil.randomString(8, TestUtil.CHARSET_NUMERIC_HEX);
+
+        return new EnvironmentContentOverride()
+            .setEnvironment(environment)
+            .setContentLabel("test_content_label")
+            .setName("test_override_parameter" + paramIndex)
+            .setValue("value-" + suffix);
+    }
+
+    private ConsumerContentOverride buildConsumerContentOverrideBoolean(Consumer consumer, int paramIndex,
+        boolean value) {
+
+        return new ConsumerContentOverride()
+            .setConsumer(consumer)
+            .setContentLabel("test_content_label")
+            .setName("test_override_parameter_boolean" + paramIndex)
+            .setValue(Boolean.toString(value));
+    }
+
+    private EnvironmentContentOverride buildEnvironmentContentOverrideBoolean(Environment environment,
+        int paramIndex, boolean value) {
+
+        return new EnvironmentContentOverride()
+            .setEnvironment(environment)
+            .setContentLabel("test_content_label")
+            .setName("test_override_parameter_boolean" + paramIndex)
+            .setValue(Boolean.toString(value));
+    }
+
+    @Test
+    public void getLayeredOverrideList() {
+        ConsumerContentOverride cco1 = buildConsumerContentOverrideFixedName(consumer, 1);
+        this.consumerContentOverrideCurator.create(cco1);
+        ConsumerContentOverride cco3 = buildConsumerContentOverrideBoolean(consumer, 1, false);
+        this.consumerContentOverrideCurator.create(cco3);
+        this.consumerContentOverrideCurator.flush();
+
+        Environment environment1 = new Environment()
+            .setId("test_environment_1")
+            .setName("test_environment_1")
+            .setOwner(owner);
+        environmentCurator.create(environment1);
+        Environment environment2 = new Environment()
+            .setId("test_environment_2")
+            .setName("test_environment_2")
+            .setOwner(owner);
+        environmentCurator.create(environment2);
+        Environment environment3 = new Environment()
+            .setId("test_environment_3")
+            .setName("test_environment_3")
+            .setOwner(owner);
+        environmentCurator.create(environment3);
+        consumer.setEnvironmentIds(List.of(environment1.getId(), environment2.getId(), environment3.getId()));
+        consumerCurator.update(consumer);
+
+        EnvironmentContentOverride eco1 = buildEnvironmentContentOverride(environment1, 1);
+        EnvironmentContentOverride eco2 = buildEnvironmentContentOverride(environment2, 1);
+        EnvironmentContentOverride eco3 = buildEnvironmentContentOverride(environment3, 1);
+        this.environmentContentOverrideCurator.create(eco1);
+        this.environmentContentOverrideCurator.create(eco2);
+        this.environmentContentOverrideCurator.create(eco3);
+        EnvironmentContentOverride eco4 = buildEnvironmentContentOverride(environment1, 2);
+        EnvironmentContentOverride eco5 = buildEnvironmentContentOverride(environment2, 2);
+        EnvironmentContentOverride eco6 = buildEnvironmentContentOverride(environment3, 2);
+        this.environmentContentOverrideCurator.create(eco4);
+        this.environmentContentOverrideCurator.create(eco5);
+        this.environmentContentOverrideCurator.create(eco6);
+        EnvironmentContentOverride eco7 = buildEnvironmentContentOverrideBoolean(environment1, 1, true);
+        this.environmentContentOverrideCurator.create(eco7);
+        this.environmentContentOverrideCurator.flush();
+
+        List<ContentOverride> result = this.consumerContentOverrideCurator.getLayeredOverrideList(consumer);
+        assertEquals(3, result.size());
+        assertTrue(result.contains(cco1));
+        assertTrue(result.contains(eco4));
+        assertTrue(result.contains(cco3));
+    }
+
     @Test
     public void normalCreateAndRetrieve() {
         ConsumerContentOverride cco = this.buildConsumerContentOverride(this.consumer);

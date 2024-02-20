@@ -42,7 +42,8 @@ import javax.validation.constraints.Size;
 @Entity
 @Table(name = ContentOverride.DB_TABLE)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorFormula("case when key_id is null then 'consumer' ELSE 'activation_key' end")
+@DiscriminatorFormula("CASE WHEN key_id is not null then 'activation_key' WHEN environment_id " +
+    "is not null then 'environment' ELSE 'consumer' END")
 public abstract class ContentOverride<T extends ContentOverride, P extends AbstractHibernateObject> extends
     AbstractHibernateObject<T> {
 
