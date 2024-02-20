@@ -39,7 +39,7 @@ import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
-import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.impl.Signer;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportProductServiceAdapter;
@@ -66,7 +66,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -128,7 +127,7 @@ public class Importer {
     private final OwnerCurator ownerCurator;
     private final IdentityCertificateCurator idCertCurator;
     private final RefresherFactory refresherFactory;
-    private final PKIUtility pki;
+    private final Signer signer;
     private final ExporterMetadataCurator expMetaCurator;
     private final CertificateSerialCurator csCurator;
     private final CdnCurator cdnCurator;
@@ -143,7 +142,7 @@ public class Importer {
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator,
         RulesImporter rulesImporter, OwnerCurator ownerCurator, IdentityCertificateCurator idCertCurator,
-        RefresherFactory refresherFactory, PKIUtility pki, ExporterMetadataCurator emc,
+        RefresherFactory refresherFactory, Signer signer, ExporterMetadataCurator emc,
         CertificateSerialCurator csc, EventSink sink, I18n i18n, DistributorVersionCurator distVerCurator,
         CdnCurator cdnCurator, SyncUtils syncUtils, @Named("ImportObjectMapper") ObjectMapper mapper,
         ImportRecordCurator importRecordCurator, SubscriptionReconciler subscriptionReconciler,
@@ -156,7 +155,7 @@ public class Importer {
         this.refresherFactory = Objects.requireNonNull(refresherFactory);
         this.syncUtils = Objects.requireNonNull(syncUtils);
         this.mapper = Objects.requireNonNull(mapper);
-        this.pki = Objects.requireNonNull(pki);
+        this.signer = Objects.requireNonNull(signer);
         this.expMetaCurator = Objects.requireNonNull(emc);
         this.csCurator = Objects.requireNonNull(csc);
         this.sink = Objects.requireNonNull(sink);
@@ -376,8 +375,10 @@ public class Importer {
                     i18n.tr("The archive does not contain the required signature file"));
             }
 
-            boolean verifiedSignature = pki.verifySHA256WithRSAHashAgainstCACerts(
-                new File(exportDir, "consumer_export.zip"), loadSignature(new File(exportDir, "signature")));
+            boolean verifiedSignature = this.signer.verifySignature(
+                new File(exportDir, "consumer_export.zip"),
+                loadSignature(new File(exportDir, "signature"))
+            );
 
             if (!verifiedSignature) {
                 log.warn("Archive signature check failed.");
@@ -441,11 +442,6 @@ public class Importer {
         catch (IOException e) {
             log.error("Exception caught importing archive", e);
             throw new ImportExtractionException(i18n.tr("Unable to extract export archive"), e, result);
-        }
-        catch (CertificateException e) {
-            log.error("Certificate exception checking archive signature", e);
-            throw new ImportExtractionException(
-                i18n.tr("Certificate exception checking archive signature"), e, result);
         }
         finally {
             if (exportDir != null) {

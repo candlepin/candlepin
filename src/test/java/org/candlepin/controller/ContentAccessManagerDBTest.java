@@ -39,6 +39,7 @@ import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.Signer;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ObjectMapperFactory;
@@ -70,6 +71,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
     private EventSink mockEventSink;
     private AnonymousCertContentCache cache;
     private KeyPairGenerator keyPairGenerator;
+    private Signer signer;
 
     @Mock
     private ProductServiceAdapter mockProdAdapter;
@@ -80,6 +82,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
         CertificateReader certReader = new CertificateReader(this.config, keyReader);
         SubjectKeyIdentifierWriter keyIdWriter = new BouncyCastleSubjectKeyIdentifierWriter();
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
+        this.signer = new Signer(certReader);
         this.keyPairGenerator = new BouncyCastleKeyPairGenerator(securityProvider, this.keyPairDataCurator);
         this.pkiUtility = new BouncyCastlePKIUtility(securityProvider, certReader,
             keyIdWriter, this.config, this.keyPairDataCurator);
@@ -96,7 +99,8 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
             this.caCertCurator, this.certSerialCurator, this.ownerCurator, this.contentCurator,
             this.consumerCurator, this.consumerTypeCurator, this.environmentCurator, this.caCertCurator,
             this.mockEventSink, this.anonymousCloudConsumerCurator, this.anonymousContentAccessCertCurator,
-            this.mockProdAdapter, this.cache, this.keyPairGenerator, new BouncyCastlePemEncoder());
+            this.mockProdAdapter, this.cache, this.keyPairGenerator, new BouncyCastlePemEncoder(),
+            this.signer);
     }
 
     private Owner createSCAOwner() {
