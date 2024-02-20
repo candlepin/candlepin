@@ -758,6 +758,11 @@ public class HostedTestResource {
             throw new BadRequestException("cloud offer ID is null");
         }
 
+        String cloudOfferType  = root.get("cloudOfferType").asText();
+        if (cloudOfferType == null) {
+            throw new BadRequestException("cloud offer type is null");
+        }
+
         JsonNode productIdsNode = root.get("productIds");
         if (productIdsNode == null) {
             throw new BadRequestException("productIds is null");
@@ -767,15 +772,7 @@ public class HostedTestResource {
         productIdsNode.elements().forEachRemaining(prod -> productIds.add(prod.asText()));
 
         this.datastore.setProductIdsForCloudOfferId(offerId, productIds);
-
-        JsonNode cloudOfferTypeNode = root.get("cloudOfferType");
-        if (cloudOfferTypeNode != null) {
-            String cloudOfferType = cloudOfferTypeNode.asText();
-            if (cloudOfferType != null && !cloudOfferType.isBlank()) {
-                this.datastore.setOfferTypeForCloudOfferId(offerId, cloudOfferType);
-            }
-        }
-
+        this.datastore.setOfferTypeForCloudOfferId(offerId, cloudOfferType);
     }
 
     @POST
