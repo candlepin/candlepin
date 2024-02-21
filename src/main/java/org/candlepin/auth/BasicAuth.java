@@ -18,6 +18,7 @@ import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.exceptions.ServiceUnavailableException;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.resteasy.filter.AuthUtil;
 import org.candlepin.service.UserServiceAdapter;
 
@@ -39,9 +40,9 @@ public class BasicAuth extends UserAuth {
 
     @Inject
     BasicAuth(UserServiceAdapter userServiceAdapter, Provider<I18n> i18nProvider,
-        PermissionFactory permissionFactory) {
+        PermissionFactory permissionFactory, OwnerCurator ownerCurator) {
 
-        super(userServiceAdapter, i18nProvider, permissionFactory);
+        super(userServiceAdapter, i18nProvider, permissionFactory, ownerCurator);
     }
 
     @Override
@@ -85,6 +86,9 @@ public class BasicAuth extends UserAuth {
             if (log.isDebugEnabled()) {
                 log.debug("Error getting principal " + e);
             }
+
+            log.info("Error getting principal " + e);
+
             throw new ServiceUnavailableException(i18nProvider.get().tr("Error contacting user service"));
         }
         return null;

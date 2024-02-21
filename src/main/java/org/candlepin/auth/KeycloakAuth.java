@@ -15,6 +15,7 @@
 package org.candlepin.auth;
 
 import org.candlepin.auth.permissions.PermissionFactory;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.resteasy.filter.AuthUtil;
 import org.candlepin.service.UserServiceAdapter;
 
@@ -61,9 +62,9 @@ public class KeycloakAuth extends UserAuth implements AuthProvider {
 
     @Inject
     public KeycloakAuth(UserServiceAdapter userServiceAdapter, Provider<I18n> i18nProvider,
-        PermissionFactory permissionFactory, KeycloakConfiguration keycloakConfig) {
+        PermissionFactory permissionFactory, KeycloakConfiguration keycloakConfig, OwnerCurator ownerCurator) {
 
-        super(userServiceAdapter, i18nProvider, permissionFactory);
+        super(userServiceAdapter, i18nProvider, permissionFactory, ownerCurator);
         this.keycloakConfig = keycloakConfig;
     }
 

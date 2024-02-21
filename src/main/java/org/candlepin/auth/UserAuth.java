@@ -16,6 +16,9 @@ package org.candlepin.auth;
 
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.model.UserInfo;
 
@@ -34,14 +37,16 @@ public abstract class UserAuth implements AuthProvider {
     protected UserServiceAdapter userServiceAdapter;
     protected Provider<I18n> i18nProvider;
     protected PermissionFactory permissionFactory;
+    protected OwnerCurator ownerCurator;
 
     @Inject
     public UserAuth(UserServiceAdapter userServiceAdapter, Provider<I18n> i18nProvider,
-        PermissionFactory permissionFactory) {
+        PermissionFactory permissionFactory, OwnerCurator ownerCurator) {
 
         this.userServiceAdapter = userServiceAdapter;
         this.i18nProvider = i18nProvider;
         this.permissionFactory = permissionFactory;
+        this.ownerCurator = ownerCurator;
     }
 
     /**
@@ -49,9 +54,34 @@ public abstract class UserAuth implements AuthProvider {
      */
     protected Principal createPrincipal(String username) {
         UserInfo user = this.userServiceAdapter.findByLogin(username);
-
         if (user == null) {
             throw new BadRequestException(this.i18nProvider.get().tr("User not found: {0}", username));
+        }
+
+        if (!user.isSuperAdmin()) {
+            if (user.getPrimaryOwner() == null) {
+                throw new BadRequestException(this.i18nProvider.get().tr("User {0} has no primary owner", username));
+            }
+    
+            Owner owner = this.ownerCurator.getByKey(user.getPrimaryOwner().getKey());
+            if (owner == null) {
+                /**
+                 * The owner does not exist in Candlepin, and so we replicate how the adapters will create a UserInfo with
+                 * the following characteristics:
+                 *
+                 * - not super admin
+                 * - no roles
+                 */
+                User newUser = new User();
+                newUser.setUsername(user.getUsername());
+                newUser.setHashedPassword(user.getHashedPassword());
+                newUser.setCreated(user.getCreated());
+                newUser.setUpdated(user.getCreated());
+                newUser.setSuperAdmin(false);
+                newUser.clearRoles();
+    
+                user = newUser;
+            }
         }
 
         // TODO: This creates a lot of object churn. We should probably update this later in a way

@@ -15,6 +15,7 @@
 package org.candlepin.auth;
 
 import org.candlepin.auth.permissions.PermissionFactory;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.resteasy.filter.AuthUtil;
 import org.candlepin.service.UserServiceAdapter;
 
@@ -38,9 +39,9 @@ public class TrustedUserAuth extends UserAuth {
 
     @Inject
     TrustedUserAuth(UserServiceAdapter userServiceAdaper, Provider<I18n> i18n,
-        PermissionFactory permissionFactory) {
+        PermissionFactory permissionFactory, OwnerCurator ownerCurator) {
 
-        super(userServiceAdaper, i18n, permissionFactory);
+        super(userServiceAdaper, i18n, permissionFactory, ownerCurator);
     }
 
     public Principal getPrincipal(HttpRequest httpRequest) {
