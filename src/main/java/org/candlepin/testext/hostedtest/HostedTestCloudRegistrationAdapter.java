@@ -56,6 +56,11 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
     private static final String INSTANCE_ID_FIELD_NAME = "instanceId";
     private static final String OFFERING_ID_FIELD_NAME = "cloudOfferingId";
     private static final String OFFERING_TYPE_1P = "1P";
+    private static final String OFFERING_TYPE_GOLD = "gold";
+    private static final String OFFERING_TYPE_CUSTOM = "custom";
+    private static final Set<String> REGISTRATION_ONLY_OFFER_TYPES =
+        Set.of(OFFERING_TYPE_1P, OFFERING_TYPE_GOLD, OFFERING_TYPE_CUSTOM);
+
     private static final ObjectMapper OBJ_MAPPER = ObjectMapperFactory.getObjectMapper();
 
     private final HostedTestDataStore datastore;
@@ -134,12 +139,15 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
         }
 
         String offerType = this.datastore.getOfferTypeForOfferId(offerId);
-        if (OFFERING_TYPE_1P.equals(offerType)) {
+        boolean isRegistrationOnly = offerType == null ?
+            false :
+            REGISTRATION_ONLY_OFFER_TYPES.contains(offerType);
+        String ownerKey = this.datastore.getOwnerKeyForCloudAccountId(accountId);
+        if (ownerKey == null && isRegistrationOnly) {
             throw new CloudRegistrationNotSupportedForOfferingException(
                 "cloud registration v2 is not supported for 1P offerings");
         }
 
-        String ownerKey = this.datastore.getOwnerKeyForCloudAccountId(accountId);
         Set<String> productIds = this.datastore.getProductIdsForOfferId(offerId);
         boolean isEntitled = isOwnerEntitledToProducts(ownerKey, productIds);
 
@@ -175,6 +183,11 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
             }
 
             @Override
+            public boolean isRegistrationOnly() {
+                return isRegistrationOnly;
+            }
+
+            @Override
             public boolean isEntitled() {
                 return isEntitled;
             }
@@ -186,14 +199,10 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
      */
     @Override
     public CloudAccountData setupCloudAccountOrg(String cloudAccountID, String cloudOfferingID,
-        String cloudProviderShortName, String ownerKey)
+        String cloudProviderShortName)
         throws CouldNotAcquireCloudAccountLockException, CouldNotEntitleOrganizationException {
 
-        if (ownerKey == null) {
-            ownerKey = Util.generateUUID();
-        }
-
-        return new CloudAccountData(ownerKey, false);
+        return new CloudAccountData(Util.generateUUID(), false);
     }
 
     /**

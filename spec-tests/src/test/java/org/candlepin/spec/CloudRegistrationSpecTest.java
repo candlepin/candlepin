@@ -66,6 +66,7 @@ import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.OffsetDateTime;
 import java.util.Base64;
@@ -117,7 +118,6 @@ class CloudRegistrationSpecTest {
     @ParameterizedTest
     @MethodSource("tokenVariation")
     public void shouldFailCloudRegistration(String owner, String type, String signature) {
-        ApiClient adminClient = ApiClients.admin();
         CloudRegistrationClient cloudRegistration = ApiClients.noAuth().cloudAuthorization();
         assertBadRequest(() -> cloudRegistration.cloudAuthorize(owner, type, signature));
     }
@@ -424,18 +424,42 @@ class CloudRegistrationSpecTest {
             .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", ""));
     }
 
-    @Test
-    public void shouldThrowNotImplementedExceptionWith1POfferingForV2Auth() {
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @ValueSource(strings = {"1P", "gold", "custom"})
+    public void shouldReceiveStandardTokenWithRegistrationOnlyOfferTypesForV2Auth(String offerType) {
         ApiClient adminClient = ApiClients.admin();
         String accountId = StringUtil.random("cloud-account-id-");
-        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        adminClient.hosted().createOwner(owner);
+        adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
+
+        ProductDTO product = adminClient.hosted().createProduct(Products.random());
+        adminClient.hosted().associateProductIdsToCloudOffer(offerId, offerType, List.of(product.getId()));
+
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(accountId, "cloud-instance-id", offerId, "test-type", "");
+
+        assertTokenType(ApiClient.MAPPER, result.getToken(), STANDARD_TOKEN_TYPE);
+        assertThat(result)
+            .isNotNull()
+            .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
+            .returns(null, CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
+            .returns(STANDARD_TOKEN_TYPE, CloudAuthenticationResultDTO::getTokenType);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @ValueSource(strings = {"1P", "gold", "custom"})
+    public void shouldNotImplementedWithRegOnlyOfferTypesAndNoOwnerForV2Auth(String offerType) {
+        ApiClient adminClient = ApiClients.admin();
         String offerId = StringUtil.random("cloud-offer-");
 
         ProductDTO product = adminClient.hosted().createProduct(Products.random());
-        adminClient.hosted().associateProductIdsToCloudOffer(offerId, "1P", List.of(product.getId()));
+        adminClient.hosted().associateProductIdsToCloudOffer(offerId, offerType, List.of(product.getId()));
 
-        assertNotImplemented(() -> ApiClients.noAuth().cloudAuthorization()
-            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", ""));
+        assertNotImplemented(() ->  ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2("account-id", "cloud-instance-id", offerId, "test-type", ""));
     }
 
     @Test
@@ -597,7 +621,6 @@ class CloudRegistrationSpecTest {
     @Test
     public void shouldDeleteAnonymousConsumersForAccount() {
         ApiClient adminClient = ApiClients.admin();
-        OwnerDTO ownerDTO = Owners.random();
         ProductDTO productDTO = Products.random();
 
         String accountId = StringUtil.random("cloud-account-id-");
@@ -624,7 +647,6 @@ class CloudRegistrationSpecTest {
     @Test
     public void cannotDeleteAnonymousConsumersForAccountNotSuperAdmin() {
         ApiClient adminClient = ApiClients.admin();
-        OwnerDTO ownerDTO = Owners.random();
         ProductDTO productDTO = Products.random();
         String username = StringUtil.random("Joe");
         String password = StringUtil.random("password");
@@ -729,7 +751,6 @@ class CloudRegistrationSpecTest {
 
     @Test
     public void shouldCreateOwnerWhenNoOwnerExistsForCloudAccountDuringV2Auth() {
-
         ApiClient adminClient = ApiClients.admin();
         ProductDTO productDTO = Products.random();
 
