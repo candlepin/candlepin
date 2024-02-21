@@ -155,7 +155,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(c2);
         consumerCurator.create(c3);
 
-        List<String> result = ownerCurator.getConsumerUuids(owner).list();
+        List<String> result = ownerCurator.getConsumerUuids(owner);
         assertEquals(2, result.size());
         assertTrue(result.contains(c1.getUuid()));
         assertTrue(result.contains(c2.getUuid()));

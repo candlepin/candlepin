@@ -1633,7 +1633,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public List<ConsumerDTOArrayElement> getHypervisors(
+    public Stream<ConsumerDTOArrayElement> getHypervisors(
         @Verify(Owner.class) String ownerKey, List<String> hypervisorIds) {
 
         Owner owner = ownerCurator.getByKey(ownerKey);
@@ -1641,8 +1641,7 @@ public class OwnerResource implements OwnerApi {
             this.consumerCurator.getHypervisorsForOwner(owner.getId()) :
             this.consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getId());
         return hypervisors.stream()
-            .map(translator.getStreamMapper(Consumer.class, ConsumerDTOArrayElement.class))
-            .toList();
+            .map(this.translator.getStreamMapper(Consumer.class, ConsumerDTOArrayElement.class));
     }
 
     @Override
