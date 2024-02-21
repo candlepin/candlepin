@@ -106,7 +106,7 @@ public class HealEntireOrgJob implements AsyncJob {
                 .onCommit(status -> eventSink.sendEvents())
                 .onRollback(status -> eventSink.rollback());
 
-            for (String uuid : ownerCurator.getConsumerUuids(owner).list()) {
+            for (String uuid : ownerCurator.getConsumerUuids(owner)) {
                 // Do not send in product IDs.  CandlepinPoolManager will take care
                 // of looking up the non or partially compliant products to bind.
                 try {

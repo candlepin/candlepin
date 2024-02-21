@@ -23,8 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +35,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -57,8 +54,6 @@ import javax.persistence.criteria.Root;
 @Singleton
 public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
-    @Inject
-    private CandlepinQueryFactory cpQueryFactory;
     private static final Logger log = LoggerFactory.getLogger(OwnerCurator.class);
 
     public OwnerCurator() {
@@ -221,27 +216,31 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     }
 
     public List<String> getConsumerIds(Owner owner) {
-        return this.getConsumerIds(owner.getId()).list();
+        return this.getConsumerIds(owner.getId());
     }
 
-    public CandlepinQuery<String> getConsumerIds(String ownerId) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
-            .add(Restrictions.eq("ownerId", ownerId))
-            .setProjection(Property.forName("id"));
+    public List<String> getConsumerIds(String ownerId) {
+        String jpql = "SELECT c.id FROM Consumer c " +
+            "WHERE c.ownerId=:ownerId ";
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        return entityManager.get()
+            .createQuery(jpql, String.class)
+            .setParameter("ownerId", ownerId)
+            .getResultList();
     }
 
-    public CandlepinQuery<String> getConsumerUuids(Owner owner) {
+    public List<String> getConsumerUuids(Owner owner) {
         return this.getConsumerUuids(owner.getId());
     }
 
-    public CandlepinQuery<String> getConsumerUuids(String ownerId) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
-            .add(Restrictions.eq("ownerId", ownerId))
-            .setProjection(Property.forName("uuid"));
+    public List<String> getConsumerUuids(String ownerId) {
+        String jpql = "SELECT c.uuid FROM Consumer c " +
+            "WHERE c.ownerId=:ownerId ";
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        return entityManager.get()
+            .createQuery(jpql, String.class)
+            .setParameter("ownerId", ownerId)
+            .getResultList();
     }
 
     @SuppressWarnings("checkstyle:indentation")
