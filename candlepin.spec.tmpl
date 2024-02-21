@@ -23,7 +23,7 @@
 
 Name: candlepin
 Version: 4.4.4
-Release: 1%{?dist}
+Release: 2%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -234,6 +234,12 @@ fi
 
 #raw
 %changelog
+* Wed Feb 21 2024 Nikos Moumoulidis <nmoumoul@redhat.com> 4.4.4-2
+- CANDLEPIN-801: Added registration only to CloudAuthenticationResult
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-794: Remove 'ownerKey' field from
+  CloudRegistrationAdapter.setupCloudAccountOrg (ojanus@redhat.com)
+
 * Wed Jan 31 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.4-1
 - Bump artemis from 2.31.2 to 2.32.0
   (49699333+dependabot[bot]@users.noreply.github.com)
