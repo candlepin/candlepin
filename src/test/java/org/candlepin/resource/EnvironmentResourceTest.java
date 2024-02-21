@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -40,7 +39,6 @@ import org.candlepin.dto.api.v1.EnvironmentTranslator;
 import org.candlepin.dto.api.v1.NestedOwnerTranslator;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -68,7 +66,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -172,9 +169,8 @@ class EnvironmentResourceTest {
     @Test
     void canDeleteEmptyEnvironment() {
         when(this.envCurator.get(anyString())).thenReturn(this.environment1);
-        List<Consumer> mockedQuery = mockedQueryOf().list();
         when(this.envCurator.getEnvironmentConsumers(this.environment1))
-            .thenReturn(mockedQuery);
+            .thenReturn(List.of());
 
         this.environmentResource.deleteEnvironment(BAD_ID);
 
@@ -193,9 +189,8 @@ class EnvironmentResourceTest {
         consumer2.setIdCert(null);
         consumer2.setContentAccessCert(null);
         when(this.envCurator.get(anyString())).thenReturn(this.environment1);
-        List<Consumer> mockedQuery = mockedQueryOf(consumer1, consumer2).list();
         when(this.envCurator.getEnvironmentConsumers(this.environment1))
-            .thenReturn(mockedQuery);
+            .thenReturn(List.of(consumer1, consumer2));
 
         this.environmentResource.deleteEnvironment(ENV_ID_1);
 
@@ -214,9 +209,8 @@ class EnvironmentResourceTest {
         consumer2.setContentAccessCert(null);
         consumer2.addEnvironment(environment2);
         when(this.envCurator.get(anyString())).thenReturn(this.environment1);
-        List<Consumer> mockedQuery = mockedQueryOf(consumer1, consumer2).list();
         when(this.envCurator.getEnvironmentConsumers(this.environment1))
-            .thenReturn(mockedQuery);
+            .thenReturn(List.of(consumer1, consumer2));
 
         this.environmentResource.deleteEnvironment(ENV_ID_1);
 
@@ -268,13 +262,6 @@ class EnvironmentResourceTest {
         assertEquals("env1", dto.getEnvironments().get(0).getId());
         assertEquals("env3", dto.getEnvironments().get(1).getId());
         assertEquals("env2", dto.getEnvironments().get(2).getId());
-    }
-
-    @SuppressWarnings("unchecked")
-    private CandlepinQuery<Consumer> mockedQueryOf(Consumer... items) {
-        CandlepinQuery<Consumer> candlepinQuery = mock(CandlepinQuery.class);
-        when(candlepinQuery.list()).thenReturn(Arrays.asList(items));
-        return candlepinQuery;
     }
 
     private Environment createEnvironment(Owner owner, String id) {
