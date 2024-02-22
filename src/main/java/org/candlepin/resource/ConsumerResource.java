@@ -19,6 +19,7 @@ import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.EntitleByProductsJob;
 import org.candlepin.async.tasks.EntitlerJob;
+import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -32,6 +33,7 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SecurityHole;
 import org.candlepin.auth.SubResource;
+import org.candlepin.auth.TrustedUserPrincipal;
 import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.Verify;
@@ -139,6 +141,7 @@ import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
@@ -245,6 +248,7 @@ public class ConsumerResource implements ConsumerApi {
     private final EntitlementCertificateGenerator entCertGenerator;
     private final AnonymousCloudConsumerCurator anonymousConsumerCurator;
     private final AnonymousContentAccessCertificateCurator anonymousCertCurator;
+    private final OwnerServiceAdapter ownerService;
 
 
     private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
@@ -296,7 +300,8 @@ public class ConsumerResource implements ConsumerApi {
         CloudRegistrationAdapter cloudAdapter,
         PoolCurator poolCurator,
         AnonymousCloudConsumerCurator anonymousConsumerCurator,
-        AnonymousContentAccessCertificateCurator anonymousCertCurator) {
+        AnonymousContentAccessCertificateCurator anonymousCertCurator,
+        OwnerServiceAdapter ownerService) {
 
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
@@ -339,6 +344,7 @@ public class ConsumerResource implements ConsumerApi {
         this.poolService = Objects.requireNonNull(poolService);
         this.anonymousConsumerCurator = Objects.requireNonNull(anonymousConsumerCurator);
         this.anonymousCertCurator = Objects.requireNonNull(anonymousCertCurator);
+        this.ownerService = Objects.requireNonNull(ownerService);
 
         this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(
             entitlementCurator, environmentContentCurator);
@@ -1425,7 +1431,7 @@ public class ConsumerResource implements ConsumerApi {
             }
         }
 
-        createOwnerIfNeeded(principal);
+        createOwnerIfNeeded(principal, ownerKey);
 
         Owner origOwner = ownerCurator.getByKey(ownerKey);
         if (origOwner == null) {
@@ -1492,25 +1498,50 @@ public class ConsumerResource implements ConsumerApi {
      */
     // TODO: Re-evaluate if this is still an issue with the new membership
     // scheme!
-    private void createOwnerIfNeeded(Principal principal) {
-        if (!(principal instanceof UserPrincipal)) {
-            // If this isn't a user principal we can't check for owners that may need to be created.
-            return;
+    private void createOwnerIfNeeded(Principal principal, String ownerKey) {
+        if (principal instanceof TrustedUserPrincipal &&
+            !this.ownerCurator.existsByKey(ownerKey) &&
+            this.ownerService.isOwnerKeyValidForCreation(ownerKey)) {
+
+            log.info("Creating new owner {} for trusted user principal", ownerKey);
+
+            Owner ownerToCreate = new Owner()
+                .setKey(ownerKey)
+                .setDisplayName(ownerKey)
+                .setContentAccessModeList(ContentAccessManager.getListDefaultDatabaseValue())
+                .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+            Owner createdOwner = this.ownerCurator.create(ownerToCreate);
+
+            refreshPools(createdOwner);
         }
+        else if (principal instanceof UserPrincipal userPrincipal) {
+            for (Owner owner : userPrincipal.getOwners()) {
+                Owner existingOwner = ownerCurator.getByKey(owner.getKey());
 
-        for (Owner owner : ((UserPrincipal) principal).getOwners()) {
-            Owner existingOwner = ownerCurator.getByKey(owner.getKey());
+                if (existingOwner == null) {
+                    log.info("Principal carries permission for owner that does not exist.");
+                    log.info("Creating new owner: {}", owner.getKey());
 
-            if (existingOwner == null) {
-                log.info("Principal carries permission for owner that does not exist.");
-                log.info("Creating new owner: {}", owner.getKey());
+                    existingOwner = ownerCurator.create(owner);
 
-                existingOwner = ownerCurator.create(owner);
-
-                this.refresherFactory.getRefresher(this.subAdapter, this.prodAdapter)
-                    .add(existingOwner)
-                    .run();
+                    this.refresherFactory.getRefresher(this.subAdapter, this.prodAdapter)
+                        .add(existingOwner)
+                        .run();
+                }
             }
+        }
+    }
+
+    private void refreshPools(Owner createdOwner) {
+        RefreshPoolsJob.RefreshPoolsJobConfig refreshPoolsJob = RefreshPoolsJob.createJobConfig()
+            .setOwner(createdOwner)
+            .setLazyRegeneration(true);
+        try {
+            this.jobManager.queueJob(refreshPoolsJob);
+        }
+        catch (JobException e) {
+            throw new IseException(this.i18n.tr(
+                "Error occurred while queueing job: {0}", refreshPoolsJob.getJobKey()), e);
         }
     }
 

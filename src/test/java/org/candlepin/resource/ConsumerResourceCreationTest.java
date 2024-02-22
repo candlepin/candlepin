@@ -14,9 +14,18 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventFactory;
@@ -86,6 +95,7 @@ import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
@@ -207,6 +217,8 @@ public class ConsumerResourceCreationTest {
     private AnonymousCloudConsumerCurator anonymousConsumerCurator;
     @Mock
     private AnonymousContentAccessCertificateCurator anonymousCertCurator;
+    @Mock
+    private OwnerServiceAdapter ownerService;
     protected ModelTranslator modelTranslator;
 
     private I18n i18n;
@@ -271,7 +283,8 @@ public class ConsumerResourceCreationTest {
             this.cloudRegistrationAdapter,
             this.poolCurator,
             this.anonymousConsumerCurator,
-            this.anonymousCertCurator
+            this.anonymousCertCurator,
+            this.ownerService
         );
 
         this.system = this.initConsumerType();

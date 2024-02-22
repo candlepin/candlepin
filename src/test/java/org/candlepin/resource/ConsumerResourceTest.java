@@ -47,6 +47,7 @@ import org.candlepin.auth.AnonymousCloudConsumerPrincipal;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
+import org.candlepin.auth.TrustedUserPrincipal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.TestConfig;
@@ -122,6 +123,7 @@ import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
@@ -167,6 +169,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -276,6 +279,8 @@ public class ConsumerResourceTest {
     private AnonymousCloudConsumerCurator anonymousConsumerCurator;
     @Mock
     private AnonymousContentAccessCertificateCurator anonymousCertCurator;
+    @Mock
+    private OwnerServiceAdapter ownerService;
 
     private ModelTranslator translator;
     private ConsumerResource consumerResource;
@@ -352,7 +357,8 @@ public class ConsumerResourceTest {
             this.cloudRegistrationAdapter,
             this.poolCurator,
             this.anonymousConsumerCurator,
-            this.anonymousCertCurator
+            this.anonymousCertCurator,
+            this.ownerService
         );
     }
 
@@ -559,7 +565,8 @@ public class ConsumerResourceTest {
             this.cloudRegistrationAdapter,
             this.poolCurator,
             this.anonymousConsumerCurator,
-            this.anonymousCertCurator
+            this.anonymousCertCurator,
+            this.ownerService
         );
 
         // Fixme throw custom exception from generator instead of generic RuntimeException
@@ -1100,6 +1107,25 @@ public class ConsumerResourceTest {
         when(up.getPrimaryOwner()).thenReturn(owner2);
         when(up.canAccess(eq(owner2), any(SubResource.class), any(Access.class))).thenReturn(true);
         assertEquals(owner2, consumerResource.setupOwner(up, null));
+    }
+
+    @Test
+    public void testTrustedUserShouldCreateMissingOwner() {
+        TrustedUserPrincipal up = mock(TrustedUserPrincipal.class);
+        String ownerKey = "new_owner";
+        Map<String, Owner> owners = new HashMap<>();
+        when(ownerCurator.create(any())).thenAnswer(invocation -> {
+            Object[] args = invocation.getArguments();
+            Owner owner = (Owner) args[0];
+            owners.put(owner.getKey(), owner);
+            return owner;
+        });
+        when(ownerService.isOwnerKeyValidForCreation(ownerKey)).thenReturn(true);
+        when(ownerCurator.getByKey(ownerKey)).thenAnswer(invocation -> owners.get(ownerKey));
+
+        Owner newOwner = this.consumerResource.setupOwner(up, ownerKey);
+
+        assertEquals(ownerKey, newOwner.getKey());
     }
 
     @Test

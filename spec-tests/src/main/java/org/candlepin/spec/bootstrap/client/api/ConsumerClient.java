@@ -74,7 +74,8 @@ public class ConsumerClient extends ConsumerApi {
     }
 
     public ConsumerDTO createConsumer(ConsumerDTO consumer) {
-        return super.createConsumer(consumer, null, consumer.getOwner().getKey(), null, true);
+        String ownerKey = consumer.getOwner() != null ? consumer.getOwner().getKey() : null;
+        return super.createConsumer(consumer, null, ownerKey, null, true);
     }
 
     public ConsumerDTO createPersonConsumer(ConsumerDTO consumer, String username) {

@@ -84,6 +84,7 @@ import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
@@ -189,6 +190,8 @@ public class AnonymousConsumerResourceCreationTest {
     private AnonymousCloudConsumerCurator anonymousConsumerCurator;
     @Mock
     private AnonymousContentAccessCertificateCurator anonymousCertCurator;
+    @Mock
+    private OwnerServiceAdapter ownerService;
 
     protected ModelTranslator modelTranslator;
 
@@ -223,7 +226,7 @@ public class AnonymousConsumerResourceCreationTest {
             this.dtoValidator, this.principalProvider, this.contentOverrideValidator,
             this.consumerContentOverrideCurator, this.entCertGenerator, this.poolService,
             this.environmentContentCurator, this.cloudRegistrationAdapter, this.poolCurator,
-            this.anonymousConsumerCurator, this.anonymousCertCurator
+            this.anonymousConsumerCurator, this.anonymousCertCurator, ownerService
         );
 
         this.system = this.initConsumerType();

@@ -18,12 +18,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 
+import org.candlepin.dto.api.client.v1.ConsumerDTO;
+import org.candlepin.dto.api.client.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
 import org.candlepin.resource.client.v1.OwnerApi;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
+import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
@@ -72,6 +75,24 @@ class TrustedUserAuthSpecTest {
         OwnerApi userClient = ApiClients.trustedUser(user.getUsername()).owners();
 
         assertForbidden(() -> userClient.createOwner(Owners.random()));
+    }
+
+    @Test
+    void shouldCreateMissingOwner() {
+        UserDTO user = UserUtil.createUser(client, owner);
+        String username = user.getUsername();
+        OwnerDTO owner = Owners.random();
+        String ownerKey = owner.getKey();
+        ApiClient client = ApiClients.trustedUser(username, false);
+
+        ConsumerDTO consumer = client.consumers()
+            .createConsumer(Consumers.random(owner), username, ownerKey, null, true);
+
+        assertThat(consumer)
+            .isNotNull()
+            .extracting(ConsumerDTO::getOwner)
+            .extracting(NestedOwnerDTO::getKey)
+            .isEqualTo(ownerKey);
     }
 
 }
