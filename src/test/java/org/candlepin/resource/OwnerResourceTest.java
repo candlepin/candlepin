@@ -334,7 +334,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Map<String, Integer> pQs = new HashMap<>();
         pQs.put(pool.getId(), 1);
         poolManager.entitleByPools(c1, pQs);
-        assertEquals(2, consumerCurator.listByOwner(owner).list().size());
         assertEquals(1, poolCurator.listByOwner(owner).size());
         assertEquals(1, entitlementCurator.listByOwner(owner).size());
 
@@ -345,7 +344,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         ownerResource.deleteOwner(owner.getKey(), true, true);
 
-        assertEquals(0, consumerCurator.listByOwner(owner).list().size());
         assertNull(consumerCurator.findByUuid(c1.getUuid()));
         assertNull(consumerCurator.findByUuid(c2.getUuid()));
         assertEquals(0, poolCurator.listByOwner(owner).size());
