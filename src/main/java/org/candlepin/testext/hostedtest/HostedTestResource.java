@@ -33,7 +33,9 @@ import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,6 +55,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
@@ -640,33 +644,37 @@ public class HostedTestResource {
         return this.removeContentFromProduct(productId, Collections.singletonList(contentId));
     }
 
-    /**
-     * Processes the attached file, deserializing it to the specified type, decompressing it if
-     * necessary.
-     *
-     * @throws IOException
-     *     if an exception occurs while deserializing the attached file
-     *
-     * @return The processed attached file, deserialized into the specified type
-     */
-    private <T> T processAttachedFile(AttachedFile attached, TypeReference<T> typeref) {
+    private InputStream getAttachedFileInputStream(AttachedFile attached) throws IOException {
         boolean archive = ARCHIVE_FILENAME_REGEX.matcher(attached.getFilename("")).find();
 
-        try {
-            InputStream istream = null;
+        InputStream istream = attached.getInputStream();
+        return archive ? new GZIPInputStream(istream) : istream;
+    }
 
-            try {
-                istream = attached.getInputStream();
-                if (archive) {
-                    istream = new GZIPInputStream(istream);
-                }
+    private <T> void processAttachedFile(AttachedFile attached, TypeReference<T> typeref,
+        Consumer<T> consumer) {
 
-                return this.mapper.readValue(istream, typeref);
-            }
-            finally {
-                if (istream != null) {
-                    istream.close();
-                }
+        try (InputStream istream = this.getAttachedFileInputStream(attached)) {
+            JsonParser parser = this.mapper.createParser(istream);
+
+            switch (parser.nextToken()) {
+                case START_ARRAY:
+                    // iterate through objects in the array until we hit END_ARRAY
+                    while (parser.nextToken() != JsonToken.END_ARRAY) {
+                        T entity = parser.readValueAs(typeref);
+                        consumer.accept(entity);
+                    }
+                    break;
+
+                case START_OBJECT:
+                    // read entity object straight up
+                    T entity = parser.readValueAs(typeref);
+                    consumer.accept(entity);
+                    break;
+
+                default:
+                    throw new BadRequestException("Unable to deserialize attached file: " +
+                        "Malformed JSON received");
             }
         }
         catch (IOException e) {
@@ -682,32 +690,31 @@ public class HostedTestResource {
     public String importSubscriptions(MultipartInput input) {
         AttachedFile attached = AttachedFile.getAttachedFile(input);
 
-        TypeReference<List<SubscriptionDTO>> typeref = new TypeReference<List<SubscriptionDTO>>() {};
-        List<SubscriptionDTO> subscriptions = this.processAttachedFile(attached, typeref);
+        TypeReference<SubscriptionDTO> typeref = new TypeReference<SubscriptionDTO>() {};
 
-        int created = 0;
-        int updated = 0;
+        AtomicInteger created = new AtomicInteger();
+        AtomicInteger updated = new AtomicInteger();
 
-        for (SubscriptionDTO subscription : subscriptions) {
+        this.processAttachedFile(attached, typeref, subscription -> {
             if (subscription == null) {
                 // Silently ignore null entries
-                continue;
+                return;
             }
 
             // Impl note: if the subscription lacks an ID, this will return null and we'll create
             // it, generating an ID for the subscription in the process.
             if (this.datastore.getSubscription(subscription.getId()) == null) {
                 this.createSubscription(true, subscription);
-                ++created;
+                created.incrementAndGet();
             }
             else {
                 this.updateSubscription(subscription.getId(), true, subscription);
-                ++updated;
+                updated.incrementAndGet();
             }
-        }
+        });
 
         return String.format("%d subscriptions imported (%d created; %d updated)\n",
-            created + updated, created, updated);
+            created.get() + updated.get(), created.get(), updated.get());
     }
 
     @POST
@@ -717,16 +724,15 @@ public class HostedTestResource {
     public String importProducts(MultipartInput input) {
         AttachedFile attached = AttachedFile.getAttachedFile(input);
 
-        TypeReference<List<ProductDTO>> typeref = new TypeReference<List<ProductDTO>>() {};
-        List<ProductDTO> products = this.processAttachedFile(attached, typeref);
+        TypeReference<ProductDTO> typeref = new TypeReference<ProductDTO>() {};
 
-        int created = 0;
-        int updated = 0;
+        AtomicInteger created = new AtomicInteger();
+        AtomicInteger updated = new AtomicInteger();
 
-        for (ProductDTO product : products) {
+        this.processAttachedFile(attached, typeref, product -> {
             if (product == null) {
                 // Silently ignore null entries
-                continue;
+                return;
             }
 
             if (product.getId() == null) {
@@ -735,16 +741,16 @@ public class HostedTestResource {
 
             if (this.datastore.getProduct(product.getId()) == null) {
                 this.createProduct(true, product);
-                ++created;
+                created.incrementAndGet();
             }
             else {
                 this.updateProduct(product.getId(), true, product);
-                ++updated;
+                updated.incrementAndGet();
             }
-        }
+        });
 
         return String.format("%d products imported (%d created; %d updated)\n",
-            created + updated, created, updated);
+            created.get() + updated.get(), created.get(), updated.get());
     }
 
     @POST
