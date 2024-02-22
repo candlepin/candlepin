@@ -14,8 +14,6 @@
  */
 package org.candlepin.dto;
 
-import org.candlepin.model.CandlepinQuery;
-
 import java.util.function.Function;
 
 
@@ -188,29 +186,6 @@ public interface ModelTranslator {
      *  a mapping function to convert instances of the input class to instances of the output class
      */
     <I, O> Function<I, O> getStreamMapper(Class<I> inputClass, Class<O> outputClass);
-
-    /**
-     * Applies a translate to the specified query that uses this ModelTranslator to translate the
-     * entities fetched by the query to DTOs. If this factory does not have a registered translator
-     * which can process the query's entities and their nested objects, this method will complete
-     * as normal, but the CandlepinQuery will throw a DTOException when it fetches any results.
-     *
-     * @param query
-     *  The CandlepinQuery to translate
-     *
-     * @param outputClass
-     *  The desired class of the output translated object
-     *
-     * @throws IllegalArgumentException
-     *  if query is null
-     *
-     * #throws TranslationException
-     *  if a translator cannot be found for the source object or any of its nested objects
-     *
-     * @return
-     *  A translated CandlepinQuery using this ModelTranslator for its element transformation
-     */
-    <I, O> CandlepinQuery<O> translateQuery(CandlepinQuery<I> query, Class<O> outputClass);
 
     // /**
     //  * Populates the given destination object with data from the source object, using the specified
