@@ -195,7 +195,7 @@ public class ApiClientFactory {
 
     private SSLContext getSslContext(TrustManager[] trustAllCerts) {
         try {
-            final SSLContext sslContext = SSLContext.getInstance("SSL");
+            final SSLContext sslContext = SSLContext.getInstance("TLSv1.3");
             sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
             return sslContext;
         }
