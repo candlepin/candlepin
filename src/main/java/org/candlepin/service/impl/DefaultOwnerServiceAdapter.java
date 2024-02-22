@@ -14,14 +14,7 @@
  */
 package org.candlepin.service.impl;
 
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.OwnerServiceAdapter;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xnap.commons.i18n.I18n;
-
-import javax.inject.Inject;
 
 
 
@@ -29,16 +22,6 @@ import javax.inject.Inject;
  * default SubscriptionAdapter implementation
  */
 public class DefaultOwnerServiceAdapter implements OwnerServiceAdapter {
-    private static Logger log = LoggerFactory.getLogger(DefaultOwnerServiceAdapter.class);
-
-    private OwnerCurator ownerCurator;
-    private I18n i18n;
-
-    @Inject
-    public DefaultOwnerServiceAdapter(OwnerCurator ownerCurator, I18n i18n) {
-        this.ownerCurator = ownerCurator;
-        this.i18n = i18n;
-    }
 
     /**
      * {@inheritDoc}

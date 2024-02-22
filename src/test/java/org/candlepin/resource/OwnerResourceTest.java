@@ -41,7 +41,6 @@ import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.ImportJob;
-import org.candlepin.audit.EventAdapter;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
@@ -189,7 +188,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     private EventSink mockEventSink;
     private EventFactory mockEventFactory;
-    private EventAdapter mockEventAdapter;
 
     private ManifestManager mockManifestManager;
     private OwnerManager ownerManager;
@@ -200,13 +198,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private ServiceLevelValidator serviceLevelValidator;
     private ConsumerTypeValidator consumerTypeValidator;
 
-    private JobManager jobManager;
     private Owner owner;
     private Product product;
-    private Set<String> typeLabels;
-    private List<String> skus;
-    private List<String> subscriptionIds;
-    private List<String> contracts;
 
     @BeforeEach
     public void setUp() {
@@ -220,17 +213,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         contentAccessManager = this.injector.getInstance(ContentAccessManager.class);
         pagingUtilFactory = this.injector.getInstance(PagingUtilFactory.class);
 
-        this.jobManager = mock(JobManager.class);
-
         this.owner = this.ownerCurator.create(new Owner()
             .setKey(OWNER_NAME)
             .setDisplayName(OWNER_NAME));
 
         product = this.createProduct();
-        typeLabels = null;
-        skus = null;
-        subscriptionIds = null;
-        contracts = null;
 
         // Setup mocks and other such things...
         this.mockActivationKeyCurator = mock(ActivationKeyCurator.class);
@@ -249,7 +236,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         this.mockEventSink = mock(EventSink.class);
         this.mockEventFactory = mock(EventFactory.class);
-        this.mockEventAdapter = mock(EventAdapter.class);
 
         this.mockManifestManager = mock(ManifestManager.class);
         this.ownerManager = mock(OwnerManager.class);
@@ -258,7 +244,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.principalProvider = mock(PrincipalProvider.class);
         this.pagingUtilFactory = mock(PagingUtilFactory.class);
 
-        this.ownerServiceAdapter = new DefaultOwnerServiceAdapter(this.mockOwnerCurator, this.i18n);
+        this.ownerServiceAdapter = new DefaultOwnerServiceAdapter();
         this.serviceLevelValidator = new ServiceLevelValidator(this.i18n, this.mockPoolManager,
             this.mockOwnerCurator);
         this.consumerTypeValidator = new ConsumerTypeValidator(this.mockConsumerTypeCurator, this.i18n);

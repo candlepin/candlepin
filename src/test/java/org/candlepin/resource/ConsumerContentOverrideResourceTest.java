@@ -14,9 +14,12 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventFactory;
@@ -62,6 +65,7 @@ import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
@@ -169,6 +173,8 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     private AnonymousCloudConsumerCurator anonymousConsumerCurator;
     @Mock
     private AnonymousContentAccessCertificateCurator anonymousCertCurator;
+    @Mock
+    private OwnerServiceAdapter ownerService;
 
     private Consumer consumer;
     private ContentOverrideValidator contentOverrideValidator;
@@ -231,7 +237,8 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             this.cloudAdapter,
             this.poolCurator,
             this.anonymousConsumerCurator,
-            this.anonymousCertCurator
+            this.anonymousCertCurator,
+            this.ownerService
         );
     }
 
