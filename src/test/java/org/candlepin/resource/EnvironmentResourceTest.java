@@ -208,6 +208,7 @@ class EnvironmentResourceTest {
         consumer2.setIdCert(null);
         consumer2.setContentAccessCert(null);
         consumer2.addEnvironment(environment2);
+
         when(this.envCurator.get(anyString())).thenReturn(this.environment1);
         when(this.envCurator.getEnvironmentConsumers(this.environment1))
             .thenReturn(List.of(consumer1, consumer2));

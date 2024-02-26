@@ -148,7 +148,6 @@ import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.resteasy.converter.OffsetDateTimeParamConverterProvider;
 import org.candlepin.resteasy.filter.AuthenticationFilter;
 import org.candlepin.resteasy.filter.AuthorizationFeature;
-import org.candlepin.resteasy.filter.CandlepinQueryInterceptor;
 import org.candlepin.resteasy.filter.CandlepinSuspendModeFilter;
 import org.candlepin.resteasy.filter.ConsumerCheckInFilter;
 import org.candlepin.resteasy.filter.DynamicJsonFilter;
@@ -426,7 +425,6 @@ public class CandlepinModule extends AbstractModule {
     private void configureInterceptors() {
         bind(ConsumerCheckInFilter.class);
         bind(PageRequestFilter.class);
-        bind(CandlepinQueryInterceptor.class);
         bind(VersionResponseFilter.class);
         bind(LinkHeaderResponseFilter.class);
         bind(DynamicJsonFilter.class);
