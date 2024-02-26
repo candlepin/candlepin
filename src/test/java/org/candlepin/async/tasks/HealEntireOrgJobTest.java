@@ -34,7 +34,6 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.EmptyCandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.test.TestUtil;
@@ -47,7 +46,6 @@ import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -97,12 +95,8 @@ public class HealEntireOrgJobTest {
             }
         };
 
-        doReturn(new EmptyCandlepinQuery<String>() {
-            @Override
-            public List<String> list() {
-                return Arrays.asList(consumer1.getUuid(), consumer2.getUuid());
-            }
-        }).when(ownerCurator).getConsumerUuids(owner);
+        doReturn(List.of(consumer1.getUuid(), consumer2.getUuid()))
+            .when(ownerCurator).getConsumerUuids(owner);
 
         doAnswer(new Answer<Consumer>() {
             @Override
@@ -144,12 +138,8 @@ public class HealEntireOrgJobTest {
         Consumer consumer1 = TestUtil.createConsumer(owner);
         Consumer consumer2 = TestUtil.createConsumer(owner);
 
-        doReturn(new EmptyCandlepinQuery<String>() {
-            @Override
-            public List<String> list() {
-                return Arrays.asList(consumer1.getUuid(), consumer2.getUuid());
-            }
-        }).when(ownerCurator).getConsumerUuids(owner);
+        doReturn(List.of(consumer1.getUuid(), consumer2.getUuid()))
+            .when(ownerCurator).getConsumerUuids(owner);
 
         doAnswer(new Answer<Consumer>() {
 
