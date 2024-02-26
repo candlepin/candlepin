@@ -321,8 +321,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void listForConsumerOnDate() {
         List<Entitlement> ents = entitlementCurator
-            .listByConsumerAndDate(consumer, createDate(2015, 1, 1))
-            .list();
+            .listByConsumerAndDate(consumer, createDate(2015, 1, 1));
 
         assertEquals(2, ents.size());
     }
@@ -626,7 +625,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             createEntitlementCertificate("key", "certificate"));
         entitlementCurator.create(eNoAttributes);
 
-        List<Entitlement> results = entitlementCurator.findByPoolAttribute("x", "true").list();
+        List<Entitlement> results = entitlementCurator.findByPoolAttribute("x", "true");
 
         assertThat(results, Matchers.hasItems(e1, e2));
     }

@@ -38,7 +38,8 @@ public class LoggingConfiguratorTest {
         LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         Logger l = context.getLogger(LoggingConfiguratorTest.class);
         DevConfig config = TestConfig.custom(Map.of(
-            ConfigurationPrefixes.LOGGING_CONFIG_PREFIX + LoggingConfiguratorTest.class.getName(), "DEBUG"
+            ConfigurationPrefixes.LOGGING_CONFIG_PREFIX + LoggingConfiguratorTest.class.getName(), "DEBUG",
+            "log4j.logger.org.hibernate.SQL", "DEBUG"
         ));
         assertNotNull(l);
         assertNull(l.getLevel());
