@@ -31,9 +31,7 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
@@ -66,7 +64,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -210,18 +207,6 @@ public class RefreshWorkerTest {
         doReturn(cinfo).when(pcinfo).getContent();
 
         return pcinfo;
-    }
-
-    private CandlepinQuery mockCandlepinQuery(List elements) {
-        if (elements == null) {
-            elements = Collections.emptyList();
-        }
-
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(elements.iterator());
-        when(cqmock.list()).thenReturn(elements);
-
-        return cqmock;
     }
 
     private Exception buildConstraintViolationException() {

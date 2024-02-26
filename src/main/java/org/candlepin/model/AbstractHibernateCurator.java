@@ -88,7 +88,6 @@ import javax.persistence.criteria.Root;
 public abstract class AbstractHibernateCurator<E extends Persisted> {
     private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
-    @Inject protected CandlepinQueryFactory cpQueryFactory;
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected Provider<I18n> i18nProvider;
     @Inject protected Configuration config;
@@ -408,26 +407,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
         countQuery.select(criteriaBuilder.count(countQuery.from(this.entityType)));
         return this.entityManager.get().createQuery(countQuery).getSingleResult();
-    }
-
-    @SuppressWarnings("unchecked")
-    public Page<ResultIterator<E>> paginateResults(CandlepinQuery<E> query, PageRequest pageRequest) {
-        Page<ResultIterator<E>> page = new Page<>();
-
-        if (pageRequest != null) {
-            page.setMaxRecords(query.getRowCount());
-
-            query.addOrder(this.createPagingOrder(pageRequest));
-            if (pageRequest.isPaging()) {
-                query.setFirstResult((pageRequest.getPage() - 1) * pageRequest.getPerPage());
-                query.setMaxResults(pageRequest.getPerPage());
-            }
-
-            page.setPageRequest(pageRequest);
-        }
-
-        page.setPageData(query.iterate());
-        return page;
     }
 
     @SuppressWarnings("unchecked")
