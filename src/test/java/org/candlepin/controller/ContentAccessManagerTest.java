@@ -31,7 +31,6 @@ import static org.mockito.Mockito.when;
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -68,9 +67,7 @@ import org.mockito.stubbing.Answer;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.KeyPair;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -223,13 +220,8 @@ public class ContentAccessManagerTest {
             .setAttribute(Product.Attributes.VARIANT, "variant")
             .setAttribute(Product.Attributes.TYPE, "SVC")
             .setAttribute(Product.Attributes.ARCHITECTURE, "x86_64");
-
         product.addContent(content, false);
-        List<Product> productList = Arrays.asList(product);
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        doReturn(productList).when(cqmock).list();
-        doAnswer(iom -> productList.iterator()).when(cqmock).iterator();
         return product;
     }
 
