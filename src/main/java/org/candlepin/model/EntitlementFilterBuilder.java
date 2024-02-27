@@ -22,8 +22,7 @@ package org.candlepin.model;
 public class EntitlementFilterBuilder extends PoolFilterBuilder {
 
     public EntitlementFilterBuilder() {
-        // Requires that the parent criteria has an alias set on the Pool class.
-        super("p");
+        super();
     }
 
 }

@@ -287,7 +287,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         req.setSortBy("id");
 
         PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addIdFilter(pool2.getId());
+        filters.addIdFilters(pool2.getId());
 
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
             null, owner.getId(), (Collection<String>) null, null, activeDate, filters, req, false,
@@ -297,8 +297,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(pool2.getId(), results.get(0).getId());
 
         filters = new PoolFilterBuilder();
-        filters.addIdFilter(pool1.getId());
-        filters.addIdFilter(pool2.getId());
+        filters.addIdFilters(pool1.getId(), pool2.getId());
 
         page = poolCurator.listAvailableEntitlementPools(
             null, owner.getId(), (Collection<String>) null, null, activeDate, filters, req, false,

@@ -113,26 +113,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 predicates.add(inPredicate(cb, pool.get(Pool_.id), idFilters));
             }
 
-            Collection<String> productIdFilters = filterBuilder.getProductIdFilter();
-
-            if (productIdFilters != null && !productIdFilters.isEmpty()) {
-                SetJoin<Product, Product> providedProducts = product
-                    .join(Product_.providedProducts, JoinType.LEFT);
-
-                predicates.add(cb.or(
-                    inPredicate(cb, product.get(Product_.id), productIdFilters),
-                    inPredicate(cb, providedProducts.get(Product_.id), productIdFilters)));
-            }
-
-            // Subscription ID filter
-            String subscriptionIdFilter = filterBuilder.getSubscriptionIdFilter();
-
-            if (subscriptionIdFilter != null && !subscriptionIdFilter.isEmpty()) {
-                Join<Pool, SourceSubscription> sourceSubscription = pool.join(Pool_.sourceSubscription);
-                predicates.add(cb.equal(
-                    sourceSubscription.get(SourceSubscription_.subscriptionId), subscriptionIdFilter));
-            }
-
             // Matches stuff
             Collection<String> matchesFilters = filterBuilder.getMatchesFilters();
             if (matchesFilters != null && !matchesFilters.isEmpty()) {
