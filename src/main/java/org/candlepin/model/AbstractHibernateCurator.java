@@ -1390,11 +1390,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     /**
-     * Partitions the given map using the value returned by getInBlockSize() method as the partition
-     * size.
+     * Partitions the given map using the custom partition value
      *
      * @param map
      *  the map to partition
+     *
+     * @param blockSize
+     *  value for the partition size
      *
      * @throws IllegalArgumentException
      *  if the provided map is null
@@ -1402,12 +1404,11 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return
      *  An iterable collection of maps containing the partitioned data from the provided map
      */
-    protected <K, V> Iterable<Map<K, V>> partitionMap(Map<K, V> map) {
+    protected <K, V> Iterable<Map<K, V>> partitionMap(Map<K, V> map, int blockSize) {
         if (map == null) {
             throw new IllegalArgumentException("map is null");
         }
 
-        int blockSize = this.getInBlockSize();
         List<Map<K, V>> blockList = new LinkedList<>();
 
         if (map.size() > blockSize) {
