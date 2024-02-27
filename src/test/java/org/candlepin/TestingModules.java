@@ -60,7 +60,6 @@ import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
-import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.RulesObjectMapper;
@@ -331,7 +330,6 @@ public class TestingModules {
             // temporary
             bind(IdentityCertServiceAdapter.class).to(DefaultIdentityCertServiceAdapter.class);
             bind(PoolRules.class);
-            bind(CriteriaRules.class);
             bind(PoolManager.class);
             bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
 

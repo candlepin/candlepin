@@ -106,7 +106,6 @@ import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.policy.SystemPurposeComplianceRules;
-import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.RulesObjectMapper;
@@ -244,7 +243,6 @@ public class CandlepinModule extends AbstractModule {
         bind(OwnerManager.class);
         bind(PoolRules.class);
         bind(PoolOpProcessor.class);
-        bind(CriteriaRules.class);
         bind(Entitler.class);
         bind(NotSupportedExceptionMapper.class);
         bind(NotAuthorizedExceptionMapper.class);

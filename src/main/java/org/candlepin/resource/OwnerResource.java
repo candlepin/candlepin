@@ -1274,7 +1274,7 @@ public class OwnerResource implements OwnerApi {
         if (matches != null) {
             matches.stream()
                 .filter(elem -> elem != null && !elem.isEmpty())
-                .forEach(elem -> poolFilters.addMatchesFilter(elem));
+                .forEach(poolFilters::addMatchesFilter);
         }
 
         if (poolIds != null && !poolIds.isEmpty()) {

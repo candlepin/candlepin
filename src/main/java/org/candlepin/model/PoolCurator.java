@@ -392,8 +392,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             log.debug("    after: {}", after);
         }
 
-        boolean joinedProvided = false;
-
         Criteria criteria = this.createSecureCriteria("Pool")
             .createAlias("product", "Product")
             .setProjection(Projections.distinct(Projections.id()));
@@ -484,43 +482,34 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         // should go all-in, cut down on the massive argument list and simply take a single filter object.
         // -C
 
-        // Subscription ID filter
-        String value = subscriptionId == null && filters != null ?
-            filters.getSubscriptionIdFilter() :
-            subscriptionId;
-
-        if (value != null && !value.isEmpty()) {
+        if (subscriptionId != null && !subscriptionId.isEmpty()) {
             criteria.createAlias("Pool.sourceSubscription", "srcsub")
-                .add(Restrictions.eq("srcsub.subscriptionId", value));
+                .add(Restrictions.eq("srcsub.subscriptionId", subscriptionId));
         }
 
-        // Product ID filters
-        Collection<String> values = productIds == null && filters != null ?
-            filters.getProductIdFilter() :
-            productIds;
-
-        if (values != null && !values.isEmpty()) {
+        boolean joinedProvided = false;
+        if (productIds != null && !productIds.isEmpty()) {
             if (!joinedProvided) {
                 criteria.createAlias("Product.providedProducts", "Provided", JoinType.LEFT_OUTER_JOIN);
                 joinedProvided = true;
             }
 
             criteria.add(Restrictions.or(
-                CPRestrictions.in("Product.id", values),
-                CPRestrictions.in("Provided.id", values)));
+                CPRestrictions.in("Product.id", productIds),
+                CPRestrictions.in("Provided.id", productIds)));
         }
 
         if (filters != null) {
             // Pool ID filters
-            values = filters.getIdFilters();
+            Collection<String> idFilters = filters.getIdFilters();
 
-            if (values != null && !values.isEmpty()) {
-                criteria.add(CPRestrictions.in("Pool.id", values));
+            if (idFilters != null && !idFilters.isEmpty()) {
+                criteria.add(CPRestrictions.in("Pool.id", idFilters));
             }
 
             // Matches stuff
-            values = filters.getMatchesFilters();
-            if (values != null && !values.isEmpty()) {
+            Collection<String> matchesFilters = filters.getMatchesFilters();
+            if (matchesFilters != null && !matchesFilters.isEmpty()) {
                 if (!joinedProvided) {
                     // This was an inner join -- might end up being important later
                     criteria.createAlias("Product.providedProducts", "Provided",
@@ -531,7 +520,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 criteria.createAlias("Provided.productContent", "PPC", JoinType.LEFT_OUTER_JOIN);
                 criteria.createAlias("PPC.content", "Content", JoinType.LEFT_OUTER_JOIN);
 
-                for (String matches : values) {
+                for (String matches : matchesFilters) {
                     String sanitized = this.sanitizeMatchesFilter(matches);
 
                     Disjunction matchesDisjunction = Restrictions.disjunction();
@@ -554,7 +543,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             // Attribute filters
             for (Map.Entry<String, List<String>> entry : filters.getAttributeFilters().entrySet()) {
                 String attrib = entry.getKey();
-                values = entry.getValue();
+                List<String> attributeFilters = entry.getValue();
 
                 if (attrib != null && !attrib.isEmpty()) {
                     // TODO:
@@ -564,11 +553,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                     // If this is not the case, then the following logic is broken and will need to be
                     // adjusted to account for one having priority over the other.
 
-                    if (values != null && !values.isEmpty()) {
+                    if (attributeFilters != null && !attributeFilters.isEmpty()) {
                         List<String> positives = new LinkedList<>();
                         List<String> negatives = new LinkedList<>();
 
-                        for (String attrValue : values) {
+                        for (String attrValue : attributeFilters) {
                             if (attrValue.startsWith("!")) {
                                 negatives.add(attrValue.substring(1));
                             }
@@ -587,7 +576,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                         }
                     }
                     else {
-                        criteria.add(this.addAttributeFilterSubquery(attrib, values));
+                        criteria.add(this.addAttributeFilterSubquery(attrib, attributeFilters));
                     }
                 }
             }
