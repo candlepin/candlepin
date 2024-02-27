@@ -29,9 +29,8 @@ import javax.inject.Singleton;
 public class PermissionBlueprintCurator extends AbstractHibernateCurator<PermissionBlueprint> {
 
     @Inject
-    public PermissionBlueprintCurator(CandlepinQueryFactory cpQueryFactory) {
+    public PermissionBlueprintCurator() {
         super(PermissionBlueprint.class);
-        this.cpQueryFactory = cpQueryFactory;
     }
 
     public List<PermissionBlueprint> findByOwner(Owner owner) {
