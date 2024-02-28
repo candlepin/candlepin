@@ -37,8 +37,8 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.Product;
 import org.candlepin.model.UeberCertificate;
-import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
+import org.candlepin.pki.certs.UeberCertificateGenerator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -119,7 +119,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
 
         // Create an ueber certificate for the owner.
         UeberCertificate uebercert = ueberCertGenerator.generate(owner1.getKey(),
-            this.setupAdminPrincipal("test_admin"));
+            this.setupAdminPrincipal("test_admin").getUsername());
         assertNotNull(uebercert);
 
         // Verify initial state
