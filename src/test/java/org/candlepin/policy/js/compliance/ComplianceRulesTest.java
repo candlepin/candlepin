@@ -1120,8 +1120,7 @@ public class ComplianceRulesTest {
         c.setFact("cpu.cpu_socket(s)", "2");
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
-        List queryList = List.of(ent);
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(queryList);
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(List.of(ent));
 
         assertTrue(compliance.isEntitlementCompliant(c, ent, new Date()));
     }
@@ -1134,8 +1133,7 @@ public class ComplianceRulesTest {
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
         ent.getPool().getProduct().setAttribute(Product.Attributes.SOCKETS, "4");
 
-        List queryList = List.of(ent);
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(queryList);
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(List.of(ent));
 
         assertTrue(compliance.isEntitlementCompliant(c, ent, new Date()));
     }
@@ -1148,8 +1146,7 @@ public class ComplianceRulesTest {
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
         ent.getPool().getProduct().setAttribute(Product.Attributes.SOCKETS, "4");
 
-        List queryList = List.of(ent);
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(queryList);
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(List.of(ent));
 
         assertFalse(compliance.isEntitlementCompliant(c, ent, new Date()));
     }
