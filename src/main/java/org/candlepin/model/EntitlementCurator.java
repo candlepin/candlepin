@@ -20,11 +20,7 @@ import org.candlepin.paging.PageRequest;
 import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
-import org.hibernate.ReplicationMode;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +40,7 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -429,10 +426,17 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     public List<Entitlement> listByConsumerAndPoolId(Consumer consumer, String poolId) {
-        Criteria query = currentSession().createCriteria(Entitlement.class)
-            .add(Restrictions.eq("pool.id", poolId));
-        query.add(Restrictions.eq("consumer", consumer));
-        return listByCriteria(query);
+        String jpql = "SELECT e FROM Entitlement e " +
+            "WHERE e.consumer = :consumer AND e.pool.id = :pool_id ";
+
+        if (consumer != null) {
+            return this.getEntityManager()
+                .createQuery(jpql, Entitlement.class)
+                .setParameter("consumer", consumer)
+                .setParameter("pool_id", poolId)
+                .getResultList();
+        }
+        return Collections.emptyList();
     }
 
     public Page<List<Entitlement>> listByConsumer(Consumer consumer, String productId,
@@ -994,24 +998,22 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
     @Transactional
     public Entitlement findByCertificateSerial(Long serial) {
-        return (Entitlement) currentSession().createCriteria(Entitlement.class)
-            .createCriteria("certificates")
-            .add(Restrictions.eq("serial.id", serial))
-            .uniqueResult();
-    }
+        String jpql = "SELECT e FROM Entitlement e " +
+            "JOIN EntitlementCertificate ec on ec.entitlement.id = e.id " +
+            "WHERE ec.serial.id = :serial ";
 
-    @Transactional
-    public Entitlement replicate(Entitlement ent) {
-        for (EntitlementCertificate ec : ent.getCertificates()) {
-            ec.setEntitlement(ent);
-            CertificateSerial cs = ec.getSerial();
-            if (cs != null) {
-                this.currentSession().replicate(cs, ReplicationMode.EXCEPTION);
-            }
+        try {
+            return this.getEntityManager()
+                .createQuery(jpql, Entitlement.class)
+                .setParameter("serial", serial)
+                .setMaxResults(1)
+                .getSingleResult();
         }
-        this.currentSession().replicate(ent, ReplicationMode.EXCEPTION);
+        catch (NoResultException e) {
+            // Intentionally left empty
+        }
 
-        return ent;
+        return null;
     }
 
     /**
@@ -1046,21 +1048,28 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         if (stackIds == null || stackIds.isEmpty()) {
             return Collections.emptyList();
         }
-        Criteria criteria = currentSession().createCriteria(Entitlement.class)
-            .createAlias("pool", "ent_pool")
-            .createAlias("ent_pool.product", "product")
-            .createAlias("product.attributes", "attrs")
-            .add(Restrictions.eq("attrs.indices", Product.Attributes.STACKING_ID))
-            .add(Restrictions.in("attrs.elements", stackIds))
-            .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
-            .createAlias("ent_pool.sourceStack", "ss", org.hibernate.sql.JoinType.LEFT_OUTER_JOIN)
-            .add(Restrictions.isNull("ss.id"));
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+        CriteriaQuery<Entitlement> criteriaQuery = criteriaBuilder.createQuery(Entitlement.class);
+        Root<Entitlement> entRoot = criteriaQuery.from(Entitlement.class);
+        Join<Entitlement, Pool> poolJoin = entRoot.join(Entitlement_.POOL);
+        Join<Pool, Product> productJoin = poolJoin.join(Pool_.PRODUCT);
+        MapJoin<Product, String, String> attributes = productJoin.joinMap(Product_.ATTRIBUTES);
+        Join<Pool, SourceStack> stackJoin = poolJoin.join(Pool_.SOURCE_STACK, JoinType.LEFT);
+        criteriaQuery.select(entRoot);
+
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(criteriaBuilder.equal(attributes.key(), Product.Attributes.STACKING_ID));
+        predicates.add(inPredicate(criteriaBuilder, attributes, stackIds));
+        predicates.add(criteriaBuilder.isNull(poolJoin.get(Pool_.SOURCE_ENTITLEMENT)));
+        predicates.add(criteriaBuilder.isNull(stackJoin.get(SourceStack_.ID)));
 
         if (consumer != null) {
-            criteria.add(Restrictions.eq("consumer", consumer));
+            predicates.add(criteriaBuilder.equal(entRoot.get(Entitlement_.CONSUMER), consumer));
         }
-
-        return (List<Entitlement>) criteria.list();
+        Predicate[] predicateArray = new Predicate[predicates.size()];
+        criteriaQuery.where(predicates.toArray(predicateArray));
+        return em.createQuery(criteriaQuery).getResultList();
     }
 
     public List<Entitlement> findByPoolAttribute(Consumer consumer, String attributeName,
@@ -1104,22 +1113,42 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      */
     public Entitlement findUpstreamEntitlementForStack(Consumer consumer, String stackId) {
         Date currentDate = new Date();
-        Criteria activeNowQuery = currentSession().createCriteria(Entitlement.class)
-            .add(Restrictions.eq("consumer", consumer))
-            .createAlias("pool", "ent_pool")
-            .createAlias("ent_pool.product", "product")
-            .createAlias("product.attributes", "attrs")
-            .add(Restrictions.le("ent_pool.startDate", currentDate))
-            .add(Restrictions.ge("ent_pool.endDate", currentDate))
-            .add(Restrictions.eq("attrs.indices", Product.Attributes.STACKING_ID))
-            .add(Restrictions.eq("attrs.elements", stackId).ignoreCase())
-            .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
-            .createAlias("ent_pool.sourceSubscription", "sourceSub")
-            .add(Restrictions.isNotNull("sourceSub.id"))
-            .addOrder(Order.asc("created")) // eldest entitlement
-            .setMaxResults(1);
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+        CriteriaQuery<Entitlement> criteriaQuery = criteriaBuilder.createQuery(Entitlement.class);
+        Root<Entitlement> entRoot = criteriaQuery.from(Entitlement.class);
+        Join<Entitlement, Pool> poolJoin = entRoot.join(Entitlement_.POOL);
+        Join<Pool, Product> productJoin = poolJoin.join(Pool_.PRODUCT);
+        MapJoin<Product, String, String> attributes = productJoin.joinMap(Product_.ATTRIBUTES);
+        Join<Pool, SourceSubscription> subscriptionJoin = poolJoin.join(Pool_.SOURCE_SUBSCRIPTION);
+        criteriaQuery.orderBy(criteriaBuilder.asc(entRoot.get(Entitlement_.CREATED)));
+        criteriaQuery.select(entRoot);
 
-        return (Entitlement) activeNowQuery.uniqueResult();
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(criteriaBuilder.lessThanOrEqualTo(poolJoin.get(Pool_.START_DATE), currentDate));
+        predicates.add(criteriaBuilder.greaterThanOrEqualTo(poolJoin.get(Pool_.END_DATE), currentDate));
+        predicates.add(criteriaBuilder.equal(attributes.key(), Product.Attributes.STACKING_ID));
+        predicates.add(criteriaBuilder.equal(criteriaBuilder.upper(attributes.value()),
+            stackId.toUpperCase()));
+        predicates.add(criteriaBuilder.isNull(poolJoin.get(Pool_.SOURCE_ENTITLEMENT)));
+        predicates.add(criteriaBuilder.isNotNull(subscriptionJoin.get(SourceSubscription_.ID)));
+
+        if (consumer != null) {
+            predicates.add(criteriaBuilder.equal(entRoot.get(Entitlement_.CONSUMER), consumer));
+        }
+        Predicate[] predicateArray = new Predicate[predicates.size()];
+        criteriaQuery.where(predicates.toArray(predicateArray));
+
+        try {
+            return em.createQuery(criteriaQuery)
+                .setMaxResults(1)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            // Intentionally left empty
+        }
+
+        return null;
     }
 
     /**
