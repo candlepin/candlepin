@@ -62,7 +62,7 @@ org.quartz.dataSource.myDS.maxConnections=5
 candlepin.standalone=false
 candlepin.refresh.orphan_entity_grace_period=0
 module.config.hostedtest.configuration.module=org.candlepin.testext.hostedtest.HostedTestModule
-candlepin.auth.cloud.enable=<%= candlepin.auth_cloud_enable || false %>
+candlepin.auth.cloud.enable=true
 <% } %>\
 
 <% if (candlepin.manifestgen) { %>\

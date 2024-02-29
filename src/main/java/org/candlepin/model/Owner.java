@@ -150,6 +150,9 @@ public class Owner extends AbstractHibernateObject<Owner>
     @Column(name = "claimed", nullable = true)
     private Boolean claimed;
 
+    @Column(name = "claimant_owner")
+    private String claimantOwner;
+
     /**
      * Default constructor
      */
@@ -588,6 +591,15 @@ public class Owner extends AbstractHibernateObject<Owner>
 
     public Owner setClaimed(Boolean claimed) {
         this.claimed = claimed;
+        return this;
+    }
+
+    public String getClaimantOwner() {
+        return claimantOwner;
+    }
+
+    public Owner setClaimantOwner(String claimantOwner) {
+        this.claimantOwner = claimantOwner;
         return this;
     }
 

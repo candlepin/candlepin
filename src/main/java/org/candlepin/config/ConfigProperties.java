@@ -18,7 +18,6 @@ import static org.candlepin.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
 
 import org.candlepin.async.tasks.ActiveEntitlementJob;
 import org.candlepin.async.tasks.CertificateCleanupJob;
-import org.candlepin.async.tasks.CloudAccountOrgSetupJob;
 import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.async.tasks.ExpiredPoolsCleanupJob;
 import org.candlepin.async.tasks.ImportRecordCleanerJob;
@@ -180,6 +179,9 @@ public class ConfigProperties {
     // Cache
     public static final String CACHE_JMX_STATS = "cache.jmx.statistics";
     public static final String CACHE_CONFIG_FILE_URI = JPA_CONFIG_PREFIX + "hibernate.javax.cache.uri";
+    public static final String CACHE_ANON_CERT_CONTENT_TTL = "candlepin.cache.anonymous.cert.content.ttl";
+    public static final String CACHE_ANON_CERT_CONTENT_MAX_ENTRIES =
+        "candlepin.cache.anonymous.cert.content.max_entries";
 
     public static final String[] ENCRYPTED_PROPERTIES = new String[] {
         DB_PASSWORD,
@@ -210,6 +212,7 @@ public class ConfigProperties {
 
     public static final String PRODUCT_CACHE_MAX = "candlepin.cache.product_cache_max";
 
+    public static final String CONSUMER_MIGRATION_BATCH_SIZE = "candlepin.consumer.migration.batch.size";
     public static final String INTEGER_FACTS = "candlepin.integer_facts";
     private static final String INTEGER_FACT_LIST = "";
 
@@ -290,8 +293,7 @@ public class ConfigProperties {
         ManifestCleanerJob.JOB_KEY,
         OrphanCleanupJob.JOB_KEY,
         UnmappedGuestEntitlementCleanerJob.JOB_KEY,
-        InactiveConsumerCleanerJob.JOB_KEY,
-        CloudAccountOrgSetupJob.JOB_KEY
+        InactiveConsumerCleanerJob.JOB_KEY
     };
 
     // How long (in seconds) to wait for job threads to finish during a graceful Tomcat shutdown
@@ -418,6 +420,8 @@ public class ConfigProperties {
 
             this.put(CACHE_JMX_STATS, "false");
             this.put(CACHE_CONFIG_FILE_URI, "ehcache.xml");
+            this.put(CACHE_ANON_CERT_CONTENT_TTL, "120000"); // milliseconds
+            this.put(CACHE_ANON_CERT_CONTENT_MAX_ENTRIES, "10000");
 
             this.put(SUSPEND_MODE_ENABLED, "true");
 
@@ -538,6 +542,7 @@ public class ConfigProperties {
 
             // Set the triggerable jobs list
             this.put(ASYNC_JOBS_TRIGGERABLE_JOBS, String.join(", ", ASYNC_JOBS_TRIGGERABLE_JOBS_LIST));
+            this.put(CONSUMER_MIGRATION_BATCH_SIZE, "200");
 
             this.put(ORPHANED_ENTITY_GRACE_PERIOD, "30");
 

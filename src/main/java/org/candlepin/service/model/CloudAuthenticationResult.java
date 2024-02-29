@@ -14,8 +14,6 @@
  */
 package org.candlepin.service.model;
 
-import org.candlepin.service.CloudProvider;
-
 import java.util.Set;
 
 
@@ -39,7 +37,7 @@ public interface CloudAuthenticationResult {
     /**
      * @return the cloud provider found in the {@link CloudRegistrationInfo} metadata
      */
-    CloudProvider getCloudProvider();
+    String getCloudProvider();
 
     /**
      * @return the owner key associated to the cloud account ID from the {@link CloudRegistrationInfo}
@@ -57,6 +55,13 @@ public interface CloudAuthenticationResult {
      * {@link CloudRegistrationInfo} metadata
      */
     Set<String> getProductIds();
+
+    /**
+     * @return true if the consumer only requires the version 1 cloud registration workflow for the provided
+     *  owner key. The owner key must be populated when the registration only value is set to true. False
+     *  indicates that the consumer requires a version 2 or greater cloud registration logic.
+     */
+    boolean isRegistrationOnly();
 
     /**
      * @return true if the owner is entitled to the product associated to the cloud offering ID found in

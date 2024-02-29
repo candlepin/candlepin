@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.util.Base64;
 
 
 /**
@@ -107,7 +108,7 @@ public class CloudRegistrationClient extends CloudRegistrationApi {
             objectNode.put("cloudOfferingId", offeringId);
         }
 
-        return objectNode.toString();
+        return Base64.getEncoder().encodeToString(objectNode.toString().getBytes());
     }
 
     private CloudRegistrationDTO generateToken(String metadata, String type, String signature) {

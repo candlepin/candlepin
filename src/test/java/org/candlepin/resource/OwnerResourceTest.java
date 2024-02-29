@@ -260,12 +260,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         return new OwnerResource(this.mockOwnerCurator, this.mockActivationKeyCurator,
             this.mockConsumerCurator, this.i18n, this.mockEventSink, this.mockEventFactory,
             this.contentAccessManager, this.mockManifestManager,
-            this.mockPoolManager, this.ownerManager, this.mockExportCurator, this.mockOwnerInfoCurator,
-            this.mockImportRecordCurator, this.mockEntitlementCurator, this.mockUeberCertCurator,
-            this.mockUeberCertificateGenerator, this.mockEnvironmentCurator, this.calculatedAttributesUtil,
-            this.contentOverrideValidator, this.serviceLevelValidator, this.ownerServiceAdapter, this.config,
-            this.consumerTypeValidator, this.mockOwnerProductCurator, this.modelTranslator,
-            this.mockJobManager, this.dtoValidator, this.poolService, this.principalProvider);
+            this.mockPoolManager, this.poolService, this.ownerManager, this.mockExportCurator,
+            this.mockOwnerInfoCurator, this.mockImportRecordCurator, this.mockEntitlementCurator,
+            this.mockUeberCertCurator, this.mockUeberCertificateGenerator, this.mockEnvironmentCurator,
+            this.calculatedAttributesUtil, this.contentOverrideValidator, this.serviceLevelValidator,
+            this.ownerServiceAdapter, this.config, this.consumerTypeValidator, this.mockOwnerProductCurator,
+            this.modelTranslator, this.mockJobManager, this.dtoValidator, this.principalProvider);
     }
 
     private ProductDTO buildTestProductDTO() {
@@ -1589,13 +1589,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(
             this.mockOwnerCurator, this.activationKeyCurator, this.consumerCurator, this.i18n,
             this.mockEventSink, this.mockEventFactory, this.contentAccessManager, this.mockManifestManager,
-            this.poolManager, this.ownerManager, this.mockExportCurator, this.ownerInfoCurator,
-            this.importRecordCurator, this.entitlementCurator, this.ueberCertificateCurator,
-            this.ueberCertGenerator,
+            this.poolManager, this.poolService, this.ownerManager, this.mockExportCurator,
+            this.ownerInfoCurator, this.importRecordCurator, this.entitlementCurator,
+            this.ueberCertificateCurator, this.ueberCertGenerator,
             this.environmentCurator, this.calculatedAttributesUtil, this.contentOverrideValidator,
             this.serviceLevelValidator, this.ownerServiceAdapter, this.config, this.consumerTypeValidator,
             this.mockOwnerProductCurator, this.modelTranslator, this.mockJobManager, this.dtoValidator,
-            this.poolService, this.principalProvider);
+            this.principalProvider);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);

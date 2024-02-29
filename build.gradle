@@ -71,6 +71,9 @@ ext {
 }
 
 dependencies {
+    // Cache
+    implementation libraries["caffeine"]
+
     // Commons
     implementation libraries["commonsCodec"]
     implementation libraries["commonsCollections"]
@@ -188,6 +191,9 @@ dependencies {
     testImplementation libraries["mockitoJunit"]
     testImplementation libraries["liquibaseSlf4j"]
     testImplementation libraries["assertj"]
+
+    // OTEL
+    implementation libraries["otelAnnotation"]
 }
 
 // Copy the resources to the main classes directory so that the

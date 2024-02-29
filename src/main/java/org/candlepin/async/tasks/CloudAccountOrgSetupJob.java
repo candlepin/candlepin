@@ -22,14 +22,16 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
+import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.exception.CloudAccountOrgMismatchException;
 import org.candlepin.service.exception.CouldNotAcquireCloudAccountLockException;
 import org.candlepin.service.exception.CouldNotEntitleOrganizationException;
 import org.candlepin.service.model.CloudAccountData;
+
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +52,6 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
     protected static final String CLOUD_ACCOUNT_ID = "cloud_account_id";
     protected static final String OFFERING_ID = "offering_id";
     protected static final String CLOUD_PROVIDER = "cloud_provider";
-    protected static final String OWNER_KEY = "owner_key";
 
     private final CloudRegistrationAdapter cloudAdapter;
     private OwnerCurator ownerCurator;
@@ -71,17 +72,17 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
      *     if an exception occurs during job execution
      */
     @Override
+    @WithSpan
     public void execute(JobExecutionContext context) throws JobExecutionException {
         JobArguments args = context.getJobArguments();
 
         String accountId = args.getAsString(CLOUD_ACCOUNT_ID);
         String offeringId = args.getAsString(OFFERING_ID);
-        String ownerKey = args.getAsString(OWNER_KEY);
-        CloudProvider cloudProviderShortName = args.getAs(CLOUD_PROVIDER, CloudProvider.class);
+        String cloudProviderShortName = args.getAsString(CLOUD_PROVIDER);
 
         try {
             CloudAccountData accountData = this.cloudAdapter.setupCloudAccountOrg(
-                accountId, offeringId, cloudProviderShortName, ownerKey);
+                accountId, offeringId, cloudProviderShortName);
 
             Owner owner = ownerCurator.getByKey(accountData.ownerKey());
             if (owner == null) {
@@ -94,6 +95,20 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
                         .setDisplayName(accountData.ownerKey())
                         .setAnonymous(accountData.isAnonymous())
                         .setClaimed(false);
+
+                    // Anonymous orgs should always and only be allowed to be in SCA mode,
+                    // while non-anonymous orgs should use the defaults.
+                    if (accountData.isAnonymous()) {
+                        newOwner.setContentAccessMode(
+                                ContentAccessManager.ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue())
+                            .setContentAccessModeList(
+                                ContentAccessManager.ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+                    }
+                    else {
+                        newOwner.setContentAccessMode(
+                            ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue())
+                            .setContentAccessModeList(ContentAccessManager.getListDefaultDatabaseValue());
+                    }
                     ownerCurator.create(newOwner);
                 }
             }
@@ -170,29 +185,12 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
          *     cloud provider for this job
          * @return a reference to this job config
          */
-        public CloudAccountOrgSetupJobConfig setCloudProvider(CloudProvider cloudProvider) {
-            if (cloudProvider == null) {
-                throw new IllegalArgumentException("cloudProvider is null");
+        public CloudAccountOrgSetupJobConfig setCloudProvider(String cloudProvider) {
+            if (cloudProvider == null || cloudProvider.isBlank()) {
+                throw new IllegalArgumentException("cloudProvider is null or empty");
             }
 
             this.setJobArgument(CLOUD_PROVIDER, cloudProvider);
-
-            return this;
-        }
-
-        /**
-         * Sets the owner key for this job
-         *
-         * @param ownerKey
-         *     the owner key to set for this job
-         * @return a reference to this job config
-         */
-        public CloudAccountOrgSetupJobConfig setOwnerKey(String ownerKey) {
-            if (ownerKey != null && ownerKey.isBlank()) {
-                throw new IllegalArgumentException("ownerKey is empty");
-            }
-
-            this.setJobArgument(OWNER_KEY, ownerKey);
 
             return this;
         }
@@ -207,7 +205,6 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
                 String accountId = arguments.getAsString(CLOUD_ACCOUNT_ID);
                 String offeringId = arguments.getAsString(OFFERING_ID);
                 String cloudProviderShortName = arguments.getAsString(CLOUD_PROVIDER);
-                String ownerKey = arguments.getAsString(OWNER_KEY);
 
                 if (accountId == null || accountId.isBlank()) {
                     String errmsg = "Cloud Account ID has not been set, or is empty";
@@ -221,11 +218,6 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
 
                 if (cloudProviderShortName == null) {
                     String errmsg = "Cloud provider has not been set";
-                    throw new JobConfigValidationException(errmsg);
-                }
-
-                if (ownerKey != null && ownerKey.isBlank()) {
-                    String errmsg = "Owner key is empty";
                     throw new JobConfigValidationException(errmsg);
                 }
             }

@@ -15,6 +15,8 @@
 package org.candlepin.controller;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.cache.AnonymousCertContent;
+import org.candlepin.cache.AnonymousCertContentCache;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.util.AnonymousContentPrefix;
@@ -223,6 +225,7 @@ public class ContentAccessManager {
     private final AnonymousCloudConsumerCurator anonCloudConsumerCurator;
     private final AnonymousContentAccessCertificateCurator anonContentAccessCertCurator;
     private final ProductServiceAdapter prodAdapter;
+    private final AnonymousCertContentCache contentCache;
 
     private final boolean standalone;
 
@@ -242,7 +245,8 @@ public class ContentAccessManager {
         EventSink eventSink,
         AnonymousCloudConsumerCurator anonCloudConsumerCurator,
         AnonymousContentAccessCertificateCurator anonContentAccessCertCurator,
-        ProductServiceAdapter prodAdapter) {
+        ProductServiceAdapter prodAdapter,
+        AnonymousCertContentCache contentCache) {
 
         this.config = Objects.requireNonNull(config);
         this.pki = Objects.requireNonNull(pki);
@@ -259,6 +263,7 @@ public class ContentAccessManager {
         this.anonCloudConsumerCurator = Objects.requireNonNull(anonCloudConsumerCurator);
         this.anonContentAccessCertCurator = Objects.requireNonNull(anonContentAccessCertCurator);
         this.prodAdapter = Objects.requireNonNull(prodAdapter);
+        this.contentCache = Objects.requireNonNull(contentCache);
         this.standalone = this.config.getBoolean(ConfigProperties.STANDALONE);
     }
 
@@ -871,24 +876,64 @@ public class ContentAccessManager {
         AnonymousContentAccessCertificate cert = consumer.getContentAccessCert();
         Date now = new Date();
 
-        // Generate a new certificate if one does not exist or the existing certificate is expired
-        if (cert == null || cert.getSerial() == null || cert.getSerial().getExpiration().before(now)) {
-            cert = createAnonContentAccessCertificate(consumer);
+        // Return a valid certificate if the anonymous cloud consumer has one
+        if (cert != null && cert.getSerial() != null && cert.getSerial().getExpiration().after(now)) {
+            log.debug("Returning existing and valid anonymous certificate for consumer: \"{}\"",
+                consumer.getUuid());
+            return cert;
         }
 
-        return cert;
+        // Generate a new certificate if one does not exist or the existing certificate is expired.
+        // First attempt to retrieve an already built and cached content access payload based on the
+        // anonymous cloud consumer's top level product IDs, or retrieve the data through adapters if
+        // we hava a cache miss.
+        String payload;
+        List<Content> content;
+        AnonymousCertContent cached = contentCache.get(consumer.getProductIds());
+        if (cached != null) {
+            log.debug("Anonymous content access certificate content retrieved from cache");
+            payload = cached.contentAccessDataPayload();
+            content = cached.content();
+        }
+        else {
+            log.debug("Retrieving anonymous content access certificate content from product adapter");
+            // Get product information from adapters to build the content access certificate
+            List<ProductInfo> products = prodAdapter.getChildrenByProductIds(consumer.getProductIds());
+            if (products == null || products.isEmpty()) {
+                String msg = "Unable to retrieve products for anonymous cloud consumer: " +
+                    consumer.getUuid();
+                throw new RuntimeException(msg);
+            }
+
+            payload = createAnonPayloadAndSignature(products);
+            List<ContentInfo> contentInfo = getContentInfo(products);
+            content = convertContentInfoToContentDto(contentInfo);
+
+            // Cache the generated content for future requests
+            contentCache.put(consumer.getProductIds(), new AnonymousCertContent(payload, content));
+        }
+
+        return createAnonContentAccessCertificate(consumer, payload, content);
     }
 
     private AnonymousContentAccessCertificate createAnonContentAccessCertificate(
-        AnonymousCloudConsumer consumer) throws GeneralSecurityException, IOException {
-        log.info("Generating content access certificate for anonymous cloud consumer: {}",
-            consumer.getUuid());
+        AnonymousCloudConsumer consumer, String payloadAndSignature, List<Content> certificateContent)
+        throws IOException, GeneralSecurityException {
 
-        List<ProductInfo> products = prodAdapter.getChildrenByProductIds(consumer.getProductIds());
-        if (products == null || products.isEmpty()) {
-            String msg = "Unable to retrieve products for anonymous cloud consumer: " + consumer.getUuid();
-            throw new RuntimeException(msg);
+        if (consumer == null) {
+            throw new IllegalArgumentException("anonymous cloud consumer is null");
         }
+
+        if (payloadAndSignature == null) {
+            throw new IllegalArgumentException("content access payload is null");
+        }
+
+        if (certificateContent == null || certificateContent.isEmpty()) {
+            throw new IllegalArgumentException("certificate content is null or empty");
+        }
+
+        log.info("Generating anonymous content access certificate for consumer: \"{}\"",
+            consumer.getUuid());
 
         OffsetDateTime start = OffsetDateTime.now().minusHours(1L);
         OffsetDateTime end = start.plusDays(2L);
@@ -897,29 +942,32 @@ public class ContentAccessManager {
         KeyPair keyPair = this.pki.generateKeyPair();
         byte[] pemEncodedKeyPair = this.pki.getPemEncoded(keyPair.getPrivate());
 
-        List<ContentInfo> contentInfo = getContentInfo(products);
         org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
-        container.setContent(convertContentInfoToContentDto(contentInfo));
+        container.setContent(certificateContent);
         String x509Cert = createX509Cert(consumer.getUuid(), null, serial, keyPair, container,
             BASIC_ENTITLEMENT_TYPE, start, end);
-
-        List<org.candlepin.model.Content> contents = convertContentInfoToContent(contentInfo);
-        Map<org.candlepin.model.Content, Boolean> activeContent = new HashMap<>();
-        contents.forEach(content -> activeContent.put(content, true));
-
-        PromotedContent promotedContent = new PromotedContent(new AnonymousContentPrefix());
-        byte[] payloadBytes = createContentAccessDataPayload(null, activeContent, promotedContent);
 
         AnonymousContentAccessCertificate caCert = new AnonymousContentAccessCertificate();
         caCert.setSerial(serial);
         caCert.setKeyAsBytes(pemEncodedKeyPair);
-        caCert.setCert(x509Cert + createPayloadAndSignature(payloadBytes));
+        caCert.setCert(x509Cert + payloadAndSignature);
         caCert = anonContentAccessCertCurator.create(caCert);
 
         consumer.setContentAccessCert(caCert);
         this.anonCloudConsumerCurator.merge(consumer);
 
         return caCert;
+    }
+
+    private String createAnonPayloadAndSignature(Collection<ProductInfo> prodInfo) throws IOException {
+        List<ContentInfo> contentInfo = getContentInfo(prodInfo);
+        List<org.candlepin.model.Content> contents = convertContentInfoToContent(contentInfo);
+        Map<org.candlepin.model.Content, Boolean> activeContent = new HashMap<>();
+        contents.forEach(content -> activeContent.put(content, true));
+        PromotedContent promotedContent = new PromotedContent(new AnonymousContentPrefix());
+        byte[] data = createContentAccessDataPayload(null, activeContent, promotedContent);
+
+        return createPayloadAndSignature(data);
     }
 
     /**
@@ -970,7 +1018,7 @@ public class ContentAccessManager {
     }
 
     /**
-     * Converts {@link ContentInfo} to {@link org.candlepin.model.Content}
+     * Converts {@link ContentInfo} to {@link org.candlepin.model.Content}.
      *
      * @param contentInfo
      *  the content to convert

@@ -14,7 +14,6 @@
  */
 package org.candlepin.testext.hostedtest;
 
-import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
 import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingException;
@@ -34,6 +33,7 @@ import org.candlepin.util.Util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -57,6 +57,11 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
     private static final String INSTANCE_ID_FIELD_NAME = "instanceId";
     private static final String OFFERING_ID_FIELD_NAME = "cloudOfferingId";
     private static final String OFFERING_TYPE_1P = "1P";
+    private static final String OFFERING_TYPE_GOLD = "gold";
+    private static final String OFFERING_TYPE_CUSTOM = "custom";
+    private static final Set<String> REGISTRATION_ONLY_OFFER_TYPES =
+        Set.of(OFFERING_TYPE_1P, OFFERING_TYPE_GOLD, OFFERING_TYPE_CUSTOM);
+
     private static final ObjectMapper OBJ_MAPPER = ObjectMapperFactory.getObjectMapper();
 
     private final HostedTestDataStore datastore;
@@ -110,7 +115,8 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
 
         Map<String, String> metadata = new HashMap<>();
         try {
-            metadata = OBJ_MAPPER.readValue(cloudRegInfo.getMetadata(), Map.class);
+            String decoded = new String(Base64.getDecoder().decode(cloudRegInfo.getMetadata()));
+            metadata = OBJ_MAPPER.readValue(decoded, Map.class);
         }
         catch (JsonProcessingException e) {
             throw new MalformedCloudRegistrationException(
@@ -136,12 +142,15 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
         }
 
         String offerType = this.datastore.getOfferTypeForOfferId(offerId);
-        if (OFFERING_TYPE_1P.equals(offerType)) {
+        boolean isRegistrationOnly = offerType == null ?
+            false :
+            REGISTRATION_ONLY_OFFER_TYPES.contains(offerType);
+        String ownerKey = this.datastore.getOwnerKeyForCloudAccountId(accountId);
+        if (ownerKey == null && isRegistrationOnly) {
             throw new CloudRegistrationNotSupportedForOfferingException(
                 "cloud registration v2 is not supported for 1P offerings");
         }
 
-        String ownerKey = this.datastore.getOwnerKeyForCloudAccountId(accountId);
         Set<String> productIds = this.datastore.getProductIdsForOfferId(offerId);
         boolean isEntitled = isOwnerEntitledToProducts(ownerKey, productIds);
 
@@ -157,8 +166,8 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
             }
 
             @Override
-            public CloudProvider getCloudProvider() {
-                return CloudProvider.AWS;
+            public String getCloudProvider() {
+                return "aws";
             }
 
             @Override
@@ -177,6 +186,11 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
             }
 
             @Override
+            public boolean isRegistrationOnly() {
+                return isRegistrationOnly;
+            }
+
+            @Override
             public boolean isEntitled() {
                 return isEntitled;
             }
@@ -188,21 +202,17 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
      */
     @Override
     public CloudAccountData setupCloudAccountOrg(String cloudAccountID, String cloudOfferingID,
-        CloudProvider cloudProviderShortName, String ownerKey)
+        String cloudProviderShortName)
         throws CouldNotAcquireCloudAccountLockException, CouldNotEntitleOrganizationException {
 
-        if (ownerKey == null) {
-            ownerKey = Util.generateUUID();
-        }
-
-        return new CloudAccountData(ownerKey, false);
+        return new CloudAccountData(Util.generateUUID(), false);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String checkCloudAccountOrgIsReady(String cloudAccountID, CloudProvider cloudProviderShortName,
+    public String checkCloudAccountOrgIsReady(String cloudAccountID, String cloudProviderShortName,
         String cloudOfferingID)
         throws OrgForCloudAccountNotCreatedYetException, OrgForCloudAccountNotEntitledYetException {
         String ownerKey = this.datastore.getOwnerKeyForCloudAccountId(cloudAccountID);

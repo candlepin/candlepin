@@ -29,8 +29,8 @@ import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.Consumer;
-import org.candlepin.service.CloudProvider;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import ch.qos.logback.classic.Level;
@@ -237,7 +237,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
             .setCloudAccountId("account-id")
             .setCloudInstanceId("instance-id")
             .setCloudOfferingId("offer-id")
-            .setCloudProviderShortName(CloudProvider.AWS)
+            .setCloudProviderShortName(TestUtil.randomString())
             .setProductIds(List.of("product-id"));
         consumer = this.anonymousCloudConsumerCurator.create(consumer);
 
@@ -295,7 +295,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
             .setCloudInstanceId("instance-id")
             .setCloudOfferingId("offer-id")
             .setProductIds(List.of("product-id"))
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
         consumer = this.anonymousCloudConsumerCurator.create(consumer);
         mockPathParameters.addAll("uuid", List.of(consumer.getUuid(), Util.generateUUID()));
 

@@ -12,28 +12,29 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.model;
+package org.candlepin.cache;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
 
-/**
- * An immutable dto projection of certificate id and its serial.
+/*
+ * A key composed of multiple elements. Duplicate elements are removed to form a distinct set including null
+ * values. Comparisons of the MultiKey does not consider ordering of elements.
  */
-public class ExpiredCertificate {
-    private final String certId;
-    private final Long serial;
+public class MultiKey {
 
-    public ExpiredCertificate(String certId, Long serial) {
-        this.certId = certId;
-        this.serial = serial;
+    private HashSet<String> elements;
+
+    public MultiKey(Collection<String> elements) {
+        Objects.requireNonNull(elements);
+
+        this.elements = new HashSet<>(elements);
     }
 
-    public String getCertId() {
-        return certId;
-    }
-
-    public Long getSerial() {
-        return serial;
+    @Override
+    public int hashCode() {
+        return elements.hashCode();
     }
 
     @Override
@@ -41,24 +42,19 @@ public class ExpiredCertificate {
         if (this == o) {
             return true;
         }
+
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        ExpiredCertificate that = (ExpiredCertificate) o;
-        return Objects.equals(certId, that.certId) && Objects.equals(serial, that.serial);
-    }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(certId, serial);
+        MultiKey multiKey = (MultiKey) o;
+        return this.elements.equals(multiKey.elements);
     }
 
     @Override
     public String toString() {
-        return "ExpiredCertificate{" +
-            "certId='" + certId + '\'' +
-            ", serial=" + serial +
-            '}';
+        return "MultiKey [elements=" + elements + "]";
     }
 
 }
+

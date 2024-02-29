@@ -27,6 +27,7 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.AnonymousCloudConsumerPrincipal;
+import org.candlepin.auth.CloudConsumerPrincipal;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SecurityHole;
@@ -241,8 +242,6 @@ public class ConsumerResource implements ConsumerApi {
     private final ContentOverrideValidator coValidator;
     private final ConsumerContentOverrideCurator ccoCurator;
     private final EntitlementCertificateGenerator entCertGenerator;
-    private final CloudRegistrationAdapter cloudAdapter;
-    private final PoolCurator poolCurator;
     private final AnonymousCloudConsumerCurator anonymousConsumerCurator;
     private final AnonymousContentAccessCertificateCurator anonymousCertCurator;
 
@@ -337,8 +336,6 @@ public class ConsumerResource implements ConsumerApi {
         this.ccoCurator = Objects.requireNonNull(ccoCurator);
         this.entCertGenerator = Objects.requireNonNull(entCertGenerator);
         this.poolService = Objects.requireNonNull(poolService);
-        this.cloudAdapter = Objects.requireNonNull(cloudAdapter);
-        this.poolCurator = Objects.requireNonNull(poolCurator);
         this.anonymousConsumerCurator = Objects.requireNonNull(anonymousConsumerCurator);
         this.anonymousCertCurator = Objects.requireNonNull(anonymousCertCurator);
 
@@ -705,6 +702,20 @@ public class ConsumerResource implements ConsumerApi {
                     consumer = this.regenerateIdentityCertificate(consumer);
                 }
             }
+            else {
+                // When anonymous orgs get claimed, identity certs are revoked, so we need to regenerate
+                // them for cloud VM consumers that check in right after the claiming happened.
+                //
+                // Also, because there is a case where a hypervisor may not be (yet, or at all) a registered
+                // system it may not have an identity certificate, we don't want to generate one for it.
+                // Here we're making the (reasonably safe) assumption that a hypervisor being run as a
+                // cloud VM is not a realistic setup.
+                if (!this.consumerTypeCurator.getConsumerType(consumer).isType(ConsumerTypeEnum.HYPERVISOR)) {
+                    log.info("Regenerating identity certificate for consumer with null identity cert: {}",
+                        uuid);
+                    consumer = this.regenerateIdentityCertificate(consumer);
+                }
+            }
 
             // enrich with subscription data
             consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
@@ -919,7 +930,7 @@ public class ConsumerResource implements ConsumerApi {
 
     @Override
     @Transactional
-    @SecurityHole(activationKey = true, anonConsumer = true)
+    @SecurityHole(activationKey = true, autoregToken = true)
     public ConsumerDTO createConsumer(ConsumerDTO dto, String userName, String ownerKey,
         String activationKeys, Boolean identityCertCreation) {
 
@@ -1380,43 +1391,52 @@ public class ConsumerResource implements ConsumerApi {
      * if the user does not have permission to register on this owner.
      */
     protected Owner setupOwner(Principal principal, String ownerKey) {
-        // If no owner was specified, try to assume based on which owners the principal has admin rights for.
-        // If more than one, we have to error out.
+        // If no owner was specified, for UserPrincipals, try to assume based on which owners it has admin
+        // rights for. If more than one, we have to error out. In case of autoregistration principals, they
+        // have the owner key set from the token itself.
+        if (ownerKey == null) {
+            if (principal instanceof UserPrincipal) {
+                // check for this cast?
+                List<String> ownerKeys = ((UserPrincipal) principal).getOwnerKeys();
 
-        if (ownerKey == null && !(principal instanceof UserPrincipal) &&
-            !(principal instanceof AnonymousCloudConsumerPrincipal)) {
-            // There's no resolution we can perform here.
-            log.warn("Cannot determine organization with which to register client: {}", principal);
-            String errmsg = i18n.tr("Client is not authorized to register with any organization");
-
-            throw new BadRequestException(errmsg);
-        }
-
-        if (ownerKey == null && (principal instanceof UserPrincipal)) {
-            // check for this cast?
-            List<String> ownerKeys = ((UserPrincipal) principal).getOwnerKeys();
-
-            if (ownerKeys.size() != 1) {
-                OwnerInfo primary = ((UserPrincipal) principal).getPrimaryOwner();
-                if (primary == null) {
-                    throw new BadRequestException(i18n.tr("You must specify an organization for new units."));
+                if (ownerKeys.size() != 1) {
+                    OwnerInfo primary = ((UserPrincipal) principal).getPrimaryOwner();
+                    if (primary == null) {
+                        throw new BadRequestException(
+                            i18n.tr("You must specify an organization for new units."));
+                    }
+                    ownerKey = primary.getKey();
                 }
-                ownerKey = primary.getKey();
+                else {
+                    ownerKey = ownerKeys.get(0);
+                }
+            }
+            else if (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal) {
+                ownerKey = anonymPrincipal.getAnonymousCloudConsumer().getOwnerKey();
+            }
+            else if (principal instanceof CloudConsumerPrincipal cloudConsumerPrincipal) {
+                ownerKey = cloudConsumerPrincipal.getOwnerKey();
             }
             else {
-                ownerKey = ownerKeys.get(0);
+                // There's no resolution we can perform here.
+                log.warn("Cannot determine organization with which to register client: {}", principal);
+                String errmsg = i18n.tr("Client is not authorized to register with any organization");
+                throw new BadRequestException(errmsg);
             }
-        }
-
-        if (ownerKey == null && (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal)) {
-            ownerKey = anonymPrincipal.getAnonymousCloudConsumer().getOwnerKey();
         }
 
         createOwnerIfNeeded(principal);
 
-        Owner owner = ownerCurator.getByKey(ownerKey);
-        if (owner == null) {
+        Owner origOwner = ownerCurator.getByKey(ownerKey);
+        if (origOwner == null) {
             throw new BadRequestException(i18n.tr("Organization {0} does not exist.", ownerKey));
+        }
+        Owner owner;
+        if (Boolean.TRUE.equals(origOwner.getClaimed()) && origOwner.getClaimantOwner() != null) {
+            owner = ownerCurator.getByKey(origOwner.getClaimantOwner());
+        }
+        else {
+            owner = origOwner;
         }
 
         // Check permissions for current principal on the owner:
@@ -2180,8 +2200,9 @@ public class ConsumerResource implements ConsumerApi {
             caCert = this.contentAccessManager.getCertificate(consumer);
         }
         catch (Exception e) {
+            log.error(e.getMessage(), e);
             throw new IseException(i18n.tr("Unable to retrieve or create anonymous content access " +
-            "certificate for consumer"), e);
+            "certificate for consumer"));
         }
 
         // Filter the certificate if we need to

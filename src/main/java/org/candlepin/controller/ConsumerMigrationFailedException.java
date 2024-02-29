@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,22 +12,14 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.service;
 
-public enum CloudProvider {
-    AWS("AWS"),
-    AWS_CHINA("ACN"),
-    AWS_GOV_CLOUD("AGOV"),
-    AZURE("MSAZ"),
-    GCE("GCE");
+package org.candlepin.controller;
 
-    private final String shortName;
-
-    CloudProvider(String shortName) {
-        this.shortName = shortName;
-    }
-
-    public String shortName() {
-        return shortName;
+/**
+ * Exception thrown when a problem occurs during consumer migration.
+ */
+public class ConsumerMigrationFailedException extends RuntimeException {
+    public ConsumerMigrationFailedException(String message) {
+        super(message);
     }
 }

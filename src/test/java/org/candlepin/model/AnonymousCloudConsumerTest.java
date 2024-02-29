@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.candlepin.service.CloudProvider;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -42,7 +42,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
         String expectedInstanceId = "instance-id";
         String expectedOfferId = "offer-id";
         String expectedProductId = "product-id";
-        CloudProvider expectedCloudProviderShortName = CloudProvider.AWS;
+        String expectedCloudProviderShortName = TestUtil.randomString();
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId(expectedCloudAccountId)
             .setCloudInstanceId(expectedInstanceId)
@@ -70,7 +70,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
             .setProductIds(List.of("product-id"))
             .setCloudInstanceId("instance-id")
             .setCloudOfferingId("offer-id")
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
 
         assertThrows(ConstraintViolationException.class,
             () -> anonymousCloudConsumerCurator.create(consumer));
@@ -82,7 +82,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
             .setCloudAccountId("cloud-account-id")
             .setProductIds(List.of("product-id"))
             .setCloudOfferingId("offer-id")
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
 
         assertThrows(ConstraintViolationException.class,
             () -> anonymousCloudConsumerCurator.create(consumer));
@@ -94,7 +94,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
             .setCloudAccountId("cloud-account-id")
             .setProductIds(List.of("product-id"))
             .setCloudInstanceId("instance-id")
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
 
         assertThrows(ConstraintViolationException.class,
             () -> anonymousCloudConsumerCurator.create(consumer));
@@ -106,7 +106,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
             .setCloudAccountId("cloud-account-id")
             .setCloudInstanceId("instance-id")
             .setCloudOfferingId("offer-id")
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
 
         assertThrows(ConstraintViolationException.class,
             () -> anonymousCloudConsumerCurator.create(consumer));
@@ -162,7 +162,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
     public void testUpdateToUuid() {
         String expectedCloudAccountId = "cloud-account-id";
         String expectedProductId = "product-id";
-        CloudProvider expectedCloudProviderShortName = CloudProvider.GCE;
+        String expectedCloudProviderShortName = TestUtil.randomString();
         String expectedInstanceId = "instance-id";
         String expectedOfferId = "offer-id";
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
@@ -210,7 +210,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
         String expectedInstanceId = "instance-id";
         String expectedProductId = "product-id";
         String expectedOfferId = "offer-id";
-        CloudProvider expectedCloudProviderShortName = CloudProvider.GCE;
+        String expectedCloudProviderShortName = TestUtil.randomString();
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId("initial-cloud-account-id")
             .setCloudInstanceId("instance-id")
@@ -256,7 +256,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
         String expectedCloudAccountId = "cloud-account-id";
         String expectedOfferId = "offer-id";
         String expectedProductId = "product-id";
-        CloudProvider expectedCloudProviderShortName = CloudProvider.GCE;
+        String expectedCloudProviderShortName = TestUtil.randomString();
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId(expectedCloudAccountId)
             .setCloudInstanceId("init-instance-id")
@@ -302,7 +302,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
         String expectedCloudAccountId = "cloud-account-id";
         String expectedProductId = "product-id";
         String expectedInstanceId = "instance-id";
-        CloudProvider expectedCloudProviderShortName = CloudProvider.GCE;
+        String expectedCloudProviderShortName = TestUtil.randomString();
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId(expectedCloudAccountId)
             .setCloudInstanceId(expectedInstanceId)
@@ -357,7 +357,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
             .setCloudInstanceId("instance-id")
             .setCloudOfferingId("offer-id")
             .setProductIds(productIds)
-            .setCloudProviderShortName(CloudProvider.AWS);
+            .setCloudProviderShortName(TestUtil.randomString());
 
         consumer = anonymousCloudConsumerCurator.create(consumer);
 
@@ -372,7 +372,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
         String expectedCloudAccountId = "cloud-account-id";
         String expectedInstanceId = "instance-id";
         String expectedOfferId = "offer-id";
-        CloudProvider expectedCloudProviderShortName = CloudProvider.AWS;
+        String expectedCloudProviderShortName = TestUtil.randomString();
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId(expectedCloudAccountId)
             .setCloudInstanceId("instance-id")
@@ -417,11 +417,11 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
             .setCloudInstanceId(expectedInstanceId)
             .setCloudOfferingId(expectedOfferId)
             .setProductIds(List.of(expectedProductId))
-            .setCloudProviderShortName(CloudProvider.AWS)
+            .setCloudProviderShortName(TestUtil.randomString())
             .setProductIds(List.of(expectedProductId));
 
         consumer = anonymousCloudConsumerCurator.create(consumer);
-        CloudProvider expectedCloudProviderShortName = CloudProvider.GCE;
+        String expectedCloudProviderShortName = TestUtil.randomString();
         consumer.setCloudProviderShortName(expectedCloudProviderShortName);
 
         AnonymousCloudConsumer actual = anonymousCloudConsumerCurator.merge(consumer);
@@ -440,10 +440,12 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testUpdateToAnonymousContentAccessCertificate() {
+        CertificateSerial serial = new CertificateSerial();
+        this.certSerialCurator.create(serial);
         AnonymousContentAccessCertificate certificate = new AnonymousContentAccessCertificate();
         certificate.setCert("cert-1");
         certificate.setKey("key-1");
-        certificate.setSerial(new CertificateSerial(12345L));
+        certificate.setSerial(serial);
 
         certificate = anonymousContentAccessCertCurator.create(certificate);
 
@@ -451,7 +453,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
         String expectedInstanceId = "instance-id";
         String expectedOfferId = "offer-id";
         String expectedProductId = "product-id";
-        CloudProvider expectedCloudProviderShortName = CloudProvider.AWS;
+        String expectedCloudProviderShortName = TestUtil.randomString();
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId(expectedCloudAccountId)
             .setCloudInstanceId(expectedInstanceId)
@@ -462,10 +464,12 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
 
         consumer = anonymousCloudConsumerCurator.create(consumer);
 
+        CertificateSerial expectedSerial = new CertificateSerial();
+        this.certSerialCurator.create(expectedSerial);
         AnonymousContentAccessCertificate expectedCert = new AnonymousContentAccessCertificate();
         expectedCert.setCert("cert-2");
         expectedCert.setKey("key-2");
-        expectedCert.setSerial(new CertificateSerial(678910L));
+        expectedCert.setSerial(expectedSerial);
         expectedCert = anonymousContentAccessCertCurator.create(expectedCert);
         consumer.setContentAccessCert(expectedCert);
 

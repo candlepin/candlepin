@@ -614,6 +614,70 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /cloud/consumers/anonymous:
+    delete:
+      description: Removes Anonymous Consumers (for testing purposes only)
+      tags:
+        - cloud_registration
+      operationId: deleteAnonymousConsumersByAccountId
+      security: [ ]
+      parameters:
+        - name: cloud_account_id
+          in: query
+          description: The ID of the Cloud Account
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: A successful operation.
+        403:
+          description: Anonymous Consumers could not be deleted due to insufficient permissions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Anonymous Consumers could not be deleted due to insufficient permissions.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /cloud/jobs/orgsetup/{cloud_account_id}:
+    delete:
+      description: Cancels all jobs associated with the specified cloud account ID (for testing purpose only)
+      tags:
+        - cloud_registration
+      operationId: cancelCloudAccountJobs
+      parameters:
+        - in: path
+          name: cloud_account_id
+          description: The ID of the cloud account
+          required: true
+          schema:
+            type: string
+      security: [ ]
+      responses:
+        200:
+          description: List of ids for jobs associated with the cloud account id that were cancelled.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        400:
+          description: Cloud account ID is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Cloud account ID is null or empty.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /consumers:
     get:
       description: Retrieves a list of the Consumers according to search criteria.
@@ -6643,6 +6707,55 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /owners/{anonymous_owner_key}/claim:
+    put:
+      description: Claims consumers of an anonymous owner and migrates them to the claimant owner
+      tags:
+        - owner
+      operationId: claim
+      security: []
+      parameters:
+        - name: anonymous_owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Claimant owner
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimantOwner'
+      responses:
+        200:
+          description:  A job to migrate consumers has been scheduled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        400:
+          description: Owner key is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Owner key could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /products/{product_uuid}:
     get:
       description: Retrieves a single Product
@@ -8294,6 +8407,15 @@ components:
           type: string
           minLength: 1
 
+    ClaimantOwner:
+      description: Represents an owner claiming the consumers of an anonymous owner
+      required:
+        - claimant_owner_key
+      properties:
+        claimant_owner_key:
+          type: string
+          minLength: 1
+
     CloudRegistrationDTO:
       description: Contains data for performing automatic cloud-based registration.
       required:
@@ -9028,6 +9150,8 @@ components:
               type: boolean
             claimed:
               type: boolean
+            claimantOwner:
+              type: string
 
     OwnerInfo:
       description: Represents owner information

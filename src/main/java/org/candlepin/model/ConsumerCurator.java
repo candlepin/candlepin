@@ -29,6 +29,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
@@ -39,6 +41,7 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,6 +56,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -1786,4 +1791,61 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         return updated;
     }
+
+    /**
+     * Takes a list of consumers and of each, updates its owner to the given one.
+     *
+     * @param consumerIds
+     *  consumer to be updated
+     * @param newOwner
+     *  owner to update the consumers to
+     */
+    @Transactional
+    public void bulkUpdateOwner(Collection<String> consumerIds, Owner newOwner) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return;
+        }
+        if (newOwner == null) {
+            throw new IllegalArgumentException("New owner is required!");
+        }
+
+        String query = """
+            UPDATE Consumer c \
+            SET c.owner.id = :ownerId \
+            WHERE c.id IN (:consumers)
+            """;
+
+        for (Collection<String> consumersBlock : this.partition(consumerIds)) {
+            this.currentSession().createQuery(query)
+                .setParameter("ownerId", newOwner.getId())
+                .setParameter("consumers", consumersBlock)
+                .executeUpdate();
+        }
+    }
+
+    public Collection<String> lockAndLoadIds(Collection<? extends Serializable> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Sort and de-duplicate the provided collection of IDs so we have a deterministic locking
+        // order for the entities (helps avoid deadlock)
+        SortedSet<Serializable> idSet = new TreeSet<>(ids);
+
+        // Fetch the IDs of locked entities from the DB...
+        String hql = """
+            SELECT c.id FROM Consumer c
+            WHERE c.id IN (:ids)""";
+        Query<String> query = this.currentSession()
+            .createQuery(hql, String.class)
+            .setLockOptions(new LockOptions(LockMode.PESSIMISTIC_WRITE));
+
+        List<String> lockedIds = new ArrayList<>(idSet.size());
+        for (List<Serializable> idBlock : this.partition(idSet)) {
+            lockedIds.addAll(query.setParameter("ids", idBlock).getResultList());
+        }
+
+        return lockedIds;
+    }
+
 }

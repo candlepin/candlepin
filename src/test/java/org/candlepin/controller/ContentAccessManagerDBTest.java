@@ -20,6 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.cache.AnonymousCertContentCache;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
@@ -63,6 +64,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
     private X509V3ExtensionUtil x509V3ExtensionUtil;
 
     private EventSink mockEventSink;
+    private AnonymousCertContentCache cache;
 
     @Mock
     private ProductServiceAdapter mockProdAdapter;
@@ -79,6 +81,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
             ObjectMapperFactory.getObjectMapper()));
 
         this.mockEventSink = mock(EventSink.class);
+        this.cache = new AnonymousCertContentCache(this.config);
     }
 
     private ContentAccessManager createManager() {
@@ -86,7 +89,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
             this.caCertCurator, this.certSerialCurator, this.ownerCurator, this.ownerContentCurator,
             this.consumerCurator, this.consumerTypeCurator, this.environmentCurator, this.caCertCurator,
             this.mockEventSink, this.anonymousCloudConsumerCurator, this.anonymousContentAccessCertCurator,
-            this.mockProdAdapter);
+            this.mockProdAdapter, this.cache);
     }
 
     private Owner createSCAOwner() {

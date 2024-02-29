@@ -22,6 +22,7 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -39,11 +40,11 @@ class IdentityCertificateCuratorTest extends DatabaseTestFixture {
         String exclude2 = createExpiredIdCertWithUpstreamConsumer().getId();
         String exclude3 = createExpiredManifestIdCert().getId();
 
-        List<ExpiredCertificate> expiredCertificates = this.identityCertificateCurator.listAllExpired();
+        List<CertSerial> expiredCertificates = this.identityCertificateCurator.listAllExpired();
 
         assertEquals(2, expiredCertificates.size());
         Set<String> expiredCertIds = expiredCertificates.stream()
-            .map(ExpiredCertificate::getCertId)
+            .map(CertSerial::certId)
             .collect(Collectors.toSet());
         assertFalse(expiredCertIds.contains(idCert));
         assertFalse(expiredCertIds.contains(exclude1));
@@ -76,6 +77,34 @@ class IdentityCertificateCuratorTest extends DatabaseTestFixture {
         assertEquals(0, this.identityCertificateCurator.deleteByIds(null));
         assertEquals(0, this.identityCertificateCurator.deleteByIds(List.of()));
         assertEquals(0, this.identityCertificateCurator.deleteByIds(List.of("UnknownId")));
+    }
+
+    @Test
+    public void shouldFetchIdCertSerials() {
+        Owner owner = createOwner();
+        Consumer consumer1 = createConsumerWithIdCert(owner);
+        Consumer consumer2 = createConsumerWithIdCert(owner);
+        Consumer consumer3 = createConsumerWithIdCert(owner);
+        List<CertSerial> expected = List.of(
+            new CertSerial(consumer1.getIdCert().getId(), consumer1.getIdCert().getSerial().getId()),
+            new CertSerial(consumer2.getIdCert().getId(), consumer2.getIdCert().getSerial().getId()),
+            new CertSerial(consumer3.getIdCert().getId(), consumer3.getIdCert().getSerial().getId())
+        );
+
+        List<CertSerial> serials = this.identityCertificateCurator.listCertSerials(List.of(
+            consumer1.getId(), consumer2.getId(), consumer3.getId()
+        ));
+
+        Assertions.assertThat(serials)
+            .hasSize(3)
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    private Consumer createConsumerWithIdCert(Owner owner) {
+        IdentityCertificate idCert = createIdCert();
+        Consumer consumer = createConsumer(owner)
+            .setIdCert(idCert);
+        return this.consumerCurator.saveOrUpdate(consumer);
     }
 
     private IdentityCertificate createExpiredIdCert() {

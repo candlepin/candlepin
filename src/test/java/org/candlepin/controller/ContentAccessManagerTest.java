@@ -29,12 +29,15 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.cache.AnonymousCertContent;
+import org.candlepin.cache.AnonymousCertContentCache;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
@@ -73,7 +76,6 @@ import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.JSSPKIUtility;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
-import org.candlepin.service.CloudProvider;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
@@ -105,7 +107,9 @@ import org.mockito.stubbing.Answer;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.KeyPair;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -152,6 +156,7 @@ public class ContentAccessManagerTest {
     private ObjectMapper objectMapper;
     private PKIUtility pkiUtility;
     private X509V3ExtensionUtil x509V3ExtensionUtil;
+    private AnonymousCertContentCache cache;
 
     private final String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
     private final String orgEnvironmentMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
@@ -207,6 +212,8 @@ public class ContentAccessManagerTest {
         EntityManager entityManager = mock(EntityManager.class);
         TestUtil.mockTransactionalFunctionality(entityManager, this.mockConsumerCurator,
             this.mockAnonCloudConsumerCurator);
+
+        cache = new AnonymousCertContentCache(config);
     }
 
     public static class PersistSimulator<T extends AbstractHibernateObject> implements Answer<T> {
@@ -233,7 +240,7 @@ public class ContentAccessManagerTest {
             this.mockCertSerialCurator, this.mockOwnerCurator, this.mockOwnerContentCurator,
             this.mockConsumerCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
             this.mockContentAccessCertCurator, this.mockEventSink, this.mockAnonCloudConsumerCurator,
-            this.mockAnonContentAccessCertCurator, this.mockProdAdapter);
+            this.mockAnonContentAccessCertCurator, this.mockProdAdapter, this.cache);
     }
 
     private ContentAccessManager createManager() {
@@ -895,7 +902,7 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testGetCertificateWithNullAnonymousCloudConsumer() {
+    public void testGetCertificateForAnonConsumerWithNullAnonymousCloudConsumer() {
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
         ContentAccessManager manager = this.createManager();
         AnonymousCloudConsumer consumer = null;
@@ -905,7 +912,7 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testGetCertificateWithStandaloneMode() {
+    public void testGetCertificateForAnonConsumerWithStandaloneMode() {
         this.config.setProperty(ConfigProperties.STANDALONE, "true");
 
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
@@ -913,7 +920,7 @@ public class ContentAccessManagerTest {
         consumer.setUuid("uuid");
         consumer.setCloudAccountId("account-id");
         consumer.setCloudInstanceId("instance-id");
-        consumer.setCloudProviderShortName(CloudProvider.AWS);
+        consumer.setCloudProviderShortName(TestUtil.randomString());
 
         ContentAccessManager manager = this.createManager();
 
@@ -921,7 +928,7 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testGetCertificateWithExistingCertificate() throws Exception {
+    public void testGetCertificateForAnonConsumerWithExistingCertificate() throws Exception {
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         CertificateSerial serial = new CertificateSerial(12345L);
@@ -938,7 +945,7 @@ public class ContentAccessManagerTest {
         consumer.setUuid("uuid");
         consumer.setCloudAccountId("account-id");
         consumer.setCloudInstanceId("instance-id");
-        consumer.setCloudProviderShortName(CloudProvider.AWS);
+        consumer.setCloudProviderShortName(TestUtil.randomString());
         consumer.setContentAccessCert(expected);
 
         ContentAccessManager manager = this.createManager();
@@ -958,7 +965,7 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testGetCertificateWithNoExistingCertificate() throws Exception {
+    public void testGetCertificateForAnonConsumerWithNoExistingCertificate() throws Exception {
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
@@ -966,8 +973,9 @@ public class ContentAccessManagerTest {
         consumer.setUuid("uuid");
         consumer.setCloudAccountId("account-id");
         consumer.setCloudInstanceId("instance-id");
-        consumer.setCloudProviderShortName(CloudProvider.AWS);
+        consumer.setCloudProviderShortName(TestUtil.randomString());
         consumer.setContentAccessCert(null);
+        consumer.setProductIds(List.of(TestUtil.randomString()));
 
         CertificateSerial expectedSerial = new CertificateSerial(678910L);
         expectedSerial.setExpiration(Util.tomorrow());
@@ -999,7 +1007,67 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testGetCertificateWithExpiredCertificate() throws Exception {
+    public void testGetCertificateForAnonConsumerWithCachedCertContent() throws Exception {
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        List<String> skuIds = List.of(TestUtil.randomString(), TestUtil.randomString());
+        cache.put(skuIds, new AnonymousCertContent(TestUtil.randomString(), getRandomContents(2)));
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+        consumer.setId("id");
+        consumer.setUuid("uuid");
+        consumer.setCloudAccountId("account-id");
+        consumer.setCloudInstanceId("instance-id");
+        consumer.setCloudProviderShortName(TestUtil.randomString());
+        consumer.setContentAccessCert(null);
+        consumer.setProductIds(skuIds);
+
+        CertificateSerial expectedSerial = new CertificateSerial(678910L);
+        expectedSerial.setExpiration(Util.tomorrow());
+        AnonymousContentAccessCertificate expected = new AnonymousContentAccessCertificate();
+        expected.setId("id-2");
+        expected.setKey("key-2");
+        expected.setCert("cert-2");
+        expected.setSerial(expectedSerial);
+
+        doReturn(expected).when(this.mockAnonContentAccessCertCurator)
+            .create(any(AnonymousContentAccessCertificate.class));
+
+        ContentAccessManager manager = this.createManager();
+        AnonymousContentAccessCertificate actual = manager.getCertificate(consumer);
+
+        assertThat(actual)
+            .isNotNull()
+            .returns(expected.getId(), AnonymousContentAccessCertificate::getId)
+            .returns(expected.getCert(), AnonymousContentAccessCertificate::getCert)
+            .returns(expected.getCreated(), AnonymousContentAccessCertificate::getCreated)
+            .returns(expected.getUpdated(), AnonymousContentAccessCertificate::getUpdated)
+            .returns(expected.getAnonymousCloudConsumer(),
+                AnonymousContentAccessCertificate::getAnonymousCloudConsumer)
+            .returns(expected.getKey(), AnonymousContentAccessCertificate::getKey)
+            .returns(expected.getSerial(), AnonymousContentAccessCertificate::getSerial);
+
+        verify(mockProdAdapter, never()).getChildrenByProductIds(any(Collection.class));
+    }
+
+    @Test
+    public void testGetCertificateForAnonConsumerWithNoExistingCertificateAndNoProdIds() throws Exception {
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+        consumer.setId("id");
+        consumer.setUuid("uuid");
+        consumer.setCloudAccountId("account-id");
+        consumer.setCloudInstanceId("instance-id");
+        consumer.setCloudProviderShortName(TestUtil.randomString());
+        consumer.setContentAccessCert(null);
+
+        ContentAccessManager manager = this.createManager();
+        assertThrows(RuntimeException.class, () ->manager.getCertificate(consumer));
+    }
+
+    @Test
+    public void testGetCertificateForAnonConsumerWithExpiredCertificate() throws Exception {
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         CertificateSerial expiredSerial = new CertificateSerial(12345L);
@@ -1017,7 +1085,7 @@ public class ContentAccessManagerTest {
         consumer.setUuid("uuid");
         consumer.setCloudAccountId("account-id");
         consumer.setCloudInstanceId("instance-id");
-        consumer.setCloudProviderShortName(CloudProvider.AWS);
+        consumer.setCloudProviderShortName(TestUtil.randomString());
         consumer.setProductIds(prodIds);
         consumer.setContentAccessCert(cert);
 
@@ -1052,7 +1120,8 @@ public class ContentAccessManagerTest {
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @NullAndEmptySource
-    public void testGetCertificateWithInvalidProductInfoFromAdapter(List<String> prods) throws Exception {
+    public void testGetCertificateForAnonConsumerWithInvalidProductInfoFromAdapter(List<String> prods)
+        throws Exception {
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
@@ -1060,8 +1129,9 @@ public class ContentAccessManagerTest {
         consumer.setUuid("uuid");
         consumer.setCloudAccountId("account-id");
         consumer.setCloudInstanceId("instance-id");
-        consumer.setCloudProviderShortName(CloudProvider.AWS);
+        consumer.setCloudProviderShortName(TestUtil.randomString());
         consumer.setContentAccessCert(null);
+        consumer.setProductIds(List.of(TestUtil.randomString()));
 
         doReturn(prods).when(this.mockProdAdapter).getChildrenByProductIds(consumer.getProductIds());
 
@@ -1087,9 +1157,30 @@ public class ContentAccessManagerTest {
         doReturn(content).when(prodContent).getContent();
 
         ProductInfo prodInfo = mock(ProductInfo.class);
+        doReturn("prod-id").when(prodInfo).getId();
         doReturn(List.of(prodContent)).when(prodInfo).getProductContent();
 
         return prodInfo;
+    }
+
+    private List<org.candlepin.model.dto.Content> getRandomContents(int size) {
+        List<org.candlepin.model.dto.Content> content = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            content.add(getRandomContent());
+        }
+
+        return content;
+    }
+
+    private org.candlepin.model.dto.Content getRandomContent() {
+        org.candlepin.model.dto.Content content = new org.candlepin.model.dto.Content();
+        content.setId(TestUtil.randomString());
+        content.setLabel(TestUtil.randomString());
+        content.setPath(TestUtil.randomString());
+        content.setType(TestUtil.randomString());
+        content.setVendor(TestUtil.randomString());
+
+        return content;
     }
 
 }
