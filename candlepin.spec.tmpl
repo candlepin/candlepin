@@ -23,7 +23,7 @@
 
 Name: candlepin
 Version: 4.4.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -240,6 +240,44 @@ fi
 
 #raw
 %changelog
+* Thu Feb 29 2024 Nikos Moumoulidis <nmoumoul@redhat.com> 4.4.1-2
+- CANDLEPIN-801: Added registration only to CloudAuthenticationResult
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-794: Remove 'ownerKey' field from
+  CloudRegistrationAdapter.setupCloudAccountOrg (ojanus@redhat.com)
+- CANDLEPIN-779: Add API endpoint to cancel CloudAccountOrgSetupJobs
+  (sbakaj@redhat.com)
+- Generate new Identity cert for claimed systems (nmoumoul@redhat.com)
+- CANDLEPIN-778: Add API endpoint for Anonymous Consumer deletion
+  (wpoteat@redhat.com)
+- CANDLEPIN-774: HostedTestCloudRegistrationAdapter should decode metadata as
+  base64 (wpoteat@redhat.com)
+- Do not specify owner query param in Autoreg spec tests (nmoumoul@redhat.com)
+- CANDLEPIN-754: Register late anonymous consumers to the claimant org
+  (ojanus@redhat.com)
+- CANDLEPIN-770: Added max size for AnonymousCertContentCache - Added
+  configuration for adding max number of entries for
+  AnonymousCertContentCache - Added default value for new max size
+  configuration (joshmalbrecht@gmail.com)
+- CANDLEPIN-720: Implement Anonymous Owner Claim endpoint (ojanus@redhat.com)
+- Log anonymous cert generation root cause errors (nmoumoul@redhat.com)
+- CANDLEPIN-733: Created anonymous certificate content cache - Created
+  ConsumerCertificateContentCache to cache cert content - Added the cache to
+  the ContentAccessManager and attempt to use the   cached content when
+  creating anonymous content access certificates - Removed unused
+  CloudRegistrationAdapter and PoolCurator from the   ConsumerResource class
+  (joshmalbrecht@gmail.com)
+- Update/add foreign keys around cp_anonymous_certificates
+  (nmoumoul@redhat.com)
+- CANDLEPIN-728: Enable tracing for calls between Candlepin async jobs and
+  RHSM-API (sbakaj@redhat.com)
+- Fix autoregv2 reauthentication & other flow updates (nmoumoul@redhat.com)
+- cloud.enable set to true when hosted flag is used on deploy
+  (wpoteat@redhat.com)
+- CANDLEPIN-742: Replaced CloudProvider enum for String - Replaced the
+  CloudProvider enum with String to remove the   limitation put on the adapters
+  (joshmalbrecht@gmail.com)
+
 * Fri Nov 24 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.1-1
 - Add new translations using Weblate (noreply@weblate.org)
 - Fix flaky CloudAccountOrgSetupJob spec test (nmoumoul@redhat.com)
