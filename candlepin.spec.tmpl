@@ -23,7 +23,7 @@
 
 Name: candlepin
 Version: 4.4.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -240,6 +240,9 @@ fi
 
 #raw
 %changelog
+* Thu Feb 29 2024 Nikos Moumoulidis <nmoumoul@redhat.com> 4.4.1-3
+- 
+
 * Thu Feb 29 2024 Nikos Moumoulidis <nmoumoul@redhat.com> 4.4.1-2
 - CANDLEPIN-801: Added registration only to CloudAuthenticationResult
   (joshmalbrecht@gmail.com)
