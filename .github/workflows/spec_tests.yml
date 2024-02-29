@@ -68,7 +68,7 @@ jobs:
           echo "MODULE_CONFIG_MANIFESTGEN_CONFIGURATION_MODULE=org.candlepin.testext.manifestgen.ManifestGeneratorModule" >> .env
 
       - name: Build Candlepin war file
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
         with:
           arguments: war -Ptest_extensions=hostedtest,manifestgen
 
