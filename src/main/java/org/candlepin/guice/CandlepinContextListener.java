@@ -22,6 +22,7 @@ import org.candlepin.audit.ActiveMQContextListener;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.RyeConfig;
+import org.candlepin.config.validation.ConfigurationValidatorUtil;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.logging.LoggingConfigurator;
 import org.candlepin.messaging.CPMContextListener;
@@ -163,6 +164,9 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         servletContext.setAttribute(CONFIGURATION_NAME, config);
         setCapabilities(config);
         log.debug("Candlepin stored config on context.");
+
+        log.info("Validating configurations.");
+        ConfigurationValidatorUtil.validateConfigurations(ConfigProperties.CONFIGURATION_VALIDATORS, config);
 
         // check state of database against liquibase changelogs
         checkDbChangelog();

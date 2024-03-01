@@ -743,7 +743,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         String ownerKey = "test_owner";
         this.mockOwner(ownerKey);
         OwnerResource resource = this.buildOwnerResource();
-        doReturn(5000L).when(this.mockConsumerCurator).getConsumerCount(any(ConsumerQueryArguments.class));
+        doReturn(12000L).when(this.mockConsumerCurator).getConsumerCount(any(ConsumerQueryArguments.class));
 
         assertThrows(BadRequestException.class, () -> resource.listConsumers(ownerKey, "username", null, null,
             null, null, null, null, null, null));

@@ -14,6 +14,8 @@
  */
 package org.candlepin.resteasy.filter;
 
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.PageRequest.Order;
@@ -40,10 +42,12 @@ import javax.ws.rs.ext.Provider;
 @Priority(Priorities.USER)
 public class PageRequestFilter implements ContainerRequestFilter {
     private final javax.inject.Provider<I18n> i18nProvider;
+    private final Configuration configuration;
 
     @Inject
-    public PageRequestFilter(javax.inject.Provider<I18n> i18nProvider) {
+    public PageRequestFilter(javax.inject.Provider<I18n> i18nProvider, Configuration configuration) {
         this.i18nProvider = Objects.requireNonNull(i18nProvider);
+        this.configuration = Objects.requireNonNull(configuration);
     }
 
     @Override
@@ -77,8 +81,9 @@ public class PageRequestFilter implements ContainerRequestFilter {
                     p.setPerPage(readInteger(perPage));
                 }
                 else if (page != null && perPage == null) {
+                    int pagingSize = this.configuration.getInt(ConfigProperties.PAGING_SIZE);
                     p.setPage(readInteger(page));
-                    p.setPerPage(PageRequest.DEFAULT_PER_PAGE);
+                    p.setPerPage(pagingSize);
                 }
                 else {
                     p.setPage(readInteger(page));
