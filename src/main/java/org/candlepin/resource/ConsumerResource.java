@@ -202,9 +202,6 @@ public class ConsumerResource implements ConsumerApi {
 
     private static final Logger log = LoggerFactory.getLogger(ConsumerResource.class);
 
-    /** The maximum number of consumers to return per list or find request */
-    private static final int MAX_CONSUMERS_PER_REQUEST = 1000;
-
     private final ConsumerCurator consumerCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
     private final SubscriptionServiceAdapter subAdapter;
@@ -652,9 +649,10 @@ public class ConsumerResource implements ConsumerApi {
         }
         // If no paging was specified, force a limit on amount of results
         else {
-            if (count > MAX_CONSUMERS_PER_REQUEST) {
+            int maxSize = config.getInt(ConfigProperties.MAX_PAGING_SIZE);
+            if (count > maxSize) {
                 String errmsg = this.i18n.tr("This endpoint does not support returning more than {0} " +
-                    "results at a time, please use paging.", MAX_CONSUMERS_PER_REQUEST);
+                    "results at a time, please use paging.", maxSize);
                 throw new BadRequestException(errmsg);
             }
         }
