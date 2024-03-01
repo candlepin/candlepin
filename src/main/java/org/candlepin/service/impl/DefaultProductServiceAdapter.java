@@ -15,8 +15,8 @@
 package org.candlepin.service.impl;
 
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.pki.certs.ProductCertificateGenerator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.ProductInfo;
@@ -26,6 +26,7 @@ import com.google.inject.persist.Transactional;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -35,16 +36,14 @@ import javax.inject.Inject;
  * Default implementation of the ProductserviceAdapter.
  */
 public class DefaultProductServiceAdapter implements ProductServiceAdapter {
-
-    private ProductCurator productCurator;
-    private ProductCertificateCurator prodCertCurator;
+    private final ProductCurator productCurator;
+    private final ProductCertificateGenerator productCertificateGenerator;
 
     @Inject
     public DefaultProductServiceAdapter(ProductCurator productCurator,
-        ProductCertificateCurator prodCertCurator) {
-
-        this.productCurator = productCurator;
-        this.prodCertCurator = prodCertCurator;
+        ProductCertificateGenerator productCertificateGenerator) {
+        this.productCurator = Objects.requireNonNull(productCurator);
+        this.productCertificateGenerator = Objects.requireNonNull(productCertificateGenerator);
     }
 
     @Override
@@ -55,7 +54,7 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         // Given the task here, we can't possibly know what namespace the product may exist in, so
         // we'll need to check both.
         Product entity = this.productCurator.resolveProductId(ownerKey, productId);
-        return entity != null ? this.prodCertCurator.getCertForProduct(entity) : null;
+        return this.productCertificateGenerator.getCertificate(entity);
     }
 
     @Override
