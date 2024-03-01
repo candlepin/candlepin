@@ -18,8 +18,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.guice.I18nProvider;
 import org.candlepin.paging.PageRequest;
@@ -31,6 +34,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 
 import javax.servlet.http.HttpServletRequest;
@@ -42,6 +47,7 @@ import javax.ws.rs.container.ContainerRequestContext;
  * PageRequestFilterTest
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class PageRequestFilterTest {
 
     @Mock
@@ -53,11 +59,16 @@ public class PageRequestFilterTest {
     private MockHttpRequest mockReq;
     @Mock
     private ContainerRequestContext mockRequestContext;
+    @Mock
+    private Configuration mockConfiguration;
+
+    private int defaultPageSize = 1000;
 
     @BeforeEach
     public void setUp() {
         this.i18nProvider = new I18nProvider(() -> this.mockServletReq);
-        interceptor = new PageRequestFilter(this.i18nProvider);
+        doReturn(defaultPageSize).when(mockConfiguration).getInt(ConfigProperties.PAGING_SIZE);
+        interceptor = new PageRequestFilter(this.i18nProvider, this.mockConfiguration);
     }
 
     @Test
@@ -96,7 +107,7 @@ public class PageRequestFilterTest {
         interceptor.filter(mockRequestContext);
 
         PageRequest p = ResteasyContext.getContextData(PageRequest.class);
-        assertEquals(PageRequest.DEFAULT_PER_PAGE, p.getPerPage());
+        assertEquals(defaultPageSize, p.getPerPage());
         assertEquals(Integer.valueOf(5), p.getPage());
         assertEquals(PageRequest.DEFAULT_ORDER, p.getOrder());
         assertNull(p.getSortBy());

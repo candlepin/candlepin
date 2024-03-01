@@ -1621,7 +1621,7 @@ public class ConsumerResourceTest {
     @Test
     public void testSearchConsumersRequiresPagingForLargeResultSets() {
         ResteasyContext.pushContext(PageRequest.class, null);
-        doReturn(5000L).when(this.consumerCurator).getConsumerCount(any(ConsumerQueryArguments.class));
+        doReturn(12000L).when(this.consumerCurator).getConsumerCount(any(ConsumerQueryArguments.class));
 
         assertThrows(BadRequestException.class, () -> this.consumerResource
             .searchConsumers("username", null, null, null, null, null, null, null, null, null, null));

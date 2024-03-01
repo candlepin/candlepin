@@ -32,7 +32,6 @@ public class PageRequest {
     public static final String PER_PAGE_PARAM = "per_page";
 
     public static final Integer DEFAULT_PAGE = 1;
-    public static final Integer DEFAULT_PER_PAGE = 10;
     public static final Order DEFAULT_ORDER = Order.DESCENDING;
     public static final String DEFAULT_SORT_FIELD = "created";
 

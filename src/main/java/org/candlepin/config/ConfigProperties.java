@@ -25,9 +25,13 @@ import org.candlepin.async.tasks.InactiveConsumerCleanerJob;
 import org.candlepin.async.tasks.JobCleaner;
 import org.candlepin.async.tasks.ManifestCleanerJob;
 import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
+import org.candlepin.config.validation.ConfigurationValidator;
+import org.candlepin.config.validation.IntegerConfigurationValidator;
 import org.candlepin.guice.CandlepinContextListener;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -181,6 +185,10 @@ public class ConfigProperties {
     public static final String CACHE_ANON_CERT_CONTENT_TTL = "candlepin.cache.anonymous.cert.content.ttl";
     public static final String CACHE_ANON_CERT_CONTENT_MAX_ENTRIES =
         "candlepin.cache.anonymous.cert.content.max_entries";
+
+    // Paging
+    public static final String PAGING_SIZE = "candlepin.paging.default_page_size";
+    public static final String MAX_PAGING_SIZE = "candlepin.paging.max_page_size";
 
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
 
@@ -413,6 +421,9 @@ public class ConfigProperties {
             this.put(CACHE_ANON_CERT_CONTENT_TTL, "120000"); // milliseconds
             this.put(CACHE_ANON_CERT_CONTENT_MAX_ENTRIES, "10000");
 
+            this.put(PAGING_SIZE, "10");
+            this.put(MAX_PAGING_SIZE, "1000");
+
             this.put(SUSPEND_MODE_ENABLED, "true");
 
             this.put(IDENTITY_CERT_YEAR_ADDENDUM, "5");
@@ -535,6 +546,20 @@ public class ConfigProperties {
             this.put(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE, "100");
             this.put(DatabaseConfigFactory.BATCH_BLOCK_SIZE, "500");
             this.put(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT, "32000");
+        }
+    };
+
+    /**
+     * Contains validation criteria for configurations.
+     */
+    public static final List<ConfigurationValidator> CONFIGURATION_VALIDATORS = new ArrayList<>() {
+        {
+            this.add(new IntegerConfigurationValidator(PAGING_SIZE)
+                .min(1)
+                .lessThan(MAX_PAGING_SIZE));
+
+            this.add(new IntegerConfigurationValidator(MAX_PAGING_SIZE)
+                .min(1));
         }
     };
 }
