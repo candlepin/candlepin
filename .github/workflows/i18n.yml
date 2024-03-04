@@ -46,10 +46,7 @@ jobs:
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ matrix.java-version }}
-
-      - name: Add safe directory
-        shell: bash
-        run: git config --system --add safe.directory $GITHUB_WORKSPACE
+          set-safe-directory: $GITHUB_WORKSPACE
 
       - name: Run internationlization
         shell: bash
