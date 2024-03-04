@@ -238,13 +238,19 @@ ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "run"]
 
 The Candlepin development image is designed to run right after pulling the image using default Candlepin and Tomcat configurations as well as a default certificate and key for TLS communication and encryption. Since this certificate and key is packaged in a publicly available container image, the use of the Candlepin development image should **not** be used in a production environment to avoid security risks.
 
-The following is an example on how to run the Candlepin development container using the docker compose file.
+The following is an example on how to run the Candlepin development container using a docker compose file or a kubernetes file via podman.
 
-The compose file is in the dev-container directory that will pull that development image and the most
-current PostgreSQL image. The configuration settings are in that compose file as environment variables. Refer to the [default configuration](#development-image-default-configurations) section for details on the Candlepin development container's default configurations. Once configured
-you can start and stop(remove) the container with
+Two compose files are in the dev-container directory. They will pull the development image and the most
+current PostgreSQL image. The configuration settings are in those compose files as environment variables.
+Refer to the [default configuration](#development-image-default-configurations) section for details on the Candlepin development container's default configurations.
+
+Once configured you can start and stop(remove) the docker container with
 
 ``` docker compose up/down```
+
+Or the kubernetes container with 
+
+```podman play kube candlepin-deployment.yaml []/--down```
 
 
 ### Configure Candlepin Container

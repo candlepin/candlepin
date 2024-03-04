@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: candlepin
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:latest
+          env:
+              - name: POSTGRES_DB
+                value: candlepin
+              - name: POSTGRES_HOST_AUTH_METHOD
+                value: trust
+              - name: POSTGRES_PASSWORD
+                value: candlepin
+              - name: POSTGRES_USER
+                value: candlepin
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c  
+                - exec pg_isready -U candlepin -d candlepin -h localhost
+            failureThreshold: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+          ports:
+            - containerPort: 5432
+              hostPort: 5432
+              protocol: TCP
+          resources: {}
+          restartPolicy: Always
+        - name: candlepin
+          image: quay.io/candlepin/candlepin:dev-latest
+          env:
+            - name: CANDLEPIN_AUTH_CLOUD_ENABLE
+              value: "false"
+            - name: CANDLEPIN_AUTH_TRUSTED_ENABLE
+              value: "true"
+            - name: CANDLEPIN_STANDALONE
+              value: "false"
+            - name: JPA_CONFIG_HIBERNATE_CONNECTION_URL
+              value: jdbc:postgresql://postgres/candlepin
+            - name: MODULE_CONFIG_HOSTED_CONFIGURATION_MODULE
+              value: org.candlepin.testext.hostedtest.HostedTestModule
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec curl --fail -k https://localhost:8443/candlepin/status
+            failureThreshold: 10
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+          ports:
+            - containerPort: 8443
+              hostPort: 8443
+              protocol: TCP
+          resources: {}
+          restartPolicy: Always
+status: {}
