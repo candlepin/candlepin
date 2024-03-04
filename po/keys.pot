@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-25 07:08+0000\n"
+"POT-Creation-Date: 2024-03-04 13:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -476,16 +476,6 @@ msgstr ""
 msgid "No rules file found in the database"
 msgstr ""
 
-#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:104
-#, java-format
-msgid "Unable to find an owner with key: {0}"
-msgstr ""
-
-#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:116
-#, java-format
-msgid "Problem generating ueber cert for owner {0}"
-msgstr ""
-
 #: src/main/java/org/candlepin/paging/PagingUtil.java:97
 #, java-format
 msgid "Invalid or unsupported sort-by field: {0}"
@@ -493,6 +483,16 @@ msgstr ""
 
 #: src/main/java/org/candlepin/paging/PagingUtil.java:98
 msgid "Paging requested, but no sort-by field provided"
+msgstr ""
+
+#: src/main/java/org/candlepin/pki/certs/UeberCertificateGenerator.java:111
+#, java-format
+msgid "Unable to find an owner with key: {0}"
+msgstr ""
+
+#: src/main/java/org/candlepin/pki/certs/UeberCertificateGenerator.java:124
+#, java-format
+msgid "Problem generating ueber cert for owner {0}"
 msgstr ""
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:93
@@ -831,7 +831,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:126
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:156
 #: src/main/java/org/candlepin/resource/JobResource.java:361
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:725
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:724
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1684
 #, java-format
 msgid "An unexpected exception occurred while scheduling job \"{0}\""
@@ -1320,7 +1320,7 @@ msgid "One or more contents are already defined in the global namespace: {0}"
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:342
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:751
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:750
 #, java-format
 msgid "Owner with key \"{0}\" was not found."
 msgstr ""
@@ -1400,15 +1400,15 @@ msgstr ""
 msgid "Only numeric product IDs are allowed."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:610
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:609
 msgid "No content IDs provided"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:662
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:661
 msgid "No content IDs provided, or provided content ID list contains null IDs"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:699
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:698
 #, java-format
 msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more "
