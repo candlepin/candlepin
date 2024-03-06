@@ -120,6 +120,8 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
+import org.candlepin.pki.certs.CertificateCreationException;
+import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -140,7 +142,6 @@ import org.candlepin.resource.util.KeyValueStringParser;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
-import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -165,8 +166,6 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -212,7 +211,7 @@ public class ConsumerResource implements ConsumerApi {
     private final SubscriptionServiceAdapter subAdapter;
     private final ProductServiceAdapter prodAdapter;
     private final EntitlementCurator entitlementCurator;
-    private final IdentityCertServiceAdapter identityCertService;
+    private final IdentityCertificateGenerator identityCertificateGenerator;
     private final EntitlementCertServiceAdapter entCertService;
     private final ContentAccessManager contentAccessManager;
     private final UserServiceAdapter userService;
@@ -262,7 +261,7 @@ public class ConsumerResource implements ConsumerApi {
         SubscriptionServiceAdapter subAdapter,
         ProductServiceAdapter prodAdapter,
         EntitlementCurator entitlementCurator,
-        IdentityCertServiceAdapter identityCertService,
+        IdentityCertificateGenerator identityCertificateGenerator,
         EntitlementCertServiceAdapter entCertServiceAdapter,
         I18n i18n,
         EventSink sink,
@@ -308,7 +307,7 @@ public class ConsumerResource implements ConsumerApi {
         this.subAdapter = Objects.requireNonNull(subAdapter);
         this.prodAdapter = Objects.requireNonNull(prodAdapter);
         this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
-        this.identityCertService = Objects.requireNonNull(identityCertService);
+        this.identityCertificateGenerator = Objects.requireNonNull(identityCertificateGenerator);
         this.entCertService = Objects.requireNonNull(entCertServiceAdapter);
         this.i18n = Objects.requireNonNull(i18n);
         this.sink = Objects.requireNonNull(sink);
@@ -2135,7 +2134,6 @@ public class ConsumerResource implements ConsumerApi {
         contentAccessManager.removeContentAccessCert(toDelete);
         Event event = eventFactory.consumerDeleted(toDelete);
         consumerCurator.delete(toDelete);
-        identityCertService.deleteIdentityCert(toDelete);
         sink.queueEvent(event);
     }
 
@@ -2977,14 +2975,14 @@ public class ConsumerResource implements ConsumerApi {
 
         try {
             idCert = regen ?
-                identityCertService.regenerateIdentityCert(c) :
-                identityCertService.generateIdentityCert(c);
+                identityCertificateGenerator.regenerate(c) :
+                identityCertificateGenerator.generate(c);
 
             if (idCert == null) {
                 throw new BadRequestException(i18n.tr("Problem regenerating ID cert for unit {0}", c));
             }
         }
-        catch (GeneralSecurityException | IOException e) {
+        catch (CertificateCreationException e) {
             log.error("Problem regenerating ID cert for unit:", e);
             throw new BadRequestException(i18n.tr("Problem regenerating ID cert for unit {0}", c), e);
         }

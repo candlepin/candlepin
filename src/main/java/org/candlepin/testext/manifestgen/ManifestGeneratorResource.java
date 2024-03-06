@@ -31,9 +31,9 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.resource.util.AttachedFile;
-import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.sync.ExportCreationException;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -86,7 +86,7 @@ public class ManifestGeneratorResource {
     private final EntityMapperFactory entityMapperFactory;
     private final ManifestManager manifestManager;
     private final PoolManager poolManager;
-    private final IdentityCertServiceAdapter identityCertService;
+    private final IdentityCertificateGenerator identityCertificateGenerator;
 
     private final ObjectMapper objectMapper;
 
@@ -94,7 +94,7 @@ public class ManifestGeneratorResource {
     public ManifestGeneratorResource(OwnerCurator ownerCurator,
         ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator, PoolCurator poolCurator,
         EntityMapperFactory entityMapperFactory, ManifestManager manifestManager, PoolManager poolManager,
-        IdentityCertServiceAdapter identityCertService, ObjectMapper objectMapper) {
+        IdentityCertificateGenerator identityCertificateGenerator, ObjectMapper objectMapper) {
 
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
@@ -104,7 +104,7 @@ public class ManifestGeneratorResource {
         this.entityMapperFactory = Objects.requireNonNull(entityMapperFactory);
         this.manifestManager = Objects.requireNonNull(manifestManager);
         this.poolManager = Objects.requireNonNull(poolManager);
-        this.identityCertService = Objects.requireNonNull(identityCertService);
+        this.identityCertificateGenerator = Objects.requireNonNull(identityCertificateGenerator);
 
         this.objectMapper = Objects.requireNonNull(objectMapper);
     }
@@ -187,7 +187,7 @@ public class ManifestGeneratorResource {
             .setFacts(facts)
             .setCapabilities(capabilities);
 
-        IdentityCertificate identityCert = this.identityCertService.generateIdentityCert(consumer);
+        IdentityCertificate identityCert = this.identityCertificateGenerator.generate(consumer);
         consumer.setIdCert(identityCert);
 
         return this.consumerCurator.create(consumer);

@@ -99,6 +99,7 @@ import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
+import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.pki.certs.ProductCertificateGenerator;
 import org.candlepin.pki.certs.UeberCertificateGenerator;
 import org.candlepin.pki.certs.X509CertificateBuilder;
@@ -174,7 +175,6 @@ import org.candlepin.sync.SyncUtils;
 import org.candlepin.util.AttributeValidator;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
-import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
@@ -182,7 +182,6 @@ import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.validation.CandlepinMessageInterpolator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.name.Names;
@@ -289,10 +288,6 @@ public class CandlepinModule extends AbstractModule {
         bind(JsonProvider.class);
         miscConfigurations();
 
-        // flexible end date for identity certificates
-        bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
-            .to(ExpiryDateFunction.class).in(Singleton.class);
-
         bind(CacheManager.class).toProvider(JCacheManagerProvider.class).in(Singleton.class);
 
         // Configure model translators
@@ -311,6 +306,7 @@ public class CandlepinModule extends AbstractModule {
         bind(X509CertificateBuilderProvider.class);
         bind(X509CertificateBuilder.class).toProvider(X509CertificateBuilderProvider.class);
 
+        bind(IdentityCertificateGenerator.class);
         bind(ProductCertificateGenerator.class);
         bind(UeberCertificateGenerator.class);
     }

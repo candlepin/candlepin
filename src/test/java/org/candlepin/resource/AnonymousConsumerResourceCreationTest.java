@@ -71,6 +71,7 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -83,7 +84,6 @@ import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
-import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -117,7 +117,7 @@ public class AnonymousConsumerResourceCreationTest {
     @Mock
     protected UserServiceAdapter userService;
     @Mock
-    protected IdentityCertServiceAdapter idCertService;
+    protected IdentityCertificateGenerator idCertGenerator;
     @Mock
     protected ProductServiceAdapter productService;
     @Mock
@@ -214,7 +214,7 @@ public class AnonymousConsumerResourceCreationTest {
 
         this.config = initConfig();
         this.resource = new ConsumerResource(this.consumerCurator, this.consumerTypeCurator,
-            this.subscriptionService, this.productService, this.entitlementCurator, this.idCertService,
+            this.subscriptionService, this.productService, this.entitlementCurator, this.idCertGenerator,
             this.entitlementCertServiceAdapter, this.i18n, this.sink, this.eventFactory, this.userService,
             this.poolManager, this.refresherFactory, this.consumerRules, this.ownerCurator,
             this.activationKeyCurator, this.entitler, this.complianceRules, this.systemPurposeComplianceRules,
@@ -256,7 +256,7 @@ public class AnonymousConsumerResourceCreationTest {
         cert.setCert("testCert");
         cert.setId("testId");
         cert.setSerial(new CertificateSerial(new Date()));
-        when(idCertService.generateIdentityCert(any(Consumer.class))).thenReturn(cert);
+        when(idCertGenerator.generate(any(Consumer.class))).thenReturn(cert);
         when(ownerCurator.getByKey(owner.getKey())).thenReturn(owner);
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),
             any(Boolean.class))).thenReturn(new ComplianceStatus(new Date()));
