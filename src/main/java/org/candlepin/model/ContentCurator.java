@@ -39,6 +39,10 @@ import javax.persistence.LockModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Root;
 
 
 
@@ -50,6 +54,12 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
     private static final Logger log = LoggerFactory.getLogger(ContentCurator.class);
 
     private ProductCurator productCurator;
+
+    /**
+     * Container object for providing various arguments to the content lookup method(s).
+     */
+    public static class ContentQueryArguments extends QueryArguments<ContentQueryArguments> {
+    }
 
     @Inject
     public ContentCurator(ProductCurator productCurator) {
@@ -687,5 +697,62 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         }
 
         return activeContent;
+    }
+
+    /**
+     * Fetches a collection of content based on the data in the query builder. If the
+     * query builder is null or contains no arguments, the query will not limit or sort the result.
+     *
+     * @param queryArgs
+     *     a ContentQueryArguments instance containing the various arguments to use to
+     *     select contents
+     *
+     * @return a list of contents. It will be paged and sorted if specified
+     */
+    public List<Content> listAll(ContentQueryArguments queryArgs) {
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Content> criteriaQuery = criteriaBuilder.createQuery(Content.class);
+
+        Root<Content> root = criteriaQuery.from(Content.class);
+        criteriaQuery.select(root)
+            .distinct(true);
+
+        List<Order> order = this.buildJPAQueryOrder(criteriaBuilder, root, queryArgs);
+        if (order != null && order.size() > 0) {
+            criteriaQuery.orderBy(order);
+        }
+
+        TypedQuery<Content> query = this.getEntityManager()
+            .createQuery(criteriaQuery);
+
+        if (queryArgs != null) {
+            Integer offset = queryArgs.getOffset();
+            if (offset != null && offset > 0) {
+                query.setFirstResult(offset);
+            }
+
+            Integer limit = queryArgs.getLimit();
+            if (limit != null && limit > 0) {
+                query.setMaxResults(limit);
+            }
+        }
+        return query.getResultList();
+    }
+
+    /**
+     * Fetches the count of content available.
+     *
+     * @return the number of contents available
+     */
+    public long getContentCount() {
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
+
+        Root<Content> root = criteriaQuery.from(Content.class);
+        criteriaQuery.select(criteriaBuilder.countDistinct(root));
+
+        return this.getEntityManager()
+            .createQuery(criteriaQuery)
+            .getSingleResult();
     }
 }
