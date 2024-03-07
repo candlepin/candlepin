@@ -16,6 +16,7 @@ package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.eq;
@@ -23,20 +24,27 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.SimpleModelTranslator;
 import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ContentTranslator;
+import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.ContentCurator.ContentQueryArguments;
+import org.candlepin.paging.PageRequest;
 
+import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 
 
@@ -49,6 +57,7 @@ public class ContentResourceTest {
     private ContentResource resource;
     private I18n i18n;
     private ModelTranslator modelTranslator;
+    private DevConfig config;
 
     @BeforeEach
     public void init() {
@@ -56,16 +65,36 @@ public class ContentResourceTest {
         this.cc = mock(ContentCurator.class);
         this.modelTranslator = new SimpleModelTranslator();
         this.modelTranslator.registerTranslator(new ContentTranslator(), Content.class, ContentDTO.class);
+        this.config = TestConfig.defaults();
 
-        this.resource = new ContentResource(this.cc, this.i18n, this.modelTranslator);
+        this.resource = new ContentResource(this.cc, this.i18n, this.modelTranslator, this.config);
+        ResteasyContext.popContextData(PageRequest.class);
     }
 
     @Test
     public void testGetContents() {
-        when(cc.listAll()).thenReturn(new LinkedList<>());
+        when(cc.listAll(any(ContentQueryArguments.class))).thenReturn(new LinkedList<>());
+        ResteasyContext.pushContext(PageRequest.class,
+            new PageRequest()
+            .setPage(1)
+            .setPerPage(10)
+            .setSortBy("label"));
+        resource.getContents(1, 10, "asc", "label");
+        verify(cc, atLeastOnce()).listAll(any(ContentQueryArguments.class));
+        ResteasyContext.popContextData(PageRequest.class);
+    }
 
-        resource.getContents();
-        verify(cc, atLeastOnce()).listAll();
+    @Test
+    public void testGetContentsOverMaxNoPaging() {
+        when(cc.getContentCount()).thenReturn(10001L);
+        assertThrows(BadRequestException.class, () -> resource.getContents(null, null, null, null));
+    }
+
+    @Test
+    public void testGetContentsNoPaging() {
+        when(cc.getContentCount()).thenReturn(1L);
+        when(cc.listAll(any(ContentQueryArguments.class))).thenReturn(List.of(new Content()));
+        assertEquals(1, resource.getContents(null, null, null, null).toList().size());
     }
 
     @Test
