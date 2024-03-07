@@ -14,35 +14,35 @@
  */
 package org.candlepin.controller.util;
 
-import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Supplier;
 
 
 
 /**
- * Wrapper class providing retry logic to handle ConstraintViolationExceptions occuring as a result
- * of parallel requests attempting to create the same global entities at the same time. In many
- * cases, only a single retry is needed; but for operations which create many entities (such as
- * refresh), several retries may be necessary to avoid complete failure.
+ * Wrapper class providing retry logic to handle known exceptions occuring during a given operation.
  */
-public class ConstraintViolationRetryWrapper {
-    private static final Logger log = LoggerFactory.getLogger(ConstraintViolationRetryWrapper.class);
+public class ExpectedExceptionRetryWrapper {
+    private static final Logger log = LoggerFactory.getLogger(ExpectedExceptionRetryWrapper.class);
 
+    private final Set<Class<? extends Exception>> exceptions;
     private int maxRetries;
 
     /**
-     * Creates a new retry wrapper with the default max retry value of 2.
+     * Creates a new retry wrapper with the default max retry value of 2 and no expected exceptions
      */
-    public ConstraintViolationRetryWrapper() {
+    public ExpectedExceptionRetryWrapper() {
+        this.exceptions = new HashSet<>();
         this.maxRetries = 2;
     }
 
     /**
-     * Checks if the given exception is one originating from a constraint violation related to
-     * entity versioning.
+     * Checks if the given exception is an expected exception, or is caused by an expected
+     * exception.
      *
      * @param exception
      *  the exception to check
@@ -51,10 +51,12 @@ public class ConstraintViolationRetryWrapper {
      *  true if the exception originates from an entity versioning constraint violation; false
      *  otherwise
      */
-    private static boolean isConstraintViolationException(Exception exception) {
+    private boolean isExpectedException(Exception exception) {
         for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
-            if (cause instanceof ConstraintViolationException) {
-                return true;
+            for (Class<? extends Exception> expected : this.exceptions) {
+                if (expected.isInstance(cause)) {
+                    return true;
+                }
             }
         }
 
@@ -74,12 +76,32 @@ public class ConstraintViolationRetryWrapper {
      * @return
      *  this retry wrapper
      */
-    public ConstraintViolationRetryWrapper retries(int attempts) {
+    public ExpectedExceptionRetryWrapper retries(int attempts) {
         if (attempts < 0) {
             throw new IllegalArgumentException("max attempts is less than zero");
         }
 
         this.maxRetries = attempts;
+        return this;
+    }
+
+    /**
+     * Adds an expected exception to this wrapper. If the action executed within the context of this
+     * wrapper throws an exception matching or caused by the given exception class, the action will
+     * be retried.
+     *
+     * @param exception
+     *  a class of exception to expect and retry
+     *
+     * @return
+     *  this retry wrapper
+     */
+    public ExpectedExceptionRetryWrapper addException(Class<? extends Exception> exception) {
+        if (exception == null) {
+            throw new IllegalArgumentException("exception class is null");
+        }
+
+        this.exceptions.add(exception);
         return this;
     }
 
@@ -104,9 +126,9 @@ public class ConstraintViolationRetryWrapper {
                 return action.get();
             }
             catch (Exception e) {
-                if (retries++ < this.maxRetries && isConstraintViolationException(e)) {
-                    log.warn("Constraint violation occurred while attempting transactional operation; " +
-                        "retrying", e);
+                if (retries++ < this.maxRetries && this.isExpectedException(e)) {
+                    log.warn("An expected exception occurred while attempting transactional operation; " +
+                        "retrying...", e);
                     continue;
                 }
 

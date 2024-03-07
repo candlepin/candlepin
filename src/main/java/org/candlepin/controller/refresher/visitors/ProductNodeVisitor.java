@@ -270,7 +270,7 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
         switch (node.getNodeState()) {
             case CREATED:
                 updatedEntity = this.applyProductChanges(new Product(), importedEntity, node);
-                updatedEntity = this.productCurator.create(updatedEntity);
+                updatedEntity = this.productCurator.create(updatedEntity, false);
 
                 node.setExistingEntity(updatedEntity);
                 break;

@@ -161,7 +161,7 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
         switch (node.getNodeState()) {
             case CREATED:
                 updatedEntity = this.applyContentChanges(new Content(), importedEntity);
-                updatedEntity = this.contentCurator.create(updatedEntity);
+                updatedEntity = this.contentCurator.create(updatedEntity, false);
 
                 node.setExistingEntity(updatedEntity);
                 break;
