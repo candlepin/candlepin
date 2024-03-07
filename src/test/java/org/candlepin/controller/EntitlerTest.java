@@ -485,9 +485,8 @@ public class EntitlerTest {
 
         p1.setEntitlements(Set.of(e1));
 
-        List queryList = List.of(e1);
         when(entitlementCurator.findByPoolAttribute(consumer, "unmapped_guests_only", "true"))
-            .thenReturn(queryList);
+            .thenReturn(List.of(e1));
         when(config.getInt(ConfigProperties.ENTITLER_BULK_SIZE)).thenReturn(1000);
 
         Set<String> pids = Set.of(product.getId(), "prod2");
@@ -504,10 +503,9 @@ public class EntitlerTest {
     public void testUnmappedGuestRevocation() {
         Pool pool1 = createValidPool("1");
         Pool pool2 = createExpiredPool("2");
-        List queryList = entsOf(pool1, pool2);
 
         when(entitlementCurator.findByPoolAttribute("unmapped_guests_only", "true"))
-            .thenReturn(queryList);
+            .thenReturn(entsOf(pool1, pool2));
         when(config.getInt(ConfigProperties.ENTITLER_BULK_SIZE)).thenReturn(1000);
 
         int total = entitler.revokeUnmappedGuestEntitlements();
@@ -520,10 +518,9 @@ public class EntitlerTest {
     public void unmappedGuestRevocationShouldBePartitioned() {
         Pool pool1 = createExpiredPool("1");
         Pool pool2 = createExpiredPool("2");
-        List queryList = entsOf(pool1, pool2);
 
         when(entitlementCurator.findByPoolAttribute("unmapped_guests_only", "true"))
-            .thenReturn(queryList);
+            .thenReturn(entsOf(pool1, pool2));
         when(config.getInt(ConfigProperties.ENTITLER_BULK_SIZE)).thenReturn(1);
 
         int total = entitler.revokeUnmappedGuestEntitlements();
