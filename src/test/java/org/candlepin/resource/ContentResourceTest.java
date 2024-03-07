@@ -64,8 +64,8 @@ public class ContentResourceTest {
     public void testGetContents() {
         when(cc.listAll()).thenReturn(new LinkedList<>());
 
-        resource.getContents();
-        verify(cc, atLeastOnce()).listAll();
+        resource.getContents(null, null, null, null);
+        verify(cc, atLeastOnce()).listAllPaged(null);
     }
 
     @Test

@@ -14,6 +14,9 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
+
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.criterion.Restrictions;
@@ -39,6 +42,10 @@ import javax.persistence.LockModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Root;
 
 
 
@@ -687,5 +694,38 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         }
 
         return activeContent;
+    }
+
+    public Page<List<Content>> listAllPaged(PageRequest request) {
+        Page page = new Page<>();
+        if (request == null) {
+            return page.setPageData(List.of());
+        }
+
+        EntityManager entityManager = this.getEntityManager();
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Content> query = builder.createQuery(Content.class);
+        Root<Content> root = query.from(Content.class);
+        query.orderBy(createPagingOrder(root, builder, request));
+        TypedQuery typedQuery = entityManager.createQuery(query);
+
+        if (request != null && request.isPaging()) {
+            typedQuery.setFirstResult((request.getPage() - 1) * request.getPerPage());
+            typedQuery.setMaxResults(request.getPerPage());
+        }
+        return page.setPageData(typedQuery.getResultList());
+    }
+
+    protected Order createPagingOrder(Root<Content> root, CriteriaBuilder criteriaBuilder, PageRequest p) {
+        String sortBy = (p.getSortBy() == null) ? PageRequest.DEFAULT_SORT_FIELD : p.getSortBy();
+        PageRequest.Order order = (p.getOrder() == null) ? PageRequest.DEFAULT_ORDER : p.getOrder();
+
+        switch (order) {
+            case ASCENDING:
+                return criteriaBuilder.asc(root.get(sortBy));
+            //DESCENDING
+            default:
+                return criteriaBuilder.desc(root.get(sortBy));
+        }
     }
 }

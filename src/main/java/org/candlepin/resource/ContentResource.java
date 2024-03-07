@@ -19,10 +19,14 @@ import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.server.v1.ContentApi;
 
+import org.jboss.resteasy.core.ResteasyContext;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -42,9 +46,15 @@ public class ContentResource implements ContentApi {
     }
 
     @Override
-    public Stream<ContentDTO> getContents() {
-        return this.contentCurator.listAll()
-            .stream()
+    public Stream<ContentDTO> getContents(Integer page, Integer perPage, String order, String sortBy) {
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
+        Page<List<Content>> p = this.contentCurator.listAllPaged(pageRequest);
+
+        // Store the page for the LinkHeaderResponseFilter
+        ResteasyContext.pushContext(Page.class, p);
+
+        return p == null ? Stream.empty() :
+            p.getPageData().stream()
             .map(this.modelTranslator.getStreamMapper(Content.class, ContentDTO.class));
     }
 
