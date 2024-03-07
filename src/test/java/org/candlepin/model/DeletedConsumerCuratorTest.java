@@ -19,15 +19,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.DeletedConsumerCurator.DeletedConsumerQueryArguments;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-
 
 
 /**
@@ -35,8 +35,8 @@ import java.util.List;
  */
 public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
 
-    private Date twoResultsDate;
-    private Date oneResultDate;
+    private OffsetDateTime twoResultsDate;
+    private OffsetDateTime oneResultDate;
     private Owner owner;
     private ConsumerType ct;
 
@@ -58,7 +58,7 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
 
         // save the current time, DCs created after this will have
         // a created timestamp after this time
-        twoResultsDate = new Date();
+        twoResultsDate = OffsetDateTime.now();
         dc = new DeletedConsumer("fghij", "10", "key", "name");
         dc.setConsumerName("consumerName");
         deletedConsumerCurator.create(dc);
@@ -70,7 +70,7 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
             e.printStackTrace();
         }
 
-        oneResultDate = new Date();
+        oneResultDate = OffsetDateTime.now();
         dc = new DeletedConsumer("klmno", "20", "key", "name");
         dc.setConsumerName("consumerName");
         deletedConsumerCurator.create(dc);
@@ -128,16 +128,34 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void findByDate() throws InterruptedException {
-        assertEquals(2, deletedConsumerCurator.findByDate(twoResultsDate).size());
-        assertEquals(1, deletedConsumerCurator.findByDate(oneResultDate).size());
+        DeletedConsumerQueryArguments args = new DeletedConsumerQueryArguments();
+        args.setOffset(0);
+        args.setDate(twoResultsDate);
+        assertEquals(2, deletedConsumerCurator.listAll(args).size());
+        args.setDate(oneResultDate);
+        assertEquals(1, deletedConsumerCurator.listAll(args).size());
         Thread.sleep(2000);
-        assertEquals(0, deletedConsumerCurator.findByDate(new Date()).size());
+        args.setDate(OffsetDateTime.now());
+        assertEquals(0, deletedConsumerCurator.listAll(args).size());
     }
 
     @Test
     public void descOrderByDate() {
-        DeletedConsumer newest = deletedConsumerCurator.findByDate(twoResultsDate).get(0);
+        DeletedConsumerQueryArguments args = new DeletedConsumerQueryArguments();
+        args.setOffset(0);
+        args.addOrder("created", true);
+        args.setDate(twoResultsDate);
+        DeletedConsumer newest = deletedConsumerCurator.listAll(args).get(0);
         assertEquals("klmno", newest.getConsumerUuid());
+    }
+
+
+    @Test
+    public void testGetDeletedConsumerCount() {
+        DeletedConsumerQueryArguments args = new DeletedConsumerQueryArguments();
+        args.setDate(twoResultsDate);
+        Long result = this.deletedConsumerCurator.getDeletedConsumerCount(args);
+        assertEquals(2L, result);
     }
 
     @Test

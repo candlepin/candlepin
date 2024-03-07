@@ -2952,6 +2952,10 @@ paths:
             type: string
             format: date-time
           description: Filter deleted consumers to those on or after this date
+        - $ref: "#/components/parameters/paging_page"
+        - $ref: "#/components/parameters/paging_per_page"
+        - $ref: "#/components/parameters/paging_order"
+        - $ref: "#/components/parameters/paging_sort_by"
       x-java-response:
         type: java.util.stream.Stream
         isContainer: true

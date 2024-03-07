@@ -113,7 +113,7 @@ public class InactiveConsumerCleanerJobSpecTest {
         assertGone(() -> consumerApi.getConsumer(inactiveConsumer1Uuid));
         // Verify that the inactive consumer has been moved to the deleted_consumers table.
         List<DeletedConsumerDTO> deletedConsumers = deletedConsumerApi
-            .listByDate(inactiveConsumer.getCreated());
+            .listByDate(inactiveConsumer.getCreated(), 1, 50, "desc", "created");
         // Assert that other tests might have created an inactive consumer
         assertThat(deletedConsumers).hasSizeGreaterThanOrEqualTo(1);
         Optional<DeletedConsumerDTO> deletedConsumer = deletedConsumers.stream()

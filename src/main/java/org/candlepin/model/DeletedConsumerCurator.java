@@ -20,15 +20,17 @@ import org.candlepin.guice.PrincipalProvider;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Root;
 
 
@@ -39,6 +41,22 @@ import javax.persistence.criteria.Root;
 public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedConsumer> {
 
     private PrincipalProvider principalProvider;
+
+    /**
+     * Container object for providing various arguments to the deleted consumer lookup method(s).
+     */
+    public static class DeletedConsumerQueryArguments extends QueryArguments<DeletedConsumerQueryArguments> {
+        private OffsetDateTime date;
+
+        public DeletedConsumerCurator.DeletedConsumerQueryArguments setDate(OffsetDateTime date) {
+            this.date = date;
+            return this;
+        }
+
+        public OffsetDateTime getDate() {
+            return this.date;
+        }
+    }
 
     @Inject
     public DeletedConsumerCurator(PrincipalProvider principalProvider) {
@@ -103,19 +121,72 @@ public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedCons
             .executeUpdate();
     }
 
-    @SuppressWarnings("unchecked")
-    public List<DeletedConsumer> findByDate(Date date) {
-        EntityManager em = this.getEntityManager();
-        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+    /**
+     * Fetches a collection of deleted consumers based on the data in the query builder. If the
+     * query builder is null or contains no arguments, the query will not limit or sort the result.
+     *
+     * @param queryArgs
+     *     a DeletedConsumerQueryArguments instance containing the various arguments to use to
+     *     select contents
+     *
+     * @return a list of deleted consumers. It will be paged and sorted if specified
+     */
+    public List<DeletedConsumer> listAll(DeletedConsumerQueryArguments queryArgs) {
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
         CriteriaQuery<DeletedConsumer> criteriaQuery = criteriaBuilder.createQuery(DeletedConsumer.class);
-        Root<DeletedConsumer> consumer = criteriaQuery.from(DeletedConsumer.class);
-        criteriaQuery.select(consumer);
 
-        criteriaQuery.where(criteriaBuilder.greaterThanOrEqualTo(
-            consumer.get(DeletedConsumer_.CREATED), date));
-        criteriaQuery.orderBy(criteriaBuilder.desc(consumer.get(DeletedConsumer_.CREATED)));
+        Root<DeletedConsumer> root = criteriaQuery.from(DeletedConsumer.class);
+        criteriaQuery.select(root)
+            .distinct(true);
+        if (queryArgs != null && queryArgs.getDate() != null) {
+            criteriaQuery.where(criteriaBuilder.greaterThanOrEqualTo(
+                root.get(DeletedConsumer_.CREATED),
+                Date.from(queryArgs.getDate().toInstant())));
+        }
 
-        return em.createQuery(criteriaQuery)
-            .getResultList();
+        List<Order> order = this.buildJPAQueryOrder(criteriaBuilder, root, queryArgs);
+        if (order != null && order.size() > 0) {
+            criteriaQuery.orderBy(order);
+        }
+
+        TypedQuery query = this.getEntityManager().createQuery(criteriaQuery);
+
+        if (queryArgs != null) {
+            Integer offset = queryArgs.getOffset();
+            if (offset != null && offset > 0) {
+                query.setFirstResult(offset);
+            }
+
+            Integer limit = queryArgs.getLimit();
+            if (limit != null && limit > 0) {
+                query.setMaxResults(limit);
+            }
+        }
+        return query.getResultList();
+    }
+
+    /**
+     * Fetches the count of deleted consumers available.
+     *
+     * @param queryArgs
+     *     a DeletedConsumerQueryArguments instance containing the various arguments
+     *
+     * @return the number of deleted consumers available
+     */
+    public long getDeletedConsumerCount(DeletedConsumerQueryArguments queryArgs) {
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
+
+        Root<DeletedConsumer> root = criteriaQuery.from(DeletedConsumer.class);
+        criteriaQuery.select(criteriaBuilder.countDistinct(root));
+        if (queryArgs != null && queryArgs.getDate() != null) {
+            criteriaQuery.where(criteriaBuilder.greaterThanOrEqualTo(
+                root.get(DeletedConsumer_.CREATED),
+                Date.from(queryArgs.getDate().toInstant())));
+        }
+
+        return this.getEntityManager()
+            .createQuery(criteriaQuery)
+            .getSingleResult();
     }
 }
