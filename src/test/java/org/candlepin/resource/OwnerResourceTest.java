@@ -65,6 +65,7 @@ import org.candlepin.dto.api.server.v1.ContentAccessDTO;
 import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.server.v1.EntitlementDTO;
+import org.candlepin.dto.api.server.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.dto.api.server.v1.PoolDTO;
@@ -89,6 +90,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.HypervisorId;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -123,6 +125,7 @@ import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
 
+import org.assertj.core.api.Assertions;
 import org.hibernate.exception.ConstraintViolationException;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -1734,13 +1737,65 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource resource = this.buildOwnerResource();
 
-        when(this.mockOwnerCurator.getByKey(eq("admin"))).thenReturn(owner);
+        when(this.mockOwnerCurator.getByKey("admin")).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);
         when(this.principalProvider.get()).thenReturn(p);
         List<UpstreamConsumerDTOArrayElement> results = resource.getUpstreamConsumers("admin");
 
         assertNotNull(results);
         assertEquals(1, results.size());
+    }
+
+    @Test
+    public void shouldGetOwnerHypervisors() {
+        Owner owner = createOwner();
+        Consumer hypervisor1 = createHypervisor(owner);
+        Consumer hypervisor2 = createHypervisor(owner);
+        Consumer hypervisor3 = createHypervisor(owner);
+        PageRequest pageRequest = new PageRequest().setPage(1).setPerPage(2);
+        ResteasyContext.pushContext(PageRequest.class, pageRequest);
+
+        List<ConsumerDTOArrayElement> results = this.ownerResource
+            .getHypervisors(owner.getKey(), null, null, null, null, null)
+            .toList();
+
+        assertNotNull(results);
+        assertEquals(2, results.size());
+        Assertions.assertThat(results)
+            .map(ConsumerDTOArrayElement::getHypervisorId)
+            .map(HypervisorIdDTO::getHypervisorId)
+            .containsExactlyInAnyOrder(
+                hypervisor1.getHypervisorId().getHypervisorId(),
+                hypervisor2.getHypervisorId().getHypervisorId()
+            );
+    }
+
+    @Test
+    public void shouldGetHypervisorsById() {
+        Owner owner = createOwner();
+        Consumer hypervisor1 = createHypervisor(owner);
+        Consumer hypervisor2 = createHypervisor(owner);
+        Consumer hypervisor3 = createHypervisor(owner);
+        PageRequest pageRequest = new PageRequest().setPage(1).setPerPage(2);
+        ResteasyContext.pushContext(PageRequest.class, pageRequest);
+
+        Stream<ConsumerDTOArrayElement> results = this.ownerResource
+            .getHypervisors(owner.getKey(), List.of(
+                hypervisor1.getHypervisorId().getHypervisorId(),
+                hypervisor2.getHypervisorId().getHypervisorId(),
+                hypervisor3.getHypervisorId().getHypervisorId()
+            ), null, null, null, null);
+
+        assertNotNull(results);
+        assertEquals(2, results.toList().size());
+    }
+
+    private Consumer createHypervisor(Owner owner) {
+        HypervisorId hypervisor = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId(TestUtil.randomString("hypervisor"));
+        return createConsumer(owner)
+            .setHypervisorId(hypervisor);
     }
 
     @Test

@@ -292,4 +292,8 @@ public class OwnerClient extends OwnerApi {
         return super.listEnvironments(owner.getKey(), name, null, true);
     }
 
+    public List<ConsumerDTOArrayElement> getHypervisors(
+        String ownerKey, List<String> hypervisorId) throws ApiException {
+        return super.getHypervisors(ownerKey, hypervisorId, null, null, null, null);
+    }
 }

@@ -5199,6 +5199,10 @@ paths:
             type: array
             items:
               type: string
+        - $ref: "#/components/parameters/paging_page"
+        - $ref: "#/components/parameters/paging_per_page"
+        - $ref: "#/components/parameters/paging_order"
+        - $ref: "#/components/parameters/paging_sort_by"
       responses:
         200:
           description: A list of hypervisors successfully retrieved

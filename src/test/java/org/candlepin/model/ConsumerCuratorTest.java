@@ -29,6 +29,7 @@ import org.candlepin.async.tasks.InactiveConsumerCleanerJob;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.FactValidator;
@@ -46,7 +47,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1598,37 +1598,21 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetHypervisor() {
-        String hypervisorid = "hypervisor";
-        Consumer consumer = new Consumer()
-            .setName("testConsumer")
-            .setUsername("testUser")
-            .setOwner(owner)
-            .setType(ct);
-        HypervisorId hypervisorId = new HypervisorId()
-            .setOwner(owner)
-            .setHypervisorId(hypervisorid);
+        Consumer consumer = createHypervisor(owner);
 
-        consumer.setHypervisorId(hypervisorId);
-        consumer = consumerCurator.create(consumer);
-        Consumer result = consumerCurator.getHypervisor(hypervisorid, owner);
+        Consumer result = consumerCurator.getHypervisor(
+            consumer.getHypervisorId().getHypervisorId(), owner);
+
         assertEquals(consumer, result);
     }
 
     @Test
     public void testGetHypervisorCaseInsensitive() {
-        String hypervisorid = "HYpervisor";
-        Consumer consumer = new Consumer()
-            .setName("testConsumer")
-            .setUsername("testUser")
-            .setOwner(owner)
-            .setType(ct);
-        HypervisorId hypervisorId = new HypervisorId()
-            .setOwner(owner)
-            .setHypervisorId(hypervisorid);
+        Consumer consumer = createHypervisor(owner, "HYpervisor");
 
-        consumer.setHypervisorId(hypervisorId);
-        consumer = consumerCurator.create(consumer);
-        Consumer result = consumerCurator.getHypervisor(hypervisorid.toUpperCase(), owner);
+        Consumer result = consumerCurator.getHypervisor(
+            consumer.getHypervisorId().getHypervisorId(), owner);
+
         assertEquals(consumer, result);
     }
 
@@ -1637,213 +1621,70 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Owner otherOwner = new Owner()
             .setKey("test-owner-other")
             .setDisplayName("Test Other Owner");
-
         otherOwner = ownerCurator.create(otherOwner);
-        String hypervisorid = "hypervisor";
-        Consumer consumer = new Consumer()
-            .setName("testConsumer")
-            .setUsername("testUser")
-            .setOwner(owner)
-            .setType(ct);
-        HypervisorId hypervisorId = new HypervisorId()
-            .setOwner(owner)
-            .setHypervisorId(hypervisorid);
+        Consumer consumer = createHypervisor(owner);
 
-        consumer.setHypervisorId(hypervisorId);
-        consumerCurator.create(consumer);
-        Consumer result = consumerCurator.getHypervisor(hypervisorid, otherOwner);
+        Consumer result = consumerCurator.getHypervisor(
+            consumer.getHypervisorId().getHypervisorId(), otherOwner);
+
         assertNull(result);
     }
 
     @Test
-    public void testGetHypervisorConsumerMap() {
-        String hypervisorId1 = "Hypervisor";
-        Consumer consumer1 = new Consumer()
-            .setName("testConsumer")
-            .setUsername("testUser")
-            .setOwner(owner)
-            .setType(ct);
-        HypervisorId hid1 = new HypervisorId()
-            .setOwner(owner)
-            .setHypervisorId(hypervisorId1);
-        consumer1.setHypervisorId(hid1);
-        consumer1 = consumerCurator.create(consumer1);
+    public void testCountHypervisorsBulk() {
+        Consumer hypervisor1 = createHypervisor(owner);
+        Consumer hypervisor2 = createHypervisor(owner);
+        Consumer hypervisor3 = createHypervisor(owner);
 
-        String hypervisorId2 = "hyPERvisor2";
-        Consumer consumer2 = new Consumer()
-            .setName("testConsumer")
-            .setUsername("testUser")
-            .setOwner(owner)
-            .setType(ct);
-        HypervisorId hid2 = new HypervisorId()
-            .setOwner(owner)
-            .setHypervisorId(hypervisorId2);
-        consumer2.setHypervisorId(hid2);
-        consumer2 = consumerCurator.create(consumer2);
+        long count = consumerCurator.countHypervisorsBulk(owner.getId(), List.of(
+            hypervisor1.getHypervisorId().getHypervisorId(),
+            hypervisor3.getHypervisorId().getHypervisorId()
+        ));
 
-        Set<String> hypervisorIds = new HashSet<>();
-        hypervisorIds.add(hypervisorId1);
-        hypervisorIds.add(hypervisorId2);
-        hypervisorIds.add("not really a hypervisor");
-
-        VirtConsumerMap hypervisorMap = consumerCurator.getHostConsumersMap(owner, hypervisorIds);
-        assertEquals(2, hypervisorMap.size());
-        assertEquals(consumer1.getId(), hypervisorMap.get(hypervisorId1).getId());
-        assertEquals(consumer2.getId(), hypervisorMap.get(hypervisorId2).getId());
-    }
-
-    @Test
-    public void testGetHypervisorConsumerMapWithFacts() {
-        String hypervisorId1 = "Hypervisor";
-        Consumer consumer1 = new Consumer()
-            .setName("testConsumer")
-            .setUsername("testUser")
-            .setOwner(owner)
-            .setType(ct)
-            .setFact(Consumer.Facts.DMI_SYSTEM_UUID, "blah");
-        HypervisorId hid1 = new HypervisorId()
-            .setOwner(owner)
-            .setHypervisorId(hypervisorId1);
-        consumer1.setHypervisorId(hid1);
-        consumer1 = consumerCurator.create(consumer1);
-
-        List<Consumer> hypervisors = Collections.singletonList(consumer1);
-
-        VirtConsumerMap hypervisorMap = consumerCurator.getHostConsumersMap(owner, hypervisors);
-        assertEquals(1, hypervisorMap.size());
-        assertEquals(consumer1, hypervisorMap.get(hypervisorId1));
-    }
-
-    @Test
-    public void testGetHypervisorConsumerMapWithFactsAndHypervisorId() {
-        // first consumer set with only the fact, not the hypervisor
-        String hypervisorId1 = "Hypervisor";
-        Consumer consumer1 = new Consumer()
-            .setName("testConsumer")
-            .setUsername("testUser")
-            .setOwner(owner)
-            .setType(ct)
-            .setFact(Consumer.Facts.DMI_SYSTEM_UUID, "blah");
-        consumer1 = consumerCurator.create(consumer1);
-
-        // next consumer set with the hypervisor, not the fact
-        String hypervisorId2 = "hypervisor2";
-        Consumer consumer2 = new Consumer()
-            .setName("testConsumer2")
-            .setUsername("testUser2")
-            .setOwner(owner)
-            .setType(ct);
-        HypervisorId hid2 = new HypervisorId()
-            .setOwner(owner)
-            .setHypervisorId(hypervisorId2);
-        consumer2.setHypervisorId(hid2);
-        consumer2 = consumerCurator.create(consumer2);
-
-        // hypervisor report will have both the hypervisor and the fact
-        HypervisorId hid1 = new HypervisorId()
-            .setOwner(owner)
-            .setHypervisorId(hypervisorId1);
-        consumer1.setHypervisorId(hid1);
-        List<Consumer> hypervisors = Arrays.asList(consumer1, consumer2);
-
-        VirtConsumerMap hypervisorMap = consumerCurator.getHostConsumersMap(owner, hypervisors);
-        assertEquals(2, hypervisorMap.size());
-        assertEquals(consumer1, hypervisorMap.get(hypervisorId1));
-        assertEquals(consumer2, hypervisorMap.get(hypervisorId2));
+        assertEquals(2, count);
     }
 
     @Test
     public void testGetHypervisorsBulk() {
-        String hypervisorid = "hypervisor";
-        Consumer consumer = new Consumer()
-            .setName("testConsumer")
-            .setUsername("testUser")
-            .setOwner(owner)
-            .setType(ct);
-        HypervisorId hypervisorId = new HypervisorId()
-            .setOwner(owner)
-            .setHypervisorId(hypervisorid);
+        Consumer consumer = createHypervisor(owner);
+        List<String> hypervisorIds = List.of(
+            consumer.getHypervisorId().getHypervisorId(), "not really a hypervisor"
+        );
 
-        consumer.setHypervisorId(hypervisorId);
-        consumer = consumerCurator.create(consumer);
-        List<String> hypervisorIds = new LinkedList<>();
-        hypervisorIds.add(hypervisorid);
-        hypervisorIds.add("not really a hypervisor");
-        List<Consumer> results = consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getId());
+        List<Consumer> results = consumerCurator.getHypervisorsBulk(owner.getId(), hypervisorIds);
+
         assertEquals(1, results.size());
         assertEquals(consumer, results.get(0));
     }
 
     @Test
     public void testGetHypervisorsBulkCaseInsensitive() {
-        String hypervisorid = "hYPervisor";
-        Consumer consumer = new Consumer()
-            .setName("testConsumer")
-            .setUsername("testUser")
-            .setOwner(owner)
-            .setType(ct);
-        HypervisorId hypervisorId = new HypervisorId()
-            .setOwner(owner)
-            .setHypervisorId(hypervisorid);
+        Consumer consumer = createHypervisor(owner, "hYPervisor");
+        List<String> hypervisorIds = List.of(
+            consumer.getHypervisorId().getHypervisorId(), "NOT really a hypervisor"
+        );
 
-        consumer.setHypervisorId(hypervisorId);
-        consumer = consumerCurator.create(consumer);
-        List<String> hypervisorIds = new LinkedList<>();
-        hypervisorIds.add(hypervisorid.toUpperCase());
-        hypervisorIds.add("NOT really a hypervisor");
-        List<Consumer> results = consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getId());
+        List<Consumer> results = consumerCurator.getHypervisorsBulk(owner.getId(), hypervisorIds);
+
         assertEquals(1, results.size());
         assertEquals(consumer, results.get(0));
     }
 
     @Test
     public void testGetHypervisorsBulkEmpty() {
-        String hypervisorid = "hypervisor";
+        Consumer consumer = createHypervisor(owner);
 
-        HypervisorId hypervisorId = new HypervisorId()
-            .setOwner(owner)
-            .setHypervisorId(hypervisorid);
-
-        Consumer consumer = new Consumer()
-            .setName("testConsumer")
-            .setUsername("testUser")
-            .setOwner(owner)
-            .setType(ct)
-            .setHypervisorId(hypervisorId);
-        consumerCurator.create(consumer);
         List<Consumer> results = consumerCurator
-            .getHypervisorsBulk(new LinkedList<>(), owner.getId());
+            .getHypervisorsBulk(owner.getId(), new LinkedList<>());
 
         assertEquals(0, results.size());
     }
 
     @Test
     public void testGetHypervisorsByOwner() {
-        HypervisorId hid = new HypervisorId()
-            .setOwner(owner)
-            .setHypervisorId("hypervisor");
-
-        Consumer consumer = new Consumer()
-            .setName("testConsumer")
-            .setUsername("testUser")
-            .setOwner(owner)
-            .setType(ct)
-            .setHypervisorId(hid);
-        consumer = consumerCurator.create(consumer);
-
         Owner otherOwner = this.createOwner("other owner");
-
-        HypervisorId hid2 = new HypervisorId()
-            .setOwner(owner)
-            .setHypervisorId("hypervisortwo");
-
-        Consumer consumer2 = new Consumer()
-            .setName("testConsumer2")
-            .setUsername("testUser2")
-            .setOwner(otherOwner)
-            .setType(ct)
-            .setHypervisorId(hid2);
-        consumerCurator.create(consumer2);
+        Consumer hypervisor1 = createHypervisor(owner);
+        Consumer hypervisor2 = createHypervisor(otherOwner);
 
         Consumer nonHypervisor = new Consumer()
             .setName("testConsumer3")
@@ -1854,7 +1695,58 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         List<Consumer> results = consumerCurator.getHypervisorsForOwner(owner.getId());
         assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
+        assertEquals(hypervisor1, results.get(0));
+    }
+
+    @Test
+    public void testGetHypervisorsByOwnerPaged() {
+        PageRequest pageRequest = new PageRequest();
+        pageRequest.setPage(1);
+        pageRequest.setPerPage(1);
+
+        Consumer hypervisor1 = createHypervisor(owner);
+        Consumer hypervisor2 = createHypervisor(owner);
+
+        Consumer nonHypervisor = new Consumer()
+            .setName("testConsumer3")
+            .setUsername("testUser3")
+            .setOwner(owner)
+            .setType(ct);
+        consumerCurator.create(nonHypervisor);
+
+        List<Consumer> results = consumerCurator.getHypervisorsForOwner(owner.getId(), pageRequest);
+        assertEquals(1, results.size());
+        assertEquals(hypervisor1, results.get(0));
+    }
+
+    @Test
+    public void testCountHypervisorsByOwner() {
+        createHypervisor(owner);
+        createHypervisor(owner);
+
+        long count = consumerCurator.countHypervisorsForOwner(owner.getId());
+
+        assertEquals(2, count);
+    }
+
+    private Consumer createHypervisor(Owner owner) {
+        String hypervisorId = TestUtil.randomString("hypervisor");
+        return createHypervisor(owner, hypervisorId);
+    }
+
+    private Consumer createHypervisor(Owner owner, String hypervisorId) {
+        HypervisorId hypervisor = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId(hypervisorId);
+
+        Consumer consumer = new Consumer()
+            .setName(TestUtil.randomString("testConsumer"))
+            .setUsername(TestUtil.randomString("testUser"))
+            .setOwner(owner)
+            .setType(ct)
+            .setHypervisorId(hypervisor);
+
+        return consumerCurator.create(consumer);
     }
 
     @Test

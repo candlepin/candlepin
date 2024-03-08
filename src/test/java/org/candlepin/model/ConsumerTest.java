@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.exceptions.DuplicateEntryException;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -415,39 +414,6 @@ public class ConsumerTest extends DatabaseTestFixture {
         second.setFacts(null);
 
         assertTrue(first.factsAreEqual(second.getFacts()));
-    }
-
-    @Test
-    public void testLookupUsersConsumer() {
-        String newUsername = "newusername";
-
-        // Need to make sure another consumer already exists, different type:
-        Consumer existing = new Consumer()
-            .setName("existing consumer")
-            .setUsername(newUsername)
-            .setOwner(owner)
-            .setType(consumerType);
-        consumerCurator.create(existing);
-
-        ConsumerType personType = new ConsumerType(ConsumerTypeEnum.PERSON);
-        consumerTypeCurator.create(personType);
-
-        User user = new User(newUsername, "password");
-        userCurator.create(user);
-
-        Role adminRole = createAdminRole(owner);
-        adminRole.addUser(user);
-        roleCurator.create(adminRole);
-
-        assertNull(consumerCurator.findByUser(user));
-
-        consumer = new Consumer()
-            .setName(CONSUMER_NAME)
-            .setUsername(newUsername)
-            .setOwner(owner)
-            .setType(personType);
-        consumerCurator.create(consumer);
-        assertEquals(consumer, consumerCurator.findByUser(user));
     }
 
     @Test
