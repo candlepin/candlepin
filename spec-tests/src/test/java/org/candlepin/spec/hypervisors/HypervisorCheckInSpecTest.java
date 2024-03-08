@@ -75,6 +75,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -100,7 +101,7 @@ public class HypervisorCheckInSpecTest {
         ownerContentApi = client.ownerContent();
     }
 
-    private PoolDTO createVirtLimitProductPools(OwnerDTO owner, ConsumerDTO hostConsumer) throws IOException {
+    private PoolDTO createVirtLimitProductPools(OwnerDTO owner, ConsumerDTO hostConsumer) {
         ProductDTO virtLimitProduct = Products.randomSKU()
             .addAttributesItem(new AttributeDTO().name("virt_limit").value("3"));
         virtLimitProduct = ownerProductApi.createProduct(owner.getKey(), virtLimitProduct);
@@ -147,9 +148,63 @@ public class HypervisorCheckInSpecTest {
         assertEquals(1, ownerApi.getHypervisors(owner.getKey(),
             List.of(data.getExpectedHostHypervisorId())).size());
         // Test lookup with nonexistant hypervisor id
-        assertEquals(0, ownerApi.getHypervisors(owner.getKey(), List.of("non existent")).size());
+        assertEquals(0, ownerApi.getHypervisors(
+            owner.getKey(), List.of("non existent")).size());
         // verify last checkin time is updated
         assertNotNull(createdConsumer.getLastCheckin());
+    }
+
+    @Test
+    public void shouldSupportPagingForGettingHypervisors() throws Exception {
+        setupOwnerUserClient();
+        HypervisorTestData data1 = new HypervisorTestData();
+        HypervisorTestData data2 = new HypervisorTestData();
+
+        hypervisorCheckin(owner, userClient,
+            data1.getExpectedHostName(), data1.getExpectedHostHypervisorId(), new ArrayList<>(), null,
+            reporterId, true);
+        hypervisorCheckin(owner, userClient,
+            data2.getExpectedHostName(), data2.getExpectedHostHypervisorId(), new ArrayList<>(), null,
+            reporterId, true);
+
+        // By owner
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), null, 1, 2, "asc", "hypervisorId"),
+            data1.getExpectedHostHypervisorId(), data2.getExpectedHostHypervisorId());
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), null, 1, 2, "desc", "hypervisorId"),
+            data2.getExpectedHostHypervisorId(), data1.getExpectedHostHypervisorId());
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), null, 1, 1, "asc", "hypervisorId"),
+            data1.getExpectedHostHypervisorId());
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), null, 1, 1, "desc", "hypervisorId"),
+            data2.getExpectedHostHypervisorId());
+
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), List.of(
+                data1.getExpectedHostHypervisorId(),
+                data2.getExpectedHostHypervisorId()
+            ), 1, 2, "asc", "hypervisorId"),
+            data1.getExpectedHostHypervisorId(), data2.getExpectedHostHypervisorId());
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), List.of(
+                data1.getExpectedHostHypervisorId(),
+                data2.getExpectedHostHypervisorId()
+            ), 1, 2, "desc", "hypervisorId"),
+            data2.getExpectedHostHypervisorId(), data1.getExpectedHostHypervisorId());
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), List.of(
+                data1.getExpectedHostHypervisorId(),
+                data2.getExpectedHostHypervisorId()
+            ), 1, 1, "asc", "hypervisorId"),
+            data1.getExpectedHostHypervisorId());
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), List.of(
+                data1.getExpectedHostHypervisorId(),
+                data2.getExpectedHostHypervisorId()
+            ), 1, 1, "desc", "hypervisorId"),
+            data2.getExpectedHostHypervisorId());
+    }
+
+    private static void assertHypervisors(List<ConsumerDTOArrayElement> hypervisors, String... expected) {
+        assertThat(hypervisors)
+            .hasSize(expected.length)
+            .map(ConsumerDTOArrayElement::getHypervisorId)
+            .map(HypervisorIdDTO::getHypervisorId)
+            .containsExactlyElementsOf(Arrays.stream(expected).map(String::toLowerCase).toList());
     }
 
     @Test
@@ -781,7 +836,7 @@ public class HypervisorCheckInSpecTest {
     }
 
     @Test
-    public void shouldAllowExistingGuestToBeMigratedToAnExistingHost() throws Exception {
+    public void shouldAllowExistingGuestToBeMigratedToAnExistingHost() {
         setupOwnerUserClient();
         String hypervisorId1 = StringUtil.random("hypervisor").toLowerCase();
         String hypervisorId2 = StringUtil.random("hypervisor").toLowerCase();
@@ -1113,7 +1168,7 @@ public class HypervisorCheckInSpecTest {
     }
 
     @Test
-    public void shouldFailWhenJsonDoesNotHaveTheProperStructure() throws Exception {
+    public void shouldFailWhenJsonDoesNotHaveTheProperStructure() {
         setupOwnerUserClient();
         String uuid1 = StringUtil.random("uuid");
         String uuid2 = StringUtil.random("uuid");
@@ -1605,9 +1660,8 @@ public class HypervisorCheckInSpecTest {
      *
      * @param status
      * @return HypervisorUpdateResultDTO
-     * @throws IOException
      */
-    private HypervisorUpdateResultDTO getResultData(AsyncJobStatusDTO status) throws IOException {
+    private HypervisorUpdateResultDTO getResultData(AsyncJobStatusDTO status) {
         return ApiClient.MAPPER.convertValue(status.getResultData(), HypervisorUpdateResultDTO.class);
     }
 
