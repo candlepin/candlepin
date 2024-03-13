@@ -26,7 +26,7 @@ import org.candlepin.controller.refresher.visitors.ContentNodeVisitor;
 import org.candlepin.controller.refresher.visitors.NodeProcessor;
 import org.candlepin.controller.refresher.visitors.PoolNodeVisitor;
 import org.candlepin.controller.refresher.visitors.ProductNodeVisitor;
-import org.candlepin.controller.util.ConstraintViolationRetryWrapper;
+import org.candlepin.controller.util.ExpectedExceptionRetryWrapper;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
@@ -41,6 +41,8 @@ import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.util.Transactional;
 
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.LockAcquisitionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -456,10 +458,14 @@ public class RefreshWorker {
         // Impl note: at the time of writing, nested transactions are not supported in Hibernate
         EntityTransaction transaction = this.poolCurator.getTransaction();
         if (transaction == null || !transaction.isActive()) {
-            // Retry this operation if we hit a constraint violation on the entity version constraint
-            return new ConstraintViolationRetryWrapper()
+            // Retry this operation if we hit a unique constraint violation (two orgs creating the
+            // same products or content in simultaneous transactions), or we deadlock (same deal,
+            // but in a spicy entity order).
+            return new ExpectedExceptionRetryWrapper()
+                .addException(ConstraintViolationException.class)
+                .addException(LockAcquisitionException.class)
                 .retries(CONSTRAINT_VIOLATION_RETRIES)
-                .execute(() -> block.execute());
+                .execute(block::execute);
         }
         else {
             // A transaction is already active, just run the block as-is

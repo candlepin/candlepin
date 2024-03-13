@@ -52,6 +52,7 @@ import org.candlepin.util.TransactionExecutionException;
 import org.candlepin.util.Util;
 
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.LockAcquisitionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -226,6 +227,10 @@ public class RefreshWorkerTest {
 
     private Exception buildConstraintViolationException() {
         return new ConstraintViolationException("test exception", new SQLException(), null);
+    }
+
+    private Exception buildDatabaseDeadlockException() {
+        return new LockAcquisitionException("test exception", new SQLException(), null);
     }
 
     private void mockChildrenProductLookup(Collection<Product> products) {
@@ -1201,7 +1206,7 @@ public class RefreshWorkerTest {
 
         doThrow(exception).doAnswer(returnsFirstArg())
             .when(this.mockProductCurator)
-            .create(Mockito.any(Product.class));
+            .create(Mockito.any(Product.class), anyBoolean());
 
         SubscriptionInfo sinfo = this.mockSubscriptionInfo("sub", pinfo1);
 
@@ -1212,7 +1217,42 @@ public class RefreshWorkerTest {
         assertNotNull(result);
 
         verify(mockProductCurator, times(2)).getProductsByIds(eq(null), any(Collection.class));
-        verify(mockProductCurator, times(3)).create(Mockito.any(Product.class));
+        verify(mockProductCurator, times(3)).create(Mockito.any(Product.class), anyBoolean());
+    }
+
+    @Test
+    public void testExecuteRetriesOnDatabaseDeadlock() {
+        Owner owner = new Owner();
+
+        ProductContentInfo pcinfo1 = this.mockProductContentInfo("cid-1", "content-1");
+        ProductContentInfo pcinfo2 = this.mockProductContentInfo("cid-2", "content-2");
+        ProductInfo pinfo1 = this.mockProductInfo("pid-1", "product-1");
+        ProductInfo pinfo2 = this.mockProductInfo("pid-2", "product-2");
+
+        doReturn(List.of(pcinfo1, pcinfo2)).when(pinfo2).getProductContent();
+        doReturn(List.of(pinfo2)).when(pinfo1).getProvidedProducts();
+
+        this.mockProductLookup(List.of());
+        this.mockContentLookup(List.of());
+
+        // Throw the constraint violation exception on the first invocation, triggering
+        // a retry
+        Exception exception = this.buildDatabaseDeadlockException();
+
+        doThrow(exception).doAnswer(returnsFirstArg())
+            .when(this.mockProductCurator)
+            .create(Mockito.any(Product.class), anyBoolean());
+
+        SubscriptionInfo sinfo = this.mockSubscriptionInfo("sub", pinfo1);
+
+        RefreshWorker worker = this.buildRefreshWorker();
+        worker.addSubscriptions(sinfo);
+
+        RefreshResult result = worker.execute(owner);
+        assertNotNull(result);
+
+        verify(mockProductCurator, times(2)).getProductsByIds(eq(null), any(Collection.class));
+        verify(mockProductCurator, times(3)).create(Mockito.any(Product.class), anyBoolean());
     }
 
     @Test
@@ -1236,7 +1276,7 @@ public class RefreshWorkerTest {
 
         doThrow(exception).doAnswer(returnsFirstArg())
             .when(this.mockProductCurator)
-            .create(any(Product.class));
+            .create(any(Product.class), anyBoolean());
 
         SubscriptionInfo sinfo = this.mockSubscriptionInfo("sub", pinfo1);
 
@@ -1248,7 +1288,7 @@ public class RefreshWorkerTest {
         assertThrows(TransactionExecutionException.class, () -> worker.execute(owner));
 
         verify(mockProductCurator, times(1)).getProductsByIds(eq(null), any(Collection.class));
-        verify(mockProductCurator, times(1)).create(Mockito.any(Product.class));
+        verify(mockProductCurator, times(1)).create(Mockito.any(Product.class), anyBoolean());
     }
 
 }
