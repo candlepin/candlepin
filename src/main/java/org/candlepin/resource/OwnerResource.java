@@ -158,14 +158,11 @@ import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 
 
-
 /**
  * Owner Resource
  */
 public class OwnerResource implements OwnerApi {
-
     private static final Logger log = LoggerFactory.getLogger(OwnerResource.class);
-
     private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
 
     private final OwnerCurator ownerCurator;
@@ -199,7 +196,7 @@ public class OwnerResource implements OwnerApi {
     private final DTOValidator validator;
     private final PrincipalProvider principalProvider;
     private final PagingUtilFactory pagingUtilFactory;
-
+    private final int maxPagingSize;
 
     @Inject
     @SuppressWarnings("checkstyle:parameternumber")
@@ -266,6 +263,7 @@ public class OwnerResource implements OwnerApi {
         this.validator = Objects.requireNonNull(validator);
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.pagingUtilFactory = Objects.requireNonNull(pagingUtilFactory);
+        this.maxPagingSize = this.config.getInt(ConfigProperties.MAX_PAGING_SIZE);
     }
 
     /**
@@ -1632,14 +1630,64 @@ public class OwnerResource implements OwnerApi {
 
     @Override
     public Stream<ConsumerDTOArrayElement> getHypervisors(
-        @Verify(Owner.class) String ownerKey, List<String> hypervisorIds) {
+        @Verify(Owner.class) String ownerKey, List<String> hypervisorIds,
+        Integer page, Integer perPage, String order, String sortBy) {
 
         Owner owner = ownerCurator.getByKey(ownerKey);
-        List<Consumer> hypervisors = (hypervisorIds == null || hypervisorIds.isEmpty()) ?
-            this.consumerCurator.getHypervisorsForOwner(owner.getId()) :
-            this.consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getId());
+        List<Consumer> hypervisors;
+        if (hypervisorIds == null || hypervisorIds.isEmpty()) {
+            hypervisors = listHypervisorsByOwner(owner);
+        }
+        else {
+            hypervisors = listHypervisorsByIds(owner, hypervisorIds);
+        }
+
         return hypervisors.stream()
             .map(this.translator.getStreamMapper(Consumer.class, ConsumerDTOArrayElement.class));
+    }
+
+    private List<Consumer> listHypervisorsByOwner(Owner owner) {
+        int ownerHypervisorCount = this.consumerCurator.countHypervisorsForOwner(owner.getId());
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
+        validateRequestSize(pageRequest, ownerHypervisorCount);
+
+        if (pageRequest != null) {
+            Page<Stream<ConsumerDTOArrayElement>> page = new Page<>();
+            page.setPageRequest(pageRequest);
+
+            page.setMaxRecords(ownerHypervisorCount);
+
+            // Store the page for the LinkHeaderResponseFilter
+            ResteasyContext.pushContext(Page.class, page);
+        }
+
+        return this.consumerCurator.getHypervisorsForOwner(owner.getId(), pageRequest);
+    }
+
+    private List<Consumer> listHypervisorsByIds(Owner owner, List<String> hypervisorIds) {
+        int ownerHypervisorCount = this.consumerCurator.countHypervisorsBulk(owner.getId(), hypervisorIds);
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
+        validateRequestSize(pageRequest, ownerHypervisorCount);
+
+        if (pageRequest != null) {
+            Page<Stream<ConsumerDTOArrayElement>> page = new Page<>();
+            page.setPageRequest(pageRequest);
+
+            page.setMaxRecords(ownerHypervisorCount);
+
+            // Store the page for the LinkHeaderResponseFilter
+            ResteasyContext.pushContext(Page.class, page);
+        }
+
+        return this.consumerCurator.getHypervisorsBulk(owner.getId(), hypervisorIds, pageRequest);
+    }
+
+    private void validateRequestSize(PageRequest pageRequest, int ownerHypervisorCount) {
+        if (pageRequest == null && ownerHypervisorCount > this.maxPagingSize) {
+            String errmsg = this.i18n.tr("This endpoint does not support returning more than {0} " +
+                "results at a time, please use paging.", this.maxPagingSize);
+            throw new BadRequestException(errmsg);
+        }
     }
 
     @Override
