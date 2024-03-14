@@ -14,6 +14,7 @@
  */
 package org.candlepin.auth.permissions;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -77,17 +78,28 @@ public class OwnerCuratorPermissionsTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testgetByKeySecureOwnerPermissionFiltering() {
+    public void testGetByKeySecureOwnerPermissionFiltering() {
         assertEquals(owner1, ownerCurator.getByKeySecure(owner1.getKey()));
         assertEquals(owner2, ownerCurator.getByKeySecure(owner2.getKey()));
         assertNull(ownerCurator.getByKeySecure(owner3.getKey()));
     }
 
     @Test
-    public void testgetByKeyOwnerPermissionDoesNotFilter() {
+    public void testGetByKeyOwnerPermissionDoesNotFilter() {
         assertEquals(owner1, ownerCurator.getByKey(owner1.getKey()));
         assertEquals(owner2, ownerCurator.getByKey(owner2.getKey()));
         assertEquals(owner3, ownerCurator.getByKey(owner3.getKey()));
     }
 
+    @Test
+    public void testGetByKeysSecureOwnerPermissionFilter() {
+        List<Owner> byKeysSecure = ownerCurator.getByKeysSecure(
+            List.of(owner1.getKey(), owner2.getKey(), owner3.getKey()));
+
+        assertThat(byKeysSecure)
+            .isNotNull()
+            .hasSize(2)
+            .extracting(Owner::getKey)
+            .containsExactlyInAnyOrderElementsOf(List.of(owner1.getKey(), owner2.getKey()));
+    }
 }

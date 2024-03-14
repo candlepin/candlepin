@@ -158,6 +158,21 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
             .getResultList();
     }
 
+    @Transactional
+    public List<Owner> getByKeysSecure(Collection<String> keys) {
+        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Owner> cq = cb.createQuery(Owner.class);
+        Root<Owner> owner = cq.from(Owner.class);
+
+        Predicate keyPredicate = owner.get("key").in(keys);
+
+        Predicate securePredicate = this.getSecurityPredicate(Owner.class, cb, owner);
+
+        cq.where(cb.and(keyPredicate, securePredicate != null ? securePredicate : cb.conjunction()));
+
+        return getEntityManager().createQuery(cq).getResultList();
+    }
+
     public Owner getByUpstreamUuid(String upstreamUuid) {
         return (Owner) createSecureCriteria()
             .createCriteria("upstreamConsumer")
