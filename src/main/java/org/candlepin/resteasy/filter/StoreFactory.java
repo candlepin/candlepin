@@ -112,7 +112,7 @@ public class StoreFactory {
 
         @Override
         public List<Owner> lookup(Collection<String> keys) {
-            return this.ownerCurator.getByKeys(keys);
+            return this.ownerCurator.getByKeysSecure(keys);
         }
 
         @Override
