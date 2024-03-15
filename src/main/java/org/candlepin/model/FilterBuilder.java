@@ -14,52 +14,28 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.Criteria;
-import org.hibernate.criterion.Conjunction;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.LikeExpression;
-import org.hibernate.criterion.Restrictions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 
 
 /**
- * FilterBuilder
- *
  * Contains the logic to apply filter Criterion to a base criteria.
  */
 public abstract class FilterBuilder {
-    private static final Logger log = LoggerFactory.getLogger(FilterBuilder.class);
-
-    public static final String WILDCARD_REGEX = "((?:[^*?\\\\]*(?:\\\\.?)*)*)([*?]|\\z)";
-    public static final Pattern WILDCARD_PATTERN = Pattern.compile(WILDCARD_REGEX);
-
-
-    private Map<String, List<String>> attributeFilters;
-    private List<String> idFilters;
-    protected List<Criterion> otherCriteria;
+    private final Map<String, List<String>> attributeFilters;
+    private final List<String> idFilters;
 
     public FilterBuilder() {
         this.attributeFilters = new HashMap<>();
         this.idFilters = new LinkedList<>();
-        this.otherCriteria = new LinkedList<>();
     }
 
-    public FilterBuilder addIdFilter(String id) {
-        idFilters.add(id);
-        return this;
+    public FilterBuilder addIdFilters(String... ids) {
+        return addIdFilters(List.of(ids));
     }
 
     public FilterBuilder addIdFilters(Collection<String> ids) {
@@ -74,120 +50,16 @@ public abstract class FilterBuilder {
     }
 
     public void addAttributeFilter(String attrName) {
-        if (!attributeFilters.containsKey(attrName)) {
-            attributeFilters.put(attrName, new LinkedList<>());
-        }
+        this.attributeFilters.computeIfAbsent(attrName, s -> new LinkedList<>());
     }
 
     public void addAttributeFilter(String attrName, String attrValue) {
-        if (!attributeFilters.containsKey(attrName)) {
-            attributeFilters.put(attrName, new LinkedList<>());
-        }
-        attributeFilters.get(attrName).add(attrValue);
+        this.attributeFilters.computeIfAbsent(attrName, s -> new LinkedList<>())
+            .add(attrValue);
     }
 
     public Map<String, List<String>> getAttributeFilters() {
         return Collections.unmodifiableMap(this.attributeFilters);
     }
 
-    public List<String> getAttributeFilters(String attrName) {
-        return this.attributeFilters.get(attrName);
-    }
-
-    /**
-     * Adds the constructed filters to the given criteria object.
-     *
-     * @param parentCriteria
-     *  The criteria to which filters should be added
-     *
-     * @deprecated
-     *  Applying filtering to criteria through this class has been deprecated, as it requires too
-     *  much pre-configuration to the criteria to be general enough for generic use. As such, it
-     *  is often better, faster and overall more efficient to hand-craft the criteria filtering
-     *  than it is to use this class, which adds its filters via subqueries off the main query.
-     */
-    @Deprecated
-    public void applyTo(Criteria parentCriteria) {
-        if (!attributeFilters.isEmpty() || !idFilters.isEmpty() || !otherCriteria.isEmpty()) {
-            parentCriteria.add(getCriteria());
-        }
-    }
-
-    public void applyTo(DetachedCriteria parentCriteria) {
-        if (!attributeFilters.isEmpty() || !idFilters.isEmpty() || !otherCriteria.isEmpty()) {
-            parentCriteria.add(getCriteria());
-        }
-    }
-
-    public Criterion getCriteria() {
-        Conjunction all = Restrictions.conjunction();
-        if (!attributeFilters.isEmpty()) {
-            all.add(buildAttributeCriteria());
-        }
-        if (!idFilters.isEmpty()) {
-            all.add(buildIdFilters());
-        }
-        if (!otherCriteria.isEmpty()) {
-            for (Criterion c : otherCriteria) {
-                all.add(c);
-            }
-        }
-        return all;
-    }
-
-    private Criterion buildIdFilters() {
-        return Restrictions.in("id", idFilters);
-    }
-
-    private Criterion buildAttributeCriteria() {
-        Conjunction all = Restrictions.conjunction();
-        for (Entry<String, List<String>> entry : attributeFilters.entrySet()) {
-            all.add(buildCriteriaForKey(entry.getKey(), entry.getValue()));
-        }
-
-        // Currently all attributes of different names are ANDed.
-        return all;
-    }
-
-    protected abstract Criterion buildCriteriaForKey(String key, List<String> values);
-
-    /**
-     * FilterLikeExpression to easily build like clauses, escaping all sql wildcards
-     * from input while allowing us to use a custom wildcard
-     */
-    @SuppressWarnings("serial")
-    public static class FilterLikeExpression extends LikeExpression {
-
-        public FilterLikeExpression(String propertyName, String value, boolean ignoreCase) {
-            super(propertyName, escape(value), '!', ignoreCase);
-        }
-
-        private static String escape(String raw) {
-            // If our escape char is already here, escape it
-            log.debug("Searching for entries like: ", raw);
-            String dbEscaped = raw.replace("!", "!!")
-                // Escape anything that would be a database wildcard
-                .replace("_", "!_").replace("%", "!%");
-            log.debug("DB characters excaped: ", dbEscaped);
-
-            // Possibly could merge this with FilterBuilder.FilterLikeExpression:
-            Matcher matcher = WILDCARD_PATTERN.matcher(dbEscaped);
-            StringBuffer searchBuf = new StringBuffer();
-            while (matcher.find()) {
-                searchBuf.append(matcher.group(1));
-                if (matcher.group(2).equals("*")) {
-                    searchBuf.append("%");
-                }
-                else if (matcher.group(2).equals("?")) {
-                    searchBuf.append("_");
-                }
-            }
-
-            // If regex didn't match anything it must be a plain search string:
-            String searchString = (searchBuf.length() > 0 ? searchBuf.toString() : dbEscaped);
-            log.debug("Final database search string: {} -> {}", raw, searchString);
-
-            return searchString;
-        }
-    }
 }
