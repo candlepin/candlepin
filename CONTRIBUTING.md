@@ -14,7 +14,7 @@
 * [Building Candlepin](#building-candlepin)
   + [Building with Gradle](#building-with-gradle)
 * [Candlepin Container](#candlepin-container)
-  + [Run Production Contaienr](#run-production-container)
+  + [Run Production Container](#run-production-container)
     - [Extend Candlepin Production Base Image](#extend-candlepin-production-base-image)
   + [Run Development Container](#run-development-container)
   + [Configure Candlepin Container](#configure-candlepin-container)
@@ -81,8 +81,8 @@ TODO
 ## Setup
 If you have not done so on this machine, you need to:
 
--   Install Git and configure your GitHub access
--   Install Java SDK 8 or 11+ (OpenJDK recommended)
+- Install Git and configure your GitHub access
+- Install Java SDK 8 or 11+ (OpenJDK recommended)
 
 Docker is not strictly necessary: it is used to run the MariaDB and PostgreSQL tests which are not enabled by default.
 
@@ -100,11 +100,11 @@ Candlepin uses gradle & gradle wrapper for building & running unit tests.
 To build Candlepin run `./gradlew war` from the root of the project.
 
 ### Custom Build Properties
-A number of build flags can be passed to Gradle in order to rurn on or off
+A number of build flags can be passed to Gradle in order to turn on or off
 certain features. The available flags are as follows:
 * `-Pdatabase_server=(mariadb|postgres)` Specify Mariadb or postgres as the database
   server to target. This defaults to postgres.
-* `-Pdb_host="hostname"` Specify the hostname for the databse server. This
+* `-Pdb_host="hostname"` Specify the hostname for the database server. This
   defaults to localhost
 * `-Papp_db_name="db_name"` Specify the name of the db schema to use. This defaults
   to `candlepin`
@@ -126,7 +126,7 @@ The `dependencyCheckAnalyze` task will check a project using the [OWASP Dependen
 to see if any dependencies have CVEs reported against them.
 The maximum allowable CVSS  score can be modified by setting the `max_allowed_cvss` to a float value
 between 1.0 and 10.0.  Any CVEs above the maximum allowed CVSS score will cause the build to fail.
-The reports will be generated automatically under build/reports folder.
+The reports will be generated automatically under the build/reports folder.
 
 ### Checkstyle
 * `./gradlew checkstyle` Runs checkstyle for both production, test, and spec test code.
@@ -246,11 +246,11 @@ Refer to the [default configuration](#development-image-default-configurations) 
 
 Once configured you can start and stop(remove) the docker container with
 
-``` docker compose up/down```
+`docker compose up/down`
 
 Or the kubernetes container with 
 
-```podman play kube candlepin-deployment.yaml []/--down```
+`podman play kube candlepin-deployment.yaml []/--down`
 
 
 ### Configure Candlepin Container
