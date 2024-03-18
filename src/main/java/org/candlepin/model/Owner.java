@@ -378,6 +378,14 @@ public class Owner extends AbstractHibernateObject<Owner>
         return id;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getOwnerKey() {
+        return key;
+    }
+
     public Set<ActivationKey> getActivationKeys() {
         return this.activationKeys != null ? Collections.unmodifiableSet(this.activationKeys) : Set.of();
     }

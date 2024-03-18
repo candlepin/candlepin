@@ -127,7 +127,7 @@ public class EventSinkImplTest {
         this.modelTranslator = new StandardTranslator(this.mockConsumerTypeCurator,
             this.mockEnvironmentCurator, this.mockOwnerCurator);
 
-        this.factory = new EventFactory(mockPrincipalProvider, mapper, this.modelTranslator);
+        this.factory = new EventFactory(mockPrincipalProvider, this.modelTranslator);
         this.eventFilter = new EventFilter(TestConfig.defaults());
 
         this.eventSinkImpl = createEventSink(mockSessionFactory);

@@ -129,6 +129,15 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
      * {@inheritDoc}
      */
     @Override
+    @JsonIgnore
+    public String getOwnerKey() {
+        return this.getOwner() == null ? null : this.getOwner().getKey();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getId() {
         return id;
     }

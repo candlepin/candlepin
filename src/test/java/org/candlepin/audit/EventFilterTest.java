@@ -16,26 +16,39 @@ package org.candlepin.audit;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.eq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
+import org.candlepin.auth.PrincipalData;
+import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.model.Owner;
+import org.candlepin.test.TestUtil;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
-
 public class EventFilterTest {
+
+    private PrincipalData principalData;
+
+    @BeforeEach
+    public void beforeEach() {
+        Owner owner = TestUtil.createOwner();
+        UserPrincipal principal = TestUtil.createOwnerPrincipal(owner);
+        principalData = principal.getData();
+    }
 
     @Test
     public void disabledShouldNotFilter() {
-        Event event1 = createEvent(Type.CREATED, Target.ENTITLEMENT);
-        Event event2 = createEvent(Type.MODIFIED, Target.CONSUMER);
+        Event event1 = new Event(Type.CREATED, Target.ENTITLEMENT, principalData);
+        Event event2 = new Event(Type.MODIFIED, Target.CONSUMER, principalData);
         EventFilter filter = new EventFilter(configurationAuditDisabled());
 
         assertFalse(filter.shouldFilter(event1));
@@ -44,7 +57,7 @@ public class EventFilterTest {
 
     @Test
     public void filterUnknownEventPolicyDoFilter() {
-        Event event = createEvent(Type.MODIFIED, Target.CONSUMER);
+        Event event = new Event(Type.MODIFIED, Target.CONSUMER, principalData);
         EventFilter filter = new EventFilter(configurationAuditEnabled());
 
         assertTrue(filter.shouldFilter(event));
@@ -52,7 +65,7 @@ public class EventFilterTest {
 
     @Test
     public void notFilterIncludes() {
-        Event event = createEvent(Type.CREATED, Target.ENTITLEMENT);
+        Event event = new Event(Type.CREATED, Target.ENTITLEMENT, principalData);
         EventFilter filter = new EventFilter(configurationAuditEnabled());
 
         assertFalse(filter.shouldFilter(event));
@@ -60,8 +73,8 @@ public class EventFilterTest {
 
     @Test
     public void policyDoNotFilterShouldNotFilter() {
-        Event event1 = createEvent(Type.CREATED, Target.ENTITLEMENT);
-        Event event2 = createEvent(Type.MODIFIED, Target.CONSUMER);
+        Event event1 = new Event(Type.CREATED, Target.ENTITLEMENT, principalData);
+        Event event2 = new Event(Type.MODIFIED, Target.CONSUMER, principalData);
         EventFilter filter = new EventFilter(configurationDoNotFilter());
 
         assertFalse(filter.shouldFilter(event1));
@@ -70,17 +83,10 @@ public class EventFilterTest {
 
     @Test
     public void policyDoNotFilterShouldFilterExcludes() {
-        Event event = createEvent(Type.MODIFIED, Target.EXPORT);
+        Event event = new Event(Type.MODIFIED, Target.EXPORT, principalData);
         EventFilter filter = new EventFilter(configurationDoNotFilterWithExcludes());
 
         assertTrue(filter.shouldFilter(event));
-    }
-
-    private Event createEvent(Type type, Target target) {
-        Event event = new Event();
-        event.setType(type);
-        event.setTarget(target);
-        return event;
     }
 
     private Configuration configurationAuditDisabled() {

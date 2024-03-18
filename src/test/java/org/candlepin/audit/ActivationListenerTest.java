@@ -22,25 +22,21 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
-import org.candlepin.util.ObjectMapperFactory;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
 
 public class ActivationListenerTest {
 
     private ActivationListener listener;
     private SubscriptionServiceAdapter subscriptionService;
-    private ObjectMapper objectMapper;
 
     @BeforeEach
     public void init() {
-        objectMapper = ObjectMapperFactory.getObjectMapper();
         subscriptionService = mock(ImportSubscriptionServiceAdapter.class);
-        listener = new ActivationListener(subscriptionService, objectMapper);
+        listener = new ActivationListener(subscriptionService);
     }
 
     @Test
@@ -48,7 +44,7 @@ public class ActivationListenerTest {
         Event event = mock(Event.class);
         when(event.getTarget()).thenReturn(Event.Target.POOL);
         when(event.getType()).thenReturn(Event.Type.CREATED);
-        when(event.getEventData()).thenReturn("{\"subscriptionId\":\"sub-id-1\"}");
+        when(event.getEventData()).thenReturn(Map.of("subscriptionId", "sub-id-1"));
         listener.onEvent(event);
         verify(subscriptionService, times(1)).sendActivationEmail("sub-id-1");
     }

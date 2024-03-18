@@ -42,12 +42,12 @@ public class LoggingListener implements EventListener {
     public void onEvent(Event e) {
         auditLog.info(
             "principalType={} principal={} target={} entityId={} type={} owner={} eventData={}\n",
-            e.getPrincipal().getType(),
-            e.getPrincipal().getName(),
+            e.getPrincipalData().getType(),
+            e.getPrincipalData().getName(),
             e.getTarget(),
             e.getEntityId(),
             e.getType(),
-            e.getOwnerId(),
+            e.getOwnerKey(),
             e.getEventData());
     }
 }

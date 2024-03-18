@@ -14,27 +14,32 @@
  */
 package org.candlepin.audit;
 
+import static org.assertj.core.api.Assertions.as;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.util.ObjectMapperFactory;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
 
 
 public class EventBuilderTest {
@@ -46,12 +51,9 @@ public class EventBuilderTest {
     private EventFactory factory;
     private EventBuilder eventBuilder;
     private PrincipalProvider principalProvider;
-    private ObjectMapper objectMapper;
 
     @BeforeEach
     public void init() throws Exception {
-        objectMapper = ObjectMapperFactory.getObjectMapper();
-
         this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
         this.mockEnvironmentCurator = mock(EnvironmentCurator.class);
         this.mockOwnerCurator = mock(OwnerCurator.class);
@@ -62,7 +64,7 @@ public class EventBuilderTest {
         principalProvider = mock(PrincipalProvider.class);
         Principal principal = mock(Principal.class);
 
-        factory = new EventFactory(principalProvider, objectMapper, this.modelTranslator);
+        factory = new EventFactory(principalProvider, this.modelTranslator);
         when(principalProvider.get()).thenReturn(principal);
     }
 
@@ -71,11 +73,37 @@ public class EventBuilderTest {
         Pool pool = mock(Pool.class);
         eventBuilder = new EventBuilder(factory, Event.Target.POOL, Event.Type.CREATED);
 
-        when(pool.getSubscriptionId()).thenReturn("test-subscription-id");
+        String expectedSubId = "test-subscription-id";
+        when(pool.getSubscriptionId()).thenReturn(expectedSubId);
+        String expectedOwnerKey = TestUtil.randomString();
+        doReturn(expectedOwnerKey).when(pool).getOwnerKey();
 
-        String expectedEventData = "{\"subscriptionId\":\"test-subscription-id\"}";
+        Map<String, Object> expectedEventData = Map.of("subscriptionId", expectedSubId);
         Event event = eventBuilder.setEventData(pool).buildEvent();
         assertEquals(expectedEventData, event.getEventData());
+        assertEquals(expectedOwnerKey, event.getOwnerKey());
+    }
+
+    @Test
+    public void testSetEventDataWithContentAccessModeModification() {
+        String expectedOwnerKey = TestUtil.randomString();
+        Owner owner = new Owner();
+        owner.setKey(expectedOwnerKey);
+        owner.setId(TestUtil.randomString());
+        owner.setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+        eventBuilder = new EventBuilder(factory, Event.Target.OWNER_CONTENT_ACCESS_MODE, Event.Type.MODIFIED);
+        Map<String, Object> expectedData =
+            Map.of("contentAccessMode", ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+
+        Event event = eventBuilder
+            .setEventData(owner)
+            .buildEvent();
+
+        assertEquals(expectedOwnerKey, event.getOwnerKey());
+        assertThat(event)
+            .returns(expectedOwnerKey, Event::getOwnerKey)
+            .extracting(Event::getEventData, as(map(String.class, Object.class)))
+            .containsAllEntriesOf(expectedData);
     }
 
     @Test

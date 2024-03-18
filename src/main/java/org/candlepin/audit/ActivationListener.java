@@ -16,16 +16,10 @@ package org.candlepin.audit;
 
 import org.candlepin.service.SubscriptionServiceAdapter;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  * ActivationListener
@@ -33,12 +27,9 @@ import javax.inject.Named;
 public class ActivationListener implements EventListener {
     private static Logger log = LoggerFactory.getLogger(ActivationListener.class);
     private SubscriptionServiceAdapter subscriptionService;
-    private ObjectMapper mapper;
 
     @Inject
-    public ActivationListener(SubscriptionServiceAdapter subService,
-        @Named("ActivationListenerObjectMapper") ObjectMapper objectMapper) {
-        this.mapper = objectMapper;
+    public ActivationListener(SubscriptionServiceAdapter subService) {
         this.subscriptionService = subService;
     }
 
@@ -46,24 +37,14 @@ public class ActivationListener implements EventListener {
     public void onEvent(Event event) {
         if (event.getType().equals(Event.Type.CREATED) &&
             event.getTarget().equals(Event.Target.POOL)) {
-            JsonNode subscriptionId = null;
-            try {
-                if (event.getEventData() != null) {
-                    subscriptionId = mapper.readTree(event.getEventData())
-                        .get("subscriptionId");
-                }
-
-                if (subscriptionId != null) {
-                    subscriptionService.sendActivationEmail(subscriptionId.asText());
-                }
+            Object subscriptionId = null;
+            if (event.getEventData() != null) {
+                subscriptionId = event.getEventData().get("subscriptionId");
             }
-            catch (IOException e) {
-                logError(event, e);
+
+            if (subscriptionId != null) {
+                subscriptionService.sendActivationEmail(String.valueOf(subscriptionId));
             }
         }
-    }
-
-    private void logError(Event event, Exception e) {
-        log.debug("Invalid JSON for pool : " + event.getEntityId(), e);
     }
 }
