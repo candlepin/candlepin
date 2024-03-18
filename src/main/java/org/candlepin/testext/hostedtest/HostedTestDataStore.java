@@ -19,8 +19,11 @@ import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Owner;
+import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.ProductContent;
+import org.candlepin.model.Role;
 import org.candlepin.model.SubscriptionsCertificate;
+import org.candlepin.model.User;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
@@ -33,16 +36,19 @@ import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
+import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.SubscriptionInfo;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -86,6 +92,10 @@ public class HostedTestDataStore {
     protected Map<String, String> cloudOfferIdToOfferType;
     protected Map<String, String> cloudAccountIdToOwnerKey;
 
+    protected Map<String, HostedTestUser> userMap;
+    protected Map<String, HostedTestRole> roleMap;
+    protected Map<String, Set<String>> usernameToRoleNames;
+
     /**
      * Creates a new HostedTestDataStore instance
      */
@@ -105,6 +115,9 @@ public class HostedTestDataStore {
         this.cloudOfferIdToProductIds = new ConcurrentHashMap<>();
         this.cloudOfferIdToOfferType = new ConcurrentHashMap<>();
         this.cloudAccountIdToOwnerKey = new ConcurrentHashMap<>();
+
+        this.userMap = new ConcurrentHashMap<>();
+        this.roleMap = new ConcurrentHashMap<>();
     }
 
     public OwnerInfo createOwner(OwnerInfo ownerInfo) {
@@ -998,6 +1011,130 @@ public class HostedTestDataStore {
         return cloudAccountIdToOwnerKey.get(cloudAccountId);
     }
 
+    protected HostedTestUser addUser(HostedTestUser user) {
+        if (user == null || user.getUsername() == null) {
+            return null;
+        }
+
+        return userMap.put(user.getUsername(), user);
+    }
+
+    protected HostedTestUser getUser(String username) {
+        if (username == null) {
+            return null;
+        }
+
+        return userMap.get(username);
+    }
+
+    protected HostedTestUser removeUser(String username) {
+        if (username == null) {
+            return null;
+        }
+
+        return userMap.remove(username);
+    }
+
+    protected List<HostedTestUser> getAllUsers() {
+        return (List<HostedTestUser>) userMap.values();
+    }
+
+    protected HostedTestRole addRole(HostedTestRole role) {
+        if (role == null || role.getName() == null) {
+            return null;
+        }
+
+        return roleMap.put(role.getName(), role);
+    }
+
+
+    protected HostedTestRole getRole(String roleName) {
+        if (roleName == null) {
+            return null;
+        }
+
+        return roleMap.get(roleName);
+    }
+
+
+    protected List<HostedTestRole> getAllRoles() {
+        return (List<HostedTestRole>) roleMap.values();
+    }
+
+    protected HostedTestRole removeRole(String roleName) {
+        if (roleName == null) {
+            return null;
+        }
+
+        return roleMap.remove(roleName);
+    }
+
+    protected HostedTestRole addPermissionToRole(String roleName, HostedTestPermission permission) {
+        if (roleName == null || permission == null) {
+            return null;
+        }
+
+        HostedTestRole role = this.roleMap.get(roleName);
+        if (role == null) {
+            return null;
+        }
+
+        role.addPermission(permission);
+
+        return role;
+
+    }
+
+    protected HostedTestRole removePermissionFromRole(String roleName, String permissionId) {
+        if (roleName == null || permissionId == null) {
+            return null;
+        }
+
+        HostedTestRole role = this.roleMap.get(roleName);
+        if (role == null) {
+            return null;
+        }
+
+        role.removePermission(permissionId);
+
+        return role;
+    }
+
+    protected HostedTestUser addUserToRole(String roleName, String username) {
+        if (roleName == null || username == null) {
+            return null;
+        }
+
+        HostedTestUser user = this.userMap.get(username);
+        if (user == null) {
+            return null;
+        }
+
+        this.usernameToRoleNames.putIfAbsent(username, new HashSet<>())
+            .add(roleName);
+
+        return user;
+    }
+
+    protected HostedTestUser removeUserFromRole(String roleName, String username) {
+        if (roleName == null || username == null) {
+            return null;
+        }
+
+        HostedTestUser user = this.userMap.get(username);
+        if (user == null) {
+            return null;
+        }
+
+        Set<String> roleNames = this.usernameToRoleNames.get(username);
+        if (roleNames != null) {
+            roleNames.remove(roleName);
+            this.usernameToRoleNames.put(username, roleNames);
+        }
+
+        return user;
+    }
+
     /**
      * Clears all data for this service adapter
      */
@@ -1010,6 +1147,8 @@ public class HostedTestDataStore {
         this.productSubscriptionMap.clear();
         this.cloudOfferIdToProductIds.clear();
         this.cloudAccountIdToOwnerKey.clear();
+        this.userMap.clear();
+        this.roleMap.clear();
     }
 
 }
