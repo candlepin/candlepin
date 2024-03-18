@@ -54,7 +54,7 @@ import org.candlepin.config.TestConfig;
 import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
+import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
@@ -90,7 +90,6 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.DistributorVersionCurator;
@@ -105,10 +104,13 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.SCACertificate;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.paging.PageRequest;
+import org.candlepin.pki.certs.AnonymousCertificateGenerator;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
+import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -279,6 +281,10 @@ public class ConsumerResourceTest {
     private AnonymousContentAccessCertificateCurator anonymousCertCurator;
     @Mock
     private OwnerServiceAdapter ownerService;
+    @Mock
+    private SCACertificateGenerator scaCertificateGenerator;
+    @Mock
+    private AnonymousCertificateGenerator anonymousCertificateGenerator;
 
     private ModelTranslator translator;
     private ConsumerResource consumerResource;
@@ -352,11 +358,11 @@ public class ConsumerResourceTest {
             this.entCertGenerator,
             this.poolService,
             this.environmentContentCurator,
-            this.cloudRegistrationAdapter,
-            this.poolCurator,
             this.anonymousConsumerCurator,
             this.anonymousCertCurator,
-            this.ownerService
+            this.ownerService,
+            this.scaCertificateGenerator,
+            this.anonymousCertificateGenerator
         );
     }
 
@@ -560,11 +566,11 @@ public class ConsumerResourceTest {
             this.entCertGenerator,
             this.poolService,
             this.environmentContentCurator,
-            this.cloudRegistrationAdapter,
-            this.poolCurator,
             this.anonymousConsumerCurator,
             this.anonymousCertCurator,
-            this.ownerService
+            this.ownerService,
+            this.scaCertificateGenerator,
+            this.anonymousCertificateGenerator
         );
 
         // Fixme throw custom exception from generator instead of generic RuntimeException
@@ -1002,14 +1008,14 @@ public class ConsumerResourceTest {
         return certificate;
     }
 
-    private ContentAccessCertificate createContentAccessCertificate(String key, String cert, long serialId) {
+    private SCACertificate createContentAccessCertificate(String key, String cert, long serialId) {
         CertificateSerial expectedSerial = new CertificateSerial(serialId, new Date());
         String certBody = """
             %s
             -----BEGIN ENTITLEMENT DATA-----
             """.formatted(cert);
 
-        ContentAccessCertificate certificate = new ContentAccessCertificate();
+        SCACertificate certificate = new SCACertificate();
         certificate.setKeyAsBytes(key.getBytes());
         certificate.setCertAsBytes(certBody.getBytes());
         certificate.setSerial(expectedSerial);
@@ -1313,9 +1319,10 @@ public class ConsumerResourceTest {
         certificates.add(createEntitlementCertificate("key-2", "cert-2"));
         doReturn(certificates).when(entitlementCertServiceAdapter).listForConsumer(any(Consumer.class));
 
-        ContentAccessCertificate expectedCertificate = createContentAccessCertificate("expected-key",
+        SCACertificate expectedCertificate = createContentAccessCertificate("expected-key",
             "expected-cert", 18084729L);
-        doReturn(expectedCertificate).when(contentAccessManager).getCertificate(any(Consumer.class));
+        when(this.scaCertificateGenerator.generate(any(Consumer.class)))
+            .thenReturn(expectedCertificate);
 
         List<CertificateDTO> actual = consumerResource.getEntitlementCertificates(consumer.getId(),
             Long.toString(expectedCertificate.getSerial().getId()));
@@ -1344,7 +1351,7 @@ public class ConsumerResourceTest {
 
         AnonymousContentAccessCertificate expectedCert = createAnonContentAccessCert("expected-key",
             "expected-cert", 18084729L);
-        doReturn(expectedCert).when(contentAccessManager).getCertificate(consumer);
+        when(this.anonymousCertificateGenerator.generate(consumer)).thenReturn(expectedCert);
 
         List<CertificateDTO> actual = consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
 
@@ -1372,7 +1379,8 @@ public class ConsumerResourceTest {
 
         AnonymousContentAccessCertificate expectedCertificate = createAnonContentAccessCert("expected-key",
             "expected-cert", 18084729L);
-        doReturn(expectedCertificate).when(contentAccessManager).getCertificate(consumer);
+        when(this.anonymousCertificateGenerator.generate(consumer))
+            .thenReturn(expectedCertificate);
         String serials = Long.toString(expectedCertificate.getSerial().getId());
 
         List<CertificateDTO> actual = consumerResource
@@ -1394,8 +1402,8 @@ public class ConsumerResourceTest {
         doReturn(List.of(mockProdInfo)).when(mockProductServiceAdapter)
             .getChildrenByProductIds(consumer.getProductIds());
 
-        doThrow(new RuntimeException()).when(contentAccessManager)
-            .getCertificate(any(AnonymousCloudConsumer.class));
+        doThrow(new RuntimeException()).when(this.anonymousCertificateGenerator)
+            .generate(any(AnonymousCloudConsumer.class));
 
         assertThrows(IseException.class, () -> consumerResource
             .getEntitlementCertificates(consumer.getUuid(), null));
@@ -1442,9 +1450,9 @@ public class ConsumerResourceTest {
         doReturn(consumer).when(consumerCurator).verifyAndLookupConsumer(consumer.getId());
         List<EntitlementCertificate> certificates = createEntitlementCertificates();
         doReturn(certificates).when(entitlementCertServiceAdapter).listForConsumer(any(Consumer.class));
-        ContentAccessCertificate certificate = createContentAccessCertificate(
+        SCACertificate certificate = createContentAccessCertificate(
             "key-1", "key-2", 18084729L);
-        doReturn(certificate).when(contentAccessManager).getCertificate(any(Consumer.class));
+        doReturn(certificate).when(this.scaCertificateGenerator).generate(any(Consumer.class));
 
         List<CertificateDTO> actual = consumerResource.getEntitlementCertificates(consumer.getId(), "123456");
 
@@ -1462,10 +1470,10 @@ public class ConsumerResourceTest {
 
     @Test
     void usesDefaultWhenNoCAAvailable() {
-        String expectedMode = ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue();
+        String expectedMode = ContentAccessMode.getDefault().toDatabaseValue();
         List<String> expectedModeList = Arrays.asList(
-            ContentAccessManager.ContentAccessMode.ENTITLEMENT.toDatabaseValue(),
-            ContentAccessManager.ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+            ContentAccessMode.ENTITLEMENT.toDatabaseValue(),
+            ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
         Consumer consumer = createConsumer(createOwner());
         when(consumerCurator.verifyAndLookupConsumer(anyString()))
             .thenReturn(consumer);
@@ -1548,9 +1556,10 @@ public class ConsumerResourceTest {
             .thenReturn(consumer);
         when(contentAccessManager.hasCertChangedSince(any(Consumer.class), any(Date.class)))
             .thenReturn(true);
-        ContentAccessCertificate expectedCertificate = createContentAccessCertificate(
+        SCACertificate expectedCertificate = createContentAccessCertificate(
             "expected-key", "expected-cert", 18084729L);
-        when(contentAccessManager.getCertificate(any(Consumer.class))).thenReturn(expectedCertificate);
+        when(this.scaCertificateGenerator.generate(any(Consumer.class)))
+            .thenReturn(expectedCertificate);
 
         Response contentAccess = consumerResource
             .getContentAccessBody("test-uuid", "Fri, 06 Oct 2023 08:20:51 Z");
@@ -1572,9 +1581,10 @@ public class ConsumerResourceTest {
             .thenReturn(consumer);
         when(contentAccessManager.hasCertChangedSince(any(Consumer.class), any(Date.class)))
             .thenReturn(true);
-        ContentAccessCertificate expectedCertificate = createContentAccessCertificate(
+        SCACertificate expectedCertificate = createContentAccessCertificate(
             "expected-key", "expected-cert", 18084729L);
-        when(contentAccessManager.getCertificate(any(Consumer.class))).thenReturn(expectedCertificate);
+        when(this.scaCertificateGenerator.generate(any(Consumer.class)))
+            .thenReturn(expectedCertificate);
 
         Response contentAccess = consumerResource
             .getContentAccessBody("test-uuid", "Fri, 06 Oct 2023 08:20:51 Z");

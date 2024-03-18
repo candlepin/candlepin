@@ -23,7 +23,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
+import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.Entitler;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;

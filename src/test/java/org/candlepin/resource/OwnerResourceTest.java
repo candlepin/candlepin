@@ -49,7 +49,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
+import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerContentAccess;
 import org.candlepin.controller.OwnerManager;
@@ -2467,7 +2467,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     void usesDefaultWhenOwnerCANotAvailable() {
-        String expectedMode = ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue();
+        String expectedMode = ContentAccessMode.getDefault().toDatabaseValue();
         List<String> expectedModeList = Arrays.asList(ContentAccessMode.ENTITLEMENT.toDatabaseValue(),
             ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
         when(mockOwnerCurator.getOwnerContentAccess(anyString()))

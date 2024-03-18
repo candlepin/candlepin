@@ -20,8 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.config.ConfigProperties;
@@ -49,6 +49,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SourceSubscription;
+import org.candlepin.pki.certs.V3CapabilityCheck;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
@@ -101,6 +102,8 @@ public class AutobindRulesTest {
     @Mock
     private ConsumerTypeCurator consumerTypeCurator;
     @Mock
+    private V3CapabilityCheck v3CapabilityCheck;
+    @Mock
     private EnvironmentCurator environmentCurator;
 
     private ComplianceStatus compliance;
@@ -132,8 +135,8 @@ public class AutobindRulesTest {
         mapper = ObjectMapperFactory.getRulesObjectMapper();
 
         translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator);
-        autobindRules = new AutobindRules(jsRules, consumerTypeCurator, mockOwnerCurator,
-            mapper, translator);
+        autobindRules = new AutobindRules(jsRules, mockOwnerCurator,
+            mapper, translator, v3CapabilityCheck);
 
         owner = new Owner();
         owner.setId(TestUtil.randomString());
@@ -250,9 +253,7 @@ public class AutobindRulesTest {
             .setOwner(owner)
             .setType(ctype);
 
-        doReturn(ctype).when(this.consumerTypeCurator).get(eq(ctype.getId()));
-        doReturn(ctype).when(this.consumerTypeCurator).getByLabel(eq(ctype.getLabel()));
-        doReturn(ctype).when(this.consumerTypeCurator).getConsumerType(eq(consumer));
+        when(this.v3CapabilityCheck.isCertV3Capable(any(Consumer.class))).thenReturn(true);
 
         List<PoolQuantity> results = autobindRules.selectBestPools(consumer, Set.of(productId),
             pools, compliance, null, new HashSet<>(), false);
@@ -262,6 +263,7 @@ public class AutobindRulesTest {
     @Test
     public void testSelectBestPoolsLotsOfContentV3Client() {
         Pool pool = createV3OnlyPool();
+        when(this.v3CapabilityCheck.isCertV3Capable(any(Consumer.class))).thenReturn(true);
 
         List<Pool> pools = Arrays.asList(pool);
 

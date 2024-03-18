@@ -32,7 +32,7 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.TestConfig;
-import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
+import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.PoolService;
 import org.candlepin.dto.api.server.v1.CertificateDTO;
 import org.candlepin.dto.api.server.v1.CertificateSerialDTO;

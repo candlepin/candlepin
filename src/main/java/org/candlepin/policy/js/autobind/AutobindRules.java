@@ -21,17 +21,14 @@ import org.candlepin.dto.rules.v1.GuestIdDTO;
 import org.candlepin.dto.rules.v1.OwnerDTO;
 import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.pki.certs.V3CapabilityCheck;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RuleExecutionException;
@@ -49,6 +46,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -68,20 +66,19 @@ public class AutobindRules {
 
     private final JsRunner jsRules;
     private final RulesObjectMapper mapper;
-    private final ConsumerTypeCurator consumerTypeCurator;
     private final OwnerCurator ownerCurator;
     private final ModelTranslator translator;
+    private final V3CapabilityCheck v3CapabilityCheck;
 
     @Inject
-    public AutobindRules(JsRunner jsRules,
-        ConsumerTypeCurator consumerTypeCurator, OwnerCurator ownerCurator,
-        RulesObjectMapper mapper, ModelTranslator translator) {
+    public AutobindRules(JsRunner jsRules, OwnerCurator ownerCurator, RulesObjectMapper mapper,
+        ModelTranslator translator, V3CapabilityCheck v3CapabilityCheck) {
 
-        this.jsRules = jsRules;
-        this.ownerCurator = ownerCurator;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.mapper = mapper;
-        this.translator = translator;
+        this.jsRules = Objects.requireNonNull(jsRules);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.mapper = Objects.requireNonNull(mapper);
+        this.translator = Objects.requireNonNull(translator);
+        this.v3CapabilityCheck = Objects.requireNonNull(v3CapabilityCheck);
 
         jsRules.init("autobind_name_space");
     }
@@ -232,7 +229,7 @@ public class AutobindRules {
      * with too many content sets.
      */
     private List<Pool> filterPoolsForV1Certificates(Consumer consumer, List<Pool> pools) {
-        if (!this.consumerIsCertV3Capable(consumer)) {
+        if (!this.v3CapabilityCheck.isCertV3Capable(consumer)) {
             List<Pool> newPools = new LinkedList<>();
 
             for (Pool p : pools) {
@@ -256,41 +253,6 @@ public class AutobindRules {
 
         // Otherwise return the list of pools as is:
         return pools;
-    }
-
-    /**
-     * Checks if the specified consumer is capable of using v3 certificates
-     *
-     * @param consumer
-     *  The consumer to check
-     *
-     * @return
-     *  true if the consumer is capable of using v3 certificates; false otherwise
-     */
-    private boolean consumerIsCertV3Capable(Consumer consumer) {
-        if (consumer == null) {
-            throw new IllegalArgumentException("consumer is null");
-        }
-
-        ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
-
-        if (type.isManifest()) {
-            for (ConsumerCapability capability : consumer.getCapabilities()) {
-                if ("cert_v3".equals(capability.getName())) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-        else if (type.isType(ConsumerTypeEnum.HYPERVISOR)) {
-            // Hypervisors in this context don't use content, so V3 is allowed
-            return true;
-        }
-
-        // Consumer isn't a special type, check their certificate_version fact
-        String entitlementVersion = consumer.getFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION);
-        return entitlementVersion != null && entitlementVersion.startsWith("3.");
     }
 
 }

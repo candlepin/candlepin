@@ -42,7 +42,7 @@ import org.candlepin.config.Configuration;
 import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
+import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
@@ -95,7 +95,6 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.DistributorVersion;
@@ -113,15 +112,17 @@ import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Release;
+import org.candlepin.model.SCACertificate;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
+import org.candlepin.pki.certs.AnonymousCertificateGenerator;
 import org.candlepin.pki.certs.CertificateCreationException;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
+import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -140,7 +141,6 @@ import org.candlepin.resource.util.EnvironmentUpdates;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.KeyValueStringParser;
 import org.candlepin.resource.validation.DTOValidator;
-import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -212,6 +212,8 @@ public class ConsumerResource implements ConsumerApi {
     private final ProductServiceAdapter prodAdapter;
     private final EntitlementCurator entitlementCurator;
     private final IdentityCertificateGenerator identityCertificateGenerator;
+    private final SCACertificateGenerator scaCertificateGenerator;
+    private final AnonymousCertificateGenerator anonymousCertGenerator;
     private final EntitlementCertServiceAdapter entCertService;
     private final ContentAccessManager contentAccessManager;
     private final UserServiceAdapter userService;
@@ -248,7 +250,6 @@ public class ConsumerResource implements ConsumerApi {
     private final AnonymousCloudConsumerCurator anonymousConsumerCurator;
     private final AnonymousContentAccessCertificateCurator anonymousCertCurator;
     private final OwnerServiceAdapter ownerService;
-
 
     private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
     private final Pattern consumerSystemNamePattern;
@@ -296,11 +297,11 @@ public class ConsumerResource implements ConsumerApi {
         EntitlementCertificateGenerator entCertGenerator,
         PoolService poolService,
         EnvironmentContentCurator environmentContentCurator,
-        CloudRegistrationAdapter cloudAdapter,
-        PoolCurator poolCurator,
         AnonymousCloudConsumerCurator anonymousConsumerCurator,
         AnonymousContentAccessCertificateCurator anonymousCertCurator,
-        OwnerServiceAdapter ownerService) {
+        OwnerServiceAdapter ownerService,
+        SCACertificateGenerator scaCertificateGenerator,
+        AnonymousCertificateGenerator anonymousCertGenerator) {
 
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
@@ -344,6 +345,8 @@ public class ConsumerResource implements ConsumerApi {
         this.anonymousConsumerCurator = Objects.requireNonNull(anonymousConsumerCurator);
         this.anonymousCertCurator = Objects.requireNonNull(anonymousCertCurator);
         this.ownerService = Objects.requireNonNull(ownerService);
+        this.scaCertificateGenerator = Objects.requireNonNull(scaCertificateGenerator);
+        this.anonymousCertGenerator = Objects.requireNonNull(anonymousCertGenerator);
 
         this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(
             entitlementCurator, environmentContentCurator);
@@ -742,11 +745,11 @@ public class ConsumerResource implements ConsumerApi {
         String caMode = Util.firstOf(predicate,
             consumer.getContentAccessMode(),
             consumer.getOwner().getContentAccessMode(),
-            ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue());
+            ContentAccessMode.getDefault().toDatabaseValue());
 
         String caList = Util.firstOf(predicate,
             consumer.getOwner().getContentAccessModeList(),
-            ContentAccessManager.getListDefaultDatabaseValue());
+            ContentAccessManager.defaultContentAccessModeList());
 
         return new ContentAccessDTO()
             .contentAccessMode(caMode)
@@ -1507,7 +1510,7 @@ public class ConsumerResource implements ConsumerApi {
             Owner ownerToCreate = new Owner()
                 .setKey(ownerKey)
                 .setDisplayName(ownerKey)
-                .setContentAccessModeList(ContentAccessManager.getListDefaultDatabaseValue())
+                .setContentAccessModeList(ContentAccessManager.defaultContentAccessModeList())
                 .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
             Owner createdOwner = this.ownerCurator.create(ownerToCreate);
 
@@ -2197,7 +2200,7 @@ public class ConsumerResource implements ConsumerApi {
         Set<Long> serialSet = this.extractSerials(serials);
         List<? extends Certificate> entitlementCerts = this.entCertService.listForConsumer(consumer);
 
-        Certificate caCert = this.contentAccessManager.getCertificate(consumer);
+        Certificate caCert = this.scaCertificateGenerator.generate(consumer);
 
         Stream<? extends Certificate> certStream = this.buildCertificateStream(entitlementCerts, caCert);
 
@@ -2230,7 +2233,7 @@ public class ConsumerResource implements ConsumerApi {
     private CertificateDTO getCertForAnonCloudConsumer(AnonymousCloudConsumer consumer, String serials) {
         Certificate caCert;
         try {
-            caCert = this.contentAccessManager.getCertificate(consumer);
+            caCert = this.anonymousCertGenerator.generate(consumer);
         }
         catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -2302,7 +2305,7 @@ public class ConsumerResource implements ConsumerApi {
                 .build();
         }
 
-        ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
+        SCACertificate cac = this.scaCertificateGenerator.generate(consumer);
         if (cac == null) {
             throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"));
         }
@@ -2398,7 +2401,7 @@ public class ConsumerResource implements ConsumerApi {
         }
 
         // add content access cert if needed
-        ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
+        SCACertificate cac = this.scaCertificateGenerator.generate(consumer);
         if (cac != null) {
             allCerts.add(new CertificateSerialDTO().serial(cac.getSerial().getId()));
         }

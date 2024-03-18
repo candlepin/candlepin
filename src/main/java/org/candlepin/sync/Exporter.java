@@ -16,7 +16,6 @@ package org.candlepin.sync;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.manifest.v1.CertificateDTO;
 import org.candlepin.guice.PrincipalProvider;
@@ -25,7 +24,6 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
@@ -35,6 +33,8 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ResultIterator;
+import org.candlepin.model.SCACertificate;
+import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.pki.impl.Signer;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -93,7 +93,7 @@ public class Exporter {
     private final ExportRules exportRules;
     private final PrincipalProvider principalProvider;
     private final ModelTranslator translator;
-    private final ContentAccessManager contentAccessManager;
+    private final SCACertificateGenerator scaCertificateGenerator;
     private final SyncUtils syncUtils;
 
     @Inject
@@ -110,7 +110,7 @@ public class Exporter {
         SyncUtils syncUtils,
         @Named("ExportObjectMapper") ObjectMapper mapper,
         ModelTranslator translator,
-        ContentAccessManager contentAccessManager) {
+        SCACertificateGenerator scaCertificateGenerator) {
 
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.meta = Objects.requireNonNull(meta);
@@ -132,7 +132,7 @@ public class Exporter {
         this.syncUtils = Objects.requireNonNull(syncUtils);
         this.mapper = Objects.requireNonNull(mapper);
         this.translator = Objects.requireNonNull(translator);
-        this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
+        this.scaCertificateGenerator = Objects.requireNonNull(scaCertificateGenerator);
     }
 
     /**
@@ -398,7 +398,7 @@ public class Exporter {
      */
     private void exportContentAccessCerts(File baseDir, Consumer consumer,
         Set<Long> serials) throws IOException {
-        ContentAccessCertificate contentAccessCert = this.contentAccessManager.getCertificate(consumer);
+        SCACertificate contentAccessCert = this.scaCertificateGenerator.generate(consumer);
 
         if (contentAccessCert != null &&
             (serials == null || contentAccessCert.getSerial() == null ||

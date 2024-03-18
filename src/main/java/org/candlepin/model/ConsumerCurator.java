@@ -1092,7 +1092,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Retrieves all the serial ids for provided {@link ContentAccessCertificate} ids and
+     * Retrieves all the serial ids for provided {@link SCACertificate} ids and
      * {@link IdentityCertificate} ids.
      *
      * @param caCertIds
@@ -1105,7 +1105,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         List<Long> serialIds = new ArrayList<>();
         if (caCertIds != null && !caCertIds.isEmpty()) {
             String caCertHql = "SELECT ca.serial.id " +
-                "FROM ContentAccessCertificate ca " +
+                "FROM SCACertificate ca " +
                 "WHERE ca.id IN (:certIds)";
 
             List<Long> caCertSerialIds = entityManager.get()

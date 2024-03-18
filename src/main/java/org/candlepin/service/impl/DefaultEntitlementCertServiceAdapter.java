@@ -21,9 +21,7 @@ import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
@@ -43,6 +41,7 @@ import org.candlepin.pki.OID;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509Extension;
+import org.candlepin.pki.certs.V3CapabilityCheck;
 import org.candlepin.pki.certs.X509StringExtension;
 import org.candlepin.pki.impl.Signer;
 import org.candlepin.util.CertificateSizeException;
@@ -97,6 +96,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private final KeyPairGenerator keyPairGenerator;
     private final PemEncoder pemEncoder;
     private final Signer signer;
+    private final V3CapabilityCheck v3CapabilityCheck;
 
     @Inject
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki,
@@ -111,7 +111,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         EnvironmentCurator environmentCurator,
         KeyPairGenerator keyPairGenerator,
         PemEncoder pemEncoder,
-        Signer signer) {
+        Signer signer,
+        V3CapabilityCheck v3CapabilityCheck) {
 
         this.pki = Objects.requireNonNull(pki);
         this.extensionUtil = Objects.requireNonNull(extensionUtil);
@@ -127,6 +128,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
         this.signer = Objects.requireNonNull(signer);
+        this.v3CapabilityCheck = Objects.requireNonNull(v3CapabilityCheck);
     }
 
 
@@ -187,7 +189,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         Set<X509Extension> extensions = new HashSet<>();
         products.add(product);
 
-        if (shouldGenerateV3(consumer)) {
+        if (this.v3CapabilityCheck.isCertV3Capable(consumer)) {
             extensions.addAll(prepareV3Extensions(pool));
             extensions.addAll(this.v3extensionUtil.getByteExtensions(productModels));
         }
@@ -235,41 +237,6 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         }
 
         return pool.getEndDate();
-    }
-
-    /**
-     * Checks if the specified consumer is capable of using v3 certificates
-     *
-     * @param consumer
-     *  The consumer to check
-     *
-     * @return
-     *  true if the consumer should use v3 certificates; false otherwise
-     */
-    private boolean shouldGenerateV3(Consumer consumer) {
-        if (consumer != null) {
-            ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
-
-            if (type.isManifest()) {
-                for (ConsumerCapability capability : consumer.getCapabilities()) {
-                    if ("cert_v3".equals(capability.getName())) {
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-            else if (type.isType(ConsumerTypeEnum.HYPERVISOR)) {
-                // Hypervisors in this context don't use content, so V3 is allowed
-                return true;
-            }
-
-            // Consumer isn't a special type, check their certificate_version fact
-            String entitlementVersion = consumer.getFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION);
-            return entitlementVersion != null && entitlementVersion.startsWith("3.");
-        }
-
-        return false;
     }
 
     /**
@@ -428,7 +395,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             log.debug("Getting PEM encoded cert.");
             String pem = this.pemEncoder.encodeAsString(x509Cert);
 
-            if (shouldGenerateV3(consumer)) {
+            if (this.v3CapabilityCheck.isCertV3Capable(consumer)) {
                 log.debug("Generating v3 entitlement data");
 
                 byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(productModels,

@@ -20,6 +20,10 @@ package org.candlepin.pki.certs;
  * in one of the certificate generators.
  */
 public class CertificateCreationException extends RuntimeException {
+    public CertificateCreationException(String message) {
+        super(message);
+    }
+
     public CertificateCreationException(String message, Throwable cause) {
         super(message, cause);
     }

@@ -23,6 +23,7 @@ import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.CloudRegistrationAdapter;
@@ -100,14 +101,14 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
                     // while non-anonymous orgs should use the defaults.
                     if (accountData.isAnonymous()) {
                         newOwner.setContentAccessMode(
-                                ContentAccessManager.ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue())
+                                ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue())
                             .setContentAccessModeList(
-                                ContentAccessManager.ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+                                ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
                     }
                     else {
                         newOwner.setContentAccessMode(
-                            ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue())
-                            .setContentAccessModeList(ContentAccessManager.getListDefaultDatabaseValue());
+                            ContentAccessMode.getDefault().toDatabaseValue())
+                            .setContentAccessModeList(ContentAccessManager.defaultContentAccessModeList());
                     }
                     ownerCurator.create(newOwner);
                 }

@@ -92,7 +92,9 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.pki.certs.AnonymousCertificateGenerator;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
+import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -234,6 +236,10 @@ public class ConsumerResourceUpdateTest {
     private AnonymousContentAccessCertificateCurator anonymousCertCurator;
     @Mock
     private OwnerServiceAdapter ownerService;
+    @Mock
+    private SCACertificateGenerator scaCertificateGenerator;
+    @Mock
+    private AnonymousCertificateGenerator anonymousCertificateGenerator;
 
     private ModelTranslator translator;
 
@@ -294,11 +300,11 @@ public class ConsumerResourceUpdateTest {
             this.entCertGenerator,
             this.poolService,
             this.environmentContentCurator,
-            this.cloudRegistrationAdapter,
-            this.poolCurator,
             this.anonymousConsumerCurator,
             this.anonymousCertCurator,
-            this.ownerService
+            this.ownerService,
+            this.scaCertificateGenerator,
+            this.anonymousCertificateGenerator
         );
 
         when(this.complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),

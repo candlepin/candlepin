@@ -30,7 +30,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-class ContentAccessCertificateCuratorTest extends DatabaseTestFixture {
+class SCACertificateCuratorTest extends DatabaseTestFixture {
 
     private static final String CERT_1 = "content_1";
     private static final String CERT_2 = "content_2";
@@ -66,7 +66,7 @@ class ContentAccessCertificateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void getByConsumer() {
-        ContentAccessCertificate contentAccess = caCertCurator
+        SCACertificate contentAccess = caCertCurator
             .getForConsumer(consumer1);
 
         assertEquals(CERT_1, contentAccess.getCert());
@@ -141,19 +141,19 @@ class ContentAccessCertificateCuratorTest extends DatabaseTestFixture {
 
     private Consumer createConsumerWithCACert(Owner owner) {
         Consumer consumer = createConsumer(owner);
-        ContentAccessCertificate idCert = createCertificate(consumer, "cert");
+        SCACertificate idCert = createCertificate(consumer, "cert");
         this.caCertCurator.saveOrUpdate(idCert);
         consumer.setContentAccessCert(idCert);
 
         return this.consumerCurator.saveOrUpdate(consumer);
     }
 
-    private ContentAccessCertificate createCertificate(Consumer consumer, String cert) {
+    private SCACertificate createCertificate(Consumer consumer, String cert) {
         return createCertificate(consumer, cert, TestUtil.createDateOffset(2, 0, 0));
     }
 
-    private ContentAccessCertificate createCertificate(Consumer consumer, String cert, Date expiration) {
-        ContentAccessCertificate certificate = new ContentAccessCertificate();
+    private SCACertificate createCertificate(Consumer consumer, String cert, Date expiration) {
+        SCACertificate certificate = new SCACertificate();
         certificate.setKey("crt_key");
         CertificateSerial serial = new CertificateSerial(expiration);
         this.certSerialCurator.save(serial);

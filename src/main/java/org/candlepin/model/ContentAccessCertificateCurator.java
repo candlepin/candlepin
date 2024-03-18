@@ -34,19 +34,19 @@ import javax.persistence.Query;
 
 
 @Singleton
-public class ContentAccessCertificateCurator extends AbstractHibernateCurator<ContentAccessCertificate> {
+public class ContentAccessCertificateCurator extends AbstractHibernateCurator<SCACertificate> {
 
     private static final Logger log = LoggerFactory.getLogger(ContentAccessCertificateCurator.class);
 
     @Inject
     public ContentAccessCertificateCurator() {
-        super(ContentAccessCertificate.class);
+        super(SCACertificate.class);
     }
 
     @Transactional
-    public ContentAccessCertificate getForConsumer(Consumer c) {
+    public SCACertificate getForConsumer(Consumer c) {
         log.debug("Retrieving content access certificate for consumer: {}", c.getId());
-        return (ContentAccessCertificate) currentSession().createCriteria(ContentAccessCertificate.class)
+        return (SCACertificate) currentSession().createCriteria(SCACertificate.class)
             .add(Restrictions.eq("consumer", c))
             .uniqueResult();
     }
@@ -116,7 +116,7 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<Co
     }
 
     private int deleteContentAccessCerts(Set<String> certIdsToDelete) {
-        String hql = "DELETE from ContentAccessCertificate WHERE id IN (:certsToDelete)";
+        String hql = "DELETE from SCACertificate WHERE id IN (:certsToDelete)";
         Query query = this.getEntityManager().createQuery(hql);
 
         String hql2 = "UPDATE Consumer set contentAccessCert = null WHERE " +
@@ -141,7 +141,7 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<Co
     @SuppressWarnings("unchecked")
     public List<CertSerial> listAllExpired() {
         String hql = "SELECT new org.candlepin.model.CertSerial(c.id, s.id)" +
-            " FROM ContentAccessCertificate c" +
+            " FROM SCACertificate c" +
             " INNER JOIN c.serial s " +
             " WHERE s.expiration < :nowDate";
 
@@ -164,7 +164,7 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<Co
             return 0;
         }
 
-        String query = "DELETE FROM ContentAccessCertificate c WHERE c.id IN (:idsToDelete)";
+        String query = "DELETE FROM SCACertificate c WHERE c.id IN (:idsToDelete)";
 
         int deleted = 0;
         for (Collection<String> idsToDeleteBlock : this.partition(idsToDelete)) {

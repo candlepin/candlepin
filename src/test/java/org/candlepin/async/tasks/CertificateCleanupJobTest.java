@@ -24,9 +24,9 @@ import org.candlepin.model.AnonymousContentAccessCertificate;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
+import org.candlepin.model.SCACertificate;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -195,8 +195,8 @@ class CertificateCleanupJobTest extends DatabaseTestFixture {
         return saveCert(idCert);
     }
 
-    private ContentAccessCertificate createContentAccessCert(Date expiration) {
-        ContentAccessCertificate certificate = new ContentAccessCertificate();
+    private SCACertificate createContentAccessCert(Date expiration) {
+        SCACertificate certificate = new SCACertificate();
         certificate.setKey("crt_key");
         certificate.setSerial(new CertificateSerial(expiration));
         certificate.setCert("cert_1");
@@ -210,7 +210,7 @@ class CertificateCleanupJobTest extends DatabaseTestFixture {
         return identityCertificateCurator.create(cert);
     }
 
-    private ContentAccessCertificate saveCert(ContentAccessCertificate cert) {
+    private SCACertificate saveCert(SCACertificate cert) {
         cert.setId(null);
         certSerialCurator.create(cert.getSerial());
         return caCertCurator.create(cert);

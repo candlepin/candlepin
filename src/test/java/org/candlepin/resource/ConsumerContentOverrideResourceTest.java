@@ -53,7 +53,9 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.pki.certs.AnonymousCertificateGenerator;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
+import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.consumer.ConsumerRules;
@@ -175,6 +177,10 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     private AnonymousContentAccessCertificateCurator anonymousCertCurator;
     @Mock
     private OwnerServiceAdapter ownerService;
+    @Mock
+    private SCACertificateGenerator scaCertificateGenerator;
+    @Mock
+    private AnonymousCertificateGenerator anonymousCertificateGenerator;
 
     private Consumer consumer;
     private ContentOverrideValidator contentOverrideValidator;
@@ -234,11 +240,11 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             this.entCertGenerator,
             this.poolService,
             this.environmentContentCurator,
-            this.cloudAdapter,
-            this.poolCurator,
             this.anonymousConsumerCurator,
             this.anonymousCertCurator,
-            this.ownerService
+            this.ownerService,
+            this.scaCertificateGenerator,
+            this.anonymousCertificateGenerator
         );
     }
 

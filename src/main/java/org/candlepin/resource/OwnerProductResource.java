@@ -547,7 +547,7 @@ public class OwnerProductResource implements OwnerProductApi {
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.resolveProductId(owner, productId, null);
 
-        ProductCertificate productCertificate = this.productCertificateGenerator.getCertificate(product);
+        ProductCertificate productCertificate = this.productCertificateGenerator.generate(product);
         return this.translator.translate(productCertificate, ProductCertificateDTO.class);
     }
 

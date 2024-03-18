@@ -15,7 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
+import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.util.Util;
@@ -163,7 +163,7 @@ public class Owner extends AbstractHibernateObject<Owner>
         this.pools = new HashSet<>();
 
         this.lastContentUpdate = new Date();
-        this.contentAccessModeList = ContentAccessManager.getListDefaultDatabaseValue();
+        this.contentAccessModeList = ContentAccessManager.defaultContentAccessModeList();
         this.contentAccessMode = ContentAccessMode.getDefault().toDatabaseValue();
     }
 

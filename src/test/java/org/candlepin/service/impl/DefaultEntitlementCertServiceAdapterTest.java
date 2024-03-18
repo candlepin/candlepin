@@ -66,6 +66,7 @@ import org.candlepin.pki.OID;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509Extension;
+import org.candlepin.pki.certs.V3CapabilityCheck;
 import org.candlepin.pki.huffman.Huffman;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
@@ -171,6 +172,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Mock
     private ConsumerTypeCurator mockConsumerTypeCurator;
     @Mock
+    private V3CapabilityCheck v3CapabilityCheck;
+    @Mock
     private CertificateSerialCurator serialCurator;
     @Mock
     private EntitlementCurator entCurator;
@@ -243,7 +246,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
-            this.keyPairGenerator, this.pemEncoder, this.signer);
+            this.keyPairGenerator, this.pemEncoder, this.signer, mock(V3CapabilityCheck.class));
 
         product = TestUtil.createProduct("12345", "a product");
         product.setAttribute(Product.Attributes.VERSION, "version");
@@ -415,7 +418,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
-            keyPairGenerator, pemEncoder, this.signer);
+            keyPairGenerator, pemEncoder, this.signer, mock(V3CapabilityCheck.class));
 
         PromotedContent promotedContent = new PromotedContent(prefix(owner));
         X509Certificate result = certServiceAdapter.createX509Certificate(consumer, owner, pool,
@@ -446,7 +449,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
-            keyPairGenerator, pemEncoder, this.signer);
+            keyPairGenerator, pemEncoder, this.signer, mock(V3CapabilityCheck.class));
 
         // pool start date is more than an hour ago, use it
         Calendar cal = Calendar.getInstance();
@@ -835,7 +838,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             mockConfig, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
-            keyPairGenerator, pemEncoder, this.signer);
+            keyPairGenerator, pemEncoder, this.signer, v3CapabilityCheck);
     }
 
     @Test
@@ -878,6 +881,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void ensureV3CertIsCreatedWhenEnableCertV3ConfigIsTrue() throws Exception {
         consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, "3.0");
+        when(this.v3CapabilityCheck.isCertV3Capable(consumer)).thenReturn(true);
 
         DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();
 
@@ -900,6 +904,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         when(mockConsumerTypeCurator.get(ctype.getId())).thenReturn(ctype);
         when(mockConsumerTypeCurator.getConsumerType(consumer)).thenReturn(ctype);
+        when(this.v3CapabilityCheck.isCertV3Capable(consumer)).thenReturn(true);
 
         consumer.setCapabilities(Set.of(new ConsumerCapability("cert_v3")));
 
@@ -947,6 +952,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         when(mockConsumerTypeCurator.get(ctype.getId())).thenReturn(ctype);
         when(mockConsumerTypeCurator.getConsumerType(consumer)).thenReturn(ctype);
+        when(this.v3CapabilityCheck.isCertV3Capable(consumer)).thenReturn(true);
 
         DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();
 

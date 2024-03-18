@@ -75,7 +75,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
             EntitlementCertificate.class.getName(),
             CdnCertificate.class.getName(),
             IdentityCertificate.class.getName(),
-            ContentAccessCertificate.class.getName(),
+            SCACertificate.class.getName(),
             AnonymousContentAccessCertificate.class.getName(),
             UeberCertificate.class.getName());
         String fetchSQL = "SELECT cs.id FROM cp_cert_serial cs " +
