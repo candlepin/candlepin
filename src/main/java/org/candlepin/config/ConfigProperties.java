@@ -293,6 +293,10 @@ public class ConfigProperties {
     // How long (in seconds) to wait for job threads to finish during a graceful Tomcat shutdown
     public static final String ASYNC_JOBS_THREAD_SHUTDOWN_TIMEOUT = "candlepin.async.thread.shutdown.timeout";
 
+    // The maximum allowable size for pages; defaults to 3000
+    public static final String PAGING_MAX_PAGE_SIZE = "candlepin.paging.max_page_size";
+
+
     /**
      * Fetches a string representing the prefix for all per-job configuration for the specified job.
      * The job key or class name may be used, but the usage must be consistent.
@@ -535,6 +539,9 @@ public class ConfigProperties {
             this.put(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE, "100");
             this.put(DatabaseConfigFactory.BATCH_BLOCK_SIZE, "500");
             this.put(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT, "32000");
+
+            // Paging defaults
+            this.put(PAGING_MAX_PAGE_SIZE, "3000");
         }
     };
 }
