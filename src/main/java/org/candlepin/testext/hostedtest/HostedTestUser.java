@@ -67,13 +67,43 @@ public class HostedTestUser implements UserInfo {
         return isSuperAdmin;
     }
 
-    public void setPrimaryOwner(OwnerInfo owner) {
+    public HostedTestUser setPrimaryOwner(OwnerInfo owner) {
         this.owner = owner;
+        return this;
     }
 
     @Override
     public OwnerInfo getPrimaryOwner() {
         return owner;
+    }
+
+    public HostedTestUser addRole(HostedTestRole role) {
+        this.roles.add(role);
+        return this;
+    }
+
+    public HostedTestUser removeRole(String roleName) {
+        if (roleName == null) {
+            return null;
+        }
+
+        this.roles.removeIf(existingRole -> roleName.equals(existingRole.getName()));
+        return this;
+    }
+
+    public boolean hasRole(String roleName) {
+        if (roleName == null) {
+            return false;
+        }
+
+        // TODO: Can we improve this?
+        for (HostedTestRole role : roles) {
+            if (roleName.equals(role.getName())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void setRoles(Collection<HostedTestRole> roles) {

@@ -46,9 +46,38 @@ public class HostedTestRole implements RoleInfo {
         return name;
     }
 
+    public HostedTestRole addUser(HostedTestUser user) {
+        this.users.add(user);
+        return this;
+    }
+
+    public HostedTestRole removeUser(String username) {
+        if (username == null) {
+            return this;
+        }
+
+        this.users.removeIf(user -> username.equals(user.getUsername()));
+        return this;
+    }
+
     public HostedTestRole setUsers(Collection<HostedTestUser> users) {
         this.users = users;
         return this;
+    }
+
+    public boolean hasUser(String username) {
+        if (username == null) {
+            return false;
+        }
+
+        // TODO: Can we improve this?
+        for (HostedTestUser user : users) {
+            if (username.equals(user.getUsername())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
