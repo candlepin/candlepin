@@ -3,6 +3,7 @@ package org.candlepin.testext.hostedtest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 import org.candlepin.service.model.PermissionBlueprintInfo;
 import org.candlepin.service.model.RoleInfo;
@@ -15,6 +16,18 @@ public class HostedTestRole implements RoleInfo {
     private String name;
     private Collection<HostedTestUser> users = new ArrayList<>();
     private Collection<HostedTestPermission> permissions = new ArrayList<>();
+
+    public HostedTestRole() {
+        // Intentionally left blank
+    }
+
+    public HostedTestRole(RoleInfo roleInfo) {
+        this.created = roleInfo.getCreated();
+        this.updated = roleInfo.getUpdated();
+        this.name = roleInfo.getName();
+        this.users = HostedTestUser.fromUserInfo(roleInfo.getUsers());
+        this.permissions = HostedTestPermission.fromPermissionBlueprintInfo(roleInfo.getPermissions());
+    }
 
     public HostedTestRole setCreated(Date created) {
         this.created = created;
@@ -107,6 +120,17 @@ public class HostedTestRole implements RoleInfo {
     @Override
     public Collection<? extends PermissionBlueprintInfo> getPermissions() {
         return permissions;
+    }
+
+    public static List<HostedTestRole> fromRoleInfo(Collection<? extends RoleInfo> roleInfo) {
+        List<HostedTestRole> convertedRoles = new ArrayList<>();
+
+        //TODO: Can we improve this?
+        for (RoleInfo role : roleInfo) {
+            convertedRoles.add(new HostedTestRole(role));
+        }
+
+        return convertedRoles;
     }
 
 }

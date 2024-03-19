@@ -17,6 +17,7 @@ package org.candlepin.testext.hostedtest;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.AbstractModule;
 
@@ -41,6 +42,8 @@ public class HostedTestModule extends AbstractModule {
         bind(ProductServiceAdapter.class).to(HostedTestProductServiceAdapter.class)
             .asEagerSingleton();
         bind(CloudRegistrationAdapter.class).to(HostedTestCloudRegistrationAdapter.class)
+            .asEagerSingleton();
+        bind(UserServiceAdapter.class).to(HostedUserServiceAdapter.class)
             .asEagerSingleton();
     }
 

@@ -1,7 +1,9 @@
 package org.candlepin.testext.hostedtest;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.RoleInfo;
@@ -16,6 +18,20 @@ public class HostedTestUser implements UserInfo {
     private Boolean isSuperAdmin;
     private OwnerInfo owner;
     private Collection<HostedTestRole> roles;
+
+    public HostedTestUser() {
+        // Intentionally left blank
+    }
+
+    public HostedTestUser(UserInfo userInfo) {
+        this.created = userInfo.getCreated();
+        this.updated = userInfo.getUpdated();
+        this.username = userInfo.getUsername();
+        this.password = userInfo.getHashedPassword();
+        this.isSuperAdmin = userInfo.isSuperAdmin();
+        this.owner = userInfo.getPrimaryOwner();
+        this.roles = HostedTestRole.fromRoleInfo(userInfo.getRoles());
+    }
 
     public HostedTestUser setCreated(Date created) {
         this.created = created;
@@ -57,7 +73,7 @@ public class HostedTestUser implements UserInfo {
         return password;
     }
 
-    public HostedTestUser setIsSuperAdmin(boolean isSuperAdmin) {
+    public HostedTestUser setSuperAdmin(boolean isSuperAdmin) {
         this.isSuperAdmin = isSuperAdmin;
         return this;
     }
@@ -113,6 +129,17 @@ public class HostedTestUser implements UserInfo {
     @Override
     public Collection<? extends RoleInfo> getRoles() {
         return roles;
+    }
+
+    public static List<HostedTestUser> fromUserInfo(Collection<? extends UserInfo> userInfo) {
+        List<HostedTestUser> convertedUsers = new ArrayList<>();
+
+        //TODO: Can we improve this?
+        for (UserInfo user : userInfo) {
+            convertedUsers.add(new HostedTestUser(user));
+        }
+
+        return convertedUsers;
     }
 
 }

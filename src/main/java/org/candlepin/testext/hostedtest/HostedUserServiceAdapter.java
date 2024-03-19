@@ -1,27 +1,14 @@
 package org.candlepin.testext.hostedtest;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
 
 import org.bouncycastle.crypto.generators.OpenBSDBCrypt;
-import org.candlepin.auth.Access;
-import org.candlepin.auth.SubResource;
-import org.candlepin.auth.permissions.Permission;
-import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
-import org.candlepin.model.Owner;
-import org.candlepin.model.PermissionBlueprint;
-import org.candlepin.model.Role;
-import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.PermissionBlueprintInfo;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
-import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
@@ -46,6 +33,9 @@ public class HostedUserServiceAdapter implements UserServiceAdapter {
         }
 
         UserInfo user = this.datastore.getUser(username);
+        if (user == null) {
+            return false;
+        }
 
         return OpenBSDBCrypt.checkPassword(user.getHashedPassword(), password.toCharArray());
     }
@@ -56,7 +46,7 @@ public class HostedUserServiceAdapter implements UserServiceAdapter {
             throw new IllegalArgumentException("user is null");
         }
 
-        return this.datastore.addUser((HostedTestUser) user);
+        return this.datastore.addUser(new HostedTestUser(user));
     }
 
     @Override
@@ -73,7 +63,7 @@ public class HostedUserServiceAdapter implements UserServiceAdapter {
             throw new IllegalStateException("user does not exist");
         }
 
-        return this.datastore.updateUser((HostedTestUser) user);
+        return this.datastore.updateUser(new HostedTestUser(user));
     }
 
     @Override
@@ -119,7 +109,7 @@ public class HostedUserServiceAdapter implements UserServiceAdapter {
             throw new IllegalStateException("Role already exists: " + role.getName());
         }
 
-        return this.datastore.addRole((HostedTestRole) role);
+        return this.datastore.addRole(new HostedTestRole(role));
     }
 
     @Override
@@ -136,7 +126,7 @@ public class HostedUserServiceAdapter implements UserServiceAdapter {
             throw new IllegalStateException("Role does not exists: " + role.getName());
         }
 
-        return this.datastore.updateRole((HostedTestRole) role);
+        return this.datastore.updateRole(new HostedTestRole(role));
     }
 
     @Override

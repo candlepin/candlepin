@@ -1,7 +1,12 @@
 package org.candlepin.testext.hostedtest;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.PermissionBlueprintInfo;
+import org.candlepin.util.Util;
 
 public class HostedTestPermission implements PermissionBlueprintInfo {
 
@@ -9,6 +14,17 @@ public class HostedTestPermission implements PermissionBlueprintInfo {
     private OwnerInfo owner;
     private String typeName;
     private String accessLevel;
+
+    public HostedTestPermission() {
+        // Intentionally left blank
+    }
+
+    public HostedTestPermission(PermissionBlueprintInfo blueprintInfo) {
+        this.id = Util.generateUUID();
+        this.owner = blueprintInfo.getOwner();
+        this.typeName = blueprintInfo.getTypeName();
+        this.accessLevel = blueprintInfo.getAccessLevel();
+    }
 
     public HostedTestPermission setId(String id) {
         this.id = id;
@@ -49,5 +65,15 @@ public class HostedTestPermission implements PermissionBlueprintInfo {
         return accessLevel;
     }
 
+    public static List<HostedTestPermission> fromPermissionBlueprintInfo(Collection<? extends PermissionBlueprintInfo> blueprintInfo) {
+        List<HostedTestPermission> convertedPermissions = new ArrayList<>();
+
+        //TODO: Can we improve this?
+        for (PermissionBlueprintInfo blueprint : blueprintInfo) {
+            convertedPermissions.add(new HostedTestPermission(blueprint));
+        }
+
+        return convertedPermissions;
+    }
 }
 
