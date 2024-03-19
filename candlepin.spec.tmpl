@@ -23,7 +23,7 @@
 
 Name: candlepin
 Version: 4.4.1
-Release: 3%{?dist}
+Release: 4%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -240,6 +240,10 @@ fi
 
 #raw
 %changelog
+* Tue Mar 19 2024 Nikos Moumoulidis <nmoumoul@redhat.com> 4.4.1-4
+- CANDLEPIN-828: Added owner key in OWNER_CONTENT_ACCESS_MODE event
+  (joshmalbrecht@gmail.com)
+
 * Thu Feb 29 2024 Nikos Moumoulidis <nmoumoul@redhat.com> 4.4.1-3
 - 
 
