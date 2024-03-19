@@ -353,13 +353,6 @@ public class TestingModules {
 
         @Provides
         @Singleton
-        @Named("EventFactoryObjectMapper")
-        private ObjectMapper configureEventFactoryObjectMapper() {
-            return ObjectMapperFactory.getEventFactoryObjectMapper();
-        }
-
-        @Provides
-        @Singleton
         @Named("X509V3ExtensionUtilObjectMapper")
         private ObjectMapper configureX509V3ExtensionUtilObjectMapper() {
             return ObjectMapperFactory.getX509V3ExtensionUtilObjectMapper();

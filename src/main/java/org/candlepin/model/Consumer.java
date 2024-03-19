@@ -495,6 +495,15 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getOwnerKey() {
+        Owner owner = this.getOwner();
+        return owner == null ? null : owner.getKey();
+    }
+
+    /**
      * Fetches the owner of this consumer, if the owner ID is set. This may perform a lazy lookup of the
      * owner, and should generally be avoided if the owner ID is sufficient.
      *

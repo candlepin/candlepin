@@ -140,6 +140,15 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         return (owner == null) ? null : owner.getId();
     }
 
+     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getOwnerKey() {
+        Owner owner = this.getOwner();
+        return owner == null ? null : owner.getKey();
+    }
+
     /**
      * @param owner The owner associated with the subscription.
      */

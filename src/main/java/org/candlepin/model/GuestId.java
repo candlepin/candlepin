@@ -174,6 +174,15 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getOwnerKey() {
+        Consumer consumer = this.getConsumer();
+        return consumer == null ? null : consumer.getOwnerKey();
+    }
+
     public String toString() {
         return "GuestID " + getGuestId();
     }

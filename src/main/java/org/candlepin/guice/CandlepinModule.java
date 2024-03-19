@@ -489,20 +489,6 @@ public class CandlepinModule extends AbstractModule {
 
     @Provides
     @Singleton
-    @Named("ActivationListenerObjectMapper")
-    private ObjectMapper configureActivationListenerObjectMapper() {
-        return ObjectMapperFactory.getActivationListenerObjectMapper();
-    }
-
-    @Provides
-    @Singleton
-    @Named("EventFactoryObjectMapper")
-    private ObjectMapper configureEventFactoryObjectMapper() {
-        return ObjectMapperFactory.getEventFactoryObjectMapper();
-    }
-
-    @Provides
-    @Singleton
     @Named("X509V3ExtensionUtilObjectMapper")
     private ObjectMapper configureX509V3ExtensionUtilObjectMapper() {
         return ObjectMapperFactory.getX509V3ExtensionUtilObjectMapper();

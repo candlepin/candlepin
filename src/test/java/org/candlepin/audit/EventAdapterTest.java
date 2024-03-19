@@ -19,8 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.candlepin.auth.PrincipalData;
+import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.TestConfig;
+import org.candlepin.model.Owner;
+import org.candlepin.test.TestUtil;
 
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
@@ -29,7 +31,6 @@ import org.junit.jupiter.api.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -65,13 +66,10 @@ public class EventAdapterTest {
         assertEquals(events.get(0).getTimestamp(), f.getUpdated());
     }
 
-    private Event mockEvent(Event.Target tgt, Event.Type type) {
-        Event e = new Event();
-        e.setTarget(tgt);
-        e.setType(type);
-        e.setPrincipal(new PrincipalData());
-        e.setTimestamp(new Date());
-        return e;
+    private Event mockEvent(Event.Target target, Event.Type type) {
+        Owner owner = TestUtil.createOwner();
+        UserPrincipal principal = TestUtil.createOwnerPrincipal(owner);
+        return new Event(type, target, principal.getData());
     }
 
     @Test

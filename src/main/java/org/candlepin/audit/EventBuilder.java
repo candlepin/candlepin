@@ -25,9 +25,6 @@ import org.candlepin.model.Named;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
-import org.candlepin.util.Util;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,9 +43,11 @@ public class EventBuilder {
 
     private Event event;
 
+    public EventBuilder() {
+    }
+
     public EventBuilder(EventFactory factory, Target target, Type type) {
-        event = new Event(type, target, null, factory.principalProvider.get(),
-                null, null, null, null, null, null);
+        event = new Event(type, target, factory.principalProvider.get().getData());
     }
 
     /**
@@ -79,24 +78,20 @@ public class EventBuilder {
     public EventBuilder setEventData(Eventful entity) {
         if (entity != null) {
             // Be careful to check for null before setting so we don't overwrite anything useful
-            if (entity instanceof Named && ((Named) entity).getName() != null) {
-                event.setTargetName(((Named) entity).getName());
+            if (entity instanceof Named named && named.getName() != null) {
+                event.setTargetName(named.getName());
             }
 
-            // TODO: FIXME:
-            // This is entirely useless. Our owner APIs expect the owner key, not the ID, so
-            // providing the ID does very little for event consumers.
-            if (entity instanceof Owned) {
-                String ownerId = ((Owned) entity).getOwnerId();
-
-                if (ownerId != null) {
-                    event.setOwnerId(ownerId);
+            if (entity instanceof Owned owned) {
+                String ownerKey = owned.getOwnerKey();
+                if (ownerKey != null) {
+                    event.setOwnerKey(ownerKey);
                 }
             }
 
-            if (entity instanceof Entitlement) {
+            if (entity instanceof Entitlement ent) {
                 event.setReferenceType(Event.ReferenceType.POOL);
-                Pool referencedPool = ((Entitlement) entity).getPool();
+                Pool referencedPool = ent.getPool();
 
                 if (referencedPool != null && referencedPool.getId() != null) {
                     event.setReferenceId(referencedPool.getId());
@@ -106,8 +101,8 @@ public class EventBuilder {
             if (entity.getId() != null) {
                 event.setEntityId((String) entity.getId());
 
-                if (entity instanceof ConsumerProperty) {
-                    Consumer owningConsumer = ((ConsumerProperty) entity).getConsumer();
+                if (entity instanceof ConsumerProperty consumerProperty) {
+                    Consumer owningConsumer = consumerProperty.getConsumer();
                     if (owningConsumer != null && owningConsumer.getUuid() != null) {
                         event.setConsumerUuid(owningConsumer.getUuid());
                     }
@@ -115,31 +110,16 @@ public class EventBuilder {
             }
 
             if (event.getTarget().equals(Target.POOL) && event.getType().equals(Type.CREATED)) {
-                Map<String, String> eventData = new HashMap<>();
+                Map<String, Object> eventData = new HashMap<>();
                 eventData.put("subscriptionId", ((Pool) entity).getSubscriptionId());
-
-                try {
-                    event.setEventData(Util.toJson(eventData));
-                }
-                catch (JsonProcessingException e) {
-                    log.error("Error while building JSON for pool.created event.", e);
-                    throw new IseException("Error while building JSON for pool.created event.", e);
-                }
+                event.setEventData(eventData);
             }
 
             if (event.getTarget().equals(Target.OWNER_CONTENT_ACCESS_MODE) &&
                 event.getType().equals(Type.MODIFIED)) {
-                Map<String, String> eventData = new HashMap<>();
+                Map<String, Object> eventData = new HashMap<>();
                 eventData.put("contentAccessMode", ((Owner) entity).getContentAccessMode());
-
-                try {
-                    event.setEventData(Util.toJson(eventData));
-                }
-                catch (JsonProcessingException e) {
-                    log.error("Error while building JSON for owner content access mode changed event.", e);
-                    throw new IseException(
-                        "Error while building JSON for owner content access mode changed event.", e);
-                }
+                event.setEventData(eventData);
             }
         }
 
