@@ -86,6 +86,7 @@ import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerCurator.OwnerQueryArguments;
 import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.OwnerNotFoundException;
 import org.candlepin.model.Pool;
@@ -770,13 +771,50 @@ public class OwnerResource implements OwnerApi {
 
     @Override
     @Wrapped(element = "owners")
-    public Stream<OwnerDTO> listOwners(String keyFilter) {
-        List<Owner> query = keyFilter != null ?
-            this.ownerCurator.getByKeys(Arrays.asList(keyFilter)) :
-            this.ownerCurator.listAll();
+    public Stream<OwnerDTO> listOwners(String keyFilter,
+                                       Integer page, Integer perPage, String order, String sortBy) {
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
 
-        return query.stream()
+        OwnerQueryArguments queryArgs = new OwnerQueryArguments()
+            .setKeys(
+                keyFilter != null ?
+                Arrays.asList(keyFilter) :
+                null);
+
+        long count = this.ownerCurator.getOwnerCount(queryArgs);
+
+        if (pageRequest != null) {
+            Page<Stream<OwnerDTO>> pageResponse = new Page<>();
+            pageResponse.setPageRequest(pageRequest);
+
+            if (pageRequest.isPaging()) {
+                queryArgs.setOffset((pageRequest.getPage() - 1) * pageRequest.getPerPage())
+                    .setLimit(pageRequest.getPerPage());
+            }
+
+            if (pageRequest.getSortBy() != null) {
+                boolean reverse = pageRequest.getOrder() == PageRequest.DEFAULT_ORDER;
+                queryArgs.addOrder(pageRequest.getSortBy(), reverse);
+            }
+
+            pageResponse.setMaxRecords((int) count);
+
+            // Store the page for the LinkHeaderResponseFilter
+            ResteasyContext.pushContext(Page.class, pageResponse);
+        }
+        // If no paging was specified, force a limit on amount of results
+        else {
+            int maxSize = config.getInt(ConfigProperties.PAGING_MAX_PAGE_SIZE);
+            if (count > maxSize) {
+                String errmsg = this.i18n.tr("This endpoint does not support returning more than {0} " +
+                    "results at a time, please use paging.", maxSize);
+                throw new BadRequestException(errmsg);
+            }
+        }
+
+        return this.ownerCurator.listAll(queryArgs).stream()
             .map(this.translator.getStreamMapper(Owner.class, OwnerDTO.class));
+
     }
 
     @Override
