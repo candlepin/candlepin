@@ -424,5 +424,21 @@ public class PoolTest {
             verify(prodSpy, never()).getUuid();
             assertFalse(Hibernate.isInitialized(retrievedPool.getProduct()));
         }
+
+        @Test
+        public void testGetOwnerKey() {
+            Owner owner = this.createOwner();
+            Product product = this.createProduct();
+            Pool pool = this.createPool(owner, product);
+
+            assertEquals(owner.getKey(), pool.getOwnerKey());
+        }
+
+        @Test
+        public void testGetOwnerKeyWithNoOwner() {
+            Pool pool = new Pool();
+
+            assertNull(pool.getOwnerKey());
+        }
     }
 }

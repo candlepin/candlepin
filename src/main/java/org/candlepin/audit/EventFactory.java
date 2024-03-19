@@ -16,10 +16,10 @@ package org.candlepin.audit;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
+import org.candlepin.auth.PrincipalData;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
-import org.candlepin.exceptions.IseException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -32,8 +32,6 @@ import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 
 import org.slf4j.Logger;
@@ -46,7 +44,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 
 
@@ -57,15 +54,10 @@ public class EventFactory {
     private static Logger log = LoggerFactory.getLogger(EventFactory.class);
 
     protected final PrincipalProvider principalProvider;
-    private ObjectMapper mapper;
     private ModelTranslator modelTranslator;
 
     @Inject
-    public EventFactory(PrincipalProvider principalProvider,
-        @Named("EventFactoryObjectMapper") ObjectMapper objectMapper,
-        ModelTranslator modelTranslator) {
-
-        this.mapper = Objects.requireNonNull(objectMapper);
+    public EventFactory(PrincipalProvider principalProvider, ModelTranslator modelTranslator) {
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.modelTranslator = Objects.requireNonNull(modelTranslator);
     }
@@ -206,19 +198,16 @@ public class EventFactory {
             ));
         }
         eventData.put("reasons", reasons);
-        try {
-            String eventDataJson = mapper.writeValueAsString(eventData);
-            // Instead of an internal db id, compliance.created events now use
-            // UUID for the 'consumerId' and 'entityId' fields, since Katello
-            // is concerned only with the consumer UUID field.
-            return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
-                consumer.getName(), principalProvider.get(), consumer.getOwnerId(), consumer.getUuid(),
-                consumer.getUuid(), eventDataJson, null, null);
-        }
-        catch (JsonProcessingException e) {
-            log.error("Error while building JSON for compliance.created event.", e);
-            throw new IseException("Error while building JSON for compliance.created event.", e);
-        }
+
+        // Instead of an internal db id, compliance.created events now use
+        // UUID for the 'consumerId' and 'entityId' fields, since Katello
+        // is concerned only with the consumer UUID field.
+        return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE, principalProvider.get().getData())
+            .setTargetName(consumer.getName())
+            .setConsumerUuid(consumer.getUuid())
+            .setEntityId(consumer.getUuid())
+            .setOwnerKey(consumer.getOwnerKey())
+            .setEventData(eventData);
     }
 
     public Event complianceCreated(Consumer consumer, SystemPurposeComplianceStatus compliance) {
@@ -243,20 +232,16 @@ public class EventFactory {
         eventData.put("compliantAddOns", dto.getCompliantAddOns());
         eventData.put("compliantServiceType", dto.getCompliantServiceType());
 
-        try {
-            String eventDataJson = mapper.writeValueAsString(eventData);
-            // Instead of an internal db id, compliance.created events now use
-            // UUID for the 'consumerId' and 'entityId' fields, since Katello
-            // is concerned only with the consumer UUID field.
-            return new Event(Event.Type.CREATED, Target.SYSTEM_PURPOSE_COMPLIANCE,
-                consumer.getName(), principalProvider.get(), consumer.getOwnerId(), consumer.getUuid(),
-                consumer.getUuid(), eventDataJson, null, null);
-        }
-        catch (JsonProcessingException e) {
-            log.error("Error while building JSON for system purpose compliance.created event.", e);
-            throw new IseException("Error while building JSON for system purpose compliance.created event.",
-                e);
-        }
+        // Instead of an internal db id, compliance.created events now use
+        // UUID for the 'consumerId' and 'entityId' fields, since Katello
+        // is concerned only with the consumer UUID field.
+        PrincipalData principalData = principalProvider.get().getData();
+        return new Event(Event.Type.CREATED, Target.SYSTEM_PURPOSE_COMPLIANCE, principalData)
+            .setTargetName(consumer.getName())
+            .setConsumerUuid(consumer.getUuid())
+            .setEntityId(consumer.getUuid())
+            .setOwnerKey(consumer.getOwnerKey())
+            .setEventData(eventData);
     }
 
 }

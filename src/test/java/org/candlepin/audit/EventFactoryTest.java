@@ -14,6 +14,7 @@
  */
 package org.candlepin.audit;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
@@ -35,9 +36,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
-import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -46,6 +45,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -60,11 +60,9 @@ public class EventFactoryTest {
     private PrincipalProvider principalProvider;
 
     private EventFactory eventFactory;
-    private ObjectMapper objectMapper;
 
     @BeforeEach
     public void init() throws Exception {
-        objectMapper = ObjectMapperFactory.getObjectMapper();
         principalProvider = mock(PrincipalProvider.class);
         Principal principal = mock(Principal.class);
         when(principalProvider.get()).thenReturn(principal);
@@ -76,8 +74,7 @@ public class EventFactoryTest {
         this.modelTranslator = new StandardTranslator(this.mockConsumerTypeCurator,
             this.mockEnvironmentCurator, this.mockOwnerCurator);
 
-        eventFactory = new EventFactory(principalProvider, objectMapper,
-            this.modelTranslator);
+        eventFactory = new EventFactory(principalProvider, this.modelTranslator);
     }
 
     @Test
@@ -109,26 +106,37 @@ public class EventFactoryTest {
 
         ComplianceReason reason1 = new ComplianceReason();
         reason1.setKey(ComplianceReason.ReasonKeys.SOCKETS);
-        reason1.setMessage("Only supports 2 of 12 sockets.");
-        reason1.setAttributes(ImmutableMap.of(ComplianceReason.Attributes.MARKETING_NAME, "Awesome OS"));
+        String expectedReason1Message = "Only supports 2 of 12 sockets.";
+        reason1.setMessage(expectedReason1Message);
+        String reason1MarketingName = "Awesome OS";
+        reason1.setAttributes(ImmutableMap.of(ComplianceReason.Attributes.MARKETING_NAME,
+            reason1MarketingName));
 
         ComplianceReason reason2 = new ComplianceReason();
         reason2.setKey(ComplianceReason.ReasonKeys.ARCHITECTURE);
-        reason2.setMessage("Supports architecture ppc64 but the system is x86_64.");
+        String expectedReason2Message = "Supports architecture ppc64 but the system is x86_64.";
+        reason2.setMessage(expectedReason2Message);
+        String reason2MarketingName = "Awesome Middleware";
         reason2.setAttributes(ImmutableMap.of(
             ComplianceReason.Attributes.MARKETING_NAME,
-            "Awesome Middleware"));
+            reason2MarketingName));
 
         when(status.getReasons()).thenReturn(ImmutableSet.of(reason1, reason2));
 
-        String expectedEventData = "{\"reasons\":[" +
-            "{\"productName\":\"Awesome OS\"," +
-            "\"message\":\"Only supports 2 of 12 sockets.\"}," +
-            "{\"productName\":\"Awesome Middleware\"," +
-            "\"message\":\"Supports architecture ppc64 but the system is x86_64.\"}]," +
-            "\"status\":\"invalid\"}";
+        Map<String, String> expectedReason1 =
+            Map.of("productName", reason1MarketingName, "message", expectedReason1Message);
+        Map<String, String> expectedReason2 =
+            Map.of("productName", reason2MarketingName, "message", expectedReason2Message);
+
+        Map<String, Object> expectedData = new HashMap<>();
+        expectedData.put("status", "invalid");
+        expectedData.put("reasons", List.of(expectedReason1, expectedReason2));
+
         Event event = eventFactory.complianceCreated(consumer, status);
-        assertEquals(expectedEventData, event.getEventData());
+
+        assertThat(event.getEventData())
+            .isNotNull()
+            .containsAllEntriesOf(expectedData);
     }
 
     @Test
@@ -160,27 +168,29 @@ public class EventFactoryTest {
         when(status.getCompliantUsage()).thenReturn(entitlements);
         when(status.getCompliantServiceType()).thenReturn(entitlements);
 
-        String expectedEventData = "{" +
-            "\"nonCompliantUsage\":\"Production\"," +
-            "\"compliantAddOns\":{}," +
-            "\"nonCompliantRole\":\"Red Hat Enterprise Linux Server\"," +
-            "\"reasons\":[" +
-            "\"unsatisfied usage: Production\"," +
-            "\"unsatisfied sla: Premium\"," +
-            "\"unsatisfied role: Red Hat Enterprise Linux Server\"," +
-            "\"unsatisfied service type: L1-L3\"" +
-            "]," +
-            "\"nonCompliantServiceType\":\"L1-L3\"," +
-            "\"compliantSLA\":{}," +
-            "\"nonCompliantAddOns\":[]," +
-            "\"compliantRole\":{}," +
-            "\"nonCompliantSLA\":\"Premium\"," +
-            "\"compliantUsage\":{}," +
-            "\"status\":\"mismatched\"," +
-            "\"compliantServiceType\":{}" +
-            "}";
+        Set<String> expectedReasons = Set.of("unsatisfied usage: Production",
+            "unsatisfied sla: Premium",
+            "unsatisfied role: Red Hat Enterprise Linux Server",
+            "unsatisfied service type: L1-L3");
+
+        Map<String, Object> expectedEventData = new HashMap<>();
+        expectedEventData.put("nonCompliantUsage", "Production");
+        expectedEventData.put("nonCompliantRole", "Red Hat Enterprise Linux Server");
+        expectedEventData.put("nonCompliantServiceType", "L1-L3");
+        expectedEventData.put("compliantSLA", Map.of());
+        expectedEventData.put("nonCompliantAddOns", Set.of());
+        expectedEventData.put("compliantRole", Map.of());
+        expectedEventData.put("nonCompliantSLA", "Premium");
+        expectedEventData.put("compliantUsage", Map.of());
+        expectedEventData.put("status", "mismatched");
+        expectedEventData.put("compliantServiceType", Map.of());
+        expectedEventData.put("reasons", expectedReasons);
+
         Event event = eventFactory.complianceCreated(consumer, status);
-        assertEquals(expectedEventData, event.getEventData());
+
+        assertThat(event.getEventData())
+            .isNotNull()
+            .containsAllEntriesOf(expectedEventData);
     }
 
     @Test
@@ -195,7 +205,7 @@ public class EventFactoryTest {
         assertEquals(Target.OWNER_CONTENT_ACCESS_MODE, event.getTarget());
         assertEquals(Type.MODIFIED, event.getType());
         assertEquals(owner.getName(), event.getTargetName());
-        assertEquals(owner.getOwnerId(), event.getOwnerId());
-        assertEquals("{\"contentAccessMode\":\"org_environment\"}", event.getEventData());
+        assertEquals(owner.getOwnerKey(), event.getOwnerKey());
+        assertEquals(Map.of("contentAccessMode", "org_environment"), event.getEventData());
     }
 }

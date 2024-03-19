@@ -79,38 +79,6 @@ public class ObjectMapperFactory implements Provider<ObjectMapper> {
         return mapper;
     }
 
-    public static ObjectMapper getActivationListenerObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
-        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
-        mapper.setAnnotationIntrospector(pair);
-
-        return mapper;
-    }
-
-    public static ObjectMapper getEventFactoryObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-
-        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.setFailOnUnknownId(false);
-
-        mapper.setFilterProvider(filterProvider);
-
-        Hibernate5Module hbm = new Hibernate5Module();
-        hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
-        mapper.registerModule(hbm);
-        mapper.registerModule(new Jdk8Module());
-        mapper.registerModule(new JavaTimeModule());
-
-        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
-        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
-        mapper.setAnnotationIntrospector(pair);
-
-        return mapper;
-    }
-
     public static ObjectMapper getX509V3ExtensionUtilObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);

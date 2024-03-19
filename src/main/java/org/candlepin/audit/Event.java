@@ -14,16 +14,19 @@
  */
 package org.candlepin.audit;
 
-import org.candlepin.auth.Principal;
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.util.Util;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -34,6 +37,7 @@ import javax.xml.bind.annotation.XmlTransient;
 /**
  * Event - Base class for Candlepin events. Serves as an integral part of the event queue.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @XmlRootElement(namespace = "http://fedorahosted.org/candlepin/Event")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Event {
@@ -65,174 +69,326 @@ public class Event {
         POOL
     }
 
-    // Uniquely identifies the event:
     @NotNull
     private String id;
-
     @NotNull
     private Type type;
-
     @NotNull
     private Target target;
-
     // This should be there, but may not be
-    // moo
     private String targetName;
-
     // String representation of the principal. We probably should not be
     // reconstructing
     // any stored principal object.
     @NotNull
     private String principalStore;
-
     @NotNull
     private Date timestamp;
-
     private String entityId;
-
-    private String ownerId;
-
+    private String ownerKey;
     private String consumerUuid;
-
-    // Generic id field in case a cross reference is needed to some other entity
-    // Use with reference type
     private String referenceId;
-
-    // Classifies Generic id field in case a cross reference is needed to some
-    // other entity
-    // Use with reference id
     private ReferenceType referenceType;
-
-    private String eventData;
-
+    private Map<String, Object> eventData;
     private String messageText;
 
+    /**
+     * Default constructor need for deserialization. Should not be used for object creation.
+     */
     public Event() {
+        // Intentionally left blank
     }
 
-    public Event(Type type, Target target, String targetName, Principal principal, String ownerId,
-        String consumerUuid, String entityId, String eventData, String referenceId,
-        ReferenceType referenceType) {
+    /**
+     * Creates a new event based on the provided type, target, and principal data.
+     *
+     * @param type
+     *  the type of event
+     *
+     * @param target
+     *  the entity of the event
+     *
+     * @param principalData
+     *  the principal data for this event
+     *
+     * @throws NullPointerException
+     *  if the provided type or principal data is null
+     */
+    public Event(Type type, Target target, PrincipalData principalData) {
+        this.type = Objects.requireNonNull(type);
+        this.target = Objects.requireNonNull(target);
 
-        this.type = type;
-        this.target = target;
-        this.targetName = targetName;
-
-        // TODO: toString good enough? Need something better?
         try {
-            this.principalStore = Util.toJson(principal.getData());
+            this.principalStore = Util.toJson(principalData);
         }
         catch (JsonProcessingException e) {
             log.error("Error while building JSON for event.", e);
             this.principalStore = "";
         }
-        this.ownerId = ownerId;
-
-        this.entityId = entityId;
-        this.eventData = eventData;
-        this.consumerUuid = consumerUuid;
-        this.referenceId = referenceId;
-        this.referenceType = referenceType;
 
         // Set the timestamp to the current date and time.
         this.timestamp = new Date();
+        this.id = UUID.randomUUID().toString();
     }
 
+    /**
+     * @return the unique identifier for this event.
+     */
     public String getId() {
-        return id;
+        return this.id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
+    /**
+     * @return the type of event
+     */
     public Type getType() {
-        return type;
+        return this.type;
     }
 
-    public void setType(Type type) {
-        this.type = type;
+    /**
+     * Sets the type of event.
+     *
+     * @param type
+     *  the type to set for this event. The type must not be null.
+     *
+     * @throws NullPointerException
+     *  if type is null
+     *
+     * @return a reference to this event
+     */
+    public Event setType(Type type) {
+        this.type = Objects.requireNonNull(type);
+        return this;
     }
 
+    /**
+     * @return the target entity of the event
+     */
     public Target getTarget() {
-        return target;
+        return this.target;
     }
 
-    public void setTarget(Target target) {
-        this.target = target;
+    /**
+     * Sets the target entity for this event.
+     *
+     * @param target
+     *  the target entity for this event. The target must not be null.
+     *
+     * @throws NullPointerException
+     *  if type is null
+     *
+     * @return a reference to this event
+     */
+    public Event setTarget(Target target) {
+        this.target = Objects.requireNonNull(target);
+        return this;
     }
 
-    public PrincipalData getPrincipal() {
+    /**
+     * @return the principal data of the event
+     */
+    public PrincipalData getPrincipalData() {
         return Util.fromJson(this.principalStore,
             PrincipalData.class);
     }
 
-    public void setPrincipal(PrincipalData principal) {
+    /**
+     * Sets the principal data of the event.
+     *
+     * @param principalData
+     *  the principal data to set for this event
+     *
+     * @return a reference to this event
+     */
+    public Event setPrincipalData(PrincipalData principalData) {
         try {
-            this.principalStore = Util.toJson(principal);
+            this.principalStore = Util.toJson(principalData);
         }
         catch (JsonProcessingException e) {
             log.error("Error while building JSON for principal.", e);
             this.principalStore = "";
         }
+
+        return this;
     }
 
+    /**
+     * @return the timestamp of when the event was created
+     */
     public Date getTimestamp() {
-        return timestamp;
+        return this.timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
+    /**
+     * @return the event owner's key
+     */
+    public String getOwnerKey() {
+        return this.ownerKey;
     }
 
-    public String getOwnerId() {
-        return ownerId;
+    /**
+     * Sets the owner key for this event.
+     *
+     * @param ownerKey
+     *  the owner key to set for this event
+     *
+     * @return a reference to this event
+     */
+    public Event setOwnerKey(String ownerKey) {
+        this.ownerKey = ownerKey;
+        return this;
     }
 
-    public void setOwnerId(String ownerId) {
-        this.ownerId = ownerId;
-    }
-
+    /**
+     * @return the reference ID for this event. The reference ID is a generic ID to be used in case a cross
+     * reference is needed to compare some other entity. This is to be used with reference type.
+     */
     public String getReferenceId() {
         return referenceId;
     }
 
-    public void setReferenceId(String referenceId) {
+    /**
+     * Sets the reference ID for this event. The reference ID is a generic ID to be used in case a cross
+     * reference is needed to compare some other entity. This is to be used with reference type.
+     *
+     * @param referenceId
+     *  the reference ID to set for this event
+     *
+     * @return a reference to this event
+     */
+    public Event setReferenceId(String referenceId) {
         this.referenceId = referenceId;
+        return this;
     }
 
+    /**
+     * @return the reference type for this event. The reference type classifies the generic id field in case
+     * a cross reference is needed to compare some other entity. This is to be used with reference ID.
+     */
     public ReferenceType getReferenceType() {
-        return referenceType;
+        return this.referenceType;
     }
 
-    public void setReferenceType(ReferenceType referenceType) {
+    /**
+     * Sets the reference type for this event. The reference type classifies the generic id field in case a
+     * cross reference is needed to compare some other entity. This is to be used with reference ID.
+     *
+     * @param referenceType
+     *  the reference type to set for this event
+     *
+     * @return a reference to this event
+     */
+    public Event setReferenceType(ReferenceType referenceType) {
         this.referenceType = referenceType;
+        return this;
     }
 
+    /**
+     * @return the principal store for this event
+     */
     @XmlTransient
     public String getPrincipalStore() {
-        return principalStore;
+        return this.principalStore;
     }
 
-    public void setPrincipalStore(String principalStore) {
-        this.principalStore = principalStore;
-    }
-
+    /**
+     * @return the entity ID for this event
+     */
     public String getEntityId() {
-        return entityId;
+        return this.entityId;
     }
 
-    public void setEntityId(String entityId) {
+    /**
+     * Sets the entity ID for this event.
+     *
+     * @param entityId
+     *  the entity ID to set for this event
+     *
+     * @return a reference to this event
+     */
+    public Event setEntityId(String entityId) {
         this.entityId = entityId;
+        return this;
     }
 
-    @XmlTransient
-    public String getEventData() {
-        return eventData;
+    /**
+     * @return the data for this event
+     */
+    public Map<String, Object> getEventData() {
+        return this.eventData;
     }
 
-    public void setEventData(String eventData) {
+    /**
+     * Sets the event data for this event.
+     *
+     * @param eventData
+     *  the event data to set for this event
+     *
+     * @return a reference to this event
+     */
+    public Event setEventData(Map<String, Object> eventData) {
         this.eventData = eventData;
+        return this;
+    }
+
+    /**
+     * @return the consumer UUID for this event
+     */
+    public String getConsumerUuid() {
+        return consumerUuid;
+    }
+
+    /**
+     * Sets the consumer UUID for this event.
+     *
+     * @param consumerUuid
+     *  the consumer UUID to set for this event
+     *
+     * @return a reference to this event
+     */
+    public Event setConsumerUuid(String consumerUuid) {
+        this.consumerUuid = consumerUuid;
+        return this;
+    }
+
+    /**
+     * @return the targetName
+     */
+    public String getTargetName() {
+        return this.targetName;
+    }
+
+    /**
+     * Sets the target name for this event.
+     *
+     * @param targetName
+     *  the target name to set for this event
+     *
+     * @return a reference to this event
+     */
+    public Event setTargetName(String targetName) {
+        this.targetName = targetName;
+        return this;
+    }
+
+    /**
+     * @return the messageText
+     */
+    public String getMessageText() {
+        return this.messageText;
+    }
+
+    /**
+     * Sets the message text for this event.
+     *
+     * @param messageText
+     *  the message text for the event
+     *
+     * @return a reference to this event
+     */
+    public Event setMessageText(String messageText) {
+        this.messageText = messageText;
+        return this;
     }
 
     @Override
@@ -243,41 +399,5 @@ public class Event {
 
         return String.format("Event [id: %s, target: %s, type: %s, time: %s, entity: %s]",
             this.getId(), this.getTarget(), this.getType(), date, this.getEntityId());
-    }
-
-    public String getConsumerUuid() {
-        return consumerUuid;
-    }
-
-    public void setConsumerUuid(String consumerUuid) {
-        this.consumerUuid = consumerUuid;
-    }
-
-    /**
-     * @return the targetName
-     */
-    public String getTargetName() {
-        return targetName;
-    }
-
-    /**
-     * @param targetName the targetName to set
-     */
-    public void setTargetName(String targetName) {
-        this.targetName = targetName;
-    }
-
-    /**
-     * @return the messageText
-     */
-    public String getMessageText() {
-        return messageText;
-    }
-
-    /**
-     * @param messageText the messageText to set
-     */
-    public void setMessageText(String messageText) {
-        this.messageText = messageText;
     }
 }

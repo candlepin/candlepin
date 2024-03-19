@@ -20,4 +20,6 @@ package org.candlepin.model;
 public interface Owned {
 
     String getOwnerId();
+
+    String getOwnerKey();
 }

@@ -167,6 +167,15 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getOwnerKey() {
+        Owner owner = this.getOwner();
+        return owner == null ? null : owner.getOwnerKey();
+    }
+
+    /**
      * @param ownerIn the owner to set
      */
     public void setOwner(Owner ownerIn) {
