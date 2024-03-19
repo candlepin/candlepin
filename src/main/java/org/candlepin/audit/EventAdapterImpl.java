@@ -110,7 +110,7 @@ public class EventAdapterImpl implements EventAdapter {
                 message = i18n.marktr("Unknown event for user {0} and target {1}");
             }
 
-            PrincipalData pd = event.getPrincipal();
+            PrincipalData pd = event.getPrincipalData();
             event.setMessageText(i18n.tr(message, pd.getName(), event.getTargetName()));
         }
     }

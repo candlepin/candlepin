@@ -129,4 +129,18 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         key.removeProduct(product);
         assertTrue(!key.hasProduct(product));
     }
+
+    @Test
+    public void testGetOwnerKey() {
+        ActivationKey key = this.createActivationKey(this.owner);
+
+        assertEquals(owner.getKey(), key.getOwnerKey());
+    }
+
+    @Test
+    public void testGetOwnerKeyWithNoOwner() {
+        ActivationKey key = new ActivationKey();
+
+        assertNull(key.getOwnerKey());
+    }
 }

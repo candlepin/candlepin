@@ -14,17 +14,19 @@
  */
 package org.candlepin.audit;
 
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.async.impl.ActiveMQSessionFactory;
+import org.candlepin.audit.Event.Target;
+import org.candlepin.audit.Event.Type;
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.ActiveMQStatusMonitor;
@@ -200,10 +202,8 @@ public class DefaultEventMessageReceiverTest {
 
     private String eventJson() throws Exception {
         StringWriter sw = new StringWriter();
-        Event e = new Event();
-        e.setId("10");
-        e.setConsumerUuid("20");
-        e.setPrincipal(new PrincipalData("5678", "910112"));
+        Event e = new Event(Type.MODIFIED, Target.CONSUMER, new PrincipalData("5678", "910112"))
+            .setConsumerUuid("20");
         mapper.writeValue(sw, e);
         return sw.toString();
     }
