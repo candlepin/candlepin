@@ -110,7 +110,7 @@ public class PoolManager {
     private final EntitlementCurator entitlementCurator;
     private final ConsumerCurator consumerCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
-    private final EntitlementCertificateGenerator ecGenerator;
+    private final EntitlementCertificateService ecService;
     private final ComplianceRules complianceRules;
     private final AutobindRules autobindRules;
     private final ActivationKeyRules activationKeyRules;
@@ -133,7 +133,7 @@ public class PoolManager {
         EntitlementCurator entitlementCurator,
         ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        EntitlementCertificateGenerator ecGenerator,
+        EntitlementCertificateService ecService,
         ComplianceRules complianceRules,
         AutobindRules autobindRules,
         ActivationKeyRules activationKeyRules,
@@ -153,7 +153,7 @@ public class PoolManager {
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.enforcer = Objects.requireNonNull(enforcer);
         this.poolRules = Objects.requireNonNull(poolRules);
-        this.ecGenerator = Objects.requireNonNull(ecGenerator);
+        this.ecService = Objects.requireNonNull(ecService);
         this.complianceRules = Objects.requireNonNull(complianceRules);
         this.autobindRules = Objects.requireNonNull(autobindRules);
         this.activationKeyRules = Objects.requireNonNull(activationKeyRules);
@@ -416,7 +416,7 @@ public class PoolManager {
         Set<String> updatedPrimaryPools = updatePoolsForPrimaryPool(
             subscriptionPools, pool, originalQuantity, updateStackDerived, changedProducts);
 
-        this.ecGenerator.regenerateCertificatesByEntitlementIds(updatedPrimaryPools, lazy);
+        this.ecService.regenerateCertificatesByEntitlementIds(updatedPrimaryPools, lazy);
     }
 
     private void removeAndDeletePoolsOnOtherOwners(List<Pool> existingPools, Pool pool) {
@@ -703,7 +703,7 @@ public class PoolManager {
         Set<String> entIds = processPoolUpdates(poolEvents, updatedPools);
         this.poolCurator.flush();
 
-        this.ecGenerator.regenerateCertificatesByEntitlementIds(entIds, lazy);
+        this.ecService.regenerateCertificatesByEntitlementIds(entIds, lazy);
     }
 
     /**
@@ -1519,7 +1519,7 @@ public class PoolManager {
 
     public void regenerateDirtyEntitlements(Consumer consumer) {
         if (consumer != null) {
-            this.ecGenerator.regenerateCertificatesOf(this.entitlementCurator.listDirty(consumer), false);
+            this.ecService.regenerateCertificatesOf(this.entitlementCurator.listDirty(consumer), false);
         }
     }
 
@@ -1537,7 +1537,7 @@ public class PoolManager {
             }
 
             // Regenerate the dirty entitlements we found...
-            this.ecGenerator.regenerateCertificatesOf(dirty.values(), false);
+            this.ecService.regenerateCertificatesOf(dirty.values(), false);
         }
     }
 

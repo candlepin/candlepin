@@ -74,16 +74,16 @@ public class X509StringExtension implements X509Extension {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(oid, value, critical);
+    }
+
+    @Override
     public String toString() {
         return "X509StringExtension{" +
             "oid=" + oid +
             ", value=" + value +
             ", critical=" + critical +
             '}';
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(oid, value, critical);
     }
 }

@@ -22,7 +22,7 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.controller.EntitlementCertificateGenerator;
+import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 
@@ -49,23 +49,23 @@ public class RegenProductEntitlementCertsJob implements AsyncJob {
     private static final String ARG_PRODUCT_ID = "product_id";
     private static final String ARG_LAZY_REGEN = "lazy_regen";
 
-    private final EntitlementCertificateGenerator ecGenerator;
+    private final EntitlementCertificateService entitlementCertificateService;
     private final OwnerCurator ownerCurator;
 
     /**
      * Instantiates a new instance of the RegenProductEntitlementCertsJob
      *
-     * @param ecGenerator
-     *  the generator to use for regenerating entitlement certificates
+     * @param entitlementCertificateService
+     *  the service for handling of entitlement certificates
      *
      * @param ownerCurator
      *  the OwnerCurator instance to use for looking up owners related to the given product
      */
     @Inject
     public RegenProductEntitlementCertsJob(
-        EntitlementCertificateGenerator ecGenerator, OwnerCurator ownerCurator) {
+        EntitlementCertificateService entitlementCertificateService, OwnerCurator ownerCurator) {
 
-        this.ecGenerator = Objects.requireNonNull(ecGenerator);
+        this.entitlementCertificateService = Objects.requireNonNull(entitlementCertificateService);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
     }
 
@@ -88,7 +88,7 @@ public class RegenProductEntitlementCertsJob implements AsyncJob {
                 owners.size(), productId);
 
             for (Owner owner : owners) {
-                this.ecGenerator.regenerateCertificatesOf(owner, productId, lazyRegen);
+                this.entitlementCertificateService.regenerateCertificatesOf(owner, productId, lazyRegen);
             }
         }
         else {
@@ -141,11 +141,11 @@ public class RegenProductEntitlementCertsJob implements AsyncJob {
         }
 
         /**
-         * Sets whether or not the regeneration of certificates should be done lazily or not.
+         * Sets whether the regeneration of certificates should be done lazily or not.
          * Defaults to true.
          *
          * @param lazy
-         *  whether or not to regenerate certificates lazily
+         *  whether to regenerate certificates lazily
          *
          * @return
          *  a reference to this job config

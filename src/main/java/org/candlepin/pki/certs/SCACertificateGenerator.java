@@ -71,6 +71,7 @@ public class SCACertificateGenerator {
     private final ContentCurator contentCurator;
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
     private final X509V3ExtensionUtil v3extensionUtil;
+    private final EntitlementPayloadGenerator payloadGenerator;
     private final ConsumerCurator consumerCurator;
     private final EnvironmentCurator environmentCurator;
     private final PemEncoder pemEncoder;
@@ -82,6 +83,7 @@ public class SCACertificateGenerator {
     public SCACertificateGenerator(
         X509V3ExtensionUtil v3extensionUtil,
         V3CapabilityCheck v3CapabilityCheck,
+        EntitlementPayloadGenerator payloadGenerator,
         ContentAccessCertificateCurator contentAccessCertificateCurator,
         CertificateSerialCurator serialCurator,
         ContentCurator contentCurator,
@@ -96,6 +98,7 @@ public class SCACertificateGenerator {
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
         this.serialCurator = Objects.requireNonNull(serialCurator);
         this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
+        this.payloadGenerator = Objects.requireNonNull(payloadGenerator);
         this.contentCurator = Objects.requireNonNull(contentCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.environmentCurator = Objects.requireNonNull(environmentCurator);
@@ -363,12 +366,7 @@ public class SCACertificateGenerator {
         List<org.candlepin.model.dto.Product> productModels = new ArrayList<>();
         productModels.add(productModel);
 
-        try {
-            return v3extensionUtil.createEntitlementDataPayload(productModels, consumerUuid, emptyPool, null);
-        }
-        catch (IOException e) {
-            throw new CertificateCreationException("Failed to create entitlement data payload!", e);
-        }
+        return this.payloadGenerator.generate(productModels, consumerUuid, emptyPool, null);
     }
 
 }

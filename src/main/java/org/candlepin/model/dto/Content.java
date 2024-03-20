@@ -100,6 +100,10 @@ public class Content {
         this.gpgUrl = gpgUrl;
     }
 
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
     /**
      * @param enabled
      */

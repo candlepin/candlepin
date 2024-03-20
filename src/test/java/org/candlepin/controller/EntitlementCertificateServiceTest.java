@@ -76,7 +76,7 @@ import java.util.Set;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class EntitlementCertificateGeneratorTest {
+public class EntitlementCertificateServiceTest {
     @Mock private ContentAccessManager mockContentAccessManager;
     @Mock private EntitlementCertServiceAdapter mockEntCertAdapter;
     @Mock private EntitlementCertificateCurator mockEntCertCurator;
@@ -90,11 +90,11 @@ public class EntitlementCertificateGeneratorTest {
     @Captor private ArgumentCaptor<Map<String, Product>> productMapCaptor;
     @Captor private ArgumentCaptor<Map<String, PoolQuantity>> poolQuantityMapCaptor;
 
-    private EntitlementCertificateGenerator ecGenerator;
+    private EntitlementCertificateService ecService;
 
     @BeforeEach
     public void init() throws Exception {
-        this.ecGenerator = new EntitlementCertificateGenerator(
+        this.ecService = new EntitlementCertificateService(
             this.mockEntCertCurator, this.mockEntCertAdapter, this.mockEntitlementCurator,
             this.mockPoolCurator, this.mockEventSink, this.mockEventFactory,
             this.mockContentAccessManager, this.mockOwnerCurator);
@@ -102,7 +102,7 @@ public class EntitlementCertificateGeneratorTest {
 
     @Test
     public void testGenerateEntitlementCertificate() throws GeneralSecurityException, IOException {
-        this.ecGenerator = new EntitlementCertificateGenerator(this.mockEntCertCurator,
+        this.ecService = new EntitlementCertificateService(this.mockEntCertCurator,
                 this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
                 this.mockEventSink, this.mockEventFactory,
                 this.mockContentAccessManager, this.mockOwnerCurator);
@@ -120,14 +120,14 @@ public class EntitlementCertificateGeneratorTest {
         expected.put("Swift", entitlement);
         Map<String, PoolQuantity> poolQuantityMap = new HashMap<>();
         poolQuantityMap.put("Swift", new PoolQuantity(pool, 0));
-        ecGenerator.generateEntitlementCertificate(pool, entitlement);
-        verify(mockEntCertAdapter).generateEntitlementCerts(eq(consumer), eq(poolQuantityMap), eq(expected),
-            eq(expectedProducts), eq(true));
+        ecService.generateEntitlementCertificate(pool, entitlement);
+        verify(mockEntCertAdapter).generateEntitlementCerts(consumer, poolQuantityMap, expected,
+            expectedProducts, true);
     }
 
     @Test
     public void testGenerateEntitlementCertificates() throws GeneralSecurityException, IOException {
-        this.ecGenerator = new EntitlementCertificateGenerator(this.mockEntCertCurator,
+        this.ecService = new EntitlementCertificateService(this.mockEntCertCurator,
             this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
             this.mockEventSink, this.mockEventFactory,
             this.mockContentAccessManager, this.mockOwnerCurator);
@@ -141,15 +141,15 @@ public class EntitlementCertificateGeneratorTest {
         entitlements.put("Taylor", entitlement);
         Map<String, PoolQuantity> poolQuantities = new HashMap<>();
         poolQuantities.put("Taylor", new PoolQuantity(pool, 1));
-        ecGenerator.generateEntitlementCertificates(consumer, products, poolQuantities, entitlements, true);
-        verify(mockEntCertAdapter).generateEntitlementCerts(eq(consumer), eq(poolQuantities), eq
-            (entitlements), eq(products), anyBoolean());
+        ecService.generateEntitlementCertificates(consumer, products, poolQuantities, entitlements, true);
+        verify(mockEntCertAdapter).generateEntitlementCerts(eq(consumer), eq(poolQuantities),
+            eq(entitlements), eq(products), anyBoolean());
     }
 
     @Test
     public void testLazyRegenerateForEntitlement() {
         Entitlement entitlement = new Entitlement();
-        this.ecGenerator.regenerateCertificatesOf(entitlement, true);
+        this.ecService.regenerateCertificatesOf(entitlement, true);
         assertTrue(entitlement.isDirty());
         verifyNoInteractions(this.mockEntCertAdapter);
     }
@@ -160,7 +160,7 @@ public class EntitlementCertificateGeneratorTest {
             new Entitlement(), new Entitlement(), new Entitlement()
         );
 
-        this.ecGenerator.regenerateCertificatesOf(entitlements, true);
+        this.ecService.regenerateCertificatesOf(entitlements, true);
 
         for (Entitlement entitlement : entitlements) {
             assertTrue(entitlement.isDirty());
@@ -240,7 +240,7 @@ public class EntitlementCertificateGeneratorTest {
         when(this.mockEntitlementCurator
                 .listEntitlementIdByEnvironmentAndContent(any(String.class), anyList()))
                 .thenReturn(entitlementIds);
-        this.ecGenerator.regenerateCertificatesOf(environmentId, contentIds, true);
+        this.ecService.regenerateCertificatesOf(environmentId, contentIds, true);
         verify(this.mockEntitlementCurator, times(1)).markEntitlementsDirty(entitlementIds);
     }
 
@@ -266,7 +266,7 @@ public class EntitlementCertificateGeneratorTest {
         for (int i = 0; i < entitlementIds.size(); i++) {
             when(mockEntitlementCurator.get(entitlementIds.get(i))).thenReturn(entitlements.get(i));
         }
-        this.ecGenerator.regenerateCertificatesOf(environmentId, Arrays.asList("c1", "c2", "c4"), false);
+        this.ecService.regenerateCertificatesOf(environmentId, Arrays.asList("c1", "c2", "c4"), false);
 
         assertFalse(entitlements.get(0).isDirty());
         assertFalse(entitlements.get(1).isDirty());
@@ -293,7 +293,7 @@ public class EntitlementCertificateGeneratorTest {
         when(this.mockPoolCurator.listAvailableEntitlementPools(isNull(), eq(owner),
             eq(product.getId()), any(Date.class))).thenReturn(Arrays.asList(pool));
         when(mockEventFactory.entitlementChanged(any(Entitlement.class))).thenReturn(mock(Event.class));
-        this.ecGenerator.regenerateCertificatesOf(owner, product.getId(), true);
+        this.ecService.regenerateCertificatesOf(owner, product.getId(), true);
 
         assertTrue(entitlement.isDirty());
 
@@ -320,7 +320,7 @@ public class EntitlementCertificateGeneratorTest {
             anyMap(), anyMap(), anyBoolean())).thenReturn(ecMap);
 
         when(mockEventFactory.entitlementChanged(any(Entitlement.class))).thenReturn(mock(Event.class));
-        this.ecGenerator.regenerateCertificatesOf(owner, product.getId(), false);
+        this.ecService.regenerateCertificatesOf(owner, product.getId(), false);
 
         assertFalse(entitlement.isDirty());
 
@@ -340,8 +340,8 @@ public class EntitlementCertificateGeneratorTest {
         consumer.setOwner(owner);
         consumer.addEntitlement(entitlement);
 
-        when(mockOwnerCurator.findOwnerById(eq("test-owner"))).thenReturn(owner);
-        this.ecGenerator.regenerateCertificatesOf(consumer, true);
+        when(mockOwnerCurator.findOwnerById("test-owner")).thenReturn(owner);
+        this.ecService.regenerateCertificatesOf(consumer, true);
 
         assertTrue(entitlement.isDirty());
         verifyNoInteractions(this.mockEntCertAdapter);
@@ -365,7 +365,7 @@ public class EntitlementCertificateGeneratorTest {
         Entitlement entitlement = new Entitlement(pool, consumer, owner, 1);
         entitlement.setDirty(true);
 
-        this.ecGenerator.regenerateCertificatesOf(entitlement, false);
+        this.ecService.regenerateCertificatesOf(entitlement, false);
         assertFalse(entitlement.isDirty());
 
         verify(this.mockEntCertAdapter).generateEntitlementCerts(eq(consumer),
@@ -389,14 +389,14 @@ public class EntitlementCertificateGeneratorTest {
         entitlement.setId("lazy-ent-id");
         Collection<String> entitlements = Arrays.asList(entitlement.getId());
 
-        this.ecGenerator.regenerateCertificatesByEntitlementIds(entitlements, true);
+        this.ecService.regenerateCertificatesByEntitlementIds(entitlements, true);
 
         // We're expecting the DB to update the state, and since we're mocking all of the curators, we can't
         // do a flush to verify this. We're, instead, relying on the backing DB functionality to be working
         // correctly.
         // assertTrue(entitlement.isDirty());
 
-        verify(this.mockEntitlementCurator, times(1)).markEntitlementsDirty(eq(entitlements));
+        verify(this.mockEntitlementCurator, times(1)).markEntitlementsDirty(entitlements);
 
         verifyNoInteractions(this.mockEntCertAdapter);
     }
@@ -415,11 +415,11 @@ public class EntitlementCertificateGeneratorTest {
         HashMap<String, EntitlementCertificate> ecMap = new HashMap<>();
         ecMap.put(pool.getId(), new EntitlementCertificate());
 
-        when(this.mockEntitlementCurator.get(eq(entitlement.getId()))).thenReturn(entitlement);
+        when(this.mockEntitlementCurator.get(entitlement.getId())).thenReturn(entitlement);
         when(this.mockEntCertAdapter.generateEntitlementCerts(any(Consumer.class), anyMap(),
             anyMap(), anyMap(), anyBoolean())).thenReturn(ecMap);
         when(mockEventFactory.entitlementChanged(any(Entitlement.class))).thenReturn(mock(Event.class));
-        this.ecGenerator.regenerateCertificatesByEntitlementIds(entitlements, false);
+        this.ecService.regenerateCertificatesByEntitlementIds(entitlements, false);
 
         assertFalse(entitlement.isDirty());
 

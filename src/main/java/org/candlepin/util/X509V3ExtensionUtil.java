@@ -25,56 +25,40 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.dto.Content;
 import org.candlepin.model.dto.EntitlementBody;
-import org.candlepin.model.dto.Order;
-import org.candlepin.model.dto.Service;
-import org.candlepin.model.dto.TinySubscription;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.pki.certs.X509ByteExtension;
 import org.candlepin.pki.certs.X509StringExtension;
 import org.candlepin.pki.huffman.Huffman;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Collections2;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.zip.DeflaterOutputStream;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-
 
 
 public class X509V3ExtensionUtil extends X509Util {
     private static final Logger log = LoggerFactory.getLogger(X509V3ExtensionUtil.class);
     public static final String CERT_VERSION = "3.4";
 
-    private final ObjectMapper mapper;
     private final Configuration config;
     private final EntitlementCurator entCurator;
     private final Huffman huffman;
 
     @Inject
-    public X509V3ExtensionUtil(Configuration config, EntitlementCurator entCurator,
-        @Named("X509V3ExtensionUtilObjectMapper") ObjectMapper objectMapper, Huffman huffman) {
-
-        // Output everything in UTC
+    public X509V3ExtensionUtil(Configuration config, EntitlementCurator entCurator, Huffman huffman) {
         this.config = Objects.requireNonNull(config);
         this.entCurator = Objects.requireNonNull(entCurator);
-        this.mapper = Objects.requireNonNull(objectMapper);
         this.huffman = Objects.requireNonNull(huffman);
     }
 
@@ -96,32 +80,9 @@ public class X509V3ExtensionUtil extends X509Util {
         return toReturn;
     }
 
-    public byte[] createEntitlementDataPayload(List<org.candlepin.model.dto.Product> productModels,
-        String consumerUuid, Pool pool, Integer quantity) throws IOException {
-
-        EntitlementBody map = createEntitlementBody(productModels, consumerUuid, pool, quantity);
-
-        String json = toJson(map);
-        return processPayload(json);
-    }
-
     private byte[] retrieveContentValue(EntitlementBody eb) throws IOException {
         List<Content> contentList = getContentList(eb);
         return this.huffman.retrieveContentValue(contentList);
-    }
-
-    public EntitlementBody createEntitlementBody(List<org.candlepin.model.dto.Product> productModels,
-        String consumerUuid, Pool pool, Integer quantity) {
-
-        EntitlementBody toReturn = new EntitlementBody();
-        toReturn.setConsumer(consumerUuid);
-        toReturn.setQuantity(quantity);
-        toReturn.setSubscription(createSubscription(pool));
-        toReturn.setOrder(createOrder(pool));
-        toReturn.setProducts(productModels);
-        toReturn.setPool(createPool(pool));
-
-        return toReturn;
     }
 
     public EntitlementBody createEntitlementBodyContent(
@@ -129,110 +90,6 @@ public class X509V3ExtensionUtil extends X509Util {
 
         EntitlementBody toReturn = new EntitlementBody();
         toReturn.setProducts(productModels);
-
-        return toReturn;
-    }
-
-    public TinySubscription createSubscription(Pool pool) {
-        TinySubscription toReturn = new TinySubscription();
-        Product product = pool.getProduct();
-
-        toReturn.setSku(product.getId());
-        toReturn.setName(product.getName());
-
-        String warningPeriod = product.getAttributeValue(Product.Attributes.WARNING_PERIOD);
-        if (StringUtils.isNotBlank(warningPeriod)) {
-            // only included if not the default value of 0
-            if (!warningPeriod.equals("0")) {
-                toReturn.setWarning(Integer.valueOf(warningPeriod));
-            }
-        }
-
-        String socketLimit = product.getAttributeValue(Product.Attributes.SOCKETS);
-        if (StringUtils.isNotBlank(socketLimit)) {
-            toReturn.setSockets(Integer.valueOf(socketLimit));
-        }
-
-        String ramLimit = product.getAttributeValue(Product.Attributes.RAM);
-        if (StringUtils.isNotBlank(ramLimit)) {
-            toReturn.setRam(Integer.valueOf(ramLimit));
-        }
-
-        String coreLimit = product.getAttributeValue(Product.Attributes.CORES);
-        if (StringUtils.isNotBlank(coreLimit)) {
-            toReturn.setCores(Integer.valueOf(coreLimit));
-        }
-
-        String management = product.getAttributeValue(Product.Attributes.MANAGEMENT_ENABLED);
-        if (StringUtils.isNotBlank(management)) {
-            // only included if not the default value of false
-            if (management.equalsIgnoreCase("true") || management.equalsIgnoreCase("1")) {
-                toReturn.setManagement(Boolean.TRUE);
-            }
-        }
-
-        String stackingId = product.getAttributeValue(Product.Attributes.STACKING_ID);
-        if (StringUtils.isNotBlank(stackingId)) {
-            toReturn.setStackingId(stackingId);
-        }
-
-        String virtOnly = pool.getAttributeValue(Product.Attributes.VIRT_ONLY);
-        if (StringUtils.isNotBlank(virtOnly)) {
-            // only included if not the default value of false
-            Boolean vo = virtOnly.equalsIgnoreCase("true") ||
-                virtOnly.equalsIgnoreCase("1");
-            if (vo) {
-                toReturn.setVirtOnly(vo);
-            }
-        }
-
-        toReturn.setService(createService(pool));
-
-        String usage = product.getAttributeValue(Product.Attributes.USAGE);
-        if (StringUtils.isNotBlank(usage)) {
-            toReturn.setUsage(usage);
-        }
-
-        String roles = product.getAttributeValue(Product.Attributes.ROLES);
-        if (StringUtils.isNotBlank(roles)) {
-            toReturn.setRoles(Util.toList(roles));
-        }
-
-        String addons = product.getAttributeValue(Product.Attributes.ADDONS);
-        if (StringUtils.isNotBlank(addons)) {
-            toReturn.setAddons(Util.toList(addons));
-        }
-        return toReturn;
-    }
-
-    private Service createService(Pool pool) {
-        if (pool.getProduct().getAttributeValue(Product.Attributes.SUPPORT_LEVEL) == null &&
-            pool.getProduct().getAttributeValue(Product.Attributes.SUPPORT_TYPE) == null) {
-            return null;
-        }
-        Service toReturn = new Service();
-        toReturn.setLevel(pool.getProduct().getAttributeValue(Product.Attributes.SUPPORT_LEVEL));
-        toReturn.setType(pool.getProduct().getAttributeValue(Product.Attributes.SUPPORT_TYPE));
-
-        return toReturn;
-    }
-
-    public Order createOrder(Pool pool) {
-        SimpleDateFormat iso8601DateFormat = Util.getUTCDateFormat();
-        Order toReturn = new Order();
-
-        toReturn.setNumber(pool.getOrderNumber());
-        toReturn.setQuantity(pool.getQuantity());
-        toReturn.setStart(iso8601DateFormat.format(pool.getStartDate()));
-        toReturn.setEnd(iso8601DateFormat.format(pool.getEndDate()));
-
-        if (StringUtils.isNotBlank(pool.getContractNumber())) {
-            toReturn.setContract(pool.getContractNumber());
-        }
-
-        if (StringUtils.isNotBlank(pool.getAccountNumber())) {
-            toReturn.setAccount(pool.getAccountNumber());
-        }
 
         return toReturn;
     }
@@ -249,12 +106,6 @@ public class X509V3ExtensionUtil extends X509Util {
             toReturn.add(mapProduct(p, sku, promotedContent, consumer, pool, entitledProductIds));
         }
 
-        return toReturn;
-    }
-
-    public org.candlepin.model.dto.Pool createPool(Pool pool) {
-        org.candlepin.model.dto.Pool toReturn = new org.candlepin.model.dto.Pool();
-        toReturn.setId(pool.getId());
         return toReturn;
     }
 
@@ -304,7 +155,7 @@ public class X509V3ExtensionUtil extends X509Util {
                 else {
                     // Warn, but use the first brand name we encountered:
                     log.warn("Found multiple brand names: product={}, contract={}, " +
-                        "owner={}", productId, pool.getContractNumber(),
+                            "owner={}", productId, pool.getContractNumber(),
                         pool.getOwner().getKey());
                 }
             }
@@ -417,23 +268,4 @@ public class X509V3ExtensionUtil extends X509Util {
         return contentList;
     }
 
-    private String toJson(Object anObject) {
-        String output = "";
-        try {
-            output = this.mapper.writeValueAsString(anObject);
-        }
-        catch (Exception e) {
-            log.error("Could no serialize the object to json " + anObject, e);
-        }
-        return output;
-    }
-
-    private byte[] processPayload(String payload) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DeflaterOutputStream dos = new DeflaterOutputStream(baos);
-        dos.write(payload.getBytes(StandardCharsets.UTF_8));
-        dos.finish();
-        dos.close();
-        return baos.toByteArray();
-    }
 }

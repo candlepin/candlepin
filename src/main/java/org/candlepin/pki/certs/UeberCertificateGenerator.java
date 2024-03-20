@@ -60,6 +60,9 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 
+/**
+ * This generator is responsible for generation of ueber certificates.
+ */
 public class UeberCertificateGenerator {
     private static final String UEBER_CERT_CONSUMER_TYPE = "uebercert";
     private static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";

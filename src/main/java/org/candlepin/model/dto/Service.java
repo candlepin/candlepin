@@ -28,16 +28,18 @@ public class Service {
     private String level;
     private String type;
 
-    /**
-     * @param level
-     */
+    public String getLevel() {
+        return level;
+    }
+
     public void setLevel(String level) {
         this.level = level;
     }
 
-    /**
-     * @param type
-     */
+    public String getType() {
+        return type;
+    }
+
     public void setType(String type) {
         this.type = type;
     }

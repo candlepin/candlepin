@@ -30,7 +30,7 @@ import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.controller.EntitlementCertificateGenerator;
+import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.util.Util;
@@ -44,17 +44,17 @@ import java.util.Set;
 
 public class RegenProductEntitlementCertsJobTest {
 
-    private EntitlementCertificateGenerator ecGenerator;
+    private EntitlementCertificateService ecService;
     private OwnerCurator ownerCurator;
 
     @BeforeEach
     public void setUp() {
-        this.ecGenerator = mock(EntitlementCertificateGenerator.class);
+        this.ecService = mock(EntitlementCertificateService.class);
         this.ownerCurator = mock(OwnerCurator.class);
     }
 
     public RegenProductEntitlementCertsJob buildTestJob() {
-        return new RegenProductEntitlementCertsJob(this.ecGenerator, this.ownerCurator);
+        return new RegenProductEntitlementCertsJob(this.ecService, this.ownerCurator);
     }
 
     @Test
@@ -141,11 +141,11 @@ public class RegenProductEntitlementCertsJobTest {
         testJob.execute(context);
 
         verify(this.ownerCurator, times(1)).getOwnersWithProducts(productIds);
-        verify(this.ecGenerator, times(1))
+        verify(this.ecService, times(1))
             .regenerateCertificatesOf(owner1, productId, lazyRegen);
-        verify(this.ecGenerator, times(1))
+        verify(this.ecService, times(1))
             .regenerateCertificatesOf(owner2, productId, lazyRegen);
-        verify(this.ecGenerator, times(1))
+        verify(this.ecService, times(1))
             .regenerateCertificatesOf(owner3, productId, lazyRegen);
     }
 
@@ -169,7 +169,7 @@ public class RegenProductEntitlementCertsJobTest {
         testJob.execute(context);
 
         verify(this.ownerCurator, times(1)).getOwnersWithProducts(productIds);
-        verify(this.ecGenerator, never())
+        verify(this.ecService, never())
             .regenerateCertificatesOf(any(Owner.class), anyString(), anyBoolean());
     }
 }

@@ -21,7 +21,7 @@ import org.candlepin.async.tasks.RegenEnvEntitlementCertsJob;
 import org.candlepin.auth.SecurityHole;
 import org.candlepin.auth.Verify;
 import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.EntitlementCertificateGenerator;
+import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.controller.PoolService;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
@@ -97,7 +97,7 @@ public class EnvironmentResource implements EnvironmentApi {
     private final IdentityCertificateCurator identityCertificateCurator;
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
     private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
-    private final EntitlementCertificateGenerator entCertGenerator;
+    private final EntitlementCertificateService entCertService;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
@@ -108,7 +108,7 @@ public class EnvironmentResource implements EnvironmentApi {
         CertificateSerialCurator certificateSerialCurator,
         IdentityCertificateCurator identityCertificateCurator,
         ContentAccessCertificateCurator contentAccessCertificateCurator,
-        EntitlementCurator entCurator, EntitlementCertificateGenerator entCertGenerator) {
+        EntitlementCurator entCurator, EntitlementCertificateService entCertService) {
 
         this.envCurator = Objects.requireNonNull(envCurator);
         this.i18n = Objects.requireNonNull(i18n);
@@ -125,7 +125,7 @@ public class EnvironmentResource implements EnvironmentApi {
         this.certificateSerialCurator = Objects.requireNonNull(certificateSerialCurator);
         this.identityCertificateCurator = Objects.requireNonNull(identityCertificateCurator);
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
-        this.entCertGenerator = entCertGenerator;
+        this.entCertService = entCertService;
         this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(entCurator, envContentCurator);
     }
 
@@ -193,7 +193,7 @@ public class EnvironmentResource implements EnvironmentApi {
 
         Set<String> entitlementsToBeRegenerated = this.entitlementEnvironmentFilter
             .filterEntitlements(prepareEnvironmentUpdates(environment, consumerIds));
-        this.entCertGenerator.regenerateCertificatesByEntitlementIds(entitlementsToBeRegenerated, true);
+        this.entCertService.regenerateCertificatesByEntitlementIds(entitlementsToBeRegenerated, true);
 
         for (Consumer consumer : consumers) {
             this.contentAccessManager.removeContentAccessCert(consumer);

@@ -43,7 +43,7 @@ import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessMode;
-import org.candlepin.controller.EntitlementCertificateGenerator;
+import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -214,7 +214,7 @@ public class ConsumerResource implements ConsumerApi {
     private final IdentityCertificateGenerator identityCertificateGenerator;
     private final SCACertificateGenerator scaCertificateGenerator;
     private final AnonymousCertificateGenerator anonymousCertGenerator;
-    private final EntitlementCertServiceAdapter entCertService;
+    private final EntitlementCertServiceAdapter entCertAdapter;
     private final ContentAccessManager contentAccessManager;
     private final UserServiceAdapter userService;
     private final I18n i18n;
@@ -246,7 +246,7 @@ public class ConsumerResource implements ConsumerApi {
     private final PrincipalProvider principalProvider;
     private final ContentOverrideValidator coValidator;
     private final ConsumerContentOverrideCurator ccoCurator;
-    private final EntitlementCertificateGenerator entCertGenerator;
+    private final EntitlementCertificateService entCertService;
     private final AnonymousCloudConsumerCurator anonymousConsumerCurator;
     private final AnonymousContentAccessCertificateCurator anonymousCertCurator;
     private final OwnerServiceAdapter ownerService;
@@ -294,7 +294,7 @@ public class ConsumerResource implements ConsumerApi {
         PrincipalProvider principalProvider,
         ContentOverrideValidator coValidator,
         ConsumerContentOverrideCurator ccoCurator,
-        EntitlementCertificateGenerator entCertGenerator,
+        EntitlementCertificateService entCertService,
         PoolService poolService,
         EnvironmentContentCurator environmentContentCurator,
         AnonymousCloudConsumerCurator anonymousConsumerCurator,
@@ -309,7 +309,7 @@ public class ConsumerResource implements ConsumerApi {
         this.prodAdapter = Objects.requireNonNull(prodAdapter);
         this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
         this.identityCertificateGenerator = Objects.requireNonNull(identityCertificateGenerator);
-        this.entCertService = Objects.requireNonNull(entCertServiceAdapter);
+        this.entCertAdapter = Objects.requireNonNull(entCertServiceAdapter);
         this.i18n = Objects.requireNonNull(i18n);
         this.sink = Objects.requireNonNull(sink);
         this.eventFactory = Objects.requireNonNull(eventFactory);
@@ -340,7 +340,7 @@ public class ConsumerResource implements ConsumerApi {
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.coValidator = Objects.requireNonNull(coValidator);
         this.ccoCurator = Objects.requireNonNull(ccoCurator);
-        this.entCertGenerator = Objects.requireNonNull(entCertGenerator);
+        this.entCertService = Objects.requireNonNull(entCertService);
         this.poolService = Objects.requireNonNull(poolService);
         this.anonymousConsumerCurator = Objects.requireNonNull(anonymousConsumerCurator);
         this.anonymousCertCurator = Objects.requireNonNull(anonymousCertCurator);
@@ -1816,11 +1816,11 @@ public class ConsumerResource implements ConsumerApi {
                     Set<String> entitlementsToBeRegenerated = entitlementEnvironmentFilter
                         .filterEntitlements(environmentUpdates);
 
-                    this.entCertGenerator
+                    this.entCertService
                         .regenerateCertificatesByEntitlementIds(entitlementsToBeRegenerated, true);
                 }
                 else {
-                    this.entCertGenerator.regenerateCertificatesOf(toUpdate, true);
+                    this.entCertService.regenerateCertificatesOf(toUpdate, true);
                 }
             }
 
@@ -2198,7 +2198,7 @@ public class ConsumerResource implements ConsumerApi {
         poolManager.regenerateDirtyEntitlements(consumer);
 
         Set<Long> serialSet = this.extractSerials(serials);
-        List<? extends Certificate> entitlementCerts = this.entCertService.listForConsumer(consumer);
+        List<? extends Certificate> entitlementCerts = this.entCertAdapter.listForConsumer(consumer);
 
         Certificate caCert = this.scaCertificateGenerator.generate(consumer);
 
@@ -2396,7 +2396,7 @@ public class ConsumerResource implements ConsumerApi {
         poolManager.regenerateDirtyEntitlements(consumer);
 
         List<CertificateSerialDTO> allCerts = new LinkedList<>();
-        for (Long id : entCertService.listEntitlementSerialIds(consumer)) {
+        for (Long id : entCertAdapter.listEntitlementSerialIds(consumer)) {
             allCerts.add(new CertificateSerialDTO().serial(id));
         }
 
@@ -2802,10 +2802,10 @@ public class ConsumerResource implements ConsumerApi {
             // TODO: This should probably verify that the consumer in the path is related to it,
             // otherwise this belongs in another endpoint.
             Entitlement entitlement = this.verifyAndLookupEntitlement(entitlementId);
-            this.entCertGenerator.regenerateCertificatesOf(entitlement, lazyRegen);
+            this.entCertService.regenerateCertificatesOf(entitlement, lazyRegen);
         }
         else {
-            this.entCertGenerator.regenerateCertificatesOf(consumer, lazyRegen);
+            this.entCertService.regenerateCertificatesOf(consumer, lazyRegen);
         }
     }
 

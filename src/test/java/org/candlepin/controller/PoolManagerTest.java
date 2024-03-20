@@ -179,7 +179,7 @@ public class PoolManagerTest {
     @Mock
     private EntitlementCertificateCurator certCurator;
     @Mock
-    private EntitlementCertificateGenerator mockECGenerator;
+    private EntitlementCertificateService mockecService;
     @Mock
     private Enforcer enforcer;
     @Mock
@@ -269,7 +269,7 @@ public class PoolManagerTest {
 
         this.manager = spy(new PoolManager(
             poolCurator, mockEventSink, eventFactory, config, enforcer, poolRules, entitlementCurator,
-            consumerCuratorMock, consumerTypeCurator, mockECGenerator, complianceRules, autobindRules,
+            consumerCuratorMock, consumerTypeCurator, mockecService, complianceRules, autobindRules,
             activationKeyRules, mockOwnerCurator, i18n, poolService, mockBindChainFactory,
             refreshWorkerProvider, poolOpProcessor, poolConverter));
 
@@ -279,7 +279,7 @@ public class PoolManagerTest {
 
         Map<String, EntitlementCertificate> entCerts = new HashMap<>();
         entCerts.put(pool.getId(), new EntitlementCertificate());
-        when(mockECGenerator.generateEntitlementCertificates(any(Consumer.class), anyMap(), anyMap(),
+        when(mockecService.generateEntitlementCertificates(any(Consumer.class), anyMap(), anyMap(),
             anyMap(), eq(false))).thenReturn(entCerts);
         dummyComplianceStatus = new ComplianceStatus(new Date());
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class))).thenReturn(
@@ -331,7 +331,7 @@ public class PoolManagerTest {
         final PostBindBonusPoolsOp postBindBonusPoolsOp = new PostBindBonusPoolsOp(poolService,
             consumerTypeCurator, poolCurator, enforcer, poolOpProcessor);
         final CheckBonusPoolQuantitiesOp checkBonusPoolQuantitiesOp = new CheckBonusPoolQuantitiesOp(manager);
-        final HandleCertificatesOp certificatesOp = new HandleCertificatesOp(mockECGenerator, certCurator,
+        final HandleCertificatesOp certificatesOp = new HandleCertificatesOp(mockecService, certCurator,
             entitlementCurator);
         final ComplianceOp complianceOp = new ComplianceOp(complianceRules, systemPurposeComplianceRules);
 

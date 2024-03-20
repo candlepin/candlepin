@@ -45,6 +45,7 @@ import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.SCACertificate;
 import org.candlepin.model.dto.Product;
+import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.huffman.Huffman;
 import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
@@ -53,7 +54,6 @@ import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.Signer;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Transactional;
 import org.candlepin.util.X509V3ExtensionUtil;
 
@@ -88,19 +88,22 @@ class SCACertificateGeneratorTest {
     private EntitlementCurator entitlementCurator;
     @Mock
     private V3CapabilityCheck v3CapabilityCheck;
+    private Configuration config;
     private X509V3ExtensionUtil extensionUtil;
     private SCACertificateGenerator generator;
 
     @BeforeEach
     void setUp() throws CertificateException, IOException {
-        Configuration config = TestConfig.defaults();
-        ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
+        this.config = TestConfig.defaults();
+        this.extensionUtil = spy(new X509V3ExtensionUtil(
+            this.config, this.entitlementCurator, new Huffman()));
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
         BouncyCastleKeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(
             securityProvider, mock(KeyPairDataCurator.class));
         CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
         this.extensionUtil = spy(new X509V3ExtensionUtil(
-            config, this.entitlementCurator, objectMapper, new Huffman()));
+            config, this.entitlementCurator, new Huffman()));
+        SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
 
         when(this.contentAccessCertificateCurator.create(any(SCACertificate.class)))
             .thenAnswer(returnsFirstArg());
@@ -113,6 +116,7 @@ class SCACertificateGeneratorTest {
         this.generator = new SCACertificateGenerator(
             this.extensionUtil,
             this.v3CapabilityCheck,
+            new EntitlementPayloadGenerator(new ObjectMapper()),
             this.contentAccessCertificateCurator,
             this.serialCurator,
             this.contentCurator,
@@ -121,8 +125,7 @@ class SCACertificateGeneratorTest {
             new BouncyCastlePemEncoder(),
             keyPairGenerator,
             new Signer(certificateReader),
-            () -> new X509CertificateBuilder(
-                certificateReader, securityProvider, new BouncyCastleSubjectKeyIdentifierWriter())
+            () -> new X509CertificateBuilder(certificateReader, securityProvider, subjectKeyIdentifierWriter)
         );
     }
 

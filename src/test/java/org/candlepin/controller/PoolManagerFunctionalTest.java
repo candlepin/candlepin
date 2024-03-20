@@ -95,7 +95,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     private PoolManager poolManager;
 
-    private EntitlementCertificateGenerator certGenerator;
+    private EntitlementCertificateService certGenerator;
     private RefresherFactory refresherFactory;
 
     private Product virtHost;
@@ -120,7 +120,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         super.init();
 
         poolManager = injector.getInstance(PoolManager.class);
-        certGenerator = injector.getInstance(EntitlementCertificateGenerator.class);
+        certGenerator = injector.getInstance(EntitlementCertificateService.class);
         refresherFactory = injector.getInstance(RefresherFactory.class);
 
         o = createOwner();

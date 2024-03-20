@@ -57,16 +57,16 @@ import java.util.Set;
  */
 public class ProductManagerTest extends DatabaseTestFixture {
 
-    private EntitlementCertificateGenerator mockEntCertGenerator;
+    private EntitlementCertificateService mockEntCertService;
     private ContentAccessManager mockContentAccessManager;
     private ProductManager productManager;
 
     @BeforeEach
     public void setup() {
-        this.mockEntCertGenerator = mock(EntitlementCertificateGenerator.class);
+        this.mockEntCertService = mock(EntitlementCertificateService.class);
         this.mockContentAccessManager = mock(ContentAccessManager.class);
 
-        this.productManager = new ProductManager(this.mockContentAccessManager, this.mockEntCertGenerator,
+        this.productManager = new ProductManager(this.mockContentAccessManager, this.mockEntCertService,
             this.poolCurator, this.productCurator, this.contentCurator, this.activationKeyCurator);
     }
 
@@ -111,7 +111,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertEquals(output.getUuid(), product.getUuid());
         assertEquals(output, product);
 
-        verifyNoInteractions(this.mockEntCertGenerator);
+        verifyNoInteractions(this.mockEntCertService);
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
@@ -129,11 +129,11 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertEquals(output.getName(), update.getName());
 
         if (regenCerts) {
-            verify(this.mockEntCertGenerator, times(1))
+            verify(this.mockEntCertService, times(1))
                 .regenerateCertificatesOf(eq(owner), eq(product.getId()), eq(true));
         }
         else {
-            verifyNoInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertService);
         }
     }
 
@@ -161,7 +161,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         assertNull(this.productCurator.get(product.getUuid()));
 
-        verifyNoInteractions(this.mockEntCertGenerator);
+        verifyNoInteractions(this.mockEntCertService);
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
@@ -189,7 +189,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertNull(this.productCurator.get(product.getUuid()));
         assertNotNull(this.productCurator.get(product2.getUuid()));
 
-        verifyNoInteractions(this.mockEntCertGenerator);
+        verifyNoInteractions(this.mockEntCertService);
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
@@ -223,7 +223,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         // pool and it's simply linked to another product, we would not expect that removal and
         // unlinking to trigger any entitlement regeneration hits.
 
-        verifyNoInteractions(this.mockEntCertGenerator);
+        verifyNoInteractions(this.mockEntCertService);
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
@@ -252,11 +252,11 @@ public class ProductManagerTest extends DatabaseTestFixture {
         if (regenCerts) {
             // TODO: Is there a better way to do this? We won't know the exact product instance,
             // we just know that a product should be refreshed as a result of this operation.
-            verify(this.mockEntCertGenerator, times(1))
+            verify(this.mockEntCertService, times(1))
                 .regenerateCertificatesOf(eq(Set.of(entitlement)), eq(true));
         }
         else {
-            verifyNoInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertService);
         }
     }
 
@@ -302,11 +302,11 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertFalse(output.hasContent(content.getId()));
 
         if (regenCerts) {
-            verify(this.mockEntCertGenerator, times(1))
+            verify(this.mockEntCertService, times(1))
                 .regenerateCertificatesOf(eq(owner), eq(product.getId()), eq(true));
         }
         else {
-            verifyNoInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertService);
         }
     }
 
@@ -360,11 +360,11 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertTrue(output.hasContent(content.getId()));
 
         if (regenCerts) {
-            verify(this.mockEntCertGenerator, times(1))
+            verify(this.mockEntCertService, times(1))
                 .regenerateCertificatesOf(eq(owner), eq(product.getId()), eq(true));
         }
         else {
-            verifyNoInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertService);
         }
     }
 
