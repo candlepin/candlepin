@@ -14,6 +14,8 @@
  */
 package org.candlepin.spec;
 
+import static java.lang.Thread.sleep;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.dto.api.client.v1.AttributeDTO;
@@ -42,13 +44,18 @@ import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.Isolated;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 @SpecTest
 public class ContentResourceSpecTest {
@@ -221,6 +228,44 @@ public class ContentResourceSpecTest {
         // Verify that the content's arch was inherited by the product
         String actualArch = productOutput2.get("content").get(0).get("arches").get(0).asText();
         assertEquals("ppc64", actualArch);
+    }
+
+    @Nested
+    @Isolated
+    @Execution(ExecutionMode.SAME_THREAD)
+    class GetPages {
+        @Test
+        public void shouldListContentPagedAndSorted() {
+            ApiClient adminClient = ApiClients.admin();
+
+            OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+            String ownerKey = owner.getKey();
+
+            // Ensure that there is data for this test.
+            // Most likely, there will already be data left from other test runs that will show up
+            IntStream.range(0, 5).forEach(entry -> {
+                adminClient.ownerContent().createContent(ownerKey, Contents.random());
+                // for timestamp separation
+                try {
+                    sleep(1000);
+                }
+                catch (InterruptedException ie) {
+                    throw new RuntimeException("Unable to sleep as expected");
+                }
+            });
+
+            List<ContentDTO> contents = adminClient.content().getContents(1, 4, "asc", "created");
+            assertThat(contents)
+                .isNotNull()
+                .hasSize(4);
+            assertThat(contents.get(0).getCreated().compareTo(contents.get(1).getCreated()))
+                .isLessThanOrEqualTo(0);
+            assertThat(contents.get(1).getCreated().compareTo(contents.get(2).getCreated()))
+                .isLessThanOrEqualTo(0);
+            assertThat(contents.get(2).getCreated().compareTo(contents.get(3).getCreated()))
+                .isLessThanOrEqualTo(0);
+
+        }
     }
 
     private ContentDTO createContent(String ownerKey, String contentUrl, String arches) {
