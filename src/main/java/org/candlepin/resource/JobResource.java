@@ -210,7 +210,7 @@ public class JobResource implements JobsApi {
         }
         // If no paging was specified, force a limit on amount of results
         else {
-            int maxSize = config.getInt(ConfigProperties.MAX_PAGING_SIZE);
+            int maxSize = config.getInt(ConfigProperties.PAGING_MAX_PAGE_SIZE);
             if (count > maxSize) {
                 String errmsg = this.i18n.tr("This endpoint does not support returning more than {0} " +
                     "results at a time, please use paging.", maxSize);
