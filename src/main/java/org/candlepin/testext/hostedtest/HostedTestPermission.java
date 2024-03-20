@@ -67,6 +67,9 @@ public class HostedTestPermission implements PermissionBlueprintInfo {
 
     public static List<HostedTestPermission> fromPermissionBlueprintInfo(Collection<? extends PermissionBlueprintInfo> blueprintInfo) {
         List<HostedTestPermission> convertedPermissions = new ArrayList<>();
+        if (blueprintInfo == null) {
+            return convertedPermissions;
+        }
 
         //TODO: Can we improve this?
         for (PermissionBlueprintInfo blueprint : blueprintInfo) {

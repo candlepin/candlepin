@@ -38,6 +38,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -111,6 +112,11 @@ public class HostedTestDataStore {
 
         this.userMap = new ConcurrentHashMap<>();
         this.roleMap = new ConcurrentHashMap<>();
+
+        userMap.put("admin", new HostedTestUser()
+            .setUsername("admin")
+            .setPassword("admin")
+            .setSuperAdmin(true));
     }
 
     public OwnerInfo createOwner(OwnerInfo ownerInfo) {
@@ -1009,7 +1015,9 @@ public class HostedTestDataStore {
             return null;
         }
 
-        return userMap.put(user.getUsername(), user);
+        userMap.put(user.getUsername(), user);
+
+        return user;
     }
 
     protected HostedTestUser getUser(String username) {
@@ -1020,12 +1028,11 @@ public class HostedTestDataStore {
         return userMap.get(username);
     }
 
-    protected HostedTestUser updateUser(HostedTestUser user) {
-        if (user == null || user.getUsername() == null) {
+    protected HostedTestUser updateUser(String username, HostedTestUser user) {
+        if (user == null || username == null) {
             return null;
         }
 
-        String username = user.getUsername();
         HostedTestUser existingUser = userMap.get(username);
         if (existingUser == null) {
             return null;
@@ -1051,7 +1058,7 @@ public class HostedTestDataStore {
     }
 
     protected List<HostedTestUser> getAllUsers() {
-        return (List<HostedTestUser>) userMap.values();
+        return new ArrayList<>(userMap.values());
     }
 
     protected HostedTestRole addRole(HostedTestRole role) {
@@ -1059,7 +1066,9 @@ public class HostedTestDataStore {
             return null;
         }
 
-        return roleMap.put(role.getName(), role);
+        roleMap.put(role.getName(), role);
+
+        return role;
     }
 
     protected HostedTestRole updateRole(HostedTestRole role) {
@@ -1114,8 +1123,9 @@ public class HostedTestDataStore {
         }
 
         role.addPermission(permission);
+        updateRole(role);
 
-        return updateRole(role);
+        return role;
     }
 
     protected HostedTestRole removePermissionFromRole(String roleName, String permissionId) {
@@ -1129,8 +1139,9 @@ public class HostedTestDataStore {
         }
 
         role.removePermission(permissionId);
+        updateRole(role);
 
-        return updateRole(role);
+        return role;
     }
 
     protected HostedTestRole addUserToRole(String username, String roleName) {

@@ -124,6 +124,9 @@ public class HostedTestRole implements RoleInfo {
 
     public static List<HostedTestRole> fromRoleInfo(Collection<? extends RoleInfo> roleInfo) {
         List<HostedTestRole> convertedRoles = new ArrayList<>();
+        if (roleInfo == null) {
+            return convertedRoles;
+        }
 
         //TODO: Can we improve this?
         for (RoleInfo role : roleInfo) {

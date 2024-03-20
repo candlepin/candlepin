@@ -4,18 +4,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
+import org.candlepin.dto.api.server.v1.UserDTO;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
+import org.candlepin.util.Util;
 
 public class HostedTestUser implements UserInfo {
 
+    private String id;
     private Date created;
     private Date updated;
     private String username;
     private String password;
-    private Boolean isSuperAdmin;
+    private Boolean isSuperAdmin = false;
     private OwnerInfo owner;
     private Collection<HostedTestRole> roles;
 
@@ -24,13 +28,36 @@ public class HostedTestUser implements UserInfo {
     }
 
     public HostedTestUser(UserInfo userInfo) {
+        if (userInfo == null) {
+            throw new IllegalArgumentException("user info is null");
+        }
+
+        this.id = Util.generateUUID();
         this.created = userInfo.getCreated();
         this.updated = userInfo.getUpdated();
         this.username = userInfo.getUsername();
-        this.password = userInfo.getHashedPassword();
+        this.setPassword(userInfo.getHashedPassword());
         this.isSuperAdmin = userInfo.isSuperAdmin();
         this.owner = userInfo.getPrimaryOwner();
         this.roles = HostedTestRole.fromRoleInfo(userInfo.getRoles());
+    }
+
+    public HostedTestUser(UserDTO user) {
+        this.id = user.getId();
+        this.created = user.getCreated() != null ? new Date(user.getCreated().toInstant().toEpochMilli()) : null;
+        this.updated = user.getUpdated() != null ? new Date(user.getUpdated().toInstant().toEpochMilli()) : null;
+        this.username = user.getUsername();
+        this.setPassword(user.getPassword());
+        this.isSuperAdmin = user.getSuperAdmin();
+    }
+
+    public HostedTestUser setId(String id) {
+        this.id = id;
+        return this;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public HostedTestUser setCreated(Date created) {
@@ -63,8 +90,12 @@ public class HostedTestUser implements UserInfo {
         return username;
     }
 
-    public HostedTestUser setHashedPassword(String password) {
-        this.password = password;
+    public HostedTestUser setPassword(String password) {
+        if (password == null) {
+            return this;
+        }
+
+        this.password = Util.hashPassword(Util.generateBcryptSalt(), password);
         return this;
     }
 
@@ -133,6 +164,9 @@ public class HostedTestUser implements UserInfo {
 
     public static List<HostedTestUser> fromUserInfo(Collection<? extends UserInfo> userInfo) {
         List<HostedTestUser> convertedUsers = new ArrayList<>();
+        if (userInfo == null) {
+            return convertedUsers;
+        }
 
         //TODO: Can we improve this?
         for (UserInfo user : userInfo) {

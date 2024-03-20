@@ -43,8 +43,7 @@ public class HostedTestModule extends AbstractModule {
             .asEagerSingleton();
         bind(CloudRegistrationAdapter.class).to(HostedTestCloudRegistrationAdapter.class)
             .asEagerSingleton();
-        bind(UserServiceAdapter.class).to(HostedUserServiceAdapter.class)
-            .asEagerSingleton();
+        bind(UserServiceAdapter.class).to(HostedUserServiceAdapter.class);
     }
 
 }

@@ -155,7 +155,7 @@ public class UserResource implements UsersApi {
 
         // We don't actually need the user, but we do this for quick verification and better error
         // generation
-        UserInfo user = this.fetchUserByUsername(username);
+        this.fetchUserByUsername(username);
 
         return this.modelTranslator.translate(
             userService.updateUser(username, InfoAdapter.userInfoAdapter(dto)),

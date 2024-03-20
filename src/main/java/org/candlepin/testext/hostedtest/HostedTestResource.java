@@ -14,11 +14,14 @@
  */
 package org.candlepin.testext.hostedtest;
 
+import org.candlepin.auth.SecurityHole;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.dto.api.server.v1.ProductDTO;
+import org.candlepin.dto.api.server.v1.RoleDTO;
 import org.candlepin.dto.api.server.v1.SubscriptionDTO;
+import org.candlepin.dto.api.server.v1.UserDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.IseException;
@@ -107,6 +110,7 @@ public class HostedTestResource {
      * @return always returns true
      */
     @GET
+    @SecurityHole(anon = true)
     @Path("/alive")
     @Produces(MediaType.TEXT_PLAIN)
     public Boolean isAlive() {
@@ -244,6 +248,7 @@ public class HostedTestResource {
      * Deletes all data currently maintained by the backing adapter.
      */
     @DELETE
+    @SecurityHole(anon = true)
     @Produces(MediaType.APPLICATION_JSON)
     public void clearData() {
         this.datastore.clearData();
@@ -259,6 +264,7 @@ public class HostedTestResource {
      * @return The newly created Subscription object
      */
     @POST
+    @SecurityHole(anon = true)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/owners")
@@ -289,6 +295,7 @@ public class HostedTestResource {
      * @return The newly created Subscription object
      */
     @POST
+    @SecurityHole(anon = true)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/subscriptions")
@@ -332,6 +339,7 @@ public class HostedTestResource {
      * @return A collection of subscriptions maintained by the subscription service
      */
     @GET
+    @SecurityHole(anon = true)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/subscriptions")
     public Stream<SubscriptionDTO> listSubscriptions() {
@@ -348,6 +356,7 @@ public class HostedTestResource {
      * @return The requested Subscription object, or null if the subscription could not be found
      */
     @GET
+    @SecurityHole(anon = true)
     @Path("/subscriptions/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public SubscriptionDTO getSubscription(@PathParam("subscription_id") String subscriptionId) {
@@ -376,6 +385,7 @@ public class HostedTestResource {
      * @return the updated subscription
      */
     @PUT
+    @SecurityHole(anon = true)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/subscriptions/{subscription_id}")
@@ -406,6 +416,7 @@ public class HostedTestResource {
     }
 
     @DELETE
+    @SecurityHole(anon = true)
     @Path("/subscriptions/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public boolean deleteSubscription(@PathParam("subscription_id") String subscriptionId) {
@@ -413,6 +424,7 @@ public class HostedTestResource {
     }
 
     @GET
+    @SecurityHole(anon = true)
     @Path("/products")
     @Produces(MediaType.APPLICATION_JSON)
     public Stream<ProductDTO> listProducts() {
@@ -421,6 +433,7 @@ public class HostedTestResource {
     }
 
     @GET
+    @SecurityHole(anon = true)
     @Path("/products/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public ProductDTO getProduct(@PathParam("product_id") String productId) {
@@ -434,6 +447,7 @@ public class HostedTestResource {
     }
 
     @POST
+    @SecurityHole(anon = true)
     @Path("/products")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -463,6 +477,7 @@ public class HostedTestResource {
     }
 
     @PUT
+    @SecurityHole(anon = true)
     @Path("/products/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -490,6 +505,7 @@ public class HostedTestResource {
     }
 
     @DELETE
+    @SecurityHole(anon = true)
     @Path("/products/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public boolean deleteProduct(@PathParam("product_id") String productId) {
@@ -497,6 +513,7 @@ public class HostedTestResource {
     }
 
     @GET
+    @SecurityHole(anon = true)
     @Path("/content")
     @Produces(MediaType.APPLICATION_JSON)
     public Stream<ContentDTO> listContent() {
@@ -505,6 +522,7 @@ public class HostedTestResource {
     }
 
     @GET
+    @SecurityHole(anon = true)
     @Path("/content/{content_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public ContentDTO getContent(@PathParam("content_id") String contentId) {
@@ -518,6 +536,7 @@ public class HostedTestResource {
     }
 
     @POST
+    @SecurityHole(anon = true)
     @Path("/content")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -539,6 +558,7 @@ public class HostedTestResource {
     }
 
     @PUT
+    @SecurityHole(anon = true)
     @Path("/content/{content_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -560,6 +580,7 @@ public class HostedTestResource {
     }
 
     @DELETE
+    @SecurityHole(anon = true)
     @Path("/content/{content_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public boolean deleteContent(@PathParam("content_id") String contentId) {
@@ -567,6 +588,7 @@ public class HostedTestResource {
     }
 
     @POST
+    @SecurityHole(anon = true)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/products/{product_id}/content")
@@ -601,6 +623,7 @@ public class HostedTestResource {
     }
 
     @POST
+    @SecurityHole(anon = true)
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
     @Path("/products/{product_id}/content/{content_id}")
@@ -615,6 +638,7 @@ public class HostedTestResource {
     }
 
     @DELETE
+    @SecurityHole(anon = true)
     @Path("/products/{product_id}/content")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -636,6 +660,7 @@ public class HostedTestResource {
     }
 
     @DELETE
+    @SecurityHole(anon = true)
     @Path("/products/{product_id}/content/{content_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public ProductDTO removeContentFromProduct(@PathParam("product_id") String productId,
@@ -684,6 +709,7 @@ public class HostedTestResource {
     }
 
     @POST
+    @SecurityHole(anon = true)
     @Path("import/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -718,6 +744,7 @@ public class HostedTestResource {
     }
 
     @POST
+    @SecurityHole(anon = true)
     @Path("import/products")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -754,6 +781,7 @@ public class HostedTestResource {
     }
 
     @POST
+    @SecurityHole(anon = true)
     @Path("cloud/offers")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -782,6 +810,7 @@ public class HostedTestResource {
     }
 
     @POST
+    @SecurityHole(anon = true)
     @Path("cloud/accounts")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -798,6 +827,35 @@ public class HostedTestResource {
         }
 
         this.datastore.setCloudAccountIdForOwnerKey(cloudAccountId, ownerId);
+    }
+
+    @POST
+    @SecurityHole(anon = true)
+    @Path("/users")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public UserDTO addUser(UserDTO user) {
+        if (user == null) {
+            throw new BadRequestException("user is null");
+        }
+
+        // TODO: Check if the user already exists
+
+        HostedTestUser testUser = new HostedTestUser(user);
+        this.datastore.addUser(testUser);
+
+        log.info("TESTING created user " + testUser);
+
+        return this.translator.translate(testUser, UserDTO.class);
+    }
+
+    @POST
+    @SecurityHole(anon = true)
+    @Path("/roles")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public UserDTO addRole(RoleDTO role) {
+        return null;
     }
 
 }

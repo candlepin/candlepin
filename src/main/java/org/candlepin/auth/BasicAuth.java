@@ -85,6 +85,8 @@ public class BasicAuth extends UserAuth {
             if (log.isDebugEnabled()) {
                 log.debug("Error getting principal " + e);
             }
+
+            log.error(e.getMessage());
             throw new ServiceUnavailableException(i18nProvider.get().tr("Error contacting user service"));
         }
         return null;

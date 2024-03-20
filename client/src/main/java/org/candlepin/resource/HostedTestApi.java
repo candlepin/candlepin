@@ -19,6 +19,7 @@ import org.candlepin.dto.api.client.v1.ContentDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.SubscriptionDTO;
+import org.candlepin.dto.api.client.v1.UserDTO;
 import org.candlepin.invoker.client.ApiClient;
 import org.candlepin.invoker.client.ApiResponse;
 import org.candlepin.invoker.client.Configuration;
@@ -788,6 +789,32 @@ public class HostedTestApi {
 
         // create path and map variables
         String localVarPath = buildPath("/hostedtest/cloud/accounts");
+
+        List<Pair> queryParams = new ArrayList<>();
+        List<Pair> collectionQueryParams = new ArrayList<>();
+        Map<String, String> headers = new HashMap<>();
+        Map<String, String> cookies = new HashMap<>();
+        Map<String, Object> form = new HashMap<>();
+
+        headers.put(ACCEPT_HEADER, APPLICATION_JSON);
+        headers.put(CONTENT_TYPE_HEADER, APPLICATION_JSON);
+
+        String[] auth = new String[]{};
+        return localVarApiClient.buildCall(basePath, localVarPath, "POST", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
+    }
+
+    public void createUser(UserDTO user) {
+        okhttp3.Call localVarCall = createUserCall(user);
+        localVarApiClient.execute(localVarCall);
+    }
+
+    public okhttp3.Call createUserCall(UserDTO user) {
+        String basePath = getBasePath();
+
+        Object body = user;
+
+        // create path and map variables
+        String localVarPath = "/hostedtest/users";
 
         List<Pair> queryParams = new ArrayList<>();
         List<Pair> collectionQueryParams = new ArrayList<>();

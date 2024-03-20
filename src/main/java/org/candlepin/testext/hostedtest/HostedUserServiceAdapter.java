@@ -1,10 +1,20 @@
 package org.candlepin.testext.hostedtest;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 import org.bouncycastle.crypto.generators.OpenBSDBCrypt;
+import org.candlepin.auth.permissions.PermissionFactory;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.PermissionBlueprintCurator;
+import org.candlepin.model.Role;
+import org.candlepin.model.RoleCurator;
+import org.candlepin.model.User;
+import org.candlepin.model.UserCurator;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.PermissionBlueprintInfo;
 import org.candlepin.service.model.RoleInfo;
@@ -15,11 +25,22 @@ import com.google.inject.Inject;
 // TODO: Add JavaDoc
 public class HostedUserServiceAdapter implements UserServiceAdapter {
 
-    private final HostedTestDataStore datastore;
+    private HostedTestDataStore datastore;
+    private DefaultUserServiceAdapter defaultUserService;
 
     @Inject
-    public HostedUserServiceAdapter(HostedTestDataStore dataStore) {
+    public HostedUserServiceAdapter(HostedTestDataStore dataStore, UserCurator userCurator, RoleCurator roleCurator,
+        PermissionBlueprintCurator permissionCurator, OwnerCurator ownerCurator,
+        PermissionFactory permissionFactory) {
         this.datastore = Objects.requireNonNull(dataStore);
+        Objects.requireNonNull(userCurator);
+        Objects.requireNonNull(roleCurator);
+        Objects.requireNonNull(permissionCurator);
+        Objects.requireNonNull(ownerCurator);
+        Objects.requireNonNull(permissionFactory);
+
+        // TODO: Honestly this might not even be needed.
+        this.defaultUserService = new DefaultUserServiceAdapter(userCurator, roleCurator, permissionCurator, ownerCurator, permissionFactory);
     }
 
     @Override
@@ -34,6 +55,8 @@ public class HostedUserServiceAdapter implements UserServiceAdapter {
 
         UserInfo user = this.datastore.getUser(username);
         if (user == null) {
+            // TODO: This might not be needed. Might just be able to return false here
+            // return defaultUserService.validateUser(username, password);
             return false;
         }
 
@@ -46,7 +69,9 @@ public class HostedUserServiceAdapter implements UserServiceAdapter {
             throw new IllegalArgumentException("user is null");
         }
 
-        return this.datastore.addUser(new HostedTestUser(user));
+        HostedTestUser createdUser = this.datastore.addUser(new HostedTestUser(user));
+
+        return convertToUser(createdUser);
     }
 
     @Override
@@ -63,7 +88,9 @@ public class HostedUserServiceAdapter implements UserServiceAdapter {
             throw new IllegalStateException("user does not exist");
         }
 
-        return this.datastore.updateUser(new HostedTestUser(user));
+        HostedTestUser updatedUser = this.datastore.updateUser(username, new HostedTestUser(user));
+
+        return convertToUser(updatedUser);
     }
 
     @Override
@@ -81,12 +108,14 @@ public class HostedUserServiceAdapter implements UserServiceAdapter {
             throw new IllegalArgumentException("username is null or blank");
         }
 
-        return this.datastore.getUser(username);
+        HostedTestUser user = this.datastore.getUser(username);
+
+        return convertToUser(user);
     }
 
     @Override
     public Collection<? extends UserInfo> listUsers() {
-        return this.datastore.getAllUsers();
+        return convertToUsers(this.datastore.getAllUsers());
     }
 
     @Override
@@ -190,6 +219,36 @@ public class HostedUserServiceAdapter implements UserServiceAdapter {
     @Override
     public Collection<? extends RoleInfo> listRoles() {
         return this.listRoles();
+    }
+
+    private List<User> convertToUsers(Collection<HostedTestUser> users) {
+        List<User> converted  = new ArrayList<>();
+
+        for (HostedTestUser user : users) {
+            User convertedUser = convertToUser(user);
+            if (convertedUser != null) {
+                converted.add(convertedUser);
+            }
+        }
+
+        return converted;
+    }
+
+    private User convertToUser(HostedTestUser user) {
+        if (user == null) {
+            return null;
+        }
+
+        User converted = new User();
+        converted.setId(user.getId());
+        converted.setUsername(user.getUsername());
+        converted.setHashedPassword(user.getHashedPassword());
+        converted.setCreated(user.getCreated());
+        converted.setUpdated(user.getUpdated());
+        converted.setPrimaryOwner(user.getPrimaryOwner());
+        converted.setSuperAdmin(user.isSuperAdmin());
+
+        return converted;
     }
 
 }
