@@ -187,8 +187,8 @@ public class ConfigProperties {
         "candlepin.cache.anonymous.cert.content.max_entries";
 
     // Paging
-    public static final String PAGING_SIZE = "candlepin.paging.default_page_size";
-    public static final String MAX_PAGING_SIZE = "candlepin.paging.max_page_size";
+    public static final String PAGING_DEFAULT_PAGE_SIZE = "candlepin.paging.default_page_size";
+    public static final String PAGING_MAX_PAGE_SIZE = "candlepin.paging.max_page_size";
 
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
 
@@ -421,8 +421,8 @@ public class ConfigProperties {
             this.put(CACHE_ANON_CERT_CONTENT_TTL, "120000"); // milliseconds
             this.put(CACHE_ANON_CERT_CONTENT_MAX_ENTRIES, "10000");
 
-            this.put(PAGING_SIZE, "10");
-            this.put(MAX_PAGING_SIZE, "1000");
+            this.put(PAGING_DEFAULT_PAGE_SIZE, "10");
+            this.put(PAGING_MAX_PAGE_SIZE, "3000");
 
             this.put(SUSPEND_MODE_ENABLED, "true");
 
@@ -554,11 +554,11 @@ public class ConfigProperties {
      */
     public static final List<ConfigurationValidator> CONFIGURATION_VALIDATORS = new ArrayList<>() {
         {
-            this.add(new IntegerConfigurationValidator(PAGING_SIZE)
+            this.add(new IntegerConfigurationValidator(PAGING_DEFAULT_PAGE_SIZE)
                 .min(1)
-                .lessThan(MAX_PAGING_SIZE));
+                .lessThan(PAGING_MAX_PAGE_SIZE));
 
-            this.add(new IntegerConfigurationValidator(MAX_PAGING_SIZE)
+            this.add(new IntegerConfigurationValidator(PAGING_MAX_PAGE_SIZE)
                 .min(1));
         }
     };
