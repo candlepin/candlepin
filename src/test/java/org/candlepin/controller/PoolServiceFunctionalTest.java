@@ -240,8 +240,8 @@ public class PoolServiceFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumeQuantity() throws Exception {
-        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o,
-            monitoring.getId()).get(0);
+        Pool monitoringPool = poolCurator.listAvailableEntitlementPools(null, o,
+            monitoring.getId(), null).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
 
         Map<String, Integer> poolQuantities = new HashMap<>();

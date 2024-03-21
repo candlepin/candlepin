@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.util.Util;
@@ -25,22 +24,14 @@ import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
-import org.hibernate.FetchMode;
-import org.hibernate.Filter;
-import org.hibernate.Hibernate;
-import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
-import org.hibernate.criterion.Junction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.criterion.SimpleExpression;
 import org.hibernate.criterion.Subqueries;
-import org.hibernate.internal.FilterImpl;
-import org.hibernate.query.Query;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.StringType;
 import org.slf4j.Logger;
@@ -56,7 +47,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -64,13 +54,14 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.persistence.PersistenceUnitUtil;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-
-
 
 /**
  * PoolCurator
@@ -189,22 +180,28 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         Set<Pool> output = new HashSet<>();
 
+        String jpql = """
+            SELECT p FROM Pool p
+            JOIN FETCH p.sourceEntitlement e
+            WHERE e IN :block""";
+
         // Impl note:
         // We're using the partitioning here as it's slightly faster to do individual queries,
         // and we eliminate the risk of hitting the query param limit. Since we weren't using
         // a CPQuery object to begin with, this is a low-effort win here.
+        TypedQuery<Pool> query = getEntityManager().createQuery(jpql, Pool.class);
+
         for (List<Entitlement> block : this.partition(ents)) {
-            List<Pool> pools = createSecureCriteria()
-                .add(CPRestrictions.in("sourceEntitlement", block))
-                .setFetchMode("entitlements", FetchMode.JOIN)
-                .list();
+            List<Pool> pools = query
+                .setParameter("block", block)
+                .getResultList();
 
             if (pools != null) {
                 output.addAll(pools);
             }
         }
 
-        if (output.size() > 0) {
+        if (!output.isEmpty()) {
             Set<Pool> pools = this.listBySourceEntitlements(convertPoolsToEntitlements(output));
             output.addAll(pools);
         }
@@ -220,39 +217,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
 
         return output;
-    }
-
-    /**
-     * Returns list of pools available to the consumer.
-     *
-     * @param c Consumer to filter
-     * @return pools available to the consumer.
-     */
-    @Transactional
-    public List<Pool> listByConsumer(Consumer c) {
-        return listAvailableEntitlementPools(c, c.getOwnerId(), (Set<String>) null, null);
-    }
-
-    /**
-     * List all entitlement pools for the given owner and product.
-     *
-     * @param owner owner of the entitlement pool
-     * @param productId product filter.
-     * @return list of EntitlementPools
-     */
-    @Transactional
-    public List<Pool> listByOwnerAndProduct(Owner owner, String productId) {
-        return listAvailableEntitlementPools(null, owner, productId, null);
-    }
-
-    /**
-     * Fetches the list of non-derived, expired pools
-     *
-     * @return
-     *  the list of non-derived, expired pools pools
-     */
-    public List<Pool> listExpiredPools() {
-        return this.listExpiredPools(-1);
     }
 
     /**
@@ -272,29 +236,29 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *  a list of non-derived, expired pools no larger than the specified block size
      */
     @Transactional
-    @SuppressWarnings("checkstyle:indentation")
     public List<Pool> listExpiredPools(int blockSize) {
         Date now = new Date();
 
-        DetachedCriteria entCheck = DetachedCriteria.forClass(Pool.class, "entPool")
-            .createAlias("entitlements", "ent", JoinType.INNER_JOIN)
-            .add(Restrictions.eqProperty("entPool.id", "tgtPool.id"))
-            .add(Restrictions.ge("ent.endDateOverride", now))
-            .setProjection(Projections.property("entPool.id"));
+        String jpql = """
+            SELECT tgtPool FROM Pool tgtPool
+            WHERE tgtPool.endDate < :now
+              AND NOT EXISTS (
+                  SELECT 1 FROM Pool entPool
+                  JOIN entPool.entitlements ent
+                  WHERE entPool.id = tgtPool.id
+                      AND ent.endDateOverride >= :now)""";
 
-        Criteria criteria = this.createSecureCriteria("tgtPool")
-            .add(Restrictions.lt("tgtPool.endDate", now))
-            .add(Subqueries.notExists(entCheck));
+        TypedQuery<Pool> query = getEntityManager().createQuery(jpql, Pool.class)
+            .setParameter("now", now);
 
         if (blockSize > 0) {
-            criteria.setMaxResults(blockSize);
+            query.setMaxResults(blockSize);
         }
 
-        List<Pool> results = (List<Pool>) criteria.list();
+        List<Pool> results = query.getResultList();
         return results != null ? results : new LinkedList<>();
     }
 
-    @SuppressWarnings("unchecked")
     @Transactional
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o, String productId, Date activeOn) {
         String ownerId = (o == null) ? null : o.getId();
@@ -303,7 +267,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             new PoolFilterBuilder(), null, false, false, false, null).getPageData();
     }
 
-    @SuppressWarnings("unchecked")
     @Transactional
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o, Collection<String> productIds,
         Date activeOn) {
@@ -313,7 +276,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             new PoolFilterBuilder(), null, false, false, false, null).getPageData();
     }
 
-    @SuppressWarnings("unchecked")
     @Transactional
     public List<Pool> listAvailableEntitlementPools(Consumer c, String ownerId, Collection<String> productIds,
         Date activeOn) {
@@ -756,7 +718,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *        Set to null for current.
      * @return boolean is active on test date.
      */
-    @SuppressWarnings("unchecked")
     @Transactional
     public boolean hasActiveEntitlementPools(String ownerId, Date date) {
         if (ownerId == null) {
@@ -817,42 +778,35 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     @Transactional
     public List<Pool> listPoolsRestrictedToUser(String username) {
-        return listByCriteria(
-            currentSession().createCriteria(Pool.class)
-                .add(Restrictions.eq("restrictedToUsername", username)));
+        String jpql = """
+            SELECT p FROM Pool p
+            WHERE p.restrictedToUsername = :username""";
+
+        return getEntityManager().createQuery(jpql, Pool.class)
+            .setParameter("username", username)
+            .getResultList();
     }
 
-    @SuppressWarnings("unchecked")
-    public List<Entitlement> retrieveOrderedEntitlementsOf(Collection<Pool> existingPools) {
-        return criteriaToSelectEntitlementForPools(existingPools)
-            .addOrder(Order.desc("created"))
-            .list();
-    }
 
-    @SuppressWarnings("unchecked")
     public List<String> retrieveOrderedEntitlementIdsOf(Collection<Pool> pools) {
-        return this.criteriaToSelectEntitlementForPools(pools)
-            .addOrder(Order.desc("created"))
-            .setProjection(Projections.id())
-            .list();
+        String jpql = """
+            SELECT e.id FROM Entitlement e
+            WHERE e.pool IN :pools
+            ORDER BY e.created DESC""";
+
+        return getEntityManager().createQuery(jpql, String.class)
+            .setParameter("pools", pools)
+            .getResultList();
     }
 
-    public void deactivatePool(Pool pool) {
-        if (log.isDebugEnabled()) {
-            log.info("Subscription disappeared for pool: " + pool);
-        }
-        pool.setActiveSubscription(Boolean.FALSE);
-        merge(pool);
-    }
+    public List<Entitlement> retrieveOrderedEntitlementsOf(Collection<Pool> existingPools) {
+        String jpql = """
+            SELECT e FROM Entitlement e
+            WHERE e.pool IN :pools ORDER BY e.created DESC""";
 
-    private Criteria criteriaToSelectEntitlementForPool(Pool entitlementPool) {
-        return this.currentSession().createCriteria(Entitlement.class)
-            .add(Restrictions.eq("pool", entitlementPool));
-    }
-
-    private Criteria criteriaToSelectEntitlementForPools(Collection<Pool> entitlementPools) {
-        return this.currentSession().createCriteria(Entitlement.class)
-            .add(CPRestrictions.in("pool", entitlementPools));
+        return getEntityManager().createQuery(jpql, Entitlement.class)
+            .setParameter("pools", existingPools)
+            .getResultList();
     }
 
     /**
@@ -860,9 +814,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return entitlements in the given pool.
      */
     @Transactional
-    @SuppressWarnings("unchecked")
     public List<Entitlement> entitlementsIn(Pool entitlementPool) {
-        return criteriaToSelectEntitlementForPool(entitlementPool).list();
+        String jpql = """
+            SELECT e FROM Entitlement e
+            WHERE e.pool = :entitlementPool""";
+
+        return getEntityManager().createQuery(jpql, Entitlement.class)
+            .setParameter("entitlementPool", entitlementPool)
+            .getResultList();
     }
 
     /**
@@ -889,7 +848,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return pools from the given subscriptions, sorted by pool.id to avoid
      *         deadlocks
      */
-    @SuppressWarnings("unchecked")
     public List<Pool> getBySubscriptionIds(Owner owner, Collection<String> subIds) {
         return this.getBySubscriptionIds(owner.getId(), subIds);
     }
@@ -931,97 +889,41 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *        is the Entitlement just created or modified.
      * @return Pools with too many entitlements for their new quantity.
      */
-    @SuppressWarnings("unchecked")
     public List<Pool> getOversubscribedBySubscriptionIds(String ownerId, Map<String, Entitlement> subIdMap) {
-        List<Criterion> subIdMapCriteria = new ArrayList<>();
-        Criterion[] exampleCriteria = new Criterion[0];
-        for (Entry<String, Entitlement> entry : subIdMap.entrySet()) {
-            SimpleExpression subscriptionExpr = Restrictions.eq("sourceSub.subscriptionId", entry.getKey());
-            Criterion srcEntIsNull = Restrictions.isNull("sourceEntitlement");
-            Criterion srcEntEquals = Restrictions.eq("sourceEntitlement", entry.getValue());
+        List<Pool> result = new ArrayList<>();
+        int blockSize = Math.min(this.getQueryParameterLimit(), (this.getInBlockSize() - 1) / 2);
 
-            Junction subscriptionJunction = Restrictions.and(subscriptionExpr)
-                .add(Restrictions.or(srcEntIsNull, srcEntEquals));
+        String jpql = """
+            SELECT p FROM Pool p
+            WHERE p.owner.id = :ownerId
+            AND p.quantity >= 0
+            AND p.consumed > p.quantity
+            AND p.sourceSubscription.subscriptionId IN :subscriptionIds
+            AND (p.sourceEntitlement IS NULL OR p.sourceEntitlement IN :entitlements)
+            """;
 
-            subIdMapCriteria.add(subscriptionJunction);
+        TypedQuery<Pool> query = getEntityManager().createQuery(jpql, Pool.class)
+            .setParameter("ownerId", ownerId);
+
+        for (Map<String, Entitlement> block : this.partitionMap(subIdMap, blockSize)) {
+            query.setParameter("subscriptionIds", new ArrayList<>(block.keySet()));
+            query.setParameter("entitlements", new ArrayList<>(block.values()));
+
+            result.addAll(query.getResultList());
         }
 
-        return currentSession()
-            .createCriteria(Pool.class)
-            .createAlias("sourceSubscription", "sourceSub")
-            .add(Restrictions.eq("owner.id", ownerId))
-            .add(Restrictions.ge("quantity", 0L))
-            .add(Restrictions.gtProperty("consumed", "quantity"))
-            .add(Restrictions.or(subIdMapCriteria.toArray(exampleCriteria))).list();
-    }
-
-    @Transactional
-    public Pool replicate(Pool pool) {
-        pool.setSourceEntitlement(null);
-
-        this.currentSession().replicate(pool, ReplicationMode.EXCEPTION);
-
-        return pool;
-    }
-
-    private static final String CONSUMER_FILTER = "Entitlement_CONSUMER_FILTER";
-
-    @SuppressWarnings("checkstyle:indentation")
-    public int getNoOfDependentEntitlements(String entitlementId) {
-        Filter consumerFilter = disableConsumerFilter();
-        Integer result = (Integer) currentSession()
-            .createCriteria(Entitlement.class)
-            .setProjection(Projections.rowCount())
-            .createCriteria("pool")
-            .createCriteria("sourceEntitlement")
-            .add(Restrictions.idEq(entitlementId))
-            .list()
-            .get(0);
-
-        enableIfPrevEnabled(consumerFilter);
         return result;
     }
 
-    // TODO: watch out for performance. Should we limit the certificates
-    // retrieved?
-    @SuppressWarnings("unchecked")
-    public List<EntitlementCertificate> retrieveEntCertsOfPoolsWithSourceEntitlement(String entId) {
-        return currentSession().createCriteria(EntitlementCertificate.class)
-            .createCriteria("entitlement")
-            .createCriteria("pool")
-            .createCriteria("sourceEntitlement")
-            .add(Restrictions.idEq(entId))
-            .list();
-    }
+    public List<ActivationKey> getActivationKeysForPool(Pool pool) {
+        String jpql = """
+            SELECT akp.activationKey FROM ActivationKeyPool akp
+            WHERE akp.pool = :pool""";
 
-    /**
-     * @param consumerFilter
-     */
-    private void enableIfPrevEnabled(Filter consumerFilter) {
-        // if filter was previously enabled, restore it.
-        if (consumerFilter != null) {
-            FilterImpl filterImpl = (FilterImpl) consumerFilter;
-            Filter filter = currentSession().enableFilter(CONSUMER_FILTER);
-            filter.setParameter("consumer_id", filterImpl.getParameter("consumer_id"));
-        }
-    }
-
-    public Filter disableConsumerFilter() {
-        Filter consumerFilter = currentSession().getEnabledFilter(CONSUMER_FILTER);
-        currentSession().disableFilter(CONSUMER_FILTER);
-        return consumerFilter;
-    }
-
-    public List<ActivationKey> getActivationKeysForPool(Pool p) {
-        List<ActivationKey> activationKeys = new ArrayList<>();
-        List<ActivationKeyPool> activationKeyPools = currentSession().createCriteria(
-            ActivationKeyPool.class).add(Restrictions.eq("pool", p)).list();
-
-        for (ActivationKeyPool akp : activationKeyPools) {
-            activationKeys.add(akp.getKey());
-        }
-
-        return activationKeys;
+        return this.getEntityManager()
+            .createQuery(jpql, ActivationKey.class)
+            .setParameter("pool", pool)
+            .getResultList();
     }
 
     public Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt) {
@@ -1040,24 +942,25 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *               explicitly marked with the support_level_exempt attribute.
      * @return Set of levels based on exempt flag.
      */
+    @SuppressWarnings("unchecked")
     public Set<String> retrieveServiceLevelsForOwner(String ownerId, boolean exempt) {
-        String stmt = "SELECT DISTINCT key(Attribute), value(Attribute), Product.id " +
-            "FROM Pool AS Pool " +
-            "  INNER JOIN Pool.product AS Product " +
-            "  INNER JOIN Product.attributes AS Attribute " +
-            "  LEFT JOIN Pool.entitlements AS Entitlement " +
-            "WHERE Pool.owner.id = :owner_id " +
-            "  AND (key(Attribute) = :sl_attr OR key(Attribute) = :sle_attr) " +
-            "  AND (Pool.endDate >= current_date() OR Entitlement.endDateOverride >= current_date()) " +
-            // Needs to be ordered, because the code below assumes exempt levels are first
-            "ORDER BY key(Attribute) DESC";
+        String jpql = """
+            SELECT DISTINCT key(Attribute), value(Attribute), Product.id
+            FROM Pool AS Pool
+              INNER JOIN Pool.product AS Product
+              INNER JOIN Product.attributes AS Attribute
+              LEFT JOIN Pool.entitlements AS Entitlement
+            WHERE Pool.owner.id = :owner_id
+              AND (key(Attribute) = :sl_attr OR key(Attribute) = :sle_attr)
+              AND (Pool.endDate >= current_date() OR Entitlement.endDateOverride >= current_date())
+            ORDER BY key(Attribute) DESC"""; // Needs to be ordered, because the code below assumes exempt
+        // levels are first
 
-        Query q = currentSession().createQuery(stmt)
-            .setParameter("owner_id", ownerId)
+        Query query = getEntityManager().createQuery(jpql).setParameter("owner_id", ownerId)
             .setParameter("sl_attr", Product.Attributes.SUPPORT_LEVEL)
             .setParameter("sle_attr", Product.Attributes.SUPPORT_LEVEL_EXEMPT);
 
-        List<Object[]> results = q.list();
+        List<Object[]> results = query.getResultList();
 
         // Use case insensitive comparison here, since we treat
         // Premium the same as PREMIUM or premium, to make it easier for users to specify
@@ -1077,7 +980,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 exemptProductIds.add(productId);
             }
             else if (Product.Attributes.SUPPORT_LEVEL.equalsIgnoreCase(name) &&
-                (value != null && !value.trim().equals("")) &&
+                (value != null && !value.trim().isEmpty()) &&
                 exemptProductIds.contains(productId)) {
 
                 exemptSlaSet.add(value);
@@ -1118,7 +1021,12 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             entity.getAttributes().size();
 
             // Perform the actual deletion...
-            this.currentSession().delete(entity);
+            // The entity must be managed to be removed, merge it to ensure it is managed
+            // Especially important if 'entity' might be in a detached state
+            Pool managedEntity = getEntityManager().merge(entity);
+
+            // Now we can remove the managed entity
+            getEntityManager().remove(managedEntity);
 
             // Maintain runtime consistency. The entitlements for the pool have been deleted on the
             // database because delete is cascaded on Pool.entitlements relation
@@ -1127,7 +1035,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             // the pools came fresh from the DB with uninitialized entitlement collections. Since
             // it could be initialized, we should clear it so other bits using the pool don't
             // attempt to use the entitlements.
-            if (Hibernate.isInitialized(entity.getEntitlements())) {
+            PersistenceUnitUtil unitUtil = getEntityManager()
+                .getEntityManagerFactory()
+                .getPersistenceUnitUtil();
+
+            if (unitUtil.isLoaded(entity, "entitlements")) {
                 entity.getEntitlements().clear();
             }
         }
@@ -1264,20 +1176,27 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param expectedSubIds Full list of all expected subscription IDs.
      * @return a list of pools for subscriptions not matching the specified subscription list
      */
-    @SuppressWarnings("unchecked")
     public List<Pool> getPoolsFromBadSubs(Owner owner, Collection<String> expectedSubIds) {
-        Criteria crit = currentSession().createCriteria(Pool.class)
-            .add(Restrictions.eq("owner", owner));
+        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Pool> cq = cb.createQuery(Pool.class);
+        Root<Pool> pool = cq.from(Pool.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(cb.equal(pool.get("owner"), owner));
 
         if (!expectedSubIds.isEmpty()) {
-            crit.createAlias("sourceSubscription", "sourceSub");
-            crit.add(Restrictions.and(
-                Restrictions.not(Restrictions.in("sourceSub.subscriptionId", expectedSubIds)),
-                Restrictions.isNotNull("sourceSub.subscriptionId")));
+            Join<Pool, SourceSubscription> sourceSub = pool.join("sourceSubscription");
+            predicates.add(cb.and(
+                cb.not(sourceSub.get("subscriptionId").in(expectedSubIds)),
+                cb.isNotNull(sourceSub.get("subscriptionId"))
+            ));
         }
 
-        crit.addOrder(Order.asc("id"));
-        return crit.list();
+        cq.select(pool)
+            .where(predicates.toArray(new Predicate[0]))
+            .orderBy(cb.asc(pool.get("id")));
+
+        return getEntityManager().createQuery(cq).getResultList();
     }
 
     /**
@@ -1303,7 +1222,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 "  AND ss2.subscription_sub_key != 'master' " +
                 "  AND ss1.pool_id IN (:pool_ids)";
 
-            javax.persistence.Query query = this.getEntityManager().createNativeQuery(sql);
+            Query query = this.getEntityManager().createNativeQuery(sql);
 
             for (List<String> block : this.partition(poolIds)) {
                 query.setParameter("pool_ids", block);
@@ -1324,21 +1243,25 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return
      *  A collection of entitlement IDs for the pools specified for the given pool IDs
      */
-    @SuppressWarnings("unchecked")
     public Collection<String> getEntitlementIdsForPools(Collection<String> poolIds) {
-        Set<String> eids = new HashSet<>();
+        Set<String> entitlementIds = new HashSet<>();
+
+        String jpql = """
+            SELECT DISTINCT e.id FROM Pool p
+            JOIN p.entitlements e
+            WHERE p.id IN :block
+            """;
+
+        TypedQuery<String> query = getEntityManager().createQuery(jpql, String.class);
 
         if (poolIds != null && !poolIds.isEmpty()) {
             for (List<String> block : this.partition(poolIds)) {
-                eids.addAll(this.currentSession().createCriteria(Pool.class, "p")
-                    .createAlias("p.entitlements", "e")
-                    .add(Restrictions.in("p.id", block))
-                    .setProjection(Projections.distinct(Projections.property("e.id")))
-                    .list());
+                entitlementIds.addAll(query.setParameter("block", block)
+                    .getResultList());
             }
         }
 
-        return eids;
+        return entitlementIds;
     }
 
     /**
@@ -1352,21 +1275,25 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return
      *  A collection of pool IDs for pools derived from the given entitlement IDs
      */
-    @SuppressWarnings("unchecked")
     public Collection<String> getPoolIdsForSourceEntitlements(Collection<String> entIds) {
-        Set<String> pids = new HashSet<>();
+        Set<String> poolIds = new HashSet<>();
+
+        String jpql = """
+            SELECT DISTINCT p.id FROM Pool p
+            JOIN p.sourceEntitlement e
+            WHERE e.id IN :block
+            """;
+
+        TypedQuery<String> query = getEntityManager().createQuery(jpql, String.class);
 
         if (entIds != null && !entIds.isEmpty()) {
             for (List<String> block : this.partition(entIds)) {
-                pids.addAll(this.currentSession().createCriteria(Pool.class, "p")
-                    .createAlias("p.sourceEntitlement", "e")
-                    .add(Restrictions.in("e.id", block))
-                    .setProjection(Projections.distinct(Projections.property("p.id")))
-                    .list());
+                poolIds.addAll(query.setParameter("block", block)
+                    .getResultList());
             }
         }
 
-        return pids;
+        return poolIds;
     }
 
     /**
@@ -1378,21 +1305,26 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return
      *  A collection of IDs of the pools for the given entitlement IDs
      */
-    @SuppressWarnings("unchecked")
     public Collection<String> getPoolIdsForEntitlements(Collection<String> entIds) {
-        Set<String> pids = new HashSet<>();
+        Set<String> poolIds = new HashSet<>();
+
+        String jpql = """
+            SELECT DISTINCT p.id FROM Entitlement e
+            JOIN e.pool p
+            WHERE e.id IN :block
+            """;
+
+        TypedQuery<String> query = getEntityManager().createQuery(jpql, String.class);
 
         if (entIds != null && !entIds.isEmpty()) {
             for (List<String> block : this.partition(entIds)) {
-                pids.addAll(this.currentSession().createCriteria(Entitlement.class, "e")
-                    .createAlias("e.pool", "p")
-                    .add(Restrictions.in("e.id", block))
-                    .setProjection(Projections.distinct(Projections.property("p.id")))
-                    .list());
+                poolIds.addAll(query
+                    .setParameter("block", block)
+                    .getResultList());
             }
         }
 
-        return pids;
+        return poolIds;
     }
 
     /**
@@ -1461,14 +1393,18 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return pools;
     }
 
-    @SuppressWarnings("unchecked")
     public List<Pool> getOwnersFloatingPools(Owner owner) {
-        return currentSession().createCriteria(Pool.class)
-            .add(Restrictions.eq("owner", owner))
-            .createAlias("sourceSubscription", "sourceSub", JoinType.LEFT_OUTER_JOIN)
-            .add(Restrictions.isNull("sourceSub.subscriptionId"))
-            .addOrder(Order.asc("id"))
-            .list();
+        String jpql = """
+            SELECT p FROM Pool p
+            LEFT JOIN p.sourceSubscription sourceSub
+            WHERE p.owner = :owner
+              AND sourceSub.subscriptionId IS NULL
+            ORDER BY p.id ASC""";
+
+
+        return getEntityManager().createQuery(jpql, Pool.class)
+            .setParameter(Pool_.OWNER, owner)
+            .getResultList();
     }
 
     /**
@@ -1516,11 +1452,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 throw new IllegalStateException("More than one dev pool found for consumer: " + consumer);
             }
 
-            criteria = this.currentSession()
-                .createCriteria(Pool.class)
-                .add(Restrictions.eq("id", poolIds.get(0)));
+            String jpql = """
+                SELECT p FROM Pool p
+                WHERE p.id = :id""";
 
-            return (Pool) criteria.uniqueResult();
+            return getEntityManager()
+                .createQuery(jpql, Pool.class)
+                .setParameter("id", poolIds.get(0))
+                .getSingleResult();
         }
 
         return null;
@@ -1539,24 +1478,34 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     public void calculateConsumedForOwnersPools(Owner owner) {
-        String stmt = "update Pool p set p.consumed = coalesce(" +
-            "(select sum(quantity) from Entitlement ent where ent.pool.id = p.id),0) " +
-            "where p.owner = :owner";
+        String jpql = """
+            UPDATE Pool p
+            SET p.consumed = coalesce(
+                (SELECT sum(quantity) FROM Entitlement ent
+                 WHERE ent.pool.id = p.id), 0)
+            WHERE p.owner = :owner""";
 
-        Query q = currentSession().createQuery(stmt);
-        q.setParameter("owner", owner);
-        q.executeUpdate();
+        Query query = getEntityManager().createQuery(jpql);
+
+        query.setParameter("owner", owner)
+            .executeUpdate();
     }
 
     public void calculateExportedForOwnersPools(Owner owner) {
-        String stmt = "update Pool p set p.exported = coalesce(" +
-            "(select sum(ent.quantity) FROM Entitlement ent, Consumer cons, ConsumerType ctype " +
-            "where ent.pool.id = p.id and ent.consumer.id = cons.id and cons.typeId = ctype.id " +
-            "and ctype.manifest = 'Y'),0) where p.owner = :owner";
+        String jpql = """
+            UPDATE Pool p
+            SET p.exported = coalesce(
+                (SELECT sum(ent.quantity) FROM Entitlement ent, Consumer cons, ConsumerType ctype
+                 WHERE ent.pool.id = p.id
+                 AND ent.consumer.id = cons.id
+                 AND cons.typeId = ctype.id
+                 AND ctype.manifest = 'Y'), 0)
+            WHERE p.owner = :owner""";
 
-        Query q = currentSession().createQuery(stmt);
-        q.setParameter("owner", owner);
-        q.executeUpdate();
+        Query query = getEntityManager().createQuery(jpql);
+
+        query.setParameter("owner", owner)
+            .executeUpdate();
     }
 
     public void markCertificatesDirtyForPoolsWithProducts(Owner owner, Collection<String> productIds) {
@@ -1567,24 +1516,36 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     private void markCertificatesDirtyForPoolsWithNormalProducts(Owner owner, Collection<String> productIds) {
-        String statement = "update Entitlement e set e.dirty=true where e.pool.id in " +
-            "(select p.id from Pool p where p.owner=:owner and p.product.id in :productIds)";
-        Query query = currentSession().createQuery(statement);
-        query.setParameter("owner", owner);
-        query.setParameterList("productIds", productIds);
-        query.executeUpdate();
+        String jpql = """
+            UPDATE Entitlement e SET e.dirty=true
+            WHERE e.pool.id IN
+                (SELECT p.id FROM Pool p
+                 WHERE p.owner=:owner
+                 AND p.product.id IN :productIds)""";
+
+        Query query = getEntityManager().createQuery(jpql);
+
+        query.setParameter("owner", owner)
+            .setParameter("productIds", productIds)
+            .executeUpdate();
     }
 
     private void markCertificatesDirtyForPoolsWithProvidedProducts(Owner owner,
         Collection<String> productIds) {
+        String jpql = """
+            UPDATE Entitlement e
+            SET e.dirty=true
+            WHERE e.pool.id in
+                (SELECT p.id FROM Pool p
+                 JOIN p.product.providedProducts pp
+                 WHERE pp.id IN :productIds)
+            AND e.owner = :owner""";
 
-        String statement = "update Entitlement e set e.dirty=true where e.pool.id in " +
-            "(select p.id from Pool p join p.product.providedProducts pp where pp.id in :productIds)" +
-            "and e.owner = :owner";
-        Query query = currentSession().createQuery(statement);
-        query.setParameter("owner", owner);
-        query.setParameterList("productIds", productIds);
-        query.executeUpdate();
+        Query query = getEntityManager().createQuery(jpql);
+
+        query.setParameter("owner", owner)
+            .setParameter("productIds", productIds)
+            .executeUpdate();
     }
 
     /**
@@ -1633,7 +1594,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             "WHERE pool.id IN (:pool_ids)";
 
         if (poolIds != null && !poolIds.isEmpty()) {
-            javax.persistence.Query query = this.getEntityManager()
+            Query query = this.getEntityManager()
                 .createNativeQuery(sql);
 
             for (List<String> block : this.partition(poolIds)) {
@@ -1695,7 +1656,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             "WHERE pool.id IN (:pool_ids)";
 
         if (poolIds != null && !poolIds.isEmpty()) {
-            javax.persistence.Query query = this.getEntityManager()
+            Query query = this.getEntityManager()
                 .createNativeQuery(sql);
 
             for (List<String> block : this.partition(poolIds)) {
@@ -1717,10 +1678,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             throw new IllegalArgumentException("Attempt to remove pool's cdn with null cdn value.");
         }
 
-        String hql = "UPDATE Pool p SET p.cdn = null WHERE p.cdn = :cdn";
+        String jpql = """
+            UPDATE Pool p
+            SET p.cdn = null
+            WHERE p.cdn = :cdn""";
 
-        int updated = this.currentSession()
-            .createQuery(hql)
+        int updated = getEntityManager()
+            .createQuery(jpql)
             .setParameter("cdn", cdn)
             .executeUpdate();
 
@@ -1737,12 +1701,17 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     public void clearPoolSourceEntitlementRefs(Iterable<String> poolIds) {
         if (poolIds != null && poolIds.iterator().hasNext()) {
-            String hql = "UPDATE Pool SET sourceEntitlement = null WHERE id IN (:pids)";
-            Query query = this.currentSession().createQuery(hql);
+
+            String jpql = """
+                UPDATE Pool
+                SET sourceEntitlement = null
+                WHERE id IN (:pids)""";
+
+            Query query = getEntityManager().createQuery(jpql);
 
             for (List<String> block : this.partition(poolIds)) {
-                query.setParameterList("pids", block);
-                query.executeUpdate();
+                query.setParameter("pids", block)
+                    .executeUpdate();
             }
         }
     }
@@ -1801,11 +1770,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                     String consumerId = (String) row[0];
                     String poolId = (String) row[1];
 
-                    Set<String> poolIds = consumerPoolMap.get(consumerId);
-                    if (poolIds == null) {
-                        poolIds = new HashSet<>();
-                        consumerPoolMap.put(consumerId, poolIds);
-                    }
+                    Set<String> poolIds = consumerPoolMap.computeIfAbsent(consumerId, k -> new HashSet<>());
 
                     poolIds.add(poolId);
                 }
@@ -1856,7 +1821,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 ") ec ON ec.consumer_id = ss.sourceconsumer_id AND ec.stack_id = ss.sourcestackid " +
                 "WHERE ec.entitlement_id IS NULL";
 
-            javax.persistence.Query query = this.getEntityManager()
+            Query query = this.getEntityManager()
                 .createNativeQuery(sql)
                 .setParameter("stackid_attrib_name", Product.Attributes.STACKING_ID);
 
@@ -1870,7 +1835,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             sql += ") ec ON ec.consumer_id = ss.sourceconsumer_id AND ec.stack_id = ss.sourcestackid " +
                 "WHERE ec.entitlement_id IS NULL";
 
-            javax.persistence.Query query = this.getEntityManager()
+            Query query = this.getEntityManager()
                 .createNativeQuery(sql)
                 .setParameter("stackid_attrib_name", Product.Attributes.STACKING_ID);
 
@@ -2019,7 +1984,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         int count = 0;
 
-        javax.persistence.Query query = this.getEntityManager()
+        Query query = this.getEntityManager()
             .createQuery(jpql);
 
         for (List<String> block : this.partition(productUuids)) {
