@@ -157,17 +157,17 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
         return new CloudAuthenticationResult() {
             @Override
             public String getCloudAccountId() {
-                return accountId;
+                return isRegistrationOnly ? null : accountId;
             }
 
             @Override
             public String getCloudInstanceId() {
-                return instanceId;
+                return isRegistrationOnly ? null : instanceId;
             }
 
             @Override
             public String getCloudProvider() {
-                return "aws";
+                return isRegistrationOnly ? null : "aws";
             }
 
             @Override
@@ -177,12 +177,12 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
 
             @Override
             public String getOfferId() {
-                return offerId;
+                return isRegistrationOnly ? null : offerId;
             }
 
             @Override
             public Set<String> getProductIds() {
-                return productIds;
+                return isRegistrationOnly ? null : productIds;
             }
 
             @Override
@@ -192,7 +192,7 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
 
             @Override
             public boolean isEntitled() {
-                return isEntitled;
+                return isRegistrationOnly || isEntitled;
             }
         };
     }
