@@ -640,9 +640,8 @@ public class CloudRegistrationResourceTest {
             .signature("test-signature");
 
         String expectedOwnerKey = "ownerKey";
-        CloudAuthenticationResult result = buildMockAuthResult(TestUtil.randomString(),
-            TestUtil.randomString(), TestUtil.randomString(), expectedOwnerKey, TestUtil.randomString(),
-            Set.of(TestUtil.randomString()), false, true);
+        CloudAuthenticationResult result = buildMockAuthResult(null, null, null, expectedOwnerKey, null,
+            null, false, true);
         doReturn(result)
             .when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
@@ -666,6 +665,29 @@ public class CloudRegistrationResourceTest {
             .returns(null, CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
             .returns(expectedToken, CloudAuthenticationResultDTO::getToken)
             .returns(CloudAuthTokenType.STANDARD.toString(), CloudAuthenticationResultDTO::getTokenType);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void testCloudAuthorizeV2WithRegistrationOnlyAndInvalidOwnerKey(String ownerKey) {
+        CloudRegistrationDTO dto = new CloudRegistrationDTO()
+            .type("test-type")
+            .metadata("test-metadata")
+            .signature("test-signature");
+
+        String expectedOwnerKey = "ownerKey";
+        CloudAuthenticationResult result = buildMockAuthResult(null, null, null, ownerKey, null,
+            null, false, true);
+        doReturn(result)
+            .when(mockCloudRegistrationAdapter)
+            .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
+
+        String expectedToken = TestUtil.randomString();
+        doReturn(expectedToken)
+            .when(mockTokenGenerator)
+            .buildStandardRegistrationToken(principal, expectedOwnerKey);
+
+        assertThrows(NotImplementedException.class, () -> cloudRegResource.cloudAuthorize(dto, 2));
     }
 
     @Test
