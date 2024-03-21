@@ -27,6 +27,7 @@ import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ProductContent;
+import org.candlepin.model.User;
 import org.candlepin.resource.util.AttachedFile;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.service.UniqueIdGenerator;
@@ -841,12 +842,9 @@ public class HostedTestResource {
 
         // TODO: Check if the user already exists
 
-        HostedTestUser testUser = new HostedTestUser(user);
-        this.datastore.addUser(testUser);
+        User addedUser = this.datastore.addUser((User) InfoAdapter.userInfoAdapter(user));
 
-        log.info("TESTING created user " + testUser);
-
-        return this.translator.translate(testUser, UserDTO.class);
+        return this.translator.translate(addedUser, UserDTO.class);
     }
 
     @POST

@@ -19,8 +19,11 @@ import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Owner;
+import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.ProductContent;
+import org.candlepin.model.Role;
 import org.candlepin.model.SubscriptionsCertificate;
+import org.candlepin.model.User;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
@@ -34,6 +37,7 @@ import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
+import org.candlepin.util.Util;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,8 +91,8 @@ public class HostedTestDataStore {
     protected Map<String, String> cloudOfferIdToOfferType;
     protected Map<String, String> cloudAccountIdToOwnerKey;
 
-    protected Map<String, HostedTestUser> userMap;
-    protected Map<String, HostedTestRole> roleMap;
+    protected Map<String, User> userMap;
+    protected Map<String, Role> roleMap;
 
     /**
      * Creates a new HostedTestDataStore instance
@@ -113,10 +117,10 @@ public class HostedTestDataStore {
         this.userMap = new ConcurrentHashMap<>();
         this.roleMap = new ConcurrentHashMap<>();
 
-        userMap.put("admin", new HostedTestUser()
-            .setUsername("admin")
-            .setPassword("admin")
-            .setSuperAdmin(true));
+        // TODO: Add username and password as static variables
+        String hashedPassword = Util.hashPassword(Util.generateBcryptSalt(), "admin");
+        User adminUser = new User("admin", hashedPassword, true);
+        userMap.put(adminUser.getUsername(), adminUser);
     }
 
     public OwnerInfo createOwner(OwnerInfo ownerInfo) {
@@ -1010,7 +1014,7 @@ public class HostedTestDataStore {
         return cloudAccountIdToOwnerKey.get(cloudAccountId);
     }
 
-    protected HostedTestUser addUser(HostedTestUser user) {
+    protected User addUser(User user) {
         if (user == null || user.getUsername() == null) {
             return null;
         }
@@ -1020,7 +1024,7 @@ public class HostedTestDataStore {
         return user;
     }
 
-    protected HostedTestUser getUser(String username) {
+    protected User getUser(String username) {
         if (username == null) {
             return null;
         }
@@ -1028,40 +1032,45 @@ public class HostedTestDataStore {
         return userMap.get(username);
     }
 
-    protected HostedTestUser updateUser(String username, HostedTestUser user) {
+    protected User updateUser(String username, User user) {
         if (user == null || username == null) {
             return null;
         }
 
-        HostedTestUser existingUser = userMap.get(username);
+        User existingUser = userMap.get(username);
         if (existingUser == null) {
             return null;
         }
 
         // TODO: Is this needed?
-        this.userMap.remove(username);
+        // this.userMap.remove(username);
         this.userMap.put(username, user);
 
-        replaceUserInRoles(user);
+        replaceUserInRoles(existingUser, user);
 
-        return userMap.get(username);
+        return user;
     }
 
-    protected HostedTestUser removeUser(String username) {
+    protected User removeUser(String username) {
         if (username == null) {
             return null;
         }
 
-        removeUserFromRoles(username);
+        User removedUser = userMap.remove(username);
+        if (removedUser == null) {
+            return null;
+        }
 
-        return userMap.remove(username);
+        removeUserFromRoles(removedUser);
+
+        return removedUser;
     }
 
-    protected List<HostedTestUser> getAllUsers() {
+    protected List<User> getAllUsers() {
         return new ArrayList<>(userMap.values());
     }
 
-    protected HostedTestRole addRole(HostedTestRole role) {
+    protected Role addRole(Role role) {
         if (role == null || role.getName() == null) {
             return null;
         }
@@ -1071,26 +1080,26 @@ public class HostedTestDataStore {
         return role;
     }
 
-    protected HostedTestRole updateRole(HostedTestRole role) {
-        if (role == null || role.getName() == null) {
+    protected Role updateRole(String roleName, Role role) {
+        if (role == null || roleName == null) {
             return null;
         }
 
-        String roleName = role.getName();
-        if (roleMap.get(roleName) == null) {
+        Role existingRole = roleMap.get(roleName);
+        if (existingRole == null) {
             return null;
         }
+
+        replaceRoleInUsers(existingRole, role);
 
         // TODO: Is this needed?
-        this.roleMap.remove(roleName);
+        // this.roleMap.remove(roleName);
         this.roleMap.put(roleName, role);
-
-        replaceRoleInUsers(role);
 
         return role;
     }
 
-    protected HostedTestRole getRole(String roleName) {
+    protected Role getRole(String roleName) {
         if (roleName == null) {
             return null;
         }
@@ -1098,88 +1107,99 @@ public class HostedTestDataStore {
         return roleMap.get(roleName);
     }
 
-    protected List<HostedTestRole> getAllRoles() {
-        return (List<HostedTestRole>) roleMap.values();
+    protected List<Role> getAllRoles() {
+        return (List<Role>) roleMap.values();
     }
 
-    protected HostedTestRole removeRole(String roleName) {
+    protected Role removeRole(String roleName) {
         if (roleName == null) {
             return null;
         }
 
-        removeRoleFromUsers(roleName);
+        Role existingRole = this.roleMap.get(roleName);
+        if (existingRole != null) {
+            existingRole.clearUsers();
+        }
 
-        return roleMap.remove(roleName);
+       this.roleMap.remove(roleName);
+
+        return existingRole;
     }
 
-    protected HostedTestRole addPermissionToRole(String roleName, HostedTestPermission permission) {
+    protected Role addPermissionToRole(String roleName, PermissionBlueprint permission) {
         if (roleName == null || permission == null) {
             return null;
         }
 
-        HostedTestRole role = this.roleMap.get(roleName);
+        Role role = this.roleMap.get(roleName);
         if (role == null) {
             return null;
         }
 
         role.addPermission(permission);
-        updateRole(role);
+        // updateRole(role);
 
         return role;
     }
 
-    protected HostedTestRole removePermissionFromRole(String roleName, String permissionId) {
+    protected Role removePermissionFromRole(String roleName, String permissionId) {
         if (roleName == null || permissionId == null) {
             return null;
         }
 
-        HostedTestRole role = this.roleMap.get(roleName);
+        Role role = this.roleMap.get(roleName);
         if (role == null) {
             return null;
         }
 
-        role.removePermission(permissionId);
-        updateRole(role);
+        Set<PermissionBlueprint> permissions = role.getPermissions();
+        permissions.removeIf(permission -> permissionId.equals(permission.getId()));
+        role.setPermissions(permissions);
+
+        // updateRole(role);
 
         return role;
     }
 
-    protected HostedTestRole addUserToRole(String username, String roleName) {
-        HostedTestRole role = getRole(roleName);
+    protected Role addUserToRole(String username, String roleName) {
+        Role role = getRole(roleName);
         if (role == null) {
             return null;
         }
 
-        HostedTestUser user = getUser(username);
+        User user = getUser(username);
         if (user == null) {
             return null;
         }
 
-        role = role.addUser(user);
-        user = user.addRole(role);
+        role.addUser(user);
+        user.addRole(role);
         addRole(role);
         addUser(user);
 
         return role;
     }
 
-    protected HostedTestRole removeUserFromRole(String username, String roleName) {
-        HostedTestRole role = getRole(roleName);
-        if (role == null) {
+    protected Role removeUserFromRole(String username, String roleName) {
+        Role existingRole = getRole(roleName);
+        if (existingRole == null) {
             return null;
         }
 
-        HostedTestUser user = getUser(username);
-        if (user == null) {
+        User existingUser = getUser(username);
+        if (existingUser == null) {
             return null;
         }
 
-        role = role.removeUser(username);
-        user = user.removeRole(roleName);
-        addRole(role);
-        addUser(user);
+        // Set<User> users = existingRole.getUsers();
+        // users.removeIf(user -> username.equals(user.getUsername()));
+        // existingRole.setUsers(users);
 
-        return role;
+        existingUser.removeRole(existingRole);
+
+        addUser(existingUser);
+
+        return addRole(existingRole);
     }
 
     /**
@@ -1199,41 +1219,37 @@ public class HostedTestDataStore {
     }
 
     // TODO: Java Doc
-    private void removeRoleFromUsers(String roleName) {
-        for (HostedTestUser user : this.userMap.values()) {
-            if (user.hasRole(roleName)) {
-                user.removeRole(roleName);
+    private void removeRoleFromUsers(Role role) {
+        for (User user : this.userMap.values()) {
+            user.removeRole(role);
+        }
+    }
+
+    // TODO: Java Doc
+    private void replaceRoleInUsers(Role existingRole, Role newRole) {
+        for (User user : this.userMap.values()) {
+            if (user.getRoles().contains(existingRole)) {
+                user.removeRole(existingRole);
+                user.addRole(newRole);
             }
         }
     }
 
     // TODO: Java Doc
-    private void replaceRoleInUsers(HostedTestRole role) {
-        String roleName = role.getName();
-        for (HostedTestUser user : this.userMap.values()) {
-            if (user.hasRole(roleName)) {
-                user.removeRole(roleName);
-                user.addRole(role);
+    private void removeUserFromRoles(User User) {
+        for (Role role : this.roleMap.values()) {
+            if (role.getUsers().contains(User)) {
+                role.removeUser(User);
             }
         }
     }
 
     // TODO: Java Doc
-    private void removeUserFromRoles(String username) {
-        for (HostedTestRole role : this.roleMap.values()) {
-            if (role.hasUser(username)) {
-                role.removeUser(username);
-            }
-        }
-    }
-
-    // TODO: Java Doc
-    private void replaceUserInRoles(HostedTestUser user) {
-        String username = user.getUsername();
-        for (HostedTestRole role : this.roleMap.values()) {
-            if (role.hasUser(username)) {
-                role.removeUser(username);
-                user.addRole(role);
+    private void replaceUserInRoles(User existingUser, User newUser) {
+        for (Role role : this.roleMap.values()) {
+            if (role.getUsers().contains(existingUser)) {
+                role.removeUser(existingUser);
+                role.addUser(newUser);
             }
         }
     }
