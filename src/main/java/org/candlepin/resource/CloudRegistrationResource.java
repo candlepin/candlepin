@@ -328,6 +328,18 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
      *  the {@link CloudAuthenticationResult} to validate
      */
     private void validateCloudAuthenticationResult(CloudAuthenticationResult result) {
+        if (result.isRegistrationOnly()) {
+            String ownerKey = result.getOwnerKey();
+            if (ownerKey == null || ownerKey.isBlank()) {
+                String errmsg = this.i18n.tr("Cloud registration is not supported for the type of " +
+                    "offering the client is using");
+
+                throw new NotImplementedException(errmsg);
+            }
+
+            return;
+        }
+
         String cloudAccountId = result.getCloudAccountId();
         if (cloudAccountId == null || cloudAccountId.isBlank()) {
             String errmsg = this.i18n.tr("cloud account ID could not be resolved");
@@ -361,14 +373,6 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
             String errmsg = this.i18n.tr("product IDs could not be resolved");
 
             throw new NotAuthorizedException(errmsg);
-        }
-
-        String ownerKey = result.getOwnerKey();
-        if (result.isRegistrationOnly() && (ownerKey == null || ownerKey.isBlank())) {
-            String errmsg = this.i18n.tr("Cloud registration is not supported for the type of " +
-                "offering the client is using");
-
-            throw new NotImplementedException(errmsg);
         }
     }
 }
