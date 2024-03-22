@@ -39,6 +39,10 @@ import javax.persistence.LockModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Root;
 
 
 /**
@@ -49,6 +53,12 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     private static final Logger log = LoggerFactory.getLogger(ProductCurator.class);
 
     private final AttributeValidator attributeValidator;
+
+    /**
+     * Container object for providing various arguments to the owner lookup method(s).
+     */
+    public static class ProductQueryArguments extends QueryArguments<ProductQueryArguments> {
+    }
 
     /**
      * default ctor
@@ -757,6 +767,63 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .createQuery(jpql, Product.class)
             .setParameter("content_uuid", contentUuid)
             .getResultList();
+    }
+
+    /**
+     * Fetches a collection of products based on the data in the query request. If the
+     * query builder is null or contains no arguments, the query will not limit or sort the result.
+     *
+     * @param arguments
+     *     a ProductQueryArguments instance containing the various arguments to use to
+     *     select owners
+     *
+     * @return a list of products. It will be paged and sorted if specified
+     */
+    public List<Product> listAll(ProductQueryArguments arguments) {
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Product> criteriaQuery = criteriaBuilder.createQuery(Product.class);
+        Root<Product> root = criteriaQuery.from(Product.class);
+        criteriaQuery.select(root);
+
+        List<Order> order = this.buildJPAQueryOrder(criteriaBuilder, root, arguments);
+        if (order != null && order.size() > 0) {
+            criteriaQuery.orderBy(order);
+        }
+
+        TypedQuery query = this.getEntityManager().createQuery(criteriaQuery);
+
+        if (arguments != null) {
+            Integer offset = arguments.getOffset();
+            if (offset != null && offset > 0) {
+                query.setFirstResult(offset);
+            }
+
+            Integer limit = arguments.getLimit();
+            if (limit != null && limit > 0) {
+                query.setMaxResults(limit);
+            }
+        }
+        return query.getResultList();
+    }
+
+    /**
+     * Fetches a count of products based on the data in the query request.
+     *
+     * @param arguments
+     *     a OwnerQueryArguments instance containing the various arguments to use to
+     *     select products
+     *
+     * @return a count of products
+     */
+    public long getProductCount(ProductQueryArguments arguments) {
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
+        Root<Product> root = criteriaQuery.from(Product.class);
+        criteriaQuery.select(criteriaBuilder.countDistinct(root));
+
+        return this.getEntityManager()
+            .createQuery(criteriaQuery)
+            .getSingleResult();
     }
 
 }

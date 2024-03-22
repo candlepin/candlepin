@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.ProductCurator.ProductQueryArguments;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.AttributeValidator;
@@ -54,6 +55,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.persistence.LockModeType;
@@ -1354,4 +1356,40 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertEquals(attributes, refreshed.getAttributes());
     }
 
+    @Test
+    public void testListAll() {
+        IntStream.range(0, 3).forEach(element -> {
+            createProduct("test_product-" + element);
+        });
+
+        ProductQueryArguments args = new ProductQueryArguments()
+            .setOffset(0);
+        assertEquals(3, productCurator.listAll(args).size());
+    }
+
+    @Test
+    public void testListAllPaged() {
+        IntStream.range(0, 10).forEach(element -> {
+            createProduct("test_product-" + element);
+        });
+
+        ProductQueryArguments args = new ProductQueryArguments()
+            .setOffset(3)
+            .setLimit(4);
+        List<Product> page = productCurator.listAll(args);
+        assertEquals(4, page.size());
+        assertEquals("test_product-3", page.get(0).getId());
+        assertEquals("test_product-6", page.get(3).getId());
+    }
+
+    @Test
+    public void testGetOwnerCount() {
+        IntStream.range(0, 10).forEach(element -> {
+            createProduct("test_product-" + element);
+        });
+
+        ProductQueryArguments args = new ProductQueryArguments();
+        Long result = productCurator.getProductCount(args);
+        assertEquals(10L, result);
+    }
 }
