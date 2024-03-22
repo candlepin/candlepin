@@ -15,23 +15,22 @@
 package org.candlepin.spec.consumers;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import org.candlepin.dto.api.client.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.client.v1.ConsumerActivationKeyDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.client.v1.ContentOverrideDTO;
+import org.candlepin.dto.api.client.v1.EntitlementDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
 import org.candlepin.resource.client.v1.ActivationKeyApi;
 import org.candlepin.resource.client.v1.OwnerProductApi;
-import org.candlepin.spec.bootstrap.assertions.NotWithMySql;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -50,12 +49,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -103,144 +101,93 @@ public class ConsumerResourceActivationKeySpecTest {
             .returns(3L, PoolDTO::getConsumed);
     }
 
-    /**
-     *  This test will only be run against Postgresql and not MySQL/MariaDB because
-     *   the initial deadlock comes occurs in a scenario (concurrent force reregistration)
-     *   that will only happen in Satellite where Postgresql is in use. The portal which employs
-     *   MariaDB has a request limiter that would not allow it to happen.
-     *  This test will create a lock contention in MySQL/MariaDB on the indexer (not the bug
-     *   to be fixed) so it will be skipped when MySQL/MariaDB is in use based on an environment
-     *   variable (MYSQL_IN_USE) on the system running the test.
-     * @throws Exception
-     */
     @Test
-    @NotWithMySql
-    public void shouldAllowConsumerToRegisterThenUnregisterWithActKeysConcurrently()
-        throws Exception {
-        // The order of keys is important. The pool ids of the first key used should be
-        // sortable by id later than those in the second key in the combined list of pools
-        OwnerDTO owner = ownerClient.createOwner(Owners.random());
+    public void shouldAllowConcurrentReregistrations() throws Exception {
+        int keyCount = 3;
+        int poolCount = 21;
+        int threadCount = 10;
 
-        int consumerCount = 3;
-        int poolCount = 6;
-        List<ConsumerDTO> consumers = Collections.synchronizedList(new ArrayList<>());
+        OwnerDTO owner = this.ownerClient.createOwner(Owners.random());
 
-        // create 6 pools and 2 activation keys
-        ActivationKeyDTO key1 = ownerClient.createActivationKey(owner.getKey(),
-            ActivationKeys.random(owner));
-        ActivationKeyDTO key2 = ownerClient.createActivationKey(owner.getKey(),
-            ActivationKeys.random(owner));
-
-        createProductsAndPoolsForActivationKeys(owner, key1, key2, poolCount);
-        List<PoolDTO> pools = ownerClient.listOwnerPools(owner.getKey());
-        assertThat(pools).hasSize(poolCount);
-
-        // register new systems
-        List<Thread> threads = new ArrayList<>();
-        IntStream.range(0, consumerCount).forEach(entry -> {
-            threads.add(new Thread(() -> {
-                String uuid = StringUtil.random("uuid");
-                ConsumerDTO consumer = Consumers.random(owner)
-                    .facts(Map.of("system.certificate_version", "3.3", "dmi.system.uuid", uuid));
-                consumer = consumerClient.createConsumer(consumer, null, owner.getKey(),
-                    key2.getName() + "," + key1.getName(), true);
-                // this ensures completion of creation before proceeding
-                consumer = consumerClient.getConsumer(consumer.getUuid());
-                assertThat(consumer).isNotNull();
-                assertThat(consumer.getEntitlementCount()).isEqualTo(poolCount);
-                consumers.add(consumer);
-            }));
-        });
-        threads.forEach(assertDoesNotThrow(() -> Thread::start));
-        for (Thread thread : threads) {
-            while (thread.isAlive()) {
-                thread.join();
-            }
+        // Create some activation keys and pools
+        ActivationKeyDTO[] keys = new ActivationKeyDTO[keyCount];
+        PoolDTO[] pools = new PoolDTO[poolCount];
+        for (int i = 0; i < keyCount; ++i) {
+            keys[i] = this.ownerClient.createActivationKey(owner.getKey(), ActivationKeys.random(owner));
         }
-        assertThat(consumers).hasSize(consumerCount);
-        pools.forEach(pool -> assertThat(client.pools().getPool(pool.getId(), null, null))
-            .isNotNull()
-            .returns(Long.valueOf(consumerCount), PoolDTO::getConsumed));
 
-        // force reregister
-        List<Callable<Result>> callables = consumers.stream()
-            .map(consumer -> (Callable<Result>) () -> {
-                try {
-                    ConsumerDTO originalConsumer = consumerClient.getConsumer(consumer.getUuid());
-                    consumerClient.deleteConsumer(consumer.getUuid());
-                    ConsumerDTO reregConsumer = Consumers.random(owner)
-                        .facts(Map.of("system.certificate_version", "3.3",
-                            "dmi.system.uuid", originalConsumer.getFacts().get("dmi.system.uuid")));
-                    reregConsumer = consumerClient.createConsumer(reregConsumer, null,
-                        owner.getKey(),
-                        key2.getName() + "," + key1.getName(), true);
-                    // this ensures completion of creation before proceeding
-                    reregConsumer = consumerClient.getConsumer(reregConsumer.getUuid());
-                    assertThat(reregConsumer).isNotNull();
-                    assertThat(reregConsumer.getEntitlementCount()).isEqualTo(poolCount);
-                    return new Result(reregConsumer, null);
-                }
-                catch (Exception e) {
-                    return new Result(null, e);
-                }
-            }).toList();
+        for (int i = 0; i < poolCount; ++i) {
+            ProductDTO product = this.ownerProductApi.createProduct(owner.getKey(), Products.random());
+            pools[i] = this.ownerClient.createPool(owner.getKey(), Pools.random(product));
+        }
 
-        List<Future<Result>> results;
-        ExecutorService executor = null;
+        // Attach the pools to the keys evenly, but random-ish-ly
+        Random rnd = new Random();
+
+        // We can use a set seed if this test becomes inconsistent in the future, but so far the order just
+        // needs to be non-sequential and every iteration attempted has triggered the deadlock as expected
+        // long seed = -1753978213090389925L;
+        long seed = rnd.nextLong();
+        rnd.setSeed(seed);
+
+        for (int i = pools.length - 1; i > 0; --i) {
+            int idx = rnd.nextInt(i + 1);
+
+            PoolDTO tmp = pools[i];
+            pools[i] = pools[idx];
+            pools[idx] = tmp;
+
+            this.activationKeyApi
+                .addPoolToKey(keys[i % keyCount].getId(), pools[i].getId(), null);
+        }
+
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        Runnable task = () -> {
+            ConsumerDTO consumer = Consumers.random(owner)
+                .uuid(UUID.randomUUID().toString());
+
+            // Do a register->unregister loop for each rotation of our activation keys
+            for (int i = 0; i < keyCount; ++i) {
+                // Build our key string...
+                String[] keyNames = new String[keyCount];
+                for (int k = 0; k < keyCount; ++k) {
+                    keyNames[k] = keys[(i + k) % keyCount].getName();
+                }
+
+                this.consumerClient
+                    .createConsumer(consumer, null, owner.getKey(), String.join(",", keyNames), true);
+
+                // Do we care about these?
+                List<EntitlementDTO> ents = this.consumerClient.listEntitlements(consumer.getUuid());
+                this.consumerClient.deleteConsumer(consumer.getUuid());
+            }
+        };
+
+        List<Future<?>> futures = new ArrayList<>();
+        for (int i = 0; i < threadCount; ++i) {
+            futures.add(executor.submit(task));
+        }
+
+        // Wait for our tasks to finish...
         try {
-            executor = Executors.newFixedThreadPool(2);
-            results = executor.invokeAll(callables);
-        }
-        finally {
-            if (executor != null) {
-                executor.shutdown();
+            executor.shutdown();
+
+            // Clunky way of propagating any exceptions from our registration tasks
+            for (Future<?> future : futures) {
+                future.get(2, TimeUnit.MINUTES);
+            }
+
+            if (!executor.awaitTermination(1, TimeUnit.MINUTES)) {
+                executor.shutdownNow();
+                fail("Failed to complete tasks in the allotted time...");
             }
         }
+        catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
 
-        // Wait for the threads to finish
-        await().atMost(180, TimeUnit.SECONDS)
-            .until(() -> results.stream().allMatch(Future::isDone));
-
-        List<ConsumerDTO> reregConsumers = results.stream()
-            .map(future -> {
-                try {
-                    return future.get();
-                }
-                catch (InterruptedException | ExecutionException e) {
-                    throw new RuntimeException(e);
-                }
-            })
-            .map(Result::consumer)
-            .toList();
-
-        assertThat(reregConsumers).hasSize(consumerCount);
-        pools.forEach(pool -> assertThat(client.pools().getPool(pool.getId(), null, null))
-            .isNotNull()
-            .returns(Long.valueOf(consumerCount), PoolDTO::getConsumed));
-
-        reregConsumers.forEach(consumer -> consumerClient.deleteConsumer(consumer.getUuid()));
-        pools.forEach(pool -> assertThat(client.pools().getPool(pool.getId(), null, null))
-            .isNotNull()
-            .returns(0L, PoolDTO::getConsumed));
-    }
-
-    record Result(ConsumerDTO consumer, Exception exception) {
-    }
-
-    private void createProductsAndPoolsForActivationKeys(OwnerDTO owner,
-        ActivationKeyDTO key1, ActivationKeyDTO key2, int poolCount) {
-        IntStream.range(0, poolCount).forEach(entry -> {
-            ProductDTO prod = Products.random()
-                .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"));
-            prod = ownerProductApi.createProduct(owner.getKey(), prod);
-            PoolDTO pool = ownerClient.createPool(owner.getKey(), Pools.random(prod).quantity(100L));
-            if (entry < poolCount / 2) {
-                activationKeyApi.addPoolToKey(key1.getId(), pool.getId(), 1L);
-            }
-            else {
-                activationKeyApi.addPoolToKey(key2.getId(), pool.getId(), 1L);
-            }
-        });
+            fail("Test interrupted while waiting for tasks to complete...");
+        }
     }
 
     @Test
