@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.4
+Version: 4.4.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,135 @@ fi
 
 #raw
 %changelog
+* Fri Mar 22 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.5-1
+- Add new translations using Weblate (noreply@weblate.org)
+- CANDLEPIN-833: Updated CloudAuthenticationResult validation
+  (joshmalbrecht@gmail.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- CANDLEPIN-800: Create entitlement certificate generator (ojanus@redhat.com)
+- Bump io.smallrye.config:smallrye-config from 3.7.0 to 3.7.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.swagger:swagger-annotations from 1.6.13 to 1.6.14
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.awaitility:awaitility from 4.2.0 to 4.2.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.14.1 to 10.14.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.owasp.dependencycheck from 9.0.9 to 9.0.10
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-828: Added owner key in OWNER_CONTENT_ACCESS_MODE event
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-799: Create anonymous content access and content access certificate
+  generator (ojanus@redhat.com)
+- Remove unused guava library (nmoumoul@redhat.com)
+- Bump io.smallrye.config:smallrye-config from 3.6.1 to 3.7.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.postgresql:postgresql from 42.7.2 to 42.7.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Addressed CONTRIBUTING.md typos and formatting (joshmalbrecht@gmail.com)
+- Bump com.google.guava:guava from 33.0.0-jre to 33.1.0-jre
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson from 2.16.2 to 2.17.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.14.0 to 10.14.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-814: Addressed some refresh performance and deadlock issues
+  (crog@redhat.com)
+- Bump openapi-generator from 7.3.0 to 7.4.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.6.0 to 3.6.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson from 2.16.1 to 2.16.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jaxb from 4.0.4 to 4.0.5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-798: Create identity certificate generator (ojanus@redhat.com)
+- CANDLEPIN-804: Created kube file for candlepin-dev image (wpoteat@redhat.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 24.0.0 to 24.0.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.1 to 1.5.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 23.0.7 to 24.0.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-811: Fix regression in i18n scheduled job (ojanus@redhat.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.10.0 to 5.11.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-797: Create product certificate generator (ojanus@redhat.com)
+- Bump gradle/gradle-build-action from 2 to 3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.13.0 to 10.14.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.0 to 1.5.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-796: Create ueber certificate generator (ojanus@redhat.com)
+- Bump io.smallrye.config:smallrye-config from 3.5.4 to 3.6.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Improved hosted test framework support for large JSON files (crog@redhat.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 23.0.6 to 23.0.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-701: Sonar issue: ApiClientFactory (sbakaj@redhat.com)
+- CANDLEPIN-802: Create Owner for TrustedUserPrincipal during consumer
+  registration (ojanus@redhat.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Bump org.postgresql:postgresql from 42.7.1 to 42.7.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mariadb.jdbc:mariadb-java-client from 3.3.2 to 3.3.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-801: Added registration only to CloudAuthenticationResult
+  (joshmalbrecht@gmail.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.18 to 10.1.19
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-718: Extract signer (ojanus@redhat.com)
+- CANDLEPIN-718: Extract PEM encoder (ojanus@redhat.com)
+- Bump ch.qos.logback:logback-classic from 1.4.14 to 1.5.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-718: Extracted huffman utilities out of extension utils
+  (ojanus@redhat.com)
+- CANDLEPIN-718: Extract key pair generator (ojanus@redhat.com)
+- CANDLEPIN-326: Do not use SHA1 for hashing passwords (sbakaj@redhat.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Updated branch listing for sonar tests (wpoteat@redhat.com)
+- CANDLEPIN-792: Upgrade to openapi-generator 7.3.0 (ojanus@redhat.com)
+- udpate for branch wildcard (wpoteat@redhat.com)
+- CANDLEPIN-794: Remove 'ownerKey' field from
+  CloudRegistrationAdapter.setupCloudAccountOrg (ojanus@redhat.com)
+- Bump commons-codec:commons-codec from 1.16.0 to 1.16.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.liquibase:liquibase-core from 4.25.1 to 4.26.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.5.2 to 3.5.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump slf4j from 2.0.11 to 2.0.12
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-272: Removed cp query in ImportRecordCurator and RoleCurator
+  (joshmalbrecht@gmail.com)
+- Bump org.assertj:assertj-core from 3.25.2 to 3.25.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 23.0.5 to 23.0.6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump junit from 5.10.1 to 5.10.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Update Gradle Wrapper from 8.5 to 8.6. (gradle-update-robot@regolo.cc)
+- Added Git commit standards (joshmalbrecht@gmail.com)
+- CANDLEPIN-735: Updated CI with removal of JSS dependency
+  (joshmalbrecht@gmail.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- CANDLEPIN-786: Remove XmlTransient tag from eventData (wpoteat@redhat.com)
+- Bump 8BitJonny/gh-get-current-pr
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-789: Change the assertion arguments to not compare dissimilar types
+  (sbakaj@redhat.com)
+- CANDLEPIN-700: Remove LegacyEncryptedInterceptor (sbakaj@redhat.com)
+- CANDLEPIN-698: Change this code to not construct the path from file name
+  entry of an archive (sbakaj@redhat.com)
+- CANDLEPIN-718: Refactor certificate extensions (ojanus@redhat.com)
+
 * Wed Jan 31 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.4-1
 - Bump artemis from 2.31.2 to 2.32.0
   (49699333+dependabot[bot]@users.noreply.github.com)
