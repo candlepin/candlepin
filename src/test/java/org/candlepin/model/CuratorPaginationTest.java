@@ -85,7 +85,7 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
 
     @Test
     public void testNoPaging() {
-        Page<List<Owner>> p = ownerCurator.listAll(null);
+        Page<List<Owner>> p = ownerCurator.listAll((PageRequest) null);
         List<Owner> ownerList = p.getPageData();
         assertEquals(10, ownerList.size());
     }

@@ -4202,6 +4202,10 @@ paths:
           required: false
           schema:
             type: string
+        - $ref: "#/components/parameters/paging_page"
+        - $ref: "#/components/parameters/paging_per_page"
+        - $ref: "#/components/parameters/paging_order"
+        - $ref: "#/components/parameters/paging_sort_by"
       security: []
       responses:
         200:

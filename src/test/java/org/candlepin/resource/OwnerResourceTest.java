@@ -28,6 +28,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anySet;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
@@ -94,6 +95,7 @@ import org.candlepin.model.HypervisorId;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerCurator.OwnerQueryArguments;
 import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.OwnerNotFoundException;
 import org.candlepin.model.PermissionBlueprint;
@@ -147,6 +149,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -547,7 +550,45 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(this.principalProvider.get()).thenReturn(principal);
         securityInterceptor.enable();
 
-        assertThrows(ForbiddenException.class, () -> ownerResource.listOwners(null));
+        assertThrows(ForbiddenException.class,
+            () -> ownerResource.listOwners(null, null, null, null, null));
+    }
+
+    @Test
+    public void testListOwnersWithKeys() {
+        OwnerResource resource = buildOwnerResource();
+        when(mockOwnerCurator.listAll(any(OwnerQueryArguments.class))).
+            thenReturn(new LinkedList<>());
+        ResteasyContext.pushContext(PageRequest.class,
+            new PageRequest()
+                .setPage(1)
+                .setPerPage(10)
+                .setSortBy("created"));
+        resource.listOwners("test-key", 1, 10, "asc", "created");
+        verify(mockOwnerCurator, atLeastOnce()).listAll(any(OwnerQueryArguments.class));
+        ResteasyContext.popContextData(PageRequest.class);
+    }
+
+    @Test
+    public void testGetOwnersOverMaxNoPaging() {
+        ResteasyContext.popContextData(PageRequest.class);
+        OwnerResource resource = buildOwnerResource();
+        config.setProperty(ConfigProperties.PAGING_MAX_PAGE_SIZE, "7");
+        when(mockOwnerCurator.getOwnerCount(any(OwnerQueryArguments.class)))
+            .thenReturn(10L);
+        assertThrows(BadRequestException.class, () -> resource.listOwners(
+            null, null, null, null, null));
+    }
+
+    @Test
+    public void testGetOwnersNoPaging() {
+        ResteasyContext.popContextData(PageRequest.class);
+        OwnerResource resource = buildOwnerResource();
+        when(mockOwnerCurator.getOwnerCount(any(OwnerQueryArguments.class)))
+            .thenReturn(1L);
+        when(mockOwnerCurator.listAll(any(OwnerQueryArguments.class)))
+            .thenReturn(List.of(new Owner()));
+        assertEquals(1, resource.listOwners(null, null, null, null, null).toList().size());
     }
 
     @Test

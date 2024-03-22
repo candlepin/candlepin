@@ -14,6 +14,7 @@
  */
 package org.candlepin.spec.owners;
 
+import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
@@ -61,7 +62,11 @@ import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.Isolated;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -69,6 +74,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 
 @SpecTest
@@ -914,4 +920,37 @@ public class OwnerResourceSpecTest {
             .toList();
     }
 
+    @Nested
+    @Isolated
+    @Execution(ExecutionMode.SAME_THREAD)
+    class GetPages {
+        @Test
+        public void shouldListOwnersPagedAndSorted() {
+            ApiClient adminClient = ApiClients.admin();
+
+            // Ensure that there is data for this test.
+            // Most likely, there will already be data left from other test runs that will show up
+            IntStream.range(0, 5).forEach(entry -> {
+                adminClient.owners().createOwner(Owners.random());
+                // for timestamp separation
+                try {
+                    sleep(1000);
+                }
+                catch (InterruptedException ie) {
+                    throw new RuntimeException("Unable to sleep as expected");
+                }
+            });
+
+            List<OwnerDTO> owners = adminClient.owners().listOwners(null, 1, 4, "asc", "created");
+            assertThat(owners)
+                .isNotNull()
+                .hasSize(4);
+            assertThat(owners.get(0).getCreated().compareTo(owners.get(1).getCreated()))
+                .isNotPositive();
+            assertThat(owners.get(1).getCreated().compareTo(owners.get(2).getCreated()))
+                .isNotPositive();
+            assertThat(owners.get(2).getCreated().compareTo(owners.get(3).getCreated()))
+                .isNotPositive();
+        }
+    }
 }

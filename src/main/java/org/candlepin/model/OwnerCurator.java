@@ -45,6 +45,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
@@ -55,6 +56,22 @@ import javax.persistence.criteria.Root;
 public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
     private static final Logger log = LoggerFactory.getLogger(OwnerCurator.class);
+
+    /**
+     * Container object for providing various arguments to the owner lookup method(s).
+     */
+    public static class OwnerQueryArguments extends QueryArguments<OwnerQueryArguments> {
+        private List<String> keys;
+
+        public OwnerQueryArguments setKeys(List keys) {
+            this.keys = keys;
+            return this;
+        }
+
+        public List<String> getKeys() {
+            return this.keys;
+        }
+    }
 
     public OwnerCurator() {
         super(Owner.class);
@@ -156,6 +173,71 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
             .createQuery(jpql, Owner.class)
             .setParameter("keys", keys)
             .getResultList();
+    }
+
+    /**
+     * Fetches a collection of owners based on the data in the query request. If the
+     * query builder is null or contains no arguments, the query will not limit or sort the result.
+     *
+     * @param arguments
+     *     a OwnerQueryArguments instance containing the various arguments to use to
+     *     select owners
+     *
+     * @return a list of owners. It will be paged and sorted if specified
+     */
+    public List<Owner> listAll(OwnerQueryArguments arguments) {
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Owner> criteriaQuery = criteriaBuilder.createQuery(Owner.class);
+        Root<Owner> root = criteriaQuery.from(Owner.class);
+        criteriaQuery.select(root);
+
+        if (arguments != null && arguments.getKeys() != null && !arguments.getKeys().isEmpty()) {
+            criteriaQuery.where(inPredicate(criteriaBuilder, root.get(Owner_.KEY), arguments.getKeys()));
+        }
+
+        List<Order> order = this.buildJPAQueryOrder(criteriaBuilder, root, arguments);
+        if (order != null && !order.isEmpty()) {
+            criteriaQuery.orderBy(order);
+        }
+
+        TypedQuery query = this.getEntityManager().createQuery(criteriaQuery);
+
+        if (arguments != null) {
+            Integer offset = arguments.getOffset();
+            if (offset != null && offset > 0) {
+                query.setFirstResult(offset);
+            }
+
+            Integer limit = arguments.getLimit();
+            if (limit != null && limit > 0) {
+                query.setMaxResults(limit);
+            }
+        }
+        return query.getResultList();
+    }
+
+    /**
+     * Fetches a count of owners based on the data in the query request.
+     *
+     * @param arguments
+     *     a OwnerQueryArguments instance containing the various arguments to use to
+     *     select owners
+     *
+     * @return a count of owners
+     */
+    public long getOwnerCount(OwnerQueryArguments arguments) {
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
+        Root<Owner> root = criteriaQuery.from(Owner.class);
+        criteriaQuery.select(criteriaBuilder.countDistinct(root));
+
+        if (arguments != null && arguments.getKeys() != null && !arguments.getKeys().isEmpty()) {
+            criteriaQuery.where(inPredicate(criteriaBuilder, root.get(Owner_.KEY), arguments.getKeys()));
+        }
+
+        return this.getEntityManager()
+            .createQuery(criteriaQuery)
+            .getSingleResult();
     }
 
     @Transactional
@@ -341,4 +423,11 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         return count;
     }
 
+    private Predicate inPredicate(CriteriaBuilder cb, Expression<String> path, Collection<String> values) {
+        CriteriaBuilder.In<String> in = cb.in(path);
+        for (String value : values) {
+            in.value(value);
+        }
+        return in;
+    }
 }
