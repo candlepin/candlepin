@@ -30,7 +30,6 @@ dependencies {
     implementation(libs.okhttp.tls)
     implementation(libs.slf4j)
 
-    testImplementation(libs.awaitility)
     testImplementation(libs.jimfs)
 
     testRuntimeOnly(libs.junit.engine)
