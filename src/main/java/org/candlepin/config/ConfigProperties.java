@@ -24,6 +24,7 @@ import org.candlepin.async.tasks.ImportRecordCleanerJob;
 import org.candlepin.async.tasks.InactiveConsumerCleanerJob;
 import org.candlepin.async.tasks.JobCleaner;
 import org.candlepin.async.tasks.ManifestCleanerJob;
+import org.candlepin.async.tasks.RevokeEntitlementsJob;
 import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
 import org.candlepin.guice.CandlepinContextListener;
 
@@ -287,7 +288,8 @@ public class ConfigProperties {
         JobCleaner.JOB_KEY,
         ManifestCleanerJob.JOB_KEY,
         UnmappedGuestEntitlementCleanerJob.JOB_KEY,
-        InactiveConsumerCleanerJob.JOB_KEY
+        InactiveConsumerCleanerJob.JOB_KEY,
+        RevokeEntitlementsJob.JOB_KEY
     };
 
     // How long (in seconds) to wait for job threads to finish during a graceful Tomcat shutdown
@@ -525,6 +527,9 @@ public class ConfigProperties {
             // UnmappedGuestEntitlementCleanerJob
             this.put(jobConfig(UnmappedGuestEntitlementCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 UnmappedGuestEntitlementCleanerJob.DEFAULT_SCHEDULE);
+
+            // RevokeEntitlementsJob
+            this.put(jobConfig(RevokeEntitlementsJob.JOB_KEY, RevokeEntitlementsJob.CFG_BATCH_SIZE), "1000");
 
             // Set the triggerable jobs list
             this.put(ASYNC_JOBS_TRIGGERABLE_JOBS, String.join(", ", ASYNC_JOBS_TRIGGERABLE_JOBS_LIST));

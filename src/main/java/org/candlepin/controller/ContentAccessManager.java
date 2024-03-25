@@ -14,7 +14,12 @@
  */
 package org.candlepin.controller;
 
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.RevokeEntitlementsJob;
+import org.candlepin.async.tasks.RevokeEntitlementsJob.RevokeEntitlementsJobConfig;
 import org.candlepin.audit.EventSink;
+import org.candlepin.exceptions.IseException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
@@ -29,6 +34,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
 import java.util.Objects;
@@ -47,18 +53,24 @@ public class ContentAccessManager {
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
     private final ConsumerCurator consumerCurator;
     private final EventSink eventSink;
+    private final JobManager jobManager;
+    private final I18n i18n;
 
     @Inject
     public ContentAccessManager(
         ContentAccessCertificateCurator contentAccessCertificateCurator,
         OwnerCurator ownerCurator,
         ConsumerCurator consumerCurator,
-        EventSink eventSink) {
+        EventSink eventSink,
+        JobManager jobManager,
+        I18n i18n) {
 
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.eventSink = Objects.requireNonNull(eventSink);
+        this.jobManager = Objects.requireNonNull(jobManager);
+        this.i18n = Objects.requireNonNull(i18n);
     }
 
     /**
@@ -247,6 +259,20 @@ public class ContentAccessManager {
                 this.contentAccessCertificateCurator.deleteForOwner(owner);
             }
 
+            // Revoke entitlements and remove activation key pools if moving from entitlement mode to SCA mode
+            if (this.isTransition(currentMode, updatedMode, ContentAccessMode.ENTITLEMENT,
+                ContentAccessMode.ORG_ENVIRONMENT)) {
+                try {
+                    RevokeEntitlementsJobConfig jobConfig = new RevokeEntitlementsJobConfig();
+                    jobConfig.setJobArgument(RevokeEntitlementsJob.OWNER_KEY, owner.getKey());
+                    jobManager.queueJob(jobConfig);
+                }
+                catch (JobException e) {
+                    log.error(e.getMessage(), e);
+                    throw new IseException(i18n.tr("Unable to create entitlement revoke job"), e);
+                }
+            }
+
             // Update sync times & report
             this.syncOwnerLastContentUpdate(owner);
             this.eventSink.emitOwnerContentAccessModeChanged(owner);
@@ -291,6 +317,36 @@ public class ContentAccessManager {
         ContentAccessMode updatedMode = ContentAccessMode.resolveModeName(updated, true);
 
         return currentMode != updatedMode && currentMode == target;
+    }
+
+    /**
+     * Checks if there has been a content access mode change and if the content access mode has transitioned
+     * from a specified content access mode to an expected content access mode.
+     *
+     * @param current
+     *  the current content access mode name
+     *
+     * @param updated
+     *  the updated content access mode name
+     *
+     * @param expectedCurrent
+     *  the expected current content access mode
+     *
+     * @param expectedUpdated
+     *  the expected updated content access mode
+     *
+     * @return true if there has been a content access mode change and the current content mode equals the
+     *  expected content access mode and the updated content access mode equals the expected content access
+     *  mode.
+     */
+    private boolean isTransition(String current, String updated, ContentAccessMode expectedCurrent,
+        ContentAccessMode expectedUpdated) {
+        ContentAccessMode currentMode = ContentAccessMode.resolveModeName(current, false);
+        ContentAccessMode updatedMode = ContentAccessMode.resolveModeName(updated, false);
+
+        return currentMode != updatedMode &&
+            currentMode == expectedCurrent &&
+            updatedMode == expectedUpdated;
     }
 
     /**

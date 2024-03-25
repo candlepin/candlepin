@@ -79,8 +79,6 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-
-
 /**
  * ConsumerCurator
  */
@@ -1848,4 +1846,27 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return lockedIds;
     }
 
+    /**
+     * Retrieves all the non-manifest type consumer UUIDs that belong to the provided owner.
+     *
+     * @param ownerKey
+     *  the key to the owner to retrieve the UUIDs for
+     *
+     * @return all non-manifest type consumer UUIDs for the provided owner
+     */
+    public List<String> getSystemConsumerUuidsByOwner(String ownerKey) {
+        List<String> consumerUuids  = new ArrayList<>();
+        if (ownerKey == null || ownerKey.isBlank()) {
+            return consumerUuids;
+        }
+
+        String jpql = "SELECT c.uuid FROM Consumer c " +
+            "JOIN ConsumerType type ON type.id=c.typeId " +
+            "WHERE c.owner.key = :owner_key AND type.manifest = 'N'";
+
+        return this.getEntityManager()
+            .createQuery(jpql, String.class)
+            .setParameter("owner_key", ownerKey)
+            .getResultList();
+    }
 }

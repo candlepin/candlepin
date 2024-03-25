@@ -24,7 +24,6 @@ import org.candlepin.resource.client.v1.ConsumerTypeApi;
 import org.candlepin.resource.client.v1.ContentApi;
 import org.candlepin.resource.client.v1.DeletedConsumerApi;
 import org.candlepin.resource.client.v1.DistributorVersionsApi;
-import org.candlepin.resource.client.v1.EntitlementsApi;
 import org.candlepin.resource.client.v1.GuestIdsApi;
 import org.candlepin.resource.client.v1.HypervisorsApi;
 import org.candlepin.resource.client.v1.OwnerContentApi;
@@ -37,6 +36,7 @@ import org.candlepin.resource.client.v1.SubscriptionApi;
 import org.candlepin.resource.client.v1.UsersApi;
 import org.candlepin.spec.bootstrap.client.api.CloudRegistrationClient;
 import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
+import org.candlepin.spec.bootstrap.client.api.EntitlementClient;
 import org.candlepin.spec.bootstrap.client.api.EnvironmentClient;
 import org.candlepin.spec.bootstrap.client.api.JobsClient;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
@@ -118,8 +118,8 @@ public class ApiClient {
         return new DistributorVersionsApi(this.client);
     }
 
-    public EntitlementsApi entitlements() {
-        return new EntitlementsApi(this.client);
+    public EntitlementClient entitlements() {
+        return new EntitlementClient(this.client);
     }
 
     public EnvironmentClient environments() {
