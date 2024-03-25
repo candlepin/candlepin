@@ -80,9 +80,8 @@ public class PermissionFactory {
         }
 
         public Owner resolve(OwnerInfo oinfo) {
-            if (oinfo == null || oinfo instanceof Owner) {
-                // nothing to resolve, it's already as good as it's going to get
-                return (Owner) oinfo;
+            if (oinfo == null) {
+                return null;
             }
 
             String ownerKey = oinfo.getKey();
@@ -94,7 +93,7 @@ public class PermissionFactory {
             if (cached == null) {
                 cached = this.ownerCurator.getByKey(ownerKey);
                 if (cached == null) {
-                    throw new IllegalStateException("No such owner: " + ownerKey);
+                    return null;
                 }
 
                 // Impl note:
@@ -136,26 +135,49 @@ public class PermissionFactory {
     @SuppressWarnings("checkstyle:indentation")
     private Map<String, PermissionBuilder> initBuilders() {
         Map<String, PermissionBuilder> builders = new HashMap<>();
+        builders.put(PermissionType.OWNER.name(), (user, bp, res) -> {
+            Owner owner = res.resolve(bp.getOwner());
+            return owner != null ?
+                List.of(new OwnerPermission(owner, Access.valueOf(bp.getAccessLevel()))) :
+                List.of();
+        });
 
-        builders.put(PermissionType.OWNER.name(), (user, bp, res) -> List.of(
-            new OwnerPermission(res.resolve(bp.getOwner()), Access.valueOf(bp.getAccessLevel()))));
+        builders.put(PermissionType.OWNER_POOLS.name(), (user, bp, res) -> {
+            Owner owner = res.resolve(bp.getOwner());
+            return owner != null ?
+                List.of(new OwnerPoolsPermission(owner)) :
+                List.of();
+        });
 
-        builders.put(PermissionType.OWNER_POOLS.name(), (user, bp, res) -> List.of(
-            new OwnerPoolsPermission(res.resolve(bp.getOwner()))));
-
-        builders.put(PermissionType.USERNAME_CONSUMERS.name(), (user, bp, res) -> List.of(
-            new UsernameConsumersPermission(user, res.resolve(bp.getOwner()))));
+        builders.put(PermissionType.USERNAME_CONSUMERS.name(), (user, bp, res) -> {
+            Owner owner = res.resolve(bp.getOwner());
+            return owner != null ?
+                List.of(new UsernameConsumersPermission(user, res.resolve(bp.getOwner()))) :
+                List.of();
+        });
 
         // At the time of writing, no matching permission exists for USERNAME_CONSUMERS_ENTITLEMENTS
 
-        builders.put(PermissionType.ATTACH.name(), (user, bp, res) -> List.of(
-            new AttachPermission(res.resolve(bp.getOwner()))));
+        builders.put(PermissionType.ATTACH.name(), (user, bp, res) -> {
+            Owner owner = res.resolve(bp.getOwner());
+            return owner != null ?
+                List.of(new AttachPermission(owner)) :
+                List.of();
+        });
 
-        builders.put(PermissionType.OWNER_HYPERVISORS.name(), (user, bp, res) -> List.of(
-            new ConsumerOrgHypervisorPermission(res.resolve(bp.getOwner()))));
+        builders.put(PermissionType.OWNER_HYPERVISORS.name(), (user, bp, res) -> {
+            Owner owner = res.resolve(bp.getOwner());
+            return owner != null ?
+                List.of(new ConsumerOrgHypervisorPermission(owner)) :
+                List.of();
+        });
 
         builders.put(PermissionType.MANAGE_ACTIVATION_KEYS.name(), (user, bp, res) -> {
             Owner resolved = res.resolve(bp.getOwner());
+            if (resolved == null) {
+                return List.of();
+            }
+
             Access accessLevel = Access.valueOf(bp.getAccessLevel());
 
             // Impl note:
