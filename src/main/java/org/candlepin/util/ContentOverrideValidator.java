@@ -24,7 +24,11 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -38,25 +42,34 @@ import javax.inject.Inject;
  */
 public class ContentOverrideValidator {
 
-    public static final Set<String> DEFAULT_BLOCKLIST = Set.of("", "name", "label");
-    public static final Set<String> HOSTED_BLOCKLIST = Set.of("", "name", "label", "baseurl");
+    public static final Pattern FIELD_SPLITTER_REGEX = Pattern.compile("\\s*,\\s*");
+
+    // Fields which can never be overridden
+    public static final Set<String> DEFAULT_BLOCKLIST = Set.of("name", "label");
+
+    protected final Configuration config;
+    protected final I18n i18n;
 
     protected final Set<String> blocklist;
-
-    protected Configuration config;
-    protected I18n i18n;
 
     @Inject
     public ContentOverrideValidator(Configuration config, I18n i18n) {
         this.config = config;
         this.i18n = i18n;
 
-        if (config.getBoolean(ConfigProperties.STANDALONE)) {
-            this.blocklist = DEFAULT_BLOCKLIST;
-        }
-        else {
-            this.blocklist = HOSTED_BLOCKLIST;
-        }
+        this.blocklist = new HashSet<>(DEFAULT_BLOCKLIST);
+        this.loadBlocklistConfig();
+    }
+
+    private void loadBlocklistConfig() {
+        String cfgBlockList = this.config.getString(ConfigProperties.CONTENT_OVERRIDE_BLOCKLIST);
+        String[] fields = FIELD_SPLITTER_REGEX.split(cfgBlockList);
+
+        Stream.of(fields)
+            .filter(Objects::nonNull)
+            .filter(Predicate.not(String::isEmpty))
+            .map(String::toLowerCase)
+            .forEach(this.blocklist::add);
     }
 
     /**
@@ -84,18 +97,19 @@ public class ContentOverrideValidator {
                     String name = override.getName();
                     String value = override.getValue();
 
-                    if (label == null || label.length() == 0 ||
+                    if (label == null || label.isBlank() ||
                         label.length() > ContentOverride.MAX_NAME_AND_LABEL_LENGTH) {
+
                         invalidLabels.add(label != null ? label : "null");
                     }
 
-                    if (name == null || this.blocklist.contains(name.toLowerCase()) ||
+                    if (name == null || name.isBlank() || this.blocklist.contains(name.toLowerCase()) ||
                         name.length() > ContentOverride.MAX_NAME_AND_LABEL_LENGTH) {
 
                         invalidProps.add(name != null ? name : "null");
                     }
 
-                    if (value == null || value.length() == 0) {
+                    if (value == null || value.isEmpty()) {
                         invalidValues.add(value != null ? value : "null");
                     }
 
