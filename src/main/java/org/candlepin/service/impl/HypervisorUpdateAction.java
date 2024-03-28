@@ -72,6 +72,7 @@ public class HypervisorUpdateAction {
     private Configuration config;
     private EventSink sink;
     private EventFactory evtFactory;
+    private final boolean systemUuidForMatching;
 
     public static final String CREATE = "create";
     protected static String prefix = "hypervisor_update_";
@@ -89,6 +90,7 @@ public class HypervisorUpdateAction {
         this.config = config;
         this.sink = sink;
         this.evtFactory = evtFactory;
+        this.systemUuidForMatching = config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING);
     }
 
     public Result update(
@@ -154,9 +156,8 @@ public class HypervisorUpdateAction {
             null;
 
         String hypervisorId = incomingHost.getHypervisorId().getHypervisorId();
-        Consumer resultHost = consumerCurator.getExistingConsumerByHypervisorIdOrUuid(owner.getId(),
-            hypervisorId,
-            config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING) ? systemUuid : null);
+        Consumer resultHost = getExistingConsumerByHypervisorIdOrUuid(
+            owner.getId(), hypervisorId, systemUuid);
 
         if (jobReporterId == null) {
             log.debug("hypervisor checkin reported asynchronously without reporter id " +
@@ -456,6 +457,18 @@ public class HypervisorUpdateAction {
         failedSet.add(failed);
 
         return failedSet;
+    }
+
+    public Consumer getExistingConsumerByHypervisorIdOrUuid(String ownerId, String hypervisorId,
+        String systemUuid) {
+
+        Consumer consumer = consumerCurator.getHypervisor(hypervisorId, ownerId);
+
+        if (consumer == null && systemUuidForMatching && systemUuid != null) {
+            consumer = consumerCurator.getConsumerBySystemUuid(ownerId, systemUuid);
+        }
+
+        return consumer;
     }
 
 }

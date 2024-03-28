@@ -315,20 +315,27 @@ public class Util {
      * this should return a list of length 1, with the given value.  All values
      * returned should be lower case
      */
-    public static List<String> getPossibleUuids(String... ids) {
+    public static List<String> getPossibleUuids(Collection<String> ids) {
         List<String> results = new LinkedList<>();
-        for (String id : ids) {
-            if (id != null) {
-                // We want to use lower case everywhere we can in order
-                // to do less work at query time.
-                id = id.toLowerCase();
-            }
-            results.add(id);
-            if (isUuid(id)) {
-                results.add(transformUuid(id));
+
+        if (ids != null) {
+            for (String id : ids) {
+                if (id != null) {
+                    // We want to use lower case everywhere we can in order
+                    // to do less work at query time.
+                    id = id.toLowerCase();
+                }
+                results.add(id);
+                if (isUuid(id)) {
+                    results.add(transformUuid(id));
+                }
             }
         }
         return results;
+    }
+
+    public static List<String> getPossibleUuids(String... ids) {
+        return ids == null ? new LinkedList<>() : getPossibleUuids(Arrays.asList(ids));
     }
 
     private static final String UUID_REGEX = "[a-fA-F0-9]{8}-" +

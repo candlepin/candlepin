@@ -957,7 +957,7 @@ public class ConsumerResource implements ConsumerApi {
             !"true".equalsIgnoreCase(getFactValue(dto.getFacts(), Consumer.Facts.VIRT_IS_GUEST))) {
 
             consumer = consumerCurator.getHypervisor(
-                getFactValue(dto.getFacts(), Consumer.Facts.DMI_SYSTEM_UUID), owner);
+                getFactValue(dto.getFacts(), Consumer.Facts.DMI_SYSTEM_UUID), owner.getId());
             if (consumer != null) {
                 consumer.setIdCert(generateIdCert(consumer, false));
                 this.updateConsumer(consumer.getUuid(), dto);
@@ -1927,7 +1927,7 @@ public class ConsumerResource implements ConsumerApi {
         if (hypervisor == null) {
             return false;
         }
-        return consumerCurator.getHypervisor(hypervisor.getHypervisorId(), owner) != null;
+        return consumerCurator.getHypervisor(hypervisor.getHypervisorId(), owner.getId()) != null;
     }
 
     /**
