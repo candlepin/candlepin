@@ -293,6 +293,9 @@ public class ConfigProperties {
     // How long (in seconds) to wait for job threads to finish during a graceful Tomcat shutdown
     public static final String ASYNC_JOBS_THREAD_SHUTDOWN_TIMEOUT = "candlepin.async.thread.shutdown.timeout";
 
+    /** The list of content fields which cannot be overridden, comma delimited; defaults to "baseurl" */
+    public static final String CONTENT_OVERRIDE_BLOCKLIST = "candlepin.content.overrides.blocklist";
+
     /**
      * Fetches a string representing the prefix for all per-job configuration for the specified job.
      * The job key or class name may be used, but the usage must be consistent.
@@ -535,6 +538,8 @@ public class ConfigProperties {
             this.put(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE, "100");
             this.put(DatabaseConfigFactory.BATCH_BLOCK_SIZE, "500");
             this.put(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT, "32000");
+
+            this.put(CONTENT_OVERRIDE_BLOCKLIST, "");
         }
     };
 }
