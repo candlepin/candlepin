@@ -1043,7 +1043,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(host, guestHost);
         guestHost = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner.getId());
         assertEquals(host, guestHost);
-        verify(spy, times(1)).currentSession();
+        verify(spy, times(1)).getEntityManager();
     }
 
     @Test
@@ -1091,7 +1091,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(hostA, guestHostA);
         guestHostB = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba9", owner.getId());
         assertEquals(hostB, guestHostB);
-        verify(spy, times(2)).currentSession();
+        verify(spy, times(2)).getEntityManager();
     }
 
     @Test

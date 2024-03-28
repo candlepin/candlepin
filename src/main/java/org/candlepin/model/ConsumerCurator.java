@@ -31,7 +31,6 @@ import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
@@ -63,6 +62,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -241,7 +241,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * Lookup consumer by its virt.uuid.
      *
      * In some cases the hypervisor will report UUIDs with uppercase, while the guest will report
-     * lowercase. As such we do case insensitive comparison when looking these up.
+     * lowercase. As such we do case-insensitive comparison when looking these up.
      *
      * @param uuid
      *     consumer virt.uuid to find
@@ -249,27 +249,29 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     public Consumer findByVirtUuid(String uuid, String ownerId) {
-        Consumer result = null;
-        List<String> possibleGuestIds = Util.getPossibleUuids(uuid);
 
-        String sql = "select cp_consumer.id from cp_consumer " +
-            "inner join cp_consumer_facts " +
-            "on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
-            "where cp_consumer_facts.mapkey = 'virt.uuid' and " +
-            "lower(cp_consumer_facts.element) in (:guestids) " +
-            "and cp_consumer.owner_id = :ownerid " +
-            "order by cp_consumer.updated desc";
+        String jpql = """
+            SELECT c FROM Consumer c JOIN c.facts f
+            WHERE LOWER(value(f)) IN :guestIds
+            AND KEY(f) = 'virt.uuid'
+            AND c.ownerId = :ownerId
+            order by c.updated
+            desc
+            """;
 
-        Query q = currentSession().createSQLQuery(sql);
-        q.setParameterList("guestids", possibleGuestIds);
-        q.setParameter("ownerid", ownerId);
-        List<String> options = q.list();
+        // We need to handle uuid with list because we need to cover both endianness
+        List<Consumer> consumers = getEntityManager().createQuery(jpql, Consumer.class)
+            .setParameter("guestIds", Util.getPossibleUuids(uuid))
+            .setParameter("ownerId", ownerId)
+            .setMaxResults(1) // Since we are only interested in the most recent Consumer
+            .getResultList();
 
-        if (options != null && options.size() != 0) {
-            result = this.get(options.get(0));
+        if (consumers.isEmpty()) {
+            return null;
         }
 
-        return result;
+        // Return the first (and only) Consumer in the list
+        return consumers.get(0);
     }
 
     /**
@@ -289,34 +291,31 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public VirtConsumerMap getGuestConsumersMap(String ownerId, Set<String> guestIds) {
         VirtConsumerMap guestConsumersMap = new VirtConsumerMap();
 
-        if (guestIds.size() == 0) {
+        if (guestIds.isEmpty()) {
             return guestConsumersMap;
         }
 
-        List<String> possibleGuestIds = Util.getPossibleUuids(guestIds.toArray(new String[guestIds.size()]));
-
-        String sql = "select cp_consumer.uuid from cp_consumer " +
-            "inner join cp_consumer_facts " +
-            "on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
-            "where cp_consumer_facts.mapkey = 'virt.uuid' and " +
-            "lower(cp_consumer_facts.element) in (:guestids) " +
-            "and cp_consumer.owner_id = :ownerid " +
-            "order by cp_consumer.updated desc";
-
         // We need to filter down to only the most recently registered consumer with
         // each guest ID.
+        String jpql = """
+            SELECT c.uuid FROM Consumer c
+            JOIN c.facts f
+            WHERE KEY(f) = 'virt.uuid'
+                AND LOWER(VALUE(f) ) IN (:guestids)
+                AND c.owner.id = :ownerid
+            ORDER BY c.updated
+            DESC
+            """;
 
         List<String> consumerUuids = new LinkedList<>();
 
-        Iterable<List<String>> blocks = Iterables.partition(possibleGuestIds, getInBlockSize());
-
-        Query query = this.currentSession()
-            .createSQLQuery(sql)
+        TypedQuery<String> query = getEntityManager()
+            .createQuery(jpql, String.class)
             .setParameter("ownerid", ownerId);
 
-        for (List<String> block : blocks) {
-            query.setParameterList("guestids", block);
-            consumerUuids.addAll(query.list());
+        for (List<String> block : this.partition(guestIds)) {
+            query.setParameter("guestids", Util.getPossibleUuids(block.toArray(new String[0])));
+            consumerUuids.addAll(query.getResultList());
         }
 
         if (consumerUuids.isEmpty()) {
@@ -352,13 +351,20 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         ConsumerType person = consumerTypeCurator
             .getByLabel(ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
 
-        if (person != null) {
-            return (Consumer) createSecureCriteria()
-                .add(Restrictions.eq("username", username))
-                .add(Restrictions.eq("typeId", person.getId())).uniqueResult();
-        }
+        String jpql = """
+            SELECT c FROM Consumer c
+            WHERE c.username = :username
+                AND c.typeId = :typeId
+            """;
 
-        return null;
+        try {
+            return getEntityManager().createQuery(jpql, Consumer.class)
+                .setParameter("username", username)
+                .setParameter("typeId", person.getId())
+                .getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**
@@ -393,8 +399,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Collection<Consumer> findByUuidsAndOwner(Collection<String> uuids, String ownerId) {
         Set<Consumer> consumers = new HashSet<>();
 
-        javax.persistence.Query query = this.getEntityManager()
-            .createQuery("SELECT c FROM Consumer c WHERE c.ownerId = :oid AND c.uuid IN (:uuids)")
+        String jpql = """
+            SELECT c FROM Consumer c
+            WHERE c.ownerId = :oid
+                AND c.uuid IN (:uuids)
+            """;
+
+        TypedQuery<Consumer> query = this.getEntityManager()
+            .createQuery(jpql, Consumer.class)
             .setParameter("oid", ownerId);
 
         if (uuids != null && !uuids.isEmpty()) {
@@ -430,22 +442,22 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     public Collection<Consumer> getConsumers(Collection<String> consumerIds) {
         if (consumerIds != null && !consumerIds.isEmpty()) {
-            List<String> cids;
+            List<Consumer> consumers = new ArrayList<>();
 
-            // Unfortunately multiLoad does not accept a generic collection, so we need to cast it
-            // or convert it as necessary.
-            if (consumerIds instanceof List) {
-                cids = (List<String>) consumerIds;
-            }
-            else {
-                cids = new ArrayList(consumerIds);
+            String jpql = """
+            SELECT c FROM Consumer c
+            WHERE c.id IN :ids
+            """;
+
+            TypedQuery<Consumer> query = getEntityManager().createQuery(jpql, Consumer.class);
+
+            for (List<String> block : this.partition(consumerIds)){
+                query.setParameter("ids", block);
+
+                consumers.addAll(query.getResultList());
             }
 
-            return this.currentSession()
-                .byMultipleIds(this.entityType())
-                .enableSessionCheck(true)
-                .enableOrderedReturn(false)
-                .multiLoad(cids);
+            return consumers;
         }
 
         return Collections.emptyList();
@@ -459,17 +471,23 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return A list of the all the distinct values of the addon attribute that the consumers belonging
      * to the specified owner have set.
      */
-    @SuppressWarnings("unchecked")
     @Transactional
     public List<String> getDistinctSyspurposeAddonsByOwner(Owner owner) {
-        String sql = "SELECT DISTINCT add_on FROM cp_sp_add_on, cp_consumer " +
-            "WHERE cp_consumer.id = cp_sp_add_on.consumer_id " +
-            "AND cp_consumer.owner_id = :ownerid " +
-            "AND add_on IS NOT NULL " +
-            "AND add_on != ''";
-        Query query = this.currentSession().createSQLQuery(sql);
-        query.setParameter("ownerid", owner.getId());
-        return query.list();
+        if (owner == null || owner.getId() == null) {
+            return Collections.emptyList();
+        }
+
+        String jpql = """
+            SELECT DISTINCT addon FROM Consumer c
+            JOIN c.addOns addon
+            WHERE c.ownerId = :ownerId
+                AND addon IS NOT NULL
+                AND addon != ''
+            """;
+
+        return getEntityManager().createQuery(jpql, String.class)
+            .setParameter("ownerId", owner.getOwnerId())
+            .getResultList();
     }
 
     /**
@@ -560,10 +578,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @Transactional
     public void updateLastCheckin(Consumer consumer, Date checkinDate) {
-        String hql = "UPDATE Consumer c SET c.lastCheckin = :date, c.updated = :date WHERE c.id = :cid";
+        if (consumer == null || checkinDate == null) {
+            throw new IllegalArgumentException();
+        }
 
-        this.currentSession().createQuery(hql)
-            .setTimestamp("date", checkinDate)
+        String jpql = """
+            UPDATE Consumer c
+            SET c.lastCheckin = :date, c.updated = :date
+            WHERE c.id = :cid
+            """;
+
+        getEntityManager().createQuery(jpql)
+            .setParameter("date", checkinDate)
             .setParameter("cid", consumer.getId())
             .executeUpdate();
     }
@@ -571,38 +597,34 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public void heartbeatUpdate(final String reporterId, final Date checkIn, final String ownerKey)
         throws PersistenceException {
-        final String query;
-        final String dialect = this.getDatabaseDialect();
-
-        if (dialect.contains("mysql") || dialect.contains("maria")) {
-            query = "" +
-                "UPDATE cp_consumer consumer" +
-                " JOIN cp_consumer_hypervisor hypervisor on consumer.id = hypervisor.consumer_id " +
-                " JOIN cp_owner owner on owner.id = consumer.owner_id" +
-                " SET consumer.lastcheckin = :checkin" +
-                " WHERE hypervisor.reporter_id = :reporter" +
-                " AND owner.account = :ownerKey";
-        }
-        else if (dialect.contains("postgresql")) {
-            query = "" +
-                "UPDATE cp_consumer consumer" +
-                " SET lastcheckin = :checkin" +
-                " FROM cp_consumer_hypervisor hypervisor, cp_owner owner" +
-                " WHERE consumer.id = hypervisor.consumer_id" +
-                " AND hypervisor.reporter_id = :reporter" +
-                " AND consumer.owner_id = owner.id" +
-                " AND owner.account = :ownerKey";
-        }
-        else {
-            throw new PersistenceException(
-                "The HypervisorHearbeatUpdate cannot execute as the database dialect is not recognized.");
+        if (reporterId == null || checkIn == null || ownerKey == null) {
+            throw new IllegalArgumentException();
         }
 
-        this.currentSession().createSQLQuery(query)
-            .setParameter("checkin", checkIn)
-            .setParameter("reporter", reporterId)
+        String jpql = """
+            SELECT c.id FROM Consumer c
+            JOIN c.hypervisorId h
+            JOIN c.owner o
+            WHERE h.reporterId = :reporterId AND o.key = :ownerKey
+            """;
+
+        List<Long> consumerIds = getEntityManager().createQuery(jpql, Long.class)
+            .setParameter("reporterId", reporterId)
             .setParameter("ownerKey", ownerKey)
-            .executeUpdate();
+            .getResultList();
+
+        if (!consumerIds.isEmpty()) {
+            String updateJpql = """
+                UPDATE Consumer c
+                SET c.lastCheckin = :checkIn
+                WHERE c.id IN :ids
+                """;
+
+            getEntityManager().createQuery(updateJpql)
+                .setParameter("checkIn", checkIn)
+                .setParameter("ids", consumerIds)
+                .executeUpdate();
+        }
     }
 
     /**
@@ -677,21 +699,25 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             return cachedHostsProvider.get().get(key);
         }
 
-        Disjunction guestIdCrit = Restrictions.disjunction();
-        for (String possibleId : Util.getPossibleUuids(guestId)) {
-            guestIdCrit.add(Restrictions.eq("guestIdLower", possibleId.toLowerCase()));
+        String jpql = """
+            SELECT g.consumer FROM GuestId g
+            WHERE g.consumer.owner.id = :ownerId
+                AND LOWER(g.guestId) IN :possibleIds
+            ORDER BY g.updated
+            DESC
+            """;
+
+        Consumer host = null;
+        try {
+            host = getEntityManager().createQuery(jpql, Consumer.class)
+                .setParameter("ownerId", ownerId)
+                .setParameter("possibleIds", Util.getPossibleUuids(guestId))
+                .setMaxResults(1)
+                .getSingleResult();
+        } catch (NoResultException e) {
+            return null;
         }
 
-        Criteria crit = currentSession()
-            .createCriteria(GuestId.class)
-            .createAlias("consumer", "gconsumer")
-            .add(Restrictions.eq("gconsumer.ownerId", ownerId))
-            .add(guestIdCrit)
-            .addOrder(org.hibernate.criterion.Order.desc("updated"))
-            .setMaxResults(1)
-            .setProjection(Projections.property("consumer"));
-
-        Consumer host = (Consumer) crit.uniqueResult();
         cachedHostsProvider.get().put(key, host);
         return host;
     }
@@ -706,7 +732,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public List<Consumer> getGuests(Consumer consumer) {
         if (consumer.getFact(Consumer.Facts.VIRT_UUID) != null &&
-            !consumer.getFact(Consumer.Facts.VIRT_UUID).trim().equals("")) {
+            !consumer.getFact(Consumer.Facts.VIRT_UUID).trim().isEmpty()) {
             throw new BadRequestException(i18nProvider.get().tr(
                 "The system with UUID {0} is a virtual guest. It does not have guests.",
                 consumer.getUuid()));
@@ -716,7 +742,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         List<GuestId> consumerGuests = consumer.getGuestIds();
         if (consumerGuests != null) {
             consumerGuests = consumerGuests.stream().distinct()
-                .collect(Collectors.toList());
+                .toList();
             for (GuestId cg : consumerGuests) {
                 // Check if this is the most recent host to report the guest by asking
                 // for the consumer's current host and comparing it to ourselves.
