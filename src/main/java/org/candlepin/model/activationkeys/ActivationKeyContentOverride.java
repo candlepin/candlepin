@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -23,31 +23,25 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
+import javax.validation.constraints.NotNull;
+
+
 
 /**
  * ActivationKeyContentOverride
  */
 @Entity
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @DiscriminatorValue("activation_key")
 public class ActivationKeyContentOverride extends
     ContentOverride<ActivationKeyContentOverride, ActivationKey> {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true)
+    @JoinColumn(nullable = false)
+    @NotNull
     private ActivationKey key;
 
     public ActivationKeyContentOverride() {
-    }
-
-    public ActivationKeyContentOverride(ActivationKey key, String contentLabel, String name, String value) {
-        super(contentLabel, name, value);
-        this.setKey(key);
+        // Intentionally left empty
     }
 
     /**
@@ -72,16 +66,19 @@ public class ActivationKeyContentOverride extends
     /**
      * @return the parent activation key
      */
-    @XmlTransient
     public ActivationKey getKey() {
         return key;
     }
 
     /**
      * @param key the activation key
+     *
+     * @return
+     *  a reference to this content override
      */
-    public void setKey(ActivationKey key) {
+    public ActivationKeyContentOverride setKey(ActivationKey key) {
         this.key = key;
+        return this;
     }
 
     public ActivationKeyContentOverride setParent(ActivationKey parent) {

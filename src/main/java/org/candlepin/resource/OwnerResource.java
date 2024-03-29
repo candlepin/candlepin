@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -629,9 +629,11 @@ public class OwnerResource implements OwnerApi {
             else {
                 for (ContentOverrideDTO overrideDTO : dto.getContentOverrides()) {
                     if (overrideDTO != null) {
-                        entity.addContentOverride(
-                            new ActivationKeyContentOverride(entity, overrideDTO.getContentLabel(),
-                                overrideDTO.getName(), overrideDTO.getValue()));
+                        entity.addContentOverride(new ActivationKeyContentOverride()
+                            .setKey(entity)
+                            .setContentLabel(overrideDTO.getContentLabel())
+                            .setName(overrideDTO.getName())
+                            .setValue(overrideDTO.getValue()));
                     }
                 }
             }

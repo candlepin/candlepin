@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -42,7 +42,9 @@ import javax.validation.constraints.Size;
 @Entity
 @Table(name = ContentOverride.DB_TABLE)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorFormula("case when key_id is null then 'consumer' ELSE 'activation_key' end")
+@DiscriminatorFormula("CASE WHEN key_id IS NOT NULL THEN 'activation_key' " +
+    "WHEN environment_id IS NOT NULL THEN 'environment' " +
+    "ELSE 'consumer' END")
 public abstract class ContentOverride<T extends ContentOverride, P extends AbstractHibernateObject> extends
     AbstractHibernateObject<T> {
 
@@ -73,12 +75,6 @@ public abstract class ContentOverride<T extends ContentOverride, P extends Abstr
 
     public ContentOverride() {
         // Intentionally left empty
-    }
-
-    public ContentOverride(String contentLabel, String name, String value) {
-        this.setContentLabel(contentLabel);
-        this.setName(name);
-        this.setValue(value);
     }
 
     public String getId() {
