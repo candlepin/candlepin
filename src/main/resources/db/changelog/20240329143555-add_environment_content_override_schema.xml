@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="20240329143555-1" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="cp_content_override" columnName="environment_id"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="cp_content_override">
+            <column name="environment_id" type="VARCHAR(32)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="cp_content_override"
+            baseColumnNames="environment_id"
+            referencedTableName="cp_environment"
+            referencedColumnNames="id"
+            constraintName="fk_content_override_environment"
+            onDelete="CASCADE" />
+    </changeSet>
+
+    <changeSet id="20240329143555-2" author="crog">
+        <!--
+            Scrub the data to ensure we don't have malformed content overrides with both an AK and
+            a consumer set. We'll follow the design's outlined priority and clear the consumer on
+            any row that has a non-null key ID.
+
+            This way we need not worry (as much) about the constraint we'll be adding in the next
+            task.
+        -->
+
+        <sql dbms="mariadb, postgresql">
+            UPDATE cp_content_override SET consumer_id = NULL WHERE key_id IS NOT NULL
+        </sql>
+    </changeSet>
+
+    <changeSet id="20240329143555-3" author="crog">
+        <!--
+            This constraint has to be done as a direct SQL addition, since the "addCheckConstraint"
+            change type is limited to Liquibase "pro" and, frankly, Liquibase is not good enough or
+            valuable enough to justify that cost.
+
+            As an example of one of its many annoyances and shortcomings, at the time of writing,
+            there is not a "constraint exists" precondition check, so we get to deal with that
+            directly as well. Yipee!
+        -->
+        <sql dbms="mariadb, postgresql">
+            ALTER TABLE cp_content_override DROP CONSTRAINT IF EXISTS cp_content_override_entity_type;
+        </sql>
+
+        <sql dbms="mariadb, postgresql, hsqldb">
+            ALTER TABLE cp_content_override ADD CONSTRAINT cp_content_override_entity_type CHECK (
+                (key_id IS NOT NULL AND environment_id IS NULL AND consumer_id IS NULL) OR
+                (key_id IS NULL AND environment_id IS NOT NULL AND consumer_id IS NULL) OR
+                (key_id IS NULL AND environment_id IS NULL AND consumer_id IS NOT NULL)
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="20240329143555-4" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="cp_content_override_idx2"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="cp_content_override_idx2" tableName="cp_content_override">
+            <column name="environment_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20240329143555-5" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="cp_content_override_idx3"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="cp_content_override_idx3" tableName="cp_content_override">
+            <column name="consumer_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
