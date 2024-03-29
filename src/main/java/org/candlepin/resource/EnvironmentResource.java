@@ -26,6 +26,7 @@ import org.candlepin.controller.PoolService;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
+import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.server.v1.ContentToPromoteDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.exceptions.BadRequestException;
@@ -72,6 +73,8 @@ import java.util.function.BinaryOperator;
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 
 
@@ -378,6 +381,26 @@ public class EnvironmentResource implements EnvironmentApi {
             ownerKey, activationKeys, true);
     }
 
+    @Override
+    public Iterable<ContentOverrideDTO> addEnvironmentContentOverrides(@Verify(Environment.class) String envId,
+        List<ContentOverrideDTO> contentOverrideDTO) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'addEnvironmentContentOverrides'");
+    }
+
+    @Override
+    public Iterable<ContentOverrideDTO> deleteEnvironmentContentOverrides(@Verify(Environment.class) String envId,
+        List<ContentOverrideDTO> contentOverrideDTO) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'deleteEnvironmentContentOverrides'");
+    }
+
+    @Override
+    public Iterable<ContentOverrideDTO> listEnvironmentContentOverrides(@Verify(Environment.class) String envId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'listEnvironmentContentOverrides'");
+    }
+
     /**
      * Verifies that the content specified by the given content object's ID exists.
      *
@@ -465,4 +488,5 @@ public class EnvironmentResource implements EnvironmentApi {
         // Return the final set of content IDs that were promoted
         return resolved.keySet();
     }
+
 }

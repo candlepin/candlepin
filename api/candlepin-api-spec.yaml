@@ -3350,6 +3350,163 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /environments/{env_id}/content_overrides:
+    get:
+      description: Retrieves list of Content Overrides
+      tags:
+        - environment
+      operationId: listEnvironmentContentOverrides
+      security: []
+      parameters:
+        - name: env_id
+          in: path
+          description: The ID of the environment
+          required: true
+          schema:
+            type: string
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      responses:
+        200:
+          description: List of content overrides of the environment
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentOverrideDTO'
+        400:
+          description: Unable to find environment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Environment with ID test_id could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Insufficient permissions
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    put:
+      description: Adds or Updates a list of Content Overrides for the environment
+      tags:
+        - environment
+      operationId: addEnvironmentContentOverrides
+      security: []
+      parameters:
+        - name: env_id
+          in: path
+          description: The ID of the environment
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The list of the content overrides
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContentOverrideDTO'
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      responses:
+        200:
+          description: List of the created/update content overrides of the environment
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentOverrideDTO'
+        400:
+          description: Unable to find environment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Environment with ID test_id could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Insufficient permissions
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Deletes a list of Content Overrides for the environment
+      tags:
+        - environment
+      operationId: deleteEnvironmentContentOverrides
+      security: []
+      parameters:
+        - name: env_id
+          in: path
+          description: The ID of the environment
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The list of the content overrides
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContentOverrideDTO'
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      responses:
+        200:
+          description: List of the deleted content overrides for the environment
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentOverrideDTO'
+        400:
+          description: Unable to find environment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Environment with ID test_id could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Insufficient permissions
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /entitlements:
     get:
       description: Retrieves list of Entitlements. This endpoint supports paging with query parameters. For more details please visit https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin
