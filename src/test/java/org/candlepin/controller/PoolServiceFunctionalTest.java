@@ -211,17 +211,17 @@ public class PoolServiceFunctionalTest extends DatabaseTestFixture {
         Pool pool = createPool(o, socketLimitedProduct, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
 
-        List<Pool> pools = poolCurator.listByOwner(o).list();
-        assertEquals(5, poolCurator.listByOwner(o).list().size());
+        List<Pool> pools = poolCurator.listByOwner(o);
+        assertEquals(5, poolCurator.listByOwner(o).size());
 
         this.poolService.deletePools(Arrays.asList(pool, pools.get(0)));
 
-        pools = poolCurator.listByOwner(o).list();
+        pools = poolCurator.listByOwner(o);
         assertEquals(3, pools.size());
 
         this.poolService.deletePools(pools);
 
-        pools = poolCurator.listByOwner(o).list();
+        pools = poolCurator.listByOwner(o);
         assertTrue(pools.isEmpty());
     }
 
@@ -240,8 +240,8 @@ public class PoolServiceFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumeQuantity() throws Exception {
-        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o,
-            monitoring.getId()).get(0);
+        Pool monitoringPool = poolCurator.listAvailableEntitlementPools(null, o,
+            monitoring.getId(), null).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
 
         Map<String, Integer> poolQuantities = new HashMap<>();

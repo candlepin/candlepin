@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 import org.candlepin.audit.EventSink;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -1121,9 +1120,7 @@ public class ComplianceRulesTest {
         c.setFact("cpu.cpu_socket(s)", "2");
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(List.of(ent));
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(cqmock);
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(List.of(ent));
 
         assertTrue(compliance.isEntitlementCompliant(c, ent, new Date()));
     }
@@ -1136,9 +1133,7 @@ public class ComplianceRulesTest {
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
         ent.getPool().getProduct().setAttribute(Product.Attributes.SOCKETS, "4");
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(List.of(ent));
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(cqmock);
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(List.of(ent));
 
         assertTrue(compliance.isEntitlementCompliant(c, ent, new Date()));
     }
@@ -1151,9 +1146,7 @@ public class ComplianceRulesTest {
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
         ent.getPool().getProduct().setAttribute(Product.Attributes.SOCKETS, "4");
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(List.of(ent));
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(cqmock);
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(List.of(ent));
 
         assertFalse(compliance.isEntitlementCompliant(c, ent, new Date()));
     }
@@ -2095,13 +2088,10 @@ public class ComplianceRulesTest {
     }
 
     private void mockEntCurator(Consumer c, List<Entitlement> ents) {
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-
         c.setEntitlements(new HashSet<>(ents));
 
-        when(cqmock.list()).thenReturn(ents);
         when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(cqmock);
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
     }
 
     /*

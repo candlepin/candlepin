@@ -14,6 +14,8 @@
  */
 package org.candlepin.spec.products;
 
+import static java.lang.Thread.sleep;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,7 +36,11 @@ import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.Isolated;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -44,6 +50,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.IntStream;
 
 @SpecTest
 public class ProductResourceSpecTest {
@@ -188,6 +195,42 @@ public class ProductResourceSpecTest {
 
         AsyncJobStatusDTO finishedJobStatus = jobsClient.waitForJob(job);
         assertEquals("FINISHED", finishedJobStatus.getState());
+    }
+
+    @Nested
+    @Isolated
+    @Execution(ExecutionMode.SAME_THREAD)
+    class GetPages {
+        @Test
+        public void shouldListProductsPagedAndSorted() {
+            ApiClient adminClient = ApiClients.admin();
+            OwnerDTO owner = ownerApi.createOwner(Owners.random());
+
+            // Ensure that there is data for this test.
+            // Most likely, there will already be data left from other test runs that will show up
+            IntStream.range(0, 5).forEach(entry -> {
+                createProduct("test_product-" + entry, owner.getKey(), null, null);
+
+                // for timestamp separation
+                try {
+                    sleep(1000);
+                }
+                catch (InterruptedException ie) {
+                    throw new RuntimeException("Unable to sleep as expected");
+                }
+            });
+
+            List<ProductDTO> products = adminClient.products().getProducts(1, 4, "asc", "created");
+            assertThat(products)
+                .isNotNull()
+                .hasSize(4);
+            assertThat(products.get(0).getCreated().compareTo(products.get(1).getCreated()))
+                .isNotPositive();
+            assertThat(products.get(1).getCreated().compareTo(products.get(2).getCreated()))
+                .isNotPositive();
+            assertThat(products.get(2).getCreated().compareTo(products.get(3).getCreated()))
+                .isNotPositive();
+        }
     }
 
     private void compareOwner(OwnerDTO expected, OwnerDTO actual) {

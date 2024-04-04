@@ -31,8 +31,12 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.ProductCurator.ProductQueryArguments;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.server.v1.ProductsApi;
 
+import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -98,8 +102,43 @@ public class ProductResource implements ProductsApi {
     }
 
     @Override
-    public Iterable<ProductDTO> getProducts() {
-        return this.translator.translateQuery(this.productCurator.listAll(), ProductDTO.class);
+    public Stream<ProductDTO> getProducts(Integer page, Integer perPage, String order, String sortBy) {
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
+
+        ProductQueryArguments queryArgs = new ProductQueryArguments();
+
+        long count = this.productCurator.getProductCount(queryArgs);
+
+        if (pageRequest != null) {
+            Page<Stream<ProductDTO>> pageResponse = new Page<>();
+            pageResponse.setPageRequest(pageRequest);
+
+            if (pageRequest.isPaging()) {
+                queryArgs.setOffset((pageRequest.getPage() - 1) * pageRequest.getPerPage())
+                    .setLimit(pageRequest.getPerPage());
+            }
+
+            if (pageRequest.getSortBy() != null) {
+                boolean reverse = pageRequest.getOrder() == PageRequest.DEFAULT_ORDER;
+                queryArgs.addOrder(pageRequest.getSortBy(), reverse);
+            }
+            pageResponse.setMaxRecords((int) count);
+
+            // Store the page for the LinkHeaderResponseFilter
+            ResteasyContext.pushContext(Page.class, pageResponse);
+        }
+        // If no paging was specified, force a limit on amount of results
+        else {
+            int maxSize = config.getInt(ConfigProperties.PAGING_MAX_PAGE_SIZE);
+            if (count > maxSize) {
+                String errmsg = this.i18n.tr("This endpoint does not support returning more than {0} " +
+                    "results at a time, please use paging.", maxSize);
+                throw new BadRequestException(errmsg);
+            }
+        }
+
+        return this.productCurator.listAll(queryArgs).stream()
+            .map(this.translator.getStreamMapper(Product.class, ProductDTO.class));
     }
 
     @Override

@@ -112,7 +112,6 @@ import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.policy.SystemPurposeComplianceRules;
-import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.RulesObjectMapper;
@@ -154,7 +153,6 @@ import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.resteasy.converter.OffsetDateTimeParamConverterProvider;
 import org.candlepin.resteasy.filter.AuthenticationFilter;
 import org.candlepin.resteasy.filter.AuthorizationFeature;
-import org.candlepin.resteasy.filter.CandlepinQueryInterceptor;
 import org.candlepin.resteasy.filter.CandlepinSuspendModeFilter;
 import org.candlepin.resteasy.filter.ConsumerCheckInFilter;
 import org.candlepin.resteasy.filter.DynamicJsonFilter;
@@ -249,7 +247,6 @@ public class CandlepinModule extends AbstractModule {
         bind(OwnerManager.class);
         bind(PoolRules.class);
         bind(PoolOpProcessor.class);
-        bind(CriteriaRules.class);
         bind(Entitler.class);
         bind(NotSupportedExceptionMapper.class);
         bind(NotAuthorizedExceptionMapper.class);
@@ -432,7 +429,6 @@ public class CandlepinModule extends AbstractModule {
     private void configureInterceptors() {
         bind(ConsumerCheckInFilter.class);
         bind(PageRequestFilter.class);
-        bind(CandlepinQueryInterceptor.class);
         bind(VersionResponseFilter.class);
         bind(LinkHeaderResponseFilter.class);
         bind(DynamicJsonFilter.class);

@@ -24,7 +24,6 @@ import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.RefreshWorker;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -539,7 +538,7 @@ public class Entitler {
     public int revokeUnmappedGuestEntitlements(Consumer consumer) {
         int total = 0;
 
-        CandlepinQuery<Entitlement> unmappedGuestEntitlements = consumer != null ?
+        List<Entitlement> unmappedGuestEntitlements = consumer != null ?
             entitlementCurator.findByPoolAttribute(consumer, "unmapped_guests_only", "true") :
             entitlementCurator.findByPoolAttribute("unmapped_guests_only", "true");
 

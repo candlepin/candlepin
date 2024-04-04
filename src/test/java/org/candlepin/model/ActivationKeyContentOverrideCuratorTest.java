@@ -105,7 +105,7 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
         activationKeyContentOverrideCurator.create(cco2);
 
         activationKeyContentOverrideCurator.removeByContentLabel(key, "test-content");
-        List<ActivationKeyContentOverride> ccoList = activationKeyContentOverrideCurator.listAll().list();
+        List<ActivationKeyContentOverride> ccoList = activationKeyContentOverrideCurator.listAll();
         assertEquals(ccoList.size(), 0);
     }
 
@@ -119,7 +119,7 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
         activationKeyContentOverrideCurator.create(cco2);
 
         activationKeyContentOverrideCurator.removeByParent(key);
-        List<ActivationKeyContentOverride> ccoList = activationKeyContentOverrideCurator.listAll().list();
+        List<ActivationKeyContentOverride> ccoList = activationKeyContentOverrideCurator.listAll();
         assertEquals(ccoList.size(), 0);
     }
 
@@ -132,7 +132,7 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
             key, "test-content1", "name1", "value2");
         activationKeyContentOverrideCurator.addOrUpdate(key, cco2);
 
-        List<ActivationKeyContentOverride> ccoList = activationKeyContentOverrideCurator.listAll().list();
+        List<ActivationKeyContentOverride> ccoList = activationKeyContentOverrideCurator.listAll();
         assertEquals(1, ccoList.size());
         assertEquals("value2", ccoList.get(0).getValue());
     }
@@ -146,7 +146,7 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
             key, "test-content2", "name2", "value2");
         activationKeyContentOverrideCurator.addOrUpdate(key, cco2);
 
-        List<ActivationKeyContentOverride> ccoList = activationKeyContentOverrideCurator.listAll().list();
+        List<ActivationKeyContentOverride> ccoList = activationKeyContentOverrideCurator.listAll();
         assertEquals(2, ccoList.size());
     }
 
@@ -226,8 +226,7 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
         activationKeyContentOverrideCurator.create(new ActivationKeyContentOverride(key,
             "test-repo", "remaining-override", "remaining"));
         activationKeyContentOverrideCurator.removeByName(key, "test-repo", "gpgcheck");
-        List<ActivationKeyContentOverride> remaining = activationKeyContentOverrideCurator.getList(key)
-            .list();
+        List<ActivationKeyContentOverride> remaining = activationKeyContentOverrideCurator.getList(key);
         assertEquals(1, remaining.size());
         assertEquals("remaining-override", remaining.get(0).getName());
     }
@@ -239,8 +238,7 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
         activationKeyContentOverrideCurator.create(new ActivationKeyContentOverride(key,
             "test-repo", "remaining-override", "remaining"));
         activationKeyContentOverrideCurator.removeByName(key, "test-repo", "GpGChecK");
-        List<ActivationKeyContentOverride> remaining = activationKeyContentOverrideCurator.getList(key)
-            .list();
+        List<ActivationKeyContentOverride> remaining = activationKeyContentOverrideCurator.getList(key);
         assertEquals(1, remaining.size());
         assertEquals("remaining-override", remaining.get(0).getName());
     }
@@ -254,8 +252,7 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
         activationKeyContentOverrideCurator.create(new ActivationKeyContentOverride(key,
             "should-remain", "remaining", "true"));
         activationKeyContentOverrideCurator.removeByContentLabel(key, "test-repo");
-        List<ActivationKeyContentOverride> remaining = activationKeyContentOverrideCurator.getList(key)
-            .list();
+        List<ActivationKeyContentOverride> remaining = activationKeyContentOverrideCurator.getList(key);
         assertEquals(1, remaining.size());
         assertEquals("should-remain", remaining.get(0).getContentLabel());
         assertEquals("remaining", remaining.get(0).getName());
@@ -274,7 +271,7 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
             "another-test-repo", "gpgcheck", "0"));
         activationKeyContentOverrideCurator.removeByParent(key);
 
-        assertTrue(activationKeyContentOverrideCurator.getList(key).list().isEmpty());
-        assertEquals(1, activationKeyContentOverrideCurator.getList(key2).list().size());
+        assertTrue(activationKeyContentOverrideCurator.getList(key).isEmpty());
+        assertEquals(1, activationKeyContentOverrideCurator.getList(key2).size());
     }
 }

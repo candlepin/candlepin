@@ -33,7 +33,6 @@ import org.candlepin.config.Configuration;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.dto.api.server.v1.StatusDTO;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
@@ -58,8 +57,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.PrintStream;
-import java.util.ArrayList;
-
+import java.util.LinkedList;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -79,10 +77,7 @@ public class StatusResourceTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 
-        CandlepinQuery mockCPQuery = mock(CandlepinQuery.class);
-        when(mockCPQuery.list()).thenReturn(new ArrayList<Rules>());
-
-        when(rulesCurator.listAll()).thenReturn(mockCPQuery);
+        when(rulesCurator.listAll()).thenReturn(new LinkedList<>());
         when(rulesCurator.getRules()).thenReturn(new Rules("// Version: 2.0\nBLAH"));
 
         when(mockedStatusCache.getStatus()).thenReturn(null);

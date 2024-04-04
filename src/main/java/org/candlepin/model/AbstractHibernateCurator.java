@@ -53,9 +53,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -70,6 +72,7 @@ import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.From;
+import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
@@ -85,7 +88,6 @@ import javax.persistence.criteria.Root;
 public abstract class AbstractHibernateCurator<E extends Persisted> {
     private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
-    @Inject protected CandlepinQueryFactory cpQueryFactory;
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected Provider<I18n> i18nProvider;
     @Inject protected Configuration config;
@@ -255,17 +257,48 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     /**
      * @return all entities for a particular type.
      */
-    public CandlepinQuery<E> listAll() {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria();
+    public List<E> listAll() {
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+        CriteriaQuery<E> criteriaQuery = criteriaBuilder.createQuery(this.entityType);
+        Root<E> root = criteriaQuery.from(this.entityType);
+        criteriaQuery.select(root);
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        Predicate securityPredicate = this.getSecurityPredicate(this.entityType, criteriaBuilder, root);
+        if (securityPredicate != null) {
+            criteriaQuery.where(securityPredicate);
+        }
+
+        return em.createQuery(criteriaQuery).getResultList();
     }
 
-    public CandlepinQuery<E> listAllByIds(Collection<? extends Serializable> ids) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(CPRestrictions.in("id", ids));
+    public List<E> listAllByIds(Collection<? extends Serializable> ids) {
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+        CriteriaQuery<E> criteriaQuery = criteriaBuilder.createQuery(this.entityType);
+        Root<E> root = criteriaQuery.from(this.entityType);
+        criteriaQuery.select(root);
 
-        return this.cpQueryFactory.<E>buildQuery(this.currentSession(), criteria);
+        ParameterExpression<Collection> idList = criteriaBuilder.parameter(Collection.class);
+        Predicate predicate = root.get("id").in(idList);
+
+        Predicate securityPredicate = this.getSecurityPredicate(this.entityType, criteriaBuilder, root);
+        if (securityPredicate != null) {
+            predicate = criteriaBuilder.and(predicate, securityPredicate);
+        }
+        criteriaQuery.where(predicate);
+        TypedQuery<E> query = em.createQuery(criteriaQuery);
+
+        // to ensure uniqueness of the members of the input collection
+        if (!(ids instanceof Set)) {
+            ids = new HashSet<>(ids);
+        }
+
+        List<E> result = new ArrayList<>();
+        for (List block : this.partition(ids)) {
+            result.addAll(query.setParameter(idList, block).getResultList());
+        }
+        return result;
     }
 
     @SuppressWarnings("unchecked")
@@ -308,7 +341,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             page.setPageRequest(pageRequest);
         }
         else {
-            List<E> pageData = this.listAll().list();
+            List<E> pageData = this.listAll();
             page.setMaxRecords(pageData.size());
             page.setPageData(pageData);
         }
@@ -374,26 +407,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
         countQuery.select(criteriaBuilder.count(countQuery.from(this.entityType)));
         return this.entityManager.get().createQuery(countQuery).getSingleResult();
-    }
-
-    @SuppressWarnings("unchecked")
-    public Page<ResultIterator<E>> paginateResults(CandlepinQuery<E> query, PageRequest pageRequest) {
-        Page<ResultIterator<E>> page = new Page<>();
-
-        if (pageRequest != null) {
-            page.setMaxRecords(query.getRowCount());
-
-            query.addOrder(this.createPagingOrder(pageRequest));
-            if (pageRequest.isPaging()) {
-                query.setFirstResult((pageRequest.getPage() - 1) * pageRequest.getPerPage());
-                query.setMaxResults(pageRequest.getPerPage());
-            }
-
-            page.setPageRequest(pageRequest);
-        }
-
-        page.setPageData(query.iterate());
-        return page;
     }
 
     @SuppressWarnings("unchecked")
@@ -1377,11 +1390,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     /**
-     * Partitions the given map using the value returned by getInBlockSize() method as the partition
-     * size.
+     * Partitions the given map using the custom partition value
      *
      * @param map
      *  the map to partition
+     *
+     * @param blockSize
+     *  value for the partition size
      *
      * @throws IllegalArgumentException
      *  if the provided map is null
@@ -1389,12 +1404,11 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return
      *  An iterable collection of maps containing the partitioned data from the provided map
      */
-    protected <K, V> Iterable<Map<K, V>> partitionMap(Map<K, V> map) {
+    protected <K, V> Iterable<Map<K, V>> partitionMap(Map<K, V> map, int blockSize) {
         if (map == null) {
             throw new IllegalArgumentException("map is null");
         }
 
-        int blockSize = this.getInBlockSize();
         List<Map<K, V>> blockList = new LinkedList<>();
 
         if (map.size() > blockSize) {
@@ -1447,7 +1461,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     /**
      * Builds a collection of order instances to be used with the JPA criteria query API.
      *
-     * @param critBuilder
+     * @param criteriaBuilder
      *  the CriteriaBuilder instance to use to create order
 
      * @param root

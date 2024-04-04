@@ -44,14 +44,14 @@ public class CertificateTest extends DatabaseTestFixture {
 
     @Test
     public void testList() throws Exception {
-        List<SubscriptionsCertificate> certificates = subscriptionsCertificateCurator.listAll().list();
+        List<SubscriptionsCertificate> certificates = subscriptionsCertificateCurator.listAll();
         int beforeCount = certificates.size();
 
         for (int i = 0; i < 10; i++) {
             subscriptionsCertificateCurator.create(createSubCert("key" + i, "cert" + i));
         }
 
-        certificates = subscriptionsCertificateCurator.listAll().list();
+        certificates = subscriptionsCertificateCurator.listAll();
         int afterCount = certificates.size();
         assertEquals(10, afterCount - beforeCount);
     }

@@ -70,7 +70,6 @@ public class JobResource implements JobsApi {
     private static Logger log = LoggerFactory.getLogger(JobResource.class);
 
     private static final String NULL_OWNER_KEY = "null";
-    private static final int MAX_JOB_RESULTS = 10000;
 
     private Configuration config;
     private I18n i18n;
@@ -211,9 +210,10 @@ public class JobResource implements JobsApi {
         }
         // If no paging was specified, force a limit on amount of results
         else {
-            if (count > MAX_JOB_RESULTS) {
+            int maxSize = config.getInt(ConfigProperties.PAGING_MAX_PAGE_SIZE);
+            if (count > maxSize) {
                 String errmsg = this.i18n.tr("This endpoint does not support returning more than {0} " +
-                    "results at a time, please use paging.", MAX_JOB_RESULTS);
+                    "results at a time, please use paging.", maxSize);
                 throw new BadRequestException(errmsg);
             }
         }

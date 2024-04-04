@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.model.SourceSubscription.DERIVED_POOL_SUB_KEY;
 import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -54,6 +55,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -284,7 +287,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         req.setSortBy("id");
 
         PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addIdFilter(pool2.getId());
+        filters.addIdFilters(pool2.getId());
 
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
             null, owner.getId(), (Collection<String>) null, null, activeDate, filters, req, false,
@@ -294,8 +297,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(pool2.getId(), results.get(0).getId());
 
         filters = new PoolFilterBuilder();
-        filters.addIdFilter(pool1.getId());
-        filters.addIdFilter(pool2.getId());
+        filters.addIdFilters(pool1.getId(), pool2.getId());
 
         page = poolCurator.listAvailableEntitlementPools(
             null, owner.getId(), (Collection<String>) null, null, activeDate, filters, req, false,
@@ -571,10 +573,14 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
-        List<Pool> results = poolCurator.listByOwnerAndProduct(owner, p.getId());
+        List<Pool> results = listPoolsByOwnerAndProduct(p, owner);
         Pool onlyPool = results.get(0);
 
         assertEquals("An Extremely Great Product", onlyPool.getProductName());
+    }
+
+    private List<Pool> listPoolsByOwnerAndProduct(Product product, Owner owner) {
+        return poolCurator.listAvailableEntitlementPools(null, owner, product.getId(), null);
     }
 
     @Test
@@ -618,7 +624,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool p = TestUtil.createPool(owner, parent, 5);
         poolCurator.create(p);
 
-        List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product.getId());
+        List<Pool> results = listPoolsByOwnerAndProduct(product, owner);
         assertEquals(1, results.size());
     }
 
@@ -759,7 +765,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
         poolCurator.create(pool3);
 
-        assertEquals(2, poolCurator.listBySourceEntitlement(e).list().size());
+        assertEquals(2, poolCurator.listBySourceEntitlement(e).size());
     }
 
     @Test
@@ -1649,7 +1655,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Pool pool = createPool(owner2, "id123");
 
-        List<Pool> result = poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId()).list();
+        List<Pool> result = poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId());
         assertEquals(1, result.size());
         assertEquals(pool, result.get(0));
     }
@@ -1661,7 +1667,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         createPool(owner2, "id123");
 
-        List<Pool> result = poolCurator.getPoolsBySubscriptionId(null).list();
+        List<Pool> result = poolCurator.getPoolsBySubscriptionId(null);
         assertTrue(result.isEmpty());
     }
 
@@ -1765,34 +1771,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         results1.add(p2);
 
         assertEquals(results1, pools1);
-    }
-
-    private List<Owner> setupDBForProductIdTests() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-        this.ownerCurator.create(owner1);
-        this.ownerCurator.create(owner2);
-
-        Product product1 = this.generateProduct(owner1, "p1", "p1");
-        product1.setProvidedProducts(this.generateProductCollection(owner1, "pp-a-", 3));
-        Product dProduct1 = this.generateProduct(owner1, "dp1", "dp1");
-        dProduct1.setProvidedProducts(this.generateProductCollection(owner1, "dpp-a-", 3));
-        product1.setDerivedProduct(dProduct1);
-
-        Pool p1 = TestUtil.createPool(owner1, product1);
-
-        Product product2 = this.generateProduct(owner2, "p2", "p2");
-        product2.setProvidedProducts(this.generateProductCollection(owner2, "pp-b-", 3));
-        Product dProduct2 = this.generateProduct(owner2, "dp2", "dp2");
-        dProduct2.setProvidedProducts(this.generateProductCollection(owner2, "dpp-b-", 3));
-        product2.setDerivedProduct(dProduct2);
-
-        Pool p2 = TestUtil.createPool(owner2, product2);
-
-        this.poolCurator.create(p1);
-        this.poolCurator.create(p2);
-
-        return Arrays.asList(owner1, owner2);
     }
 
     @Test
@@ -1915,7 +1893,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         expected.add(pools.get(1));
         expected.add(pools.get(4));
 
-        List<Pool> actual = this.poolCurator.getPrimaryPools().list();
+        List<Pool> actual = this.poolCurator.getPrimaryPools();
         assertEquals(expected, actual);
     }
 
@@ -3022,8 +3000,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool pool = TestUtil.createPool(owner, parentProduct, 5);
         poolCurator.create(pool);
 
-        List<Pool> results = poolCurator.listAvailableEntitlementPools(
-            null, owner, childProduct.getId(), null);
+        List<Pool> results = listPoolsByOwnerAndProduct(childProduct, owner);
 
         assertEquals(1, results.size());
         assertEquals(pool.getId(), results.get(0).getId());
@@ -3399,4 +3376,270 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertFalse(pool6.hasDirtyProduct());
     }
 
+    @Test
+    public void testListByOwner() {
+        Owner owner1 = this.createOwner(TestUtil.randomString());
+        Owner owner2 = this.createOwner(TestUtil.randomString());
+        Owner owner3 = this.createOwner(TestUtil.randomString());
+
+        Product prod1 = this.createProduct(TestUtil.randomString());
+        Product prod2 = this.createProduct(TestUtil.randomString());
+
+        Pool pool1 = this.createPool(owner1, prod1);
+        this.createPool(owner2, prod2);
+
+        assertThat(this.poolCurator.listByOwner(owner1))
+            .isNotNull()
+            .singleElement()
+            .isEqualTo(pool1);
+
+        assertThat(this.poolCurator.listByOwner(owner3))
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testListByOwnerWithActiveOn() {
+        Owner owner = this.createOwner(TestUtil.randomString());
+        Product prod = this.createProduct(TestUtil.randomString());
+
+        Instant now = Instant.now();
+        Date poolStartDate = Date.from(now.minus(3, ChronoUnit.DAYS));
+        Date poolEndDate = Date.from(now.plus(3, ChronoUnit.DAYS));
+
+        Pool pool = this.createPool(owner, prod, 10L, poolStartDate, poolEndDate);
+
+        assertThat(this.poolCurator.listByOwner(owner, Date.from(now)))
+            .isNotNull()
+            .singleElement()
+            .isEqualTo(pool);
+
+        // Active on date greater than the pool end date
+        assertThat(this.poolCurator.listByOwner(owner, Date.from(now.plus(4, ChronoUnit.DAYS))))
+            .isNotNull()
+            .isEmpty();
+
+        // Active on date less than the pool start date
+        assertThat(this.poolCurator.listByOwner(owner, Date.from(now.minus(4, ChronoUnit.DAYS))))
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetPoolsBySubscriptionIds() {
+        Owner owner1 = this.createOwner(TestUtil.randomString());
+        Owner owner2 = this.createOwner(TestUtil.randomString());
+        Owner owner3 = this.createOwner(TestUtil.randomString());
+
+        Product prod1 = this.createProduct(TestUtil.randomString());
+        Product prod2 = this.createProduct(TestUtil.randomString());
+        Product prod3 = this.createProduct(TestUtil.randomString());
+
+        Subscription sub1 = TestUtil.createSubscription(owner1, prod1);
+        sub1.setId(Util.generateDbUUID());
+        sub1.setQuantity(16L);
+        sub1.setStartDate(Date.from(Instant.now().minus(3, ChronoUnit.DAYS)));
+        sub1.setEndDate(Date.from(Instant.now().plus(3, ChronoUnit.DAYS)));
+        sub1.setModified(new Date());
+        Pool pool1 = poolManager.createAndEnrichPools(sub1).get(0);
+
+        Subscription sub2 = TestUtil.createSubscription(owner2, prod2);
+        sub2.setId(Util.generateDbUUID());
+        sub2.setQuantity(16L);
+        sub2.setStartDate(Date.from(Instant.now().minus(3, ChronoUnit.DAYS)));
+        sub2.setEndDate(Date.from(Instant.now().plus(3, ChronoUnit.DAYS)));
+        sub2.setModified(new Date());
+        Pool pool2 = poolManager.createAndEnrichPools(sub2).get(0);
+
+        Subscription sub3 = TestUtil.createSubscription(owner3, prod3);
+        sub3.setId(Util.generateDbUUID());
+        sub3.setQuantity(16L);
+        sub3.setStartDate(Date.from(Instant.now().minus(3, ChronoUnit.DAYS)));
+        sub3.setEndDate(Date.from(Instant.now().plus(3, ChronoUnit.DAYS)));
+        sub3.setModified(new Date());
+        poolManager.createAndEnrichPools(sub3).get(0);
+
+        String sourceSubId1 = pool1.getSourceSubscription().getSubscriptionId();
+        String sourceSubId2 = pool2.getSourceSubscription().getSubscriptionId();
+
+        List<Pool> actual = this.poolCurator
+            .getPoolsBySubscriptionIds(List.of(sourceSubId1, sourceSubId2));
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactly(pool1, pool2);
+    }
+
+    @Test
+    public void testGetPoolsWithoutSubscription() {
+        Owner owner = this.createOwner();
+        Product product = this.createProduct();
+        Pool pool = this.createPool(owner, product)
+            .setSourceSubscription(null);
+
+        List<Pool> ownersFloatingPools = this.poolCurator.getOwnersFloatingPools(owner);
+
+        assertThat(ownersFloatingPools)
+            .isNotNull()
+            .hasSize(1)
+            .extracting(Pool::getId)
+            .isEqualTo(List.of(pool.getId()));
+    }
+
+    @Test
+    public void testListPoolIdsForEntitlements() {
+        Owner owner = this.createOwner();
+
+        Consumer consumer1 = this.createConsumer(owner);
+        Consumer consumer2 = this.createConsumer(owner);
+
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+        Product product3 = this.createProduct();
+        Product product4 = this.createProduct();
+
+        Pool pool1 = this.createPool(owner, product1);
+        Pool pool2 = this.createPool(owner, product2);
+        Pool pool3 = this.createPool(owner, product3);
+        Pool pool4 = this.createPool(owner, product4);
+
+        Entitlement entitlement1 = this.createEntitlement(owner, consumer1, pool1);
+        Entitlement entitlement2 = this.createEntitlement(owner, consumer2, pool2);
+        Entitlement entitlement3 = this.createEntitlement(owner, consumer1, pool3);
+        Entitlement entitlement4 = this.createEntitlement(owner, consumer2, pool4);
+
+        Collection<String> poolIdsForEntitlements = this.poolCurator.getPoolIdsForEntitlements(
+            List.of(entitlement1.getId(), entitlement2.getId(), entitlement3.getId(), entitlement4.getId()));
+
+        assertThat(poolIdsForEntitlements)
+            .isNotNull()
+            .hasSize(4)
+            .containsExactlyInAnyOrderElementsOf(
+                List.of(pool1.getId(), pool2.getId(), pool3.getId(), pool4.getId()));
+    }
+
+    @Test
+    public void testListPoolIdsForSourceEntitlements() {
+        Owner owner = this.createOwner();
+
+        Consumer consumer1 = this.createConsumer(owner);
+
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+
+        Entitlement entitlement1 = this.createEntitlement(owner, consumer1, this.createPool(owner, product1));
+        Entitlement entitlement2 = this.createEntitlement(owner, consumer1, this.createPool(owner, product2));
+
+        Pool pool1 = this.createPool(owner, product1)
+            .setSourceEntitlement(entitlement1);
+        Pool pool2 = this.createPool(owner, product2)
+            .setSourceEntitlement(entitlement2);
+
+        Collection<String> poolIdsForSourceEntitlements = this.poolCurator.getPoolIdsForSourceEntitlements(
+            List.of(entitlement1.getId(), entitlement2.getId()));
+
+        assertThat(poolIdsForSourceEntitlements)
+            .isNotNull()
+            .hasSize(2)
+            .containsExactlyInAnyOrderElementsOf(
+                List.of(pool1.getId(), pool2.getId()));
+    }
+
+    @Test
+    public void testListEntitlementIdsForPools() {
+        Owner owner = this.createOwner();
+
+        Consumer consumer1 = this.createConsumer(owner);
+
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+
+        Pool pool1 = this.createPool(owner, product1);
+        Pool pool2 = this.createPool(owner, product2);
+
+        Entitlement entitlement1 = this.createEntitlement(owner, consumer1, pool1);
+        Entitlement entitlement2 = this.createEntitlement(owner, consumer1, pool2);
+
+        Collection<String> entitlementIdsForPools = this.poolCurator.getEntitlementIdsForPools(
+            List.of(pool1.getId(), pool2.getId()));
+
+        assertThat(entitlementIdsForPools)
+            .isNotNull()
+            .hasSize(2)
+            .containsExactlyInAnyOrderElementsOf(
+                List.of(entitlement1.getId(), entitlement2.getId()));
+    }
+
+    @Test
+    public void testPoolsFromBadSubs() {
+        Owner owner = this.createOwner();
+
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+
+        Pool pool1 = this.createPool(owner, product1);
+        Pool pool2 = this.createPool(owner, product2);
+        Pool pool3 = this.createPool(owner, product2);
+
+        List<Pool> poolsFromBadSubs = this.poolCurator.getPoolsFromBadSubs(owner,
+            List.of(pool1.getSubscriptionId()));
+
+        assertThat(poolsFromBadSubs)
+            .isNotNull()
+            .hasSize(2)
+            .extracting(Pool::getId)
+            .containsExactlyInAnyOrderElementsOf(List.of(pool2.getId(), pool3.getId()));
+
+    }
+
+    @Test
+    public void testListEntitlementsForPoolInOrderByCreated() {
+        Owner owner = this.createOwner();
+
+        Consumer consumer1 = this.createConsumer(owner);
+
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+
+        Pool pool1 = this.createPool(owner, product1);
+        Pool pool2 = this.createPool(owner, product2);
+
+        Instant now = Instant.now();
+        Entitlement entitlement1 = this.createEntitlement(owner, consumer1, pool1)
+            .setCreated(Date.from(now));
+        Entitlement entitlement2 = this.createEntitlement(owner, consumer1, pool1)
+            .setCreated(Date.from(now.minus(1L, ChronoUnit.HOURS)));
+        Entitlement entitlement3 = this.createEntitlement(owner, consumer1, pool2)
+            .setCreated(Date.from(now.minus(2L, ChronoUnit.HOURS)));
+        Entitlement entitlement4 = this.createEntitlement(owner, consumer1, pool2)
+            .setCreated(Date.from(now.minus(3L, ChronoUnit.HOURS)));
+
+        List<String> entitlementIds = this.poolCurator.retrieveOrderedEntitlementIdsOf(List.of(pool1, pool2));
+
+        assertThat(entitlementIds)
+            .isNotNull()
+            .hasSize(4)
+            .containsExactlyElementsOf(List.of(entitlement1.getId(), entitlement2.getId(),
+                entitlement3.getId(), entitlement4.getId()));
+    }
+
+    @Test
+    public void testListPoolsRestrictedToUsername() {
+        Owner owner = this.createOwner();
+
+        Product product1 = this.createProduct();
+
+        Pool pool1 = this.createPool(owner, product1)
+            .setRestrictedToUsername("username");
+        Pool pool2 = this.createPool(owner, product1)
+            .setRestrictedToUsername("username");
+
+        List<Pool> pools = this.poolCurator.listPoolsRestrictedToUser("username");
+
+        assertThat(pools)
+            .isNotNull()
+            .hasSize(2)
+            .extracting(Pool::getId)
+            .containsExactlyInAnyOrderElementsOf(List.of(pool1.getId(), pool2.getId()));
+    }
 }

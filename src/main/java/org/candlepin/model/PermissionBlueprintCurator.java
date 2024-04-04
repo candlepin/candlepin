@@ -14,8 +14,8 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Restrictions;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -28,18 +28,21 @@ import javax.inject.Singleton;
 @Singleton
 public class PermissionBlueprintCurator extends AbstractHibernateCurator<PermissionBlueprint> {
 
-    private CandlepinQueryFactory cpQueryFactory;
-
     @Inject
-    public PermissionBlueprintCurator(CandlepinQueryFactory cpQueryFactory) {
+    public PermissionBlueprintCurator() {
         super(PermissionBlueprint.class);
-        this.cpQueryFactory = cpQueryFactory;
     }
 
-    public CandlepinQuery<PermissionBlueprint> findByOwner(Owner owner) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(PermissionBlueprint.class)
-            .add(Restrictions.eq("owner", owner));
+    public List<PermissionBlueprint> findByOwner(Owner owner) {
+        if (owner == null) {
+            return new ArrayList<>();
+        }
 
-        return this.cpQueryFactory.<PermissionBlueprint>buildQuery(this.currentSession(), criteria);
+        String jpql = "SELECT pb from PermissionBlueprint pb WHERE pb.owner.id = :owner_id";
+
+        return this.getEntityManager()
+            .createQuery(jpql, PermissionBlueprint.class)
+            .setParameter("owner_id", owner.getId())
+            .getResultList();
     }
 }

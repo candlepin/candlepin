@@ -19,7 +19,6 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -139,7 +138,7 @@ public class PoolService {
         return pool;
     }
 
-    public CandlepinQuery<Pool> listPoolsByOwner(Owner owner) {
+    public List<Pool> listPoolsByOwner(Owner owner) {
         return poolCurator.listByOwner(owner);
     }
 
@@ -271,7 +270,7 @@ public class PoolService {
                     this.entitlementCurator.getInBlockSize());
 
                 for (List<String> block : blocks) {
-                    entitlements.addAll(this.entitlementCurator.listAllByIds(block).list());
+                    entitlements.addAll(this.entitlementCurator.listAllByIds(block));
                 }
             }
 
@@ -367,7 +366,7 @@ public class PoolService {
 
                             if (subPoolIds != null && !subPoolIds.isEmpty()) {
                                 // Resolve pool IDs...
-                                Collection<Pool> subPools = this.poolCurator.listAllByIds(subPoolIds).list();
+                                Collection<Pool> subPools = this.poolCurator.listAllByIds(subPoolIds);
 
                                 // Invoke the rules engine to update the affected pools
                                 if (subPools != null && !subPools.isEmpty()) {

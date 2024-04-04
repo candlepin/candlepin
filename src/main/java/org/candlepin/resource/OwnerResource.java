@@ -70,7 +70,6 @@ import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerCurator.ConsumerQueryArguments;
@@ -87,6 +86,7 @@ import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerCurator.OwnerQueryArguments;
 import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.OwnerNotFoundException;
 import org.candlepin.model.Pool;
@@ -159,18 +159,12 @@ import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 
 
-
 /**
  * Owner Resource
  */
 public class OwnerResource implements OwnerApi {
-
     private static final Logger log = LoggerFactory.getLogger(OwnerResource.class);
-
     private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
-
-    /** The maximum number of consumers to return per list or find request */
-    private static final int MAX_CONSUMERS_PER_REQUEST = 1000;
 
     private final OwnerCurator ownerCurator;
     private final OwnerInfoCurator ownerInfoCurator;
@@ -203,7 +197,7 @@ public class OwnerResource implements OwnerApi {
     private final DTOValidator validator;
     private final PrincipalProvider principalProvider;
     private final PagingUtilFactory pagingUtilFactory;
-
+    private final int maxPagingSize;
 
     @Inject
     @SuppressWarnings("checkstyle:parameternumber")
@@ -270,6 +264,7 @@ public class OwnerResource implements OwnerApi {
         this.validator = Objects.requireNonNull(validator);
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.pagingUtilFactory = Objects.requireNonNull(pagingUtilFactory);
+        this.maxPagingSize = this.config.getInt(ConfigProperties.PAGING_MAX_PAGE_SIZE);
     }
 
     /**
@@ -776,12 +771,50 @@ public class OwnerResource implements OwnerApi {
 
     @Override
     @Wrapped(element = "owners")
-    public CandlepinQuery<OwnerDTO> listOwners(String keyFilter) {
-        CandlepinQuery<Owner> query = keyFilter != null ?
-            this.ownerCurator.getByKeys(Arrays.asList(keyFilter)) :
-            this.ownerCurator.listAll();
+    public Stream<OwnerDTO> listOwners(String keyFilter,
+                                       Integer page, Integer perPage, String order, String sortBy) {
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
 
-        return this.translator.translateQuery(query, OwnerDTO.class);
+        OwnerQueryArguments queryArgs = new OwnerQueryArguments()
+            .setKeys(
+                keyFilter != null ?
+                Arrays.asList(keyFilter) :
+                null);
+
+        long count = this.ownerCurator.getOwnerCount(queryArgs);
+
+        if (pageRequest != null) {
+            Page<Stream<OwnerDTO>> pageResponse = new Page<>();
+            pageResponse.setPageRequest(pageRequest);
+
+            if (pageRequest.isPaging()) {
+                queryArgs.setOffset((pageRequest.getPage() - 1) * pageRequest.getPerPage())
+                    .setLimit(pageRequest.getPerPage());
+            }
+
+            if (pageRequest.getSortBy() != null) {
+                boolean reverse = pageRequest.getOrder() == PageRequest.DEFAULT_ORDER;
+                queryArgs.addOrder(pageRequest.getSortBy(), reverse);
+            }
+
+            pageResponse.setMaxRecords((int) count);
+
+            // Store the page for the LinkHeaderResponseFilter
+            ResteasyContext.pushContext(Page.class, pageResponse);
+        }
+        // If no paging was specified, force a limit on amount of results
+        else {
+            int maxSize = config.getInt(ConfigProperties.PAGING_MAX_PAGE_SIZE);
+            if (count > maxSize) {
+                String errmsg = this.i18n.tr("This endpoint does not support returning more than {0} " +
+                    "results at a time, please use paging.", maxSize);
+                throw new BadRequestException(errmsg);
+            }
+        }
+
+        return this.ownerCurator.listAll(queryArgs).stream()
+            .map(this.translator.getStreamMapper(Owner.class, OwnerDTO.class));
+
     }
 
     @Override
@@ -1017,14 +1050,15 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public CandlepinQuery<ActivationKeyDTO> ownerActivationKeys(
+    public Stream<ActivationKeyDTO> ownerActivationKeys(
         @Verify(value = Owner.class, subResource = SubResource.ACTIVATION_KEYS) String ownerKey,
         String keyName) {
 
         Owner owner = findOwnerByKey(ownerKey);
 
-        CandlepinQuery<ActivationKey> keys = this.activationKeyCurator.listByOwner(owner, keyName);
-        return translator.translateQuery(keys, ActivationKeyDTO.class);
+        List<ActivationKey> keys = this.activationKeyCurator.listByOwner(owner, keyName);
+        return keys.stream()
+            .map(this.translator.getStreamMapper(ActivationKey.class, ActivationKeyDTO.class));
     }
 
     @Override
@@ -1170,9 +1204,10 @@ public class OwnerResource implements OwnerApi {
         }
         // If no paging was specified, force a limit on amount of results
         else {
-            if (count > MAX_CONSUMERS_PER_REQUEST) {
+            int maxSize = config.getInt(ConfigProperties.PAGING_MAX_PAGE_SIZE);
+            if (count > maxSize) {
                 String errmsg = this.i18n.tr("This endpoint does not support returning more than {0} " +
-                    "results at a time, please use paging.", MAX_CONSUMERS_PER_REQUEST);
+                    "results at a time, please use paging.", maxSize);
                 throw new BadRequestException(errmsg);
             }
         }
@@ -1273,7 +1308,7 @@ public class OwnerResource implements OwnerApi {
         if (matches != null) {
             matches.stream()
                 .filter(elem -> elem != null && !elem.isEmpty())
-                .forEach(elem -> poolFilters.addMatchesFilter(elem));
+                .forEach(poolFilters::addMatchesFilter);
         }
 
         if (poolIds != null && !poolIds.isEmpty()) {
@@ -1300,7 +1335,7 @@ public class OwnerResource implements OwnerApi {
         Owner owner = this.findOwnerByKey(ownerKey);
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
 
-        for (Pool pool : this.poolService.listPoolsByOwner(owner).list()) {
+        for (Pool pool : this.poolService.listPoolsByOwner(owner)) {
 
             SourceSubscription srcsub = pool.getSourceSubscription();
             if (srcsub != null && PRIMARY_POOL_SUB_KEY.equalsIgnoreCase(srcsub.getSubscriptionSubKey())) {
@@ -1632,14 +1667,65 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public CandlepinQuery<ConsumerDTOArrayElement> getHypervisors(
-        @Verify(Owner.class) String ownerKey, List<String> hypervisorIds) {
+    public Stream<ConsumerDTOArrayElement> getHypervisors(
+        @Verify(Owner.class) String ownerKey, List<String> hypervisorIds,
+        Integer page, Integer perPage, String order, String sortBy) {
 
         Owner owner = ownerCurator.getByKey(ownerKey);
-        CandlepinQuery<Consumer> query = (hypervisorIds == null || hypervisorIds.isEmpty()) ?
-            this.consumerCurator.getHypervisorsForOwner(owner.getId()) :
-            this.consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getId());
-        return translator.translateQuery(query, ConsumerDTOArrayElement.class);
+        List<Consumer> hypervisors;
+        if (hypervisorIds == null || hypervisorIds.isEmpty()) {
+            hypervisors = listHypervisorsByOwner(owner);
+        }
+        else {
+            hypervisors = listHypervisorsByIds(owner, hypervisorIds);
+        }
+
+        return hypervisors.stream()
+            .map(this.translator.getStreamMapper(Consumer.class, ConsumerDTOArrayElement.class));
+    }
+
+    private List<Consumer> listHypervisorsByOwner(Owner owner) {
+        int ownerHypervisorCount = this.consumerCurator.countHypervisorsForOwner(owner.getId());
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
+        validateRequestSize(pageRequest, ownerHypervisorCount);
+
+        if (pageRequest != null) {
+            Page<Stream<ConsumerDTOArrayElement>> page = new Page<>();
+            page.setPageRequest(pageRequest);
+
+            page.setMaxRecords(ownerHypervisorCount);
+
+            // Store the page for the LinkHeaderResponseFilter
+            ResteasyContext.pushContext(Page.class, page);
+        }
+
+        return this.consumerCurator.getHypervisorsForOwner(owner.getId(), pageRequest);
+    }
+
+    private List<Consumer> listHypervisorsByIds(Owner owner, List<String> hypervisorIds) {
+        int ownerHypervisorCount = this.consumerCurator.countHypervisorsBulk(owner.getId(), hypervisorIds);
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
+        validateRequestSize(pageRequest, ownerHypervisorCount);
+
+        if (pageRequest != null) {
+            Page<Stream<ConsumerDTOArrayElement>> page = new Page<>();
+            page.setPageRequest(pageRequest);
+
+            page.setMaxRecords(ownerHypervisorCount);
+
+            // Store the page for the LinkHeaderResponseFilter
+            ResteasyContext.pushContext(Page.class, page);
+        }
+
+        return this.consumerCurator.getHypervisorsBulk(owner.getId(), hypervisorIds, pageRequest);
+    }
+
+    private void validateRequestSize(PageRequest pageRequest, int ownerHypervisorCount) {
+        if (pageRequest == null && ownerHypervisorCount > this.maxPagingSize) {
+            String errmsg = this.i18n.tr("This endpoint does not support returning more than {0} " +
+                "results at a time, please use paging.", this.maxPagingSize);
+            throw new BadRequestException(errmsg);
+        }
     }
 
     @Override

@@ -218,7 +218,7 @@ public class ManifestGeneratorResource {
             // We could probably not consume the full quantity, but it's not really important. The
             // upstream will cease to exist after this operation anyway.
             Map<String, Integer> poolQuantities = new HashMap<>();
-            for (Pool pool : this.poolCurator.listByOwner(owner).list()) {
+            for (Pool pool : this.poolCurator.listByOwner(owner)) {
                 if (!pool.isDerived()) {
                     int quantity = pool.getQuantity() != null ? pool.getQuantity().intValue() : 1;
                     poolQuantities.put(pool.getId(), quantity);

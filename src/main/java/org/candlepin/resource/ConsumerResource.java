@@ -82,7 +82,6 @@ import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificate;
 import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.AsyncJobStatus;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerActivationKey;
@@ -202,9 +201,6 @@ import javax.ws.rs.core.Response;
 public class ConsumerResource implements ConsumerApi {
 
     private static final Logger log = LoggerFactory.getLogger(ConsumerResource.class);
-
-    /** The maximum number of consumers to return per list or find request */
-    private static final int MAX_CONSUMERS_PER_REQUEST = 1000;
 
     private final ConsumerCurator consumerCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
@@ -381,18 +377,19 @@ public class ConsumerResource implements ConsumerApi {
     @Override
     @SecurityHole
     @RootResource.LinkedResource
-    public Iterable<ContentOverrideDTO> listConsumerContentOverrides(String consumerUuid) {
+    public Stream<ContentOverrideDTO> listConsumerContentOverrides(String consumerUuid) {
         Principal principal = ResteasyContext.getContextData(Principal.class);
         Consumer parent = this.verifyAndGetParent(consumerUuid, principal, Access.READ_ONLY);
 
-        CandlepinQuery<ConsumerContentOverride> query = this.ccoCurator.getList(parent);
-        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+        return this.ccoCurator.getList(parent)
+            .stream()
+            .map(this.translator.getStreamMapper(ConsumerContentOverride.class, ContentOverrideDTO.class));
     }
 
     @Override
     @Transactional
     @SecurityHole
-    public Iterable<ContentOverrideDTO> addConsumerContentOverrides(
+    public Stream<ContentOverrideDTO> addConsumerContentOverrides(
         String consumerUuid, List<ContentOverrideDTO> entries) {
 
         // Validate our input
@@ -435,14 +432,15 @@ public class ConsumerResource implements ConsumerApi {
         // Hibernate typically persists automatically before executing a query against a table with
         // pending changes, but if it doesn't, we can add a flush here to make sure this outputs the
         // correct values
-        CandlepinQuery<ConsumerContentOverride> query = this.ccoCurator.getList(parent);
-        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+        return this.ccoCurator.getList(parent)
+            .stream()
+            .map(this.translator.getStreamMapper(ConsumerContentOverride.class, ContentOverrideDTO.class));
     }
 
     @Override
     @Transactional
     @SecurityHole
-    public Iterable<ContentOverrideDTO> deleteConsumerContentOverrides(
+    public Stream<ContentOverrideDTO> deleteConsumerContentOverrides(
         String consumerUuid, List<ContentOverrideDTO> entries) {
 
         Principal principal = ResteasyContext.getContextData(Principal.class);
@@ -469,8 +467,9 @@ public class ConsumerResource implements ConsumerApi {
             }
         }
 
-        CandlepinQuery<ConsumerContentOverride> query = this.ccoCurator.getList(parent);
-        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+        return this.ccoCurator.getList(parent)
+            .stream()
+            .map(this.translator.getStreamMapper(ConsumerContentOverride.class, ContentOverrideDTO.class));
     }
 
     private Consumer verifyAndGetParent(String parentId, Principal principal, Access access) {
@@ -650,9 +649,10 @@ public class ConsumerResource implements ConsumerApi {
         }
         // If no paging was specified, force a limit on amount of results
         else {
-            if (count > MAX_CONSUMERS_PER_REQUEST) {
+            int maxSize = config.getInt(ConfigProperties.PAGING_MAX_PAGE_SIZE);
+            if (count > maxSize) {
                 String errmsg = this.i18n.tr("This endpoint does not support returning more than {0} " +
-                    "results at a time, please use paging.", MAX_CONSUMERS_PER_REQUEST);
+                    "results at a time, please use paging.", maxSize);
                 throw new BadRequestException(errmsg);
             }
         }

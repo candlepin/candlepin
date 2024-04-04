@@ -28,7 +28,6 @@ import org.candlepin.config.Configuration;
 import org.candlepin.controller.refresher.RefreshResult;
 import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.RefreshWorker;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -358,7 +357,7 @@ public class PoolManager {
         List<Pool> subscriptionPools;
 
         if (pool.getSubscriptionId() != null) {
-            subscriptionPools = this.poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId()).list();
+            subscriptionPools = this.poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId());
 
             if (log.isDebugEnabled()) {
                 log.debug("Found {} pools for subscription {}", subscriptionPools.size(),
@@ -1616,7 +1615,7 @@ public class PoolManager {
      * @return
      *  a list of pools associated with the specified subscription.
      */
-    public CandlepinQuery<Pool> getPoolsBySubscriptionId(String subscriptionId) {
+    public List<Pool> getPoolsBySubscriptionId(String subscriptionId) {
         return this.poolCurator.getPoolsBySubscriptionId(subscriptionId);
     }
 
@@ -1626,7 +1625,7 @@ public class PoolManager {
      * @return
      *  a list of known primary pools
      */
-    public CandlepinQuery<Pool> getPrimaryPools() {
+    public List<Pool> getPrimaryPools() {
         return this.poolCurator.getPrimaryPools();
     }
 

@@ -14,6 +14,7 @@
  */
 package org.candlepin.spec.consumers;
 
+import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
@@ -30,10 +31,15 @@ import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.Isolated;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.stream.IntStream;
 
 @SpecTest
 public class DeletedConsumerSpecTest {
@@ -61,12 +67,49 @@ public class DeletedConsumerSpecTest {
         admin.consumers().deleteConsumer(consumer.getUuid());
 
         List<DeletedConsumerDTO> deletedConsumers = admin.deletedConsumers()
-            .listByDate(fromDate);
+            .listByDate(fromDate, 1, 50, "desc", "created");
 
         assertThat(deletedConsumers)
             .hasSizeGreaterThanOrEqualTo(1)
             .map(DeletedConsumerDTO::getConsumerUuid)
             .contains(consumer.getUuid());
+    }
+
+    @Nested
+    @Isolated
+    @Execution(ExecutionMode.SAME_THREAD)
+    class GetPages {
+        @Test
+        public void shouldFindPageOfDeletedConsumers() {
+            OffsetDateTime fromDate = OffsetDateTime.now();
+
+            // Ensure that there is minimum data for this test.
+            // Most likely, there will already be data left from other test runs that will show up
+            IntStream.range(0, 5).forEach(entry -> {
+                ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
+                admin.consumers().deleteConsumer(consumer.getUuid());
+                // for timestamp separation
+                try {
+                    sleep(1000);
+                }
+                catch (InterruptedException ie) {
+                    throw new RuntimeException("Unable to sleep as expected");
+                }
+            });
+
+            List<DeletedConsumerDTO> deletedConsumers = admin.deletedConsumers()
+                .listByDate(fromDate, 1, 4, "asc", "created");
+            assertThat(deletedConsumers)
+                .isNotNull()
+                .hasSize(4);
+            assertThat(deletedConsumers.get(0).getCreated().compareTo(deletedConsumers.get(1).getCreated()))
+                .isLessThanOrEqualTo(0);
+            assertThat(deletedConsumers.get(1).getCreated().compareTo(deletedConsumers.get(2).getCreated()))
+                .isLessThanOrEqualTo(0);
+            assertThat(deletedConsumers.get(2).getCreated().compareTo(deletedConsumers.get(3).getCreated()))
+                .isLessThanOrEqualTo(0);
+
+        }
     }
 
 }

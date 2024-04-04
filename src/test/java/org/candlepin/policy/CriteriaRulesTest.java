@@ -32,13 +32,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
 
-
-/*
+/**
  * Test the Javascript pool criteria. This works because we configure an enforcer for the
  * unit tests that by default, will always return success. As such if we see pools getting
  * filtered out below, we know it was because of the hibernate query mechanism.
@@ -57,7 +55,6 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
 
     @Test
     public void virtOnlyPoolAttributeFiltering() {
-
         consumer = this.createConsumer(owner);
         Product targetProduct = this.createProduct();
 
@@ -68,7 +65,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         poolCurator.flush();
 
         List<Pool> results = poolCurator.listAvailableEntitlementPools(consumer, (String) null,
-            (Collection<String>) null, null);
+            null, null);
 
         assertEquals(1, results.size());
         assertEquals(physicalPool.getId(), results.get(0).getId());
@@ -76,10 +73,9 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         // Make the consumer a guest and try again:
         consumer.setFact("virt.is_guest", "true");
         results = poolCurator.listAvailableEntitlementPools(consumer, (String) null,
-            (Collection<String>) null, null);
+            null, null);
 
         assertEquals(2, results.size());
-
     }
 
     // Virt only can also be on the product:
@@ -95,20 +91,19 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         this.createPool(owner, targetProduct, 1L, new Date(), new Date());
 
         List<Pool> results = poolCurator.listAvailableEntitlementPools(consumer, (String) null,
-            (Collection<String>) null, null);
+            null, null);
 
         assertEquals(0, results.size());
         // Make the consumer a guest and try again:
         consumer.setFact("virt.is_guest", "true");
         results = poolCurator.listAvailableEntitlementPools(consumer, (String) null,
-            (Collection<String>) null, null);
+            null, null);
 
         assertEquals(2, results.size());
     }
 
     @Test
     public void requiresHostPoolAttributeFiltering() {
-
         consumer = this.createConsumer(owner);
 
         Consumer host = createConsumer(owner);
@@ -130,7 +125,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         poolCurator.flush();
 
         List<Pool> results = poolCurator.listAvailableEntitlementPools(consumer, (String) null,
-            (Collection<String>) null, null);
+            null, null);
 
         assertEquals(0, results.size());
 
@@ -140,7 +135,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         consumerCurator.update(consumer);
         assertEquals(host.getUuid(), consumerCurator.getHost("GUESTUUID", owner.getId()).getUuid());
         results = poolCurator.listAvailableEntitlementPools(consumer, (String) null,
-            (Collection<String>) null, null);
+            null, null);
 
         assertEquals(1, results.size());
         assertEquals(virtPool.getId(), results.get(0).getId());
@@ -171,8 +166,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         poolCurator.merge(virtPool);
         poolCurator.flush();
 
-        List<Pool> results = poolCurator.listAvailableEntitlementPools(c, (String) null, (Collection<String>)
-            null, null);
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(c, (String) null, null, null);
         assertEquals(0, results.size());
     }
 
@@ -200,8 +194,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         poolCurator.merge(virtPool);
         poolCurator.flush();
 
-        List<Pool> results = poolCurator.listAvailableEntitlementPools(c, (String) null, (Collection<String>)
-            null, null);
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(c, (String) null, null, null);
         assertEquals(1, results.size());
     }
 }

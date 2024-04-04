@@ -14,6 +14,8 @@
  */
 package org.candlepin.resteasy.filter;
 
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.PageRequest.Order;
@@ -39,16 +41,35 @@ import javax.ws.rs.ext.Provider;
 @Provider
 @Priority(Priorities.USER)
 public class PageRequestFilter implements ContainerRequestFilter {
+
+    private final Configuration config;
     private final javax.inject.Provider<I18n> i18nProvider;
 
+    private final int defaultPageSize;
+    private final int maxPageSize;
+
     @Inject
-    public PageRequestFilter(javax.inject.Provider<I18n> i18nProvider) {
+    public PageRequestFilter(Configuration config, javax.inject.Provider<I18n> i18nProvider) {
+        this.config = Objects.requireNonNull(config);
         this.i18nProvider = Objects.requireNonNull(i18nProvider);
+
+        this.defaultPageSize = this.config.getInt(ConfigProperties.PAGING_DEFAULT_PAGE_SIZE);
+        this.maxPageSize = this.config.getInt(ConfigProperties.PAGING_MAX_PAGE_SIZE);
+    }
+
+    private BadRequestException buildPageSizeException(int maxSize) {
+        I18n i18n = this.i18nProvider.get();
+        return new BadRequestException(i18n.tr("page size cannot exceed {0} elements", maxSize));
+    }
+
+    private BadRequestException buildIntegerParsingException(String field) {
+        I18n i18n = this.i18nProvider.get();
+        return new BadRequestException(i18n.tr("param \"{0}\" must be a positive integer", field));
     }
 
     @Override
     public void filter(ContainerRequestContext requestContext) {
-        PageRequest p = null;
+        PageRequest pageRequest = null;
 
         MultivaluedMap<String, String> params = requestContext.getUriInfo().getQueryParameters();
 
@@ -58,41 +79,36 @@ public class PageRequestFilter implements ContainerRequestFilter {
         String sortBy = params.getFirst(PageRequest.SORT_BY_PARAM);
 
         if (page != null || perPage != null || order != null || sortBy != null) {
-            p = new PageRequest();
+            pageRequest = new PageRequest()
+                .setOrder(PageRequest.DEFAULT_ORDER);
 
-            if (order == null) {
-                p.setOrder(PageRequest.DEFAULT_ORDER);
-            }
-            else {
-                p.setOrder(readOrder(order));
+            if (order != null) {
+                pageRequest.setOrder(readOrder(order));
             }
 
-            /* We'll leave it to the curator layer to figure out what to sort by if
-             * sortBy is null. */
-            p.setSortBy(sortBy);
+            // We'll leave it to the curator layer to figure out what to sort by if sortBy is null.
+            pageRequest.setSortBy(sortBy);
 
-            try {
-                if (page == null && perPage != null) {
-                    p.setPage(PageRequest.DEFAULT_PAGE);
-                    p.setPerPage(readInteger(perPage));
+            if (page != null || perPage != null) {
+                pageRequest.setPage(PageRequest.DEFAULT_PAGE)
+                    .setPerPage(this.defaultPageSize);
+
+                if (page != null) {
+                    pageRequest.setPage(this.readInteger(PageRequest.PAGE_PARAM, page));
                 }
-                else if (page != null && perPage == null) {
-                    p.setPage(readInteger(page));
-                    p.setPerPage(PageRequest.DEFAULT_PER_PAGE);
+
+                if (perPage != null) {
+                    int perPageValue = this.readInteger(PageRequest.PER_PAGE_PARAM, perPage);
+                    if (perPageValue > this.maxPageSize) {
+                        throw this.buildPageSizeException(this.maxPageSize);
+                    }
+
+                    pageRequest.setPerPage(perPageValue);
                 }
-                else {
-                    p.setPage(readInteger(page));
-                    p.setPerPage(readInteger(perPage));
-                }
-            }
-            catch (NumberFormatException nfe) {
-                I18n i18n = this.i18nProvider.get();
-                throw new BadRequestException(i18n.tr("offset and limit parameters" +
-                    " must be positive integers"), nfe);
             }
         }
 
-        ResteasyContext.pushContext(PageRequest.class, p);
+        ResteasyContext.pushContext(PageRequest.class, pageRequest);
     }
 
     private Order readOrder(String order) {
@@ -105,20 +121,21 @@ public class PageRequestFilter implements ContainerRequestFilter {
 
         I18n i18n = this.i18nProvider.get();
         throw new BadRequestException(i18n.tr("the order parameter must be either" +
-                " \"ascending\" or \"descending\""));
+            " \"ascending\" or \"descending\""));
     }
 
-    private Integer readInteger(String value) {
-        if (value != null) {
-            int i = Integer.parseInt(value);
+    private int readInteger(String field, String value) {
+        try {
+            int parsed = Integer.parseInt(value);
 
-            if (i <= 0) {
-                I18n i18n = this.i18nProvider.get();
-                throw new NumberFormatException(i18n.tr("Expected a positive integer."));
+            if (parsed <= 0) {
+                throw this.buildIntegerParsingException(field);
             }
-            return i;
-        }
 
-        return null;
+            return parsed;
+        }
+        catch (NumberFormatException e) {
+            throw this.buildIntegerParsingException(field);
+        }
     }
 }

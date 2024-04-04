@@ -102,7 +102,7 @@ class ConsumerMigrationTest extends DatabaseTestFixture {
         this.consumerCurator.clear();
 
         List<Consumer> migratedConsumers = this.consumerCurator.listAllByIds(
-            this.ownerCurator.getConsumerIds(destOwner)).list();
+            this.ownerCurator.getConsumerIds(destOwner));
         assertThat(migratedConsumers)
             .allSatisfy(consumer -> assertThat(consumer)
                 .returns(null, Consumer::getIdCert)

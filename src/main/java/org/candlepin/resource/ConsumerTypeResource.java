@@ -18,7 +18,6 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.ConsumerTypeDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.resource.server.v1.ConsumerTypeApi;
@@ -27,8 +26,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import javax.inject.Inject;
+import java.util.stream.Stream;
 
+import javax.inject.Inject;
 
 
 /**
@@ -84,9 +84,10 @@ public class ConsumerTypeResource implements ConsumerTypeApi {
      * {@InheritDoc}
      */
     @Override
-    public CandlepinQuery<ConsumerTypeDTO> getConsumerTypes() {
-        CandlepinQuery<ConsumerType> query = this.consumerTypeCurator.listAll();
-        return this.translator.translateQuery(query, ConsumerTypeDTO.class);
+    public Stream<ConsumerTypeDTO> getConsumerTypes() {
+        return this.consumerTypeCurator.listAll()
+            .stream()
+            .map(this.translator.getStreamMapper(ConsumerType.class, ConsumerTypeDTO.class));
     }
 
     /**

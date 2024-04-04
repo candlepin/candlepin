@@ -28,6 +28,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anySet;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
@@ -65,6 +66,7 @@ import org.candlepin.dto.api.server.v1.ContentAccessDTO;
 import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.server.v1.EntitlementDTO;
+import org.candlepin.dto.api.server.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.dto.api.server.v1.PoolDTO;
@@ -80,7 +82,6 @@ import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerCurator.ConsumerQueryArguments;
@@ -90,9 +91,11 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.HypervisorId;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerCurator.OwnerQueryArguments;
 import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.OwnerNotFoundException;
 import org.candlepin.model.PermissionBlueprint;
@@ -124,6 +127,7 @@ import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
 
+import org.assertj.core.api.Assertions;
 import org.hibernate.exception.ConstraintViolationException;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -145,6 +149,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -321,9 +326,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Map<String, Integer> pQs = new HashMap<>();
         pQs.put(pool.getId(), 1);
         poolManager.entitleByPools(c1, pQs);
-        assertEquals(2, consumerCurator.listByOwner(owner).list().size());
-        assertEquals(1, poolCurator.listByOwner(owner).list().size());
-        assertEquals(1, entitlementCurator.listByOwner(owner).list().size());
+        assertEquals(1, poolCurator.listByOwner(owner).size());
+        assertEquals(1, entitlementCurator.listByOwner(owner).size());
 
         // Generate an ueber certificate for the Owner. This will need to
         // be cleaned up along with the owner deletion.
@@ -333,11 +337,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         ownerResource.deleteOwner(owner.getKey(), true, true);
 
-        assertEquals(0, consumerCurator.listByOwner(owner).list().size());
         assertNull(consumerCurator.findByUuid(c1.getUuid()));
         assertNull(consumerCurator.findByUuid(c2.getUuid()));
-        assertEquals(0, poolCurator.listByOwner(owner).list().size());
-        assertEquals(0, entitlementCurator.listByOwner(owner).list().size());
+        assertEquals(0, poolCurator.listByOwner(owner).size());
+        assertEquals(0, entitlementCurator.listByOwner(owner).size());
         assertNull(ueberCertificateCurator.findForOwner(owner));
     }
 
@@ -548,7 +551,45 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(this.principalProvider.get()).thenReturn(principal);
         securityInterceptor.enable();
 
-        assertThrows(ForbiddenException.class, () -> ownerResource.listOwners(null));
+        assertThrows(ForbiddenException.class,
+            () -> ownerResource.listOwners(null, null, null, null, null));
+    }
+
+    @Test
+    public void testListOwnersWithKeys() {
+        OwnerResource resource = buildOwnerResource();
+        when(mockOwnerCurator.listAll(any(OwnerQueryArguments.class))).
+            thenReturn(new LinkedList<>());
+        ResteasyContext.pushContext(PageRequest.class,
+            new PageRequest()
+                .setPage(1)
+                .setPerPage(10)
+                .setSortBy("created"));
+        resource.listOwners("test-key", 1, 10, "asc", "created");
+        verify(mockOwnerCurator, atLeastOnce()).listAll(any(OwnerQueryArguments.class));
+        ResteasyContext.popContextData(PageRequest.class);
+    }
+
+    @Test
+    public void testGetOwnersOverMaxNoPaging() {
+        ResteasyContext.popContextData(PageRequest.class);
+        OwnerResource resource = buildOwnerResource();
+        config.setProperty(ConfigProperties.PAGING_MAX_PAGE_SIZE, "7");
+        when(mockOwnerCurator.getOwnerCount(any(OwnerQueryArguments.class)))
+            .thenReturn(10L);
+        assertThrows(BadRequestException.class, () -> resource.listOwners(
+            null, null, null, null, null));
+    }
+
+    @Test
+    public void testGetOwnersNoPaging() {
+        ResteasyContext.popContextData(PageRequest.class);
+        OwnerResource resource = buildOwnerResource();
+        when(mockOwnerCurator.getOwnerCount(any(OwnerQueryArguments.class)))
+            .thenReturn(1L);
+        when(mockOwnerCurator.listAll(any(OwnerQueryArguments.class)))
+            .thenReturn(List.of(new Owner()));
+        assertEquals(1, resource.listOwners(null, null, null, null, null).toList().size());
     }
 
     @Test
@@ -747,7 +788,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         String ownerKey = "test_owner";
         this.mockOwner(ownerKey);
         OwnerResource resource = this.buildOwnerResource();
-        doReturn(5000L).when(this.mockConsumerCurator).getConsumerCount(any(ConsumerQueryArguments.class));
+        doReturn(12000L).when(this.mockConsumerCurator).getConsumerCount(any(ConsumerQueryArguments.class));
 
         assertThrows(BadRequestException.class, () -> resource.listConsumers(ownerKey, "username", null, null,
             null, null, null, null, null, null));
@@ -1098,12 +1139,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNotNull(key.getId());
         assertEquals(key.getOwner().getId(), owner.getId());
         assertEquals(key.getReleaseVer().getReleaseVer(), "release1");
-        CandlepinQuery<ActivationKeyDTO> result = ownerResource.ownerActivationKeys(owner.getKey(), null);
+        List<ActivationKeyDTO> result = ownerResource.ownerActivationKeys(owner.getKey(), null).toList();
 
         assertNotNull(result);
-        List<ActivationKeyDTO> keys = result.list();
-
-        assertEquals(1, keys.size());
+        assertEquals(1, result.size());
     }
 
     @Test
@@ -1124,15 +1163,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(key.getOwner().getId(), owner.getId());
         assertEquals(key.getReleaseVer().getReleaseVer(), "release2");
 
-        CandlepinQuery<ActivationKeyDTO> result = ownerResource.ownerActivationKeys(owner.getKey(), "dd");
+        List<ActivationKeyDTO> result = ownerResource.ownerActivationKeys(owner.getKey(), "dd").toList();
         assertNotNull(result);
-        List<ActivationKeyDTO> keys = result.list();
-        assertEquals(1, keys.size());
+        assertEquals(1, result.size());
 
-        result = ownerResource.ownerActivationKeys(owner.getKey(), null);
+        result = ownerResource.ownerActivationKeys(owner.getKey(), null).toList();
         assertNotNull(result);
-        keys = result.list();
-        assertEquals(2, keys.size());
+        assertEquals(2, result.size());
     }
 
     @Test
@@ -1752,6 +1789,58 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void shouldGetOwnerHypervisors() {
+        Owner owner = createOwner();
+        Consumer hypervisor1 = createHypervisor(owner);
+        Consumer hypervisor2 = createHypervisor(owner);
+        Consumer hypervisor3 = createHypervisor(owner);
+        PageRequest pageRequest = new PageRequest().setPage(1).setPerPage(2);
+        ResteasyContext.pushContext(PageRequest.class, pageRequest);
+
+        List<ConsumerDTOArrayElement> results = this.ownerResource
+            .getHypervisors(owner.getKey(), null, null, null, null, null)
+            .toList();
+
+        assertNotNull(results);
+        assertEquals(2, results.size());
+        Assertions.assertThat(results)
+            .map(ConsumerDTOArrayElement::getHypervisorId)
+            .map(HypervisorIdDTO::getHypervisorId)
+            .containsExactlyInAnyOrder(
+                hypervisor1.getHypervisorId().getHypervisorId(),
+                hypervisor2.getHypervisorId().getHypervisorId()
+            );
+    }
+
+    @Test
+    public void shouldGetHypervisorsById() {
+        Owner owner = createOwner();
+        Consumer hypervisor1 = createHypervisor(owner);
+        Consumer hypervisor2 = createHypervisor(owner);
+        Consumer hypervisor3 = createHypervisor(owner);
+        PageRequest pageRequest = new PageRequest().setPage(1).setPerPage(2);
+        ResteasyContext.pushContext(PageRequest.class, pageRequest);
+
+        Stream<ConsumerDTOArrayElement> results = this.ownerResource
+            .getHypervisors(owner.getKey(), List.of(
+                hypervisor1.getHypervisorId().getHypervisorId(),
+                hypervisor2.getHypervisorId().getHypervisorId(),
+                hypervisor3.getHypervisorId().getHypervisorId()
+            ), null, null, null, null);
+
+        assertNotNull(results);
+        assertEquals(2, results.toList().size());
+    }
+
+    private Consumer createHypervisor(Owner owner) {
+        HypervisorId hypervisor = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId(TestUtil.randomString("hypervisor"));
+        return createConsumer(owner)
+            .setHypervisorId(hypervisor);
+    }
+
+    @Test
     public void testSetAndDeleteOwnerLogLevel() {
         Owner owner = new Owner()
             .setKey("Test Owner")
@@ -1788,10 +1877,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Pool pool = TestUtil.createPool(owner, prod);
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
 
-        assertEquals(0, poolCurator.listByOwner(owner).list().size());
+        assertEquals(0, poolCurator.listByOwner(owner).size());
 
         PoolDTO createdPoolDto = ownerResource.createPool(owner.getKey(), poolDto);
-        assertEquals(1, poolCurator.listByOwner(owner).list().size());
+        assertEquals(1, poolCurator.listByOwner(owner).size());
         assertNotNull(createdPoolDto.getId());
     }
 
@@ -1801,7 +1890,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class)
             .productId("invalid_product_id");
 
-        assertEquals(0, poolCurator.listByOwner(owner).list().size());
+        assertEquals(0, poolCurator.listByOwner(owner).size());
 
         assertThrows(NotFoundException.class, () -> ownerResource.createPool(owner.getKey(), poolDto));
     }
@@ -1812,7 +1901,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Pool pool = TestUtil.createPool(owner, prod);
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
 
-        assertEquals(0, poolCurator.listByOwner(owner).list().size());
+        assertEquals(0, poolCurator.listByOwner(owner).size());
 
         assertThrows(ForbiddenException.class, () -> ownerResource.createPool(owner.getKey(), poolDto));
     }
@@ -1828,13 +1917,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
 
         poolDto = ownerResource.createPool(owner.getKey(), poolDto);
-        List<Pool> createdPools = poolCurator.listByOwner(owner).list();
+        List<Pool> createdPools = poolCurator.listByOwner(owner);
         assertEquals(1, createdPools.size());
         assertEquals(pool.getQuantity(), createdPools.get(0).getQuantity());
 
         poolDto.setQuantity(10L);
         ownerResource.updatePool(owner.getKey(), poolDto);
-        List<Pool> updatedPools = poolCurator.listByOwner(owner).list();
+        List<Pool> updatedPools = poolCurator.listByOwner(owner);
         assertEquals(1, updatedPools.size());
         assertEquals(10L, updatedPools.get(0).getQuantity().longValue());
     }
@@ -1877,12 +1966,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setUpstreamPoolId("upstream-" + pool.getId());
-        assertEquals(0, poolCurator.listByOwner(owner).list().size());
+        assertEquals(0, poolCurator.listByOwner(owner).size());
 
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
         ownerResource.createPool(owner.getKey(), poolDto);
 
-        List<Pool> pools = poolCurator.listByOwner(owner).list();
+        List<Pool> pools = poolCurator.listByOwner(owner);
         assertEquals(2, pools.size());
         assertTrue(pools.get(0).getSubscriptionSubKey().startsWith(PRIMARY_POOL_SUB_KEY) ||
             pools.get(1).getSubscriptionSubKey().startsWith(PRIMARY_POOL_SUB_KEY));
@@ -1906,7 +1995,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolDto.setQuantity(100L);
         ownerResource.updatePool(owner.getKey(), poolDto);
 
-        List<Pool> pools = poolCurator.listByOwner(owner).list();
+        List<Pool> pools = poolCurator.listByOwner(owner);
         assertEquals(2, pools.size());
         assertTrue(pools.get(0).getSubscriptionSubKey().startsWith(PRIMARY_POOL_SUB_KEY) ||
             pools.get(1).getSubscriptionSubKey().startsWith(PRIMARY_POOL_SUB_KEY));
@@ -1929,13 +2018,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
         poolDto = ownerResource.createPool(owner.getKey(), poolDto);
 
-        List<Pool> pools = poolCurator.listByOwner(owner).list();
+        List<Pool> pools = poolCurator.listByOwner(owner);
         assertEquals(2, pools.size());
 
         poolDto.setStartDate(Util.toDateTime(new Date(System.currentTimeMillis() - 5 * 24 * 60 * 60 * 1000)));
         poolDto.setEndDate(Util.toDateTime(new Date(System.currentTimeMillis() - 3 * 24 * 60 * 60 * 1000)));
         ownerResource.updatePool(owner.getKey(), poolDto);
-        pools = poolCurator.listByOwner(owner).list();
+        pools = poolCurator.listByOwner(owner);
         assertEquals(0, pools.size());
     }
 
@@ -1952,7 +2041,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
         ownerResource.createPool(owner.getKey(), poolDto);
 
-        List<Pool> pools = poolCurator.listByOwner(owner).list();
+        List<Pool> pools = poolCurator.listByOwner(owner);
 
         Pool bonusPool = null;
         for (Pool p : pools) {
@@ -1978,11 +2067,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setQuantity(100L);
-        assertEquals(0, poolCurator.listByOwner(owner).list().size());
+        assertEquals(0, poolCurator.listByOwner(owner).size());
 
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
         ownerResource.createPool(owner.getKey(), poolDto);
-        List<Pool> pools = poolCurator.listByOwner(owner).list();
+        List<Pool> pools = poolCurator.listByOwner(owner);
         assertEquals(1, pools.size());
         assertTrue(Boolean.parseBoolean(pools.get(0).getAttributeValue(Product.Attributes.VIRT_ONLY)));
         assertEquals(200L, pools.get(0).getQuantity().intValue());

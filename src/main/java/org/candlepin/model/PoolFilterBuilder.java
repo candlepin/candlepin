@@ -14,63 +14,22 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.Criteria;
-import org.hibernate.criterion.Criterion;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 
 
 /**
- * PoolFilterBuilder
- *
  * Builds criteria to find pools based upon their attributes and product attributes
  */
 public class PoolFilterBuilder extends FilterBuilder {
 
-    private String alias = "";
-    private List<String> matchFilters = new ArrayList<>();
-    private Set<String> productIds = new HashSet<>();
-    private String subscriptionIdFilter;
+    private final List<String> matchFilters = new ArrayList<>();
 
     public PoolFilterBuilder() {
         super();
-    }
-
-    public PoolFilterBuilder(String aliasName) {
-        this.alias = aliasName + ".";
-    }
-
-    @Override
-    public void applyTo(Criteria parentCriteria) {
-        super.applyTo(parentCriteria);
-    }
-
-    public void setProductIdFilter(String productId) {
-        this.productIds.clear();
-        this.productIds.add(productId);
-    }
-
-    public void setProductIdFilter(Collection<String> productIds) {
-        this.productIds.clear();
-        this.productIds.addAll(productIds);
-    }
-
-    public Collection<String> getProductIdFilter() {
-        return Collections.unmodifiableSet(this.productIds);
-    }
-
-    public void setSubscriptionIdFilter(String subscriptionId) {
-        this.subscriptionIdFilter = subscriptionId;
-    }
-
-    public String getSubscriptionIdFilter() {
-        return this.subscriptionIdFilter;
     }
 
     /**
@@ -90,17 +49,8 @@ public class PoolFilterBuilder extends FilterBuilder {
         }
     }
 
-    public boolean hasMatchFilters() {
-        return !matchFilters.isEmpty();
-    }
-
     public Collection<String> getMatchesFilters() {
         return Collections.unmodifiableList(this.matchFilters);
-    }
-
-    @Override
-    protected Criterion buildCriteriaForKey(String key, List<String> values) {
-        throw new UnsupportedOperationException("This should not be used at present");
     }
 
 }

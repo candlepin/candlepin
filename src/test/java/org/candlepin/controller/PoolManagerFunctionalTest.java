@@ -237,16 +237,16 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testEntitlementPoolsCreated() {
-        List<Pool> pools = poolCurator.listByOwner(o).list();
+        List<Pool> pools = poolCurator.listByOwner(o);
         assertTrue(pools.size() > 0);
 
-        Pool virtHostPool = poolCurator.listByOwnerAndProduct(o, virtHost.getId()).get(0);
+        Pool virtHostPool = listPoolsByOwnerAndProduct(o, virtHost.getId()).get(0);
         assertNotNull(virtHostPool);
     }
 
     @Test
     public void testQuantityCheck() throws Exception {
-        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o, monitoring.getId()).get(0);
+        Pool monitoringPool = listPoolsByOwnerAndProduct(o, monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
         AutobindData data = new AutobindData(parentSystem, o)
             .on(new Date())
@@ -274,7 +274,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testFabricateWithBranding() {
-        List<Pool> primaryPools = poolManager.getPoolsBySubscriptionId(sub4.getId()).list();
+        List<Pool> primaryPools = poolManager.getPoolsBySubscriptionId(sub4.getId());
         Pool primaryPool = null;
         for (Pool pool : primaryPools) {
             if (pool.getType() == Pool.PoolType.NORMAL) {
@@ -410,7 +410,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(o).run();
 
-        List<Pool> pools = poolCurator.listByOwnerAndProduct(o, product1.getId());
+        List<Pool> pools = listPoolsByOwnerAndProduct(o, product1.getId());
         assertEquals(1, pools.size());
 
         // now alter the product behind the sub, and make sure the pool is also updated
@@ -419,7 +419,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // set up initial pool
         this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(o).run();
 
-        pools = poolCurator.listByOwnerAndProduct(o, product2.getId());
+        pools = listPoolsByOwnerAndProduct(o, product2.getId());
         assertEquals(1, pools.size());
     }
 
@@ -934,7 +934,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
 
         this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
-        List<Pool> pools = poolCurator.listByOwnerAndProduct(owner, prod.getId());
+        List<Pool> pools = listPoolsByOwnerAndProduct(owner, prod.getId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
 
@@ -1013,7 +1013,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
         this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
-        List<Pool> pools = poolCurator.listByOwnerAndProduct(owner, prod.getId());
+        List<Pool> pools = listPoolsByOwnerAndProduct(owner, prod.getId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
         String poolId = newPool.getId();
@@ -1063,7 +1063,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod, prod2);
         this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
-        List<Pool> pools = poolCurator.listByOwner(owner).list();
+        List<Pool> pools = poolCurator.listByOwner(owner);
         assertEquals(2, pools.size());
     }
 
@@ -1343,4 +1343,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertEquals(1, pool2.getEntitlements().size());
     }
 
+    private List<Pool> listPoolsByOwnerAndProduct(Owner owner, String productId) {
+        return poolCurator.listAvailableEntitlementPools(null, owner, productId, null);
+    }
 }

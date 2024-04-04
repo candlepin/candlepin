@@ -19,8 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobConfig;
@@ -35,9 +37,13 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
+import org.candlepin.model.ProductCurator.ProductQueryArguments;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
+import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
@@ -250,4 +256,46 @@ public class ProductResourceTest extends DatabaseTestFixture {
         assertEquals(Integer.valueOf(1), statusDTO2.getMaxAttempts());
     }
 
+    @Test
+    public void testGetProducts() {
+        ProductCurator mockProductCurator = mock(ProductCurator.class);
+        ProductResource productResource = new ProductResource(mockProductCurator, this.ownerCurator,
+            this.productCertificateCurator, config, this.i18n, this.modelTranslator, this.jobManager);
+        when(mockProductCurator.listAll(any(ProductQueryArguments.class)))
+            .thenReturn(new LinkedList<>());
+        ResteasyContext.pushContext(PageRequest.class,
+            new PageRequest()
+                .setPage(1)
+                .setPerPage(10)
+                .setSortBy("created"));
+        productResource.getProducts(1, 10, "asc", "created");
+        verify(mockProductCurator, atLeastOnce()).listAll(any(ProductQueryArguments.class));
+        ResteasyContext.popContextData(PageRequest.class);
+    }
+
+    @Test
+    public void testGetProductsOverMaxNoPaging() {
+        ResteasyContext.popContextData(PageRequest.class);
+        ProductCurator mockProductCurator = mock(ProductCurator.class);
+        ProductResource productResource = new ProductResource(mockProductCurator, this.ownerCurator,
+            this.productCertificateCurator, config, this.i18n, this.modelTranslator, this.jobManager);
+        config.setProperty(ConfigProperties.PAGING_MAX_PAGE_SIZE, "7");
+        when(mockProductCurator.getProductCount(any(ProductQueryArguments.class)))
+            .thenReturn(10L);
+        assertThrows(BadRequestException.class, () -> productResource.getProducts(
+            null, null, null, null));
+    }
+
+    @Test
+    public void testGetProductsNoPaging() {
+        ResteasyContext.popContextData(PageRequest.class);
+        ProductCurator mockProductCurator = mock(ProductCurator.class);
+        ProductResource productResource = new ProductResource(mockProductCurator, this.ownerCurator,
+            this.productCertificateCurator, config, this.i18n, this.modelTranslator, this.jobManager);
+        when(mockProductCurator.getProductCount(any(ProductQueryArguments.class)))
+            .thenReturn(1L);
+        when(mockProductCurator.listAll(any(ProductQueryArguments.class)))
+            .thenReturn(List.of(new Product()));
+        assertEquals(1, productResource.getProducts(null, null, null, null).toList().size());
+    }
 }

@@ -14,12 +14,14 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 import javax.inject.Singleton;
+
 
 /**
  * GuestIdCurator
@@ -33,11 +35,13 @@ public class GuestIdCurator extends AbstractHibernateCurator<GuestId> {
         super(GuestId.class);
     }
 
-    public CandlepinQuery<GuestId> listByConsumer(Consumer consumer) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(Restrictions.eq("consumer", consumer));
+    public List<GuestId> listByConsumer(Consumer consumer) {
+        String jpql = "SELECT g FROM GuestId g WHERE g.consumer = :consumer";
 
-        return this.cpQueryFactory.<GuestId>buildQuery(this.currentSession(), criteria);
+        return this.getEntityManager()
+            .createQuery(jpql, GuestId.class)
+            .setParameter("consumer", consumer)
+            .getResultList();
     }
 
     public GuestId findByConsumerAndId(Consumer consumer, String guestId) {

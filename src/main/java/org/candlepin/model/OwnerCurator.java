@@ -23,8 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +35,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -48,6 +45,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
@@ -57,9 +55,23 @@ import javax.persistence.criteria.Root;
 @Singleton
 public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
-    @Inject
-    private CandlepinQueryFactory cpQueryFactory;
     private static final Logger log = LoggerFactory.getLogger(OwnerCurator.class);
+
+    /**
+     * Container object for providing various arguments to the owner lookup method(s).
+     */
+    public static class OwnerQueryArguments extends QueryArguments<OwnerQueryArguments> {
+        private List<String> keys;
+
+        public OwnerQueryArguments setKeys(List keys) {
+            this.keys = keys;
+            return this;
+        }
+
+        public List<String> getKeys() {
+            return this.keys;
+        }
+    }
 
     public OwnerCurator() {
         super(Owner.class);
@@ -154,11 +166,93 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     }
 
     @Transactional
-    public CandlepinQuery<Owner> getByKeys(Collection<String> keys) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(CPRestrictions.in("key", keys));
+    public List<Owner> getByKeys(Collection<String> keys) {
+        String jpql = "SELECT o FROM Owner o WHERE o.key in (:keys)";
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        return this.getEntityManager()
+            .createQuery(jpql, Owner.class)
+            .setParameter("keys", keys)
+            .getResultList();
+    }
+
+    /**
+     * Fetches a collection of owners based on the data in the query request. If the
+     * query builder is null or contains no arguments, the query will not limit or sort the result.
+     *
+     * @param arguments
+     *     a OwnerQueryArguments instance containing the various arguments to use to
+     *     select owners
+     *
+     * @return a list of owners. It will be paged and sorted if specified
+     */
+    public List<Owner> listAll(OwnerQueryArguments arguments) {
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Owner> criteriaQuery = criteriaBuilder.createQuery(Owner.class);
+        Root<Owner> root = criteriaQuery.from(Owner.class);
+        criteriaQuery.select(root);
+
+        if (arguments != null && arguments.getKeys() != null && !arguments.getKeys().isEmpty()) {
+            criteriaQuery.where(inPredicate(criteriaBuilder, root.get(Owner_.KEY), arguments.getKeys()));
+        }
+
+        List<Order> order = this.buildJPAQueryOrder(criteriaBuilder, root, arguments);
+        if (order != null && !order.isEmpty()) {
+            criteriaQuery.orderBy(order);
+        }
+
+        TypedQuery query = this.getEntityManager().createQuery(criteriaQuery);
+
+        if (arguments != null) {
+            Integer offset = arguments.getOffset();
+            if (offset != null && offset > 0) {
+                query.setFirstResult(offset);
+            }
+
+            Integer limit = arguments.getLimit();
+            if (limit != null && limit > 0) {
+                query.setMaxResults(limit);
+            }
+        }
+        return query.getResultList();
+    }
+
+    /**
+     * Fetches a count of owners based on the data in the query request.
+     *
+     * @param arguments
+     *     a OwnerQueryArguments instance containing the various arguments to use to
+     *     select owners
+     *
+     * @return a count of owners
+     */
+    public long getOwnerCount(OwnerQueryArguments arguments) {
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
+        Root<Owner> root = criteriaQuery.from(Owner.class);
+        criteriaQuery.select(criteriaBuilder.countDistinct(root));
+
+        if (arguments != null && arguments.getKeys() != null && !arguments.getKeys().isEmpty()) {
+            criteriaQuery.where(inPredicate(criteriaBuilder, root.get(Owner_.KEY), arguments.getKeys()));
+        }
+
+        return this.getEntityManager()
+            .createQuery(criteriaQuery)
+            .getSingleResult();
+    }
+
+    @Transactional
+    public List<Owner> getByKeysSecure(Collection<String> keys) {
+        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Owner> cq = cb.createQuery(Owner.class);
+        Root<Owner> owner = cq.from(Owner.class);
+
+        Predicate keyPredicate = owner.get("key").in(keys);
+
+        Predicate securePredicate = this.getSecurityPredicate(Owner.class, cb, owner);
+
+        cq.where(cb.and(keyPredicate, securePredicate != null ? securePredicate : cb.conjunction()));
+
+        return getEntityManager().createQuery(cq).getResultList();
     }
 
     public Owner getByUpstreamUuid(String upstreamUuid) {
@@ -219,27 +313,31 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     }
 
     public List<String> getConsumerIds(Owner owner) {
-        return this.getConsumerIds(owner.getId()).list();
+        return this.getConsumerIds(owner.getId());
     }
 
-    public CandlepinQuery<String> getConsumerIds(String ownerId) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
-            .add(Restrictions.eq("ownerId", ownerId))
-            .setProjection(Property.forName("id"));
+    public List<String> getConsumerIds(String ownerId) {
+        String jpql = "SELECT c.id FROM Consumer c " +
+            "WHERE c.ownerId=:ownerId ";
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        return entityManager.get()
+            .createQuery(jpql, String.class)
+            .setParameter("ownerId", ownerId)
+            .getResultList();
     }
 
-    public CandlepinQuery<String> getConsumerUuids(Owner owner) {
+    public List<String> getConsumerUuids(Owner owner) {
         return this.getConsumerUuids(owner.getId());
     }
 
-    public CandlepinQuery<String> getConsumerUuids(String ownerId) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
-            .add(Restrictions.eq("ownerId", ownerId))
-            .setProjection(Property.forName("uuid"));
+    public List<String> getConsumerUuids(String ownerId) {
+        String jpql = "SELECT c.uuid FROM Consumer c " +
+            "WHERE c.ownerId=:ownerId ";
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        return entityManager.get()
+            .createQuery(jpql, String.class)
+            .setParameter("ownerId", ownerId)
+            .getResultList();
     }
 
     @SuppressWarnings("checkstyle:indentation")
@@ -325,4 +423,11 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         return count;
     }
 
+    private Predicate inPredicate(CriteriaBuilder cb, Expression<String> path, Collection<String> values) {
+        CriteriaBuilder.In<String> in = cb.in(path);
+        for (String value : values) {
+            in.value(value);
+        }
+        return in;
+    }
 }

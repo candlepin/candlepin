@@ -17,8 +17,15 @@ package org.candlepin.resource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.controller.PoolService;
 import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
@@ -68,9 +75,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     public void setUp() {
         activationKeyResource = injector.getInstance(ActivationKeyResource.class);
         activationKeyRules = injector.getInstance(ActivationKeyRules.class);
-        serviceLevelValidator = injector.getInstance(ServiceLevelValidator.class);
 
         this.mockActivationKeyCurator = mock(ActivationKeyCurator.class);
+        this.serviceLevelValidator = mock(ServiceLevelValidator.class);
         this.poolService = mock(PoolService.class);
         this.akcoCurator = mock(ActivationKeyContentOverrideCurator.class);
         this.coValidator = mock(ContentOverrideValidator.class);
@@ -403,6 +410,35 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         assertThrows(BadRequestException.class,
             () -> activationKeyResource.updateActivationKey(key.getId(), update));
     }
+
+    @Test
+    public void testNotNullFieldsUpdate() {
+        ActivationKey toUpdate = spy(createActivationKey(owner));
+        when(this.mockActivationKeyCurator.secureGet(toUpdate.getId())).thenReturn(toUpdate);
+        String ownerId = owner.getId();
+        doNothing().when(serviceLevelValidator).validate(eq(ownerId), any(String.class));
+
+        ActivationKeyDTO update = new ActivationKeyDTO()
+            .id(toUpdate.getId())
+            .name("KeyName")
+            .serviceLevel("Key Level")
+            .releaseVer(new ReleaseVerDTO().releaseVer("Key Release"))
+            .description("Key Decription")
+            .usage("Key Usage")
+            .role("Key Role")
+            .addOns(Set.of("Key Addon"))
+            .autoAttach(true);
+        buildActivationKeyResource().updateActivationKey(toUpdate.getId(), update);
+
+        verify(toUpdate, times(1)).setName(update.getName());
+        verify(toUpdate, times(1)).setServiceLevel(update.getServiceLevel());
+        verify(toUpdate, times(1)).setReleaseVer(any(Release.class));
+        verify(toUpdate, times(1)).setDescription(update.getDescription());
+        verify(toUpdate, times(1)).setUsage(update.getUsage());
+        verify(toUpdate, times(1)).setAddOns(update.getAddOns());
+        verify(toUpdate, times(1)).setAutoAttach(update.getAutoAttach());
+    }
+
 
     private Pool genPool() {
         Pool pool = new Pool();

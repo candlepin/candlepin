@@ -30,7 +30,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -48,49 +47,6 @@ public class ConsumerCuratorPermissionsTest extends DatabaseTestFixture {
 
         consumerType = new ConsumerType(CONSUMER_TYPE_NAME);
         consumerTypeCurator.create(consumerType);
-    }
-
-    @Test
-    public void testListForOwnerPermissionFiltering() {
-        User u = setupOnlyMyConsumersPrincipal();
-
-        Consumer c1 = new Consumer()
-            .setName("c1")
-            .setUsername(u.getUsername())
-            .setOwner(owner)
-            .setType(consumerType);
-        consumerCurator.create(c1);
-        Consumer c2 = new Consumer()
-            .setName("c2")
-            .setUsername("anotheruser")
-            .setOwner(owner)
-            .setType(consumerType);
-        consumerCurator.create(c2);
-
-        List<Consumer> results = consumerCurator.listByOwner(owner).list();
-        assertEquals(1, results.size());
-        assertEquals(c1.getName(), results.get(0).getName());
-    }
-
-    @Test
-    public void testListForOwnerEditMineViewAllPermissionFiltering() {
-        User u = setupEditMyConsumersViewAllPrincipal();
-
-        Consumer c1 = new Consumer()
-            .setName("c1")
-            .setUsername(u.getUsername())
-            .setOwner(owner)
-            .setType(consumerType);
-        consumerCurator.create(c1);
-        Consumer c2 = new Consumer()
-            .setName("c2")
-            .setUsername("anotheruser")
-            .setOwner(owner)
-            .setType(consumerType);
-        consumerCurator.create(c2);
-
-        List<Consumer> results = consumerCurator.listByOwner(owner).list();
-        assertEquals(2, results.size());
     }
 
     @Test

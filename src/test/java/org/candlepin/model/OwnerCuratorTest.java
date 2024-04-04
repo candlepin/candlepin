@@ -14,8 +14,10 @@
  */
 package org.candlepin.model;
 
+import static java.lang.Thread.sleep;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -23,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.controller.OwnerContentAccess;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.OwnerCurator.OwnerQueryArguments;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -35,6 +38,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
@@ -155,7 +159,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(c2);
         consumerCurator.create(c3);
 
-        List<String> result = ownerCurator.getConsumerUuids(owner).list();
+        List<String> result = ownerCurator.getConsumerUuids(owner);
         assertEquals(2, result.size());
         assertTrue(result.contains(c1.getUuid()));
         assertTrue(result.contains(c2.getUuid()));
@@ -404,5 +408,70 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         assertFalse(now.isBefore(owner1.getLastContentUpdate().toInstant()));
         assertFalse(now.isBefore(owner2.getLastContentUpdate().toInstant()));
         assertFalse(now.isBefore(owner3.getLastContentUpdate().toInstant()));
+    }
+
+    @Test
+    public void testListAll() {
+        this.createOwner("test_owner-1");
+        this.createOwner("test_owner-2");
+        this.createOwner("test_owner-3");
+
+        OwnerQueryArguments args = new OwnerQueryArguments()
+            .setOffset(0);
+        assertEquals(3, ownerCurator.listAll(args).size());
+    }
+
+    @Test
+    public void testListAllWithKeys() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+        Owner owner3 = this.createOwner("test_owner-3");
+
+        OwnerQueryArguments args = new OwnerQueryArguments()
+            .setOffset(0)
+            .setKeys(List.of("test_owner-1", "test_owner-3"));
+        assertIterableEquals(List.of(owner1, owner3), ownerCurator.listAll(args));
+    }
+
+    @Test
+    public void testListAllWithKeysOrdered() throws InterruptedException {
+        Owner owner1 = this.createOwner("test_owner-1");
+        // ensure timestamp uniqueness
+        sleep(1000);
+        Owner owner2 = this.createOwner("test_owner-2");
+        sleep(1000);
+        Owner owner3 = this.createOwner("test_owner-3");
+
+        OwnerQueryArguments args = new OwnerQueryArguments()
+            .setOffset(0)
+            .setKeys(List.of("test_owner-1", "test_owner-3"))
+            .addOrder("created", true);
+        assertEquals(owner3, ownerCurator.listAll(args).get(0));
+    }
+
+    @Test
+    public void testListAllPaged() {
+        IntStream.range(0, 10).forEach(element -> {
+            createOwner("test_owner-" + element);
+        });
+
+        OwnerQueryArguments args = new OwnerQueryArguments()
+            .setOffset(5)
+            .setLimit(5);
+        List<Owner> page = ownerCurator.listAll(args);
+        assertEquals(5, page.size());
+        assertEquals("test_owner-5", page.get(0).getKey());
+        assertEquals("test_owner-9", page.get(4).getKey());
+    }
+
+    @Test
+    public void testGetOwnerCount() {
+        IntStream.range(0, 10).forEach(element -> {
+            createOwner("test_owner-" + element);
+        });
+
+        OwnerQueryArguments args = new OwnerQueryArguments();
+        Long result = ownerCurator.getOwnerCount(args);
+        assertEquals(10L, result);
     }
 }

@@ -60,6 +60,8 @@ public final class TestConfig {
         defaults.put(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT, "32000");
         defaults.put(ConfigProperties.CACHE_ANON_CERT_CONTENT_TTL, "120000");
         defaults.put(ConfigProperties.CACHE_ANON_CERT_CONTENT_MAX_ENTRIES, "10000");
+        defaults.put(ConfigProperties.PAGING_DEFAULT_PAGE_SIZE, "100");
+        defaults.put(ConfigProperties.PAGING_MAX_PAGE_SIZE, "10000");
 
         return defaults;
     }

@@ -40,7 +40,6 @@ import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.RefreshWorker;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -77,7 +76,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -487,10 +485,8 @@ public class EntitlerTest {
 
         p1.setEntitlements(Set.of(e1));
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Collections.singletonList(e1).iterator());
         when(entitlementCurator.findByPoolAttribute(consumer, "unmapped_guests_only", "true"))
-            .thenReturn(cqmock);
+            .thenReturn(List.of(e1));
         when(config.getInt(ConfigProperties.ENTITLER_BULK_SIZE)).thenReturn(1000);
 
         Set<String> pids = Set.of(product.getId(), "prod2");
@@ -500,40 +496,38 @@ public class EntitlerTest {
             .forProducts(pids);
 
         verify(pm).entitleByProducts(data);
-        verify(poolService).revokeEntitlements(Collections.singletonList(e1));
+        verify(poolService).revokeEntitlements(List.of(e1));
     }
 
     @Test
     public void testUnmappedGuestRevocation() {
         Pool pool1 = createValidPool("1");
         Pool pool2 = createExpiredPool("2");
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(entsOf(pool1, pool2).iterator());
+
         when(entitlementCurator.findByPoolAttribute("unmapped_guests_only", "true"))
-            .thenReturn(cqmock);
+            .thenReturn(entsOf(pool1, pool2));
         when(config.getInt(ConfigProperties.ENTITLER_BULK_SIZE)).thenReturn(1000);
 
         int total = entitler.revokeUnmappedGuestEntitlements();
 
         assertEquals(1, total);
-        verify(poolService).revokeEntitlements(Collections.singletonList(entOf(pool2)));
+        verify(poolService).revokeEntitlements(List.of(entOf(pool2)));
     }
 
     @Test
     public void unmappedGuestRevocationShouldBePartitioned() {
         Pool pool1 = createExpiredPool("1");
         Pool pool2 = createExpiredPool("2");
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(entsOf(pool1, pool2).iterator());
+
         when(entitlementCurator.findByPoolAttribute("unmapped_guests_only", "true"))
-            .thenReturn(cqmock);
+            .thenReturn(entsOf(pool1, pool2));
         when(config.getInt(ConfigProperties.ENTITLER_BULK_SIZE)).thenReturn(1);
 
         int total = entitler.revokeUnmappedGuestEntitlements();
 
         assertEquals(2, total);
-        verify(poolService).revokeEntitlements(Collections.singletonList(entOf(pool1)));
-        verify(poolService).revokeEntitlements(Collections.singletonList(entOf(pool2)));
+        verify(poolService).revokeEntitlements(List.of(entOf(pool1)));
+        verify(poolService).revokeEntitlements(List.of(entOf(pool2)));
     }
 
     @Test

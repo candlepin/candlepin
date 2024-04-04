@@ -154,11 +154,11 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
 
         this.consumerContentOverrideCurator.flush();
 
-        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll().list();
+        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll();
         assertEquals(2, ccoList.size());
 
         consumerContentOverrideCurator.removeByContentLabel(consumer, "test-content");
-        List<ConsumerContentOverride> ccoList2 = consumerContentOverrideCurator.listAll().list();
+        List<ConsumerContentOverride> ccoList2 = consumerContentOverrideCurator.listAll();
         assertEquals(0, ccoList2.size());
     }
 
@@ -170,11 +170,11 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
         consumerContentOverrideCurator.create(cco2);
 
         this.consumerContentOverrideCurator.flush();
-        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll().list();
+        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll();
         assertEquals(2, ccoList.size());
 
         consumerContentOverrideCurator.removeByParent(consumer);
-        List<ConsumerContentOverride> ccoList2 = consumerContentOverrideCurator.listAll().list();
+        List<ConsumerContentOverride> ccoList2 = consumerContentOverrideCurator.listAll();
         assertEquals(0, ccoList2.size());
     }
 
@@ -199,7 +199,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
         this.consumerContentOverrideCurator.flush();
         this.consumerContentOverrideCurator.clear();
 
-        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll().list();
+        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll();
         assertEquals(1, ccoList.size());
         assertEquals(cco2.getValue(), ccoList.get(0).getValue());
     }
@@ -224,7 +224,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
         this.consumerContentOverrideCurator.flush();
         this.consumerContentOverrideCurator.clear();
 
-        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll().list();
+        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll();
         assertEquals(2, ccoList.size());
     }
 
@@ -344,7 +344,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
 
         this.consumerContentOverrideCurator.flush();
 
-        List<ConsumerContentOverride> remaining = consumerContentOverrideCurator.getList(consumer).list();
+        List<ConsumerContentOverride> remaining = consumerContentOverrideCurator.getList(consumer);
         assertEquals(1, remaining.size());
         assertEquals(override2.getName(), remaining.get(0).getName());
     }
@@ -371,7 +371,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
 
         this.consumerContentOverrideCurator.flush();
 
-        List<ConsumerContentOverride> remaining = consumerContentOverrideCurator.getList(consumer).list();
+        List<ConsumerContentOverride> remaining = consumerContentOverrideCurator.getList(consumer);
         assertEquals(1, remaining.size());
         assertEquals(override2.getName(), remaining.get(0).getName());
     }
@@ -405,7 +405,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
 
         this.consumerContentOverrideCurator.flush();
 
-        List<ConsumerContentOverride> remaining = consumerContentOverrideCurator.getList(consumer).list();
+        List<ConsumerContentOverride> remaining = consumerContentOverrideCurator.getList(consumer);
         assertEquals(1, remaining.size());
         assertEquals(override3.getContentLabel(), remaining.get(0).getContentLabel());
         assertEquals(override3.getName(), remaining.get(0).getName());
@@ -441,7 +441,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
         this.consumerContentOverrideCurator.removeByParent(this.consumer);
         this.consumerContentOverrideCurator.flush();
 
-        assertTrue(consumerContentOverrideCurator.getList(consumer).list().isEmpty());
-        assertEquals(1, consumerContentOverrideCurator.getList(consumer2).list().size());
+        assertTrue(consumerContentOverrideCurator.getList(consumer).isEmpty());
+        assertEquals(1, consumerContentOverrideCurator.getList(consumer2).size());
     }
 }

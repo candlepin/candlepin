@@ -146,7 +146,6 @@ import java.util.Map;
 import java.util.Set;
 
 
-
 /**
  * Test suite for the ConsumerResource class, focusing on updates
  */
