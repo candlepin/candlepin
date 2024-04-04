@@ -30,6 +30,7 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.exception.CloudAccountOrgMismatchException;
@@ -108,6 +109,13 @@ class CloudAccountOrgSetupJobTest {
         when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any()))
             .thenReturn(new CloudAccountData("owner_key", true));
 
+        Owner createdOwner = new Owner()
+            .setKey("owner_key")
+            .setDisplayName("owner_key")
+            .setAnonymous(true)
+            .setClaimed(false);
+        when(ownerCurator.create(any())).thenReturn(createdOwner);
+
         CloudAccountOrgSetupJob regJob = new CloudAccountOrgSetupJob(cloudReg, ownerCurator);
 
         String offering = TestUtil.randomString("offering");
@@ -138,6 +146,13 @@ class CloudAccountOrgSetupJobTest {
         when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any()))
             .thenReturn(new CloudAccountData("owner_key", false));
 
+        Owner createdOwner = new Owner()
+            .setKey("owner_key")
+            .setDisplayName("owner_key")
+            .setAnonymous(false)
+            .setClaimed(false);
+        when(ownerCurator.create(any())).thenReturn(createdOwner);
+
         CloudAccountOrgSetupJob regJob = new CloudAccountOrgSetupJob(cloudReg, ownerCurator);
 
         String offering = TestUtil.randomString("offering");
@@ -159,6 +174,87 @@ class CloudAccountOrgSetupJobTest {
         Object result = captor.getValue();
 
         assertEquals(String.format("Entitled offering %s to owner owner_key (anonymous: false).", offering),
+            result);
+    }
+
+    @Test
+    void ensureJobSuccessWithExistingAnonymousOrganization()
+        throws JobExecutionException, CouldNotAcquireCloudAccountLockException {
+        when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any()))
+            .thenReturn(new CloudAccountData("owner_key1", true));
+
+        Owner existingOwner = new Owner()
+            .setKey("owner_key1")
+            .setDisplayName("owner_key1")
+            .setAnonymous(false)
+            .setClaimed(false);
+        when(ownerCurator.getByKey(anyString())).thenReturn(existingOwner);
+
+        Owner updatedOwner = new Owner()
+            .setKey("owner_key1")
+            .setDisplayName("owner_key1")
+            .setAnonymous(true) // <-- updated to true
+            .setClaimed(false);
+        when(ownerCurator.merge(existingOwner)).thenReturn(updatedOwner);
+
+        CloudAccountOrgSetupJob regJob = new CloudAccountOrgSetupJob(cloudReg, ownerCurator);
+
+        String offering = TestUtil.randomString("offering");
+        CloudAccountOrgSetupJob.CloudAccountOrgSetupJobConfig jobConfig =
+            CloudAccountOrgSetupJob.createJobConfig()
+            .setCloudAccountId(TestUtil.randomString())
+            .setCloudOfferingId(offering)
+            .setCloudProvider(TestUtil.randomString());
+
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = spy(new JobExecutionContext(status));
+        when(status.getJobArguments()).thenReturn(jobConfig.getJobArguments());
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        regJob.execute(context);
+
+        verify(context).setJobResult(captor.capture());
+        Object result = captor.getValue();
+
+        assertEquals(String.format("Entitled offering %s to owner owner_key1 (anonymous: true).", offering),
+            result);
+    }
+
+    @Test
+    void ensureJobSuccessWithExistingNonAnonymousOrganization()
+        throws JobExecutionException, CouldNotAcquireCloudAccountLockException {
+        when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any()))
+            .thenReturn(new CloudAccountData("owner_key1", false));
+
+        Owner existingOwner = new Owner()
+            .setKey("owner_key1")
+            .setDisplayName("owner_key1")
+            .setAnonymous(false)
+            .setClaimed(false);
+        when(ownerCurator.getByKey(anyString())).thenReturn(existingOwner);
+
+        CloudAccountOrgSetupJob regJob = new CloudAccountOrgSetupJob(cloudReg, ownerCurator);
+
+        String offering = TestUtil.randomString("offering");
+        CloudAccountOrgSetupJob.CloudAccountOrgSetupJobConfig jobConfig =
+            CloudAccountOrgSetupJob.createJobConfig()
+            .setCloudAccountId(TestUtil.randomString())
+            .setCloudOfferingId(offering)
+            .setCloudProvider(TestUtil.randomString());
+
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = spy(new JobExecutionContext(status));
+        when(status.getJobArguments()).thenReturn(jobConfig.getJobArguments());
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        regJob.execute(context);
+
+        verify(context).setJobResult(captor.capture());
+        Object result = captor.getValue();
+
+        assertEquals(String.format("Entitled offering %s to owner owner_key1 (anonymous: false).", offering),
             result);
     }
 
@@ -226,9 +322,10 @@ class CloudAccountOrgSetupJobTest {
     }
 
     @Test
-    void ensureJobExceptionThrownIllegalState() throws CouldNotAcquireCloudAccountLockException {
+    void shouldThrowIllegalStateExceptionWithNullCloudAccountData()
+        throws CouldNotAcquireCloudAccountLockException {
         when(cloudReg.setupCloudAccountOrg(anyString(), anyString(), any()))
-            .thenReturn(new CloudAccountData("owner_key", null));
+            .thenReturn(null);
 
         CloudAccountOrgSetupJob regJob = new CloudAccountOrgSetupJob(cloudReg, ownerCurator);
 
@@ -237,7 +334,6 @@ class CloudAccountOrgSetupJobTest {
                 .setCloudAccountId(TestUtil.randomString())
                 .setCloudOfferingId(TestUtil.randomString())
                 .setCloudProvider(TestUtil.randomString());
-
 
         AsyncJobStatus status = mock(AsyncJobStatus.class);
         JobExecutionContext context = spy(new JobExecutionContext(status));
