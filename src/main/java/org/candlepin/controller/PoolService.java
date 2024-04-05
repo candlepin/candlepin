@@ -599,6 +599,13 @@ public class PoolService {
     }
 
     @Transactional
+    public int revokeAllEntitlements(Collection<String> consumerUuid, boolean regenCertsAndStatuses) {
+        List<Entitlement> entsToDelete = entitlementCurator.listByConsumerUuids(consumerUuid);
+        revokeEntitlements(entsToDelete, null, regenCertsAndStatuses);
+        return entsToDelete.size();
+    }
+
+    @Transactional
     public Set<Pool> revokeEntitlements(List<Entitlement> entsToRevoke) {
         return revokeEntitlements(entsToRevoke, null, true);
     }
