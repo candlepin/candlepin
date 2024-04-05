@@ -85,39 +85,47 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
             CloudAccountData accountData = this.cloudAdapter.setupCloudAccountOrg(
                 accountId, offeringId, cloudProviderShortName);
 
+            if (accountData == null) {
+                throw new IllegalStateException(
+                    "Cannot create or update owner. Incomplete account data received.");
+            }
+
             Owner owner = ownerCurator.getByKey(accountData.ownerKey());
             if (owner == null) {
-                if (accountData.isAnonymous() == null) {
-                    throw new IllegalStateException("Cannot create owner. Incomplete account data received.");
+                Owner newOwner = new Owner()
+                    .setKey(accountData.ownerKey())
+                    .setDisplayName(accountData.ownerKey())
+                    .setAnonymous(accountData.isAnonymous())
+                    .setClaimed(false);
+
+                // Anonymous orgs should always and only be allowed to be in SCA mode,
+                // while non-anonymous orgs should use the defaults.
+                if (accountData.isAnonymous()) {
+                    newOwner.setContentAccessMode(
+                            ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue())
+                        .setContentAccessModeList(
+                            ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
                 }
                 else {
-                    Owner newOwner = new Owner()
-                        .setKey(accountData.ownerKey())
-                        .setDisplayName(accountData.ownerKey())
-                        .setAnonymous(accountData.isAnonymous())
-                        .setClaimed(false);
-
-                    // Anonymous orgs should always and only be allowed to be in SCA mode,
-                    // while non-anonymous orgs should use the defaults.
-                    if (accountData.isAnonymous()) {
-                        newOwner.setContentAccessMode(
-                                ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue())
-                            .setContentAccessModeList(
-                                ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
-                    }
-                    else {
-                        newOwner.setContentAccessMode(
-                            ContentAccessMode.getDefault().toDatabaseValue())
-                            .setContentAccessModeList(ContentAccessManager.defaultContentAccessModeList());
-                    }
-                    ownerCurator.create(newOwner);
+                    newOwner.setContentAccessMode(
+                        ContentAccessMode.getDefault().toDatabaseValue())
+                        .setContentAccessModeList(ContentAccessManager.defaultContentAccessModeList());
+                }
+                owner = ownerCurator.create(newOwner);
+            }
+            else {
+                // If the org is supposed to be anonymous, but it isn't, then set it to be anonymous,
+                // (in case it was auto-created through the 'Pools Refresh' API endpoint first).
+                if (accountData.isAnonymous() && Boolean.FALSE.equals(owner.getAnonymous())) {
+                    owner.setAnonymous(Boolean.TRUE);
+                    owner = ownerCurator.merge(owner);
                 }
             }
 
             context.setJobResult("Entitled offering %s to owner %s (anonymous: %s).", offeringId,
-                accountData.ownerKey(), accountData.isAnonymous());
+                owner.getKey(), owner.getAnonymous());
             log.info("Entitled offering {} to owner {} (anonymous: {}).", offeringId,
-                accountData.ownerKey(), accountData.isAnonymous());
+                owner.getKey(), owner.getAnonymous());
         }
         catch (CouldNotEntitleOrganizationException | CouldNotAcquireCloudAccountLockException |
             CloudAccountOrgMismatchException e) {

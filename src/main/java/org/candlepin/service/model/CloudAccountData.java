@@ -14,7 +14,7 @@
  */
 package org.candlepin.service.model;
 
-public record CloudAccountData(String ownerKey, Boolean isAnonymous) {
+public record CloudAccountData(String ownerKey, boolean isAnonymous) {
 
     public CloudAccountData {
         if (ownerKey == null || ownerKey.isEmpty()) {
