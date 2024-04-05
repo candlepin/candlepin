@@ -25,10 +25,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.RevokeEntitlementsJob.RevokeEntitlementsJobConfig;
 import org.candlepin.audit.EventSink;
+import org.candlepin.exceptions.IseException;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.CertificateSerial;
@@ -63,6 +69,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
+import org.xnap.commons.i18n.I18n;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -95,6 +102,10 @@ public class ContentAccessManagerTest {
     private AnonymousCloudConsumerCurator mockAnonCloudConsumerCurator;
     @Mock
     private KeyPairGenerator keyPairGenerator;
+    @Mock
+    private JobManager jobManager;
+    @Mock
+    private I18n i18n;
 
     private final String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
     private final String orgEnvironmentMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
@@ -161,7 +172,7 @@ public class ContentAccessManagerTest {
 
     private ContentAccessManager createManager() {
         return new ContentAccessManager(this.mockContentAccessCertCurator, this.mockOwnerCurator,
-            this.mockConsumerCurator, this.mockEventSink);
+            this.mockConsumerCurator, this.mockEventSink, this.jobManager, this.i18n);
     }
 
     private Owner mockOwner() {
@@ -488,8 +499,10 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testUpdateOwnerContentAccessModeChanged() {
+    public void testUpdateOwnerContentAccessModeChangedFromEntModeToSCA() throws JobException {
         Owner owner = new Owner();
+        owner.setKey(TestUtil.randomString());
+        owner.setContentAccessMode(entitlementMode);
 
         String contentAccessModeList = entitlementMode + "," + orgEnvironmentMode;
         String contentAccessMode = orgEnvironmentMode;
@@ -499,6 +512,24 @@ public class ContentAccessManagerTest {
 
         assertEquals(owner.getContentAccessModeList(), contentAccessModeList);
         assertEquals(owner.getContentAccessMode(), contentAccessMode);
+        verify(jobManager).queueJob(any(RevokeEntitlementsJobConfig.class));
+    }
+
+    @Test
+    public void testUpdateOwnerContentAccessModeChangedWithErrorSchedulingEntitlementRevokeJob()
+        throws JobException {
+        Owner owner = new Owner();
+        owner.setKey(TestUtil.randomString());
+        owner.setContentAccessMode(entitlementMode);
+
+        doThrow(JobException.class).when(jobManager).queueJob(any(RevokeEntitlementsJobConfig.class));
+
+        String contentAccessModeList = entitlementMode + "," + orgEnvironmentMode;
+        String contentAccessMode = orgEnvironmentMode;
+
+        ContentAccessManager manager = this.createManager();
+        assertThrows(IseException.class, () -> manager
+            .updateOwnerContentAccess(owner, contentAccessModeList, contentAccessMode));
     }
 
     @Test

@@ -14,7 +14,11 @@
  */
 package org.candlepin.controller;
 
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.RevokeEntitlementsJob.RevokeEntitlementsJobConfig;
 import org.candlepin.audit.EventSink;
+import org.candlepin.exceptions.IseException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
@@ -29,6 +33,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
 import java.util.Objects;
@@ -47,18 +52,24 @@ public class ContentAccessManager {
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
     private final ConsumerCurator consumerCurator;
     private final EventSink eventSink;
+    private final JobManager jobManager;
+    private final I18n i18n;
 
     @Inject
     public ContentAccessManager(
         ContentAccessCertificateCurator contentAccessCertificateCurator,
         OwnerCurator ownerCurator,
         ConsumerCurator consumerCurator,
-        EventSink eventSink) {
+        EventSink eventSink,
+        JobManager jobManager,
+        I18n i18n) {
 
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.eventSink = Objects.requireNonNull(eventSink);
+        this.jobManager = Objects.requireNonNull(jobManager);
+        this.i18n = Objects.requireNonNull(i18n);
     }
 
     /**
@@ -245,6 +256,18 @@ public class ContentAccessManager {
             // Delete the SCA cert if we're leaving SCA mode
             if (this.isTransitioningFrom(currentMode, updatedMode, ContentAccessMode.ORG_ENVIRONMENT)) {
                 this.contentAccessCertificateCurator.deleteForOwner(owner);
+            }
+
+            // Revoke entitlements and remove activation key pools if moving from entitlement mode to SCA mode
+            if (this.isTransitioningFrom(currentMode, updatedMode, ContentAccessMode.ENTITLEMENT)) {
+                try {
+                    RevokeEntitlementsJobConfig jobConfig = new RevokeEntitlementsJobConfig();
+                    jobConfig.setOwner(owner);
+                    jobManager.queueJob(jobConfig);
+                }
+                catch (JobException e) {
+                    throw new IseException(i18n.tr("Unable to create revoke entitlements job"), e);
+                }
             }
 
             // Update sync times & report

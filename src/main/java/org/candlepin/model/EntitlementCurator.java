@@ -42,6 +42,7 @@ import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
@@ -403,6 +404,36 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         query.where(toArray(criteria));
 
         return listByCriteria(query);
+    }
+
+    /**
+     * Retrieves all the {@link Entitlement}s that belong to the {@link Consumer}s correspond to the provided
+     * consumer UUIDs.
+     *
+     * @param consumerUuids
+     *  the UUIDs to the consumers to retrieve entitlements for
+     *
+     * @return all the {@link Entitlement}s that belong to the {@link Consumer}s correspond to the provided
+     *  consumer UUIDs. This method will not return null.
+     */
+    public List<Entitlement> listByConsumerUuids(Collection<String> consumerUuids) {
+        List<Entitlement> entitlements = new ArrayList<>();
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            return entitlements;
+        }
+
+        String jpql = "SELECT e FROM Entitlement e " +
+            "WHERE e.consumer.uuid IN (:consumer_uuids)";
+
+        TypedQuery<Entitlement> query = this.getEntityManager()
+            .createQuery(jpql, Entitlement.class);
+
+        for (List<String> block : this.partition(consumerUuids)) {
+            query.setParameter("consumer_uuids", block);
+            entitlements.addAll(query.getResultList());
+        }
+
+        return entitlements;
     }
 
     public List<Entitlement> listByConsumerAndPoolId(Consumer consumer, String poolId) {

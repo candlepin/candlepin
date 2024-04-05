@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
@@ -39,6 +40,8 @@ import org.candlepin.util.Util;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.Mockito;
 
 import java.lang.reflect.Field;
@@ -2112,6 +2115,49 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Assertions.assertThat(lockedIds)
             .hasSize(2)
             .containsExactlyInAnyOrderElementsOf(consumerIds);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void testGetSystemConsumerUuidsByOwnerWithInvalidOwnerKey(String ownerKey) {
+        List<String> actual = consumerCurator.getSystemConsumerUuidsByOwner(ownerKey);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetSystemConsumerUuidsByOwner() {
+        Consumer systemConsumer1 = new Consumer()
+            .setName(TestUtil.randomString())
+            .setUsername(TestUtil.randomString())
+            .setOwner(owner)
+            .setType(ct);
+        systemConsumer1 = consumerCurator.create(systemConsumer1);
+
+        Consumer systemConsumer2 = new Consumer()
+            .setName(TestUtil.randomString())
+            .setUsername(TestUtil.randomString())
+            .setOwner(owner)
+            .setType(ct);
+        systemConsumer2 = consumerCurator.create(systemConsumer2);
+
+        ConsumerType manifestType = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        manifestType = consumerTypeCurator.create(manifestType);
+
+        Consumer manifestConsumer = new Consumer()
+            .setName(TestUtil.randomString())
+            .setUsername(TestUtil.randomString())
+            .setOwner(owner)
+            .setType(manifestType);
+        manifestConsumer = consumerCurator.create(manifestConsumer);
+
+        List<String> actual = consumerCurator.getSystemConsumerUuidsByOwner(owner.getOwnerKey());
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(systemConsumer1.getUuid(), systemConsumer2.getUuid());
     }
 
     private IdentityCertificate createIdCert() {
