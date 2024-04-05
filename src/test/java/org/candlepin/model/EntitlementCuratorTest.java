@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -29,7 +29,6 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.hamcrest.Matchers;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -626,7 +625,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         List<Entitlement> results = entitlementCurator.findByPoolAttribute("x", "true").list();
 
-        assertThat(results, Matchers.hasItems(e1, e2));
+        assertThat(results)
+            .isNotNull()
+            .containsExactlyInAnyOrder(e1, e2);
     }
 
     private Entitlement bind(Consumer consumer, Pool pool) {
@@ -1617,5 +1618,76 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         assertNotNull(entitlementContentIdMap);
         assertTrue(entitlementContentIdMap.isEmpty());
+    }
+
+    @Test
+    public void testListByConsumerUuidsWithNullConsumerUuids() {
+        List<Entitlement> actual = entitlementCurator.listByConsumerUuids(null);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testListByConsumerUuidsWithEmptyConsumerUuids() {
+        List<Entitlement> actual = entitlementCurator.listByConsumerUuids(List.of());
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testListByConsumerUuids() {
+        Owner owner = this.createOwner("test_owner");
+        Consumer consumer1 = this.createConsumer(owner);
+        Consumer consumer2 = this.createConsumer(owner);
+        Consumer consumer3 = this.createConsumer(owner);
+
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+        Content content3 = this.createContent();
+
+        Product product1 = new Product()
+            .setId(TestUtil.randomString())
+            .setName(TestUtil.randomString());
+        product1.addContent(content1, true);
+        product1.addContent(content2, false);
+
+        this.createProduct(product1);
+
+        Product product2 = new Product()
+            .setId(TestUtil.randomString())
+            .setName(TestUtil.randomString());
+        product2.addContent(content2, true);
+        product2.addContent(content3, false);
+
+        this.createProduct(product2);
+
+        Pool pool1 = poolCurator.create(new Pool()
+            .setOwner(owner)
+            .setProduct(product1)
+            .setQuantity(10L)
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow()));
+
+        Pool pool2 = poolCurator.create(new Pool()
+            .setOwner(owner)
+            .setProduct(product2)
+            .setQuantity(10L)
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow()));
+
+        Entitlement ent1 = bind(consumer1, pool1);
+        Entitlement ent2 = bind(consumer2, pool2);
+        bind(consumer3, pool1);
+
+        List<Entitlement> actual = entitlementCurator
+            .listByConsumerUuids(Set.of(consumer1.getUuid(), consumer2.getUuid()));
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(ent1, ent2);
     }
 }

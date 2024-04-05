@@ -35,6 +35,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.RevokeEntitlementsJob.RevokeEntitlementsJobConfig;
 import org.candlepin.audit.EventSink;
 import org.candlepin.cache.AnonymousCertContent;
 import org.candlepin.cache.AnonymousCertContentCache;
@@ -42,6 +45,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
+import org.candlepin.exceptions.IseException;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
@@ -103,6 +107,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
+import org.xnap.commons.i18n.I18n;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -157,6 +162,10 @@ public class ContentAccessManagerTest {
     private PKIUtility pkiUtility;
     private X509V3ExtensionUtil x509V3ExtensionUtil;
     private AnonymousCertContentCache cache;
+    @Mock
+    private JobManager jobManager;
+    @Mock
+    private I18n i18n;
 
     private final String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
     private final String orgEnvironmentMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
@@ -240,7 +249,8 @@ public class ContentAccessManagerTest {
             this.mockCertSerialCurator, this.mockOwnerCurator, this.mockOwnerContentCurator,
             this.mockConsumerCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
             this.mockContentAccessCertCurator, this.mockEventSink, this.mockAnonCloudConsumerCurator,
-            this.mockAnonContentAccessCertCurator, this.mockProdAdapter, this.cache);
+            this.mockAnonContentAccessCertCurator, this.mockProdAdapter, this.cache, this.jobManager,
+            this.i18n);
     }
 
     private ContentAccessManager createManager() {
@@ -609,8 +619,10 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testUpdateOwnerContentAccessModeChanged() {
+    public void testUpdateOwnerContentAccessModeChangedFromEntModeToSCA() throws JobException {
         Owner owner = new Owner();
+        owner.setKey(TestUtil.randomString());
+        owner.setContentAccessMode(entitlementMode);
 
         String contentAccessModeList = entitlementMode + "," + orgEnvironmentMode;
         String contentAccessMode = orgEnvironmentMode;
@@ -620,6 +632,24 @@ public class ContentAccessManagerTest {
 
         assertEquals(owner.getContentAccessModeList(), contentAccessModeList);
         assertEquals(owner.getContentAccessMode(), contentAccessMode);
+        verify(jobManager).queueJob(any(RevokeEntitlementsJobConfig.class));
+    }
+
+    @Test
+    public void testUpdateOwnerContentAccessModeChangedWithErrorSchedulingEntitlementRevokeJob()
+        throws JobException {
+        Owner owner = new Owner();
+        owner.setKey(TestUtil.randomString());
+        owner.setContentAccessMode(entitlementMode);
+
+        doThrow(JobException.class).when(jobManager).queueJob(any(RevokeEntitlementsJobConfig.class));
+
+        String contentAccessModeList = entitlementMode + "," + orgEnvironmentMode;
+        String contentAccessMode = orgEnvironmentMode;
+
+        ContentAccessManager manager = this.createManager();
+        assertThrows(IseException.class, () -> manager
+            .updateOwnerContentAccess(owner, contentAccessModeList, contentAccessMode));
     }
 
     @Test

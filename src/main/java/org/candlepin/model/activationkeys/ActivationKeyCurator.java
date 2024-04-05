@@ -95,4 +95,43 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
         return foundActivationKeys;
     }
 
+    /**
+     * Deletes all the {@link ActivationKeyPool}s for the provided owner.
+     *
+     * @param ownerKey
+     *  the key to the owner to delete {@link ActivationKeyPool}s for
+     *
+     * @throws IllegalArgumentException
+     *  if the provided owner key is null or blank
+     *
+     * @return the number of deleted {@link ActivationKeyPool}s
+     */
+    @Transactional
+    public int removeActivationKeyPools(String ownerKey) {
+        if (ownerKey == null || ownerKey.isBlank()) {
+            throw new IllegalArgumentException("owner key is null or blank");
+        }
+
+        String akPoolIdJpql = "SELECT ap.id FROM ActivationKeyPool ap " +
+            "JOIN Pool p ON p.id = ap.pool.id " +
+            "WHERE p.owner.key = :owner_key";
+
+        List<String> ids = this.getEntityManager()
+            .createQuery(akPoolIdJpql, String.class)
+            .setParameter("owner_key", ownerKey)
+            .getResultList();
+
+        String deleteJpql = "DELETE FROM ActivationKeyPool akp " +
+            "WHERE akp.id IN (:ids)";
+
+        int deleted = 0;
+        for (Collection<String> block : this.partition(ids)) {
+            deleted += this.currentSession()
+                .createQuery(deleteJpql)
+                .setParameter("ids", block)
+                .executeUpdate();
+        }
+
+        return deleted;
+    }
 }

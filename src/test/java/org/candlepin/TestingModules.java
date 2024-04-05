@@ -18,6 +18,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.auth.Principal;
@@ -275,6 +276,9 @@ public class TestingModules {
             // define test alternative for it.
             bindScope(RequestScoped.class, TestingScope.EAGER_SINGLETON);
             bind(CandlepinRequestScope.class).toInstance(requestScope);
+
+            JobManager mockJobManager = mock(JobManager.class);
+            bind(JobManager.class).toInstance(mockJobManager);
 
             bind(X509ExtensionUtil.class);
 
