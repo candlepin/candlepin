@@ -23,7 +23,7 @@
 
 Name: candlepin
 Version: 4.4.1
-Release: 5%{?dist}
+Release: 6%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -240,6 +240,10 @@ fi
 
 #raw
 %changelog
+* Fri Apr 05 2024 Nikos Moumoulidis <nmoumoul@redhat.com> 4.4.1-6
+- CANDLEPIN-846: Make sure anonymous orgs are marked as such
+  (nmoumoul@redhat.com)
+
 * Fri Mar 22 2024 Nikos Moumoulidis <nmoumoul@redhat.com> 4.4.1-5
 - CANDLEPIN-833: Updated CloudAuthenticationResult validation
   (joshmalbrecht@gmail.com)
