@@ -59,3 +59,4 @@ jobs:
           name: unit_test_reports
           path: |
             **/build/**/jacoco*.xml
+            **/build/classes/
