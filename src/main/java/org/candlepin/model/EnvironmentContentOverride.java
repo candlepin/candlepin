@@ -27,8 +27,11 @@ import javax.validation.constraints.NotNull;
  * A content override applied to an environment
  */
 @Entity
-@DiscriminatorValue("environment")
+@DiscriminatorValue(EnvironmentContentOverride.DISCRIMINATOR_VALUE)
 public class EnvironmentContentOverride extends ContentOverride<EnvironmentContentOverride, Environment> {
+
+    /** The fixed source type for this class of content override */
+    public static final String DISCRIMINATOR_VALUE = "environment";
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
@@ -84,6 +87,14 @@ public class EnvironmentContentOverride extends ContentOverride<EnvironmentConte
     public EnvironmentContentOverride setParent(Environment parent) {
         this.setEnvironment(parent);
         return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDiscriminatorValue() {
+        return DISCRIMINATOR_VALUE;
     }
 
     /**

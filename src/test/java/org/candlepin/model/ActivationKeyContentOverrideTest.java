@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
@@ -37,6 +38,15 @@ public class ActivationKeyContentOverrideTest extends ContentOverrideTest<Activa
     @Override
     protected ActivationKeyContentOverride getTestInstance() {
         return new ActivationKeyContentOverride();
+    }
+
+    @Test
+    public void testToString() {
+        ActivationKeyContentOverride override = this.getTestInstance();
+        String output = override.toString();
+
+        assertNotNull(output);
+        assertTrue(output.matches("^ActivationKeyContentOverride \\[.+\\]"));
     }
 
     @Test
@@ -135,5 +145,12 @@ public class ActivationKeyContentOverrideTest extends ContentOverrideTest<Activa
         assertEquals(name, cco.getName());
         assertEquals(label, cco.getContentLabel());
         assertEquals(value, cco.getValue());
+    }
+
+    @Test
+    public void testGetSourceType() {
+        ActivationKeyContentOverride override = new ActivationKeyContentOverride();
+
+        assertEquals(ActivationKeyContentOverride.DISCRIMINATOR_VALUE, override.getDiscriminatorValue());
     }
 }

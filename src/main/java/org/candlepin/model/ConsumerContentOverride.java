@@ -29,8 +29,11 @@ import javax.validation.constraints.NotNull;
  * Represents an override to a value for a specific content set and named field.
  */
 @Entity
-@DiscriminatorValue("consumer")
+@DiscriminatorValue(ConsumerContentOverride.DISCRIMINATOR_VALUE)
 public class ConsumerContentOverride extends ContentOverride<ConsumerContentOverride, Consumer> {
+
+    /** The discriminator value for this class of content override */
+    public static final String DISCRIMINATOR_VALUE = "consumer";
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
@@ -65,6 +68,14 @@ public class ConsumerContentOverride extends ContentOverride<ConsumerContentOver
     @Override
     public Consumer getParent() {
         return this.getConsumer();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDiscriminatorValue() {
+        return DISCRIMINATOR_VALUE;
     }
 
     /**

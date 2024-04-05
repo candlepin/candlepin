@@ -56,6 +56,7 @@ public class ContentOverrideTranslator implements ObjectTranslator<ContentOverri
     @Override
     public ContentOverrideDTO populate(ModelTranslator translator, ContentOverride source,
         ContentOverrideDTO dest) {
+
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
@@ -67,6 +68,7 @@ public class ContentOverrideTranslator implements ObjectTranslator<ContentOverri
         dest.contentLabel(source.getContentLabel())
             .name(source.getName())
             .value(source.getValue())
+            .source(source.getDiscriminatorValue())
             .created(Util.toDateTime(source.getCreated()))
             .updated(Util.toDateTime(source.getUpdated()));
 

@@ -15,8 +15,10 @@
 package org.candlepin.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +35,15 @@ public class EnvironmentContentOverrideTest extends ContentOverrideTest<Environm
     @Override
     protected EnvironmentContentOverride getTestInstance() {
         return new EnvironmentContentOverride();
+    }
+
+    @Test
+    public void testToString() {
+        EnvironmentContentOverride override = this.getTestInstance();
+        String output = override.toString();
+
+        assertNotNull(output);
+        assertTrue(output.matches("^EnvironmentContentOverride \\[.+\\]"));
     }
 
     @Test
@@ -97,4 +108,10 @@ public class EnvironmentContentOverrideTest extends ContentOverrideTest<Environm
         assertNull(output.getEnvironment());
     }
 
+    @Test
+    public void testGetSourceType() {
+        EnvironmentContentOverride override = new EnvironmentContentOverride();
+
+        assertEquals(EnvironmentContentOverride.DISCRIMINATOR_VALUE, override.getDiscriminatorValue());
+    }
 }

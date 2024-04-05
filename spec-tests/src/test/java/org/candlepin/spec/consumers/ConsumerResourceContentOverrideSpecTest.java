@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 @SpecTest
-public class ConsumerResourceContentSpecTest {
+public class ConsumerResourceContentOverrideSpecTest {
 
     private static final String CONTENT_LABEL = "content.label";
     private static ApiClient admin;
@@ -67,6 +67,24 @@ public class ConsumerResourceContentSpecTest {
         assertConsumerOverrides(consumerClient, consumer)
             .hasSize(2)
             .containsExactlyInAnyOrderElementsOf(createdOverrides);
+    }
+
+    @Test
+    public void shouldSpecifySourceTypeInConsumerContentOverrides() {
+        ConsumerDTO consumer = admin.consumers()
+            .createConsumer(Consumers.random(this.owner));
+
+        List<ContentOverrideDTO> overrides = List.of(
+            ContentOverrides.random(),
+            ContentOverrides.random());
+
+        admin.consumers()
+            .addConsumerContentOverrides(consumer.getUuid(), overrides);
+
+        assertConsumerOverrides(admin, consumer)
+            .hasSize(2)
+            .map(ContentOverrideDTO::getSource)
+            .containsOnly("consumer");
     }
 
     @Test

@@ -34,9 +34,9 @@ import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.PoolService;
 import org.candlepin.controller.RefresherFactory;
-import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificateCurator;
@@ -259,24 +259,6 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         return overrides;
     }
 
-    /**
-     * Removes the created and updated timestamps from the DTOs to make comparison easier
-     */
-    private List<ContentOverrideDTO> stripTimestamps(List<ContentOverrideDTO> list) {
-        if (list != null) {
-            for (ContentOverrideDTO dto : list) {
-                dto.setCreated(null);
-                dto.setUpdated(null);
-            }
-        }
-
-        return list;
-    }
-
-    private List<ContentOverrideDTO> stripTimestamps(Iterable<ContentOverrideDTO> list) {
-        return stripTimestamps(StreamSupport.stream(list.spliterator(), false).collect(Collectors.toList()));
-    }
-
     private long sizeOf(Iterable<ContentOverrideDTO> list) {
         return StreamSupport.stream(list.spliterator(), false).count();
     }
@@ -286,7 +268,26 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
      * stripping their timestamps.
      */
     private void compareOverrideDTOs(List<ContentOverrideDTO> expected, Iterable<ContentOverrideDTO> actual) {
-        assertEquals(this.stripTimestamps(expected), this.stripTimestamps(actual));
+        java.util.function.Consumer<ContentOverrideDTO> preprocessor = override -> {
+            if (override == null) {
+                return;
+            }
+
+            override.created(null)
+                .updated(null);
+        };
+
+        if (expected != null) {
+            expected.forEach(preprocessor);
+        }
+
+        if (actual != null) {
+            actual = StreamSupport.stream(actual.spliterator(), false)
+                .peek(preprocessor)
+                .toList();
+        }
+
+        assertEquals(expected, actual);
     }
 
     private String getLongString() {
@@ -389,230 +390,171 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testAddOverride() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
-
         List<ContentOverrideDTO> overrides = new LinkedList<>();
-        ContentOverrideDTO dto = new ContentOverrideDTO()
+        ContentOverrideDTO dto1 = new ContentOverrideDTO()
             .contentLabel("test_label")
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
+        overrides.add(dto1);
 
         List<ContentOverrideDTO> actual = this.resource
-            .addConsumerContentOverrides(this.consumer.getUuid(), overrides)
+            .addConsumerContentOverrides(this.consumer.getUuid(), List.of(dto1))
             .toList();
 
+        dto1.source(ConsumerContentOverride.DISCRIMINATOR_VALUE);
         this.compareOverrideDTOs(overrides, actual);
 
         // Add a second to ensure we don't clobber the first
-        dto = new ContentOverrideDTO()
+        ContentOverrideDTO dto2 = new ContentOverrideDTO()
             .contentLabel("test_label-2")
             .name("override_name-2")
             .value("override_value-2");
 
-        overrides.add(dto);
+        overrides.add(dto2);
 
-        actual = this.resource.addConsumerContentOverrides(this.consumer.getUuid(), Arrays.asList(dto))
+        actual = this.resource.addConsumerContentOverrides(this.consumer.getUuid(), List.of(dto2))
             .toList();
 
+        dto2.source(ConsumerContentOverride.DISCRIMINATOR_VALUE);
         this.compareOverrideDTOs(overrides, actual);
     }
 
     @Test
     public void testAddOverrideOverwritesExistingWhenMatched() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("test_label")
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
-
         Iterable<ContentOverrideDTO> actual = this.resource
-            .addConsumerContentOverrides(this.consumer.getUuid(), overrides)
+            .addConsumerContentOverrides(this.consumer.getUuid(), List.of(dto))
             .toList();
 
-        this.compareOverrideDTOs(overrides, actual);
+        dto.source(ConsumerContentOverride.DISCRIMINATOR_VALUE);
+        this.compareOverrideDTOs(List.of(dto), actual);
 
         // Add a "new" override that has the same label and name as the first which should inherit
         // the new value
-        dto = new ContentOverrideDTO()
+        ContentOverrideDTO update = new ContentOverrideDTO()
             .contentLabel("test_label")
             .name("override_name")
             .value("override_value-2");
 
-        overrides.clear();
-        overrides.add(dto);
-
-        actual = this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides)
+        actual = this.resource.addConsumerContentOverrides(this.consumer.getUuid(), List.of(update))
             .toList();
 
-        this.compareOverrideDTOs(overrides, actual);
+        update.source(ConsumerContentOverride.DISCRIMINATOR_VALUE);
+        this.compareOverrideDTOs(List.of(update), actual);
     }
 
     @Test
     public void testAddOverrideFailsValidationWithNoParent() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("test_label")
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
-
-        Iterable<ContentOverrideDTO> actual = this.resource
-            .addConsumerContentOverrides(this.consumer.getUuid(), overrides)
-            .toList();
-
-        this.compareOverrideDTOs(overrides, actual);
+        assertThrows(ForbiddenException.class,
+            () -> this.resource.addConsumerContentOverrides(null, List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithNullLabel() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel(null)
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
+            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithEmptyLabel() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("")
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
+            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithLongLabel() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel(this.getLongString())
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
+            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithNullName() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("content_label")
             .name(null)
             .value("override_value");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
+            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithEmptyName() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("content_label")
             .name("")
             .value("override_value");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
+            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithLongName() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("content_label")
             .name(this.getLongString())
             .value("override_value");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
+            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithNullValue() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("content_label")
             .name("override_name")
             .value(null);
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
+            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithEmptyValue() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("content_label")
             .name("override_name")
             .value("");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
+            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithLongValue() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("content_label")
             .name("override_name")
             .value(this.getLongString());
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
+            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), List.of(dto)));
     }
 }

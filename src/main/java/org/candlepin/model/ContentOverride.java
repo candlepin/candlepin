@@ -118,6 +118,15 @@ public abstract class ContentOverride<T extends ContentOverride, P extends Abstr
     public abstract P getParent();
 
     /**
+     * Fetches the discriminator value of this content override, roughly representing the type of
+     * its parent object. This method should never return null.
+     *
+     * @return
+     *  the discriminator value of this override as a string
+     */
+    public abstract String getDiscriminatorValue();
+
+    /**
      * {@inheritDoc}
      */
     @Override

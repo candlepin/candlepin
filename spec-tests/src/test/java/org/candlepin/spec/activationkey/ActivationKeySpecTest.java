@@ -409,7 +409,7 @@ public class ActivationKeySpecTest {
             .extracting(ActivationKeyDTO::getContentOverrides, as(collection(ContentOverrideDTO.class)))
             .singleElement()
             .usingRecursiveComparison()
-            .ignoringFields("created", "updated")
+            .ignoringFields("created", "updated", "source")
             .isEqualTo(contentOverride);
     }
 
@@ -432,7 +432,7 @@ public class ActivationKeySpecTest {
             .extracting(ActivationKeyDTO::getContentOverrides, as(collection(ContentOverrideDTO.class)))
             .singleElement()
             .usingRecursiveComparison()
-            .ignoringFields("created", "updated")
+            .ignoringFields("created", "updated", "source")
             .isEqualTo(contentOverride);
 
         ApiClient userClient = this.createUserClient(owner, permission, access);
@@ -604,7 +604,7 @@ public class ActivationKeySpecTest {
             .extracting(ActivationKeyDTO::getContentOverrides, as(collection(ContentOverrideDTO.class)))
             .singleElement()
             .usingRecursiveComparison()
-            .ignoringFields("created", "updated")
+            .ignoringFields("created", "updated", "source")
             .isEqualTo(contentOverride);
 
         ApiClient userClient = this.createUserClient(owner, permission, access);
@@ -621,7 +621,7 @@ public class ActivationKeySpecTest {
             .extracting(ActivationKeyDTO::getContentOverrides, as(collection(ContentOverrideDTO.class)))
             .singleElement()
             .usingRecursiveComparison()
-            .ignoringFields("created", "updated")
+            .ignoringFields("created", "updated", "source")
             .isEqualTo(contentOverride);
     }
 
@@ -1168,9 +1168,28 @@ public class ActivationKeySpecTest {
             .hasSize(1)
             .first()
             .usingRecursiveComparison()
-            .ignoringFields("created")
-            .ignoringFields("updated")
+            .ignoringFields("created", "updated", "source")
             .isEqualTo(contentOverride);
+    }
+
+    @Test
+    public void shouldSpecifySourceTypeInActivationKeyContentOverrides() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+
+        ActivationKeyDTO activationKey = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        adminClient.activationKeys().addActivationKeyContentOverrides(
+            activationKey.getId(), List.of(ContentOverrides.random()));
+
+        List<ContentOverrideDTO> overrides = adminClient.activationKeys()
+            .listActivationKeyContentOverrides(activationKey.getId());
+
+        assertThat(overrides)
+            .first()
+            .extracting("source")
+            .isEqualTo("activation_key");
     }
 
     @Test
@@ -1371,7 +1390,7 @@ public class ActivationKeySpecTest {
             .hasFieldOrPropertyWithValue("pools", Set.of(activationKeyPool1, activationKeyPool2));
         assertThat(registeredActivationKey.getContentOverrides())
             .usingRecursiveComparison()
-            .ignoringFields("updated", "created")
+            .ignoringFields("updated", "created", "source")
             .isEqualTo(activationKey.getContentOverrides());
     }
 

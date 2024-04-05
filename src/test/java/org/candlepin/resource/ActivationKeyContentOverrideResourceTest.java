@@ -22,7 +22,6 @@ import static org.mockito.Mockito.when;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
-import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.ContentOverride;
@@ -81,34 +80,16 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
         List<ActivationKeyContentOverride> overrides = new LinkedList<>();
 
         for (int i = offset; i < offset + count; ++i) {
-            ActivationKeyContentOverride akco = new ActivationKeyContentOverride();
-            akco.setKey(key);
-            akco.setContentLabel("content_label-" + i);
-            akco.setName("override_name-" + i);
-            akco.setValue("override_value-" + i);
+            ActivationKeyContentOverride akco = new ActivationKeyContentOverride()
+                .setKey(key)
+                .setContentLabel("content_label-" + i)
+                .setName("override_name-" + i)
+                .setValue("override_value-" + i);
 
             overrides.add(this.activationKeyContentOverrideCurator.create(akco));
         }
 
         return overrides;
-    }
-
-    /**
-     * Removes the created and updated timestamps from the DTOs to make comparison easier
-     */
-    private List<ContentOverrideDTO> stripTimestamps(List<ContentOverrideDTO> list) {
-        if (list != null) {
-            for (ContentOverrideDTO dto : list) {
-                dto.setCreated(null);
-                dto.setUpdated(null);
-            }
-        }
-
-        return list;
-    }
-
-    private List<ContentOverrideDTO> stripTimestamps(Iterable<ContentOverrideDTO> list) {
-        return stripTimestamps(StreamSupport.stream(list.spliterator(), false).toList());
     }
 
     private long sizeOf(Iterable<ContentOverrideDTO> list) {
@@ -120,7 +101,27 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
      * stripping their timestamps.
      */
     private void compareOverrideDTOs(List<ContentOverrideDTO> expected, Iterable<ContentOverrideDTO> actual) {
-        assertEquals(this.stripTimestamps(expected), this.stripTimestamps(actual));
+        java.util.function.Consumer<ContentOverrideDTO> preprocessor = override -> {
+            if (override == null) {
+                return;
+            }
+
+            // Strip fields that aren't important for the purposes of determining DTO equality
+            override.created(null)
+                .updated(null);
+        };
+
+        if (expected != null) {
+            expected.forEach(preprocessor);
+        }
+
+        if (actual != null) {
+            actual = StreamSupport.stream(actual.spliterator(), false)
+                .peek(preprocessor)
+                .toList();
+        }
+
+        assertEquals(expected, actual);
     }
 
     private String getLongString() {
@@ -222,230 +223,173 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
     @Test
     public void testAddOverride() {
-        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
-
         List<ContentOverrideDTO> overrides = new LinkedList<>();
-        ContentOverrideDTO dto = new ContentOverrideDTO()
+        ContentOverrideDTO dto1 = new ContentOverrideDTO()
             .contentLabel("test_label")
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
+        overrides.add(dto1);
 
         List<ContentOverrideDTO> actual = this.resource
-            .addActivationKeyContentOverrides(key.getId(), overrides)
+            .addActivationKeyContentOverrides(key.getId(), List.of(dto1))
             .toList();
 
+        dto1.source(ActivationKeyContentOverride.DISCRIMINATOR_VALUE);
         this.compareOverrideDTOs(overrides, actual);
 
         // Add a second to ensure we don't clobber the first
-        dto = new ContentOverrideDTO()
+        ContentOverrideDTO dto2 = new ContentOverrideDTO()
             .contentLabel("test_label-2")
             .name("override_name-2")
             .value("override_value-2");
 
-        overrides.add(dto);
+        overrides.add(dto2);
 
-        actual = this.resource.addActivationKeyContentOverrides(key.getId(), Arrays.asList(dto))
+        actual = this.resource
+            .addActivationKeyContentOverrides(key.getId(), List.of(dto2))
             .toList();
 
+        dto2.source(ActivationKeyContentOverride.DISCRIMINATOR_VALUE);
         this.compareOverrideDTOs(overrides, actual);
     }
 
     @Test
     public void testAddOverrideOverwritesExistingWhenMatched() {
-        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("test_label")
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
-
         List<ContentOverrideDTO> actual = this.resource
-            .addActivationKeyContentOverrides(key.getId(), overrides)
+            .addActivationKeyContentOverrides(key.getId(), List.of(dto))
             .toList();
 
-        this.compareOverrideDTOs(overrides, actual);
+        dto.source(ActivationKeyContentOverride.DISCRIMINATOR_VALUE);
+        this.compareOverrideDTOs(List.of(dto), actual);
 
         // Add a "new" override that has the same label and name as the first which should inherit
         // the new value
-        dto = new ContentOverrideDTO()
+        ContentOverrideDTO update = new ContentOverrideDTO()
             .contentLabel("test_label")
             .name("override_name")
-            .value("override_value-2");
+            .value("override_value-2")
+            .source(ActivationKeyContentOverride.DISCRIMINATOR_VALUE);
 
-        overrides.clear();
-        overrides.add(dto);
-
-        actual = this.resource.addActivationKeyContentOverrides(key.getId(), overrides)
+        actual = this.resource.addActivationKeyContentOverrides(key.getId(), List.of(update))
             .toList();
 
-        this.compareOverrideDTOs(overrides, actual);
+        update.source(ActivationKeyContentOverride.DISCRIMINATOR_VALUE);
+        this.compareOverrideDTOs(List.of(update), actual);
     }
 
     @Test
     public void testAddOverrideFailsValidationWithNoParent() {
-        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("test_label")
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
-
-        Iterable<ContentOverrideDTO> actual = this.resource
-            .addActivationKeyContentOverrides(key.getId(), overrides)
-            .toList();
-
-        this.compareOverrideDTOs(overrides, actual);
+        assertThrows(BadRequestException.class,
+            () -> this.resource.addActivationKeyContentOverrides(null, List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithNullLabel() {
-        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel(null)
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
+            () -> resource.addActivationKeyContentOverrides(key.getId(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithEmptyLabel() {
-        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("")
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
+            () -> resource.addActivationKeyContentOverrides(key.getId(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithLongLabel() {
-        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel(this.getLongString())
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
+            () -> resource.addActivationKeyContentOverrides(key.getId(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithNullName() {
-        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("content_label")
             .name(null)
             .value("override_value");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
+            () -> resource.addActivationKeyContentOverrides(key.getId(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithEmptyName() {
-        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("content_label")
             .name("")
             .value("override_value");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
+            () -> resource.addActivationKeyContentOverrides(key.getId(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithLongName() {
-        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("content_label")
             .name(this.getLongString())
             .value("override_value");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
+            () -> resource.addActivationKeyContentOverrides(key.getId(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithNullValue() {
-        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("content_label")
             .name("override_name")
             .value(null);
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
+            () -> resource.addActivationKeyContentOverrides(key.getId(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithEmptyValue() {
-        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("content_label")
             .name("override_name")
             .value("");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
+            () -> resource.addActivationKeyContentOverrides(key.getId(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithLongValue() {
-        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("content_label")
             .name("override_name")
             .value(this.getLongString());
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
+            () -> resource.addActivationKeyContentOverrides(key.getId(), List.of(dto)));
     }
 }

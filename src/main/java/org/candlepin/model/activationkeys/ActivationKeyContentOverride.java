@@ -31,9 +31,12 @@ import javax.validation.constraints.NotNull;
  * ActivationKeyContentOverride
  */
 @Entity
-@DiscriminatorValue("activation_key")
+@DiscriminatorValue(ActivationKeyContentOverride.DISCRIMINATOR_VALUE)
 public class ActivationKeyContentOverride extends
     ContentOverride<ActivationKeyContentOverride, ActivationKey> {
+
+    /** The discriminator value for this class of content override */
+    public static final String DISCRIMINATOR_VALUE = "activation_key";
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
@@ -81,12 +84,39 @@ public class ActivationKeyContentOverride extends
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public ActivationKeyContentOverride setParent(ActivationKey parent) {
         this.setKey(parent);
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public ActivationKey getParent() {
         return this.getKey();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDiscriminatorValue() {
+        return DISCRIMINATOR_VALUE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        ActivationKey key = this.getKey();
+
+        return String.format("ActivationKeyContentOverride [key: %s, content: %s, name: %s, value: %s]",
+            key != null ? key.getId() : null, this.getContentLabel(), this.getName(), this.getValue());
     }
 }

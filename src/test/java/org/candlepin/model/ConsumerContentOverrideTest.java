@@ -15,8 +15,10 @@
 package org.candlepin.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +35,15 @@ public class ConsumerContentOverrideTest extends ContentOverrideTest<ConsumerCon
     @Override
     protected ConsumerContentOverride getTestInstance() {
         return new ConsumerContentOverride();
+    }
+
+    @Test
+    public void testToString() {
+        ConsumerContentOverride override = this.getTestInstance();
+        String output = override.toString();
+
+        assertNotNull(output);
+        assertTrue(output.matches("^ConsumerContentOverride \\[.+\\]"));
     }
 
     @Test
@@ -97,4 +108,10 @@ public class ConsumerContentOverrideTest extends ContentOverrideTest<ConsumerCon
         assertNull(output.getConsumer());
     }
 
+    @Test
+    public void testGetSourceType() {
+        ConsumerContentOverride override = new ConsumerContentOverride();
+
+        assertEquals(ConsumerContentOverride.DISCRIMINATOR_VALUE, override.getDiscriminatorValue());
+    }
 }

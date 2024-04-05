@@ -8634,6 +8634,10 @@ components:
             value:
               type: string
               maxLength: 2048
+            source:
+              description: |
+                the source of this override (e.g. "consumer", or "environment"); ignored on input
+              type: string
 
     ContentToPromoteDTO:
       description: Represents the JSON input when promoting content, or updating promoted content.
