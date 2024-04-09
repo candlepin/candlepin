@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 @SpecTest
-public class ConsumerResourceContentSpecTest {
+public class ConsumerResourceContentOverrideSpecTest {
 
     private static final String CONTENT_LABEL = "content.label";
     private static ApiClient admin;

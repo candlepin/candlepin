@@ -473,6 +473,10 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     private Consumer verifyAndGetParent(String parentId, Principal principal, Access access) {
+        if (parentId == null || parentId.isEmpty()) {
+            throw new BadRequestException("No consumer specified");
+        }
+
         // Throws exception if criteria block the id
         Consumer result = this.consumerCurator.verifyAndLookupConsumer(parentId);
 

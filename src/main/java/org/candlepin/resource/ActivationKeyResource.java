@@ -334,7 +334,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
 
         return this.contentOverrideCurator.getList(key)
             .stream()
-            .map(this.translator.getStreamMapper(ActivationKeyContentOverride.class,
+            .map(this.translator.getStreamMapper(ContentOverride.class,
                 ContentOverrideDTO.class));
     }
 
@@ -358,10 +358,10 @@ public class ActivationKeyResource implements ActivationKeyApi {
                 else {
                     String name = dto.getName();
                     if (StringUtils.isBlank(name)) {
-                        this.contentOverrideCurator.removeByContentLabel(key, dto.getContentLabel());
+                        this.contentOverrideCurator.removeByContentLabel(key, label);
                     }
                     else {
-                        this.contentOverrideCurator.removeByName(key, dto.getContentLabel(), name);
+                        this.contentOverrideCurator.removeByName(key, label, name);
                     }
                 }
             }

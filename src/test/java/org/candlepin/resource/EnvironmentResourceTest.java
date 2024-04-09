@@ -50,12 +50,14 @@ import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContentCurator;
+import org.candlepin.model.EnvironmentContentOverrideCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.SCACertificate;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.RdbmsExceptionTranslator;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -94,7 +96,9 @@ class EnvironmentResourceTest {
     @Mock
     private JobManager jobManager;
     @Mock
-    private DTOValidator validator;
+    private DTOValidator dtoValidator;
+    @Mock
+    private ContentOverrideValidator contentOverrideValidator;
     @Mock
     private ContentAccessManager contentAccessManager;
     @Mock
@@ -107,9 +111,11 @@ class EnvironmentResourceTest {
     private EntitlementCurator entitlementCurator;
     @Mock
     private EntitlementCertificateService entCertService;
+    @Mock
+    private EnvironmentContentOverrideCurator envContentOverrideCurator;
+
     private I18n i18n;
     private ModelTranslator translator;
-
     private EnvironmentResource environmentResource;
 
     private Owner owner;
@@ -135,14 +141,19 @@ class EnvironmentResourceTest {
             this.rdbmsExceptionTranslator,
             this.translator,
             this.jobManager,
-            this.validator,
+            this.dtoValidator,
+            this.contentOverrideValidator,
             this.contentAccessManager,
             this.certificateSerialCurator,
             this.identityCertificateCurator,
             this.contentAccessCertificateCurator,
             this.entitlementCurator,
-            this.entCertService);
+            this.entCertService,
+            this.envContentOverrideCurator);
 
+        // TODO: Stop doing this! Globally shared data means every test in the suite has to account
+        // for this or risk counts/queries not returning precise results! Just create the objects in
+        // the test as necessary!
         this.owner = TestUtil.createOwner("owner1");
         this.environment1 = createEnvironment(owner, ENV_ID_1);
     }
