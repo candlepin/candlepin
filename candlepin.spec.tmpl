@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.3.12
+Version: 4.3.13
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -240,6 +240,13 @@ fi
 
 #raw
 %changelog
+* Tue Apr 09 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.13-1
+- Add new translations using Weblate (noreply@weblate.org)
+- 2213261: Ensure pool lock order for activation keys (wpoteat@redhat.com)
+- CANDLEPIN-785: Catch scenario with null event data (wpoteat@redhat.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- CANDLEPIN-765: Remove Rules upload and delete (wpoteat@redhat.com)
+
 * Wed Jan 17 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.12-1
 - Add new translations using Weblate (noreply@weblate.org)
 - 2256951: Fix CertificateCleanupJob fk violation (nmoumoul@redhat.com)
