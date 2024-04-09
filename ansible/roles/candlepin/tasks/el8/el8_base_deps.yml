@@ -18,15 +18,6 @@
     - system_update
     - candlepin
 
-- name: "Enable required DNF modules"
-  become: true
-  ansible.builtin.command:
-    cmd: dnf module enable -y pki-core pki-deps
-  changed_when: false
-  tags:
-    - base_deps
-    - candlepin
-
 - name: "Install Candlepin requirements"
   become: true
   ansible.builtin.package:
@@ -37,11 +28,11 @@
       - java-17-openjdk-devel
       - gettext
       - openssl
-      - pki-servlet-engine
       - platform-python
       - python36
       - python3-libxml2
       - python3-requests
+      - tomcat
       - unzip
       - wget
       - zlib
