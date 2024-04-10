@@ -1,15 +1,14 @@
 plugins {
-    id "com.gradle.enterprise" version "3.17"
+    id "com.gradle.develocity" version "3.17.1"
 }
 
 def runsOnCI = System.getenv("CI") == 'true'
 
-gradleEnterprise {
+develocity {
     buildScan {
-        termsOfServiceUrl = "https://gradle.com/terms-of-service"
-        termsOfServiceAgree = "yes"
-
-        publishAlwaysIf(runsOnCI)
+        termsOfUseUrl = "https://gradle.com/terms-of-service"
+        termsOfUseAgree = "yes"
+        publishing.onlyIf { runsOnCI }
     }
 }
 
