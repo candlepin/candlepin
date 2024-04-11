@@ -16,6 +16,7 @@ package org.candlepin.spec.content;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatObject;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,6 +63,7 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -130,23 +132,19 @@ class OwnerContentSpecTest {
         ContentDTO content = this.getFullyPopulatedContent();
         ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), content);
 
-        assertNotNull(created);
-
-        // Impl note:
-        // We can't do a raw equality check since our generated content won't have a value for the
-        // uuid, created, or updated fields. We can cheat a bit and just use those on the returned
-        // DTO to test everything else with .equals
-        content.uuid(created.getUuid())
-            .created(created.getCreated())
-            .updated(created.getUpdated());
-
-        assertEquals(content, created);
+        assertThat(created)
+            .isNotNull()
+            .usingRecursiveComparison()
+            .ignoringFields("uuid", "created", "updated")
+            .isEqualTo(content);
 
         ContentDTO fetched = adminClient.ownerContent().getContentById(owner.getKey(), content.getId());
-        assertNotNull(fetched);
 
-        // Same deal here, but we've already set the fields to what they should be upstream
-        assertEquals(content, fetched);
+        assertThat(fetched)
+            .isNotNull()
+            .usingRecursiveComparison()
+            .ignoringFields("uuid", "created", "updated")
+            .isEqualTo(content);
     }
 
     private static Stream<Arguments> criticalContentStringFieldsAndValues() {
@@ -198,12 +196,8 @@ class OwnerContentSpecTest {
             .contains(fieldName + " cannot be null or empty");
     }
 
-    private static Stream<String> critialContentFields() {
-        return Stream.of("label", "name", "type", "vendor");
-    }
-
     @ParameterizedTest
-    @MethodSource("critialContentFields")
+    @ValueSource(strings = {"label", "name", "type", "vendor"})
     public void shouldRequireCriticalFieldsArePopulatedWhenCreatingContent(String fieldName)
         throws Exception {
 
@@ -234,6 +228,96 @@ class OwnerContentSpecTest {
         assertThat(response.getBodyAsString())
             .isNotNull()
             .contains(fieldName + " cannot be null or empty");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"type", "label", "name", "vendor", "contentUrl", "requiredTags", "releaseVer",
+        "gpgUrl", "arches"})
+    public void shouldValidateMaxLengthOfFieldsOnCreate(String fieldName) throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = OwnerContentSpecTest.this.createOwner(adminClient);
+        ContentDTO content = this.getFullyPopulatedContent();
+
+        // Convert the content to a JsonNode so we can set the field
+        ObjectNode jsonNode = ApiClient.MAPPER.readValue(content.toJson(), ObjectNode.class);
+        jsonNode.put(fieldName, "s".repeat(256));
+
+        Response response = Request.from(adminClient)
+            .setPath("/owners/{owner_key}/content")
+            .setPathParam("owner_key", owner.getKey())
+            .setMethod("POST")
+            .setBody(jsonNode.toString())
+            .execute();
+
+        assertThat(response)
+            .returns(400, Response::getCode);
+
+        assertThat(response.getBodyAsString())
+            .isNotNull()
+            .contains(fieldName)
+            .contains("size must be between");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"type", "label", "name", "vendor", "contentUrl", "requiredTags", "releaseVer",
+        "gpgUrl", "arches"})
+    public void shouldValidateMaxLengthOfFieldsOnBatchCreate(String fieldName) throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = OwnerContentSpecTest.this.createOwner(adminClient);
+        ContentDTO content = this.getFullyPopulatedContent();
+
+        // Convert the content to a JsonNode so we can set the field
+        ObjectNode jsonNode = ApiClient.MAPPER.readValue(content.toJson(), ObjectNode.class);
+        jsonNode.put(fieldName, "s".repeat(256));
+
+        Response response = Request.from(adminClient)
+            .setPath("/owners/{owner_key}/content/batch")
+            .setPathParam("owner_key", owner.getKey())
+            .setMethod("POST")
+            .setBody("[" + jsonNode.toString() + "]")
+            .execute();
+
+        assertThat(response)
+            .returns(400, Response::getCode);
+
+        assertThat(response.getBodyAsString())
+            .isNotNull()
+            .contains(fieldName)
+            .contains("size must be between");
+    }
+
+    @Test
+    public void shouldNotAllowCreatingContentWithInvalidIDs() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = this.createOwner(adminClient);
+
+        String invalidId = "a".repeat(33);
+
+        ContentDTO content = this.getFullyPopulatedContent()
+            .id(invalidId);
+
+        assertBadRequest(() -> adminClient.ownerContent().createContent(owner.getKey(), content));
+
+        assertNotFound(() -> adminClient.ownerContent().getContentById(owner.getKey(), content.getId()));
+    }
+
+    @Test
+    public void shouldNotAllowCreatingContentInBatchesWithInvalidIDs() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = this.createOwner(adminClient);
+
+        String invalidId = "a".repeat(33);
+
+        ContentDTO content1 = this.getFullyPopulatedContent()
+            .id(invalidId);
+
+        ContentDTO content2 = this.getFullyPopulatedContent();
+
+        assertBadRequest(() -> adminClient.ownerContent()
+            .createContentBatch(owner.getKey(), List.of(content1, content2)));
+
+        assertNotFound(() -> adminClient.ownerContent().getContentById(owner.getKey(), content1.getId()));
+        assertNotFound(() -> adminClient.ownerContent().getContentById(owner.getKey(), content2.getId()));
     }
 
     @Test

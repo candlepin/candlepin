@@ -4758,7 +4758,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContentDTO'
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentDTO'
         400:
           description: Invalid inputs, could not create content
           content:
@@ -8571,30 +8573,39 @@ components:
               example: "ff808081554a3e4101554a3e9033005d"
             id:
               type: string
+              maxLength: 32
               example: "5001"
             type:
               type: string
+              maxLength: 255
               example: "yum"
             label:
               type: string
+              maxLength: 255
               example: "content_label"
             name:
               type: string
+              maxLength: 255
               example: "content_name"
             vendor:
               type: string
+              maxLength: 255
               example: "example-vendor"
             contentUrl:
               type: string
+              maxLength: 255
               example: "/admin/foo/example/path"
             requiredTags:
               type: string
+              maxLength: 255
               example: "TAG1,TAG2"
             releaseVer:
               type: string
+              maxLength: 255
               example: "1.2.3"
             gpgUrl:
               type: string
+              maxLength: 255
               example: "/admin/foo/example/gpg/path"
             modifiedProductIds:
               type: array
@@ -8602,8 +8613,10 @@ components:
               example: "[5051,5052,5053]"
               items:
                 type: string
+                maxLength: 32
             arches:
               type: string
+              maxLength: 255
               example: "x86_64"
             metadataExpire:
               type: integer
