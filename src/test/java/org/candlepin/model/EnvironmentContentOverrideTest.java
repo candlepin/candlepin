@@ -66,35 +66,4 @@ public class EnvironmentContentOverrideTest extends ContentOverrideTest<Environm
         assertNull(output.getParent());
     }
 
-    @Test
-    public void testGetSetParent() {
-        Environment environment = new Environment();
-        EnvironmentContentOverride override = this.getTestInstance();
-
-        // The getParent method is synonymous with fetching the environment for EnvContentOverrides
-        assertNull(override.getParent());
-        assertNull(override.getEnvironment());
-
-        EnvironmentContentOverride output = override.setParent(environment);
-        assertSame(override, output);
-
-        assertEquals(environment, output.getParent());
-        assertEquals(environment, output.getEnvironment());
-    }
-
-    @Test
-    public void testGetSetNullParent() {
-        EnvironmentContentOverride override = this.getTestInstance();
-
-        // The getParent method is synonymous with fetching the environment for EnvContentOverrides
-        assertNull(override.getParent());
-        assertNull(override.getEnvironment());
-
-        EnvironmentContentOverride output = override.setParent(null);
-        assertSame(override, output);
-
-        assertNull(output.getParent());
-        assertNull(output.getEnvironment());
-    }
-
 }

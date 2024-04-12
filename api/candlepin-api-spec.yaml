@@ -3359,6 +3359,147 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /environments/{environment_id}/content_overrides:
+    get:
+      description: |
+        Fetches the overrides to be applied to all consumers in the given environment. If the environment has
+        no overrides, this endpoint returns an empty list.
+      operationId: getEnvironmentContentOverrides
+      tags:
+        - environment
+      parameters:
+        - name: environment_id
+          in: path
+          description: |
+            The ID of the environment for which to fetch content overrides
+          required: true
+          schema:
+            type: string
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
+      security: []
+      responses:
+        200:
+          description: |
+            A list of content overrides for the specified environment
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentOverrideDTO'
+        404:
+          description: |
+            An environment with the specified ID does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          $ref: '#/components/responses/default'
+    put:
+      description: |
+        Adds one or more new content overrides or updates existing overrides for the given environment, then
+        returns a list containing all known, updated overrides for the environment. If the list contains
+        multiple values for a given content override, any previous value(s) will be overwritten.
+      operationId: putEnvironmentContentOverrides
+      tags:
+        - environment
+      parameters:
+        - name: environment_id
+          in: path
+          description: |
+            The ID of the environment in which to add or update content overrides
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: A list containing the content overrides to apply to the environment
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContentOverrideDTO'
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
+      security: []
+      responses:
+        200:
+          description: |
+            An updated list of all known content overrides for the specified environment
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentOverrideDTO'
+        404:
+          description: |
+            An environment with the specified ID does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+    delete:
+      description: |
+        Removes one or more content overrides from the given environment. If the list of content overrides to
+        remove is empty, or the list contains one or more entries without a label, all content overrides for
+        the specified environment will be removed. If the list contains one or more entries with a label but
+        without an override name (key), all overrides for that label will be removed. If no matching overrides
+        could be found, no change will be made to the environment.
+
+        Regardless of which, if any, content overrides are removed, this endpoint returns a list containing
+        the remaining overrides on the specified environment.
+      operationId: deleteEnvironmentContentOverrides
+      tags:
+        - environment
+      parameters:
+        - name: environment_id
+          in: path
+          description: |
+            The ID of the environment from which to remove content overrides
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: |
+          A list containing the content overrides to remove from the environment. The overrides need not be
+          fully populated, as the value is ignored entirely during removal; and depending on the behavior
+          desired, the name or label fields may not be needed, either. See the description for the operation
+          itself for more details.
+        required: false
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContentOverrideDTO'
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
+      security: []
+      responses:
+        200:
+          description: |
+            An update list of all remaining content overrides for the specified environment
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentOverrideDTO'
+        404:
+          description: |
+            An environment with the specified ID does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
   /entitlements:
     get:
       description: Retrieves list of Entitlements. This endpoint supports paging with query parameters. For more details please visit https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin
@@ -8642,8 +8783,10 @@ components:
           properties:
             name:
               type: string
+              maxLength: 255
             contentLabel:
               type: string
+              maxLength: 255
             value:
               type: string
               maxLength: 2048

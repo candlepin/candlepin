@@ -134,33 +134,6 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
     }
 
     @Test
-    public void testAddOrUpdateUpdatesValue() {
-        ActivationKeyContentOverride cco1 = this.buildActivationKeyContentOverride(
-            key, "test-content1", "name1", "value");
-        activationKeyContentOverrideCurator.create(cco1);
-        ActivationKeyContentOverride cco2 = this.buildActivationKeyContentOverride(
-            key, "test-content1", "name1", "value2");
-        activationKeyContentOverrideCurator.addOrUpdate(key, cco2);
-
-        List<ActivationKeyContentOverride> ccoList = activationKeyContentOverrideCurator.listAll();
-        assertEquals(1, ccoList.size());
-        assertEquals("value2", ccoList.get(0).getValue());
-    }
-
-    @Test
-    public void testAddOrUpdateCreatesNew() {
-        ActivationKeyContentOverride cco1 = this.buildActivationKeyContentOverride(
-            key, "test-content1", "name1", "value");
-        activationKeyContentOverrideCurator.create(cco1);
-        ActivationKeyContentOverride cco2 = this.buildActivationKeyContentOverride(
-            key, "test-content2", "name2", "value2");
-        activationKeyContentOverrideCurator.addOrUpdate(key, cco2);
-
-        List<ActivationKeyContentOverride> ccoList = activationKeyContentOverrideCurator.listAll();
-        assertEquals(2, ccoList.size());
-    }
-
-    @Test
     public void testCreateOverride() {
         ActivationKeyContentOverride override = this.buildActivationKeyContentOverride(key,
             "test-repo", "gpgcheck", "1");

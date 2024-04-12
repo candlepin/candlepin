@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -176,56 +177,6 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
         consumerContentOverrideCurator.removeByParent(consumer);
         List<ConsumerContentOverride> ccoList2 = consumerContentOverrideCurator.listAll();
         assertEquals(0, ccoList2.size());
-    }
-
-    @Test
-    public void testAddOrUpdateUpdatesValue() {
-        ConsumerContentOverride cco1 = new ConsumerContentOverride()
-            .setConsumer(this.consumer)
-            .setContentLabel("test_content-1")
-            .setName("cco-1")
-            .setValue("value-1");
-
-        this.consumerContentOverrideCurator.create(cco1);
-        this.consumerContentOverrideCurator.flush();
-
-        ConsumerContentOverride cco2 = new ConsumerContentOverride()
-            .setConsumer(this.consumer)
-            .setContentLabel("test_content-1")
-            .setName("cco-1")
-            .setValue("value-2");
-
-        this.consumerContentOverrideCurator.addOrUpdate(consumer, cco2);
-        this.consumerContentOverrideCurator.flush();
-        this.consumerContentOverrideCurator.clear();
-
-        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll();
-        assertEquals(1, ccoList.size());
-        assertEquals(cco2.getValue(), ccoList.get(0).getValue());
-    }
-
-    @Test
-    public void testAddOrUpdateCreatesNew() {
-        ConsumerContentOverride cco1 = new ConsumerContentOverride()
-            .setConsumer(this.consumer)
-            .setContentLabel("test-content1")
-            .setName("name1")
-            .setValue("value");
-
-        consumerContentOverrideCurator.create(cco1);
-
-        ConsumerContentOverride cco2 = new ConsumerContentOverride()
-            .setConsumer(this.consumer)
-            .setContentLabel("test-content2")
-            .setName("name2")
-            .setValue("value2");
-
-        consumerContentOverrideCurator.addOrUpdate(consumer, cco2);
-        this.consumerContentOverrideCurator.flush();
-        this.consumerContentOverrideCurator.clear();
-
-        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll();
-        assertEquals(2, ccoList.size());
     }
 
     @Test
@@ -443,5 +394,229 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
 
         assertTrue(consumerContentOverrideCurator.getList(consumer).isEmpty());
         assertEquals(1, consumerContentOverrideCurator.getList(consumer2).size());
+    }
+
+    @Test
+    public void testGetLayeredContentOverridesIncludesConsumerContentOverrides() {
+        Owner owner = this.createOwner();
+        Consumer consumer1 = this.createConsumer(owner);
+        Consumer consumer2 = this.createConsumer(owner);
+
+        ConsumerContentOverride consumerOverride1 = new ConsumerContentOverride()
+            .setConsumer(consumer1)
+            .setContentLabel("repo1")
+            .setName("attrib1")
+            .setValue("attrib1-consumer_val-1");
+
+        ConsumerContentOverride consumerOverride2 = new ConsumerContentOverride()
+            .setConsumer(consumer1)
+            .setContentLabel("repo1")
+            .setName("attrib2")
+            .setValue("attrib2-consumer_val-2");
+
+        ConsumerContentOverride consumerOverride3 = new ConsumerContentOverride()
+            .setConsumer(consumer2)
+            .setContentLabel("repo1")
+            .setName("attrib3")
+            .setValue("attrib3-consumer_val-3");
+
+        this.consumerContentOverrideCurator.create(consumerOverride1);
+        this.consumerContentOverrideCurator.create(consumerOverride2);
+        this.consumerContentOverrideCurator.create(consumerOverride3);
+
+        List<ContentOverride<?, ?>> overrides1 = this.consumerContentOverrideCurator
+            .getLayeredContentOverrides(consumer1);
+
+        List<ContentOverride<?, ?>> overrides2 = this.consumerContentOverrideCurator
+            .getLayeredContentOverrides(consumer1.getId());
+
+        assertThat(overrides1)
+            .hasSize(2)
+            .usingRecursiveFieldByFieldElementComparatorOnFields("contentLabel", "name", "value")
+            .containsExactlyInAnyOrder(consumerOverride1, consumerOverride2);
+
+        assertThat(overrides2)
+            .hasSize(2)
+            .usingRecursiveFieldByFieldElementComparatorOnFields("contentLabel", "name", "value")
+            .containsExactlyInAnyOrder(consumerOverride1, consumerOverride2);
+    }
+
+    @Test
+    public void testGetLayeredContentOverridesIncludesEnvironmentContentOverrides() {
+        Owner owner = this.createOwner();
+        Environment env1 = this.createEnvironment(owner);
+        Environment env2 = this.createEnvironment(owner);
+        Consumer consumer1 = this.createConsumer(owner);
+
+        EnvironmentContentOverride envOverride1 = new EnvironmentContentOverride()
+            .setEnvironment(env1)
+            .setContentLabel("repo1")
+            .setName("attrib1")
+            .setValue("attrib1-env_value-1");
+
+        EnvironmentContentOverride envOverride2 = new EnvironmentContentOverride()
+            .setEnvironment(env1)
+            .setContentLabel("repo1")
+            .setName("attrib2")
+            .setValue("attrib2-env_value-2");
+
+        EnvironmentContentOverride envOverride3 = new EnvironmentContentOverride()
+            .setEnvironment(env2)
+            .setContentLabel("repo1")
+            .setName("attrib1")
+            .setValue("attrib1-env_value-3");
+
+        this.environmentContentOverrideCurator.create(envOverride1);
+        this.environmentContentOverrideCurator.create(envOverride2);
+        this.environmentContentOverrideCurator.create(envOverride3);
+
+        consumer1.addEnvironment(env1);
+
+        this.consumerCurator.merge(consumer1);
+
+        List<ContentOverride<?, ?>> overrides1 = this.consumerContentOverrideCurator
+            .getLayeredContentOverrides(consumer1);
+
+        List<ContentOverride<?, ?>> overrides2 = this.consumerContentOverrideCurator
+            .getLayeredContentOverrides(consumer1.getId());
+
+        assertThat(overrides1)
+            .hasSize(2)
+            .usingRecursiveFieldByFieldElementComparatorOnFields("contentLabel", "name", "value")
+            .containsExactlyInAnyOrder(envOverride1, envOverride2);
+
+        assertThat(overrides2)
+            .hasSize(2)
+            .usingRecursiveFieldByFieldElementComparatorOnFields("contentLabel", "name", "value")
+            .containsExactlyInAnyOrder(envOverride1, envOverride2);
+    }
+
+    /**
+     * This test verifies that the layering logic will use the override from the highest priority
+     * environment in the case of a conflict on override label+name in multiple environments, *but
+     * no conflicting override on the consumer*.
+     */
+    @Test
+    public void testGetLayeredContentOverridesPrefersHighestPriorityEnvironment() {
+        Owner owner = this.createOwner();
+        Environment env1 = this.createEnvironment(owner);
+        Environment env2 = this.createEnvironment(owner);
+        Consumer consumer1 = this.createConsumer(owner);
+
+        EnvironmentContentOverride envOverride1 = new EnvironmentContentOverride()
+            .setEnvironment(env1)
+            .setContentLabel("repo1")
+            .setName("attrib1")
+            .setValue("attrib1-env_value-1");
+
+        EnvironmentContentOverride envOverride2 = new EnvironmentContentOverride()
+            .setEnvironment(env1)
+            .setContentLabel("repo1")
+            .setName("attrib2")
+            .setValue("attrib2-env_value-2");
+
+        EnvironmentContentOverride envOverride3 = new EnvironmentContentOverride()
+            .setEnvironment(env2)
+            .setContentLabel("repo1")
+            .setName("attrib1")
+            .setValue("attrib1-env_value-3");
+
+        this.environmentContentOverrideCurator.create(envOverride1);
+        this.environmentContentOverrideCurator.create(envOverride2);
+        this.environmentContentOverrideCurator.create(envOverride3);
+
+        // Order matters here. env2 being added first gives it higher priority, so we should get its
+        // overrides before env1's.
+        consumer1.addEnvironment(env2);
+        consumer1.addEnvironment(env1);
+
+        this.consumerCurator.merge(consumer1);
+
+        List<ContentOverride<?, ?>> overrides1 = this.consumerContentOverrideCurator
+            .getLayeredContentOverrides(consumer1);
+
+        List<ContentOverride<?, ?>> overrides2 = this.consumerContentOverrideCurator
+            .getLayeredContentOverrides(consumer1.getId());
+
+        assertThat(overrides1)
+            .hasSize(2)
+            .usingRecursiveFieldByFieldElementComparatorOnFields("contentLabel", "name", "value")
+            .containsExactlyInAnyOrder(envOverride2, envOverride3);
+
+        assertThat(overrides2)
+            .hasSize(2)
+            .usingRecursiveFieldByFieldElementComparatorOnFields("contentLabel", "name", "value")
+            .containsExactlyInAnyOrder(envOverride2, envOverride3);
+    }
+
+    /**
+     * This test verifies that the layering behavior will prefer the override on the consumer in
+     * cases where there is a conflict on label+name between overrides; even if there is a conflict
+     * between the consumer's environments.
+     */
+    @Test
+    public void testGetLayeredContentOverridesPrefersConsumerOverride() {
+        Owner owner = this.createOwner();
+        Environment env1 = this.createEnvironment(owner);
+        Environment env2 = this.createEnvironment(owner);
+        Consumer consumer1 = this.createConsumer(owner);
+
+        EnvironmentContentOverride envOverride1 = new EnvironmentContentOverride()
+            .setEnvironment(env1)
+            .setContentLabel("repo1")
+            .setName("attrib1")
+            .setValue("attrib1-env_value-1");
+
+        EnvironmentContentOverride envOverride2 = new EnvironmentContentOverride()
+            .setEnvironment(env1)
+            .setContentLabel("repo1")
+            .setName("attrib2")
+            .setValue("attrib2-env_value");
+
+        EnvironmentContentOverride envOverride3 = new EnvironmentContentOverride()
+            .setEnvironment(env2)
+            .setContentLabel("repo1")
+            .setName("attrib1")
+            .setValue("attrib1-env_value-2");
+
+        ConsumerContentOverride consumerOverride1 = new ConsumerContentOverride()
+            .setConsumer(consumer1)
+            .setContentLabel("repo1")
+            .setName("attrib1")
+            .setValue("attrib1-consumer_val");
+
+        ConsumerContentOverride consumerOverride2 = new ConsumerContentOverride()
+            .setConsumer(consumer1)
+            .setContentLabel("repo1")
+            .setName("attrib3")
+            .setValue("attrib3-consumer_val");
+
+        this.environmentContentOverrideCurator.create(envOverride1);
+        this.environmentContentOverrideCurator.create(envOverride2);
+        this.environmentContentOverrideCurator.create(envOverride3);
+        this.consumerContentOverrideCurator.create(consumerOverride1);
+        this.consumerContentOverrideCurator.create(consumerOverride2);
+
+        // Technically the order matters here, but the conflict should be ignored in favor of the
+        // consumer's specific content override anyway
+        consumer1.addEnvironment(env2);
+        consumer1.addEnvironment(env1);
+        this.consumerCurator.merge(consumer1);
+
+        List<ContentOverride<?, ?>> overrides1 = this.consumerContentOverrideCurator
+            .getLayeredContentOverrides(consumer1);
+
+        List<ContentOverride<?, ?>> overrides2 = this.consumerContentOverrideCurator
+            .getLayeredContentOverrides(consumer1.getId());
+
+        assertThat(overrides1)
+            .hasSize(3)
+            .usingRecursiveFieldByFieldElementComparatorOnFields("contentLabel", "name", "value")
+            .containsExactlyInAnyOrder(consumerOverride1, envOverride2, consumerOverride2);
+
+        assertThat(overrides2)
+            .hasSize(3)
+            .usingRecursiveFieldByFieldElementComparatorOnFields("contentLabel", "name", "value")
+            .containsExactlyInAnyOrder(consumerOverride1, envOverride2, consumerOverride2);
     }
 }

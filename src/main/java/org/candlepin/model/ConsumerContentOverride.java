@@ -54,15 +54,6 @@ public class ConsumerContentOverride extends ContentOverride<ConsumerContentOver
      * {@inheritDoc}
      */
     @Override
-    public ConsumerContentOverride setParent(Consumer parent) {
-        this.setConsumer(parent);
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Consumer getParent() {
         return this.getConsumer();
     }

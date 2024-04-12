@@ -56,6 +56,7 @@ public class ContentOverrideTranslator implements ObjectTranslator<ContentOverri
     @Override
     public ContentOverrideDTO populate(ModelTranslator translator, ContentOverride source,
         ContentOverrideDTO dest) {
+
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }

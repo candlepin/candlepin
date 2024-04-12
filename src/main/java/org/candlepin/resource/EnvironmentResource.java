@@ -26,6 +26,7 @@ import org.candlepin.controller.PoolService;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
+import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.server.v1.ContentToPromoteDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.exceptions.BadRequestException;
@@ -39,10 +40,13 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.ContentOverride;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
+import org.candlepin.model.EnvironmentContentOverride;
+import org.candlepin.model.EnvironmentContentOverrideCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
@@ -51,6 +55,7 @@ import org.candlepin.resource.server.v1.EnvironmentApi;
 import org.candlepin.resource.util.EntitlementEnvironmentFilter;
 import org.candlepin.resource.util.EnvironmentUpdates;
 import org.candlepin.resource.validation.DTOValidator;
+import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.RdbmsExceptionTranslator;
 
 import com.google.inject.persist.Transactional;
@@ -68,6 +73,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BinaryOperator;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
@@ -91,24 +97,38 @@ public class EnvironmentResource implements EnvironmentApi {
     private final RdbmsExceptionTranslator rdbmsExceptionTranslator;
     private final ModelTranslator translator;
     private final JobManager jobManager;
-    private final DTOValidator validator;
+    private final DTOValidator dtoValidator;
+    private final ContentOverrideValidator contentOverrideValidator;
     private final ContentAccessManager contentAccessManager;
     private final CertificateSerialCurator certificateSerialCurator;
     private final IdentityCertificateCurator identityCertificateCurator;
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
-    private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
     private final EntitlementCertificateService entCertService;
+    private final EnvironmentContentOverrideCurator envContentOverrideCurator;
+
+    private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
 
     @Inject
-    public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
-        EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
-        PoolService poolService, ConsumerCurator consumerCurator, ContentCurator contentCurator,
-        RdbmsExceptionTranslator rdbmsExceptionTranslator, ModelTranslator translator,
-        JobManager jobManager, DTOValidator validator, ContentAccessManager contentAccessManager,
+    public EnvironmentResource(
+        EnvironmentCurator envCurator,
+        I18n i18n,
+        EnvironmentContentCurator envContentCurator,
+        ConsumerResource consumerResource,
+        PoolService poolService,
+        ConsumerCurator consumerCurator,
+        ContentCurator contentCurator,
+        RdbmsExceptionTranslator rdbmsExceptionTranslator,
+        ModelTranslator translator,
+        JobManager jobManager,
+        DTOValidator dtoValidator,
+        ContentOverrideValidator contentOverrideValidator,
+        ContentAccessManager contentAccessManager,
         CertificateSerialCurator certificateSerialCurator,
         IdentityCertificateCurator identityCertificateCurator,
         ContentAccessCertificateCurator contentAccessCertificateCurator,
-        EntitlementCurator entCurator, EntitlementCertificateService entCertService) {
+        EntitlementCurator entCurator,
+        EntitlementCertificateService entCertService,
+        EnvironmentContentOverrideCurator envContentOverrideCurator) {
 
         this.envCurator = Objects.requireNonNull(envCurator);
         this.i18n = Objects.requireNonNull(i18n);
@@ -120,12 +140,16 @@ public class EnvironmentResource implements EnvironmentApi {
         this.rdbmsExceptionTranslator = Objects.requireNonNull(rdbmsExceptionTranslator);
         this.translator = Objects.requireNonNull(translator);
         this.jobManager = Objects.requireNonNull(jobManager);
-        this.validator = Objects.requireNonNull(validator);
+        this.dtoValidator = Objects.requireNonNull(dtoValidator);
+        this.contentOverrideValidator = Objects.requireNonNull(contentOverrideValidator);
         this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
         this.certificateSerialCurator = Objects.requireNonNull(certificateSerialCurator);
         this.identityCertificateCurator = Objects.requireNonNull(identityCertificateCurator);
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
-        this.entCertService = entCertService;
+        Objects.requireNonNull(entCurator);
+        this.entCertService = Objects.requireNonNull(entCertService);
+        this.envContentOverrideCurator = Objects.requireNonNull(envContentOverrideCurator);
+
         this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(entCurator, envContentCurator);
     }
 
@@ -135,6 +159,9 @@ public class EnvironmentResource implements EnvironmentApi {
      * @param environmentId
      *  The ID of the environment to lookup
      *
+     * @throws BadRequestException
+     *  if no environmentId is provided
+     *
      * @throws NotFoundException
      *  if the given ID cannot be resolved to a valid Environment
      *
@@ -142,6 +169,10 @@ public class EnvironmentResource implements EnvironmentApi {
      *  the environment with the given ID
      */
     private Environment lookupEnvironment(String environmentId) {
+        if (environmentId == null || environmentId.isEmpty()) {
+            throw new BadRequestException("No environment specified");
+        }
+
         Environment environment = this.envCurator.get(environmentId);
         if (environment == null) {
             throw new NotFoundException(i18n.tr("No such environment: {0}", environmentId));
@@ -351,7 +382,7 @@ public class EnvironmentResource implements EnvironmentApi {
     public ConsumerDTO createConsumerInEnvironment(String envId, ConsumerDTO consumer,
         String userName, String activationKeys) throws BadRequestException {
 
-        this.validator.validateCollectionElementsNotNull(consumer::getInstalledProducts,
+        this.dtoValidator.validateCollectionElementsNotNull(consumer::getInstalledProducts,
             consumer::getGuestIds, consumer::getCapabilities);
 
         List<EnvironmentDTO> environmentDTOs = Arrays.stream(envId.trim().split("\\s*,\\s*"))
@@ -376,6 +407,108 @@ public class EnvironmentResource implements EnvironmentApi {
         consumer.setEnvironments(environmentDTOs);
         return this.consumerResource.createConsumer(consumer, userName,
             ownerKey, activationKeys, true);
+    }
+
+    @Override
+    public Stream<ContentOverrideDTO> getEnvironmentContentOverrides(
+        @Verify(Environment.class) String environmentId) {
+
+        Environment environment = this.lookupEnvironment(environmentId);
+
+        return this.envContentOverrideCurator.getList(environment)
+            .stream()
+            .map(this.translator.getStreamMapper(ContentOverride.class, ContentOverrideDTO.class));
+    }
+
+    @Override
+    public Stream<ContentOverrideDTO> putEnvironmentContentOverrides(
+        @Verify(Environment.class) String environmentId,
+        List<ContentOverrideDTO> contentOverrideDTOs) {
+
+        this.contentOverrideValidator.validate(contentOverrideDTOs);
+        Environment environment = this.lookupEnvironment(environmentId);
+
+        try {
+            for (ContentOverrideDTO dto : contentOverrideDTOs) {
+                if (dto == null) {
+                    continue;
+                }
+
+                EnvironmentContentOverride override = this.envContentOverrideCurator
+                    .retrieve(environment, dto.getContentLabel(), dto.getName());
+
+                // We're counting on Hibernate to do our batching for us here...
+                if (override != null) {
+                    override.setValue(dto.getValue());
+                    this.envContentOverrideCurator.merge(override);
+                }
+                else {
+                    override = new EnvironmentContentOverride()
+                        .setEnvironment(environment)
+                        .setContentLabel(dto.getContentLabel())
+                        .setName(dto.getName())
+                        .setValue(dto.getValue());
+
+                    this.envContentOverrideCurator.create(override);
+                }
+            }
+        }
+        catch (RuntimeException e) {
+            // Make sure we clear all pending changes, since we don't want to risk storing only a
+            // portion of the changes.
+            this.envContentOverrideCurator.clear();
+
+            // Re-throw the exception
+            throw e;
+        }
+
+        // Hibernate typically persists automatically before executing a query against a table with
+        // pending changes, but if it doesn't, we can add a flush here to make sure this outputs the
+        // correct values
+
+        return this.envContentOverrideCurator.getList(environment)
+            .stream()
+            .map(this.translator.getStreamMapper(ContentOverride.class,
+                ContentOverrideDTO.class));
+    }
+
+    @Override
+    public Stream<ContentOverrideDTO> deleteEnvironmentContentOverrides(
+        @Verify(Environment.class) String environmentId,
+        List<ContentOverrideDTO> contentOverrideDTOs) {
+
+        Environment environment = this.lookupEnvironment(environmentId);
+
+        if (contentOverrideDTOs == null || contentOverrideDTOs.isEmpty()) {
+            this.envContentOverrideCurator.removeByParent(environment);
+        }
+        else {
+            for (ContentOverrideDTO dto : contentOverrideDTOs) {
+                if (dto == null) {
+                    continue;
+                }
+
+                String label = dto.getContentLabel();
+
+                if (label == null || label.isBlank()) {
+                    // Why in god's name is this a standard feature of content override deletions!?
+                    this.envContentOverrideCurator.removeByParent(environment);
+                }
+                else {
+                    String name = dto.getName();
+                    if (name == null || name.isBlank()) {
+                        this.envContentOverrideCurator.removeByContentLabel(environment, label);
+                    }
+                    else {
+                        this.envContentOverrideCurator.removeByName(environment, label, name);
+                    }
+                }
+            }
+        }
+
+        return this.envContentOverrideCurator.getList(environment)
+            .stream()
+            .map(this.translator.getStreamMapper(ContentOverride.class, ContentOverrideDTO.class));
     }
 
     /**
