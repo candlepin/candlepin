@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.persist.Transactional;
-
 import org.hibernate.criterion.Restrictions;
 
 import java.util.List;
@@ -105,37 +103,6 @@ public abstract class ContentOverrideCurator<T extends ContentOverride<T, Parent
         }
 
         return null;
-    }
-
-    @Transactional
-    public T addOrUpdate(Parent parent, ContentOverride override) {
-        if (parent == null) {
-            throw new IllegalArgumentException("parent is null");
-        }
-
-        if (override == null) {
-            throw new IllegalArgumentException("override is null");
-        }
-
-        T current = this.retrieve(parent, override.getContentLabel(), override.getName());
-
-        if (current != null) {
-            current.setValue(override.getValue());
-
-            current = this.merge(current);
-        }
-        else {
-            current = this.createOverride();
-
-            current.setParent(parent);
-            current.setContentLabel(override.getContentLabel());
-            current.setName(override.getName());
-            current.setValue(override.getValue());
-
-            current = this.create(current);
-        }
-
-        return current;
     }
 
     /**

@@ -43,6 +43,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.activationkey.ActivationKeyRules;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
@@ -61,6 +62,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
     private static int poolid = 0;
 
+    private DTOValidator dtoValidator;
     private ServiceLevelValidator serviceLevelValidator;
     private ActivationKeyResource activationKeyResource;
     private ActivationKeyRules activationKeyRules;
@@ -76,6 +78,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         activationKeyResource = injector.getInstance(ActivationKeyResource.class);
         activationKeyRules = injector.getInstance(ActivationKeyRules.class);
 
+        this.dtoValidator = new DTOValidator(this.i18n);
         this.mockActivationKeyCurator = mock(ActivationKeyCurator.class);
         this.serviceLevelValidator = mock(ServiceLevelValidator.class);
         this.poolService = mock(PoolService.class);
@@ -88,7 +91,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     private ActivationKeyResource buildActivationKeyResource() {
         return new ActivationKeyResource(this.mockActivationKeyCurator, this.i18n, this.poolService,
             this.serviceLevelValidator, this.activationKeyRules, this.productCurator, this.modelTranslator,
-            this.validator, this.akcoCurator, this.coValidator);
+            this.dtoValidator, this.akcoCurator, this.coValidator);
     }
 
     @Test

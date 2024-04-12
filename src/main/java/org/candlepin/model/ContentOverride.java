@@ -113,8 +113,6 @@ public abstract class ContentOverride<T extends ContentOverride, P extends Abstr
         return value;
     }
 
-    public abstract T setParent(P parent);
-
     public abstract P getParent();
 
     /**

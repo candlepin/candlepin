@@ -81,15 +81,6 @@ public class EnvironmentContentOverride extends ContentOverride<EnvironmentConte
      * {@inheritDoc}
      */
     @Override
-    public EnvironmentContentOverride setParent(Environment parent) {
-        this.setEnvironment(parent);
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String toString() {
         Environment environment = this.getEnvironment();
 

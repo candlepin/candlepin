@@ -94,6 +94,7 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ContentOverride;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.DistributorVersion;
@@ -379,11 +380,11 @@ public class ConsumerResource implements ConsumerApi {
     @RootResource.LinkedResource
     public Stream<ContentOverrideDTO> listConsumerContentOverrides(String consumerUuid) {
         Principal principal = ResteasyContext.getContextData(Principal.class);
-        Consumer parent = this.verifyAndGetParent(consumerUuid, principal, Access.READ_ONLY);
+        Consumer consumer = this.verifyAndGetParent(consumerUuid, principal, Access.READ_ONLY);
 
-        return this.ccoCurator.getList(parent)
+        return this.ccoCurator.getLayeredContentOverrides(consumer.getId())
             .stream()
-            .map(this.translator.getStreamMapper(ConsumerContentOverride.class, ContentOverrideDTO.class));
+            .map(this.translator.getStreamMapper(ContentOverride.class, ContentOverrideDTO.class));
     }
 
     @Override
@@ -409,12 +410,11 @@ public class ConsumerResource implements ConsumerApi {
                     this.ccoCurator.merge(override);
                 }
                 else {
-                    override = new ConsumerContentOverride();
-
-                    override.setParent(parent);
-                    override.setContentLabel(dto.getContentLabel());
-                    override.setName(dto.getName());
-                    override.setValue(dto.getValue());
+                    override = new ConsumerContentOverride()
+                        .setConsumer(parent)
+                        .setContentLabel(dto.getContentLabel())
+                        .setName(dto.getName())
+                        .setValue(dto.getValue());
 
                     this.ccoCurator.create(override);
                 }
@@ -473,6 +473,10 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     private Consumer verifyAndGetParent(String parentId, Principal principal, Access access) {
+        if (parentId == null || parentId.isEmpty()) {
+            throw new BadRequestException("No consumer specified");
+        }
+
         // Throws exception if criteria block the id
         Consumer result = this.consumerCurator.verifyAndLookupConsumer(parentId);
 

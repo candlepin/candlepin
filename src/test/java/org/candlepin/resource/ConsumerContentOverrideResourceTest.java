@@ -14,10 +14,10 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -34,24 +34,13 @@ import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.PoolService;
 import org.candlepin.controller.RefresherFactory;
-import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.model.AnonymousCloudConsumerCurator;
-import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ContentOverride;
-import org.candlepin.model.DeletedConsumerCurator;
-import org.candlepin.model.DistributorVersionCurator;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.EnvironmentContentCurator;
-import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.pki.certs.AnonymousCertificateGenerator;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.pki.certs.SCACertificateGenerator;
@@ -77,17 +66,15 @@ import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import javax.inject.Provider;
 
@@ -98,10 +85,6 @@ import javax.inject.Provider;
 public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
     @Mock
-    private ConsumerCurator consumerCurator;
-    @Mock
-    private OwnerCurator ownerCurator;
-    @Mock
     private EntitlementCertServiceAdapter entitlementCertServiceAdapter;
     @Mock
     private SubscriptionServiceAdapter subscriptionServiceAdapter;
@@ -111,8 +94,6 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     private PoolManager poolManager;
     @Mock
     private RefresherFactory refresherFactory;
-    @Mock
-    private EntitlementCurator entitlementCurator;
     @Mock
     private ComplianceRules complianceRules;
     @Mock
@@ -128,27 +109,17 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     @Mock
     private ConsumerEnricher consumerEnricher;
     @Mock
-    private ConsumerTypeCurator consumerTypeCurator;
-    @Mock
     private ContentAccessManager contentAccessManager;
     @Mock
     private EventSink sink;
     @Mock
-    private EnvironmentCurator environmentCurator;
-    @Mock
-    private DistributorVersionCurator distributorVersionCurator;
-    @Mock
     private IdentityCertificateGenerator idCertGenerator;
-    @Mock
-    private ActivationKeyCurator activationKeyCurator;
     @Mock
     private Entitler entitler;
     @Mock
     private ManifestManager manifestManager;
     @Mock
     private UserServiceAdapter userServiceAdapter;
-    @Mock
-    private DeletedConsumerCurator deletedConsumerCurator;
     @Mock
     private JobManager jobManager;
     @Mock
@@ -162,13 +133,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     @Mock
     private PrincipalProvider principalProvider;
     @Mock
-    private EnvironmentContentCurator environmentContentCurator;
-    @Mock
     private EntitlementCertificateService entCertService;
-    @Mock
-    private AnonymousCloudConsumerCurator anonymousConsumerCurator;
-    @Mock
-    private AnonymousContentAccessCertificateCurator anonymousCertCurator;
     @Mock
     private OwnerServiceAdapter ownerService;
     @Mock
@@ -176,22 +141,14 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     @Mock
     private AnonymousCertificateGenerator anonymousCertificateGenerator;
 
-    private Consumer consumer;
-    private ContentOverrideValidator contentOverrideValidator;
     private ConsumerResource resource;
 
     @BeforeEach
     public void setUp() {
-        this.consumer = this.createConsumer(this.createOwner());
-
         Principal principal = mock(Principal.class);
         when(principal.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))
             .thenReturn(true);
         ResteasyContext.pushContext(Principal.class, principal);
-
-        this.contentOverrideValidator = new ContentOverrideValidator(this.config, this.i18n);
-        when(this.consumerCurator.verifyAndLookupConsumer(anyString()))
-            .thenReturn(this.consumer);
 
         this.resource = new ConsumerResource(
             this.consumerCurator,
@@ -229,29 +186,33 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             this.jobManager,
             this.dtoValidator,
             this.principalProvider,
-            this.contentOverrideValidator,
+            new ContentOverrideValidator(this.config, this.i18n),
             this.consumerContentOverrideCurator,
             this.entCertService,
             this.poolService,
             this.environmentContentCurator,
-            this.anonymousConsumerCurator,
-            this.anonymousCertCurator,
+            this.anonymousCloudConsumerCurator,
+            this.anonymousContentAccessCertCurator,
             this.ownerService,
             this.scaCertificateGenerator,
             this.anonymousCertificateGenerator
         );
     }
 
-    private List<ConsumerContentOverride> createOverrides(Consumer consumer, int offset, int count) {
+    private Consumer createConsumer() {
+        Owner owner = this.createOwner();
+        return this.createConsumer(owner);
+    }
 
+    private List<ConsumerContentOverride> createOverrides(Consumer consumer, int offset, int count) {
         List<ConsumerContentOverride> overrides = new LinkedList<>();
 
         for (int i = offset; i < offset + count; ++i) {
-            ConsumerContentOverride cco = new ConsumerContentOverride();
-            cco.setConsumer(consumer);
-            cco.setContentLabel("content_label-" + i);
-            cco.setName("override_name-" + i);
-            cco.setValue("override_value-" + i);
+            ConsumerContentOverride cco = new ConsumerContentOverride()
+                .setConsumer(consumer)
+                .setContentLabel("content_label-" + i)
+                .setName("override_name-" + i)
+                .setValue("override_value-" + i);
 
             overrides.add(this.consumerContentOverrideCurator.create(cco));
         }
@@ -259,74 +220,40 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         return overrides;
     }
 
-    /**
-     * Removes the created and updated timestamps from the DTOs to make comparison easier
-     */
-    private List<ContentOverrideDTO> stripTimestamps(List<ContentOverrideDTO> list) {
-        if (list != null) {
-            for (ContentOverrideDTO dto : list) {
-                dto.setCreated(null);
-                dto.setUpdated(null);
-            }
-        }
-
-        return list;
-    }
-
-    private List<ContentOverrideDTO> stripTimestamps(Iterable<ContentOverrideDTO> list) {
-        return stripTimestamps(StreamSupport.stream(list.spliterator(), false).collect(Collectors.toList()));
-    }
-
-    private long sizeOf(Iterable<ContentOverrideDTO> list) {
-        return StreamSupport.stream(list.spliterator(), false).count();
-    }
-
-    /**
-     * Compares the collections of override DTOs by converting them to generic override lists and
-     * stripping their timestamps.
-     */
-    private void compareOverrideDTOs(List<ContentOverrideDTO> expected, Iterable<ContentOverrideDTO> actual) {
-        assertEquals(this.stripTimestamps(expected), this.stripTimestamps(actual));
-    }
-
-    private String getLongString() {
-        StringBuilder builder = new StringBuilder();
-
-        while (builder.length() < ContentOverride.MAX_VALUE_LENGTH) {
-            builder.append("longstring");
-        }
-
-        return builder.toString();
-    }
-
     @Test
     public void testGetOverrides() {
-        List<ConsumerContentOverride> overrides = this.createOverrides(this.consumer, 1, 3);
+        Consumer consumer = this.createConsumer();
+        List<ConsumerContentOverride> overrides = this.createOverrides(consumer, 1, 3);
 
         List<ContentOverrideDTO> expected = overrides.stream()
-            .map(this.modelTranslator.getStreamMapper(
-                ConsumerContentOverride.class, ContentOverrideDTO.class))
-            .collect(Collectors.toList());
-
-        List<ContentOverrideDTO> actual = this.resource
-            .listConsumerContentOverrides(this.consumer.getUuid())
+            .map(this.modelTranslator.getStreamMapper(ContentOverride.class, ContentOverrideDTO.class))
             .toList();
 
-        this.compareOverrideDTOs(expected, actual);
+        List<ContentOverrideDTO> actual = this.resource
+            .listConsumerContentOverrides(consumer.getUuid())
+            .toList();
+
+        assertThat(actual)
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
+            .containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     public void testGetOverridesEmptyList() {
+        Consumer consumer = this.createConsumer();
+
         List<ContentOverrideDTO> actual = this.resource
-            .listConsumerContentOverrides(this.consumer.getUuid())
+            .listConsumerContentOverrides(consumer.getUuid())
             .toList();
 
-        assertEquals(0, sizeOf(actual));
+        assertThat(actual)
+            .isEmpty();
     }
 
     @Test
     public void testDeleteOverrideUsingName() {
-        List<ConsumerContentOverride> overrides = this.createOverrides(this.consumer, 1, 3);
+        Consumer consumer = this.createConsumer();
+        List<ConsumerContentOverride> overrides = this.createOverrides(consumer, 1, 3);
 
         ConsumerContentOverride toDelete = overrides.remove(1);
         ContentOverrideDTO toDeleteDTO = new ContentOverrideDTO()
@@ -334,285 +261,224 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             .name(toDelete.getName());
 
         List<ContentOverrideDTO> expected = overrides.stream()
-            .map(this.modelTranslator.getStreamMapper(
-                ConsumerContentOverride.class, ContentOverrideDTO.class))
-            .collect(Collectors.toList());
-
-        List<ContentOverrideDTO> actual = this.resource
-            .deleteConsumerContentOverrides(this.consumer.getUuid(), Arrays.asList(toDeleteDTO))
+            .map(this.modelTranslator.getStreamMapper(ContentOverride.class, ContentOverrideDTO.class))
             .toList();
 
-        this.compareOverrideDTOs(expected, actual);
+        List<ContentOverrideDTO> actual = this.resource
+            .deleteConsumerContentOverrides(consumer.getUuid(), List.of(toDeleteDTO))
+            .toList();
+
+        assertThat(actual)
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
+            .containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     public void testDeleteOverridesUsingContentLabel() {
-        List<ConsumerContentOverride> overrides = this.createOverrides(this.consumer, 1, 3);
+        Consumer consumer = this.createConsumer();
+        List<ConsumerContentOverride> overrides = this.createOverrides(consumer, 1, 3);
 
         ConsumerContentOverride toDelete = overrides.remove(1);
         ContentOverrideDTO toDeleteDTO = new ContentOverrideDTO()
             .contentLabel(toDelete.getContentLabel());
 
         List<ContentOverrideDTO> expected = overrides.stream()
-            .map(this.modelTranslator.getStreamMapper(
-                ConsumerContentOverride.class, ContentOverrideDTO.class))
-            .collect(Collectors.toList());
-
-        List<ContentOverrideDTO> actual = this.resource
-            .deleteConsumerContentOverrides(this.consumer.getUuid(), Arrays.asList(toDeleteDTO))
+            .map(this.modelTranslator.getStreamMapper(ContentOverride.class, ContentOverrideDTO.class))
             .toList();
 
-        this.compareOverrideDTOs(expected, actual);
+        List<ContentOverrideDTO> actual = this.resource
+            .deleteConsumerContentOverrides(consumer.getUuid(), List.of(toDeleteDTO))
+            .toList();
+
+        assertThat(actual)
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
+            .containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     public void testDeleteAllOverridesUsingEmptyList() {
-        this.createOverrides(this.consumer, 1, 3);
+        Consumer consumer = this.createConsumer();
+        this.createOverrides(consumer, 1, 3);
 
         List<ContentOverrideDTO> actual = this.resource
-            .deleteConsumerContentOverrides(this.consumer.getUuid(), Collections.emptyList())
+            .deleteConsumerContentOverrides(consumer.getUuid(), List.of())
             .toList();
 
-        assertEquals(0, sizeOf(actual));
+        assertTrue(actual.isEmpty());
     }
 
     @Test
     public void testDeleteAllOverridesUsingEmptyContentLabel() {
-        this.createOverrides(this.consumer, 1, 3);
+        Consumer consumer = this.createConsumer();
+        this.createOverrides(consumer, 1, 3);
 
         List<ContentOverrideDTO> actual = this.resource
-            .deleteConsumerContentOverrides(this.consumer.getUuid(), Collections.emptyList())
+            .deleteConsumerContentOverrides(consumer.getUuid(), List.of())
             .toList();
 
-        assertEquals(0, sizeOf(actual));
+        assertTrue(actual.isEmpty());
     }
 
     @Test
     public void testAddOverride() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        Consumer consumer = this.createConsumer();
 
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
-        ContentOverrideDTO dto = new ContentOverrideDTO()
+        ContentOverrideDTO dto1 = new ContentOverrideDTO()
             .contentLabel("test_label")
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
-
-        List<ContentOverrideDTO> actual = this.resource
-            .addConsumerContentOverrides(this.consumer.getUuid(), overrides)
+        List<ContentOverrideDTO> output1 = this.resource
+            .addConsumerContentOverrides(consumer.getUuid(), List.of(dto1))
             .toList();
 
-        this.compareOverrideDTOs(overrides, actual);
+        assertThat(output1)
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
+            .containsExactlyInAnyOrder(dto1);
 
         // Add a second to ensure we don't clobber the first
-        dto = new ContentOverrideDTO()
+        ContentOverrideDTO dto2 = new ContentOverrideDTO()
             .contentLabel("test_label-2")
             .name("override_name-2")
             .value("override_value-2");
 
-        overrides.add(dto);
-
-        actual = this.resource.addConsumerContentOverrides(this.consumer.getUuid(), Arrays.asList(dto))
+        List<ContentOverrideDTO> output2 = this.resource
+            .addConsumerContentOverrides(consumer.getUuid(), List.of(dto2))
             .toList();
 
-        this.compareOverrideDTOs(overrides, actual);
+        assertThat(output2)
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
+            .containsExactlyInAnyOrder(dto1, dto2);
     }
 
     @Test
     public void testAddOverrideOverwritesExistingWhenMatched() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        Consumer consumer = this.createConsumer();
 
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
-        ContentOverrideDTO dto = new ContentOverrideDTO()
+        ContentOverrideDTO dto1 = new ContentOverrideDTO()
             .contentLabel("test_label")
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
-
-        Iterable<ContentOverrideDTO> actual = this.resource
-            .addConsumerContentOverrides(this.consumer.getUuid(), overrides)
+        List<ContentOverrideDTO> output1 = this.resource
+            .addConsumerContentOverrides(consumer.getUuid(), List.of(dto1))
             .toList();
 
-        this.compareOverrideDTOs(overrides, actual);
+        assertThat(output1)
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
+            .containsExactlyInAnyOrder(dto1);
 
         // Add a "new" override that has the same label and name as the first which should inherit
         // the new value
-        dto = new ContentOverrideDTO()
+        ContentOverrideDTO dto2 = new ContentOverrideDTO()
             .contentLabel("test_label")
             .name("override_name")
             .value("override_value-2");
 
-        overrides.clear();
-        overrides.add(dto);
-
-        actual = this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides)
+        List<ContentOverrideDTO> output2 = this.resource
+            .addConsumerContentOverrides(consumer.getUuid(), List.of(dto2))
             .toList();
 
-        this.compareOverrideDTOs(overrides, actual);
+        assertThat(output2)
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
+            .containsExactlyInAnyOrder(dto2);
     }
 
     @Test
     public void testAddOverrideFailsValidationWithNoParent() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("test_label")
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
-
-        Iterable<ContentOverrideDTO> actual = this.resource
-            .addConsumerContentOverrides(this.consumer.getUuid(), overrides)
-            .toList();
-
-        this.compareOverrideDTOs(overrides, actual);
+        assertThrows(BadRequestException.class,
+            () -> this.resource.addConsumerContentOverrides(null, List.of(dto)));
     }
 
-    @Test
-    public void testAddOverrideFailsValidationWithNullLabel() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testAddOverrideFailsValidationWithNullOrEmptyLabel(String label) {
+        Consumer consumer = this.createConsumer();
 
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
-            .contentLabel(null)
+            .contentLabel(label)
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
-    }
-
-    @Test
-    public void testAddOverrideFailsValidationWithEmptyLabel() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
-        ContentOverrideDTO dto = new ContentOverrideDTO()
-            .contentLabel("")
-            .name("override_name")
-            .value("override_value");
-
-        overrides.add(dto);
-
-        assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
+            () -> this.resource.addConsumerContentOverrides(consumer.getUuid(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithLongLabel() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        Consumer consumer = this.createConsumer();
 
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
+        String longString = "a".repeat(ContentOverride.MAX_NAME_AND_LABEL_LENGTH + 1);
+
         ContentOverrideDTO dto = new ContentOverrideDTO()
-            .contentLabel(this.getLongString())
+            .contentLabel(longString)
             .name("override_name")
             .value("override_value");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
+            () -> this.resource.addConsumerContentOverrides(consumer.getUuid(), List.of(dto)));
     }
 
-    @Test
-    public void testAddOverrideFailsValidationWithNullName() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testAddOverrideFailsValidationWithNullOrEmptyName(String name) {
+        Consumer consumer = this.createConsumer();
 
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("content_label")
-            .name(null)
+            .name(name)
             .value("override_value");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
-    }
-
-    @Test
-    public void testAddOverrideFailsValidationWithEmptyName() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
-        ContentOverrideDTO dto = new ContentOverrideDTO()
-            .contentLabel("content_label")
-            .name("")
-            .value("override_value");
-
-        overrides.add(dto);
-
-        assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
+            () -> this.resource.addConsumerContentOverrides(consumer.getUuid(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithLongName() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        Consumer consumer = this.createConsumer();
 
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
+        String longString = "a".repeat(ContentOverride.MAX_NAME_AND_LABEL_LENGTH + 1);
+
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("content_label")
-            .name(this.getLongString())
+            .name(longString)
             .value("override_value");
 
-        overrides.add(dto);
-
         assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
+            () -> this.resource.addConsumerContentOverrides(consumer.getUuid(), List.of(dto)));
     }
 
-    @Test
-    public void testAddOverrideFailsValidationWithNullValue() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testAddOverrideFailsValidationWithNullOrEmptyValue(String value) {
+        Consumer consumer = this.createConsumer();
 
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("content_label")
             .name("override_name")
-            .value(null);
-
-        overrides.add(dto);
+            .value(value);
 
         assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
-    }
-
-    @Test
-    public void testAddOverrideFailsValidationWithEmptyValue() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
-
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
-        ContentOverrideDTO dto = new ContentOverrideDTO()
-            .contentLabel("content_label")
-            .name("override_name")
-            .value("");
-
-        overrides.add(dto);
-
-        assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
+            () -> this.resource.addConsumerContentOverrides(consumer.getUuid(), List.of(dto)));
     }
 
     @Test
     public void testAddOverrideFailsValidationWithLongValue() {
-        this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
+        Consumer consumer = this.createConsumer();
 
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
+        String longString = "a".repeat(ContentOverride.MAX_VALUE_LENGTH + 1);
+
         ContentOverrideDTO dto = new ContentOverrideDTO()
             .contentLabel("content_label")
             .name("override_name")
-            .value(this.getLongString());
-
-        overrides.add(dto);
+            .value(longString);
 
         assertThrows(BadRequestException.class,
-            () -> this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides));
+            () -> this.resource.addConsumerContentOverrides(consumer.getUuid(), List.of(dto)));
     }
 }

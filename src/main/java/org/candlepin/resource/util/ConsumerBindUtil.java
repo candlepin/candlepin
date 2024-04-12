@@ -45,11 +45,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -222,12 +225,37 @@ public class ConsumerBindUtil {
     }
 
     private void handleActivationKeyOverrides(Consumer consumer,
-        Set<ActivationKeyContentOverride> overrides) {
+        Set<ActivationKeyContentOverride> keyOverrides) {
 
-        for (ActivationKeyContentOverride akco : overrides) {
-            ConsumerContentOverride consumerOverride = akco.buildConsumerContentOverride(consumer);
-            this.consumerContentOverrideCurator.addOrUpdate(consumer, consumerOverride);
+        Map<String, Map<String, ConsumerContentOverride>> overrideMap = new HashMap<>();
+        List<ConsumerContentOverride> existing = this.consumerContentOverrideCurator.getList(consumer);
+
+        // Map the existing overrides
+        for (ConsumerContentOverride override : existing) {
+            String contentLabel = override.getContentLabel();
+            String attrib = override.getName();
+
+            // Impl note: content labels are case sensitive, but attribute names are *not*.
+            overrideMap.computeIfAbsent(contentLabel, key -> new HashMap<>())
+                .put(attrib.toLowerCase(), override);
         }
+
+        // Create or update new entries from the activation key overrides
+        for (ActivationKeyContentOverride override : keyOverrides) {
+            String contentLabel = override.getContentLabel();
+            String attrib = override.getName();
+
+            overrideMap.computeIfAbsent(contentLabel, key -> new HashMap<>())
+                .computeIfAbsent(attrib.toLowerCase(), key -> override.buildConsumerContentOverride(consumer))
+                .setValue(override.getValue());
+        }
+
+        // Persist the changes
+        overrideMap.values()
+            .stream()
+            .map(Map::values)
+            .flatMap(Collection::stream)
+            .forEach(this.consumerContentOverrideCurator::saveOrUpdate);
     }
 
     private void handleActivationKeyRelease(Consumer consumer, Release release) {

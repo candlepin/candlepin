@@ -51,7 +51,7 @@ public abstract class ContentOverrideTest<T extends ContentOverride> {
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = { "test_value" })
-    public void testGetSetConetntLabel(String value) {
+    public void testGetSetContentLabel(String value) {
         T override = this.getTestInstance();
 
         assertNull(override.getContentLabel());
@@ -77,8 +77,22 @@ public abstract class ContentOverrideTest<T extends ContentOverride> {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = { "test_value-1", "TEST-VALUE-2", "TeSt_VaLuE-3" })
+    public void testNameAlwaysStoredAsLowerCase(String value) {
+        T override = this.getTestInstance();
+
+        assertNull(override.getName());
+
+        T output = (T) override.setName(value);
+        assertSame(override, output);
+
+        String expected = value.toLowerCase();
+        assertEquals(expected, override.getName());
+    }
+
+    @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = { "test_value" })
+    @ValueSource(strings = { "test_value", "TeSt_ValUe-2" })
     public void testGetSetValue(String value) {
         T override = this.getTestInstance();
 

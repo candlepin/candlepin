@@ -20,12 +20,14 @@ import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.asser
 
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ContentOverrideDTO;
+import org.candlepin.dto.api.client.v1.EnvironmentDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.ContentOverrides;
+import org.candlepin.spec.bootstrap.data.builder.Environments;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 
 import org.assertj.core.api.ListAssert;
@@ -36,7 +38,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 @SpecTest
-public class ConsumerResourceContentSpecTest {
+public class ConsumerResourceContentOverrideSpecTest {
 
     private static final String CONTENT_LABEL = "content.label";
     private static ApiClient admin;
@@ -50,6 +52,19 @@ public class ConsumerResourceContentSpecTest {
     @BeforeEach
     void setUp() {
         this.owner = admin.owners().createOwner(Owners.random());
+    }
+
+    private ListAssert<ContentOverrideDTO> assertConsumerOverrides(ApiClient client, ConsumerDTO consumer) {
+        List<ContentOverrideDTO> returnedOverrides = client.consumers()
+            .listConsumerContentOverrides(consumer.getUuid());
+        return assertThat(returnedOverrides);
+    }
+
+    public ContentOverrideDTO createOverride(String name, String value) {
+        return new ContentOverrideDTO()
+            .name(name)
+            .value(value)
+            .contentLabel(CONTENT_LABEL);
     }
 
     @Test
@@ -282,17 +297,104 @@ public class ConsumerResourceContentSpecTest {
             .deleteConsumerContentOverrides(consumer1.getUuid(), List.of(override)));
     }
 
-    private ListAssert<ContentOverrideDTO> assertConsumerOverrides(ApiClient client, ConsumerDTO consumer) {
-        List<ContentOverrideDTO> returnedOverrides = client.consumers()
-            .listConsumerContentOverrides(consumer.getUuid());
-        return assertThat(returnedOverrides);
-    }
+    @Test
+    public void shouldLayerContentOverridesForConsumer() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-    public ContentOverrideDTO createOverride(String name, String value) {
-        return new ContentOverrideDTO()
-            .name(name)
-            .value(value)
-            .contentLabel(CONTENT_LABEL);
+        EnvironmentDTO environment1 = adminClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO environment2 = adminClient.owners().createEnv(owner.getKey(), Environments.random());
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner)
+            .addEnvironmentsItem(environment1)
+            .addEnvironmentsItem(environment2));
+
+        ContentOverrideDTO env1or1 = new ContentOverrideDTO()
+            .contentLabel("label1")
+            .name("attrib-a")
+            .value("env1or1");
+        ContentOverrideDTO env1or2 = new ContentOverrideDTO()
+            .contentLabel("label1")
+            .name("attrib-b")
+            .value("env1or2");
+        ContentOverrideDTO env1or3 = new ContentOverrideDTO()
+            .contentLabel("label2")
+            .name("attrib-a")
+            .value("env1or3");
+
+        ContentOverrideDTO env2or1 = new ContentOverrideDTO()
+            .contentLabel("label3")
+            .name("attrib-a")
+            .value("env2or1");
+        ContentOverrideDTO env2or2 = new ContentOverrideDTO()
+            .contentLabel("label3")
+            .name("attrib-b")
+            .value("env2or2");
+        ContentOverrideDTO env2or3 = new ContentOverrideDTO()
+            .contentLabel("label2")
+            .name("attrib-a")
+            .value("env2or3");
+
+        ContentOverrideDTO consumerOr1 = new ContentOverrideDTO()
+            .contentLabel("label1")
+            .name("attrib-b")
+            .value("consumerOr1");
+        ContentOverrideDTO consumerOr2 = new ContentOverrideDTO()
+            .contentLabel("label2")
+            .name("attrib-b")
+            .value("consumerOr2");
+        ContentOverrideDTO consumerOr3 = new ContentOverrideDTO()
+            .contentLabel("label3")
+            .name("attrib-b")
+            .value("consumerOr3");
+
+        // label1
+        //     a - env1or1
+        //     b - consumerOr1
+
+        // label2
+        //     a - env1or3
+        //     b - consumerOr2
+
+        // label3
+        //     a - env2or1
+        //     b - consumerOr3
+
+        List<ContentOverrideDTO> overrides1 = adminClient.environments()
+            .putEnvironmentContentOverrides(environment1.getId(), List.of(env1or1, env1or2, env1or3));
+
+        List<ContentOverrideDTO> overrides2 = adminClient.environments()
+            .putEnvironmentContentOverrides(environment2.getId(), List.of(env2or1, env2or2, env2or3));
+
+        List<ContentOverrideDTO> overrides3 = adminClient.consumers()
+            .addConsumerContentOverrides(consumer.getUuid(), List.of(consumerOr1, consumerOr2, consumerOr3));
+
+        assertThat(overrides1)
+            .hasSize(3)
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
+            .containsExactlyInAnyOrderElementsOf(List.of(env1or1, env1or2, env1or3));
+
+        assertThat(overrides2)
+            .hasSize(3)
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
+            .containsExactlyInAnyOrderElementsOf(List.of(env2or1, env2or2, env2or3));
+
+        assertThat(overrides3)
+            .hasSize(3)
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
+            .containsExactlyInAnyOrderElementsOf(List.of(consumerOr1, consumerOr2, consumerOr3));
+
+        // We have a few conflicts here, and conflict resolution following highest prio wins should
+        // give us the following in no particular order:
+        List<ContentOverrideDTO> expected = List.of(env1or1, consumerOr1, env1or3, consumerOr2, env2or1,
+            consumerOr3);
+
+        List<ContentOverrideDTO> output = adminClient.consumers()
+            .listConsumerContentOverrides(consumer.getUuid());
+
+        assertThat(output)
+            .hasSize(expected.size())
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
+            .containsExactlyInAnyOrderElementsOf(expected);
     }
 
 }

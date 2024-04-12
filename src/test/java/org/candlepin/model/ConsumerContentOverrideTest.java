@@ -66,35 +66,4 @@ public class ConsumerContentOverrideTest extends ContentOverrideTest<ConsumerCon
         assertNull(output.getParent());
     }
 
-    @Test
-    public void testGetSetParent() {
-        Consumer consumer = new Consumer();
-        ConsumerContentOverride override = this.getTestInstance();
-
-        // The getParent method is synonymous with fetching the consumer for EnvContentOverrides
-        assertNull(override.getParent());
-        assertNull(override.getConsumer());
-
-        ConsumerContentOverride output = override.setParent(consumer);
-        assertSame(override, output);
-
-        assertEquals(consumer, output.getParent());
-        assertEquals(consumer, output.getConsumer());
-    }
-
-    @Test
-    public void testGetSetNullParent() {
-        ConsumerContentOverride override = this.getTestInstance();
-
-        // The getParent method is synonymous with fetching the consumer for EnvContentOverrides
-        assertNull(override.getParent());
-        assertNull(override.getConsumer());
-
-        ConsumerContentOverride output = override.setParent(null);
-        assertSame(override, output);
-
-        assertNull(output.getParent());
-        assertNull(output.getConsumer());
-    }
-
 }
