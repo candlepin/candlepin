@@ -57,8 +57,10 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     private static final Logger log = LoggerFactory.getLogger(DefaultUserServiceAdapter.class);
     // Bcrypt uses 128-bit (16 bytes) salts
     private static final int SALT_LENGTH = 16;
-    // Recommended cost for the bcrypt based study from April 2023 is between 10 and 12
-    private static final int BCRYPT_COST = 12;
+    // Recommended cost for the bcrypt based study from April 2023 is between 10 and 12, but setting
+    // the cost that high destroys throughput, and since this is only for testing and dev purposes,
+    // we aren't terribly concerned about the security implications.
+    private static final int BCRYPT_COST = 4;
 
     private UserCurator userCurator;
     private RoleCurator roleCurator;
