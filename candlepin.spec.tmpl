@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.5
+Version: 4.4.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,115 @@ fi
 
 #raw
 %changelog
+* Fri Apr 19 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.6-1
+- Add new translations using Weblate (noreply@weblate.org)
+- CANDLEPIN-840: Added endpoints for environment content overrides
+  (crog@redhat.com)
+- CANDLEPIN-839: Updated schema to support environment content overrides
+  (crog@redhat.com)
+- CANDLEPIN-838: Added blocklist configuration for content override fields
+  (crog@redhat.com)
+- CANDLEPIN-849: Reduced BCrypt cost in DefaultUserServiceAdapter
+  (crog@redhat.com)
+- Bump org.bouncycastle:bcpkix-jdk18on from 1.78 to 1.78.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.bouncycastle:bcprov-jdk18on from 1.78 to 1.78.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.5 to 1.5.6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.gradle.develocity from 3.17.1 to 3.17.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 24.0.2 to 24.0.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump openapi-generator from 7.4.0 to 7.5.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump slf4j from 2.0.12 to 2.0.13
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.4 to 1.5.5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Updated the API spec to include a max length for ContentDTO fields
+  (crog@redhat.com)
+- Use the ansible dnf module instead of custom cmd (nmoumoul@redhat.com)
+- Upgraded gradle from enterprise to develocity (sbakaj@redhat.com)
+- Added tomcat package to ansible for cs8 (sbakaj@redhat.com)
+- Bump commons-io:commons-io from 2.16.0 to 2.16.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.3 to 1.5.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.bouncycastle:bcprov-jdk18on from 1.77 to 1.78
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.spotbugs:spotbugs-annotations from 4.8.3 to 4.8.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.bouncycastle:bcpkix-jdk18on from 1.77 to 1.78
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- CANDLEPIN-845: Added retry logic for database connection failures
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-846: Make sure anonymous orgs are marked as such
+  (nmoumoul@redhat.com)
+- Fixed sonar issue with new version (sbakaj@redhat.com)
+- Bump com.gradle.enterprise from 3.16.2 to 3.17
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Added additional documentation for podman play kube health checks
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-734: Added paging to GET /products endpoint (wpoteat@redhat.com)
+- CANDLEPIN-147: Added paging to GET /owners endpoint (wpoteat@redhat.com)
+- CANDLEPIN-238: Updated PoolCurator to not use Hibernate Criteria
+  (sbakaj@redhat.com)
+- CANDLEPIN-819: Added enforcement of the max page size configuration
+  (crog@redhat.com)
+- CANDLEPIN-269: Added paging to GET /content endpoint (wpoteat@redhat.com)
+- CANDLEPIN-234: Added paging to GET /deleted_consumers endpoint
+  (wpoteat@redhat.com)
+- CANDLEPIN-231: Removed Unused Code in FilterBuilder (ojanus@redhat.com)
+- CANDLEPIN-816: Added secure method to OwnerCurator for StoreFactory
+  (sbakaj@redhat.com)
+- CANDLEPIN-150: Add pagination to getHypervisors endpoint (ojanus@redhat.com)
+- CANDLEPIN-123: Updated EntitlementCurator to not use Hibernate Criteria
+  (wpoteat@redhat.com)
+- CANDLEPIN-246: Defined default and max page size for pagination
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-115: Removed CandlepinQuery classes (joshmalbrecht@gmail.com)
+- CANDLEPIN-203: Removed CP Query from Environment (wpoteat@redhat.com)
+- CANDLEPIN-192: Removed CP Query from Owner (wpoteat@redhat.com)
+- CANDLEPIN-200: Removed CandlepinQuery from ModelTranslator
+  (sbakaj@redhat.com)
+- CANDLEPIN-140: Removed CP query from ConsumerResource/Curator
+  (sbakaj@redhat.com)
+- CANDLEPIN-210: Removed CP query from PermissionBlueprintCurator
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-169: Removed CP Query from Activation Key (wpoteat@redhat.com)
+- CANDLEPIN-221: Removed CP Query from Deleted Consumer (wpoteat@redhat.com)
+- CANDLEPIN-131: Removed CP Query from  CDN, GuestId, and Entitlement
+  (wpoteat@redhat.com)
+- CANDLEPIN-214: Removed cp query from ContentOverride and Pool curators
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-793: Removed CandlepinQuery from AHC.listAll and listAllByIds
+  (wpoteat@redhat.com)
+- Bump org.owasp.dependencycheck from 9.0.10 to 9.1.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.14.2 to 10.15.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump commons-io:commons-io from 2.15.1 to 2.16.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.liquibase:liquibase-core from 4.26.0 to 4.27.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-755: Updated org_migrator to reflect layering schema
+  (crog@redhat.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.19 to 10.1.20
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-827: Removed IllegalStateException when owner does not exist
+  (joshmalbrecht@gmail.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 24.0.1 to 24.0.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump artemis from 2.32.0 to 2.33.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Update Gradle Wrapper from 8.6 to 8.7. (gradle-update-robot@regolo.cc)
+- CANDLEPIN-829: Updated consumer activation key registration testing
+  (crog@redhat.com)
+
 * Fri Mar 22 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.5-1
 - Add new translations using Weblate (noreply@weblate.org)
 - CANDLEPIN-833: Updated CloudAuthenticationResult validation
