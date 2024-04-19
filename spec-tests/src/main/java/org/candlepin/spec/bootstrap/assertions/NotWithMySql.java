@@ -26,6 +26,9 @@ import java.lang.annotation.Target;
 
 /**
  * This annotation marks a test or test suite to run only when not running against MariaDB/MySql.
+ *
+ * TODO: FIXME: This doesn't actually check the state of the server, it's only checking against an
+ * environment variable set on the *CLIENT* which could lead to incorrect test selection.
  */
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
