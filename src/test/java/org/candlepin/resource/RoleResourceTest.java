@@ -19,6 +19,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.exception.user.UserDisabledException;
 import org.candlepin.test.DatabaseTestFixture;
@@ -33,25 +34,29 @@ import org.mockito.MockitoAnnotations;
  * ProductResourceTest
  */
 public class RoleResourceTest extends DatabaseTestFixture {
-    private RoleResource roleResource;
-    @Mock
-    UserServiceAdapter userServiceAdapter;
 
+    @Mock
+    private UserServiceAdapter mockUserServiceAdapter;
+
+    private DTOValidator dtoValidator;
+    private RoleResource roleResource;
 
     @BeforeEach
     public void init() throws Exception {
         super.init();
         MockitoAnnotations.initMocks(this);
-        roleResource = new RoleResource(this.userServiceAdapter, ownerCurator, permissionBlueprintCurator,
-            i18n, modelTranslator, validator);
+
+        this.dtoValidator = new DTOValidator(this.i18n);
+        this.roleResource = new RoleResource(this.mockUserServiceAdapter, this.ownerCurator,
+            this.permissionBlueprintCurator, this.i18n, this.modelTranslator, this.dtoValidator);
     }
 
     @Test
     public void fetchUserByUsernameExceptions() {
-        when(userServiceAdapter.findByLogin(anyString())).thenReturn(null);
+        when(this.mockUserServiceAdapter.findByLogin(anyString())).thenReturn(null);
         assertThrows(NotFoundException.class, () -> roleResource.fetchUserByUsername("test_user"));
 
-        when(userServiceAdapter.findByLogin(anyString())).thenThrow(UserDisabledException.class);
+        when(this.mockUserServiceAdapter.findByLogin(anyString())).thenThrow(UserDisabledException.class);
         assertThrows(UserDisabledException.class, () -> roleResource.fetchUserByUsername("test_user"));
     }
 }

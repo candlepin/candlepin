@@ -51,12 +51,14 @@ import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContentCurator;
+import org.candlepin.model.EnvironmentContentOverrideCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.GuestIdCurator;
@@ -84,7 +86,6 @@ import org.candlepin.model.UserCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.resteasy.ResourceLocatorMap;
@@ -154,10 +155,12 @@ public class DatabaseTestFixture {
     protected ContentAccessCertificateCurator caCertCurator;
     protected ContentCurator contentCurator;
     protected DeletedConsumerCurator deletedConsumerCurator;
+    protected DistributorVersionCurator distributorVersionCurator;
     protected EntitlementCurator entitlementCurator;
     protected EntitlementCertificateCurator entitlementCertificateCurator;
     protected EnvironmentCurator environmentCurator;
     protected EnvironmentContentCurator environmentContentCurator;
+    protected EnvironmentContentOverrideCurator environmentContentOverrideCurator;
     protected ExporterMetadataCurator exporterMetadataCurator;
     protected GuestIdCurator guestIdCurator;
     protected IdentityCertificateCurator identityCertificateCurator;
@@ -189,8 +192,7 @@ public class DatabaseTestFixture {
     protected TestingInterceptor securityInterceptor;
     protected DateSourceForTesting dateSource;
     protected I18n i18n;
-    protected Provider<I18n> i18nProvider = () -> i18n;
-    protected DTOValidator validator;
+    protected Provider<I18n> i18nProvider;
 
     @BeforeAll
     public static void initClass() {
@@ -243,8 +245,7 @@ public class DatabaseTestFixture {
         loadFromInjector();
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-
-        this.validator = new DTOValidator(this.i18n);
+        this.i18nProvider = () -> this.i18n;
 
         // Because all candlepin operations are running in the CandlepinRequestScope
         // we'll force the instance creations to be done inside the scope.
@@ -285,10 +286,13 @@ public class DatabaseTestFixture {
         caCertCurator = this.injector.getInstance(ContentAccessCertificateCurator.class);
         contentCurator = this.injector.getInstance(ContentCurator.class);
         deletedConsumerCurator = this.injector.getInstance(DeletedConsumerCurator.class);
+        distributorVersionCurator = this.injector.getInstance(DistributorVersionCurator.class);
         entitlementCurator = this.injector.getInstance(EntitlementCurator.class);
         entitlementCertificateCurator = this.injector.getInstance(EntitlementCertificateCurator.class);
         environmentCurator = this.injector.getInstance(EnvironmentCurator.class);
         environmentContentCurator = this.injector.getInstance(EnvironmentContentCurator.class);
+        environmentContentOverrideCurator = this.injector
+            .getInstance(EnvironmentContentOverrideCurator.class);
         exporterMetadataCurator = this.injector.getInstance(ExporterMetadataCurator.class);
         guestIdCurator = this.injector.getInstance(GuestIdCurator.class);
         identityCertificateCurator = this.injector.getInstance(IdentityCertificateCurator.class);

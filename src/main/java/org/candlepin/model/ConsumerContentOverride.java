@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -19,6 +19,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.validation.constraints.NotNull;
 
 
 
@@ -31,11 +32,9 @@ import javax.persistence.ManyToOne;
 @DiscriminatorValue("consumer")
 public class ConsumerContentOverride extends ContentOverride<ConsumerContentOverride, Consumer> {
 
-    // TODO: FIXME: This field has no matching field on content, yet is permitted to be null?? If
-    // such an override is created, it'll be lost to the void and sit in the database until it is
-    // manually cleaned up.
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true)
+    @JoinColumn(nullable = false)
+    @NotNull
     private Consumer consumer;
 
     public ConsumerContentOverride() {
@@ -49,15 +48,6 @@ public class ConsumerContentOverride extends ContentOverride<ConsumerContentOver
 
     public Consumer getConsumer() {
         return consumer;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ConsumerContentOverride setParent(Consumer parent) {
-        this.setConsumer(parent);
-        return this;
     }
 
     /**
