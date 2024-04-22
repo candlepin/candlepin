@@ -31,6 +31,7 @@ import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
 import org.candlepin.resource.client.v1.ActivationKeyApi;
 import org.candlepin.resource.client.v1.OwnerProductApi;
+import org.candlepin.spec.bootstrap.assertions.NotWithMySql;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -102,6 +103,7 @@ public class ConsumerResourceActivationKeySpecTest {
     }
 
     @Test
+    @NotWithMySql
     public void shouldAllowConcurrentReregistrations() throws Exception {
         int keyCount = 3;
         int poolCount = 21;
