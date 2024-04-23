@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mariadb:
     image: mariadb:10.6.14
-    command: --transaction-isolation=READ-COMMITTED
+    command: --transaction-isolation=READ-COMMITTED --innodb-print-all-deadlocks=ON
     container_name: mariadb
     environment:
       MARIADB_USER: candlepin
