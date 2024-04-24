@@ -17,6 +17,7 @@ package org.candlepin.model;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.exception.LockAcquisitionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -417,10 +418,15 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         Map<String, Content> output = new HashMap<>();
         int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() - 1);
 
-        for (Collection<String> block : this.partition(input, blockSize)) {
-            query.setParameter("content_ids", block)
-                .getResultList()
-                .forEach(elem -> output.put(elem.getId(), elem));
+        try {
+            for (Collection<String> block : this.partition(input, blockSize)) {
+                query.setParameter("content_ids", block)
+                    .getResultList()
+                    .forEach(elem -> output.put(elem.getId(), elem));
+            }
+        }
+        catch (LockAcquisitionException e) {
+            log.error(e.getMessage());
         }
 
         return output;
