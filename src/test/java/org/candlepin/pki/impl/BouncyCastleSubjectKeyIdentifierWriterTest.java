@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Test;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.util.List;
+
 
 
 public class BouncyCastleSubjectKeyIdentifierWriterTest {
@@ -38,7 +40,9 @@ public class BouncyCastleSubjectKeyIdentifierWriterTest {
     @Test
     public void getSubjectKeyIdentifier() throws Exception {
         BouncyCastleSubjectKeyIdentifierWriter writer = new BouncyCastleSubjectKeyIdentifierWriter();
-        byte[] actual = writer.getSubjectKeyIdentifier(keyPair);
+
+        byte[] actual = writer.getSubjectKeyIdentifier(keyPair, List.of());
+
         byte[] expected = new JcaX509ExtensionUtils()
             .createSubjectKeyIdentifier(keyPair.getPublic())
             .getEncoded();
