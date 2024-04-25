@@ -16,15 +16,15 @@ package org.candlepin.async.tasks;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -113,6 +113,7 @@ public class HypervisorUpdateJobTest {
         when(consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel())).thenReturn(ctype);
         when(consumerTypeCurator.getByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel()), anyBoolean()))
             .thenReturn(ctype);
+        when(config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING)).thenReturn(true);
 
         when(owner.getKey()).thenReturn("joe");
         when(principal.getUsername()).thenReturn("joe user");
@@ -218,8 +219,8 @@ public class HypervisorUpdateJobTest {
         hypervisor.setOwner(owner);
         String hypervisorId = "uuid_999";
         hypervisor.setHypervisorId(new HypervisorId().setHypervisorId(hypervisorId));
-        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
-            nullable(String.class))).thenReturn(hypervisor);
+
+        when(consumerCurator.getHypervisor(anyString(), anyString())).thenReturn(hypervisor);
 
         JobConfig config = createJobConfig(null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
@@ -242,8 +243,8 @@ public class HypervisorUpdateJobTest {
         hypervisor.setOwner(owner);
         String hypervisorId = "uuid_999";
         hypervisor.setHypervisorId(new HypervisorId().setHypervisorId(hypervisorId));
-        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
-            nullable(String.class))).thenReturn(hypervisor);
+
+        when(consumerCurator.getHypervisor(anyString(), anyString())).thenReturn(hypervisor);
 
         JobConfig config = createJobConfig("updateReporterId");
         JobExecutionContext ctx = mock(JobExecutionContext.class);
@@ -267,8 +268,8 @@ public class HypervisorUpdateJobTest {
         hypervisor.setId("the-id");
         String hypervisorId = "existing_hypervisor_id";
         hypervisor.setHypervisorId(new HypervisorId().setHypervisorId(hypervisorId));
-        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
-            any(String.class))).thenReturn(hypervisor);
+
+        when(consumerCurator.getHypervisor(anyString(), anyString())).thenReturn(hypervisor);
         when(config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING)).thenReturn(true);
 
         hypervisorJson =
@@ -306,11 +307,8 @@ public class HypervisorUpdateJobTest {
         hypervisor.setFact(Consumer.Facts.DMI_SYSTEM_UUID, "myUuid");
         String hypervisorId = "existing_hypervisor_id";
         hypervisor.setHypervisorId(new HypervisorId().setHypervisorId(hypervisorId));
-        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
-            isNull())).thenReturn(null);
-        // if it uses the uuid then it will return the hypervisor and update it. That will fail the test.
-        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
-            any(String.class))).thenReturn(hypervisor);
+
+        when(consumerCurator.getHypervisor(anyString(), anyString())).thenReturn(null);
         when(config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING)).thenReturn(false);
 
         hypervisorJson =
@@ -377,9 +375,6 @@ public class HypervisorUpdateJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getJobArguments()).thenReturn(config.getJobArguments());
 
-        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
-            any(String.class))).thenReturn(new Consumer());
-
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator,
             hypervisorUpdateAction, objectMapper);
         job.execute(ctx);
@@ -406,8 +401,8 @@ public class HypervisorUpdateJobTest {
         hypervisor.setId("the-id");
         String hypervisorId = "existing_hypervisor_id";
         hypervisor.setHypervisorId(new HypervisorId().setHypervisorId(hypervisorId));
-        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
-            any(String.class))).thenReturn(hypervisor);
+
+        when(consumerCurator.getHypervisor(anyString(), anyString())).thenReturn(hypervisor);
         when(config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING)).thenReturn(true);
 
         hypervisorJson =
@@ -450,8 +445,8 @@ public class HypervisorUpdateJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getJobArguments()).thenReturn(config.getJobArguments());
 
-        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
-            any(String.class))).thenReturn(new Consumer());
+        when(consumerCurator.getConsumerBySystemUuid(any(String.class), any(String.class)))
+            .thenReturn(new Consumer());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator,
             hypervisorUpdateAction, objectMapper);
@@ -485,8 +480,7 @@ public class HypervisorUpdateJobTest {
 
         hypervisor = spy(hypervisor);
 
-        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
-            nullable(String.class))).thenReturn(hypervisor);
+        when(consumerCurator.getHypervisor(anyString(), anyString())).thenReturn(hypervisor);
 
         hypervisorJson =
             "{\"hypervisors\":" +
@@ -513,6 +507,71 @@ public class HypervisorUpdateJobTest {
         verify(hypervisor, never()).updateRHCloudProfileModified();
 
         assertEquals(currentDate, updated.getRHCloudProfileModified());
+    }
+
+    @Test
+    public void testGetExistingConsumerByHypervisorId() {
+        Consumer hypervisor = new Consumer();
+        hypervisor.ensureUUID();
+
+        when(consumerCurator.getHypervisor(anyString(), anyString())).thenReturn(hypervisor);
+
+        Consumer result = hypervisorUpdateAction.getExistingConsumerByHypervisorIdOrUuid(
+            owner.getId(), TestUtil.randomString("hypervisor-"), null);
+
+        assertEquals(hypervisor.getUuid(), result.getUuid());
+    }
+
+    @Test
+    public void testGetExistingConsumerBySystemUuid() {
+        Consumer system = new Consumer();
+        system.ensureUUID();
+
+        when(consumerCurator.getHypervisor(anyString(), anyString())).thenReturn(null);
+        when(consumerCurator.getConsumerBySystemUuid(anyString(), anyString())).thenReturn(system);
+
+        Consumer result = hypervisorUpdateAction.getExistingConsumerByHypervisorIdOrUuid(
+            owner.getId(), TestUtil.randomString("hypervisor-"), TestUtil.randomString("uuid-"));
+
+        assertEquals(system.getUuid(), result.getUuid());
+    }
+
+    @Test
+    public void testGetExistingConsumerByHypervisorIdOrUuidPriority() {
+        Consumer system = new Consumer();
+        system.ensureUUID();
+        Consumer hypervisor = new Consumer();
+        hypervisor.ensureUUID();
+
+        when(consumerCurator.getHypervisor(anyString(), anyString())).thenReturn(hypervisor);
+        when(consumerCurator.getConsumerBySystemUuid(anyString(), anyString())).thenReturn(system);
+
+        Consumer result = hypervisorUpdateAction.getExistingConsumerByHypervisorIdOrUuid(
+            owner.getId(), TestUtil.randomString("hypervisor-"), TestUtil.randomString("uuid-"));
+
+        assertNotEquals(system.getUuid(), result.getUuid());
+        assertEquals(hypervisor.getUuid(), result.getUuid());
+    }
+
+    @Test
+    public void testGetExistingConsumerByHypervisorIdOrUuidReturnNullHypervisor() {
+        when(consumerCurator.getHypervisor(anyString(), anyString())).thenReturn(null);
+
+        Consumer result = hypervisorUpdateAction.getExistingConsumerByHypervisorIdOrUuid(
+            owner.getId(), TestUtil.randomString("hypervisor-"), null);
+
+        assertNull(result);
+    }
+
+    @Test
+    public void testGetExistingConsumerByHypervisorIdOrUuidReturn() {
+        when(consumerCurator.getHypervisor(anyString(), anyString())).thenReturn(null);
+        when(consumerCurator.getConsumerBySystemUuid(anyString(), anyString())).thenReturn(null);
+
+        Consumer result = hypervisorUpdateAction.getExistingConsumerByHypervisorIdOrUuid(
+            owner.getId(), TestUtil.randomString("hypervisor-"), TestUtil.randomString("uuid-"));
+
+        assertNull(result);
     }
 
 }

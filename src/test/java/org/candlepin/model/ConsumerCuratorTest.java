@@ -57,10 +57,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.persistence.EntityManager;
-
-
 
 public class ConsumerCuratorTest extends DatabaseTestFixture {
 
@@ -658,6 +657,15 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testGetDistinctSyspurposeAddonsByOwnerReturnEmptyList() {
+        List<String> result = consumerCurator.getDistinctSyspurposeAddonsByOwner(null);
+
+        assertThat(result)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
     public void addGuestConsumers() {
         Consumer consumer = new Consumer()
             .setName("hostConsumer")
@@ -1046,7 +1054,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(host, guestHost);
         guestHost = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner.getId());
         assertEquals(host, guestHost);
-        verify(spy, times(1)).currentSession();
+        verify(spy, times(1)).getEntityManager();
     }
 
     @Test
@@ -1094,7 +1102,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(hostA, guestHostA);
         guestHostB = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba9", owner.getId());
         assertEquals(hostB, guestHostB);
-        verify(spy, times(2)).currentSession();
+        verify(spy, times(2)).getEntityManager();
     }
 
     @Test
@@ -1604,7 +1612,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Consumer consumer = createHypervisor(owner);
 
         Consumer result = consumerCurator.getHypervisor(
-            consumer.getHypervisorId().getHypervisorId(), owner);
+            consumer.getHypervisorId().getHypervisorId(), owner.getId());
 
         assertEquals(consumer, result);
     }
@@ -1614,7 +1622,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Consumer consumer = createHypervisor(owner, "HYpervisor");
 
         Consumer result = consumerCurator.getHypervisor(
-            consumer.getHypervisorId().getHypervisorId(), owner);
+            consumer.getHypervisorId().getHypervisorId(), owner.getId());
 
         assertEquals(consumer, result);
     }
@@ -1628,7 +1636,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Consumer consumer = createHypervisor(owner);
 
         Consumer result = consumerCurator.getHypervisor(
-            consumer.getHypervisorId().getHypervisorId(), otherOwner);
+            consumer.getHypervisorId().getHypervisorId(), otherOwner.getId());
 
         assertNull(result);
     }
@@ -2158,6 +2166,70 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertThat(actual)
             .isNotNull()
             .containsExactlyInAnyOrder(systemConsumer1.getUuid(), systemConsumer2.getUuid());
+    }
+
+    @Test
+    public void testConsumerFindByVirtUuid() {
+        String uuid = UUID.randomUUID().toString();
+        Consumer consumer = createConsumer(owner);
+        consumer.setFact("virt.uuid", uuid);
+
+        Consumer findedConsumer = consumerCurator.findByVirtUuid(uuid, owner.getId());
+
+        assertEquals(consumer.getId(), findedConsumer.getId());
+    }
+
+    @Test
+    public void testConsumerFindByVirtUuidToGetNull() {
+        assertNull(consumerCurator.findByVirtUuid(null, owner.getId()));
+        assertNull(consumerCurator.findByVirtUuid(UUID.randomUUID().toString(), owner.getId()));
+    }
+
+    @Test
+    void testFindByUsername() {
+        ConsumerType consumerType = createConsumerType(ConsumerTypeEnum.PERSON.getLabel(), true);
+        Consumer consumer = createConsumer(owner, consumerType);
+
+        Consumer findedConsumer = consumerCurator.findByUsername(consumer.getUsername());
+
+        assertEquals(consumer.getId(), findedConsumer.getId());
+    }
+
+    @Test
+    void testFindByUsernameWithNullConsumerType() {
+        Consumer consumer = createConsumer(owner);
+
+        Consumer findedConsumer = consumerCurator.findByUsername(consumer.getUsername());
+
+        assertNull(findedConsumer);
+    }
+
+    @Test
+    void testFindByUsernameWithNotExistingUsername() {
+        createConsumerType(ConsumerTypeEnum.PERSON.getLabel(), true);
+
+        Consumer findedConsumer = consumerCurator.findByUsername(TestUtil.randomString());
+
+        assertNull(findedConsumer);
+    }
+
+    @Test
+    void testGetConsumerBySystemUuid() {
+        String uuid = UUID.randomUUID().toString();
+        Consumer consumer = createConsumer(owner).setFact(Consumer.Facts.DMI_SYSTEM_UUID, uuid);
+
+        Consumer findedConsumer = consumerCurator.getConsumerBySystemUuid(
+            owner.getId(), uuid);
+
+        assertEquals(consumer.getId(), findedConsumer.getId());
+    }
+
+    @Test
+    void testGetConsumerBySystemUuidWithNonExistingUuid() {
+        Consumer findedConsumer = consumerCurator.getConsumerBySystemUuid(
+            owner.getId(), UUID.randomUUID().toString());
+
+        assertNull(findedConsumer);
     }
 
     private IdentityCertificate createIdCert() {

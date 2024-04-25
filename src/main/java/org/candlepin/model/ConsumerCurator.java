@@ -29,12 +29,9 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.criterion.Disjunction;
+import org.hibernate.annotations.QueryHints;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +60,10 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -240,7 +240,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * Lookup consumer by its virt.uuid.
      *
      * In some cases the hypervisor will report UUIDs with uppercase, while the guest will report
-     * lowercase. As such we do case insensitive comparison when looking these up.
+     * lowercase. As such we do case-insensitive comparison when looking these up.
      *
      * @param uuid
      *     consumer virt.uuid to find
@@ -248,27 +248,28 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     public Consumer findByVirtUuid(String uuid, String ownerId) {
-        Consumer result = null;
-        List<String> possibleGuestIds = Util.getPossibleUuids(uuid);
 
-        String sql = "select cp_consumer.id from cp_consumer " +
-            "inner join cp_consumer_facts " +
-            "on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
-            "where cp_consumer_facts.mapkey = 'virt.uuid' and " +
-            "lower(cp_consumer_facts.element) in (:guestids) " +
-            "and cp_consumer.owner_id = :ownerid " +
-            "order by cp_consumer.updated desc";
+        String jpql = """
+            SELECT c FROM Consumer c JOIN c.facts f
+            WHERE KEY(f) = 'virt.uuid'
+                AND LOWER(f) IN :guestIds
+                AND c.ownerId = :ownerId
+            ORDER BY c.updated DESC
+            """;
 
-        Query q = currentSession().createSQLQuery(sql);
-        q.setParameterList("guestids", possibleGuestIds);
-        q.setParameter("ownerid", ownerId);
-        List<String> options = q.list();
-
-        if (options != null && options.size() != 0) {
-            result = this.get(options.get(0));
+        try {
+            // We need to handle uuid with list because we need to cover both endianness, but we only care
+            // about most recent updated consumer. So we take all consumers by uuid, sort by update date
+            // and take only the most recently modified one
+            return getEntityManager().createQuery(jpql, Consumer.class)
+                .setParameter("guestIds", Util.getPossibleUuids(uuid))
+                .setParameter("ownerId", ownerId)
+                .setMaxResults(1)
+                .getSingleResult();
         }
-
-        return result;
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**
@@ -288,42 +289,39 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public VirtConsumerMap getGuestConsumersMap(String ownerId, Set<String> guestIds) {
         VirtConsumerMap guestConsumersMap = new VirtConsumerMap();
 
-        if (guestIds.size() == 0) {
+        if (guestIds.isEmpty()) {
             return guestConsumersMap;
         }
 
-        List<String> possibleGuestIds = Util.getPossibleUuids(guestIds.toArray(new String[guestIds.size()]));
-
-        String sql = "select cp_consumer.uuid from cp_consumer " +
-            "inner join cp_consumer_facts " +
-            "on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
-            "where cp_consumer_facts.mapkey = 'virt.uuid' and " +
-            "lower(cp_consumer_facts.element) in (:guestids) " +
-            "and cp_consumer.owner_id = :ownerid " +
-            "order by cp_consumer.updated desc";
+        List<String> possibleUuids = Util.getPossibleUuids(guestIds);
 
         // We need to filter down to only the most recently registered consumer with
         // each guest ID.
+        String jpql = """
+            SELECT c FROM Consumer c JOIN c.facts f
+            WHERE KEY(f) = 'virt.uuid'
+                AND LOWER(f) IN :guestIds
+                AND c.ownerId = :ownerId
+            ORDER BY c.updated DESC
+            """;
 
-        List<String> consumerUuids = new LinkedList<>();
+        List<Consumer> consumers = new LinkedList<>();
 
-        Iterable<List<String>> blocks = Iterables.partition(possibleGuestIds, getInBlockSize());
+        TypedQuery<Consumer> query = getEntityManager()
+            .createQuery(jpql, Consumer.class)
+            .setParameter("ownerId", ownerId);
 
-        Query query = this.currentSession()
-            .createSQLQuery(sql)
-            .setParameter("ownerid", ownerId);
-
-        for (List<String> block : blocks) {
-            query.setParameterList("guestids", block);
-            consumerUuids.addAll(query.list());
+        for (List<String> block : this.partition(possibleUuids)) {
+            query.setParameter("guestIds", block);
+            consumers.addAll(query.getResultList());
         }
 
-        if (consumerUuids.isEmpty()) {
+        if (consumers.isEmpty()) {
             return guestConsumersMap;
         }
 
         // At this point we might have duplicates for re-registered consumers:
-        for (Consumer c : this.findByUuidsAndOwner(consumerUuids, ownerId)) {
+        for (Consumer c : consumers) {
             String virtUuid = c.getFact(Consumer.Facts.VIRT_UUID).toLowerCase();
             if (guestConsumersMap.get(virtUuid) == null) {
                 // Store both big and little endian forms in the result:
@@ -351,13 +349,25 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         ConsumerType person = consumerTypeCurator
             .getByLabel(ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
 
-        if (person != null) {
-            return (Consumer) createSecureCriteria()
-                .add(Restrictions.eq("username", username))
-                .add(Restrictions.eq("typeId", person.getId())).uniqueResult();
+        if (person == null) {
+            return null;
         }
 
-        return null;
+        String jpql = """
+            SELECT c FROM Consumer c
+            WHERE c.username = :username
+                AND c.typeId = :typeId
+            """;
+
+        try {
+            return getEntityManager().createQuery(jpql, Consumer.class)
+                .setParameter("username", username)
+                .setParameter("typeId", person.getId())
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**
@@ -392,8 +402,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Collection<Consumer> findByUuidsAndOwner(Collection<String> uuids, String ownerId) {
         Set<Consumer> consumers = new HashSet<>();
 
-        javax.persistence.Query query = this.getEntityManager()
-            .createQuery("SELECT c FROM Consumer c WHERE c.ownerId = :oid AND c.uuid IN (:uuids)")
+        String jpql = """
+            SELECT c FROM Consumer c
+            WHERE c.ownerId = :oid
+                AND c.uuid IN (:uuids)
+            """;
+
+        TypedQuery<Consumer> query = this.getEntityManager()
+            .createQuery(jpql, Consumer.class)
             .setParameter("oid", ownerId);
 
         if (uuids != null && !uuids.isEmpty()) {
@@ -429,22 +445,21 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     public Collection<Consumer> getConsumers(Collection<String> consumerIds) {
         if (consumerIds != null && !consumerIds.isEmpty()) {
-            List<String> cids;
+            List<Consumer> consumers = new ArrayList<>();
 
-            // Unfortunately multiLoad does not accept a generic collection, so we need to cast it
-            // or convert it as necessary.
-            if (consumerIds instanceof List) {
-                cids = (List<String>) consumerIds;
-            }
-            else {
-                cids = new ArrayList(consumerIds);
+            String jpql = """
+            SELECT c FROM Consumer c
+            WHERE c.id IN :ids""";
+
+            TypedQuery<Consumer> query = getEntityManager().createQuery(jpql, Consumer.class);
+
+            for (List<String> block : this.partition(consumerIds)) {
+                query.setParameter("ids", block);
+
+                consumers.addAll(query.getResultList());
             }
 
-            return this.currentSession()
-                .byMultipleIds(this.entityType())
-                .enableSessionCheck(true)
-                .enableOrderedReturn(false)
-                .multiLoad(cids);
+            return consumers;
         }
 
         return Collections.emptyList();
@@ -458,17 +473,23 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return A list of the all the distinct values of the addon attribute that the consumers belonging
      * to the specified owner have set.
      */
-    @SuppressWarnings("unchecked")
     @Transactional
     public List<String> getDistinctSyspurposeAddonsByOwner(Owner owner) {
-        String sql = "SELECT DISTINCT add_on FROM cp_sp_add_on, cp_consumer " +
-            "WHERE cp_consumer.id = cp_sp_add_on.consumer_id " +
-            "AND cp_consumer.owner_id = :ownerid " +
-            "AND add_on IS NOT NULL " +
-            "AND add_on != ''";
-        Query query = this.currentSession().createSQLQuery(sql);
-        query.setParameter("ownerid", owner.getId());
-        return query.list();
+        if (owner == null || owner.getId() == null) {
+            return Collections.emptyList();
+        }
+
+        String jpql = """
+            SELECT DISTINCT addon FROM Consumer c
+            JOIN c.addOns addon
+            WHERE c.ownerId = :ownerId
+                AND addon IS NOT NULL
+                AND addon != ''
+            """;
+
+        return getEntityManager().createQuery(jpql, String.class)
+            .setParameter("ownerId", owner.getOwnerId())
+            .getResultList();
     }
 
     /**
@@ -559,10 +580,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @Transactional
     public void updateLastCheckin(Consumer consumer, Date checkinDate) {
-        String hql = "UPDATE Consumer c SET c.lastCheckin = :date, c.updated = :date WHERE c.id = :cid";
+        String jpql = """
+            UPDATE Consumer c
+            SET c.lastCheckin = :date, c.updated = :date
+            WHERE c.id = :cid
+            """;
 
-        this.currentSession().createQuery(hql)
-            .setTimestamp("date", checkinDate)
+        getEntityManager().createQuery(jpql)
+            .setParameter("date", checkinDate)
             .setParameter("cid", consumer.getId())
             .executeUpdate();
     }
@@ -597,10 +622,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 "The HypervisorHearbeatUpdate cannot execute as the database dialect is not recognized.");
         }
 
-        this.currentSession().createSQLQuery(query)
+        getEntityManager().createNativeQuery(query)
             .setParameter("checkin", checkIn)
             .setParameter("reporter", reporterId)
             .setParameter("ownerKey", ownerKey)
+            .setHint(QueryHints.NATIVE_SPACES, Consumer.class.getName())
             .executeUpdate();
     }
 
@@ -676,21 +702,25 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             return cachedHostsProvider.get().get(key);
         }
 
-        Disjunction guestIdCrit = Restrictions.disjunction();
-        for (String possibleId : Util.getPossibleUuids(guestId)) {
-            guestIdCrit.add(Restrictions.eq("guestIdLower", possibleId.toLowerCase()));
+        String jpql = """
+            SELECT g.consumer FROM GuestId g
+            WHERE g.consumer.owner.id = :ownerId
+                AND LOWER(g.guestId) IN :possibleIds
+            ORDER BY g.updated DESC
+            """;
+
+        Consumer host = null;
+        try {
+            host = getEntityManager().createQuery(jpql, Consumer.class)
+                .setParameter("ownerId", ownerId)
+                .setParameter("possibleIds", Util.getPossibleUuids(guestId))
+                .setMaxResults(1)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
         }
 
-        Criteria crit = currentSession()
-            .createCriteria(GuestId.class)
-            .createAlias("consumer", "gconsumer")
-            .add(Restrictions.eq("gconsumer.ownerId", ownerId))
-            .add(guestIdCrit)
-            .addOrder(org.hibernate.criterion.Order.desc("updated"))
-            .setMaxResults(1)
-            .setProjection(Projections.property("consumer"));
-
-        Consumer host = (Consumer) crit.uniqueResult();
         cachedHostsProvider.get().put(key, host);
         return host;
     }
@@ -739,60 +769,52 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      *
      * @param hypervisorId
      *     Unique identifier of the hypervisor
-     * @param owner
-     *     Org namespace to search
+     * @param ownerId
+     *     Id of org namespace to search
      * @return Consumer that matches the given
      */
     @Transactional
-    public Consumer getHypervisor(String hypervisorId, Owner owner) {
-        return (Consumer) currentSession().createCriteria(Consumer.class)
-            .add(Restrictions.eq("ownerId", owner.getId()))
-            .createAlias("hypervisorId", "hvsr")
-            .add(Restrictions.eq("hvsr.hypervisorId", hypervisorId.toLowerCase()))
-            .setMaxResults(1)
-            .uniqueResult();
+    public Consumer getHypervisor(String hypervisorId, String ownerId) {
+        String jpql = """
+            SELECT c FROM Consumer c
+            WHERE c.ownerId = :ownerId
+                AND LOWER(c.hypervisorId.hypervisorId) = :hypervisorId
+            """;
+
+        try {
+            return getEntityManager().createQuery(jpql, Consumer.class)
+                .setParameter("ownerId", ownerId)
+                .setParameter("hypervisorId", hypervisorId.toLowerCase())
+                .setMaxResults(1)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     @Transactional
-    public Consumer getExistingConsumerByHypervisorIdOrUuid(String ownerId, String hypervisorId,
-        String systemUuid) {
-        VirtConsumerMap hypervisorMap = new VirtConsumerMap();
-        Consumer found = null;
-        String sql = "select consumer_id from cp_consumer_hypervisor " +
-            "where hypervisor_id = :hypervisorId " +
-            "and owner_id = :ownerId";
+    public Consumer getConsumerBySystemUuid(String ownerId, String systemUuid) {
+        String jpql = """
+                SELECT c FROM Consumer c
+                JOIN c.facts f
+                WHERE KEY(f) = :factKey
+                    AND LOWER(f) = :uuid
+                    AND c.ownerId = :ownerId
+                ORDER BY c.updated DESC
+                """;
 
-        Query query = this.currentSession()
-            .createSQLQuery(sql)
-            .setParameter("ownerId", ownerId)
-            .setParameter("hypervisorId", hypervisorId.toLowerCase());
-        List<String> consumerIds = query.list();
-
-        if (consumerIds != null && consumerIds.size() > 0) {
-            List<String> one = Collections.singletonList(consumerIds.get(0));
-            found = (Consumer) ((List) this.getConsumers(one)).get(0);
-        }
-        else if (systemUuid != null) {
-            sql = "select cp_consumer.id from cp_consumer " +
-                "join cp_consumer_facts on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
-                "where cp_consumer_facts.mapkey = :fact_key and " +
-                "lower(cp_consumer_facts.element) = :uuid " +
-                "and cp_consumer.owner_id = :ownerId " +
-                "order by cp_consumer.updated desc";
-
-            query = this.currentSession()
-                .createSQLQuery(sql)
-                .setParameter("fact_key", Consumer.Facts.DMI_SYSTEM_UUID)
+        try {
+            return getEntityManager().createQuery(jpql, Consumer.class)
+                .setParameter("factKey", Consumer.Facts.DMI_SYSTEM_UUID)
                 .setParameter("ownerId", ownerId)
-                .setParameter("uuid", systemUuid.toLowerCase());
-
-            consumerIds = query.list();
-            if (consumerIds != null && consumerIds.size() > 0) {
-                List<String> one = Collections.singletonList(consumerIds.get(0));
-                found = (Consumer) ((List) this.getConsumers(one)).get(0);
-            }
+                .setParameter("uuid", systemUuid.toLowerCase())
+                .setMaxResults(1)
+                .getSingleResult();
         }
-        return found;
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**
@@ -807,15 +829,19 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             return new ArrayList<>();
         }
 
-        String retrieveIdCertsHql = "SELECT idCert.id FROM Consumer WHERE id IN (:consumerIds)";
-        List<String> idCertIds = entityManager.get()
-            .createQuery(retrieveIdCertsHql)
+        String jpql = """
+            SELECT idCert.id FROM Consumer
+            WHERE id IN (:consumerIds)
+            """;
+
+        List<String> idCertIds = getEntityManager()
+            .createQuery(jpql, String.class)
             .setParameter("consumerIds", consumerIds)
             .getResultList();
 
         return idCertIds.stream()
             .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+            .toList();
     }
 
     /**
@@ -830,15 +856,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             return new ArrayList<>();
         }
 
-        String retrieveScaCertsHql = "SELECT contentAccessCert.id FROM Consumer WHERE id IN (:consumerIds)";
-        List<String> caCertIds = entityManager.get()
-            .createQuery(retrieveScaCertsHql)
+        String jpql = """
+            SELECT contentAccessCert.id FROM Consumer
+            WHERE id IN (:consumerIds)
+            """;
+        List<String> caCertIds = getEntityManager()
+            .createQuery(jpql, String.class)
             .setParameter("consumerIds", consumerIds)
             .getResultList();
 
         return caCertIds.stream()
             .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+            .toList();
     }
 
     /**
@@ -853,36 +882,36 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     public List<Long> getSerialIdsForCerts(Collection<String> caCertIds, Collection<String> idCertIds) {
         List<Long> serialIds = new ArrayList<>();
+        EntityManager em = getEntityManager();
         if (caCertIds != null && !caCertIds.isEmpty()) {
-            String caCertHql = "SELECT ca.serial.id " +
+            String jpql = "SELECT ca.serial.id " +
                 "FROM SCACertificate ca " +
                 "WHERE ca.id IN (:certIds)";
 
-            List<Long> caCertSerialIds = entityManager.get()
-                .createQuery(caCertHql)
+            List<Long> caCertSerialIds = em
+                .createQuery(jpql, Long.class)
                 .setParameter("certIds", caCertIds)
                 .getResultList();
 
             serialIds.addAll(caCertSerialIds.stream()
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList()));
+                .toList());
         }
 
         if (idCertIds != null && !idCertIds.isEmpty()) {
-            String idCertHql = "SELECT idcert.serial.id " +
+            String jpql = "SELECT idcert.serial.id " +
                 "FROM IdentityCertificate idcert " +
                 "WHERE idcert.id IN (:certIds)";
 
-            List<Long> idCertSerialIds = entityManager.get()
-                .createQuery(idCertHql)
+            List<Long> idCertSerialIds = em
+                .createQuery(jpql, Long.class)
                 .setParameter("certIds", idCertIds)
                 .getResultList();
 
             serialIds.addAll(idCertSerialIds.stream()
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList()));
+                .toList());
         }
-
         return serialIds;
     }
 
@@ -898,12 +927,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             return 0;
         }
 
-        entityManager.get()
+        return getEntityManager()
             .createQuery("DELETE Consumer WHERE id IN (:consumerIds)")
             .setParameter("consumerIds", consumerIds)
             .executeUpdate();
-
-        return consumerIds.size();
     }
 
     /**
@@ -929,7 +956,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             throw new IllegalArgumentException("Last updated retention date cannot be null.");
         }
 
-        String hql = "SELECT consumer.id " +
+        String jpql = "SELECT consumer.id " +
             "FROM Consumer consumer " +
             "JOIN ConsumerType type ON type.id=consumer.typeId " +
             "LEFT JOIN Entitlement ent ON ent.consumer.id=consumer.id " +
@@ -938,8 +965,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             "AND ent.consumer.id IS NULL " +
             "AND type.manifest = 'N'";
 
-        return entityManager.get()
-            .createQuery(hql)
+        return getEntityManager()
+            .createQuery(jpql, String.class)
             .setParameter("lastCheckedInRetention", Date.from(lastCheckedInRetention))
             .setParameter("nonCheckedInRetention", Date.from(lastUpdatedRetention))
             .getResultList();
@@ -1095,8 +1122,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         if (consumerUuids != null && consumerUuids.iterator().hasNext()) {
             int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit());
 
-            String querySql = "SELECT C.uuid FROM Consumer C WHERE C.uuid IN (:uuids)";
-            javax.persistence.Query query = this.getEntityManager().createQuery(querySql);
+            String jpql = """
+                SELECT c.uuid FROM Consumer c
+                WHERE c.uuid IN (:uuids)
+                """;
+            TypedQuery<String> query = getEntityManager().createQuery(jpql, String.class);
 
             for (List<String> block : Iterables.partition(consumerUuids, blockSize)) {
                 existingUuids.addAll(query.setParameter("uuids", block).getResultList());
@@ -1163,11 +1193,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
 
         if (!predicates.isEmpty()) {
-            criteriaQuery.where(predicates.toArray(new Predicate[predicates.size()]));
+            criteriaQuery.where(predicates.toArray(new Predicate[0]));
         }
 
         List<Order> order = this.buildJPAQueryOrder(criteriaBuilder, root, queryArgs);
-        if (order != null && order.size() > 0) {
+        if (order != null && !order.isEmpty()) {
             criteriaQuery.orderBy(order);
         }
 
@@ -1215,7 +1245,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
 
         if (!predicates.isEmpty()) {
-            criteriaQuery.where(predicates.toArray(new Predicate[predicates.size()]));
+            criteriaQuery.where(predicates.toArray(new Predicate[0]));
         }
 
         return this.getEntityManager()
@@ -1455,26 +1485,40 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     public int getConsumerEntitlementCount(Owner owner, ConsumerType type) {
-        Criteria c = createSecureCriteria()
-            .add(Restrictions.eq("ownerId", owner.getId()))
-            .add(Restrictions.eq("typeId", type.getId()))
-            .createAlias("entitlements", "ent")
-            .setProjection(Projections.sum("ent.quantity"));
+        EntityManager em = getEntityManager();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        Long result = (Long) c.uniqueResult();
-        return result == null ? 0 : result.intValue();
+        CriteriaQuery<Integer> cq = cb.createQuery(Integer.class);
+        Root<Consumer> consumerRoot = cq.from(Consumer.class);
+
+        Join<Consumer, Entitlement> entitlementJoin = consumerRoot.join("entitlements");
+
+        Predicate securePredicate = getSecurityPredicate(Consumer.class, cb, consumerRoot);
+        if (securePredicate == null) {
+            securePredicate = cb.conjunction();
+        }
+
+        Predicate ownerPredicate = cb.equal(consumerRoot.get("ownerId"), owner.getId());
+        Predicate typePredicate = cb.equal(consumerRoot.get("typeId"), type.getId());
+
+        cq.select(cb.sum(entitlementJoin.get("quantity")))
+            .where(cb.and(ownerPredicate, typePredicate, securePredicate));
+
+        Integer result = em.createQuery(cq).getSingleResult();
+        return result != null ? result : 0;
     }
 
-    @SuppressWarnings("unchecked")
     public List<String> getConsumerIdsWithStartedEnts() {
-        Date now = new Date();
-        return currentSession().createCriteria(Entitlement.class)
-            .createAlias("pool", "p")
-            .add(Restrictions.eq("updatedOnStart", false))
-            .add(Restrictions.lt("p.startDate", now))
-            .setProjection(Projections.property("consumer.id"))
-            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
-            .list();
+        String jpql = """
+            SELECT DISTINCT e.consumer.id FROM Entitlement e
+            JOIN e.pool p
+            WHERE e.updatedOnStart = FALSE
+                AND p.startDate < CURRENT_TIMESTAMP
+            """;
+
+        return getEntityManager()
+            .createQuery(jpql, String.class)
+            .getResultList();
     }
 
     /**
@@ -1579,16 +1623,20 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             return 0;
         }
 
-        String query = "UPDATE Consumer c" +
-            " SET c.idCert = NULL, c.updated = :date" +
-            " WHERE c.idCert.id IN (:cert_ids)";
+        String jpql = """
+            UPDATE Consumer c
+            SET c.idCert = NULL, c.updated = :date
+            WHERE c.idCert.id IN (:cert_ids)
+            """;
 
         int updated = 0;
         Date updateTime = new Date();
+
+        Query query = getEntityManager().createQuery(jpql)
+            .setParameter("date", updateTime);
+
         for (Collection<String> certIdBlock : this.partition(certIds)) {
-            updated += this.currentSession().createQuery(query)
-                .setParameter("date", updateTime)
-                .setParameter("cert_ids", certIdBlock)
+            updated += query.setParameter("cert_ids", certIdBlock)
                 .executeUpdate();
         }
 
@@ -1608,16 +1656,20 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             return 0;
         }
 
-        String query = "UPDATE Consumer c" +
-            " SET c.contentAccessCert = NULL, c.updated = :date" +
-            " WHERE c.contentAccessCert.id IN (:cert_ids)";
+        String jpql = """
+            UPDATE Consumer c
+            SET c.contentAccessCert = NULL, c.updated = :date
+            WHERE c.contentAccessCert.id IN (:cert_ids)
+            """;
 
         int updated = 0;
         Date updateTime = new Date();
+
+        Query query = getEntityManager().createQuery(jpql)
+            .setParameter("date", updateTime);
+
         for (Collection<String> certIdBlock : this.partition(certIds)) {
-            updated += this.currentSession().createQuery(query)
-                .setParameter("date", updateTime)
-                .setParameter("cert_ids", certIdBlock)
+            updated += query.setParameter("cert_ids", certIdBlock)
                 .executeUpdate();
         }
 
@@ -1641,16 +1693,17 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             throw new IllegalArgumentException("New owner is required!");
         }
 
-        String query = """
-            UPDATE Consumer c \
-            SET c.owner.id = :ownerId \
+        String jpql = """
+            UPDATE Consumer c
+            SET c.owner.id = :ownerId
             WHERE c.id IN (:consumers)
             """;
 
+        Query query = getEntityManager().createQuery(jpql)
+            .setParameter("ownerId", newOwner.getId());
+
         for (Collection<String> consumersBlock : this.partition(consumerIds)) {
-            this.currentSession().createQuery(query)
-                .setParameter("ownerId", newOwner.getId())
-                .setParameter("consumers", consumersBlock)
+            query.setParameter("consumers", consumersBlock)
                 .executeUpdate();
         }
     }
@@ -1667,10 +1720,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // Fetch the IDs of locked entities from the DB...
         String hql = """
             SELECT c.id FROM Consumer c
-            WHERE c.id IN (:ids)""";
-        Query<String> query = this.currentSession()
+            WHERE c.id IN (:ids)
+            """;
+
+        TypedQuery<String> query = getEntityManager()
             .createQuery(hql, String.class)
-            .setLockOptions(new LockOptions(LockMode.PESSIMISTIC_WRITE));
+            .setLockMode(LockModeType.PESSIMISTIC_WRITE);
 
         List<String> lockedIds = new ArrayList<>(idSet.size());
         for (List<Serializable> idBlock : this.partition(idSet)) {
