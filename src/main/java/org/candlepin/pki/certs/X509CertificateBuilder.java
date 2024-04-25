@@ -168,7 +168,7 @@ public class X509CertificateBuilder {
         this.addSSLCertificateType(builder);
         this.addKeyUsage(builder);
         this.addAuthorityKeyIdentifier(builder, caCertificate);
-        this.addSubjectKeyIdentifier(builder, this.keyPair);
+        this.addSubjectKeyIdentifier(builder, this.keyPair, this.certExtensions);
         this.addSubjectAltName(builder, this.distinguishedName, this.subjectAltName);
         this.addBasicConstraints(builder);
         this.addExtensions(builder, this.certExtensions);
@@ -202,9 +202,11 @@ public class X509CertificateBuilder {
         }
     }
 
-    private void addSubjectKeyIdentifier(X509v3CertificateBuilder builder, KeyPair keyPair) {
+    private void addSubjectKeyIdentifier(X509v3CertificateBuilder builder, KeyPair keyPair,
+        List<X509Extension> extensions) {
+
         try {
-            byte[] ski = this.subjectKeyIdentifierWriter.getSubjectKeyIdentifier(keyPair);
+            byte[] ski = this.subjectKeyIdentifierWriter.getSubjectKeyIdentifier(keyPair, extensions);
             builder.addExtension(Extension.subjectKeyIdentifier, false, ski);
         }
         catch (NoSuchAlgorithmException | IOException e) {

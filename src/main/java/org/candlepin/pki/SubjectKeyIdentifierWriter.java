@@ -17,6 +17,9 @@ package org.candlepin.pki;
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
+
+
 
 /**
  * SubjectKeyIdentifierWriter is an interface to provide the encoded SubjectKeyIdentifier to a certificate.
@@ -60,9 +63,10 @@ public interface SubjectKeyIdentifierWriter {
      * we need to abide by it.
      * </p>
      * @param clientKeyPair the KeyPair of the certificate's subject
+     * @param extensions Other Extensions being placed on this certificate
      * @return DER encoded octet string of the subject key identifier as a byte array
      * @throws IOException thrown if error reading extensions or encoding the KeyIdentifier
      */
-    byte[] getSubjectKeyIdentifier(KeyPair clientKeyPair)
+    byte[] getSubjectKeyIdentifier(KeyPair clientKeyPair, List<X509Extension> extensions)
         throws IOException, NoSuchAlgorithmException;
 }

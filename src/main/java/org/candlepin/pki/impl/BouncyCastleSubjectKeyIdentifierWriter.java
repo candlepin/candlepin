@@ -15,23 +15,30 @@
 package org.candlepin.pki.impl;
 
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
+import org.candlepin.pki.X509Extension;
 
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
+
+
 
 /**
  * Default implementation of SubjectKeyIdentifierWriter.  This implementation is exactly what you might
- * expect but hosted candlepin instances have use cases that require custom SubjectKeyIdentifiers so they may
+ * expect but hosted Candlepin instances have use cases that require custom SubjectKeyIdentifiers so they may
  * write and bind other implementations of the SubjectKeyIdentifierWriter interface.
  */
 public class BouncyCastleSubjectKeyIdentifierWriter implements SubjectKeyIdentifierWriter {
 
     @Override
-    public byte[] getSubjectKeyIdentifier(KeyPair clientKeyPair)
+    public byte[] getSubjectKeyIdentifier(KeyPair clientKeyPair, List<X509Extension> extensions)
         throws IOException, NoSuchAlgorithmException {
-        return new JcaX509ExtensionUtils().createSubjectKeyIdentifier(clientKeyPair.getPublic()).getEncoded();
+
+        return new JcaX509ExtensionUtils()
+            .createSubjectKeyIdentifier(clientKeyPair.getPublic())
+            .getEncoded();
     }
 }
