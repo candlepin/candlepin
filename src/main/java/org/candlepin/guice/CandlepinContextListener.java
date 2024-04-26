@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -15,7 +15,6 @@
 package org.candlepin.guice;
 
 import static org.candlepin.config.ConfigProperties.ACTIVEMQ_ENABLED;
-import static org.candlepin.config.ConfigProperties.DB_MANAGE_ON_START;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.ActiveMQContextListener;
@@ -23,6 +22,8 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.RyeConfig;
 import org.candlepin.config.validation.ConfigurationValidatorUtil;
+import org.candlepin.database.DatabaseConnectionManager;
+import org.candlepin.database.MigrationManager;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.logging.LoggingConfigurator;
 import org.candlepin.messaging.CPMContextListener;
@@ -39,19 +40,6 @@ import com.google.inject.util.Modules;
 import io.smallrye.config.PropertiesConfigSource;
 import io.smallrye.config.SmallRyeConfigBuilder;
 
-import liquibase.changelog.ChangeLogParameters;
-import liquibase.changelog.ChangeSet;
-import liquibase.command.CommandScope;
-import liquibase.command.core.StatusCommandStep;
-import liquibase.command.core.UpdateCommandStep;
-import liquibase.command.core.helpers.DbUrlConnectionCommandStep;
-import liquibase.database.Database;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.exception.LiquibaseException;
-import liquibase.parser.core.xml.XMLChangeLogSAXParser;
-import liquibase.resource.ClassLoaderResourceAccessor;
-
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -66,7 +54,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -75,7 +62,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.cache.CacheManager;
@@ -96,7 +82,6 @@ import javax.servlet.ServletContextEvent;
  */
 public class CandlepinContextListener extends GuiceResteasyBootstrapServletContextListener {
     public static final String CONFIGURATION_NAME = Configuration.class.getName();
-    private static final String CHANGELOG_FILE_NAME = "db/changelog/changelog-update.xml";
     private static final Path DEFAULT_CONFIG_FILE = Paths.get("/etc/candlepin/candlepin.conf");
     private static final Path DEFAULT_CONFIG_DIR = Paths.get("/etc/candlepin/conf.d");
 
@@ -165,11 +150,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         setCapabilities(config);
         log.debug("Candlepin stored config on context.");
 
-        log.info("Validating configurations.");
-        ConfigurationValidatorUtil.validateConfigurations(ConfigProperties.CONFIGURATION_VALIDATORS, config);
-
-        // check state of database against liquibase changelogs
-        checkDbChangelog();
+        initializeDatabase();
 
         // set things up BEFORE calling the super class' initialize method.
         super.contextInitialized(sce);
@@ -331,7 +312,25 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
             }
         }
 
-        return new RyeConfig(configBuilder.build());
+        RyeConfig ryeConfig = new RyeConfig(configBuilder.build());
+
+        log.info("Validating configurations.");
+        ConfigurationValidatorUtil.validateConfigurations(ConfigProperties.CONFIGURATION_VALIDATORS,
+            ryeConfig);
+
+        return ryeConfig;
+    }
+
+    protected void initializeDatabase() {
+        try {
+            DatabaseConnectionManager connectionManager = new DatabaseConnectionManager(config);
+            MigrationManager migrationManager = new MigrationManager(config, connectionManager);
+            migrationManager.migrate();
+        }
+        catch (Exception e) {
+            log.error("Error initializing database: " + e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -404,140 +403,4 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
     }
 
-    public enum DBManagementLevel {
-        NONE("NONE"),
-        REPORT("REPORT"),
-        HALT("HALT"),
-        MANAGE("MANAGE");
-
-        private String name;
-
-        DBManagementLevel(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return this.name;
-        }
-    }
-
-    /**
-     * Check the state of the database in regards to the application of changesets via Liquibase.
-     *
-     * The number of changesets not applied will be logged at error level.
-     *
-     * @throws RuntimeException if there are missing changesets or a LiqubaseException
-     */
-    protected void checkDbChangelog() {
-        String configStart = config.getString(DB_MANAGE_ON_START);
-        log.info("Liquibase startup management set to {}", configStart);
-        DBManagementLevel dbmLevel = null;
-        try {
-            dbmLevel = DBManagementLevel.valueOf(configStart.toUpperCase());
-        }
-        catch (IllegalArgumentException iae) {
-            log.error("The value {} of parameter '{}' is not allowed", configStart, DB_MANAGE_ON_START);
-            throw new RuntimeException(iae.getMessage());
-        }
-
-        if (DBManagementLevel.NONE.equals(dbmLevel)) {
-            return;
-        }
-
-        try (Database database = this.getDatabase()) {
-            List<ChangeSet> unrunChangeSets = getUnrunChangeSets(database);
-            if (unrunChangeSets.isEmpty()) {
-                log.info("Candlepin database is up to date!");
-            }
-            else {
-                Stream<String> csStream = unrunChangeSets.stream()
-                    .map(changeset ->
-                    String.format("file: %s, changeset: %s", changeset.getFilePath(), changeset.getId()));
-
-                switch (dbmLevel) {
-                    case REPORT:
-                        log.warn("Database has {} unrun changeset(s): \n{}", unrunChangeSets.size(),
-                            csStream.collect(Collectors.joining("\n  ", "  ", "")));
-                        break;
-                    case HALT:
-                        log.error("Database has {} unrun changeset(s); halting startup...\n{}",
-                            unrunChangeSets.size(), csStream.collect(Collectors.joining("\n  ", "  ", "")));
-                        throw new RuntimeException("The database is missing Liquibase changeset(s)");
-                    case MANAGE:
-                        log.info("Calling liquibase to update the database");
-                        log.info("Database has {} unrun changeset(s): \n{}", unrunChangeSets.size(),
-                            csStream.collect(Collectors.joining("\n  ", "  ", "")));
-                        executeUpdate(database);
-                        log.info("Update complete");
-                        break;
-                    default:
-                        throw new RuntimeException("Cannot determine database management mode.");
-                }
-            }
-        }
-        catch (LiquibaseException e) {
-            log.error("Liquibase exception: {}", e.getMessage());
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Initializes the CommandScope object and executes the update
-     *
-     * @param database the object which defines the database connection
-     * @throws LiquibaseException
-     */
-    protected void executeUpdate(Database database) throws LiquibaseException {
-        CommandScope commandScope = new CommandScope(UpdateCommandStep.COMMAND_NAME)
-            .addArgumentValue(DbUrlConnectionCommandStep.DATABASE_ARG, database)
-            .addArgumentValue(UpdateCommandStep.CHANGELOG_FILE_ARG, CHANGELOG_FILE_NAME);
-        commandScope.execute();
-    }
-
-    /**
-     * Reads the list of unrun changesets from the database supplied based on the changelog.
-     *
-     * @param database the object which defines the database connection
-     * @return List of unrun changesets
-     * @throws LiquibaseException if there is an issue with reading the changesets.
-     */
-    protected List<ChangeSet> getUnrunChangeSets(Database database) throws LiquibaseException {
-        try {
-            return new StatusCommandStep().listUnrunChangeSets(
-                null,
-                null,
-                new XMLChangeLogSAXParser().parse(CHANGELOG_FILE_NAME,
-                    new ChangeLogParameters(), new ClassLoaderResourceAccessor()),
-                database);
-        }
-        catch (Exception e) {
-            // method throws generic exception
-            throw new LiquibaseException(e.getMessage());
-        }
-    }
-
-    /**
-     * Establish the object for database communication from the configuration parameters
-     *
-     * @return Database object which defines the database connection
-     * @throws LiquibaseException if there is an issue with establishing the Database object
-     */
-    protected Database getDatabase() throws LiquibaseException {
-        Database database = null;
-        try {
-            Class.forName(config.getString(ConfigProperties.DB_DRIVER_CLASS))
-                .getDeclaredConstructor().newInstance();
-            Connection connection = DriverManager.getConnection(
-                config.getString(ConfigProperties.DB_URL),
-                config.getString(ConfigProperties.DB_USERNAME),
-                config.getString(ConfigProperties.DB_PASSWORD));
-            JdbcConnection jdbcConnection = new JdbcConnection(connection);
-            database =
-                DatabaseFactory.getInstance().findCorrectDatabaseImplementation(jdbcConnection);
-        }
-        catch (ReflectiveOperationException | SQLException e) {
-            throw new LiquibaseException(e);
-        }
-        return database;
-    }
 }

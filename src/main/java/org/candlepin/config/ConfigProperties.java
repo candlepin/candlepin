@@ -28,7 +28,7 @@ import org.candlepin.async.tasks.RevokeEntitlementsJob;
 import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
 import org.candlepin.config.validation.ConfigurationValidator;
 import org.candlepin.config.validation.IntegerConfigurationValidator;
-import org.candlepin.guice.CandlepinContextListener;
+import org.candlepin.database.MigrationManagementLevel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -179,6 +179,10 @@ public class ConfigProperties {
     public static final String DB_URL = JPA_CONFIG_PREFIX + "hibernate.connection.url";
     public static final String DB_USERNAME = JPA_CONFIG_PREFIX + "hibernate.connection.username";
     public static final String DB_PASSWORD = JPA_CONFIG_PREFIX + "hibernate.connection.password";
+
+    // Database
+    public static final String DB_MAX_CONNECTION_ATTEMPTS = "candlepin.db.max_connection_attempts";
+    public static final String DB_CONNECTION_RETRY_INTERVAL = "candlepin.db.retry_interval";
 
     // Cache
     public static final String CACHE_JMX_STATS = "cache.jmx.statistics";
@@ -350,6 +354,10 @@ public class ConfigProperties {
         {
             this.put(CANDLEPIN_URL, "https://localhost");
 
+            // Database connection
+            this.put(DB_CONNECTION_RETRY_INTERVAL, "5"); // seconds
+            this.put(DB_MAX_CONNECTION_ATTEMPTS, "3");
+
             this.put(JWT_ISSUER, "Candlepin");
             this.put(JWT_TOKEN_TTL, "600"); // seconds
             this.put(ANON_JWT_TOKEN_TTL, "172800"); // seconds
@@ -415,7 +423,7 @@ public class ConfigProperties {
             // submit one when registering.
             this.put(HIDDEN_RESOURCES, "environments");
             this.put(HIDDEN_CAPABILITIES, "");
-            this.put(DB_MANAGE_ON_START, CandlepinContextListener.DBManagementLevel.NONE.getName());
+            this.put(DB_MANAGE_ON_START, MigrationManagementLevel.NONE.getName());
             this.put(SSL_VERIFY, "false");
 
             this.put(FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
@@ -568,6 +576,12 @@ public class ConfigProperties {
                 .lessThan(PAGING_MAX_PAGE_SIZE));
 
             this.add(new IntegerConfigurationValidator(PAGING_MAX_PAGE_SIZE)
+                .min(1));
+
+            this.add(new IntegerConfigurationValidator(DB_CONNECTION_RETRY_INTERVAL)
+                .min(1));
+
+            this.add(new IntegerConfigurationValidator(DB_MAX_CONNECTION_ATTEMPTS)
                 .min(1));
         }
     };
