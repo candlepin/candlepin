@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.6
+Version: 4.4.7
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,22 @@ fi
 
 #raw
 %changelog
+* Fri Apr 26 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.7-1
+- CANDLEPIN-852: Reverted change to SubjectKeyIdentifierWriter interface
+  (crog@redhat.com)
+- Bump io.smallrye.config:smallrye-config from 3.8.0 to 3.8.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-252: Updated ConsumerCurator to not use Hibernate Criteria
+  (sbakaj@redhat.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.20 to 10.1.23
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.7.1 to 3.8.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Added innodb deadlock logging to mariadb GH actions container
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-844: Restored an annotation on the reregistration test
+  (crog@redhat.com)
+
 * Fri Apr 19 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.6-1
 - Add new translations using Weblate (noreply@weblate.org)
 - CANDLEPIN-840: Added endpoints for environment content overrides
