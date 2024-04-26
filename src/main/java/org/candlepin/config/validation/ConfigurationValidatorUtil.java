@@ -44,11 +44,22 @@ public final class ConfigurationValidatorUtil {
      * @param config
      *  used to retrieve the configuration values based on configuration keys
      *
+     * @throws IllegalArgumentException
+     *  if the provided validators or the configuration is null
+     *
      * @throws RuntimeException
      *  if there is an invalid configuration
      */
     public static void validateConfigurations(Collection<ConfigurationValidator> validators,
         Configuration config) {
+        if (validators == null) {
+            throw new IllegalArgumentException("validators is null");
+        }
+
+        if (config == null) {
+            throw new IllegalArgumentException("config is null");
+        }
+
         Set<String> failures =  validators.stream()
             .flatMap(validator -> validator.validate(config).stream())
             .collect(Collectors.toSet());

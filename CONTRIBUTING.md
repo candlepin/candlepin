@@ -252,8 +252,6 @@ Or the kubernetes container with
 
 `podman play kube candlepin-deployment.yaml []/--down`
 
-Note that the `podman play kube` command does not currently have functionality that forces a healthy health check before attempting to start dependent containers like docker compose does. So, it is possible that the database container does not start before the Candlepin container attempts to run migrations causing the Candlepin container to fail to start. In this case, once the database container is running, simply restart the Candlepin container using `podman restart [Candlepin container ID]`.
-
 ### Configure Candlepin Container
 
 This topic provides information on how to configure the Candlepin container.
