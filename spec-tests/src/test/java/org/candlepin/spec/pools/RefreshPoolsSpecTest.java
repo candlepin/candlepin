@@ -14,6 +14,7 @@
  */
 package org.candlepin.spec.pools;
 
+import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
@@ -1867,7 +1868,8 @@ public class RefreshPoolsSpecTest {
 
     @Test
     @OnlyInHosted
-    public void shouldDetectProductChangesAcrossMultipleOrgsSCACertificateRegeneration() {
+    public void shouldDetectProductChangesAcrossMultipleOrgsSCACertificateRegeneration()
+        throws InterruptedException {
         // With global products, SCA gets a little bit more aggressive in terms of refresh. Whenever
         // a product is detected as "changed", we update the lastContentUpdate field on every org
         // that has a pool referencing it. This should trigger SCA cert refreshes even outside of
@@ -1913,6 +1915,7 @@ public class RefreshPoolsSpecTest {
         adminClient.hosted().addContentToProduct(product.getId(), content.getId(), true);
 
         // Refresh first org and verify it gets new SCA content blobs
+        sleep(1000);
         this.refreshPools(adminClient, owner1.getKey());
 
         JsonNode owner1SCAContentBody2 = adminClient.consumers()
@@ -1922,8 +1925,8 @@ public class RefreshPoolsSpecTest {
         String owner1SCAContent2 = owner1SCAContentBody2.get("contentListing")
             .elements().next().get(1).asText(); // :/
 
-        assertNotEquals(owner1SCALastUpdate1, owner1SCALastUpdate2);
         assertNotEquals(owner1SCAContent1, owner1SCAContent2);
+        assertNotEquals(owner1SCALastUpdate1, owner1SCALastUpdate2);
 
         // The second org should also be affected by this in SCA mode, even without an explicit
         // refresh
@@ -1934,12 +1937,13 @@ public class RefreshPoolsSpecTest {
         String owner2SCAContent2 = owner2SCAContentBody2.get("contentListing")
             .elements().next().get(1).asText(); // :/
 
-        assertNotEquals(owner2SCALastUpdate1, owner2SCALastUpdate2);
         assertNotEquals(owner2SCAContent1, owner2SCAContent2);
+        assertNotEquals(owner2SCALastUpdate1, owner2SCALastUpdate2);
 
         // An explicit refresh should also trigger another regen, since its pool will be flagged as
         // dirty. Note that this behavior is not explicitly required for future implementations, so
         // if this changes in the future, drop this additional check.
+        sleep(1000);
         this.refreshPools(adminClient, owner2.getKey());
 
         JsonNode owner2SCAContentBody3 = adminClient.consumers()
@@ -1949,12 +1953,12 @@ public class RefreshPoolsSpecTest {
         String owner2SCAContent3 = owner2SCAContentBody3.get("contentListing")
             .elements().next().get(1).asText(); // :/
 
-        assertNotEquals(owner2SCALastUpdate1, owner2SCALastUpdate2);
         assertNotEquals(owner2SCAContent1, owner2SCAContent2);
-        assertNotEquals(owner2SCALastUpdate1, owner2SCALastUpdate3);
+        assertNotEquals(owner2SCALastUpdate1, owner2SCALastUpdate2);
         assertNotEquals(owner2SCAContent1, owner2SCAContent3);
-        assertNotEquals(owner2SCALastUpdate2, owner2SCALastUpdate3);
+        assertNotEquals(owner2SCALastUpdate1, owner2SCALastUpdate3);
         assertNotEquals(owner2SCAContent2, owner2SCAContent3);
+        assertNotEquals(owner2SCALastUpdate2, owner2SCALastUpdate3);
     }
 
     private AsyncJobStatusDTO refreshPools(ApiClient client, String ownerKey) {
