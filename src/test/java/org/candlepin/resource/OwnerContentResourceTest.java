@@ -287,6 +287,29 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testCreateContentInOrgUsingLongKey() {
+        Owner owner = this.createOwner("test_owner".repeat(25));
+        ContentDTO cdto = TestUtil.createContentDTO("test_content");
+        cdto.setLabel("test-label");
+        cdto.setType("test-test");
+        cdto.setVendor("test-vendor");
+
+        assertNull(this.contentCurator.getContentById(owner.getKey(), cdto.getId()));
+
+        ContentDTO output = this.ownerContentResource.createContent(owner.getKey(), cdto);
+
+        assertNotNull(output);
+        assertEquals(cdto.getId(), output.getId());
+
+        Content entity = this.contentCurator.getContentById(owner.getKey(), cdto.getId());
+        assertNotNull(entity);
+        assertEquals(cdto.getName(), entity.getName());
+        assertEquals(cdto.getLabel(), entity.getLabel());
+        assertEquals(cdto.getType(), entity.getType());
+        assertEquals(cdto.getVendor(), entity.getVendor());
+    }
+
+    @Test
     public void testUpdateContent() {
         Owner owner = this.createOwner("test_owner");
         Content content = TestUtil.createContent("test_content", "test_content")

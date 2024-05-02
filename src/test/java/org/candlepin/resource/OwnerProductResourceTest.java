@@ -366,6 +366,23 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testCreateProductInOrgUsingLongKey() {
+        Owner owner = this.createOwner("test_owner".repeat(25));
+        ProductDTO pdto = this.buildTestProductDTO();
+
+        assertNull(this.productCurator.getProductById(owner.getKey(), pdto.getId()));
+
+        ProductDTO result = this.ownerProductResource.createProduct(owner.getKey(), pdto);
+        assertNotNull(result);
+
+        Product entity = this.productCurator.getProductById(owner.getKey(), pdto.getId());
+        assertNotNull(entity);
+
+        ProductDTO expected = this.modelTranslator.translate(entity, ProductDTO.class);
+        assertEquals(expected, result);
+    }
+
+    @Test
     public void testUpdateProductWithAttributes() {
         Map<String, String> attributes = new HashMap<>();
         attributes.put("attrib-1", "value-1");

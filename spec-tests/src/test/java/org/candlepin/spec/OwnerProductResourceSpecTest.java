@@ -110,6 +110,20 @@ public class OwnerProductResourceSpecTest {
     }
 
     @Test
+    public void shouldAllowCreatingProductsInOrgsWithLongKeys() {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random()
+            .key(StringUtil.random("test_org-", 245, StringUtil.CHARSET_NUMERIC_HEX)));
+
+        ProductDTO prod = Products.randomEng();
+
+        ProductDTO created = ownerProductApi.createProduct(owner.getKey(), prod);
+        assertThat(created)
+            .usingRecursiveComparison()
+            .comparingOnlyFields("id", "name")
+            .isEqualTo(prod);
+    }
+
+    @Test
     public void shouldFailWhenFetchingNonExistingProducts() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         assertNotFound(() -> ownerProductApi.getProductById(owner.getKey(), "bad product id"));
