@@ -134,6 +134,22 @@ public class ContentManagerTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testCreateContentInOrgUsingLongKey() {
+        Owner owner = this.createOwner("test-owner".repeat(25));
+        Content content = TestUtil.createContent("c1", "content-1")
+            .setNamespace(owner.getKey())
+            .setLabel("test-label")
+            .setType("test-test")
+            .setVendor("test-vendor");
+
+        assertNull(this.contentCurator.getContentById(owner.getKey(), content.getId()));
+
+        Content output = this.contentManager.createContent(owner, content);
+
+        assertEquals(output, this.contentCurator.getContentById(owner.getKey(), content.getId()));
+    }
+
+    @Test
     public void testUpdateContentNoChange() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Content content = TestUtil.createContent("c1", "content-1")

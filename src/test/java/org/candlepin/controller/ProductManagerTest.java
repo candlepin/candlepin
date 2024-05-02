@@ -97,6 +97,18 @@ public class ProductManagerTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testCreateProductInOrgUsingLongKey() {
+        Owner owner = this.createOwner("test_owner".repeat(25));
+        ProductInfo productInfo = TestUtil.createProductInfo("p1", "prod1");
+
+        assertNull(this.productCurator.getProductById(owner.getKey(), productInfo.getId()));
+
+        Product output = this.productManager.createProduct(owner, productInfo);
+
+        assertEquals(output, this.productCurator.getProductById(owner.getKey(), productInfo.getId()));
+    }
+
+    @Test
     public void testUpdateProductNoChange() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Product product = TestUtil.createProduct("p1", "prod1")

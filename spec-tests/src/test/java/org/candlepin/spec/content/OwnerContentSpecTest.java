@@ -147,6 +147,22 @@ class OwnerContentSpecTest {
             .isEqualTo(content);
     }
 
+    @Test
+    public void shouldAllowCreatingProductsInOrgsWithLongKeys() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random()
+            .key(StringUtil.random("test_org-", 245, StringUtil.CHARSET_NUMERIC_HEX)));
+
+        ContentDTO content = this.getFullyPopulatedContent();
+        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), content);
+
+        assertThat(created)
+            .isNotNull()
+            .usingRecursiveComparison()
+            .ignoringFields("uuid", "created", "updated")
+            .isEqualTo(content);
+    }
+
     private static Stream<Arguments> criticalContentStringFieldsAndValues() {
         Set<String> fields = Set.of("label", "name", "type", "vendor");
         List<String> values = Arrays.asList("", null);
