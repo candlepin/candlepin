@@ -617,6 +617,8 @@ public class OwnerResource implements OwnerApi {
             }
         }
 
+        // Adding some random change
+
         if (dto.getContentOverrides() != null) {
             if (dto.getContentOverrides().isEmpty()) {
                 entity.setContentOverrides(new HashSet<>());
