@@ -2,7 +2,7 @@
 name: Run Jira Check
 
 on:
-  pull_request:
+  pull_request_target:
   workflow_dispatch:
 
 # Cancel in-progress PR verification workflows. We only care about verifying the latest commit.
