@@ -3,7 +3,7 @@ artemis = "2.33.0"
 guice = "6.0.0"
 hibernate = "5.6.15.Final"
 hibernate-validator = "6.2.5.Final"
-jackson = "2.17.0"
+jackson = "2.17.1"
 jaxb = "4.0.5"
 junit = "5.10.2"
 okhttp3 = "4.12.0"
@@ -89,12 +89,12 @@ resteasy-atom = { module = "org.jboss.resteasy:resteasy-atom-provider", version.
 resteasy-guice = { module = "org.jboss.resteasy:resteasy-guice", version.ref = "resteasy" }
 resteasy-multipart = { module = "org.jboss.resteasy:resteasy-multipart-provider", version.ref = "resteasy" }
 resteasy-validator = { module = "org.jboss.resteasy:resteasy-validator-provider", version.ref = "resteasy" }
-rhino = { module = "org.mozilla:rhino", version = "1.7.14" }
+rhino = { module = "org.mozilla:rhino", version = "1.7.15" }
 slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-jcl = { module = "org.slf4j:jcl-over-slf4j", version.ref = "slf4j" }
 slf4j-log4j = { module = "org.slf4j:log4j-over-slf4j", version.ref = "slf4j" }
 smallrye-config = { module = "io.smallrye.config:smallrye-config", version = "3.8.1" }
-spotbugs = { module = "com.github.spotbugs:spotbugs-annotations", version = "4.8.4" }
+spotbugs = { module = "com.github.spotbugs:spotbugs-annotations", version = "4.8.5" }
 tomcat-annotations = { module = "org.apache.tomcat:tomcat-annotations-api", version = "10.1.23" }
 swagger = { module = "io.swagger:swagger-annotations", version = "1.6.14" }
 test-logger-plugin = { module = "com.adarshr:gradle-test-logger-plugin", version.ref = "test-logger" }
