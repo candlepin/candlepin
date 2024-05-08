@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.7
+Version: 4.4.8
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,34 @@ fi
 
 #raw
 %changelog
+* Wed May 08 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.8-1
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 24.0.3 to 24.0.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump info.picocli:picocli from 4.7.5 to 4.7.6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Updated jira_check.yml to run on pull_request_target
+  (joshmalbrecht@gmail.com)
+- Bump org.mozilla:rhino from 1.7.14 to 1.7.15
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.spotbugs:spotbugs-annotations from 4.8.4 to 4.8.5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson from 2.17.0 to 2.17.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-853: Fixed namespace column type for layered entities
+  (crog@redhat.com)
+- CANDLEPIN-446: Added PR commit validation for Jira Target Version field
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-847: Fixed intermittent failure in RefreshPoolsSpecTest
+  (sbakaj@redhat.com)
+- Bump commons-codec:commons-codec from 1.16.1 to 1.17.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump nebula.lint from 19.0.1 to 19.0.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.15.0 to 10.16.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-845: Added retry logic for database connection failures
+  (joshmalbrecht@gmail.com)
+
 * Fri Apr 26 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.7-1
 - CANDLEPIN-852: Reverted change to SubjectKeyIdentifierWriter interface
   (crog@redhat.com)
