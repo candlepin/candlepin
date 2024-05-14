@@ -23,8 +23,10 @@
 
 
     <changeSet id="20190927153020-1"  dbms="postgresql" author="sdhome">
+        <validCheckSum>7:12f032e843e38e5ee3a8ecfee0922f26</validCheckSum>
 
         <comment>Index consumer_fact_element_idx on cp_consumer_facts table for lower case of elements</comment>
+
         <createIndex indexName="consumer_fact_element_idx"
                      tableName="cp_consumer_facts"
                      unique="false">

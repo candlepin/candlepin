@@ -413,7 +413,7 @@
             -- Collect "active" global content
             INSERT INTO tmp_active_global_contents (uuid, cid, new_uuid, best)
                 WITH active_contents(uuid) AS (
-                    SELECT content_uuid AS uuid FROM cp2_owner_content
+                    SELECT cont.uuid FROM cp2_owner_content oc JOIN cp2_content cont ON cont.uuid = oc.content_uuid WHERE cont.locked != 0
                     UNION
                     SELECT pc.content_uuid AS uuid FROM cp2_product_content pc JOIN tmp_active_global_products agp ON agp.uuid = pc.product_uuid)
                 SELECT cont.uuid, cont.content_id, md5(concat('--global--', cont.content_id)) AS new_uuid, cont.uuid = best.uuid AS best_uuid
@@ -574,7 +574,7 @@
             -- Collect "active" custom content
             INSERT INTO tmp_active_custom_contents (owner_id, uuid, cid, best, new_uuid)
                 WITH active_contents(owner_id, uuid) AS (
-                    SELECT owner_id, content_uuid AS uuid FROM cp2_owner_content
+                    SELECT oc.owner_id, cont.uuid FROM cp2_owner_content oc JOIN cp2_content cont ON cont.uuid = oc.content_uuid WHERE cont.locked = 0
                     UNION
                     SELECT acp.owner_id, pc.content_uuid AS uuid FROM cp2_product_content pc JOIN tmp_active_custom_products acp ON acp.uuid = pc.product_uuid)
                 SELECT active.owner_id, cont.uuid, cont.content_id, cont.uuid = best.uuid AS best_uuid, md5(concat(active.owner_id, cont.content_id)) AS new_uuid
@@ -588,7 +588,7 @@
                         GROUP BY cont2.content_id) best ON best.content_id = cont.content_id;
 
 
-            -- Copy over global content
+            -- Copy over custom content
             INSERT INTO cp_contents (uuid, created, updated, namespace, content_id, content_url, gpg_url, label, metadata_expire, name, release_ver, required_tags, type, vendor, arches)
                 SELECT acc.new_uuid, old_cont.updated, now(), owner.account, old_cont.content_id, old_cont.contenturl, old_cont.gpgurl, old_cont.label, old_cont.metadataexpire, old_cont.name, old_cont.releasever, old_cont.requiredtags, old_cont.type, old_cont.vendor, old_cont.arches
                     FROM tmp_active_custom_contents acc
@@ -602,7 +602,7 @@
                 FROM tmp_active_custom_contents acc
                 JOIN cp2_content_modified_products old_cmp ON old_cmp.content_uuid = acc.uuid;
 
-            -- Copy global products
+            -- Copy custom products
             INSERT INTO cp_products (uuid, created, updated, namespace, product_id, name, multiplier, derived_product_uuid)
             SELECT acp.new_uuid, old_prod.updated, now(), owner.account, old_prod.product_id, old_prod.name, old_prod.multiplier, null
                 FROM tmp_active_custom_products acp
