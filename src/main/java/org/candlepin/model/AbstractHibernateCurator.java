@@ -466,8 +466,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * (for example), but still have their results filtered without one of the perms
      * hiding the results from the other.
      *
+     * @deprecated
+     *  This method relies upon Hibernate criteria, which has been removed from Hibernate 6
+     *
      * @return Criteria Final criteria query with all filters applied.
      */
+    @Deprecated(since = "4.2", forRemoval = true)
     protected Criteria createSecureCriteria() {
         return this.createSecureCriteria(null);
     }
@@ -478,11 +482,15 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * (for example), but still have their results filtered without one of the perms
      * hiding the results from the other.
      *
+     * @deprecated
+     *  This method relies upon Hibernate criteria, which has been removed from Hibernate 6
+     *
      * @param alias
      *  The alias to assign to the entity managed by the resultant Criteria.
      *
      * @return Criteria Final criteria query with all filters applied.
      */
+    @Deprecated(since = "4.2", forRemoval = true)
     protected Criteria createSecureCriteria(String alias) {
         return this.createSecureCriteria(this.entityType, alias);
     }
@@ -491,6 +499,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * Creates a "secure" criteria for the given entity class. The criteria object returned will
      * have zero or more restrictions applied to the entity class based on the current principal's
      * permissions.
+     *
+     * @deprecated
+     *  This method relies upon Hibernate criteria, which has been removed from Hibernate 6
      *
      * @param entityClass
      *  The class of entity to be retrieved and restricted by the generated criteria
@@ -501,6 +512,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return
      *  a new Criteria instance with any applicable entity restrictions
      */
+    @Deprecated(since = "4.2", forRemoval = true)
     protected Criteria createSecureCriteria(Class entityClass, String alias) {
         Criteria criteria = (alias != null && alias.length() > 0) ?
             this.currentSession().createCriteria(entityClass, alias) :
@@ -519,9 +531,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * Creates a detached criteria object to use as the basis of a permission-oriented entity
      * lookup query.
      *
+     * @deprecated
+     *  This method relies upon Hibernate criteria, which has been removed from Hibernate 6
+     *
      * @return
      *  a detached criteria object containing permission restrictions
      */
+    @Deprecated(since = "4.2", forRemoval = true)
     protected DetachedCriteria createSecureDetachedCriteria() {
         return this.createSecureDetachedCriteria(null);
     }
@@ -530,12 +546,16 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * Creates a detached criteria object to use as the basis of a permission-oriented entity
      * lookup query.
      *
+     * @deprecated
+     *  This method relies upon Hibernate criteria, which has been removed from Hibernate 6
+     *
      * @param alias
      *  The alias to use for the main entity, or null to omit an alias
      *
      * @return
      *  a detached criteria object containing permission restrictions
      */
+    @Deprecated(since = "4.2", forRemoval = true)
     protected DetachedCriteria createSecureDetachedCriteria(String alias) {
         return this.createSecureDetachedCriteria(this.entityType, null);
     }
@@ -543,6 +563,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     /**
      * Creates a detached criteria object to use as the basis of a permission-oriented entity
      * lookup query.
+     *
+     * @deprecated
+     *  This method relies upon Hibernate criteria, which has been removed from Hibernate 6
      *
      * @param entityClass
      *  The class of entity to be retrieved and restricted by the generated criteria
@@ -553,6 +576,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return
      *  a detached criteria object containing permission restrictions
      */
+    @Deprecated(since = "4.2", forRemoval = true)
     protected DetachedCriteria createSecureDetachedCriteria(Class entityClass, String alias) {
         DetachedCriteria criteria = (alias != null && !alias.equals("")) ?
             DetachedCriteria.forClass(entityClass, alias) :
@@ -571,6 +595,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * Builds the criteria restrictions for the given entity class. If the entity does not need any
      * restrictions or the current principal otherwise has full access, this method returns null.
      *
+     * @deprecated
+     *  This method relies upon Hibernate criteria, which has been removed from Hibernate 6
+     *
      * @param entityClass
      *  The entity class for which to build secure criteria restrictions
      *
@@ -578,6 +605,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      *  the criteria restrictions for the given entity class, or null if no restrictions are
      *  necessary.
      */
+    @Deprecated(since = "4.2", forRemoval = true)
     protected Criterion getSecureCriteriaRestrictions(Class entityClass) {
         Principal principal = this.getPrincipal();
         Criterion restrictions = null;
@@ -656,7 +684,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
             if (!predicates.isEmpty()) {
                 predicate = predicates.size() > 1 ?
-                    builder.or(predicates.toArray(new Predicate[predicates.size()])) :
+                    builder.or(predicates.toArray(new Predicate[0])) :
                     predicates.get(0);
             }
         }
