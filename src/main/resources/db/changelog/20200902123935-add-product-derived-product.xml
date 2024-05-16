@@ -8,6 +8,8 @@
 
     <changeSet id="20200902123935-1" author="crog">
         <validCheckSum>8:85948979429199b8006134f80140c0b9</validCheckSum>
+        <validCheckSum>7:582e5b2f50d59150fbd4d53c61149ef7</validCheckSum>
+
         <comment>
             Adds the derived_product_uuid column for moving dervied products from pool to product
         </comment>
