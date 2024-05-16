@@ -108,7 +108,7 @@ public class DistributorVersionResource implements DistributorVersionsApi {
             versions = curator.findByCapability(capability);
         }
         else {
-            versions = curator.findAll();
+            versions = curator.listAll();
         }
 
         return versions.stream().map(
@@ -117,7 +117,7 @@ public class DistributorVersionResource implements DistributorVersionsApi {
 
     @Override
     public void delete(String id) {
-        DistributorVersion dv = curator.findById(id);
+        DistributorVersion dv = curator.get(id);
         if (dv != null) {
             curator.delete(dv);
         }
@@ -153,7 +153,7 @@ public class DistributorVersionResource implements DistributorVersionsApi {
     }
 
     private DistributorVersion verifyAndLookupDistributorVersion(String id) {
-        DistributorVersion dv = curator.findById(id);
+        DistributorVersion dv = curator.get(id);
 
         if (dv == null) {
             throw new NotFoundException(i18n.tr("No such distributor version: {0}", id));

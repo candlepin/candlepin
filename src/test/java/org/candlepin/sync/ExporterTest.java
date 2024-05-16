@@ -491,7 +491,7 @@ public class ExporterTest {
         dv.setCapabilities(dvcSet);
         List<DistributorVersion> dvList = new ArrayList<>();
         dvList.add(dv);
-        when(dvc.findAll()).thenReturn(dvList);
+        when(dvc.listAll()).thenReturn(dvList);
 
         when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
 

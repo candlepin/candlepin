@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,12 +14,12 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.persistence.NoResultException;
 
 
 @Singleton
@@ -33,11 +33,20 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
 
     public ProductCertificate findForProduct(Product product) {
         log.debug("Finding cert for product: {}", product);
+        if (product == null || product.getUuid() == null || product.getUuid().isBlank()) {
+            return null;
+        }
 
-        return (ProductCertificate) currentSession()
-            .createCriteria(ProductCertificate.class)
-            .add(Restrictions.eq("product", product))
-            .uniqueResult();
+        String query = "SELECT pc FROM ProductCertificate pc WHERE pc.product.uuid = :uuid";
+
+        try {
+            return this.entityManager.get()
+                .createQuery(query, ProductCertificate.class)
+                .setParameter("uuid", product.getUuid())
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
-
 }
