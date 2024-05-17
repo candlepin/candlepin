@@ -23,7 +23,7 @@
 
 Name: candlepin
 Version: 4.3.13
-Release: 1%{?dist}
+Release: 2.HOTFIXRHBZ2280181%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -240,6 +240,9 @@ fi
 
 #raw
 %changelog
+* Fri May 17 2024 Nikos Moumoulidis <nmoumoul@redhat.com> 4.3.13-2.HOTFIXRHBZ2280181
+- 2280181: Remove XmlTransient tag from eventData (wpoteat@redhat.com)
+
 * Tue Apr 09 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.13-1
 - Add new translations using Weblate (noreply@weblate.org)
 - 2213261: Ensure pool lock order for activation keys (wpoteat@redhat.com)
