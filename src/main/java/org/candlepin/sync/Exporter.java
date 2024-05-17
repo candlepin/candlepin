@@ -548,7 +548,7 @@ public class Exporter {
     }
 
     private void exportDistributorVersions(File baseDir) throws IOException {
-        List<DistributorVersion> versions = distVerCurator.findAll();
+        List<DistributorVersion> versions = distVerCurator.listAll();
         if (versions == null || versions.isEmpty()) {
             return;
         }

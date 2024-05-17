@@ -1265,8 +1265,13 @@ public class ConsumerResource implements ConsumerApi {
             if ((existing.getCapabilities() == null || existing.getCapabilities().isEmpty()) &&
                 existing.getFact(Consumer.Facts.DISTRIBUTOR_VERSION) != null) {
 
-                Set<DistributorVersionCapability> capabilities = distributorVersionCurator
-                    .findCapabilitiesByDistVersion(existing.getFact(Consumer.Facts.DISTRIBUTOR_VERSION));
+                DistributorVersion distributorVersion = distributorVersionCurator
+                    .findByName(existing.getFact(Consumer.Facts.DISTRIBUTOR_VERSION));
+
+                Set<DistributorVersionCapability> capabilities = null;
+                if (distributorVersion != null) {
+                    capabilities = distributorVersion.getCapabilities();
+                }
 
                 this.populateCapabilities(existing, capabilities);
                 change = true;

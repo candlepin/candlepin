@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -17,7 +17,6 @@ package org.candlepin.model;
 import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +29,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 
 
@@ -43,12 +43,33 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<SC
         super(SCACertificate.class);
     }
 
+    /**
+     * Retrieves the {@link SCACertificate} for the provided consumer.
+     *
+     * @param consumer
+     *  the consumer to retrieve a SCA certificate for
+     *
+     * @return the {@link SCACertificate} for the provided consumer, or null if one does not exist
+     */
     @Transactional
-    public SCACertificate getForConsumer(Consumer c) {
-        log.debug("Retrieving content access certificate for consumer: {}", c.getId());
-        return (SCACertificate) currentSession().createCriteria(SCACertificate.class)
-            .add(Restrictions.eq("consumer", c))
-            .uniqueResult();
+    public SCACertificate getForConsumer(Consumer consumer) {
+        log.debug("Retrieving content access certificate for consumer: {}",
+            consumer == null ? "null" : consumer.getId());
+        if (consumer == null || consumer.getId() == null || consumer.getId().isBlank()) {
+            return null;
+        }
+
+        String query = "SELECT c FROM SCACertificate c WHERE c.consumer.id = :id";
+
+        try {
+            return this.entityManager.get()
+                .createQuery(query, SCACertificate.class)
+                .setParameter("id", consumer.getId())
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**
@@ -59,7 +80,7 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<SC
     @Transactional
     @SuppressWarnings("unchecked")
     public int deleteForOwner(Owner owner) {
-        if (owner == null || owner.getKey() == null || owner.getKey().isEmpty()) {
+        if (owner == null || owner.getKey() == null || owner.getKey().isBlank()) {
             return 0;
         }
         // So we must get ids for this owner, and then delete them
@@ -125,13 +146,11 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<SC
 
         int removed = 0;
         for (List<String> block : Iterables.partition(certIdsToDelete, getInBlockSize())) {
-            String param = block.toString();
             query2.setParameter("certsToDelete", block).executeUpdate();
             removed += query.setParameter("certsToDelete", block).executeUpdate();
         }
         return removed;
     }
-
 
     /**
      * Lists all expired content access certificates that are not revoked.

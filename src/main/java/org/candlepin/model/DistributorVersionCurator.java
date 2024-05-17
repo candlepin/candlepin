@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,13 +14,11 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.criterion.Restrictions;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import javax.inject.Singleton;
+import javax.persistence.NoResultException;
 
 /**
  * DistributorVersionCurator
@@ -33,66 +31,81 @@ public class DistributorVersionCurator
         super(DistributorVersion.class);
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Retrieves a {@link DistributorVersion} based on the provided name.
+     *
+     * @param name
+     *  the name of the {@link DistributorVersion} to retrieve
+     *
+     * @return the distributor version based on the provided name, or null if one does not exist
+     */
     public DistributorVersion findByName(String name) {
-        List<DistributorVersion> dvList = currentSession()
-            .createCriteria(DistributorVersion.class)
-            .add(Restrictions.eq("name", name)).list();
-        if (!dvList.isEmpty()) {
-            return dvList.get(0);
+        if (name == null || name.isBlank()) {
+            return null;
         }
-        return null;
+
+        String query = "SELECT d FROM DistributorVersion d WHERE d.name = :name";
+
+        try {
+            return this.entityManager.get()
+                .createQuery(query, DistributorVersion.class)
+                .setParameter("name", name)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Retrieves a list of {@link DistributorVersion}s that has a name that equals or has a substring of
+     * the provided name.
+     *
+     * @param name
+     *  the name of the {@link DistributorVersion}s to retrieve
+     *
+     * @return a list of distributor versions that has a name equal to or has a substring of the provided
+     *  name
+     */
     public List<DistributorVersion> findByNameSearch(String name) {
-        return currentSession()
-            .createCriteria(DistributorVersion.class)
-            .add(Restrictions.like("name", "%" + name + "%")).list();
+        if (name == null) {
+            return new ArrayList<>();
+        }
+
+        String query = "SELECT d FROM DistributorVersion d WHERE d.name LIKE :name";
+
+        return this.entityManager.get()
+            .createQuery(query, DistributorVersion.class)
+            .setParameter("name", "%" + name + "%")
+            .getResultList();
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Retrieves a list of {@link DistributorVersion} that has a {@link DistributorVersionCapability} with a
+     * name that equals the provided capability name.
+     *
+     * @param capability
+     *  the name of the {@link DistributorVersionCapability} to retrieve {@link DistributorVersion}s for
+     *
+     * @return a list of distributor versions that have a capability that matches the provided name
+     */
     public List<DistributorVersion> findByCapability(String capability) {
-        List<DistributorVersionCapability> caps = currentSession()
-            .createCriteria(DistributorVersionCapability.class)
-            .add(Restrictions.eq("name", capability)).list();
-
-        List<DistributorVersion> distVers = new ArrayList<>();
-
-        for (DistributorVersionCapability dvc : caps) {
-            distVers.add(dvc.getDistributorVersion());
+        if (capability == null || capability.isBlank()) {
+            return new ArrayList<>();
         }
 
-        return distVers;
-    }
+        String query = "SELECT d FROM DistributorVersionCapability d WHERE d.name = :name";
 
-    @SuppressWarnings("unchecked")
-    public DistributorVersion findById(String id) {
-        List<DistributorVersion> dvList = currentSession()
-            .createCriteria(DistributorVersion.class)
-            .add(Restrictions.eq("id", id)).list();
-        if (!dvList.isEmpty()) {
-            return dvList.get(0);
+        List<DistributorVersionCapability> distributorVersionCapabilities = this.entityManager.get()
+            .createQuery(query, DistributorVersionCapability.class)
+            .setParameter("name", capability)
+            .getResultList();
+
+        List<DistributorVersion> result = new ArrayList<>();
+        for (DistributorVersionCapability dvc : distributorVersionCapabilities) {
+            result.add(dvc.getDistributorVersion());
         }
-        return null;
+
+        return result;
     }
-
-    @SuppressWarnings("unchecked")
-    public List<DistributorVersion> findAll() {
-        return (List<DistributorVersion>) currentSession()
-            .createCriteria(DistributorVersion.class).list();
-    }
-
-    @SuppressWarnings("unchecked")
-    public Set<DistributorVersionCapability> findCapabilitiesByDistVersion(String distVersion) {
-        List<DistributorVersion> dvList = currentSession()
-            .createCriteria(DistributorVersion.class)
-            .add(Restrictions.eq("name", distVersion)).list();
-        if (!dvList.isEmpty()) {
-            return ((DistributorVersion) dvList.get(0)).getCapabilities();
-        }
-        return null;
-    }
-
-
 }
