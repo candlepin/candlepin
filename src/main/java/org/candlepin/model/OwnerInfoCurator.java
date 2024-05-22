@@ -18,62 +18,149 @@ import org.candlepin.dto.api.server.v1.OwnerInfo;
 
 import com.google.inject.Provider;
 
-import org.hibernate.Criteria;
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Disjunction;
-import org.hibernate.criterion.LikeExpression;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Property;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.criterion.Subqueries;
-import org.hibernate.type.StringType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.MapJoin;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
+
+
 
 /**
  * OwnerInfoCurator
  */
 @Singleton
 public class OwnerInfoCurator {
-    private static Logger log = LoggerFactory.getLogger(OwnerInfoCurator.class);
+    private static final Pattern CONSUMER_TYPE_SPLITTER = Pattern.compile("\\s*,\\s*");
 
-    private Provider<EntityManager> entityManager;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private ConsumerCurator consumerCurator;
-    private PoolCurator poolCurator;
+    private final Provider<EntityManager> entityManager;
+    private final ConsumerTypeCurator consumerTypeCurator;
+    private final ConsumerCurator consumerCurator;
+    private final PoolCurator poolCurator;
 
     @Inject
-    public OwnerInfoCurator(Provider<EntityManager> entityManager,
-        ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator,
-        PoolCurator poolCurator) {
-        this.entityManager = entityManager;
-        this.consumerCurator = consumerCurator;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.poolCurator = poolCurator;
+    public OwnerInfoCurator(Provider<EntityManager> entityManager, ConsumerCurator consumerCurator,
+        ConsumerTypeCurator consumerTypeCurator, PoolCurator poolCurator) {
+
+        this.entityManager = Objects.requireNonNull(entityManager);
+        this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
+        this.poolCurator = Objects.requireNonNull(poolCurator);
+    }
+
+    /**
+     * Builds a JPA predicate for performing an attribute equality check using the given builder,
+     * query, and root. Note that the predicate is built using a correlated subquery matching the
+     * provided pool root.
+     * <p></p>
+     * The attribute name is checked against the pool's attributes, and then against the pool's
+     * product's attributes if, and only if, the pool itself does not define the attribute. The
+     * check is performed using a standard equality operation which uses the underlying character
+     * collation to determine case-sensitivity.
+     *
+     * @param builder
+     *  the criteria builder to use for building various JPA criteria objects
+     *
+     * @param query
+     *  the base query which needs to check for attribute equality
+     *
+     * @param root
+     *  the query root which will be correlated to the subqueries built by this subquery; must be
+     *  a pool root
+     *
+     * @param attribute
+     *  the name of the attribute to match
+     *
+     * @param valuePredicateFunc
+     *  a function which receives an expression representing the value for the attribute for each
+     *  matching pool, and returns a predicate for determining if the value matches
+     *
+     * @return
+     *  a predicate for performing attribute equality checks for pools
+     */
+    private Predicate buildPoolAttributePredicate(CriteriaBuilder builder, CriteriaQuery<?> query,
+        Root<Pool> root, String attribute, Function<Expression<String>, Predicate> valuePredicateFunc) {
+
+        Subquery<Pool> subquery = query.subquery(Pool.class);
+        Root<Pool> correlation = subquery.correlate(root);
+
+        Root<Pool> subqueryRoot = subquery.from(Pool.class);
+        Join<Pool, Product> prodJoin = subqueryRoot.join(Pool_.product);
+        MapJoin<Pool, String, String> poolAttr = subqueryRoot.join(Pool_.attributes, JoinType.LEFT);
+        poolAttr.on(builder.equal(poolAttr.key(), attribute));
+        MapJoin<Product, String, String> prodAttr = prodJoin.join(Product_.attributes, JoinType.LEFT);
+        prodAttr.on(builder.equal(prodAttr.key(), attribute));
+
+        subquery.select(subqueryRoot)
+            .where(builder.equal(subqueryRoot, correlation),
+                builder.or(builder.isNotNull(poolAttr.value()), builder.isNotNull(prodAttr.value())),
+                valuePredicateFunc.apply(builder.coalesce(poolAttr.value(), prodAttr.value())));
+
+        return builder.exists(subquery);
+    }
+
+    /**
+     * Fetches a list of all known values for pool attributes of pools in the specified organization
+     * that are active on the given date. This lookup will fall back to product attributes on the
+     * pool's product if, and only if, the product defines the attribute but the pool does not.
+     *
+     * @param owner
+     *  the organization in which to find pool attribute values
+     *
+     * @param date
+     *  the active-on date to use to filter pools; pools with a start-end date range outside of this
+     *  date will not be evaluated
+     *
+     * @param attribute
+     *  the name of the attribute for which to fetch values
+     *
+     * @return
+     *  a list of known pool attribute values for pools in the organization that are active on the
+     *  given date
+     */
+    private List<String> getPoolAttributeValues(Owner owner, Date date, String attribute) {
+        // Select product families from every active pool, first pulling from pool attributes and
+        // then from product attributes iff no product family is defined on the pool.
+
+        String sql = "SELECT DISTINCT coalesce(poolattr.value, prodattr.value) " +
+            "FROM cp_pool pool " +
+            "LEFT JOIN cp_pool_attribute poolattr ON poolattr.pool_id = pool.id " +
+            "    AND poolattr.name = :attrib " +
+            "LEFT JOIN cp_product_attributes prodattr ON prodattr.product_uuid = pool.product_uuid " +
+            "    AND prodattr.name = :attrib " +
+            "WHERE pool.owner_id = :owner_id " +
+            "  AND pool.startdate < :date AND :date < pool.enddate " +
+            "  AND (poolattr.name IS NOT NULL OR prodattr.name IS NOT NULL) ";
+
+        return this.entityManager.get()
+            .createNativeQuery(sql)
+            .setParameter("owner_id", owner != null ? owner.getId() : null)
+            .setParameter("date", date)
+            .setParameter("attrib", attribute)
+            .getResultList();
     }
 
     public OwnerInfo getByOwner(Owner owner) {
         OwnerInfoBuilder info = new OwnerInfoBuilder();
         Date now = new Date();
-
-        // TODO:
-        // Make sure this doesn't choke on MySQL, since we're doing queries with the cursor open.
 
         List<ConsumerType> types = consumerTypeCurator.listAll();
         HashMap<String, ConsumerType> typeHash = new HashMap<>();
@@ -98,7 +185,7 @@ public class OwnerInfoCurator {
         int activePools = getActivePoolCount(owner, now);
         info.addDefaultEnabledConsumerTypeCount(activePools);
 
-        Collection<String> families = getProductFamilies(owner, now);
+        Collection<String> families = this.getPoolAttributeValues(owner, now, Pool.Attributes.PRODUCT_FAMILY);
 
         for (String family : families) {
             int virtualCount = getProductFamilyCount(owner, now, family, true);
@@ -113,239 +200,198 @@ public class OwnerInfoCurator {
             totalEntitlements - virtTotalEntitlements,
             virtTotalEntitlements);
 
-        setConsumerGuestCounts(owner, info);
+        this.setVirtConsumerCounts(owner, info);
         setConsumerCountsByComplianceStatus(owner, info);
 
         return info.build();
     }
 
-    @SuppressWarnings("unchecked")
-    private void setConsumerGuestCounts(Owner owner, OwnerInfoBuilder info) {
-        Criteria cr = consumerCurator.createSecureCriteria()
-            .createAlias("facts", "f")
-            .add(Restrictions.eq("ownerId", owner.getId()))
-            .add(Restrictions.ilike("f.indices", "virt.is_guest"))
-            .add(Restrictions.ilike("f.elements", "true"))
-            .setProjection(Projections.count("id"));
+    /**
+     * Fetches the count of all known consumers for a given org. If the organization does not exist,
+     * or does not have any consumers, this method returns 0.
+     *
+     * @param owner
+     *  the organization in which to count consumers
+     *
+     * @return
+     *  the number of consumers in the organization, or zero if the organization does not exist or
+     *  does not have any consumers
+     */
+    private int getConsumerCount(Owner owner) {
+        EntityManager em = this.entityManager.get();
+        CriteriaBuilder builder = em.getCriteriaBuilder();
 
-        int guestCount = ((Long) cr.uniqueResult()).intValue();
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<Consumer> root = query.from(Consumer.class);
 
-        Criteria totalConsumersCriteria = consumerCurator.createSecureCriteria()
-            .add(Restrictions.eq("ownerId", owner.getId()))
-            .setProjection(Projections.count("id"));
+        List<Predicate> predicates = new ArrayList<>();
 
-        int totalConsumers = ((Long) totalConsumersCriteria.uniqueResult()).intValue();
-        int physicalCount = totalConsumers - guestCount;
+        Predicate securityPredicate = this.poolCurator.getSecurityPredicate(Consumer.class, builder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        predicates.add(builder.equal(root.get(Consumer_.owner), owner));
+
+        query.select(builder.count(root.get(Consumer_.id)))
+            .where(predicates.toArray(new Predicate[0]));
+
+        return em.createQuery(query)
+            .getSingleResult()
+            .intValue();
+    }
+
+    /**
+     * Counts the number of guest consumers in the given organization, where a guest is defined as a
+     * consumer that has the "virt.is_guest" fact set to true. Note that this check is a case
+     * insensitive check regardless of character collation. If the organization does not exist, or
+     * does not have any consumers, this method returns 0.
+     *
+     * @param owner
+     *  the organization in which to count guest consumers
+     *
+     * @return
+     *  the number of guest consumers in the organization, or zero if the organization does not
+     *  exist or does not have any guest consumers
+     */
+    private int getGuestConsumerCount(Owner owner) {
+        EntityManager em = this.entityManager.get();
+        CriteriaBuilder builder = em.getCriteriaBuilder();
+
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<Consumer> root = query.from(Consumer.class);
+        MapJoin<Consumer, String, String> facts = root.join(Consumer_.facts);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        Predicate securityPredicate = this.poolCurator.getSecurityPredicate(Consumer.class, builder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        predicates.add(builder.equal(root.get(Consumer_.owner), owner));
+        predicates.add(builder.equal(builder.lower(facts.key()), Consumer.Facts.VIRT_IS_GUEST.toLowerCase()));
+        predicates.add(builder.equal(builder.lower(facts.value()), "true"));
+
+        query.select(builder.countDistinct(root.get(Consumer_.id)))
+            .where(predicates.toArray(new Predicate[0]));
+
+        return em.createQuery(query)
+            .getSingleResult()
+            .intValue();
+    }
+
+    private void setVirtConsumerCounts(Owner owner, OwnerInfoBuilder info) {
+        int consumerCount = this.getConsumerCount(owner);
+        int guestCount = this.getGuestConsumerCount(owner);
+
+        int physicalCount = consumerCount - guestCount;
 
         info.setGuestCount(guestCount);
         info.setPhysicalCount(physicalCount);
     }
 
-    @SuppressWarnings("checkstyle:indentation")
     private void setConsumerCountsByComplianceStatus(Owner owner, OwnerInfoBuilder info) {
-        Criteria countCriteria = consumerCurator.createSecureCriteria()
-            .add(Restrictions.eq("ownerId", owner.getId()))
-            .add(Restrictions.isNotNull("entitlementStatus"))
-            .setProjection(Projections.projectionList()
-                .add(Projections.groupProperty("entitlementStatus"))
-                .add(Projections.count("id")));
+        EntityManager em = this.entityManager.get();
+        CriteriaBuilder builder = em.getCriteriaBuilder();
 
-        List<Object[]> results = countCriteria.list();
-        for (Object[] row : results) {
-            String status = (String) row[0];
-            Integer count = ((Long) row[1]).intValue();
-            info.setConsumerCountByComplianceStatus(status, count);
+        CriteriaQuery<Tuple> query = builder.createTupleQuery();
+        Root<Consumer> root = query.from(Consumer.class);
+        Path<String> entitlementStatus = root.get(Consumer_.entitlementStatus);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        Predicate securityPredicate = this.poolCurator.getSecurityPredicate(Consumer.class, builder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
         }
+
+        predicates.add(builder.equal(root.get(Consumer_.owner), owner));
+        predicates.add(builder.isNotNull(entitlementStatus));
+
+        query.multiselect(entitlementStatus, builder.count(root.get(Consumer_.id)))
+            .groupBy(entitlementStatus)
+            .where(predicates.toArray(new Predicate[0]));
+
+        em.createQuery(query)
+            .getResultList()
+            .forEach(tuple -> info.setConsumerCountByComplianceStatus(tuple.get(0, String.class),
+                tuple.get(1, Long.class).intValue()));
     }
 
     private int getActivePoolCount(Owner owner, Date date) {
-        Criteria activePoolCountCrit = poolCurator.createSecureCriteria()
-            .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.le("startDate", date))
-            .add(Restrictions.ge("endDate", date))
-            .setProjection(Projections.count("id"));
-        return ((Long) activePoolCountCrit.uniqueResult()).intValue();
+        EntityManager em = this.entityManager.get();
+        CriteriaBuilder builder = em.getCriteriaBuilder();
+
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<Pool> root = query.from(Pool.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        Predicate securityPredicate = this.poolCurator.getSecurityPredicate(Pool.class, builder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        predicates.add(builder.equal(root.get(Pool_.owner), owner));
+        predicates.add(builder.lessThan(root.get(Pool_.startDate), date));
+        predicates.add(builder.greaterThan(root.get(Pool_.endDate), date));
+
+        query.select(builder.count(root.get(Pool_.id)))
+            .where(predicates.toArray(new Predicate[0]));
+
+        return em.createQuery(query)
+            .getSingleResult()
+            .intValue();
     }
 
-    @SuppressWarnings("checkstyle:indentation")
     private int getRequiresConsumerTypeCount(ConsumerType type, Owner owner, Date date) {
-        Criteria criteria = poolCurator.createSecureCriteria("Pool")
-            .createAlias("product", "Product")
-            .setProjection(Projections.countDistinct("Pool.id"));
+        EntityManager em = this.entityManager.get();
+        CriteriaBuilder builder = em.getCriteriaBuilder();
 
-        criteria.add(Restrictions.eq("owner", owner))
-            .add(Restrictions.le("startDate", date))
-            .add(Restrictions.ge("endDate", date))
-            .add(this.addAttributeFilterSubquery(Pool.Attributes.REQUIRES_CONSUMER_TYPE, Arrays.asList(
-                type.getLabel()
-            )));
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<Pool> root = query.from(Pool.class);
 
-        return ((Long) criteria.uniqueResult()).intValue();
+        List<Predicate> predicates = new ArrayList<>();
+
+        Predicate securityPredicate = this.poolCurator.getSecurityPredicate(Pool.class, builder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        predicates.add(builder.equal(root.get(Pool_.owner), owner));
+        predicates.add(builder.lessThan(root.get(Pool_.startDate), date));
+        predicates.add(builder.greaterThan(root.get(Pool_.endDate), date));
+        predicates.add(this.buildPoolAttributePredicate(builder, query, root,
+            Pool.Attributes.REQUIRES_CONSUMER_TYPE, attr -> builder.equal(attr, type.getLabel())));
+
+        query.select(builder.countDistinct(root.get(Pool_.id)))
+            .where(predicates.toArray(new Predicate[0]));
+
+        return em.createQuery(query)
+            .getSingleResult()
+            .intValue();
     }
 
-    @SuppressWarnings("checkstyle:indentation")
     private int getEnabledConsumerTypeCount(ConsumerType type, Owner owner, Date date) {
-        Criteria criteria = poolCurator.createSecureCriteria("Pool")
-            .createAlias("product", "Product")
-            .setProjection(Projections.countDistinct("Pool.id"));
+        // We could attempt to do this on the DB, but using JPA restricts so much functionality,
+        // it's far easier to just fetch the attributes and count the pools locally. Probably
+        // faster, too.
 
-        criteria.add(Restrictions.eq("owner", owner))
-            .add(Restrictions.le("startDate", date))
-            .add(Restrictions.ge("endDate", date))
-            .add(this.addAttributeFilterSubquery(Pool.Attributes.ENABLED_CONSUMER_TYPES, Arrays.asList(
-                type.getLabel() + ",*", "*," + type.getLabel(), "*," + type.getLabel() + ",*", type.getLabel()
-            )));
+        int count = 0;
 
-        return ((Long) criteria.uniqueResult()).intValue();
-    }
+        List<String> enabledConsumerTypes = this.getPoolAttributeValues(owner, date,
+            Pool.Attributes.ENABLED_CONSUMER_TYPES);
 
-    @SuppressWarnings("checkstyle:indentation")
-    private Criterion addAttributeFilterSubquery(String key, Collection<String> values) {
-        key = this.sanitizeMatchesFilter(key);
-
-        // Find all pools which have the given attribute (and values) on a product, unless the pool
-        // defines that same attribute
-        DetachedCriteria poolAttrSubquery = DetachedCriteria.forClass(Pool.class, "PoolI")
-            .createAlias("PoolI.attributes", "attrib")
-            .setProjection(Projections.id())
-            .add(Property.forName("Pool.id").eqProperty("PoolI.id"))
-            .add(new CPLikeExpression("attrib.indices", key, '!', false));
-
-        // Impl note:
-        // The SQL restriction below uses some Hibernate magic value to get the pool ID from the
-        // outer-most query. We can't use {alias} here, since we're basing the subquery on Product
-        // instead of Pool to save ourselves an unnecessary join. Similarly, we use an SQL
-        // restriction here because we can query the information we need, hitting only one table
-        // with direct SQL, whereas the matching criteria query would end up requiring a minimum of
-        // one join to get from pool to pool attributes.
-        DetachedCriteria prodAttrSubquery = DetachedCriteria.forClass(Product.class, "ProdI")
-            .createAlias("ProdI.attributes", "attrib")
-            .setProjection(Projections.id())
-            .add(Property.forName("Product.uuid").eqProperty("ProdI.uuid"))
-            .add(new CPLikeExpression("attrib.indices", key, '!', false))
-            .add(Restrictions.sqlRestriction(
-                "NOT EXISTS (SELECT poolattr.pool_id FROM cp_pool_attribute poolattr " +
-                "WHERE poolattr.pool_id = this_.id AND LOWER(poolattr.name) LIKE LOWER(?) ESCAPE '!')",
-                key, StringType.INSTANCE
-            ));
-
-        if (values != null && !values.isEmpty()) {
-            Disjunction poolAttrValueDisjunction = Restrictions.disjunction();
-            Disjunction prodAttrValueDisjunction = Restrictions.disjunction();
-
-            for (String attrValue : values) {
-                if (attrValue == null || attrValue.isEmpty()) {
-                    poolAttrValueDisjunction.add(Restrictions.isNull("attrib.elements"))
-                        .add(Restrictions.eq("attrib.elements", ""));
-
-                    prodAttrValueDisjunction.add(Restrictions.isNull("attrib.elements"))
-                        .add(Restrictions.eq("attrib.elements", ""));
-                }
-                else {
-                    attrValue = this.sanitizeMatchesFilter(attrValue);
-                    poolAttrValueDisjunction.add(
-                        new CPLikeExpression("attrib.elements", attrValue, '!', true));
-                    prodAttrValueDisjunction.add(
-                        new CPLikeExpression("attrib.elements", attrValue, '!', true));
+        for (String row : enabledConsumerTypes) {
+            for (String label : CONSUMER_TYPE_SPLITTER.split(row)) {
+                if (label.equalsIgnoreCase(type.getLabel())) {
+                    ++count;
                 }
             }
-
-            poolAttrSubquery.add(poolAttrValueDisjunction);
-            prodAttrSubquery.add(prodAttrValueDisjunction);
         }
 
-        return Restrictions.or(
-            Subqueries.exists(poolAttrSubquery),
-            Subqueries.exists(prodAttrSubquery)
-        );
-    }
-
-    private String sanitizeMatchesFilter(String matches) {
-        StringBuilder output = new StringBuilder();
-        boolean escaped = false;
-
-        for (int index = 0; index < matches.length(); ++index) {
-            char c = matches.charAt(index);
-
-            switch (c) {
-                case '!':
-                case '_':
-                case '%':
-                    output.append('!').append(c);
-                    break;
-
-                case '\\':
-                    if (escaped) {
-                        output.append(c);
-                    }
-
-                    escaped = !escaped;
-                    break;
-
-                case '*':
-                case '?':
-                    if (!escaped) {
-                        output.append(c == '*' ? '%' : '_');
-                        break;
-                    }
-
-                default:
-                    output.append(c);
-                    escaped = false;
-            }
-        }
-
-        return output.toString();
-    }
-
-    // TODO: Move this to the CPRestrictions class (as a pair of .like and .ilike methods) once
-    // this branch and the branch that contain it are merged together.
-    private static class CPLikeExpression extends LikeExpression {
-        public CPLikeExpression(String property, String value, char escape, boolean ignoreCase) {
-            super(property, value, escape, ignoreCase);
-        }
-    }
-
-    private Collection<String> getProductFamilies(Owner owner, Date date) {
-        Set<String> families = new HashSet<>();
-
-        String queryStr = "select distinct value(attr) from Pool p " +
-            "join p.attributes as attr " +
-            "where p.owner = :owner " +
-            "and p.startDate < :date and p.endDate > :date " +
-            "and key(attr) = :attribute";
-
-        Query query = currentSession().createQuery(queryStr)
-            .setEntity("owner", owner)
-            .setParameter("date", date)
-            .setParameter("attribute", Pool.Attributes.PRODUCT_FAMILY);
-
-        Iterator iter = query.iterate();
-        while (iter.hasNext()) {
-            String family = (String) iter.next();
-            families.add(family);
-        }
-
-        queryStr = "select distinct value(prod) from Pool p " +
-            "join p.product.attributes as prod " +
-            "where p.owner = :owner " +
-            "and p.startDate < :date and p.endDate > :date " +
-            "and key(prod) = :attribute " +
-            "and p not in (SELECT DISTINCT p2 FROM Pool p2 JOIN p2.attributes AS attr2 " +
-            "    WHERE key(attr2) = :attribute)";
-
-        query = currentSession().createQuery(queryStr)
-            .setEntity("owner", owner)
-            .setParameter("date", date)
-            .setParameter("attribute", Pool.Attributes.PRODUCT_FAMILY);
-
-        iter = query.iterate();
-        while (iter.hasNext()) {
-            String family = (String) iter.next();
-            families.add(family);
-        }
-
-        return families;
+        return count;
     }
 
     /*
@@ -354,33 +400,80 @@ public class OwnerInfoCurator {
      * virt=true from that.
      *
      * use family = null to get counts for all pools.
+     *
+     * At the time of writing, the current JPA criteria query resolves to the following SQL:
+     *
+     * select coalesce(sum(entitlemen1_.quantity), 0) as col_0_0_
+     *   from cp_pool pool0_
+     *   inner join cp_entitlement entitlemen1_ on pool0_.id=entitlemen1_.pool_id
+     *   where pool0_.owner_id=?
+     *     and pool0_.startDate<? and pool0_.endDate>?
+     *     -- product family check
+     *     and (exists (<SQ1>))
+     *     -- virt attribute check
+     *     and (exists (<SQ2>))
+     *
+     * SQ1 (product family check):
+     * select pool2_.id
+     *   from cp_pool pool2_
+     *   inner join cp_products product3_ on pool2_.product_uuid=product3_.uuid
+     *   left outer join cp_product_attributes attributes4_ on product3_.uuid=attributes4_.product_uuid
+     *     and (attributes4_.name=?)
+     *   left outer join cp_pool_attribute attributes5_ on pool2_.id=attributes5_.pool_id
+     *     and (attributes5_.name=?)
+     *   where pool2_.id=pool0_.id
+     *     and (attributes5_.value is not null or attributes4_.value is not null)
+     *     and coalesce(attributes5_.value, attributes4_.value)=?)
+     *
+     * SQ2 (virt attribute check):
+     * select pool6_.id
+     *   from cp_pool pool6_
+     *   inner join cp_products product7_ on pool6_.product_uuid=product7_.uuid
+     *   left outer join cp_product_attributes attributes8_ on product7_.uuid=attributes8_.product_uuid
+     *     and (attributes8_.name=?)
+     *   left outer join cp_pool_attribute attributes9_ on pool6_.id=attributes9_.pool_id
+     *     and (attributes9_.name=?)
+     *   where pool6_.id=pool0_.id
+     *     and (attributes9_.value is not null or attributes8_.value is not null)
+     *     and coalesce(attributes9_.value, attributes8_.value)=?)
+     *
+     * If either family is null or virt is false, the corresponding subquery is not present in the
+     * generated SQL.
      */
     private int getProductFamilyCount(Owner owner, Date date, String family, boolean virt) {
-        Criteria criteria = poolCurator.createSecureCriteria("Pool")
-            .createAlias("entitlements", "Ent")
-            .createAlias("product", "Product")
-            .setProjection(Projections.sum("Ent.quantity"));
+        EntityManager em = this.entityManager.get();
+        CriteriaBuilder builder = em.getCriteriaBuilder();
 
-        criteria.add(Restrictions.eq("owner", owner))
-            .add(Restrictions.le("startDate", date))
-            .add(Restrictions.ge("endDate", date));
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<Pool> root = query.from(Pool.class);
+        Join<Pool, Entitlement> entJoin = root.join(Pool_.entitlements);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        Predicate securityPredicate = this.poolCurator.getSecurityPredicate(Pool.class, builder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        predicates.add(builder.equal(root.get(Pool_.owner), owner));
+        predicates.add(builder.lessThan(root.get(Pool_.startDate), date));
+        predicates.add(builder.greaterThan(root.get(Pool_.endDate), date));
 
         if (family != null) {
-            criteria.add(this.addAttributeFilterSubquery(
-                Pool.Attributes.PRODUCT_FAMILY, Arrays.asList(family)
-            ));
+            predicates.add(this.buildPoolAttributePredicate(builder, query, root,
+                Pool.Attributes.PRODUCT_FAMILY, attr -> builder.equal(attr, family)));
         }
 
         if (virt) {
-            criteria.add(this.addAttributeFilterSubquery(Pool.Attributes.VIRT_ONLY, Arrays.asList("true")));
+            predicates.add(this.buildPoolAttributePredicate(builder, query, root,
+                Pool.Attributes.VIRT_ONLY, attr -> builder.equal(attr, "true")));
         }
 
-        Long res = (Long) criteria.uniqueResult();
-        return res != null ? res.intValue() : 0;
-    }
+        query.select(builder.coalesce(builder.sumAsLong(entJoin.get(Entitlement_.quantity)), 0L))
+            .where(predicates.toArray(new Predicate[0]));
 
-    protected Session currentSession() {
-        Session sess = (Session) entityManager.get().getDelegate();
-        return sess;
+        return em.createQuery(query)
+            .getSingleResult()
+            .intValue();
     }
 }
