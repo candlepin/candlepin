@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -264,6 +264,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             null, owner.getId(), (Collection<String>) null, null, activeDate, filters,
             req, false, false, false, null);
         List<Pool> results = page.getPageData();
+
         assertEquals(1, results.size());
         assertEquals(pool2.getId(), results.get(0).getId());
     }
@@ -436,8 +437,27 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(pool, results.get(0));
     }
 
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testListEntitledConsumerUuidsWithInvalidPoolId(String poolId) {
+        List<String> actual = poolCurator.listEntitledConsumerUuids(poolId);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
     @Test
-    public void testFetchEntitledConsumerUuids() {
+    public void testListEntitledConsumerUuidsWithNoConsumers() {
+        List<String> actual = poolCurator.listEntitledConsumerUuids(pool.getId());
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testListEntitledConsumerUuids() {
         Consumer c1 = createMockConsumer(owner, false);
         Entitlement e1 = new Entitlement(pool, c1, owner, 1);
         String id1 = Util.generateDbUUID();
@@ -660,7 +680,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testgetBySubscriptionIds() {
+    public void testGetBySubscriptionIds() {
         Product product = new Product("someProduct", "An Extremely Great Product", 10L);
         product = this.createProduct(product);
 
@@ -838,8 +858,28 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testLookupOverconsumedBySubscriptionId() {
+    public void testGetBySubscriptionIdWithNullOwner() {
+        Owner nullOwner = null;
 
+        List<Pool> actual = poolCurator.getBySubscriptionId(nullOwner, TestUtil.randomString());
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testGetBySubscriptionIdWithInvalidSubId(String id) {
+        List<Pool> actual = poolCurator.getBySubscriptionId(owner, id);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testLookupOverconsumedBySubscriptionId() {
         Pool pool = createPool(owner, product, 1L,
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
@@ -1705,75 +1745,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetPoolsOrderedByProductNameAscending() {
-        Owner owner1 = this.createOwner();
-
-        Pool p1 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p1", "xyz"))
-            .setSourceSubscription(new SourceSubscription("subscriptionId-phil", PRIMARY_POOL_SUB_KEY));
-
-        Pool p2 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p2", "abc"))
-            .setSourceSubscription(new SourceSubscription("subscriptionId-ned", "primary1"));
-
-        Pool p3 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p3", "lmn"))
-            .setSourceSubscription(new SourceSubscription("subscriptionId-ned1", "primary11"));
-
-        this.poolCurator.create(p3);
-        this.poolCurator.create(p2);
-        this.poolCurator.create(p1);
-
-        PageRequest req = new PageRequest();
-
-        req.setOrder(PageRequest.Order.ASCENDING);
-        req.setSortBy("Product.name");
-        Date activeOn = new Date();
-
-        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(null, null, owner1.getId(),
-            null, null, activeOn, false, null, req, false, false, null);
-
-        List<Pool> pools = page.getPageData();
-        List<Pool> results = new ArrayList<>();
-        results.add(p2);
-        results.add(p3);
-        results.add(p1);
-        assertEquals(results, pools);
-
-    }
-
-    @Test
-    public void testGetPoolsOrderedByProductNameDescending() {
-        // Checking for Descending
-        Owner owner1 = this.createOwner();
-        this.ownerCurator.create(owner1);
-
-        Pool p1 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p1", "xyz"));
-        p1.setSourceSubscription(new SourceSubscription("subscriptionId-phil", PRIMARY_POOL_SUB_KEY));
-        Pool p2 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p2", "abc"));
-        p2.setSourceSubscription(new SourceSubscription("subscriptionId-ned", "primary1"));
-        Pool p3 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p3", "lmn"));
-        p3.setSourceSubscription(new SourceSubscription("subscriptionId-ned1", "primary11"));
-        this.poolCurator.create(p3);
-        this.poolCurator.create(p1);
-        this.poolCurator.create(p2);
-        PageRequest req1 = new PageRequest();
-        req1.setSortBy("Product.name");
-        req1.setOrder(PageRequest.Order.DESCENDING);
-
-        Date activeOn1 = new Date();
-
-        Page<List<Pool>> page1 = poolManager.listAvailableEntitlementPools(null, null, owner1.getId(),
-            null, null, activeOn1, false, null, req1, false, false, null);
-
-        List<Pool> pools1 = page1.getPageData();
-
-        List<Pool> results1 = new ArrayList<>();
-        results1.add(p1);
-        results1.add(p3);
-        results1.add(p2);
-
-        assertEquals(results1, pools1);
-    }
-
-    @Test
     public void testGetPoolBySubscriptionId() {
         Owner owner1 = this.createOwner();
         this.ownerCurator.create(owner1);
@@ -1790,6 +1761,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Page<List<Pool>> result = this.poolCurator.listAvailableEntitlementPools(null, owner1.getId(),
             (Collection<String>) null, "subscriptionId-phil", new Date(), null, null, false,
             false, false, null);
+        assertEquals(1, result.getPageData().size());
         assertEquals("subscriptionId-phil", result.getPageData().get(0).getSubscriptionId());
     }
 

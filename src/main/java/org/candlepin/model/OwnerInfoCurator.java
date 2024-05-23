@@ -96,7 +96,7 @@ public class OwnerInfoCurator {
      * @return
      *  a predicate for performing attribute equality checks for pools
      */
-    private Predicate buildPoolAttributePredicate(CriteriaBuilder builder, CriteriaQuery<?> query,
+    public static Predicate buildPoolAttributePredicate(CriteriaBuilder builder, CriteriaQuery<?> query,
         Root<Pool> root, String attribute, Function<Expression<String>, Predicate> valuePredicateFunc) {
 
         Subquery<Pool> subquery = query.subquery(Pool.class);
