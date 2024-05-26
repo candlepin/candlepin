@@ -1,3 +1,4 @@
+# Builder Stage
 FROM registry.access.redhat.com/ubi9-minimal:latest as builder
 
 ARG WAR_FILE
@@ -9,10 +10,10 @@ RUN microdnf -y update && \
 USER root
 
 # Prepare Tomcat
-RUN wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.76/bin/apache-tomcat-9.0.76.tar.gz; \
-    tar xzf apache-tomcat-9.0.76.tar.gz; \
+RUN wget https://archive.apache.org/dist/tomcat/tomcat-10/v10.0.27/bin/apache-tomcat-10.0.27.tar.gz; \
+    tar xzf apache-tomcat-10.0.27.tar.gz; \
     mkdir /opt/tomcat; \
-    mv apache-tomcat-9.0.76/* /opt/tomcat/
+    mv apache-tomcat-10.0.27/* /opt/tomcat/
 
 # Prepare Candlepin
 RUN mkdir -p /app/build
@@ -47,12 +48,13 @@ USER root
 # Update and install dependencies
 RUN microdnf -y update && \
     microdnf -y update ca-certificates && \
-    microdnf install -y java-17-openjdk-headless initscripts && \
+    microdnf install -y java-17-openjdk-headless initscripts unzip && \
     microdnf clean all
 
 ENV JAVA_HOME=/usr/lib/jvm/jre-17-openjdk
 ENV JRE_HOME=/usr/lib/jvm/jre-17-openjdk
 ENV CATALINA_OPTS=-Djavax.net.ssl.trustStore=$JAVA_HOME/lib/security/cacerts
+ENV JPDA_OPTS=-agentlib:jdwp=transport=dt_socket,address=0.0.0.0:8000,server=y,suspend=n
 
 # Tomcat Setup
 COPY --from=builder /opt/tomcat/ /opt/tomcat/
@@ -71,16 +73,16 @@ RUN mkdir -p /etc/candlepin/certs; \
     chmod -R 775 /var/log/;
 
 # Candlepin install
-COPY --from=builder /app/build /opt/tomcat/webapps
+COPY --from=builder /app/build /opt/tomcat/webapps-javaee
 
 WORKDIR /opt/tomcat/bin
 
 USER tomcat
 
 # Expose ports for tomcat, candlepin, postgres and mariadb
-EXPOSE 8080 8443 5432 3306
+EXPOSE 8080 8443 5432 3306 8000
 
-ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "run"]
+ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "jpda", "run"]
 
 ################################# Development Image ################################
 
@@ -116,9 +118,9 @@ COPY ./containers/server.xml /opt/tomcat/conf
 
 WORKDIR /opt/tomcat/bin
 
-USER tomcat
+USER root
 
 # Expose ports for tomcat, candlepin, postgres and mariadb
-EXPOSE 8080 8443 5432 3306
+EXPOSE 8080 8443 5432 3306 8000
 
-ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "run"]
+ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "jpda", "run"]

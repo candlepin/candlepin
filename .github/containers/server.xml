@@ -39,7 +39,7 @@
         <Realm className="org.apache.catalina.realm.UserDatabaseRealm" resourceName="UserDatabase" />
       </Realm>
 
-      <Host name="localhost" appBase="webapps" unpackWARs="true" autoDeploy="true">
+      <Host name="localhost" appBase="webapps-javaee" unpackWARs="true" autoDeploy="true">
         <Valve className="org.apache.catalina.valves.AccessLogValve" directory="/var/log/candlepin/"
           prefix="access" rotatable="false" checkExists="true" suffix=".log"
           pattern="%h %l %u %t &quot;%r&quot; %s %b &quot;&quot; &quot;%{user-agent}i sm/%{x-subscription-manager-version}i&quot; &quot;req_time=%T,req=%{requestUuid}r&quot;"
