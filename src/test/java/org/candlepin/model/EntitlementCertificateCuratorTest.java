@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,18 +14,21 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -47,6 +50,93 @@ public class EntitlementCertificateCuratorTest extends DatabaseTestFixture {
         this.consumer = this.createConsumer(this.owner);
         this.product = this.createProduct();
         this.pool = this.createPool(this.owner, this.product);
+    }
+
+    @Test
+    public void testListForEntitlementWithNullEntitlement() {
+        assertThat(this.entitlementCertificateCurator.listForEntitlement(null))
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testListForEntitlementWithNoEntitlement() {
+        Entitlement ent1 = this.createEntitlement(this.owner, this.consumer, this.pool);
+        Entitlement ent2 = this.createEntitlement(this.owner, this.consumer, this.pool);
+        this.createEntitlementCertificate(ent1, "key1", "cert1");
+
+        List<EntitlementCertificate> actual = this.entitlementCertificateCurator.listForEntitlement(ent2);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testListForEntitlement() {
+        Entitlement ent1 = this.createEntitlement(this.owner, this.consumer, this.pool);
+        Entitlement ent2 = this.createEntitlement(this.owner, this.consumer, this.pool);
+
+        EntitlementCertificate cert1 = this.createEntitlementCertificate(ent1, "key1", "cert1");
+        EntitlementCertificate cert2 = this.createEntitlementCertificate(ent1, "key2", "cert2");
+        this.createEntitlementCertificate(ent2, "key2", "cert2");
+
+        List<EntitlementCertificate> actual = this.entitlementCertificateCurator.listForEntitlement(ent1);
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(cert1, cert2);
+    }
+
+    @Test
+    public void testListForConsumerWithNullConsumer() {
+        assertThat(this.entitlementCertificateCurator.listForConsumer(null))
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testListForConsumerWithNoEntitlementCertificates() {
+        Entitlement ent = this.createEntitlement(this.owner, this.consumer, this.pool);
+        this.createEntitlementCertificate(ent, "key1", "cert1");
+
+        Consumer consumer2 = this.createConsumer(this.owner);
+
+        List<EntitlementCertificate> actual = this.entitlementCertificateCurator.listForConsumer(consumer2);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testListForConsumer() {
+        Date startDate = TestUtil.createDateOffset(0, 0, -7);
+        Date endDate = TestUtil.createDateOffset(0, 0, -4);
+        Pool expiredPool = this.createPool(this.owner, this.product, 100L, startDate, endDate);
+
+        Consumer consumer2 = this.createConsumer(this.owner);
+        Product product2 = this.createProduct();
+        Pool pool2 = this.createPool(this.owner, product2);
+
+        Entitlement ent1 = this.createEntitlement(this.owner, this.consumer, this.pool);
+        Entitlement ent2 = this.createEntitlement(this.owner, this.consumer, this.pool);
+        Entitlement ent3 = this.createEntitlement(this.owner, this.consumer, expiredPool);
+        Entitlement ent4 = this.createEntitlement(this.owner, consumer2, pool2);
+
+        EntitlementCertificate cert1 = this.createEntitlementCertificate(ent1, "key1", "cert1");
+        EntitlementCertificate cert2 = this.createEntitlementCertificate(ent2, "key2", "cert2");
+
+        // Certificate from expired pool
+        this.createEntitlementCertificate(ent3, "key3", "cert3");
+        // Certificate from another consumer
+        this.createEntitlementCertificate(ent4, "key4", "cert4");
+
+        List<EntitlementCertificate> actual = this.entitlementCertificateCurator.listForConsumer(consumer);
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(cert1, cert2);
     }
 
     @Test

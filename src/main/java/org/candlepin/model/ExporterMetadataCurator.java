@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,10 +14,9 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.criterion.Restrictions;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.persistence.NoResultException;
 
 
 
@@ -33,16 +32,41 @@ public class ExporterMetadataCurator extends AbstractHibernateCurator<ExporterMe
     }
 
     public ExporterMetadata getByType(String type) {
-        return (ExporterMetadata) this.currentSession().createCriteria(ExporterMetadata.class)
-            .add(Restrictions.eq("type", type))
-            .uniqueResult();
+        if (type == null || type.isBlank()) {
+            return null;
+        }
+
+        String query = "SELECT em FROM ExporterMetadata em WHERE em.type = :type";
+
+        try {
+            return this.getEntityManager()
+                .createQuery(query, ExporterMetadata.class)
+                .setParameter("type", type)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     public ExporterMetadata getByTypeAndOwner(String type, Owner owner) {
-        return (ExporterMetadata) this.currentSession().createCriteria(ExporterMetadata.class)
-            .add(Restrictions.eq("type", type))
-            .add(Restrictions.eq("owner", owner))
-            .uniqueResult();
+        if (type == null || type.isBlank() || owner == null) {
+            return null;
+        }
+
+        String query = "SELECT em FROM ExporterMetadata em " +
+            "WHERE em.type = :type AND em.owner.id = :owner_id";
+
+        try {
+            return this.getEntityManager()
+                .createQuery(query, ExporterMetadata.class)
+                .setParameter("type", type)
+                .setParameter("owner_id", owner.getId())
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
 }
