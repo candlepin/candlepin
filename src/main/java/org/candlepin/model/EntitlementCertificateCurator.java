@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -16,10 +16,10 @@ package org.candlepin.model;
 
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -46,25 +46,34 @@ public class EntitlementCertificateCurator extends AbstractHibernateCurator<Enti
         super(EntitlementCertificate.class);
     }
 
-    @SuppressWarnings("unchecked")
     @Transactional
-    public List<EntitlementCertificate> listForEntitlement(Entitlement e) {
-        return currentSession().createCriteria(
-            EntitlementCertificate.class).add(
-                Restrictions.eq("entitlement", e)).list();
+    public List<EntitlementCertificate> listForEntitlement(Entitlement entitlement) {
+        if (entitlement == null) {
+            return new ArrayList<>();
+        }
 
+        String query = "SELECT ec FROM EntitlementCertificate ec WHERE ec.entitlement.id = :id";
+
+        return this.getEntityManager()
+            .createQuery(query, EntitlementCertificate.class)
+            .setParameter("id", entitlement.getId())
+            .getResultList();
     }
 
-    @SuppressWarnings("unchecked")
     @Transactional
-    public List<EntitlementCertificate> listForConsumer(Consumer c) {
-        return currentSession().createCriteria(EntitlementCertificate.class)
-            .createAlias("entitlement", "ent")
-            .createAlias("ent.pool", "p")
-            .add(Restrictions.eq("ent.consumer", c))
-            // Never show a consumer expired certificates
-            .add(Restrictions.ge("p.endDate", new Date()))
-            .list();
+    public List<EntitlementCertificate> listForConsumer(Consumer consumer) {
+        if (consumer == null) {
+            return new ArrayList<>();
+        }
+
+        String query = "SELECT ec FROM EntitlementCertificate ec " +
+            "WHERE ec.entitlement.consumer.id = :consumer_id AND ec.entitlement.pool.endDate >= :now";
+
+        return this.getEntityManager()
+            .createQuery(query, EntitlementCertificate.class)
+            .setParameter("consumer_id", consumer.getId())
+            .setParameter("now", new Date())
+            .getResultList();
     }
 
     @Transactional

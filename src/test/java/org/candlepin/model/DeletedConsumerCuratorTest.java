@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -15,15 +15,19 @@
 package org.candlepin.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.DeletedConsumerCurator.DeletedConsumerQueryArguments;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -80,10 +84,21 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
         ct = consumerTypeCurator.create(ct);
     }
 
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testFindByConsumerUuidWithInvalidConsumerUuid(String uuid) {
+        assertNull(deletedConsumerCurator.findByConsumerUuid(uuid));
+    }
+
     @Test
-    public void byConsumerId() {
+    public void testFindByConsumerUuid() {
         DeletedConsumer found = deletedConsumerCurator.findByConsumerUuid("abcde");
         assertEquals("abcde", found.getConsumerUuid());
+    }
+
+    @Test
+    public void testFindByConsumerUuidWithNonExistingDeletedConsumer() {
+        assertNull(deletedConsumerCurator.findByConsumerUuid(TestUtil.randomString()));
     }
 
     @Test
@@ -108,8 +123,14 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(1, found.size());
     }
 
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testCountByConsumerUuidWithInvalidUuid(String uuid) {
+        assertEquals(0, deletedConsumerCurator.countByConsumerUuid(uuid));
+    }
+
     @Test
-    public void countByConsumerId() {
+    public void testCountByConsumerUuid() {
         assertEquals(1, deletedConsumerCurator.countByConsumerUuid("abcde"));
         assertEquals(0, deletedConsumerCurator.countByConsumerUuid("dontfind"));
         assertEquals(1, deletedConsumerCurator.countByConsumerUuid("fghij"));

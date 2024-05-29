@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -21,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.util.Date;
 
@@ -56,6 +58,12 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
         assertEquals(emdb.getId(), emfound.getId());
     }
 
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void getByTypeWithInvalidType(String type) {
+        assertNull(exporterMetadataCurator.getByType(type));
+    }
+
     @Test
     public void getByType() {
         ExporterMetadata em = new ExporterMetadata();
@@ -80,6 +88,18 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
         assertNotNull(emdb.getOwner().getId());
     }
 
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void getByTypeAndOwnerWithInvalidType(String type) {
+        Owner owner = createOwner();
+        assertNull(exporterMetadataCurator.getByTypeAndOwner(type, owner));
+    }
+
+    @Test
+    public void getByTypeAndOwnerWithNullOwner() {
+        assertNull(exporterMetadataCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, null));
+    }
+
     @Test
     public void getByTypeAndOwner() {
         ExporterMetadata em = new ExporterMetadata();
@@ -89,7 +109,18 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
         em.setOwner(owner);
         ExporterMetadata emdb = exporterMetadataCurator.create(em);
 
+        ExporterMetadata differentTypeMetadata = new ExporterMetadata();
+        differentTypeMetadata.setType(ExporterMetadata.TYPE_SYSTEM);
+        differentTypeMetadata.setExported(new Date());
+        differentTypeMetadata.setOwner(owner);
+        exporterMetadataCurator.create(em);
+
         assertEquals(emdb, exporterMetadataCurator.getByTypeAndOwner(
             ExporterMetadata.TYPE_PER_USER, owner));
+
+        // Owner with no exporter metadata
+        Owner owner2 = createOwner();
+        assertNull(exporterMetadataCurator
+            .getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner2));
     }
 }

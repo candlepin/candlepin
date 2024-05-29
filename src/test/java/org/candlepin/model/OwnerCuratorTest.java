@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import static java.lang.Thread.sleep;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
@@ -23,6 +24,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.candlepin.auth.Access;
+import org.candlepin.auth.UserPrincipal;
+import org.candlepin.auth.permissions.OwnerPermission;
+import org.candlepin.auth.permissions.Permission;
 import org.candlepin.controller.OwnerContentAccess;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.OwnerCurator.OwnerQueryArguments;
@@ -36,6 +41,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
@@ -46,6 +52,40 @@ import javax.persistence.RollbackException;
 
 
 public class OwnerCuratorTest extends DatabaseTestFixture {
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testGetByKeySecureWithInvalidKey(String key) {
+        assertNull(this.ownerCurator.getByKeySecure(key));
+    }
+
+    @Test
+    public void testGetByKeySecure() {
+        Owner expected = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        User user = new User(TestUtil.randomString(), TestUtil.randomString());
+        Set<Permission> perms = new HashSet<>();
+        perms.add(new OwnerPermission(expected, Access.ALL));
+        UserPrincipal principal = new UserPrincipal(user.getUsername(), perms, false);
+        setupPrincipal(principal);
+
+        Owner actual = this.ownerCurator.getByKeySecure(expected.getKey());
+
+        assertThat(actual)
+            .isNotNull()
+            .isEqualTo(expected);
+
+        // Verify that the user cannot access an owner that they do not have permissions for.
+        assertNull(this.ownerCurator.getByKeySecure(owner2.getKey()));
+    }
+
+    @Test
+    public void testGetByKeySecureWithUnknownOwner() {
+        this.createOwner();
+
+        assertNull(this.ownerCurator.getByKeySecure(TestUtil.randomString()));
+    }
 
     @Test
     public void basicImport() {
@@ -101,12 +141,18 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(ent);
     }
 
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void getByUpstreamUuidWithInvalidUuid(String uuid) {
+        assertNull(ownerCurator.getByUpstreamUuid(uuid));
+    }
+
     @Test
     public void getByUpstreamUuid() {
         Owner owner = new Owner()
             .setKey("owner1")
             .setDisplayName("owner1");
-        // setup some data
+
         owner = ownerCurator.create(owner);
         ConsumerType type = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         consumerTypeCurator.create(type);
@@ -114,12 +160,13 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         owner.setUpstreamConsumer(uc);
         ownerCurator.merge(owner);
 
-        // ok let's see if this works
         Owner found = ownerCurator.getByUpstreamUuid("someuuid");
 
-        // verify all is well in the world
         assertNotNull(found);
         assertEquals(owner.getId(), found.getId());
+
+        // Test with a non-existing upstream uuid
+        assertNull(ownerCurator.getByUpstreamUuid(TestUtil.randomString()));
     }
 
     @Test

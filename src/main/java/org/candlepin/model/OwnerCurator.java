@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -23,10 +23,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
-import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -121,6 +121,17 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     }
 
     /**
+     * Fetches an owner by natural id (key). This method is non-secure.
+     *
+     * @param key owner's unique key to fetch.
+     * @return the owner whose key matches the one given.
+     */
+    @Transactional
+    public Owner getByKey(String key) {
+        return this.currentSession().bySimpleNaturalId(Owner.class).load(key);
+    }
+
+    /**
      * Fetches an owner by key securely by checking principal permissions.
      *
      * @param key owner's unique key to fetch.
@@ -128,9 +139,71 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      */
     @Transactional
     public Owner getByKeySecure(String key) {
-        return (Owner) createSecureCriteria()
-            .add(Restrictions.eq("key", key))
-            .uniqueResult();
+        if (key == null || key.isBlank()) {
+            return null;
+        }
+
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Owner> criteriaQuery = criteriaBuilder.createQuery(Owner.class);
+
+        Root<Owner> root = criteriaQuery.from(Owner.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(criteriaBuilder.equal(root.get(Owner_.key), key));
+
+        Predicate securityPredicate = this.getSecurityPredicate(Owner.class, criteriaBuilder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        criteriaQuery.where(predicates.toArray(new Predicate[0]));
+
+        try {
+            return this.getEntityManager()
+                .createQuery(criteriaQuery)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    @Transactional
+    public List<Owner> getByKeys(Collection<String> keys) {
+        String jpql = "SELECT o FROM Owner o WHERE o.key in (:keys)";
+
+        return this.getEntityManager()
+            .createQuery(jpql, Owner.class)
+            .setParameter("keys", keys)
+            .getResultList();
+    }
+
+    @Transactional
+    public List<Owner> getByKeysSecure(Collection<String> keys) {
+        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Owner> cq = cb.createQuery(Owner.class);
+        Root<Owner> owner = cq.from(Owner.class);
+
+        Predicate keyPredicate = owner.get("key").in(keys);
+
+        Predicate securePredicate = this.getSecurityPredicate(Owner.class, cb, owner);
+
+        cq.where(cb.and(keyPredicate, securePredicate != null ? securePredicate : cb.conjunction()));
+
+        return getEntityManager().createQuery(cq).getResultList();
+    }
+
+    /**
+     * Checks if the owner exists in the database.
+     *
+     * @param ownerKey key of the owner to be checked
+     * @return true if the owner exists
+     */
+    public boolean existsByKey(String ownerKey) {
+        return this.getEntityManager()
+            .createQuery("SELECT COUNT(o.id) FROM Owner o WHERE o.key = :owner_key", Long.class)
+            .setParameter("owner_key", ownerKey)
+            .getSingleResult() > 0;
     }
 
     /**
@@ -152,27 +225,6 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         }
 
         return null;
-    }
-
-    /**
-     * Fetches an owner by natural id (key). This method is non-secure.
-     *
-     * @param key owner's unique key to fetch.
-     * @return the owner whose key matches the one given.
-     */
-    @Transactional
-    public Owner getByKey(String key) {
-        return this.currentSession().bySimpleNaturalId(Owner.class).load(key);
-    }
-
-    @Transactional
-    public List<Owner> getByKeys(Collection<String> keys) {
-        String jpql = "SELECT o FROM Owner o WHERE o.key in (:keys)";
-
-        return this.getEntityManager()
-            .createQuery(jpql, Owner.class)
-            .setParameter("keys", keys)
-            .getResultList();
     }
 
     /**
@@ -240,26 +292,22 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
             .getSingleResult();
     }
 
-    @Transactional
-    public List<Owner> getByKeysSecure(Collection<String> keys) {
-        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
-        CriteriaQuery<Owner> cq = cb.createQuery(Owner.class);
-        Root<Owner> owner = cq.from(Owner.class);
-
-        Predicate keyPredicate = owner.get("key").in(keys);
-
-        Predicate securePredicate = this.getSecurityPredicate(Owner.class, cb, owner);
-
-        cq.where(cb.and(keyPredicate, securePredicate != null ? securePredicate : cb.conjunction()));
-
-        return getEntityManager().createQuery(cq).getResultList();
-    }
-
     public Owner getByUpstreamUuid(String upstreamUuid) {
-        return (Owner) createSecureCriteria()
-            .createCriteria("upstreamConsumer")
-            .add(Restrictions.eq("uuid", upstreamUuid))
-            .uniqueResult();
+        if (upstreamUuid == null || upstreamUuid.isBlank()) {
+            return null;
+        }
+
+        String query = "SELECT o FROM Owner o WHERE o.upstreamConsumer.uuid = :uuid";
+
+        try {
+            return this.getEntityManager()
+                .createQuery(query, Owner.class)
+                .setParameter("uuid", upstreamUuid)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**
@@ -355,19 +403,6 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         catch (NoResultException e) {
             throw new OwnerNotFoundException(ownerKey, e);
         }
-    }
-
-    /**
-     * Checks if the owner exists in the database.
-     *
-     * @param ownerKey key of the owner to be checked
-     * @return true if the owner exists
-     */
-    public boolean existsByKey(String ownerKey) {
-        return this.getEntityManager()
-            .createQuery("SELECT COUNT(o.id) FROM Owner o WHERE o.key = :owner_key", Long.class)
-            .setParameter("owner_key", ownerKey)
-            .getSingleResult() > 0;
     }
 
     /**

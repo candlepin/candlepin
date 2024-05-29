@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -17,9 +17,6 @@ package org.candlepin.model;
 import org.candlepin.auth.Principal;
 import org.candlepin.guice.PrincipalProvider;
 
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
-
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Date;
@@ -27,6 +24,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -69,9 +67,21 @@ public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedCons
     }
 
     public DeletedConsumer findByConsumerUuid(String uuid) {
-        return (DeletedConsumer) currentSession().createCriteria(DeletedConsumer.class)
-            .add(Restrictions.eq("consumerUuid", uuid))
-            .uniqueResult();
+        if (uuid == null || uuid.isBlank()) {
+            return null;
+        }
+
+        String query = "SELECT dc FROM DeletedConsumer dc WHERE dc.consumerUuid = :uuid";
+
+        try {
+            return this.getEntityManager()
+                .createQuery(query, DeletedConsumer.class)
+                .setParameter("uuid", uuid)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     public List<DeletedConsumer> findByOwner(Owner o) {
@@ -80,7 +90,7 @@ public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedCons
 
     @SuppressWarnings("unchecked")
     public List<DeletedConsumer> findByOwnerId(String oid) {
-        String jpql = "SELECT dc from DeletedConsumer dc WHERE dc.ownerId = :owner_id " +
+        String jpql = "SELECT dc FROM DeletedConsumer dc WHERE dc.ownerId = :owner_id " +
             "ORDER BY created desc";
 
         return this.getEntityManager()
@@ -94,9 +104,17 @@ public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedCons
     }
 
     public int countByConsumerUuid(String uuid) {
-        return ((Long) currentSession().createCriteria(DeletedConsumer.class)
-            .add(Restrictions.eq("consumerUuid", uuid))
-            .setProjection(Projections.rowCount()).uniqueResult()).intValue();
+        if (uuid == null || uuid.isBlank()) {
+            return 0;
+        }
+
+        String query = "SELECT COUNT(dc) FROM DeletedConsumer dc WHERE dc.consumerUuid = :uuid";
+
+        return this.getEntityManager()
+            .createQuery(query, Long.class)
+            .setParameter("uuid", uuid)
+            .getSingleResult()
+            .intValue();
     }
 
     public int createDeletedConsumers(Collection<String> consumerIds) {
