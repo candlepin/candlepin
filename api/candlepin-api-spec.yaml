@@ -3169,6 +3169,12 @@ paths:
           required: true
           schema:
             type: string
+        - name: delete_consumers
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
       security: []
       responses:
         204:

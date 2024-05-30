@@ -73,6 +73,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -191,22 +192,24 @@ public class EnvironmentResource implements EnvironmentApi {
     }
 
     @Override
-    public void deleteEnvironment(@Verify(Environment.class) String envId) {
+    public void deleteEnvironment(@Verify(Environment.class) String envId, Boolean deleteConsumers) {
         Environment environment = envCurator.get(envId);
         if (environment == null) {
             throw new NotFoundException(i18n.tr("No such environment: {0}", envId));
         }
 
         List<Consumer> consumers = this.envCurator.getEnvironmentConsumers(environment);
-        List<Consumer> consumersToDelete = consumers.stream()
-            .filter(consumer -> consumer.getEnvironmentIds().size() == 1)
-            .toList();
-        deleteConsumers(environment, consumersToDelete);
 
-        List<Consumer> consumersToKeep = consumers.stream()
-            .filter(consumer -> consumer.getEnvironmentIds().size() > 1)
-            .toList();
-        removeConsumersFromEnvironment(environment, consumersToKeep);
+        if (deleteConsumers == null || deleteConsumers) {
+            Map<Boolean, List<Consumer>> partitionedConsumers = consumers.stream()
+                .collect(Collectors.partitioningBy(consumer -> consumer.getEnvironmentIds().size() == 1));
+
+            deleteConsumers(environment, partitionedConsumers.get(true));
+            removeConsumersFromEnvironment(environment, partitionedConsumers.get(false));
+        }
+        else {
+            removeConsumersFromEnvironment(environment, consumers);
+        }
 
         log.info("Deleting environment: {}", environment);
         this.envCurator.delete(environment);

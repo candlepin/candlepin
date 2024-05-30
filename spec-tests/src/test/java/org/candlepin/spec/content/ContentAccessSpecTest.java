@@ -1477,7 +1477,7 @@ public class ContentAccessSpecTest {
             .isNotNull();
         Long initialSerial = oldCerts.get(0).getSerial().getSerial();
 
-        adminClient.environments().deleteEnvironment(env1.getId());
+        adminClient.environments().deleteEnvironment(env1.getId(), true);
 
         List<CertificateDTO> newCerts = consumerClient.consumers().fetchCertificates(consumer.getUuid());
         assertThat(newCerts)
