@@ -192,7 +192,7 @@ public class EnvironmentResource implements EnvironmentApi {
     }
 
     @Override
-    public void deleteEnvironment(@Verify(Environment.class) String envId, Boolean deleteConsumers) {
+    public void deleteEnvironment(@Verify(Environment.class) String envId, Boolean retainConsumers) {
         Environment environment = envCurator.get(envId);
         if (environment == null) {
             throw new NotFoundException(i18n.tr("No such environment: {0}", envId));
@@ -200,7 +200,11 @@ public class EnvironmentResource implements EnvironmentApi {
 
         List<Consumer> consumers = this.envCurator.getEnvironmentConsumers(environment);
 
-        if (deleteConsumers == null || deleteConsumers) {
+        // Impl note:
+        // Original behavior was to always delete consumers when their last environment is deleted.
+        // The update adds the optional behavior to retain consumers in such a case, but to maintain
+        // backwards compatibility, we default to deleting consumers.
+        if (retainConsumers == null || !retainConsumers) {
             Map<Boolean, List<Consumer>> partitionedConsumers = consumers.stream()
                 .collect(Collectors.partitioningBy(consumer -> consumer.getEnvironmentIds().size() == 1));
 
@@ -220,6 +224,7 @@ public class EnvironmentResource implements EnvironmentApi {
             log.info("No consumers found in environment: {}", environment);
             return;
         }
+
         // No need to delete env from consumers manually. It will be handled by cascading delete.
         List<String> consumerIds = consumers.stream()
             .map(Consumer::getId)
@@ -251,6 +256,7 @@ public class EnvironmentResource implements EnvironmentApi {
             log.info("No consumers found for deletion with environment: {}", environment);
             return;
         }
+
         // Cleanup all consumers and their entitlements:
         log.info("Deleting consumers in environment {}", environment);
 

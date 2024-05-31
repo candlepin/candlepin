@@ -199,9 +199,9 @@ class EnvironmentResourceTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true})
     @NullSource
-    void shouldCleanUpAfterDeletingEnvironment(Boolean deleteConsumers) {
+    @ValueSource(booleans = { false })
+    void shouldCleanUpAfterDeletingEnvironment(Boolean retainConsumers) {
         Consumer consumer1 = createConsumer(this.environment1);
         Consumer consumer2 = createConsumer(this.environment1);
         consumer2.setIdCert(null);
@@ -210,7 +210,7 @@ class EnvironmentResourceTest {
         when(this.envCurator.getEnvironmentConsumers(this.environment1))
             .thenReturn(List.of(consumer1, consumer2));
 
-        this.environmentResource.deleteEnvironment(ENV_ID_1, deleteConsumers);
+        this.environmentResource.deleteEnvironment(ENV_ID_1, retainConsumers);
 
         verify(this.identityCertificateCurator).deleteByIds(anyList());
         verify(this.contentAccessCertificateCurator).deleteByIds(anyList());
@@ -231,14 +231,14 @@ class EnvironmentResourceTest {
         when(this.envCurator.getEnvironmentConsumers(this.environment1))
             .thenReturn(List.of(consumer1, consumer2));
 
-        this.environmentResource.deleteEnvironment(ENV_ID_1, true);
+        this.environmentResource.deleteEnvironment(ENV_ID_1, false);
 
         verify(this.consumerCurator).delete(consumer1);
         verify(this.contentAccessManager).removeContentAccessCert(consumer2);
     }
 
     @Test
-    void shouldRemoveConsumersFromEnvironmentWithoutDeletionWhenDeleteFlagIsFalse() {
+    void shouldRemoveConsumersFromEnvironmentWithoutDeletionWhenRetainFlagIsSet() {
         Consumer consumer1 = createConsumer(this.environment1);
         Consumer consumer2 = createConsumer(this.environment1);
         Environment environment2 = createEnvironment(owner, "env_id_2");
@@ -250,7 +250,7 @@ class EnvironmentResourceTest {
         when(this.envCurator.getEnvironmentConsumers(this.environment1))
             .thenReturn(List.of(consumer1, consumer2));
 
-        this.environmentResource.deleteEnvironment(ENV_ID_1, false);
+        this.environmentResource.deleteEnvironment(ENV_ID_1, true);
 
         verify(this.consumerCurator, never()).delete(any(Consumer.class));
         verify(this.contentAccessManager, times(2)).removeContentAccessCert(consumer2);

@@ -109,7 +109,7 @@ public class EnvironmentSpecTest {
     public void shouldAllowOwnerAdminToDeleteEnvironments() {
         EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
 
-        ownerClient.environments().deleteEnvironment(env.getId(), true);
+        ownerClient.environments().deleteEnvironment(env.getId());
 
         List<EnvironmentDTO> environments = ownerClient.owners().listEnvironments(owner);
         assertThat(environments)
@@ -132,7 +132,7 @@ public class EnvironmentSpecTest {
 
         assertNotFound(() -> foreignClient.owners().listEnvironments(owner));
         assertNotFound(() -> foreignClient.environments().getEnvironment(env.getId()));
-        assertNotFound(() -> foreignClient.environments().deleteEnvironment(env.getId(), true));
+        assertNotFound(() -> foreignClient.environments().deleteEnvironment(env.getId()));
         assertNotFound(() -> foreignClient.environments()
             .promoteContent(env.getId(), List.of(new ContentToPromoteDTO()), true));
     }
@@ -657,9 +657,9 @@ public class EnvironmentSpecTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true})
     @NullSource
-    public void shouldDeleteConsumerTogetherWithHisLastEnvironment(Boolean deleteConsumers) {
+    @ValueSource(booleans = { false })
+    public void shouldDeleteConsumersWhenLastEnvironmentIsDeleted(Boolean retainConsumers) {
         EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
         EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
         ConsumerDTO consumer1 = ownerClient.consumers().createConsumer(Consumers.random(owner)
@@ -667,7 +667,7 @@ public class EnvironmentSpecTest {
         ConsumerDTO consumer2 = ownerClient.consumers().createConsumer(Consumers.random(owner)
             .environments(List.of(env1, env2)));
 
-        ownerClient.environments().deleteEnvironment(env1.getId(), deleteConsumers);
+        ownerClient.environments().deleteEnvironment(env1.getId(), retainConsumers);
 
         assertGone(() -> ownerClient.consumers().getConsumer(consumer1.getUuid()));
 
@@ -676,7 +676,7 @@ public class EnvironmentSpecTest {
     }
 
     @Test
-    public void shouldNotDeleteConsumerWhenDeletingItsLastEnvironment() {
+    public void shouldRetainConsumerWhenDeletingItsLastEnvironmentIfRetainFlagIsSet() {
         EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
         EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
         ConsumerDTO consumer1 = ownerClient.consumers().createConsumer(Consumers.random(owner)
@@ -684,7 +684,7 @@ public class EnvironmentSpecTest {
         ConsumerDTO consumer2 = ownerClient.consumers().createConsumer(Consumers.random(owner)
             .environments(List.of(env1, env2)));
 
-        ownerClient.environments().deleteEnvironment(env1.getId(), false);
+        ownerClient.environments().deleteEnvironment(env1.getId(), true);
 
         ConsumerDTO consumer3 = ownerClient.consumers().getConsumer(consumer1.getUuid());
         assertThat(consumer3.getEnvironments()).isNull();
@@ -728,7 +728,7 @@ public class EnvironmentSpecTest {
             .exportCertificates(consumer.getUuid(), null);
         assertThat(certificatesBeforeDelete).hasSize(2);
 
-        ownerClient.environments().deleteEnvironment(env1.getId(), true);
+        ownerClient.environments().deleteEnvironment(env1.getId());
 
         List<EntitlementDTO> entitlements = consumerClient.consumers()
             .listEntitlementsWithRegen(consumer.getUuid());

@@ -414,7 +414,7 @@ public class EnvironmentPrioritySpecTest {
             .hasContentRepoType(content2)
             .doesNotHaveContentRepoType(content3);
 
-        ownerClient.environments().deleteEnvironment(env1.getId(), true);
+        ownerClient.environments().deleteEnvironment(env1.getId());
 
         List<EntitlementDTO> entsWithSecondEnvironment = ownerClient.consumers()
             .listEntitlementsWithRegen(consumer.getUuid());
@@ -452,7 +452,7 @@ public class EnvironmentPrioritySpecTest {
             .hasContentRepoType(content2)
             .doesNotHaveContentRepoType(content3);
 
-        ownerClient.environments().deleteEnvironment(env2.getId(), true);
+        ownerClient.environments().deleteEnvironment(env2.getId());
 
         List<EntitlementDTO> entsWithSecondEnvironment = ownerClient.consumers()
             .listEntitlementsWithRegen(consumer.getUuid());
@@ -490,7 +490,7 @@ public class EnvironmentPrioritySpecTest {
             .hasContentRepoType(content2)
             .hasContentRepoType(content3);
 
-        ownerClient.environments().deleteEnvironment(env1.getId(), true);
+        ownerClient.environments().deleteEnvironment(env1.getId());
 
         List<EntitlementDTO> entsWithSecondEnvironment = ownerClient.consumers()
             .listEntitlementsWithRegen(consumer.getUuid());
@@ -529,7 +529,7 @@ public class EnvironmentPrioritySpecTest {
             .doesNotHaveContentRepoType(content3)
             .doesNotHaveContentRepoType(content4);
 
-        ownerClient.environments().deleteEnvironment(env1.getId(), true);
+        ownerClient.environments().deleteEnvironment(env1.getId());
 
         List<EntitlementDTO> entsWithSecondEnvironment = ownerClient.consumers()
             .listEntitlementsWithRegen(consumer.getUuid());

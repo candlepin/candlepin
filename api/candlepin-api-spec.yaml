@@ -3159,7 +3159,11 @@ paths:
           $ref: '#/components/responses/default'
 
     delete:
-      description: "Deletes an environment. WARNING: this will delete all consumers in the environment and revoke their entitlement certificates."
+      description: |
+        Deletes the specified environment, unregistering and deleting any consumers registered to
+        the environment with no other remaining environments. If the retain_consumers flag is set to
+        true, no consumer deletion will occur, and any such consumers will be moved to the
+        organization's default content view.
       operationId: deleteEnvironment
       tags:
         - environment
@@ -3169,12 +3173,15 @@ paths:
           required: true
           schema:
             type: string
-        - name: delete_consumers
+        - name: retain_consumers
+          description: |
+            Whether or not to retain affected consumers with no remaining environments. If set to
+            true, affected consumers will be moved to the organization's default content view.
           in: query
           required: false
           schema:
             type: boolean
-            default: true
+            default: false
       security: []
       responses:
         204:
