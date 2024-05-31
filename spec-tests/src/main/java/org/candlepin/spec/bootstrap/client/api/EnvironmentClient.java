@@ -29,4 +29,8 @@ public class EnvironmentClient extends EnvironmentApi {
         return super.createConsumerInEnvironment(envId, consumer, consumer.getUsername(), null);
     }
 
+    public void deleteEnvironment(String environmentId) {
+        super.deleteEnvironment(environmentId, false);
+    }
+
 }
