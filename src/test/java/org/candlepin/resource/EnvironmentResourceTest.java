@@ -20,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -63,6 +65,9 @@ import org.candlepin.util.RdbmsExceptionTranslator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.xnap.commons.i18n.I18n;
@@ -174,7 +179,7 @@ class EnvironmentResourceTest {
 
     @Test
     void nothingToDelete() {
-        assertThrows(NotFoundException.class, () -> this.environmentResource.deleteEnvironment(BAD_ID));
+        assertThrows(NotFoundException.class, () -> this.environmentResource.deleteEnvironment(BAD_ID, true));
     }
 
     @Test
@@ -183,7 +188,7 @@ class EnvironmentResourceTest {
         when(this.envCurator.getEnvironmentConsumers(this.environment1))
             .thenReturn(List.of());
 
-        this.environmentResource.deleteEnvironment(BAD_ID);
+        this.environmentResource.deleteEnvironment(BAD_ID, true);
 
         verifyNoInteractions(this.poolService);
         verifyNoInteractions(this.consumerCurator);
@@ -193,8 +198,10 @@ class EnvironmentResourceTest {
         verify(this.envCurator).delete(this.environment1);
     }
 
-    @Test
-    void shouldCleanUpAfterDeletingEnvironment() {
+    @ParameterizedTest
+    @ValueSource(booleans = {true})
+    @NullSource
+    void shouldCleanUpAfterDeletingEnvironment(Boolean deleteConsumers) {
         Consumer consumer1 = createConsumer(this.environment1);
         Consumer consumer2 = createConsumer(this.environment1);
         consumer2.setIdCert(null);
@@ -203,7 +210,7 @@ class EnvironmentResourceTest {
         when(this.envCurator.getEnvironmentConsumers(this.environment1))
             .thenReturn(List.of(consumer1, consumer2));
 
-        this.environmentResource.deleteEnvironment(ENV_ID_1);
+        this.environmentResource.deleteEnvironment(ENV_ID_1, deleteConsumers);
 
         verify(this.identityCertificateCurator).deleteByIds(anyList());
         verify(this.contentAccessCertificateCurator).deleteByIds(anyList());
@@ -224,10 +231,30 @@ class EnvironmentResourceTest {
         when(this.envCurator.getEnvironmentConsumers(this.environment1))
             .thenReturn(List.of(consumer1, consumer2));
 
-        this.environmentResource.deleteEnvironment(ENV_ID_1);
+        this.environmentResource.deleteEnvironment(ENV_ID_1, true);
 
         verify(this.consumerCurator).delete(consumer1);
         verify(this.contentAccessManager).removeContentAccessCert(consumer2);
+    }
+
+    @Test
+    void shouldRemoveConsumersFromEnvironmentWithoutDeletionWhenDeleteFlagIsFalse() {
+        Consumer consumer1 = createConsumer(this.environment1);
+        Consumer consumer2 = createConsumer(this.environment1);
+        Environment environment2 = createEnvironment(owner, "env_id_2");
+        consumer2.setIdCert(null);
+        consumer2.setContentAccessCert(null);
+        consumer2.addEnvironment(environment2);
+
+        when(this.envCurator.get(anyString())).thenReturn(this.environment1);
+        when(this.envCurator.getEnvironmentConsumers(this.environment1))
+            .thenReturn(List.of(consumer1, consumer2));
+
+        this.environmentResource.deleteEnvironment(ENV_ID_1, false);
+
+        verify(this.consumerCurator, never()).delete(any(Consumer.class));
+        verify(this.contentAccessManager, times(2)).removeContentAccessCert(consumer2);
+        verify(this.envCurator).delete(this.environment1);
     }
 
     @Test

@@ -56,6 +56,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -106,7 +109,7 @@ public class EnvironmentSpecTest {
     public void shouldAllowOwnerAdminToDeleteEnvironments() {
         EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
 
-        ownerClient.environments().deleteEnvironment(env.getId());
+        ownerClient.environments().deleteEnvironment(env.getId(), true);
 
         List<EnvironmentDTO> environments = ownerClient.owners().listEnvironments(owner);
         assertThat(environments)
@@ -129,7 +132,7 @@ public class EnvironmentSpecTest {
 
         assertNotFound(() -> foreignClient.owners().listEnvironments(owner));
         assertNotFound(() -> foreignClient.environments().getEnvironment(env.getId()));
-        assertNotFound(() -> foreignClient.environments().deleteEnvironment(env.getId()));
+        assertNotFound(() -> foreignClient.environments().deleteEnvironment(env.getId(), true));
         assertNotFound(() -> foreignClient.environments()
             .promoteContent(env.getId(), List.of(new ContentToPromoteDTO()), true));
     }
@@ -653,8 +656,10 @@ public class EnvironmentSpecTest {
             });
     }
 
-    @Test
-    public void shouldDeleteConsumerTogetherWithHisLastEnvironment() {
+    @ParameterizedTest
+    @ValueSource(booleans = {true})
+    @NullSource
+    public void shouldDeleteConsumerTogetherWithHisLastEnvironment(Boolean deleteConsumers) {
         EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
         EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
         ConsumerDTO consumer1 = ownerClient.consumers().createConsumer(Consumers.random(owner)
@@ -662,12 +667,30 @@ public class EnvironmentSpecTest {
         ConsumerDTO consumer2 = ownerClient.consumers().createConsumer(Consumers.random(owner)
             .environments(List.of(env1, env2)));
 
-        ownerClient.environments().deleteEnvironment(env1.getId());
+        ownerClient.environments().deleteEnvironment(env1.getId(), deleteConsumers);
 
         assertGone(() -> ownerClient.consumers().getConsumer(consumer1.getUuid()));
 
         ConsumerDTO consumer = ownerClient.consumers().getConsumer(consumer2.getUuid());
         assertThat(consumer.getEnvironments()).hasSize(1);
+    }
+
+    @Test
+    public void shouldNotDeleteConsumerWhenDeletingItsLastEnvironment() {
+        EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        ConsumerDTO consumer1 = ownerClient.consumers().createConsumer(Consumers.random(owner)
+            .environments(List.of(env1)));
+        ConsumerDTO consumer2 = ownerClient.consumers().createConsumer(Consumers.random(owner)
+            .environments(List.of(env1, env2)));
+
+        ownerClient.environments().deleteEnvironment(env1.getId(), false);
+
+        ConsumerDTO consumer3 = ownerClient.consumers().getConsumer(consumer1.getUuid());
+        assertThat(consumer3.getEnvironments()).isNull();
+
+        ConsumerDTO consumer4 = ownerClient.consumers().getConsumer(consumer2.getUuid());
+        assertThat(consumer4.getEnvironments()).hasSize(1);
     }
 
     @Test
@@ -705,7 +728,7 @@ public class EnvironmentSpecTest {
             .exportCertificates(consumer.getUuid(), null);
         assertThat(certificatesBeforeDelete).hasSize(2);
 
-        ownerClient.environments().deleteEnvironment(env1.getId());
+        ownerClient.environments().deleteEnvironment(env1.getId(), true);
 
         List<EntitlementDTO> entitlements = consumerClient.consumers()
             .listEntitlementsWithRegen(consumer.getUuid());
