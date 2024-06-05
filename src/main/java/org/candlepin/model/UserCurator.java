@@ -14,11 +14,13 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.criterion.Restrictions;
-
 import javax.inject.Singleton;
-
-
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 /**
  *
@@ -32,9 +34,28 @@ public class UserCurator extends AbstractHibernateCurator<User> {
     }
 
     public User findByLogin(String login) {
-        return (User) createSecureCriteria()
-            .add(Restrictions.eq("username", login))
-            .uniqueResult();
+        EntityManager em = getEntityManager();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<User> cq = cb.createQuery(User.class);
+        Root<User> root = cq.from(User.class);
+
+        Predicate usernamePredicate = cb.equal(root.get("username"), login);
+        Predicate securityPredicate = getSecurityPredicate(User.class, cb, root);
+
+        if (securityPredicate != null) {
+            cq.where(cb.and(usernamePredicate, securityPredicate));
+        }
+        else {
+            cq.where(usernamePredicate);
+        }
+
+        try {
+            return em.createQuery(cq)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**
@@ -42,8 +63,10 @@ public class UserCurator extends AbstractHibernateCurator<User> {
      * @return number of user accounts in our database
      */
     public Long getUserCount() {
-        return (Long) currentSession().createQuery("select count(*) from User").
-            iterate().next();
+        String jpql = "SELECT COUNT(u) FROM User u";
+
+        return getEntityManager().createQuery(jpql, Long.class)
+            .getSingleResult();
     }
 
 }

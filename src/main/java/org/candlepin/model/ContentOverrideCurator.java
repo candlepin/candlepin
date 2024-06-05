@@ -14,15 +14,17 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.criterion.Restrictions;
+import com.google.inject.persist.Transactional;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-
-
 
 /**
  * ContentOverrideCurator
@@ -55,51 +57,72 @@ public abstract class ContentOverrideCurator<T extends ContentOverride<T, Parent
             .getResultList();
     }
 
+    @Transactional
     public void removeByName(Parent parent, String contentLabel, String name) {
-        List<T> overrides = currentSession()
-            .createCriteria(this.entityType())
-            .add(Restrictions.eq(parentAttr, parent))
-            .add(Restrictions.eq("contentLabel", contentLabel))
-            .add(Restrictions.eq("name", name).ignoreCase())
-            .list();
+        EntityManager em = getEntityManager();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaDelete<T> cd = cb.createCriteriaDelete(this.entityType());
+        Root<T> root = cd.from(this.entityType());
 
-        for (T cco : overrides) {
-            delete(cco);
-        }
+        Predicate parentPredicate = cb.equal(root.get(parentAttr), parent);
+        Predicate contentLabelPredicate = cb.equal(root.get("contentLabel"), contentLabel);
+        Predicate namePredicate = cb.equal(cb.lower(root.get("name")), name.toLowerCase());
+
+        cd.where(cb.and(parentPredicate, contentLabelPredicate, namePredicate));
+
+        em.createQuery(cd).executeUpdate();
     }
 
+    @Transactional
     public void removeByContentLabel(Parent parent, String contentLabel) {
-        List<T> overrides = currentSession()
-            .createCriteria(this.entityType())
-            .add(Restrictions.eq(parentAttr, parent))
-            .add(Restrictions.eq("contentLabel", contentLabel))
-            .list();
+        EntityManager em = getEntityManager();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaDelete<T> cd = cb.createCriteriaDelete(this.entityType());
+        Root<T> root = cd.from(this.entityType());
 
-        for (T cco : overrides) {
-            delete(cco);
-        }
+        Predicate parentPredicate = cb.equal(root.get(parentAttr), parent);
+        Predicate contentLabelPredicate = cb.equal(root.get("contentLabel"), contentLabel);
+
+        cd.where(cb.and(parentPredicate, contentLabelPredicate));
+
+        em.createQuery(cd).executeUpdate();
     }
 
+    @Transactional
     public void removeByParent(Parent parent) {
-        List<T> overrides = currentSession()
-            .createCriteria(this.entityType())
-            .add(Restrictions.eq(parentAttr, parent))
-            .list();
+        EntityManager em = getEntityManager();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaDelete<T> cd = cb.createCriteriaDelete(this.entityType());
+        Root<T> root = cd.from(this.entityType());
 
-        for (T cco : overrides) {
-            delete(cco);
-        }
+        Predicate parentPredicate = cb.equal(root.get(parentAttr), parent);
+
+        cd.where(parentPredicate);
+
+        em.createQuery(cd).executeUpdate();
     }
 
     public T retrieve(Parent parent, String contentLabel, String name) {
         if (parent != null && contentLabel != null && name != null) {
-            return (T) currentSession()
-                .createCriteria(this.entityType())
-                .add(Restrictions.eq(parentAttr, parent))
-                .add(Restrictions.eq("contentLabel", contentLabel))
-                .add(Restrictions.eq("name", name.toLowerCase()))
-                .setMaxResults(1)
-                .uniqueResult();
+            EntityManager em = getEntityManager();
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<T> cq = cb.createQuery(this.entityType());
+            Root<T> root = cq.from(this.entityType());
+
+            Predicate parentPredicate = cb.equal(root.get(parentAttr), parent);
+            Predicate contentLabelPredicate = cb.equal(root.get("contentLabel"), contentLabel);
+            Predicate namePredicate = cb.equal(cb.lower(root.get("name")), name.toLowerCase());
+
+            cq.where(cb.and(parentPredicate, contentLabelPredicate, namePredicate));
+
+            try {
+                return em.createQuery(cq)
+                    .setMaxResults(1)
+                    .getSingleResult();
+            }
+            catch (NoResultException e) {
+                return null;
+            }
         }
 
         return null;

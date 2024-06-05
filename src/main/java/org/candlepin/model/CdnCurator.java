@@ -16,11 +16,10 @@ package org.candlepin.model;
 
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.NonUniqueResultException;
-import org.hibernate.criterion.Restrictions;
-
 import javax.inject.Inject;
-
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.TypedQuery;
 
 /**
  * Subscription manager.
@@ -41,10 +40,15 @@ public class CdnCurator extends AbstractHibernateCurator<Cdn> {
         // TODO: This is dangerous. We're expecting a unique result, but there is no guarantee the
         // label will be unique. The DB schema should be updated to prevent this on the input side.
 
+        String jpql = "SELECT c FROM Cdn c WHERE c.label = :label";
+        TypedQuery<Cdn> query = getEntityManager().createQuery(jpql, Cdn.class)
+            .setParameter("label", label);
+
         try {
-            return (Cdn) currentSession().createCriteria(Cdn.class)
-                .add(Restrictions.eq("label", label))
-                .uniqueResult();
+            return query.getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
         }
         catch (NonUniqueResultException e) {
             throw new IllegalStateException("Multiple CDN instances found with the same label: " + label, e);

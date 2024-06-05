@@ -14,13 +14,10 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.criterion.Restrictions;
-
 import java.util.List;
 
 import javax.inject.Singleton;
-
-
+import javax.persistence.NoResultException;
 
 /**
  * RoleCurator
@@ -49,9 +46,16 @@ public class RoleCurator extends AbstractHibernateCurator<Role> {
      * @return the role whose name matches the one given.
      */
     public Role getByName(String name) {
-        return (Role) currentSession().createCriteria(Role.class)
-            .add(Restrictions.eq("name", name))
-            .uniqueResult();
+        String jpql = "SELECT r FROM Role r WHERE r.name = :name";
+
+        try {
+            return getEntityManager().createQuery(jpql, Role.class)
+                .setParameter("name", name)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
 }
