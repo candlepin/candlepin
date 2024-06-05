@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.8
+Version: 4.4.9
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,53 @@ fi
 
 #raw
 %changelog
+* Wed Jun 05 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.9-1
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 24.0.4 to 24.0.5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump artemis from 2.33.0 to 2.34.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Update Gradle Wrapper from 8.7 to 8.8. (gradle-update-robot@regolo.cc)
+- Renamed the delete_consumers query parameter on the deleteEnvironment op
+  (crog@redhat.com)
+- Bump org.hsqldb:hsqldb from 2.7.2 to 2.7.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-856: Support environment deletion without deleting consumers
+  (sbakaj@redhat.com)
+- CANDLEPIN-823: Removed hibernate criteria from select curator classes
+  (joshmalbrecht@gmail.com)
+- Bump org.assertj:assertj-core from 3.25.3 to 3.26.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.16.0 to 10.17.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.8.1 to 3.8.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Additional fixes for the entity layering database migration (crog@redhat.com)
+- --- updated-dependencies: - dependency-name: org.liquibase:liquibase-core
+  dependency-type: direct:production   update-type: version-update:semver-minor
+  ... (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-821: Updated OwnerInfoCurator to stop using Hibernate APIs
+  (crog@redhat.com)
+- Bump com.google.code.gson:gson from 2.10.1 to 2.11.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump openapi-generator from 7.5.0 to 7.6.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mariadb.jdbc:mariadb-java-client from 3.3.3 to 3.4.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-820: Removed hibernate criteria from select curator classes
+  (joshmalbrecht@gmail.com)
+- Bump org.owasp.dependencycheck from 9.1.0 to 9.2.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.23 to 10.1.24
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Added fixes for various database migration scripts (crog@redhat.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.11.0 to 5.12.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Remove 'Gradle Enterprise' build scans (nmoumoul@redhat.com)
+- Bump com.gradle.develocity from 3.17.2 to 3.17.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+
 * Wed May 08 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.8-1
 - Bump org.keycloak:keycloak-servlet-filter-adapter from 24.0.3 to 24.0.4
   (49699333+dependabot[bot]@users.noreply.github.com)
