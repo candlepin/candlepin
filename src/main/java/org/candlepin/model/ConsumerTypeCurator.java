@@ -16,8 +16,6 @@ package org.candlepin.model;
 
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 
-import org.hibernate.criterion.Restrictions;
-
 import java.util.Collection;
 import java.util.List;
 
@@ -133,10 +131,12 @@ public class ConsumerTypeCurator extends AbstractHibernateCurator<ConsumerType> 
      * @param labels
      * @return all types matching the specified labels;
      */
-    @SuppressWarnings("unchecked")
     public List<ConsumerType> getByLabels(Collection<String> labels) {
-        return (List<ConsumerType>) currentSession().createCriteria(ConsumerType.class)
-            .add(Restrictions.in("label", labels)).list();
+        String jpql = "SELECT c FROM ConsumerType c WHERE c.label IN :labels";
+
+        return this.getEntityManager().createQuery(jpql, ConsumerType.class)
+            .setParameter("labels", labels)
+            .getResultList();
     }
 
 }

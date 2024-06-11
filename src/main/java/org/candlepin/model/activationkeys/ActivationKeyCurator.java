@@ -21,7 +21,6 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.hibernate.annotations.QueryHints;
-import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +30,7 @@ import java.util.List;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -82,14 +82,21 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
     @Transactional
     public ActivationKey getByKeyName(Owner owner, String name) {
         // Impl note:
-        // The usage of "uniqueResult" here is valid as long as we maintain the unique index on the
+        // The usage of "getSingleResult" here is valid as long as we maintain the unique index on the
         // (owner, name) tuple. At the time of writing this is present in the table definition, but
         // could break things if removed.
 
-        return (ActivationKey) this.currentSession().createCriteria(ActivationKey.class)
-            .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("name", name))
-            .uniqueResult();
+        String jpql = "SELECT a FROM ActivationKey a WHERE a.owner = :owner AND a.name = :name";
+
+        try {
+            return this.getEntityManager().createQuery(jpql, ActivationKey.class)
+                .setParameter("owner", owner)
+                .setParameter("name", name)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     public List<ActivationKey> findByKeyNames(String ownerKey, Collection<String> keyNames) {
