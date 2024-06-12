@@ -184,19 +184,94 @@ public class EnvironmentResource implements EnvironmentApi {
 
     @Override
     public EnvironmentDTO getEnvironment(@Verify(Environment.class) String envId) {
-        Environment e = envCurator.get(envId);
-        if (e == null) {
-            throw new NotFoundException(i18n.tr("No such environment: {0}", envId));
-        }
-        return translator.translate(e, EnvironmentDTO.class);
+        Environment environment = this.lookupEnvironment(envId);
+
+        return translator.translate(environment, EnvironmentDTO.class);
     }
 
     @Override
-    public void deleteEnvironment(@Verify(Environment.class) String envId, Boolean retainConsumers) {
-        Environment environment = envCurator.get(envId);
-        if (environment == null) {
-            throw new NotFoundException(i18n.tr("No such environment: {0}", envId));
+    @Transactional
+    public EnvironmentDTO updateEnvironment(@Verify(Environment.class) String envId, EnvironmentDTO dto) {
+        if (dto == null) {
+            throw new BadRequestException(this.i18n.tr("no environment update data provided"));
         }
+
+        Environment environment = this.lookupEnvironment(envId);
+
+        // Impl note:
+        // Environment ID, owner, and environment content are not updateable through this endpoint
+        // All validations must be performed first or we risk Hibernate doing a partial update if we
+        // lose control of the transaction boundaries.
+        String name = dto.getName();
+        if (name != null) {
+            if (name.isBlank()) {
+                throw new BadRequestException(this.i18n.tr("environment name must be a non-empty value"));
+            }
+
+            if (name.length() > Environment.NAME_MAX_LENGTH) {
+                throw new BadRequestException(this.i18n.tr("environment name cannot exceed {0} characters",
+                    Environment.NAME_MAX_LENGTH));
+            }
+        }
+
+        String type = dto.getType();
+        if (type != null) {
+            if (type.length() > Environment.TYPE_MAX_LENGTH) {
+                throw new BadRequestException(this.i18n.tr("environment type cannot exceed {0} characters",
+                    Environment.TYPE_MAX_LENGTH));
+            }
+        }
+
+        String description = dto.getDescription();
+        if (description != null) {
+            if (description.length() > Environment.DESCRIPTION_MAX_LENGTH) {
+                String errmsg = this.i18n.tr("environment description cannot exceed {0} characters",
+                    Environment.DESCRIPTION_MAX_LENGTH);
+
+                throw new BadRequestException(errmsg);
+            }
+        }
+
+        String contentPrefix = dto.getContentPrefix();
+        if (contentPrefix != null) {
+            if (contentPrefix.length() > Environment.CONTENT_PREFIX_MAX_LENGTH) {
+                String errmsg = this.i18n.tr("environment content prefix cannot exceed {0} characters",
+                    Environment.CONTENT_PREFIX_MAX_LENGTH);
+
+                throw new BadRequestException(errmsg);
+            }
+        }
+
+        // Impl note:
+        // Because of Hibernate's magic store-on-commit stuff, we have to do these as a separate set
+        // of checks to retain atomicity, or we could find ourselves in an undefined state.
+        if (name != null) {
+            environment.setName(name);
+        }
+
+        if (type != null) {
+            environment.setType(!type.isBlank() ? type : null);
+        }
+
+        if (description != null) {
+            environment.setDescription(!description.isBlank() ? description : null);
+        }
+
+        if (contentPrefix != null) {
+            environment.setContentPrefix(!contentPrefix.isBlank() ? contentPrefix : null);
+        }
+
+        // This isn't actually necessary, but maybe some day we'll get away from the magic and this
+        // will be required
+        environment = this.envCurator.merge(environment);
+
+        return translator.translate(environment, EnvironmentDTO.class);
+    }
+
+    @Override
+    @Transactional
+    public void deleteEnvironment(@Verify(Environment.class) String envId, Boolean retainConsumers) {
+        Environment environment = this.lookupEnvironment(envId);
 
         List<Consumer> consumers = this.envCurator.getEnvironmentConsumers(environment);
 

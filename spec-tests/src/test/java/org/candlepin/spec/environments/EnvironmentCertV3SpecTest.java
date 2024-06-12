@@ -61,7 +61,7 @@ public class EnvironmentCertV3SpecTest {
         String ownerKey = owner.getKey();
 
         ApiClient orgAdmin = ApiClients.basic(UserUtil.createAdminUser(adminClient, owner));
-        EnvironmentDTO env = orgAdmin.owners().createEnv(ownerKey, Environments.random());
+        EnvironmentDTO env = orgAdmin.owners().createEnvironment(ownerKey, Environments.random());
         ConsumerDTO consumer = orgAdmin.consumers().createConsumer(Consumers.random(owner)
             .addEnvironmentsItem(env)
             .facts(Map.ofEntries(Facts.CertificateVersion.withValue("3.1"))));
@@ -102,7 +102,7 @@ public class EnvironmentCertV3SpecTest {
         String ownerKey = owner.getKey();
 
         ApiClient orgAdmin = ApiClients.basic(UserUtil.createAdminUser(adminClient, owner));
-        EnvironmentDTO env = orgAdmin.owners().createEnv(ownerKey, Environments.random());
+        EnvironmentDTO env = orgAdmin.owners().createEnvironment(ownerKey, Environments.random());
         ConsumerDTO consumer = orgAdmin.consumers().createConsumer(Consumers.random(owner)
             .addEnvironmentsItem(env)
             .facts(Map.ofEntries(Facts.CertificateVersion.withValue("3.1"))));
@@ -180,7 +180,7 @@ public class EnvironmentCertV3SpecTest {
         String ownerKey = owner.getKey();
 
         ApiClient orgAdmin = ApiClients.basic(UserUtil.createAdminUser(adminClient, owner));
-        EnvironmentDTO env = orgAdmin.owners().createEnv(ownerKey, Environments.random());
+        EnvironmentDTO env = orgAdmin.owners().createEnvironment(ownerKey, Environments.random());
         ConsumerDTO consumer = orgAdmin.consumers().createConsumer(Consumers.random(owner)
             .addEnvironmentsItem(env)
             .facts(Map.ofEntries(Facts.CertificateVersion.withValue("3.1"))));

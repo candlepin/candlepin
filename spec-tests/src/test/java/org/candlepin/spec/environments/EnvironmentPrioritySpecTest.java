@@ -75,8 +75,8 @@ public class EnvironmentPrioritySpecTest {
         this.owner = admin.owners().createOwner(Owners.random());
         this.ownerClient = ApiClients.basic(UserUtil.createAdminUser(admin, this.owner));
 
-        this.env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
-        this.env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        this.env1 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        this.env2 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         this.content1 = createContent();
         this.content2 = createContent();
         this.content3 = createContent();
@@ -310,7 +310,7 @@ public class EnvironmentPrioritySpecTest {
 
     @Test
     public void shouldNotRegenWhenReorderingLowPriorityEnvironments() {
-        EnvironmentDTO env3 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env3 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         ProductDTO product = ownerClient.ownerProducts()
             .createProduct(owner.getKey(), Products.randomEng());
         addContentToProduct(product, content1);

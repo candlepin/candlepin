@@ -68,7 +68,7 @@ public class ConsumerResourceEnvironmentSpecTest {
         ApiClient userClient = ApiClients.basic(user);
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        EnvironmentDTO env = adminClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = adminClient.owners().createEnvironment(owner.getKey(), Environments.random());
         assertNull(consumer.getEnvironment());
 
         consumerClient.consumers().updateConsumer(consumer.getUuid(), new ConsumerDTO()
@@ -85,7 +85,7 @@ public class ConsumerResourceEnvironmentSpecTest {
         ApiClient userClient = ApiClients.basic(user);
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        EnvironmentDTO env = adminClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = adminClient.owners().createEnvironment(owner.getKey(), Environments.random());
         assertNull(consumer.getEnvironment());
 
         consumerClient.consumers().updateConsumer(consumer.getUuid(), new ConsumerDTO()
@@ -102,7 +102,7 @@ public class ConsumerResourceEnvironmentSpecTest {
         ApiClient userClient = ApiClients.basic(user);
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        adminClient.owners().createEnv(owner.getKey(), Environments.random());
+        adminClient.owners().createEnvironment(owner.getKey(), Environments.random());
         assertNull(consumer.getEnvironment());
 
         assertNotFound(() -> consumerClient.consumers().updateConsumer(consumer.getUuid(), new ConsumerDTO()
@@ -112,8 +112,8 @@ public class ConsumerResourceEnvironmentSpecTest {
     @Test
     public void shouldCreateConsumerWithMultipleEnvironments() {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
-        EnvironmentDTO env1 = adminClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env2 = adminClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env1 = adminClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env2 = adminClient.owners().createEnvironment(owner.getKey(), Environments.random());
 
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner)
             .environments(List.of(env1, env2)));
@@ -125,7 +125,7 @@ public class ConsumerResourceEnvironmentSpecTest {
     @Test
     public void shouldNotCreateConsumerWithNullEnvironmentInEnvironmentsList() {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
-        EnvironmentDTO env1 = adminClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env1 = adminClient.owners().createEnvironment(owner.getKey(), Environments.random());
         assertNotFound(() -> userClient.consumers().createConsumer(Consumers.random(owner)
             .environments(List.of(env1, Environments.random()))));
     }
@@ -133,8 +133,8 @@ public class ConsumerResourceEnvironmentSpecTest {
     @Test
     public void shouldUpdateConsumerWithRePrioritizedEnvironments() {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
-        EnvironmentDTO env1 = adminClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env2 = adminClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env1 = adminClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env2 = adminClient.owners().createEnvironment(owner.getKey(), Environments.random());
 
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
@@ -157,9 +157,9 @@ public class ConsumerResourceEnvironmentSpecTest {
     @Test
     public void shouldPreserveOtherEnvironmentPrioritiesOnAConsumerWhenAnEnvironmentIsRemoved() {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
-        EnvironmentDTO env1 = adminClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env2 = adminClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env3 = adminClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env1 = adminClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env2 = adminClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env3 = adminClient.owners().createEnvironment(owner.getKey(), Environments.random());
 
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner)
             .environments(List.of(env1, env2, env3)));
@@ -183,8 +183,8 @@ public class ConsumerResourceEnvironmentSpecTest {
     @Test
     public void shouldReturnExceptionWhenEnvironmentIsSpecifiedMoreThanOnce() {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
-        EnvironmentDTO env1 = adminClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env2 = adminClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env1 = adminClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env2 = adminClient.owners().createEnvironment(owner.getKey(), Environments.random());
 
         // Exception raised while creating consumer
         assertConflict(() -> userClient.consumers().createConsumer(Consumers.random(owner)

@@ -308,7 +308,7 @@ public class ContentAccessSpecTest {
         adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
-        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environments.random());
+        EnvironmentDTO env = adminClient.owners().createEnvironment(ownerKey, Environments.random());
         promoteContentToEnvironment(adminClient, env.getId(), content, false);
 
         ConsumerDTO consumer = adminClient.consumers()
@@ -352,8 +352,8 @@ public class ContentAccessSpecTest {
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
-        EnvironmentDTO env1 = adminClient.owners().createEnv(ownerKey, Environments.random());
-        EnvironmentDTO env2 = adminClient.owners().createEnv(ownerKey, Environments.random());
+        EnvironmentDTO env1 = adminClient.owners().createEnvironment(ownerKey, Environments.random());
+        EnvironmentDTO env2 = adminClient.owners().createEnvironment(ownerKey, Environments.random());
         ContentDTO content2 = adminClient.ownerContent()
             .createContent(ownerKey, Contents.random().arches("x86_64"));
         adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content2.getId(), true);
@@ -409,7 +409,7 @@ public class ContentAccessSpecTest {
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
-        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environments.random());
+        EnvironmentDTO env = adminClient.owners().createEnvironment(ownerKey, Environments.random());
         ConsumerDTO consumer = adminClient.consumers()
             .createConsumer(Consumers.random(owner).addEnvironmentsItem(env));
         ApiClient consumerClient = ApiClients.ssl(consumer);
@@ -462,7 +462,7 @@ public class ContentAccessSpecTest {
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
-        EnvironmentDTO env1 = adminClient.owners().createEnv(ownerKey, Environments.random());
+        EnvironmentDTO env1 = adminClient.owners().createEnvironment(ownerKey, Environments.random());
         promoteContentToEnvironment(adminClient, env1.getId(), content, true);
 
         ConsumerDTO consumer = adminClient.consumers()
@@ -489,7 +489,7 @@ public class ContentAccessSpecTest {
                 contentUrl(ownerKey, env1)
             );
 
-        EnvironmentDTO env2 = adminClient.owners().createEnv(ownerKey, Environments.random());
+        EnvironmentDTO env2 = adminClient.owners().createEnvironment(ownerKey, Environments.random());
         consumer.environments(List.of(env2));
         consumer.setReleaseVer(new ReleaseVerDTO().releaseVer(""));
         consumerClient.consumers().updateConsumer(consumer.getUuid(), consumer);
@@ -695,7 +695,7 @@ public class ContentAccessSpecTest {
         adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
-        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environments.random());
+        EnvironmentDTO env = adminClient.owners().createEnvironment(ownerKey, Environments.random());
         promoteContentToEnvironment(adminClient, env.getId(), content, true);
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -1085,7 +1085,7 @@ public class ContentAccessSpecTest {
         adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
-        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environments.random());
+        EnvironmentDTO env = adminClient.owners().createEnvironment(ownerKey, Environments.random());
         promoteContentToEnvironment(adminClient, env.getId(), content, false);
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner)
@@ -1151,7 +1151,7 @@ public class ContentAccessSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environments.random());
+        EnvironmentDTO env = adminClient.owners().createEnvironment(ownerKey, Environments.random());
         ConsumerDTO consumer = adminClient.consumers()
             .createConsumer(Consumers.random(owner).addEnvironmentsItem(env));
         assertThat(consumer.getEnvironments()).singleElement().returns(env.getId(), EnvironmentDTO::getId);
@@ -1462,8 +1462,8 @@ public class ContentAccessSpecTest {
         ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
 
-        EnvironmentDTO env1 = adminClient.owners().createEnv(ownerKey, Environments.random());
-        EnvironmentDTO env2 = adminClient.owners().createEnv(ownerKey, Environments.random());
+        EnvironmentDTO env1 = adminClient.owners().createEnvironment(ownerKey, Environments.random());
+        EnvironmentDTO env2 = adminClient.owners().createEnvironment(ownerKey, Environments.random());
         promoteContentToEnvironment(adminClient, env2.getId(), content, true);
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner)

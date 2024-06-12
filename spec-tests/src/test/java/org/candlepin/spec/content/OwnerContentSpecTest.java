@@ -1002,7 +1002,7 @@ class OwnerContentSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
-        EnvironmentDTO env = adminClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = adminClient.owners().createEnvironment(owner.getKey(), Environments.random());
         assertNotNull(env);
 
         int products = 10;  // number of products to create

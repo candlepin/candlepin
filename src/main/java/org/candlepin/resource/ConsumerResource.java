@@ -1117,6 +1117,7 @@ public class ConsumerResource implements ConsumerApi {
         if (keyStrings == null || keyStrings.isEmpty()) {
             return Collections.emptyList();
         }
+
         LinkedHashMap<String, ActivationKey> keys = new LinkedHashMap<>();
         for (String keyname : keyStrings.split("\\s*,\\s*")) {
             keys.put(keyname, null);
