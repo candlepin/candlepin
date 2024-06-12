@@ -27,6 +27,7 @@ jobs:
           workflow: unit_tests.yml
           run_id: ${{ github.event.workflow_run.id }}
           name: pr_number
+          allow_forks: true
 
       - name: Read PR_NUMBER.txt
         id: pr_number
@@ -80,6 +81,7 @@ jobs:
           workflow: unit_tests.yml
           run_id: ${{ github.event.workflow_run.id }}
           name: unit_test_reports
+          allow_forks: true
 
       - name: Analyze
         if: ${{ fromJson(steps.get_pr_data.outputs.data).base.ref == 'main' || startsWith(fromJson(steps.get_pr_data.outputs.data).base.ref, 'feature/') }}
