@@ -6,6 +6,14 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
 
+    <!--
+        Impl note:
+        Cast types for the SQL gigablob below, because why have standards when you can have pain?
+        Also, declaration order is very important here.
+    -->
+    <property name="cast.varchar.type" value="CHAR" dbms="mysql,mariadb"/>
+    <property name="cast.varchar.type" value="VARCHAR" dbms="postgresql,all"/>
+
     <!-- content tables -->
     <changeSet id="20231003113535-1" author="crog">
         <preConditions onFail="MARK_RAN">
@@ -386,7 +394,7 @@
                     SELECT product_uuid AS parent_uuid, provided_product_uuid AS child_uuid
                         FROM cp2_product_provided_products),
                 product_graph(uuid, depth) AS (
-                    SELECT active.uuid, 0
+                    SELECT CAST(active.uuid AS ${cast.varchar.type}) AS uuid, 0
                         FROM cp2_products prod
                         JOIN (SELECT product_uuid AS uuid FROM cp2_owner_products
                             UNION
@@ -550,7 +558,7 @@
                     SELECT product_uuid AS parent_uuid, provided_product_uuid AS child_uuid
                         FROM cp2_product_provided_products),
                 product_graph(owner_id, uuid, depth) AS (
-                    SELECT active.owner_id, active.uuid, 0
+                    SELECT active.owner_id, CAST(active.uuid AS ${cast.varchar.type}) AS uuid, 0
                         FROM cp2_products prod
                         JOIN (SELECT owner_id, product_uuid AS uuid FROM cp2_owner_products
                             UNION
