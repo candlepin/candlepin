@@ -1108,7 +1108,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public EnvironmentDTO createEnv(@Verify(Owner.class) String ownerKey, EnvironmentDTO envDTO) {
+    public EnvironmentDTO createEnvironment(@Verify(Owner.class) String ownerKey, EnvironmentDTO envDTO) {
         Environment env = new Environment();
         NestedOwnerDTO ownerDTO = new NestedOwnerDTO().key(ownerKey);
         envDTO.setOwner(ownerDTO);

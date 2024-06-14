@@ -302,8 +302,10 @@ public class ConsumerResourceContentOverrideSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-        EnvironmentDTO environment1 = adminClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO environment2 = adminClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO environment1 = adminClient.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO environment2 = adminClient.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner)
             .addEnvironmentsItem(environment1)
             .addEnvironmentsItem(environment2));

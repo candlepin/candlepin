@@ -3158,6 +3158,62 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+    put:
+      description: |
+        Updates the specified using the non-null fields specified in the provided EnvironmentDTO.
+        Note that some fields of an environment cannot be changed without deleting and recreating
+        the environment -- such as its ID or organization (owner) -- and some other properties that
+        are mutable may not be changed by this operation, such as environment content overrides. In
+        the case of the created and updated timestamps, this operation may not directly update those
+        fields, but the updated field may be changed as a result of other fields changing.
+
+        Ignored EnvironmentDTO fields:
+        - id
+        - owner
+        - environmentContent
+        - created
+        - updated*
+
+      operationId: updateEnvironment
+      tags:
+        - environment
+      parameters:
+        - name: env_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: |
+          An EnvironmentDTO containing the data to use to update the target environment. The object
+          need not be fully populated, as some fields cannot be changed by an update operation and
+          will be ignored. Any field which is not intended to be updated should be left undefined or
+          null. An empty, non-null value should be used to clear any existing value in a given
+          field.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvironmentDTO'
+      security: []
+      responses:
+        200:
+          description: |
+            The updated environment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentDTO'
+        404:
+          description: |
+            An environment with the specified ID does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          $ref: '#/components/responses/default'
+
     delete:
       description: |
         Deletes the specified environment, unregistering and deleting any consumers registered to
@@ -3329,7 +3385,16 @@ paths:
           $ref: '#/components/responses/default'
 
     delete:
-      description: "Demotes a Content from an Environment. Consumer's registered to this environment will not see this content in their entitlement certificates. (after they are regenerated and synced to clients) This call accepts multiple content IDs to demote at once, allowing us to mass demote, then trigger a cert regeneration. NOTE: This call expects the actual content IDs, *not* the ID created for each EnvironmentContent object created after a promotion. This is to help integrate with other management apps which should not have to track/lookup a specific ID for the content to demote."
+      description: |
+        Demotes a Content from an Environment. Consumer's registered to this environment will not
+        see this content in their entitlement certificates. (after they are regenerated and synced
+        to clients) This call accepts multiple content IDs to demote at once, allowing us to mass
+        demote, then trigger a cert regeneration.
+
+        NOTE: This call expects the actual content IDs, *not* the ID created for each
+        EnvironmentContent object created after a promotion. This is to help integrate with other
+        management apps which should not have to track/lookup a specific ID for the content to
+        demote.
       operationId: demoteContent
       tags:
         - environment
@@ -3832,7 +3897,13 @@ paths:
     post:
       tags:
         - hypervisors
-      description: Creates or Updates the list of Hypervisor hosts Allows agents such as virt-who to update hosts' information . This is typically used when a host is unable to register to candlepin via subscription manager. In situations where consumers already exist it is probably best not to allow creation of new hypervisor consumers.  Most consumers do not have a hypervisorId attribute, so that should be added manually when necessary by the management environment. Default is true. If false is specified, hypervisorIds that are not found will result in a failed state of the job.
+      description: |
+        Creates or Updates the list of Hypervisor hosts Allows agents such as virt-who to update hosts'
+        information . This is typically used when a host is unable to register to candlepin via subscription
+        manager. In situations where consumers already exist it is probably best not to allow creation of new
+        hypervisor consumers.  Most consumers do not have a hypervisorId attribute, so that should be added
+        manually when necessary by the management environment. Default is true. If false is specified,
+        hypervisorIds that are not found will result in a failed state of the job.
       operationId: hypervisorUpdateAsync
       security: []
       requestBody:
@@ -5308,7 +5379,7 @@ paths:
       description: Creates an environment for the owner
       tags:
         - owner
-      operationId: createEnv
+      operationId: createEnvironment
       security: []
       parameters:
         - name: owner_key

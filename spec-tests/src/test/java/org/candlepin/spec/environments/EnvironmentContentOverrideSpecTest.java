@@ -55,7 +55,7 @@ public class EnvironmentContentOverrideSpecTest {
             .createOwner(Owners.random());
 
         return client.owners()
-            .createEnv(owner.getKey(), Environments.random());
+            .createEnvironment(owner.getKey(), Environments.random());
     }
 
     @Test
@@ -204,9 +204,12 @@ public class EnvironmentContentOverrideSpecTest {
 
         OwnerDTO owner1 = adminClient.owners().createOwner(Owners.random());
         OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
-        EnvironmentDTO environment1 = adminClient.owners().createEnv(owner1.getKey(), Environments.random());
-        EnvironmentDTO environment2 = adminClient.owners().createEnv(owner1.getKey(), Environments.random());
-        EnvironmentDTO environment3 = adminClient.owners().createEnv(owner2.getKey(), Environments.random());
+        EnvironmentDTO environment1 = adminClient.owners()
+            .createEnvironment(owner1.getKey(), Environments.random());
+        EnvironmentDTO environment2 = adminClient.owners()
+            .createEnvironment(owner1.getKey(), Environments.random());
+        EnvironmentDTO environment3 = adminClient.owners()
+            .createEnvironment(owner2.getKey(), Environments.random());
 
         ContentOverrideDTO co1 = ContentOverrides.random();
         ContentOverrideDTO co2 = ContentOverrides.random();

@@ -16,10 +16,14 @@ package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -34,6 +38,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.SimpleModelTranslator;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.ContentDTO;
+import org.candlepin.dto.api.server.v1.EnvironmentContentDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.ContentTranslator;
@@ -51,6 +56,7 @@ import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentContentOverrideCurator;
 import org.candlepin.model.EnvironmentCurator;
@@ -70,15 +76,22 @@ import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.lang.reflect.InvocationTargetException;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class EnvironmentResourceTest {
 
     private static final String ENV_ID_1 = "env_id_1";
@@ -161,6 +174,8 @@ class EnvironmentResourceTest {
         // the test as necessary!
         this.owner = TestUtil.createOwner("owner1");
         this.environment1 = createEnvironment(owner, ENV_ID_1);
+
+        doAnswer(returnsFirstArg()).when(this.envCurator).merge(any(Environment.class));
     }
 
     @Test
@@ -175,6 +190,345 @@ class EnvironmentResourceTest {
         EnvironmentDTO environment = this.environmentResource.getEnvironment(ENV_ID_1);
 
         assertNotNull(environment);
+    }
+
+    private Environment createMockedEnvironment() {
+        Date now = new Date();
+
+        Environment environment = new Environment()
+            .setId(TestUtil.randomString(16, TestUtil.CHARSET_ALPHANUMERIC))
+            .setCreated(now)
+            .setUpdated(now);
+
+        doReturn(environment).when(this.envCurator).get(environment.getId());
+
+        return environment;
+    }
+
+    @Test
+    public void testUpdateEnvironmentCanUpdateName() {
+        Environment environment = this.createMockedEnvironment()
+            .setName("initial name");
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .name("updated name");
+
+        EnvironmentDTO result = this.environmentResource.updateEnvironment(environment.getId(), update);
+
+        assertEquals(update.getName(), result.getName());
+        assertEquals(update.getName(), environment.getName());
+    }
+
+    @Test
+    public void testUpdateEnvironmentRejectsEmptyName() {
+        String initialValue = "initial name";
+
+        Environment environment = this.createMockedEnvironment()
+            .setName(initialValue);
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .name("");
+
+        assertThrows(BadRequestException.class, () ->
+            this.environmentResource.updateEnvironment(environment.getId(), update));
+
+        assertEquals(initialValue, environment.getName());
+    }
+
+    @Test
+    public void testUpdateEnvironmentRejectsLongName() {
+        String initialValue = "initial name";
+
+        Environment environment = this.createMockedEnvironment()
+            .setName(initialValue);
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .name("o".repeat(Environment.NAME_MAX_LENGTH + 1));
+
+        assertThrows(BadRequestException.class, () ->
+            this.environmentResource.updateEnvironment(environment.getId(), update));
+
+        assertEquals(initialValue, environment.getName());
+    }
+
+    @Test
+    public void testUpdateEnvironmentCanUpdateType() {
+        Environment environment = this.createMockedEnvironment()
+            .setType("initial type");
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .type("updated type");
+
+        EnvironmentDTO result = this.environmentResource.updateEnvironment(environment.getId(), update);
+
+        assertEquals(update.getType(), result.getType());
+        assertEquals(update.getType(), environment.getType());
+    }
+
+    @Test
+    public void testUpdateEnvironmentCanClearType() {
+        Environment environment = this.createMockedEnvironment()
+            .setType("initial type");
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .type("");
+
+        EnvironmentDTO result = this.environmentResource.updateEnvironment(environment.getId(), update);
+
+        assertNull(result.getType());
+        assertNull(environment.getType());
+    }
+
+    @Test
+    public void testUpdateEnvironmentRejectsLongType() {
+        String initialValue = "initial type";
+
+        Environment environment = this.createMockedEnvironment()
+            .setType(initialValue);
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .type("o".repeat(Environment.TYPE_MAX_LENGTH + 1));
+
+        assertThrows(BadRequestException.class, () ->
+            this.environmentResource.updateEnvironment(environment.getId(), update));
+
+        assertEquals(initialValue, environment.getType());
+    }
+
+    @Test
+    public void testUpdateEnvironmentCanUpdateDescription() {
+        Environment environment = this.createMockedEnvironment()
+            .setDescription("initial description");
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .description("updated description");
+
+        EnvironmentDTO result = this.environmentResource.updateEnvironment(environment.getId(), update);
+
+        assertEquals(update.getDescription(), result.getDescription());
+        assertEquals(update.getDescription(), environment.getDescription());
+    }
+
+    @Test
+    public void testUpdateEnvironmentCanClearDescription() {
+        Environment environment = this.createMockedEnvironment()
+            .setDescription("initial description");
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .description("");
+
+        EnvironmentDTO result = this.environmentResource.updateEnvironment(environment.getId(), update);
+
+        assertNull(result.getDescription());
+        assertNull(environment.getDescription());
+    }
+
+    @Test
+    public void testUpdateEnvironmentRejectsLongDescription() {
+        String initialValue = "initial description";
+
+        Environment environment = this.createMockedEnvironment()
+            .setDescription(initialValue);
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .description("o".repeat(Environment.DESCRIPTION_MAX_LENGTH + 1));
+
+        assertThrows(BadRequestException.class, () ->
+            this.environmentResource.updateEnvironment(environment.getId(), update));
+
+        assertEquals(initialValue, environment.getDescription());
+    }
+
+    @Test
+    public void testUpdateEnvironmentCanUpdateContentPrefix() {
+        Environment environment = this.createMockedEnvironment()
+            .setContentPrefix("initial contentprefix");
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .contentPrefix("updated contentprefix");
+
+        EnvironmentDTO result = this.environmentResource.updateEnvironment(environment.getId(), update);
+
+        assertEquals(update.getContentPrefix(), result.getContentPrefix());
+        assertEquals(update.getContentPrefix(), environment.getContentPrefix());
+    }
+
+    @Test
+    public void testUpdateEnvironmentCanClearContentPrefix() {
+        Environment environment = this.createMockedEnvironment()
+            .setContentPrefix("initial contentprefix");
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .contentPrefix("");
+
+        EnvironmentDTO result = this.environmentResource.updateEnvironment(environment.getId(), update);
+
+        assertNull(result.getContentPrefix());
+        assertNull(environment.getContentPrefix());
+    }
+
+    @Test
+    public void testUpdateEnvironmentRejectsLongContentPrefix() {
+        String initialValue = "initial contentprefix";
+
+        Environment environment = this.createMockedEnvironment()
+            .setContentPrefix(initialValue);
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .contentPrefix("o".repeat(Environment.CONTENT_PREFIX_MAX_LENGTH + 1));
+
+        assertThrows(BadRequestException.class, () ->
+            this.environmentResource.updateEnvironment(environment.getId(), update));
+
+        assertEquals(initialValue, environment.getContentPrefix());
+    }
+
+    /**
+     * These tests verify we don't update fields that either should not be updated (ID, owner) or
+     * need special juggling for cert and content access (env content)
+     */
+    @Test
+    public void testUpdateEnvironmentIgnoresId() {
+        Environment environment = this.createMockedEnvironment();
+
+        String initialValue = environment.getId();
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .id("new id");
+
+        EnvironmentDTO result = this.environmentResource.updateEnvironment(environment.getId(), update);
+
+        assertEquals(initialValue, environment.getId());
+    }
+
+    @Test
+    public void testUpdateEnvironmentIgnoresCreatedTimestamp() {
+        Environment environment = this.createMockedEnvironment();
+
+        Date initialValue = environment.getCreated();
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .created(OffsetDateTime.now().minusDays(5));
+
+        EnvironmentDTO result = this.environmentResource.updateEnvironment(environment.getId(), update);
+
+        assertEquals(initialValue, environment.getCreated());
+    }
+
+    @Test
+    public void testUpdateEnvironmentIgnoresUpdatedTimestamp() {
+        Environment environment = this.createMockedEnvironment();
+
+        Date initialValue = environment.getUpdated();
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .updated(OffsetDateTime.now().minusDays(5));
+
+        EnvironmentDTO result = this.environmentResource.updateEnvironment(environment.getId(), update);
+
+        assertEquals(initialValue, environment.getUpdated());
+    }
+
+    @Test
+    public void testUpdateEnvironmentIgnoresOwner() {
+        Owner owner = new Owner()
+            .setId("owner id")
+            .setKey("owner key");
+
+        Environment environment = this.createMockedEnvironment()
+            .setOwner(owner);
+
+        String initialValue = environment.getId();
+
+        NestedOwnerDTO ownerUpdate = new NestedOwnerDTO()
+            .id("updated id")
+            .key("updated key");
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .owner(ownerUpdate);
+
+        EnvironmentDTO result = this.environmentResource.updateEnvironment(environment.getId(), update);
+
+        assertEquals(owner.getId(), environment.getOwnerId());
+        assertEquals(owner.getKey(), environment.getOwnerKey());
+    }
+
+    @Test
+    public void testUpdateEnvironmentIgnoresEnvironmentContent() {
+        EnvironmentContent ec1 = new EnvironmentContent()
+            .setContentId("content1")
+            .setEnabled(true);
+
+        Environment environment = this.createMockedEnvironment()
+            .addEnvironmentContent(ec1);
+
+        EnvironmentContentDTO envContentUpdate1 = new EnvironmentContentDTO()
+            .contentId("content1")
+            .enabled(false);
+
+        EnvironmentContentDTO envContentUpdate2 = new EnvironmentContentDTO()
+            .contentId("content2")
+            .enabled(true);
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .addEnvironmentContentItem(envContentUpdate1)
+            .addEnvironmentContentItem(envContentUpdate2);
+
+        EnvironmentDTO result = this.environmentResource.updateEnvironment(environment.getId(), update);
+
+        Set<EnvironmentContent> environmentContent = environment.getEnvironmentContent();
+        assertNotNull(environmentContent);
+        assertEquals(1, environmentContent.size());
+
+        EnvironmentContent elem1 = environmentContent.iterator().next();
+        assertNotNull(elem1);
+        assertEquals(ec1.getContentId(), elem1.getContentId());
+        assertEquals(ec1.getEnabled(), elem1.getEnabled());
+    }
+
+    /**
+     * Test to verify that we don't do partial updates in the event that we have multiple fields to
+     * update, some valid and some not.
+     */
+    @ParameterizedTest
+    @ValueSource(strings = { "name", "type", "description", "contentPrefix" })
+    public void testUpdateEnvironmentIsAtomic(String invalidFieldName) {
+        String initialName = "initial name";
+        String initialType = "initial type";
+        String initialDescription = "initial description";
+        String initialContentPrefix = "initial prefix";
+
+        Environment environment = this.createMockedEnvironment()
+            .setName(initialName)
+            .setType(initialType)
+            .setDescription(initialDescription)
+            .setContentPrefix(initialContentPrefix);
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .name("updated name")
+            .type("updated type")
+            .description("updated description")
+            .contentPrefix("updated prefix");
+
+        try {
+            // Make the designated field an invalid field with a ridiculously long value
+            String invalidFieldValue = "void".repeat(512);
+
+            EnvironmentDTO.class.getMethod(invalidFieldName, String.class)
+                .invoke(update, invalidFieldValue);
+        }
+        catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            // Rethrow anything that happens in here
+            throw new RuntimeException(e);
+        }
+
+        assertThrows(BadRequestException.class, () ->
+            this.environmentResource.updateEnvironment(environment.getId(), update));
+
+        assertEquals(initialName, environment.getName());
+        assertEquals(initialType, environment.getType());
+        assertEquals(initialDescription, environment.getDescription());
+        assertEquals(initialContentPrefix, environment.getContentPrefix());
     }
 
     @Test

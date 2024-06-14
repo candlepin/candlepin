@@ -43,11 +43,23 @@ import javax.validation.constraints.Size;
  */
 @Entity
 @Table(name = Environment.DB_TABLE)
-public class Environment extends AbstractHibernateObject implements Serializable, Owned {
+public class Environment extends AbstractHibernateObject<Environment> implements Serializable, Owned {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_environment";
     private static final long serialVersionUID = 4162471699021316341L;
+
+    /** The maximum number of characters allowed in the name field */
+    public static final int NAME_MAX_LENGTH = 255;
+
+    /** The maximum number of characters allowed in the type field */
+    public static final int TYPE_MAX_LENGTH = 32;
+
+    /** The maximum number of characters allowed in the description field */
+    public static final int DESCRIPTION_MAX_LENGTH = 255;
+
+    /** The maximum number of characters allowed in the contentPrefix field */
+    public static final int CONTENT_PREFIX_MAX_LENGTH = 255;
 
     @Id
     @Column(length = 32)
@@ -62,20 +74,20 @@ public class Environment extends AbstractHibernateObject implements Serializable
     private Owner owner;
 
     @Column(nullable = false)
-    @Size(max = 255)
+    @Size(max = NAME_MAX_LENGTH)
     @NotNull
     private String name;
 
-    @Column
-    @Size(max = 32)
+    @Column(nullable = true)
+    @Size(max = TYPE_MAX_LENGTH)
     private String type;
 
     @Column(nullable = true)
-    @Size(max = 255)
+    @Size(max = DESCRIPTION_MAX_LENGTH)
     private String description;
 
-    @Column(name = "content_prefix")
-    @Size(max = 255)
+    @Column(name = "content_prefix", nullable = true)
+    @Size(max = CONTENT_PREFIX_MAX_LENGTH)
     private String contentPrefix;
 
     @OneToMany(mappedBy = "environment", targetEntity = EnvironmentContent.class,
@@ -207,9 +219,7 @@ public class Environment extends AbstractHibernateObject implements Serializable
     }
 
     public Environment setType(String type) {
-        if (type != null) {
-            this.type = type.toLowerCase();
-        }
+        this.type = type != null ? type.toLowerCase() : null;
         return this;
     }
 

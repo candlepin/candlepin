@@ -16,9 +16,12 @@ package org.candlepin.spec.environments;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.CertificateAssert.assertThatCert;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertConflict;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertGone;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.dto.api.client.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
@@ -60,6 +63,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.lang.reflect.InvocationTargetException;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -91,7 +96,7 @@ public class EnvironmentSpecTest {
     public void shouldAllowOwnerAdminToCreateEnvironments() {
         EnvironmentDTO expectedEnv = Environments.random();
 
-        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), expectedEnv);
+        EnvironmentDTO env = ownerClient.owners().createEnvironment(owner.getKey(), expectedEnv);
         assertThat(env)
             .isNotNull()
             .returns(expectedEnv.getId(), EnvironmentDTO::getId)
@@ -107,7 +112,7 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldAllowOwnerAdminToDeleteEnvironments() {
-        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
 
         ownerClient.environments().deleteEnvironment(env.getId());
 
@@ -121,12 +126,12 @@ public class EnvironmentSpecTest {
         OwnerDTO foreignOwner = admin.owners().createOwner(Owners.random());
         ApiClient foreignClient = ApiClients.basic(UserUtil.createUser(admin, foreignOwner));
 
-        assertNotFound(() -> foreignClient.owners().createEnv(owner.getKey(), Environments.random()));
+        assertNotFound(() -> foreignClient.owners().createEnvironment(owner.getKey(), Environments.random()));
     }
 
     @Test
     public void shouldNotAllowForeignAdminToAccessEnvironments() {
-        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         OwnerDTO foreignOwner = admin.owners().createOwner(Owners.random());
         ApiClient foreignClient = ApiClients.basic(UserUtil.createUser(admin, foreignOwner));
 
@@ -139,7 +144,7 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldFindEnvironmentByName() {
-        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
 
         List<EnvironmentDTO> foundEnv = ownerClient.owners().listEnvironments(owner, env.getName());
 
@@ -150,11 +155,11 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldFindTypedEnvironmentsByOwner() {
-        EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random()
+        EnvironmentDTO env1 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random()
             .type(null));
-        EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random()
+        EnvironmentDTO env2 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random()
             .type(StringUtil.random("type-")));
-        EnvironmentDTO env3 = ownerClient.owners().createEnv(owner.getKey(), Environments.random()
+        EnvironmentDTO env3 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random()
             .type(StringUtil.random("type-")));
 
         List<EnvironmentDTO> found1 = ownerClient.owners().listEnvironments(owner.getKey(), null,
@@ -170,7 +175,7 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldLowerCaseEnvironmentType() {
-        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(),
+        EnvironmentDTO env = ownerClient.owners().createEnvironment(owner.getKey(),
             Environments.random().type("mY_TypE"));
 
         List<EnvironmentDTO> foundEnv = ownerClient.owners().listEnvironments(owner, env.getName());
@@ -182,7 +187,7 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldDefaultContentEnabledToNull() {
-        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         ContentDTO content = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
 
         ContentToPromoteDTO contentToPromote = new ContentToPromoteDTO()
@@ -199,7 +204,7 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldAllowEnabledContent() {
-        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         ContentDTO content = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
 
         promoteContent(env, content);
@@ -214,7 +219,7 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldAllowDisabledContent() {
-        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         ContentDTO content = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
 
         promoteContentDisabled(env, content);
@@ -229,7 +234,7 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldAllowContentPromotion() {
-        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         ContentDTO content = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
 
         promoteContent(env, content);
@@ -239,7 +244,7 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldRejectPromotionOfAlreadyPromotedContent() {
-        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         ContentDTO content1 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content2 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
 
@@ -252,7 +257,7 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldAllowPromotionOfMultipleContents() {
-        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         ContentDTO content1 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content2 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content3 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
@@ -267,7 +272,7 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldCleanupEnvContentOnContentDeletion() {
-        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         ContentDTO content1 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content2 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
 
@@ -283,7 +288,7 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldAllowContentDemotion() {
-        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         ContentDTO content1 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content2 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content3 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
@@ -297,7 +302,7 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldGracefullyAbortDemotionOfInvalidContent() {
-        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         ContentDTO content1 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content2 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
 
@@ -316,7 +321,7 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldFilterContentNotPromotedToEnv() {
-        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         ConsumerDTO consumer = ownerClient.consumers().createConsumer(Consumers.random(owner)
             .putFactsItem("system.certificate_version", "1.0")
             .addEnvironmentsItem(env)
@@ -347,7 +352,7 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldRegenerateCertsAfterPromotingOrDemotingContent() {
-        EnvironmentDTO env = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         ConsumerDTO consumer = ownerClient.consumers().createConsumer(Consumers.random(owner)
             .putFactsItem("system.certificate_version", "1.0")
             .addEnvironmentsItem(env)
@@ -399,8 +404,8 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldListEnvironmentsWithPopulatedEntityCollections() {
-        EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env1 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env2 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         ContentDTO content1 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         ContentDTO content2 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
         promoteContent(env1, content1);
@@ -421,7 +426,7 @@ public class EnvironmentSpecTest {
         @Test
         public void shouldCreateConsumerInSingleEnvironment() {
             EnvironmentDTO environment = ownerClient.owners()
-                .createEnv(owner.getKey(), Environments.random());
+                .createEnvironment(owner.getKey(), Environments.random());
             ConsumerDTO consumer = ownerClient.environments()
                 .createConsumerInEnvironment(environment.getId(), Consumers.random(owner));
 
@@ -435,8 +440,10 @@ public class EnvironmentSpecTest {
 
         @Test
         public void shouldCreateConsumerInMultipleEnvironments() {
-            EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
-            EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+            EnvironmentDTO env1 = ownerClient.owners()
+                .createEnvironment(owner.getKey(), Environments.random());
+            EnvironmentDTO env2 = ownerClient.owners()
+                .createEnvironment(owner.getKey(), Environments.random());
             ConsumerDTO consumer2 = ownerClient.environments()
                 .createConsumerInEnvironment(joinEnvIds(env2, env1), Consumers.random(owner));
 
@@ -461,7 +468,7 @@ public class EnvironmentSpecTest {
                 .createProduct(owner.getKey(), Products.randomEng());
             PoolDTO pool = ownerClient.owners().createPool(owner.getKey(), Pools.random(product));
             EnvironmentDTO environment = ownerClient.owners()
-                .createEnv(owner.getKey(), Environments.random());
+                .createEnvironment(owner.getKey(), Environments.random());
             ActivationKeyDTO activationKey = ownerClient.owners()
                 .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
             ownerClient.activationKeys().addPoolToKey(activationKey.getId(), pool.getId(), 1L);
@@ -502,9 +509,9 @@ public class EnvironmentSpecTest {
             .addContentToProduct(owner.getKey(), product.getId(), content3.getId(), true);
         PoolDTO pool = ownerClient.owners().createPool(owner.getKey(), Pools.random(product));
 
-        EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env3 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env1 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env2 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env3 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         promoteContent(env1, content1);
         promoteContent(env2, content2);
         promoteContent(env3, content3);
@@ -544,9 +551,9 @@ public class EnvironmentSpecTest {
             .addContentToProduct(owner.getKey(), product.getId(), content3.getId(), true);
         PoolDTO pool = ownerClient.owners().createPool(owner.getKey(), Pools.random(product));
 
-        EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env3 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env1 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env2 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env3 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         promoteContent(env1, content1);
         promoteContent(env2, content2);
         promoteContent(env3, content3);
@@ -582,9 +589,9 @@ public class EnvironmentSpecTest {
             .addContentToProduct(owner.getKey(), product.getId(), content3.getId(), true);
         PoolDTO pool = ownerClient.owners().createPool(owner.getKey(), Pools.random(product));
 
-        EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env3 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env1 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env2 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env3 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         promoteContent(env1, content1);
         promoteContent(env2, content2);
         promoteContent(env3, content3);
@@ -624,9 +631,9 @@ public class EnvironmentSpecTest {
             .addContentToProduct(owner.getKey(), product.getId(), content3.getId(), true);
         PoolDTO pool = ownerClient.owners().createPool(owner.getKey(), Pools.random(product));
 
-        EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env3 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env1 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env2 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env3 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         promoteContent(env1, content1, content2);
         promoteContent(env2, content1, content2);
         promoteContent(env3, content1, content2, content3);
@@ -660,8 +667,8 @@ public class EnvironmentSpecTest {
     @NullSource
     @ValueSource(booleans = { false })
     public void shouldDeleteConsumersWhenLastEnvironmentIsDeleted(Boolean retainConsumers) {
-        EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env1 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env2 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         ConsumerDTO consumer1 = ownerClient.consumers().createConsumer(Consumers.random(owner)
             .environments(List.of(env1)));
         ConsumerDTO consumer2 = ownerClient.consumers().createConsumer(Consumers.random(owner)
@@ -677,8 +684,8 @@ public class EnvironmentSpecTest {
 
     @Test
     public void shouldRetainConsumerWhenDeletingItsLastEnvironmentIfRetainFlagIsSet() {
-        EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env1 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env2 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         ConsumerDTO consumer1 = ownerClient.consumers().createConsumer(Consumers.random(owner)
             .environments(List.of(env1)));
         ConsumerDTO consumer2 = ownerClient.consumers().createConsumer(Consumers.random(owner)
@@ -705,8 +712,8 @@ public class EnvironmentSpecTest {
             .addContentToProduct(owner.getKey(), product1.getId(), content1.getId(), true);
         ownerClient.ownerProducts()
             .addContentToProduct(owner.getKey(), product2.getId(), content2.getId(), true);
-        EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
-        EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env1 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env2 = ownerClient.owners().createEnvironment(owner.getKey(), Environments.random());
         promoteContent(env1, content1);
         promoteContent(env2, content2);
         PoolDTO pool1 = ownerClient.owners().createPool(owner.getKey(), Pools.random(product1));
@@ -754,6 +761,419 @@ public class EnvironmentSpecTest {
                 assertThat(content).isEmpty();
             }
         }
+    }
+
+    @Test
+    public void shouldAllowUpdatingNameWithEnvironmentUpdate() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .name("updated name");
+
+        EnvironmentDTO output = admin.environments()
+            .updateEnvironment(environment.getId(), update);
+
+        assertEquals(update.getName(), output.getName());
+
+        EnvironmentDTO fetched = admin.environments()
+            .getEnvironment(environment.getId());
+
+        assertEquals(update.getName(), fetched.getName());
+    }
+
+    @Test
+    public void shouldNotAllowEmptyNameWithEnvironmentUpdate() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .name("");
+
+        assertBadRequest(() -> admin.environments().updateEnvironment(environment.getId(), update));
+
+        EnvironmentDTO fetched = admin.environments()
+            .getEnvironment(environment.getId());
+
+        assertEquals(environment.getName(), fetched.getName());
+    }
+
+    @Test
+    public void shouldNotAllowLongNameWithEnvironmentUpdate() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .name("long".repeat(256));
+
+        assertBadRequest(() -> admin.environments()
+            .updateEnvironment(environment.getId(), update));
+
+        EnvironmentDTO result = admin.environments()
+            .getEnvironment(environment.getId());
+
+        assertEquals(environment.getName(), result.getName());
+    }
+
+    @Test
+    public void shouldAllowUpdatingTypeWithEnvironmentUpdate() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .type("updated type");
+
+        EnvironmentDTO output = admin.environments()
+            .updateEnvironment(environment.getId(), update);
+
+        assertEquals(update.getType(), output.getType());
+
+        EnvironmentDTO fetched = admin.environments()
+            .getEnvironment(environment.getId());
+
+        assertEquals(update.getType(), fetched.getType());
+    }
+
+    @Test
+    public void shouldAllowClearingTypeWithEnvironmentUpdate() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .type("");
+
+        EnvironmentDTO output = admin.environments()
+            .updateEnvironment(environment.getId(), update);
+
+        assertNull(output.getType());
+
+        EnvironmentDTO fetched = admin.environments()
+            .getEnvironment(environment.getId());
+
+        assertNull(fetched.getType());
+    }
+
+    @Test
+    public void shouldNotAllowLongTypeWithEnvironmentUpdate() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .type("long".repeat(256));
+
+        assertBadRequest(() -> admin.environments()
+            .updateEnvironment(environment.getId(), update));
+
+        EnvironmentDTO result = admin.environments()
+            .getEnvironment(environment.getId());
+
+        assertEquals(environment.getType(), result.getType());
+    }
+
+    @Test
+    public void shouldAllowUpdatingDescriptionWithEnvironmentUpdate() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .description("updated description");
+
+        EnvironmentDTO output = admin.environments()
+            .updateEnvironment(environment.getId(), update);
+
+        assertEquals(update.getDescription(), output.getDescription());
+
+        EnvironmentDTO fetched = admin.environments()
+            .getEnvironment(environment.getId());
+
+        assertEquals(update.getDescription(), fetched.getDescription());
+    }
+
+    @Test
+    public void shouldAllowClearingDescriptionWithEnvironmentUpdate() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .description("");
+
+        EnvironmentDTO output = admin.environments()
+            .updateEnvironment(environment.getId(), update);
+
+        assertNull(output.getDescription());
+
+        EnvironmentDTO fetched = admin.environments()
+            .getEnvironment(environment.getId());
+
+        assertNull(fetched.getDescription());
+    }
+
+    @Test
+    public void shouldNotAllowLongDescriptionWithEnvironmentUpdate() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .description("long".repeat(256));
+
+        assertBadRequest(() -> admin.environments()
+            .updateEnvironment(environment.getId(), update));
+
+        EnvironmentDTO result = admin.environments()
+            .getEnvironment(environment.getId());
+
+        assertEquals(environment.getDescription(), result.getDescription());
+    }
+
+    @Test
+    public void shouldAllowUpdatingContentPrefixWithEnvironmentUpdate() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .contentPrefix("updated contentprefix");
+
+        EnvironmentDTO output = admin.environments()
+            .updateEnvironment(environment.getId(), update);
+
+        assertEquals(update.getContentPrefix(), output.getContentPrefix());
+
+        EnvironmentDTO fetched = admin.environments()
+            .getEnvironment(environment.getId());
+
+        assertEquals(update.getContentPrefix(), fetched.getContentPrefix());
+    }
+
+    @Test
+    public void shouldAllowClearingContentPrefixWithEnvironmentUpdate() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .contentPrefix("");
+
+        EnvironmentDTO output = admin.environments()
+            .updateEnvironment(environment.getId(), update);
+
+        assertNull(output.getContentPrefix());
+
+        EnvironmentDTO fetched = admin.environments()
+            .getEnvironment(environment.getId());
+
+        assertNull(fetched.getContentPrefix());
+    }
+
+    @Test
+    public void shouldNotAllowLongContentPrefixWithEnvironmentUpdate() {
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(this.owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .contentPrefix("long".repeat(256));
+
+        assertBadRequest(() -> admin.environments()
+            .updateEnvironment(environment.getId(), update));
+
+        EnvironmentDTO result = admin.environments()
+            .getEnvironment(environment.getId());
+
+        assertEquals(environment.getContentPrefix(), result.getContentPrefix());
+    }
+
+
+    /**
+     * These tests verify we don't update fields that either should not be updated (ID, owner) or
+     * need special juggling for cert and content access (env content)
+     */
+    @Test
+    public void shouldIgnoreIdChangesWithEnvironmentUpdate() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .id("updated id");
+
+        EnvironmentDTO output = admin.environments()
+            .updateEnvironment(environment.getId(), update);
+
+        assertEquals(environment.getId(), output.getId());
+
+        EnvironmentDTO fetched = admin.environments()
+            .getEnvironment(environment.getId());
+
+        assertEquals(environment.getId(), fetched.getId());
+    }
+
+    @Test
+    public void shouldIgnoreCreatedTimestampChangesWithEnvironmentUpdate() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .created(OffsetDateTime.now().minusDays(5));
+
+        EnvironmentDTO output = admin.environments()
+            .updateEnvironment(environment.getId(), update);
+
+        assertEquals(environment.getCreated(), output.getCreated());
+
+        EnvironmentDTO fetched = admin.environments()
+            .getEnvironment(environment.getId());
+
+        assertEquals(environment.getCreated(), fetched.getCreated());
+    }
+
+    @Test
+    public void shouldIgnoreUpdatedTimestampChangesWithEnvironmentUpdate() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .updated(OffsetDateTime.now().minusDays(5));
+
+        EnvironmentDTO output = admin.environments()
+            .updateEnvironment(environment.getId(), update);
+
+        assertEquals(environment.getUpdated(), output.getUpdated());
+
+        EnvironmentDTO fetched = admin.environments()
+            .getEnvironment(environment.getId());
+
+        assertEquals(environment.getUpdated(), fetched.getUpdated());
+    }
+
+    @Test
+    public void shouldIgnoreOwnerChangesWithEnvironmentUpdate() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .owner(Owners.toNested(Owners.random()));
+
+        EnvironmentDTO output = admin.environments()
+            .updateEnvironment(environment.getId(), update);
+
+        assertThat(output)
+            .isNotNull()
+            .extracting(EnvironmentDTO::getOwner)
+            .usingRecursiveComparison()
+            .isEqualTo(environment.getOwner());
+
+        EnvironmentDTO fetched = admin.environments()
+            .getEnvironment(environment.getId());
+
+        assertThat(fetched)
+            .isNotNull()
+            .extracting(EnvironmentDTO::getOwner)
+            .usingRecursiveComparison()
+            .isEqualTo(environment.getOwner());
+    }
+
+    @Test
+    public void shouldIgnoreEnvironmentContentChangesWithEnvironmentUpdate() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+        ContentDTO content1 = admin.ownerContent().createContent(owner.getKey(), Contents.random());
+        ContentDTO content2 = admin.ownerContent().createContent(owner.getKey(), Contents.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        this.promoteContent(environment, content1);
+
+        environment = admin.environments().getEnvironment(environment.getId());
+
+        EnvironmentContentDTO envcont2 = new EnvironmentContentDTO()
+            .contentId(content2.getId())
+            .enabled(true);
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .addEnvironmentContentItem(envcont2);
+
+        EnvironmentDTO output = admin.environments()
+            .updateEnvironment(environment.getId(), update);
+
+        assertThat(output)
+            .isNotNull()
+            .extracting(EnvironmentDTO::getEnvironmentContent)
+            .isEqualTo(environment.getEnvironmentContent());
+
+        EnvironmentDTO fetched = admin.environments().getEnvironment(environment.getId());
+
+        assertThat(fetched)
+            .isNotNull()
+            .extracting(EnvironmentDTO::getEnvironmentContent)
+            .isEqualTo(environment.getEnvironmentContent());
+    }
+
+    /**
+     * Test to verify that we don't do partial updates in the event that we have multiple fields to
+     * update, some valid and some not.
+     */
+    @ParameterizedTest
+    @ValueSource(strings = { "name", "type", "description", "contentPrefix" })
+    public void shouldUpdateEnvironmentAtomically(String invalidFieldName) {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        EnvironmentDTO environment = admin.owners()
+            .createEnvironment(owner.getKey(), Environments.random());
+
+        EnvironmentDTO update = new EnvironmentDTO()
+            .name("updated name")
+            .type("updated type")
+            .description("updated description")
+            .contentPrefix("updated prefix");
+
+        try {
+            // Make the designated field an invalid field with a ridiculously long value
+            String invalidFieldValue = "void".repeat(512);
+
+            EnvironmentDTO.class.getMethod(invalidFieldName, String.class)
+                .invoke(update, invalidFieldValue);
+        }
+        catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            // Rethrow anything that happens in here
+            throw new RuntimeException(e);
+        }
+
+        assertBadRequest(() -> admin.environments()
+            .updateEnvironment(environment.getId(), update));
+
+        EnvironmentDTO fetched = admin.environments().getEnvironment(environment.getId());
+
+        assertThat(fetched)
+            .isNotNull()
+            .usingRecursiveComparison()
+            .isEqualTo(environment);
     }
 
     private Set<Long> serialsOf(Collection<EntitlementDTO> entitlements) {

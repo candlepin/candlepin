@@ -135,7 +135,7 @@ public class SkuLevelEnableOverrideSpecTest {
     @Test
     public void shouldSkuOverrideForEnabledSupercededByEnvironmentPromotion() {
         OwnerDTO owner = ownerClient.createOwner(Owners.random());
-        EnvironmentDTO env = ownerClient.createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = ownerClient.createEnvironment(owner.getKey(), Environments.random());
         ConsumerDTO consumer = Consumers.random(owner)
             .facts(Map.of("system.certificate_version", "3.2"))
             .environments(List.of(env));
@@ -230,7 +230,7 @@ public class SkuLevelEnableOverrideSpecTest {
     @Test
     public void shouldSkuOverrideForEnabledSupercededByEnvironmentPromotionV1() {
         OwnerDTO owner = ownerClient.createOwner(Owners.random());
-        EnvironmentDTO env = ownerClient.createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env = ownerClient.createEnvironment(owner.getKey(), Environments.random());
         ConsumerDTO consumer = Consumers.random(owner)
             .facts(Map.of("system.certificate_version", "1.0"))
             .environments(List.of(env));
