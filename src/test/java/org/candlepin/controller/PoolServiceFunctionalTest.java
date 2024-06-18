@@ -32,6 +32,7 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolQualifier;
 import org.candlepin.model.Product;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
@@ -240,8 +241,13 @@ public class PoolServiceFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumeQuantity() throws Exception {
-        Pool monitoringPool = poolCurator.listAvailableEntitlementPools(null, o,
-            monitoring.getId(), null).get(0);
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(o.getId())
+            .addProductId(monitoring.getId());
+
+        Pool monitoringPool = poolCurator.listAvailableEntitlementPools(qualifier)
+            .getPageData()
+            .get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
 
         Map<String, Integer> poolQuantities = new HashMap<>();

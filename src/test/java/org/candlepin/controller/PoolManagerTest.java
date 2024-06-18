@@ -14,6 +14,7 @@
  */
 package org.candlepin.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.model.SourceSubscription.DERIVED_POOL_SUB_KEY;
 import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -89,15 +90,15 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
-import org.candlepin.model.PoolFilterBuilder;
+import org.candlepin.model.PoolQualifier;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
+import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.paging.Page;
-import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.ValidationError;
@@ -1144,10 +1145,7 @@ public class PoolManagerTest {
         Page page = mock(Page.class);
 
         when(page.getPageData()).thenReturn(pools);
-        when(poolCurator.listAvailableEntitlementPools(any(Consumer.class),
-            any(String.class), nullable(String.class), nullable(String.class), eq(now),
-            any(PoolFilterBuilder.class), nullable(PageRequest.class), eq(true), eq(false),
-            eq(false), nullable(Date.class)))
+        when(poolCurator.listAvailableEntitlementPools(any(PoolQualifier.class)))
             .thenReturn(page);
 
         when(poolCurator.listAllByIds(nullable(Set.class))).thenReturn(List.of(pool1));
@@ -1203,9 +1201,7 @@ public class PoolManagerTest {
         Page<List<Pool>> page = new Page<>();
         page.setPageData(pools);
 
-        doReturn(page).when(poolCurator).listAvailableEntitlementPools(eq(consumer), any(String.class),
-            nullable(String.class), nullable(String.class), eq(now), any(PoolFilterBuilder.class),
-            nullable(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean(), nullable(Date.class));
+        doReturn(page).when(poolCurator).listAvailableEntitlementPools(any(PoolQualifier.class));
 
         doAnswer(iom -> iom.getArgument(1)).when(enforcer)
             .filterPools(eq(consumer), anyList(), anyBoolean());
@@ -1414,10 +1410,9 @@ public class PoolManagerTest {
         Page page = mock(Page.class);
         when(page.getPageData()).thenReturn(pools);
 
-        when(poolCurator.listAvailableEntitlementPools(any(Consumer.class),
-            nullable(String.class), nullable(String.class), nullable(String.class), eq(now),
-            any(PoolFilterBuilder.class), nullable(PageRequest.class), anyBoolean(), anyBoolean(),
-            anyBoolean(), nullable(Date.class))).thenReturn(page);
+        when(poolCurator
+            .listAvailableEntitlementPools(any(PoolQualifier.class)))
+            .thenReturn(page);
 
         when(poolCurator.listAllByIds(anyList())).thenReturn(List.of(pool1));
 
@@ -1872,6 +1867,90 @@ public class PoolManagerTest {
         assertEquals(1, derivedPool.getConsumed().intValue());
         assertEquals(1, derivedPool2.getConsumed().intValue());
         assertEquals(2, derivedPool3.getConsumed().intValue());
+    }
+
+    @Test
+    public void testListAvailableEntitlementPoolsWithNullPoolQualifier() {
+        Page<List<Pool>> actual = manager.listAvailableEntitlementPools(null);
+
+        assertThat(actual.getPageData())
+            .isEmpty();
+    }
+
+    @Test
+    public void testListAvailableEntitlementPoolsWithEmptyCuratorPage() {
+        Page<List<Pool>> emptyPage = new Page<>();
+        emptyPage.setPageData(Collections.emptyList());
+        emptyPage.setMaxRecords(0);
+
+        doReturn(emptyPage).when(poolCurator).listAvailableEntitlementPools(nullable(PoolQualifier.class));
+
+        Page<List<Pool>> actual = manager.listAvailableEntitlementPools(new PoolQualifier());
+
+        assertThat(actual.getPageData())
+            .isEmpty();
+    }
+
+    @Test
+    public void testListAvailableEntitlementPoolsWithNullConsumerAndActivationKey() {
+        Pool pool1 = TestUtil.createPool(product)
+            .setId(TestUtil.randomString());
+        Pool pool2 = TestUtil.createPool(product)
+            .setId(TestUtil.randomString());
+
+        Page<List<Pool>> page = new Page<>();
+        page.setPageData(List.of(pool1, pool2));
+
+        PoolQualifier qualifier = new PoolQualifier()
+            .addProductId(product.getId())
+            .addIds(List.of(pool1.getId(), pool2.getId()));
+
+        doReturn(page).when(poolCurator).listAvailableEntitlementPools(qualifier);
+
+        Page<List<Pool>> actual = manager.listAvailableEntitlementPools(qualifier);
+
+        assertThat(actual.getPageData())
+            .hasSize(2)
+            .containsExactlyInAnyOrder(pool1, pool2);
+    }
+
+    @Test
+    public void testListAvailableEntitlementPoolsWithActivationKeyFilteringAndPaging() {
+        Pool pool1 = TestUtil.createPool(product)
+            .setId(TestUtil.randomString());
+        Pool pool2 = TestUtil.createPool(product)
+            .setId(TestUtil.randomString());
+
+        ActivationKey key = TestUtil.createActivationKey(owner, List.of(pool1));
+
+        PoolQualifier qualifier = new PoolQualifier()
+            .addProductId(product.getId())
+            .addIds(List.of(pool1.getId(), pool2.getId()))
+            .setActivationKey(key)
+            .setOffset(1)
+            .setLimit(10);
+
+        Page<List<Pool>> page = new Page<>();
+        page.setPageData(List.of(pool1, pool2));
+
+        doReturn(page).when(poolCurator).listAvailableEntitlementPools(qualifier);
+        doReturn(List.of(pool1)).when(poolCurator).takeSubList(qualifier, List.of(pool1));
+
+        ValidationResult errorResult = new ValidationResult();
+        errorResult.addError(TestUtil.randomString());
+
+        doReturn(new ValidationResult())
+            .when(activationKeyRules)
+            .runPoolValidationForActivationKey(any(ActivationKey.class), eq(pool1), nullable(Long.class));
+        doReturn(errorResult)
+            .when(activationKeyRules)
+            .runPoolValidationForActivationKey(any(ActivationKey.class), eq(pool2), nullable(Long.class));
+
+        Page<List<Pool>> actual = manager.listAvailableEntitlementPools(qualifier);
+
+        assertThat(actual.getPageData())
+            .singleElement()
+            .isEqualTo(pool1);
     }
 
 }
