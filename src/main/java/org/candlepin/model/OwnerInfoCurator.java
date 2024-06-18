@@ -140,21 +140,33 @@ public class OwnerInfoCurator {
         // Select product families from every active pool, first pulling from pool attributes and
         // then from product attributes iff no product family is defined on the pool.
 
-        String sql = "SELECT DISTINCT coalesce(poolattr.value, prodattr.value) " +
-            "FROM cp_pool pool " +
-            "LEFT JOIN cp_pool_attribute poolattr ON poolattr.pool_id = pool.id " +
-            "    AND poolattr.name = :attrib " +
-            "LEFT JOIN cp_product_attributes prodattr ON prodattr.product_uuid = pool.product_uuid " +
-            "    AND prodattr.name = :attrib " +
-            "WHERE pool.owner_id = :owner_id " +
-            "  AND pool.startdate < :date AND :date < pool.enddate " +
-            "  AND (poolattr.name IS NOT NULL OR prodattr.name IS NOT NULL) ";
+        EntityManager em = this.entityManager.get();
+        CriteriaBuilder builder = em.getCriteriaBuilder();
 
-        return this.entityManager.get()
-            .createNativeQuery(sql)
-            .setParameter("owner_id", owner != null ? owner.getId() : null)
-            .setParameter("date", date)
-            .setParameter("attrib", attribute)
+        CriteriaQuery<String> query = builder.createQuery(String.class);
+        Root<Pool> root = query.from(Pool.class);
+        Join<Pool, Product> prodJoin = root.join(Pool_.product);
+        MapJoin<Pool, String, String> poolAttr = root.join(Pool_.attributes, JoinType.LEFT);
+        poolAttr.on(builder.equal(poolAttr.key(), attribute));
+        MapJoin<Product, String, String> prodAttr = prodJoin.join(Product_.attributes, JoinType.LEFT);
+        prodAttr.on(builder.equal(prodAttr.key(), attribute));
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        Predicate securityPredicate = this.poolCurator.getSecurityPredicate(Pool.class, builder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        predicates.add(builder.equal(root.get(Pool_.owner), owner));
+        predicates.add(builder.lessThan(root.get(Pool_.startDate), date));
+        predicates.add(builder.greaterThan(root.get(Pool_.endDate), date));
+        predicates.add(builder.or(builder.isNotNull(poolAttr.value()), builder.isNotNull(prodAttr.value())));
+
+        query.select(builder.coalesce(poolAttr.value(), prodAttr.value()))
+            .where(predicates.toArray(new Predicate[0]));
+
+        return em.createQuery(query)
             .getResultList();
     }
 
