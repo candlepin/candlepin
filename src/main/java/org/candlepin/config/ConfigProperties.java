@@ -28,14 +28,13 @@ import org.candlepin.async.tasks.RevokeEntitlementsJob;
 import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
 import org.candlepin.config.validation.ConfigurationValidator;
 import org.candlepin.config.validation.IntegerConfigurationValidator;
+import org.candlepin.config.validation.StringConfigurationValidator;
 import org.candlepin.database.MigrationManagementLevel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-
 
 /**
  * Defines a map of default properties used to prepopulate the {@link Configuration}.
@@ -583,6 +582,8 @@ public class ConfigProperties {
 
             this.add(new IntegerConfigurationValidator(DB_MAX_CONNECTION_ATTEMPTS)
                 .min(1));
+
+            this.add(new StringConfigurationValidator(DB_DRIVER_CLASS));
         }
     };
 }
