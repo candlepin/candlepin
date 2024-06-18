@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -531,8 +530,17 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
      */
     @Transactional
     public Content getByUuid(String uuid) {
-        return (Content) currentSession().createCriteria(Content.class).setCacheable(true)
-            .add(Restrictions.eq("uuid", uuid)).uniqueResult();
+        String jpql = "SELECT c FROM Content c WHERE c.uuid = :uuid";
+
+        try {
+            return this.getEntityManager().createQuery(jpql, Content.class)
+                .setParameter("uuid", uuid)
+                .setHint("org.hibernate.cacheable", true)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**

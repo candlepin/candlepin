@@ -16,17 +16,18 @@ package org.candlepin.model;
 
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
 import javax.inject.Singleton;
-
-
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 @Singleton
 public class AnonymousCloudConsumerCurator extends AbstractHibernateCurator<AnonymousCloudConsumer> {
@@ -49,10 +50,28 @@ public class AnonymousCloudConsumerCurator extends AbstractHibernateCurator<Anon
             return null;
         }
 
-        Criteria criteria = this.createSecureCriteria()
-            .add(Restrictions.eq("uuid", uuid));
+        EntityManager em = getEntityManager();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<AnonymousCloudConsumer> cq = cb.createQuery(AnonymousCloudConsumer.class);
+        Root<AnonymousCloudConsumer> root = cq.from(AnonymousCloudConsumer.class);
 
-        return (AnonymousCloudConsumer) criteria.uniqueResult();
+        Predicate uuidPredicate = cb.equal(root.get("uuid"), uuid);
+        Predicate securityPredicate = getSecurityPredicate(AnonymousCloudConsumer.class, cb, root);
+
+        if (securityPredicate != null) {
+            cq.where(cb.and(uuidPredicate, securityPredicate));
+        }
+        else {
+            cq.where(uuidPredicate);
+        }
+
+        try {
+            return em.createQuery(cq)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**
@@ -69,11 +88,25 @@ public class AnonymousCloudConsumerCurator extends AbstractHibernateCurator<Anon
             return consumers;
         }
 
-        for (List<String> block : this.partition(uuids)) {
-            Criteria criteria = this.createSecureCriteria()
-                .add(Restrictions.in("uuid", block));
+        EntityManager em = getEntityManager();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<AnonymousCloudConsumer> cq = cb.createQuery(AnonymousCloudConsumer.class);
+        Root<AnonymousCloudConsumer> root = cq.from(AnonymousCloudConsumer.class);
 
-            consumers.addAll(criteria.list());
+        Predicate securityPredicate = getSecurityPredicate(AnonymousCloudConsumer.class, cb, root);
+
+        for (List<String> block : this.partition(uuids)) {
+
+            Predicate uuidPredicate = root.get("uuid").in(block);
+
+            if (securityPredicate != null) {
+                cq.where(cb.and(uuidPredicate, securityPredicate));
+            }
+            else {
+                cq.where(uuidPredicate);
+            }
+
+            consumers.addAll(em.createQuery(cq).getResultList());
         }
 
         return consumers;
@@ -93,10 +126,28 @@ public class AnonymousCloudConsumerCurator extends AbstractHibernateCurator<Anon
             return null;
         }
 
-        Criteria criteria = this.createSecureCriteria()
-            .add(Restrictions.eq("cloudInstanceId", instanceId));
+        EntityManager em = getEntityManager();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<AnonymousCloudConsumer> cq = cb.createQuery(AnonymousCloudConsumer.class);
+        Root<AnonymousCloudConsumer> root = cq.from(AnonymousCloudConsumer.class);
 
-        return (AnonymousCloudConsumer) criteria.uniqueResult();
+        Predicate instanceIdPredicate = cb.equal(root.get("cloudInstanceId"), instanceId);
+        Predicate securityPredicate = getSecurityPredicate(AnonymousCloudConsumer.class, cb, root);
+
+        if (securityPredicate != null) {
+            cq.where(cb.and(instanceIdPredicate, securityPredicate));
+        }
+        else {
+            cq.where(instanceIdPredicate);
+        }
+
+        try {
+            return em.createQuery(cq)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**

@@ -14,14 +14,13 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 import javax.inject.Singleton;
-
+import javax.persistence.NoResultException;
 
 /**
  * GuestIdCurator
@@ -45,19 +44,41 @@ public class GuestIdCurator extends AbstractHibernateCurator<GuestId> {
     }
 
     public GuestId findByConsumerAndId(Consumer consumer, String guestId) {
-        return (GuestId) this.currentSession().createCriteria(GuestId.class)
-            .add(Restrictions.eq("consumer", consumer))
-            .add(Restrictions.eq("guestIdLower", guestId.toLowerCase()))
-            .setMaxResults(1)
-            .uniqueResult();
+        String jpql = """
+                SELECT g FROM GuestId g
+                WHERE g.consumer = :consumer
+                    AND LOWER(g.guestIdLower) = :guestId
+                """;
+
+        try {
+            return this.getEntityManager().createQuery(jpql, GuestId.class)
+                .setParameter("consumer", consumer)
+                .setParameter("guestId", guestId.toLowerCase())
+                .setMaxResults(1)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     public GuestId findByGuestIdAndOrg(String guestUuid, String ownerId) {
-        return (GuestId) this.currentSession().createCriteria(GuestId.class)
-            .add(Restrictions.eq("guestIdLower", guestUuid.toLowerCase()))
-            .createAlias("consumer", "gconsumer")
-            .add(Restrictions.eq("gconsumer.ownerId", ownerId))
-            .setMaxResults(1)
-            .uniqueResult();
+        String jpql = """
+                SELECT g FROM GuestId g
+                JOIN g.consumer c
+                WHERE LOWER(g.guestIdLower) = :guestUuid
+                    AND c.ownerId = :ownerId
+                """;
+
+        try {
+            return this.getEntityManager().createQuery(jpql, GuestId.class)
+                .setParameter("guestUuid", guestUuid.toLowerCase())
+                .setParameter("ownerId", ownerId)
+                .setMaxResults(1)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 }

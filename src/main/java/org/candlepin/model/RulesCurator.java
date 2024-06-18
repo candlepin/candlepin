@@ -21,8 +21,6 @@ import org.candlepin.version.VersionUtil;
 
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +31,7 @@ import java.net.URL;
 import java.util.Date;
 
 import javax.inject.Singleton;
+import javax.persistence.NoResultException;
 
 /**
  * RulesCurator
@@ -81,10 +80,16 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
     }
 
     public Rules getDbRules() {
-        return (Rules) this.currentSession().createCriteria(Rules.class)
-            .addOrder(Order.desc("updated"))
-            .setMaxResults(1)
-            .uniqueResult();
+        String jpql = "SELECT r FROM Rules r ORDER BY r.updated DESC";
+
+        try {
+            return this.getEntityManager().createQuery(jpql, Rules.class)
+                .setMaxResults(1)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     public void updateDbRules() {
@@ -115,11 +120,17 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
     }
 
     public Date getUpdatedFromDB() {
-        return (Date) this.currentSession().createCriteria(Rules.class)
-            .setCacheable(true)
-            .setCacheRegion(CandlepinCacheRegions.FIVE_SECONDS_QUERY_CACHE)
-            .setProjection(Projections.max("updated"))
-            .uniqueResult();
+        String jpql = "SELECT MAX(r.updated) FROM Rules r";
+
+        try {
+            return this.getEntityManager().createQuery(jpql, Date.class)
+                .setHint("org.hibernate.cacheable", true)
+                .setHint("org.hibernate.cacheRegion", CandlepinCacheRegions.FIVE_SECONDS_QUERY_CACHE)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**
