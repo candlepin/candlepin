@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.9
+Version: 4.4.10
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,28 @@ fi
 
 #raw
 %changelog
+* Wed Jun 19 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.10-1
+- Restored missing security predicate in OwnerInfoCurator (crog@redhat.com)
+- Bump com.github.spotbugs:spotbugs-annotations from 4.8.5 to 4.8.6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- Bump artemis from 2.34.0 to 2.35.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- CANDLEPIN-865: Added explicit casts in entity layering migration
+  (crog@redhat.com)
+- CANDLEPIN-863: Added an endpoint for performing environment updates
+  (crog@redhat.com)
+- Updated configuration of downoald step in GH action (sbakaj@redhat.com)
+- Bump dawidd6/action-download-artifact from 3 to 6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-235: Removed hibernate criteria from select curator classes
+  (sbakaj@redhat.com)
+- CANDLEPIN-822: Removed hibernate criteria from select curator classes
+  (sbakaj@redhat.com)
+
 * Wed Jun 05 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.9-1
 - Bump org.keycloak:keycloak-servlet-filter-adapter from 24.0.4 to 24.0.5
   (49699333+dependabot[bot]@users.noreply.github.com)
