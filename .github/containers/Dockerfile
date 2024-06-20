@@ -2,6 +2,10 @@ FROM quay.io/centos/centos:stream8 as builder
 
 USER root
 
+# Modify all yum repository configurations to use vault.centos.org
+RUN for i in $(ls /etc/yum.repos.d); do sed -i -e "s/mirrorlist.*//g" /etc/yum.repos.d/$i && sed -i -e  \
+    "s/#baseurl=http:\/\/mirror.centos.org/baseurl=http:\/\/vault.centos.org/g" /etc/yum.repos.d/$i; done
+
 # Update and install dependencies
 RUN dnf -y --setopt install_weak_deps=False update && \
     dnf module enable -y pki-core pki-deps && \
@@ -29,6 +33,10 @@ FROM quay.io/centos/centos:stream8
 LABEL author="Josh Albrecht <jalbrech@redhat.com>"
 
 USER root
+
+# Modify all yum repository configurations to use vault.centos.org
+RUN for i in $(ls /etc/yum.repos.d); do sed -i -e "s/mirrorlist.*//g" /etc/yum.repos.d/$i && sed -i -e  \
+    "s/#baseurl=http:\/\/mirror.centos.org/baseurl=http:\/\/vault.centos.org/g" /etc/yum.repos.d/$i; done
 
 # Update and install dependencies
 RUN dnf -y update && \
