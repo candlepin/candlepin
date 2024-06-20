@@ -46,6 +46,7 @@ import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
 import org.candlepin.model.dto.Content;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
@@ -54,7 +55,6 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
-import org.candlepin.util.Arch;
 import org.candlepin.util.OIDUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
@@ -76,12 +76,13 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.naming.ldap.Rdn;
@@ -321,8 +322,22 @@ public class ContentAccessManager {
         ContentPrefix contentPrefix = ScaContentPrefix.from(owner, this.standalone, environments);
         PromotedContent promotedContent = new PromotedContent(contentPrefix).withAll(environments);
 
-        Map<org.candlepin.model.Content, Boolean> ownerContent = this.ownerContentCurator
-            .getActiveContentByOwner(owner.getId());
+        Function<Map.Entry<org.candlepin.model.Content, Boolean>, ProductContent> pcbuilder = (entry) ->
+            new ProductContent()
+                .setContent(entry.getKey())
+                .setEnabled(entry.getValue());
+
+        Function<ProductContent, String> cidFetcher = (pcinfo) -> pcinfo.getContent().getId();
+
+        Map<String, ProductContent> ownerContent = this.ownerContentCurator
+            .getActiveContentByOwner(owner.getId())
+            .entrySet()
+            .stream()
+            .map(pcbuilder)
+            .collect(Collectors.toMap(cidFetcher, Function.identity(), (v1, v2) ->
+                new ProductContent()
+                    .setContent(v2.getContent()) // last in wins
+                    .setEnabled(v1.isEnabled() || v2.isEnabled())));
 
         byte[] payloadBytes = createContentAccessDataPayload(consumer, ownerContent, promotedContent);
 
@@ -368,8 +383,22 @@ public class ContentAccessManager {
             ContentPrefix contentPrefix = ScaContentPrefix.from(owner, this.standalone, environments);
             PromotedContent promotedContent = new PromotedContent(contentPrefix).withAll(environments);
 
-            Map<org.candlepin.model.Content, Boolean> ownerContent = this.ownerContentCurator
-                .getActiveContentByOwner(owner.getId());
+            Function<Map.Entry<org.candlepin.model.Content, Boolean>, ProductContent> pcbuilder = (entry) ->
+                new ProductContent()
+                    .setContent(entry.getKey())
+                    .setEnabled(entry.getValue());
+
+            Function<ProductContent, String> cidFetcher = (pcinfo) -> pcinfo.getContent().getId();
+
+            Map<String, ProductContent> ownerContent = this.ownerContentCurator
+                .getActiveContentByOwner(owner.getId())
+                .entrySet()
+                .stream()
+                .map(pcbuilder)
+                .collect(Collectors.toMap(cidFetcher, Function.identity(), (v1, v2) ->
+                    new ProductContent()
+                        .setContent(v2.getContent()) // last in wins
+                        .setEnabled(v1.isEnabled() || v2.isEnabled())));
 
             byte[] payloadBytes = createContentAccessDataPayload(consumer, ownerContent, promotedContent);
             existing.setContent(this.createPayloadAndSignature(payloadBytes));
@@ -524,15 +553,14 @@ public class ContentAccessManager {
     }
 
     private byte[] createContentAccessDataPayload(Consumer consumer,
-        Map<org.candlepin.model.Content, Boolean> ownerContent, PromotedContent promotedContent)
+        Map<String, ProductContent> activeContent, PromotedContent promotedContent)
         throws IOException {
         log.info("Generating SCA payload for consumer \"{}\"...", consumer != null ? consumer.getUuid() :
             "unknown");
         Product engProduct = new Product()
             .setId("content_access")
-            .setName(" Content Access");
-
-        ownerContent.forEach(engProduct::addContent);
+            .setName(" Content Access")
+            .setProductContent(activeContent.values());
 
         Product skuProduct = new Product()
             .setId("content_access")
@@ -905,9 +933,9 @@ public class ContentAccessManager {
                 throw new RuntimeException(msg);
             }
 
-            payload = createAnonPayloadAndSignature(products);
-            List<ContentInfo> contentInfo = getContentInfo(products);
-            content = convertContentInfoToContentDto(contentInfo);
+            Map<String, ProductContent> activeContent = translateProductInfo(products);
+            payload = createAnonPayloadAndSignature(activeContent);
+            content = convertProductContentToContentDto(activeContent.values());
 
             // Cache the generated content for future requests
             contentCache.put(consumer.getProductIds(), new AnonymousCertContent(payload, content));
@@ -959,93 +987,81 @@ public class ContentAccessManager {
         return caCert;
     }
 
-    private String createAnonPayloadAndSignature(Collection<ProductInfo> prodInfo) throws IOException {
-        List<ContentInfo> contentInfo = getContentInfo(prodInfo);
-        List<org.candlepin.model.Content> contents = convertContentInfoToContent(contentInfo);
-        Map<org.candlepin.model.Content, Boolean> activeContent = new HashMap<>();
-        contents.forEach(content -> activeContent.put(content, true));
-        PromotedContent promotedContent = new PromotedContent(new AnonymousContentPrefix());
-        byte[] data = createContentAccessDataPayload(null, activeContent, promotedContent);
+    private String createAnonPayloadAndSignature(Map<String, ProductContent> productContentMap)
+        throws IOException {
 
-        return createPayloadAndSignature(data);
+        PromotedContent promotedContent = new PromotedContent(new AnonymousContentPrefix());
+        byte[] data = this.createContentAccessDataPayload(null, productContentMap, promotedContent);
+        return this.createPayloadAndSignature(data);
     }
 
     /**
-     * Retrieves all of the {@link ContentInfo} from the provided {@link ProductInfo}
+     * Translates all of the {@link ContentInfo} and their enabled (true/false) status from the provided
+     * {@link ProductInfo} into a Map of content IDs to ProductContent (which includes the enabled/disabled
+     * value). In case more than one of the same content, but different enabled values are provided, the
+     * enabled=true value is kept.
+     * IMPORTANT: The rationale for this method is that {@link ContentInfo}, {@link ProductContentInfo} and
+     * {@link ProductInfo} are interfaces, without guaranteed hashCode/equals methods that compare based on
+     * content ID. Rather, the known implementations of those use field-by-field comparison, which we want
+     * to avoid, in case we ever need to deal with different content objects but with the same content ID.
      *
      * @param prodInfo
      *  the product info that contains content info
      *
-     * @return all of the content info from the provided product info
+     * @return a map that contains the unique content IDs mapped to a ProductContent instance (which embeds
+     * the enabled/disabled value in it).
      */
-    private List<ContentInfo> getContentInfo(Collection<ProductInfo> prodInfo) {
+    private Map<String, ProductContent> translateProductInfo(Collection<ProductInfo> prodInfo) {
+        Function<ProductContent, String> cidFetcher = (pcinfo) -> pcinfo.getContent().getId();
+
         return prodInfo.stream()
             .filter(Objects::nonNull)
             .map(ProductInfo::getProductContent)
             .flatMap(Collection::stream)
             .filter(Objects::nonNull)
-            .map(ProductContentInfo::getContent)
-            .toList();
+            .map(this::translateProductContentInfo)
+            .collect(Collectors.toMap(cidFetcher, Function.identity(), (v1, v2) ->
+                new ProductContent()
+                    .setContent(v2.getContent()) // last in wins
+                    .setEnabled(v1.isEnabled() || v2.isEnabled())));
+    }
+
+    private ProductContent translateProductContentInfo(ProductContentInfo pcinfo) {
+        ContentInfo cinfo = pcinfo.getContent();
+
+        org.candlepin.model.Content converted = new org.candlepin.model.Content()
+            .setId(cinfo.getId())
+            .setName(cinfo.getName())
+            .setType(cinfo.getType())
+            .setLabel(cinfo.getLabel())
+            .setVendor(cinfo.getVendor())
+            .setGpgUrl(cinfo.getGpgUrl())
+            .setMetadataExpiration(cinfo.getMetadataExpiration())
+            .setRequiredTags(cinfo.getRequiredTags())
+            .setArches(cinfo.getArches())
+            .setContentUrl(cinfo.getContentUrl());
+
+        return new ProductContent()
+            .setContent(converted)
+            .setEnabled(pcinfo.isEnabled());
     }
 
     /**
-     * Converts {@link ContentInfo} into {@link Content}
+     * Translates a collection of {@link ProductContent} instances into a list of {@link Content} where the
+     * only populated field is the path (contentUrl), for the purpose of generating the X509 part of the
+     * cert ('Authorized content Urls' is the only content-related information in that part of the cert).
      *
-     * @param contentInfo
-     *  the content to convert
+     * @param productContentSet A collection of ProductContent instances
      *
-     * @return the converted {@link ContentInfo} objects
+     * @return A list of Content dtos with only the path populated
      */
-    private List<Content> convertContentInfoToContentDto(Collection<ContentInfo> contentInfo) {
-        return contentInfo.stream()
-            .filter(Objects::nonNull)
-            .map(content -> {
-                Content converted = new Content();
-                converted.setId(content.getId());
-                converted.setName(content.getName());
-                converted.setType(content.getType());
-                converted.setLabel(content.getLabel());
-                converted.setVendor(content.getVendor());
-                converted.setGpgUrl(content.getGpgUrl());
-                converted.setMetadataExpiration(content.getMetadataExpiration());
-                converted.setRequiredTags(Util.toList(content.getRequiredTags()));
-                converted.setArches(new ArrayList<>(Arch.parseArches(content.getArches())));
-                converted.setPath(content.getContentUrl());
-
-                return converted;
+    public List<Content> convertProductContentToContentDto(Collection<ProductContent> productContentSet) {
+        return productContentSet.stream()
+            .map(productContent -> {
+                Content contentContainer = new Content();
+                contentContainer.setPath(productContent.getContent().getContentUrl());
+                return contentContainer;
             })
             .toList();
     }
-
-    /**
-     * Converts {@link ContentInfo} to {@link org.candlepin.model.Content}.
-     *
-     * @param contentInfo
-     *  the content to convert
-     *
-     * @return the converted {@link org.candlepin.model.Content} objects
-     */
-    private List<org.candlepin.model.Content> convertContentInfoToContent(
-        Collection<ContentInfo> contentInfo) {
-        return contentInfo.stream()
-            .filter(Objects::nonNull)
-            .map(content -> {
-                org.candlepin.model.Content converted = new org.candlepin.model.Content();
-                converted.setId(content.getId());
-                converted.setName(content.getName());
-                converted.setType(content.getType());
-                converted.setLabel(content.getLabel());
-                converted.setVendor(content.getVendor());
-                converted.setGpgUrl(content.getGpgUrl());
-                converted.setMetadataExpiration(content.getMetadataExpiration());
-                converted.setRequiredTags(content.getRequiredTags());
-                converted.setArches(content.getArches());
-                converted.setContentUrl(content.getContentUrl());
-                converted.setReleaseVersion(content.getReleaseVersion());
-
-                return converted;
-            })
-            .toList();
-    }
-
 }
