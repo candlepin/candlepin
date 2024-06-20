@@ -136,7 +136,15 @@ public class DatabaseConnectionManager {
     }
 
     protected void loadDatabaseDriver() throws ReflectiveOperationException {
-        Class.forName(config.getString(ConfigProperties.DB_DRIVER_CLASS))
+        String driverClass = config.getString(ConfigProperties.DB_DRIVER_CLASS);
+        if (driverClass == null) {
+            String msg = "No driver class specified for the database connection. Please specify it in " +
+                "'candlepin.conf' under 'jpa.config.hibernate.connection.driver_class' config or as ENV " +
+                "variable.";
+            log.error(msg);
+            throw new RuntimeException(msg);
+        }
+        Class.forName(driverClass)
             .getDeclaredConstructor()
             .newInstance();
     }

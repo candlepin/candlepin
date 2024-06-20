@@ -197,4 +197,9 @@ public class DatabaseConnectionManagerTest {
                 .isEqualTo(mockDatabase);
         }
     }
+
+    @Test
+    void testMissingDbDriverClass() {
+        assertThrows(RuntimeException.class, () -> new DatabaseConnectionManager(config));
+    }
 }
