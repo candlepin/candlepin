@@ -22,7 +22,9 @@ import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.asser
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertThatStatus;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertUnauthorized;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.CertificateDTO;
@@ -470,11 +472,11 @@ class CloudRegistrationSpecTest {
         String offerId = StringUtil.random("cloud-offer-");
 
         ProductDTO product = adminClient.hosted().createProduct(Products.random());
-        ContentDTO content1 = adminClient.hosted().createContent(Contents.random());
-        ContentDTO content2 = adminClient.hosted().createContent(Contents.random());
+        ContentDTO enabledContent = adminClient.hosted().createContent(Contents.random());
+        ContentDTO disabledContent = adminClient.hosted().createContent(Contents.random());
 
-        adminClient.hosted().addContentToProduct(product.getId(), content1.getId(), true);
-        adminClient.hosted().addContentToProduct(product.getId(), content2.getId(), true);
+        adminClient.hosted().addContentToProduct(product.getId(), enabledContent.getId(), true);
+        adminClient.hosted().addContentToProduct(product.getId(), disabledContent.getId(), false);
         adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(product.getId()));
         adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
 
@@ -496,7 +498,17 @@ class CloudRegistrationSpecTest {
         assertThat(prodIdToContentIds.get("content_access"))
             .isNotNull()
             .hasSize(2)
-            .contains(content1.getId(), content2.getId());
+            .contains(enabledContent.getId(), disabledContent.getId());
+
+        // Check that we honor the content enabled/disabled defaults
+        JsonNode content = certs.get(0).get("products").get(0).get("content");
+        JsonNode certEnabledContent = enabledContent.getId().equals(content.get(0).get("id").asText()) ?
+            content.get(0) : content.get(1);
+        JsonNode certDisabledContent = disabledContent.getId().equals(content.get(0).get("id").asText()) ?
+            content.get(0) : content.get(1);
+
+        assertNull(certEnabledContent.get("enabled"));
+        assertFalse(certDisabledContent.get("enabled").asBoolean());
     }
 
     @Test
