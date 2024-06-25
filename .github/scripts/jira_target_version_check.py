@@ -56,7 +56,18 @@ for commit in pr_commits:
         continue
 
     jira_key = jira_key_match.group(1)
-    jira_target_versions = jira.issue_field_value(jira_key, TARGET_VERSION_FIELD_ID)
+    issue = jira.issue(jira_key)
+
+    contain_sat_link = any(
+        link.get('type', {}).get('inward') == 'is depended on by' and
+        link.get('inwardIssue', {}).get('key', '').startswith('SAT-')
+        for link in issue.get("fields", {}).get("issuelinks", [])
+    )
+
+    if not contain_sat_link:
+        continue
+
+    jira_target_versions = issue.get('fields', {}).get(TARGET_VERSION_FIELD_ID, {})
 
     # If there is no Jira target version field value defined for the Jira task then the task is expected to merge into main
     if not jira_target_versions:
