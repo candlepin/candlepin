@@ -353,16 +353,25 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             return null;
         }
 
-        String jpql = """
-            SELECT c FROM Consumer c
-            WHERE c.username = :username
-                AND c.typeId = :typeId
-            """;
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Consumer> criteriaQuery = criteriaBuilder.createQuery(Consumer.class);
+        Root<Consumer> root = criteriaQuery.from(Consumer.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+        Predicate securityPredicate = this.getSecurityPredicate(Consumer.class, criteriaBuilder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        predicates.add(criteriaBuilder.equal(root.get(Consumer_.username), username));
+        predicates.add(criteriaBuilder.equal(root.get(Consumer_.typeId), person.getId()));
+
+        criteriaQuery.select(root)
+            .where(predicates.toArray(new Predicate[0]));
 
         try {
-            return getEntityManager().createQuery(jpql, Consumer.class)
-                .setParameter("username", username)
-                .setParameter("typeId", person.getId())
+            return getEntityManager()
+                .createQuery(criteriaQuery)
                 .getSingleResult();
         }
         catch (NoResultException e) {
@@ -1061,12 +1070,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         CriteriaQuery<Consumer> criteriaQuery = criteriaBuilder.createQuery(Consumer.class);
         Root<Consumer> root = criteriaQuery.from(Consumer.class);
 
-        Predicate ownerIdPredicate = criteriaBuilder.equal(root.get(Consumer_.OWNER_ID), ownerId);
-        Predicate hypervisorNotNullPredicate = criteriaBuilder.isNotNull(root.get(Consumer_.hypervisorId)
-            .get(HypervisorId_.hypervisorId));
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(criteriaBuilder.equal(root.get(Consumer_.OWNER_ID), ownerId));
+        predicates.add(criteriaBuilder.isNotNull(root.get(Consumer_.hypervisorId)
+            .get(HypervisorId_.hypervisorId)));
+
+        Predicate securityPredicate = this.getSecurityPredicate(Consumer.class, criteriaBuilder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
 
         criteriaQuery.select(root)
-            .where(criteriaBuilder.and(ownerIdPredicate, hypervisorNotNullPredicate));
+            .where(predicates.toArray(new Predicate[0]));
 
         if (pageRequest != null && pageRequest.getSortBy() != null) {
             Order order = pageRequest.getOrder() == PageRequest.Order.ASCENDING ?

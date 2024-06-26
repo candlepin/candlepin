@@ -14,17 +14,25 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.candlepin.auth.UserPrincipal;
+import org.candlepin.auth.permissions.ConsumerPermission;
+import org.candlepin.auth.permissions.Permission;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 
@@ -64,6 +72,73 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
         for (int i = 0; i < 5; i++) {
             assertTrue(result.contains(new GuestId("" + i)));
         }
+    }
+
+    @Test
+    public void listByConsumerTestWithPrincipal() {
+        Consumer consumer = new Consumer()
+            .setName(TestUtil.randomString())
+            .setUsername(TestUtil.randomString())
+            .setOwner(owner)
+            .setType(ct);
+
+        User user = new User(TestUtil.randomString(), TestUtil.randomString());
+        Set<Permission> perms = new HashSet<>();
+        perms.add(new ConsumerPermission(consumer, owner));
+        UserPrincipal principal = new UserPrincipal(user.getUsername(), perms, false);
+        this.setupPrincipal(principal);
+
+        List<GuestId> expected = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            GuestId guestId = new GuestId(TestUtil.randomString());
+            expected.add(guestId);
+            consumer.addGuestId(guestId);
+        }
+
+        consumerCurator.create(consumer);
+
+        List<GuestId> actual = guestIdCurator.listByConsumer(consumer);
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    public void listByConsumerTestWithDifferentPrincipal() {
+        Consumer consumer2 = new Consumer()
+            .setName(TestUtil.randomString())
+            .setUsername(TestUtil.randomString())
+            .setOwner(owner)
+            .setType(ct);
+
+        Owner owner2 = this.createOwner();
+        User user = new User(TestUtil.randomString(), TestUtil.randomString());
+        Set<Permission> perms = new HashSet<>();
+        perms.add(new ConsumerPermission(consumer2, owner2));
+        UserPrincipal principal = new UserPrincipal(user.getUsername(), perms, false);
+        this.setupPrincipal(principal);
+
+        Consumer consumer = new Consumer()
+            .setName(TestUtil.randomString())
+            .setUsername(TestUtil.randomString())
+            .setOwner(owner)
+            .setType(ct);
+
+        List<GuestId> expected = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            GuestId guestId = new GuestId(TestUtil.randomString());
+            expected.add(guestId);
+            consumer.addGuestId(guestId);
+        }
+
+        consumerCurator.create(consumer);
+
+        List<GuestId> actual = guestIdCurator.listByConsumer(consumer);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
     }
 
     @Test
