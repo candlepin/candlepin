@@ -1,0 +1,48 @@
+---
+name: Run Jira Check
+
+on:
+  pull_request_target:
+  workflow_dispatch:
+
+# Cancel in-progress PR verification workflows. We only care about verifying the latest commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  target_version_validation:
+    name: target version validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Mask secrets
+        shell: bash
+        run: |
+          echo "::add-mask::${{ secrets.CANDLEPIN_JIRA_TOKEN }}"
+          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Install packages
+        shell: bash
+        run: sudo apt-get install -y python3 python3-pip python3-requests git-core
+
+      - name: Install python dependencies
+        run: pip install atlassian-python-api
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
+
+      - name: Validate target version field
+        run: |
+          chmod +x ./.github/scripts/jira_target_version_check.py
+          ./.github/scripts/jira_target_version_check.py
+        env:
+          JIRA_TOKEN: ${{ secrets.CANDLEPIN_JIRA_TOKEN }}
+          GITHUB_TOKEN_PSW: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
