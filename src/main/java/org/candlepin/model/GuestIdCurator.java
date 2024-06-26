@@ -17,10 +17,15 @@ package org.candlepin.model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Singleton;
 import javax.persistence.NoResultException;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 /**
  * GuestIdCurator
@@ -35,11 +40,23 @@ public class GuestIdCurator extends AbstractHibernateCurator<GuestId> {
     }
 
     public List<GuestId> listByConsumer(Consumer consumer) {
-        String jpql = "SELECT g FROM GuestId g WHERE g.consumer = :consumer";
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<GuestId> criteriaQuery = criteriaBuilder.createQuery(GuestId.class);
+        Root<Consumer> root = criteriaQuery.from(Consumer.class);
 
-        return this.getEntityManager()
-            .createQuery(jpql, GuestId.class)
-            .setParameter("consumer", consumer)
+        List<Predicate> predicates = new ArrayList<>();
+        Predicate securityPredicate = this.getSecurityPredicate(Consumer.class, criteriaBuilder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        predicates.add(criteriaBuilder.equal(root.get(Consumer_.id), consumer.getId()));
+
+        criteriaQuery.select(root.get(Consumer_.GUEST_IDS))
+            .where(predicates.toArray(new Predicate[0]));
+
+        return getEntityManager()
+            .createQuery(criteriaQuery)
             .getResultList();
     }
 

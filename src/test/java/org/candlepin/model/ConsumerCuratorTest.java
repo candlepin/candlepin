@@ -27,6 +27,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.async.tasks.InactiveConsumerCleanerJob;
+import org.candlepin.auth.Access;
+import org.candlepin.auth.UserPrincipal;
+import org.candlepin.auth.permissions.ConsumerPermission;
+import org.candlepin.auth.permissions.OwnerPermission;
+import org.candlepin.auth.permissions.Permission;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -1710,6 +1715,61 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testGetHypervisorsByOwnerWithPrincipal() {
+        Consumer hypervisor1 = createHypervisor(owner);
+        // Create hypervisor for another owner
+        createHypervisor(this.createOwner());
+
+        User user = new User(TestUtil.randomString(), TestUtil.randomString());
+        Set<Permission> perms = new HashSet<>();
+        perms.add(new ConsumerPermission(hypervisor1, owner));
+        UserPrincipal principal = new UserPrincipal(user.getUsername(), perms, false);
+        this.setupPrincipal(principal);
+
+        Consumer nonHypervisor = new Consumer()
+            .setName(TestUtil.randomString())
+            .setUsername(TestUtil.randomString())
+            .setOwner(owner)
+            .setType(ct);
+        consumerCurator.create(nonHypervisor);
+
+        List<Consumer> results = consumerCurator.getHypervisorsForOwner(owner.getId());
+
+        assertThat(results)
+            .isNotNull()
+            .singleElement()
+            .isEqualTo(hypervisor1);
+    }
+
+    @Test
+    public void testGetHypervisorsByOwnerWithDifferentPrincipal() {
+        // Create hypervisor for target owner
+        createHypervisor(owner);
+
+        Owner owner2 = this.createOwner();
+        Consumer otherHypervisor = createHypervisor(owner2);
+
+        User user = new User(TestUtil.randomString(), TestUtil.randomString());
+        Set<Permission> perms = new HashSet<>();
+        perms.add(new ConsumerPermission(otherHypervisor, owner));
+        UserPrincipal principal = new UserPrincipal(user.getUsername(), perms, false);
+        this.setupPrincipal(principal);
+
+        Consumer nonHypervisor = new Consumer()
+            .setName(TestUtil.randomString())
+            .setUsername(TestUtil.randomString())
+            .setOwner(owner)
+            .setType(ct);
+        consumerCurator.create(nonHypervisor);
+
+        List<Consumer> results = consumerCurator.getHypervisorsForOwner(owner.getId());
+
+        assertThat(results)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
     public void testGetHypervisorsByOwnerPaged() {
         PageRequest pageRequest = new PageRequest();
         pageRequest.setPage(1);
@@ -2186,50 +2246,83 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    void testFindByUsername() {
+    public void testFindByUsername() {
         ConsumerType consumerType = createConsumerType(ConsumerTypeEnum.PERSON.getLabel(), true);
         Consumer consumer = createConsumer(owner, consumerType);
 
-        Consumer findedConsumer = consumerCurator.findByUsername(consumer.getUsername());
+        Consumer foundConsumer = consumerCurator.findByUsername(consumer.getUsername());
 
-        assertEquals(consumer.getId(), findedConsumer.getId());
+        assertEquals(consumer.getId(), foundConsumer.getId());
     }
 
     @Test
-    void testFindByUsernameWithNullConsumerType() {
+    public void testFindByUsernameWithPrincipal() {
+        User user = new User(TestUtil.randomString(), TestUtil.randomString());
+        Set<Permission> perms = new HashSet<>();
+        perms.add(new OwnerPermission(owner, Access.ALL));
+        UserPrincipal principal = new UserPrincipal(user.getUsername(), perms, false);
+        this.setupPrincipal(principal);
+
+        ConsumerType consumerType = createConsumerType(ConsumerTypeEnum.PERSON.getLabel(), true);
+        Consumer expected = createConsumer(owner, consumerType);
+
+        Consumer actual = consumerCurator.findByUsername(expected.getUsername());
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testFindByUsernameWithDifferentPrincipal() {
+        User user = new User(TestUtil.randomString(), TestUtil.randomString());
+        Owner owner2 = this.createOwner();
+        Set<Permission> perms = new HashSet<>();
+        perms.add(new OwnerPermission(owner2, Access.ALL));
+        UserPrincipal principal = new UserPrincipal(user.getUsername(), perms, false);
+        this.setupPrincipal(principal);
+
+        ConsumerType consumerType = createConsumerType(ConsumerTypeEnum.PERSON.getLabel(), true);
+        Consumer expected = createConsumer(owner, consumerType);
+
+        Consumer actual = consumerCurator.findByUsername(expected.getUsername());
+
+        assertNull(actual);
+    }
+
+    @Test
+    public void testFindByUsernameWithNullConsumerType() {
         Consumer consumer = createConsumer(owner);
 
-        Consumer findedConsumer = consumerCurator.findByUsername(consumer.getUsername());
+        Consumer foundConsumer = consumerCurator.findByUsername(consumer.getUsername());
 
-        assertNull(findedConsumer);
+        assertNull(foundConsumer);
     }
 
     @Test
-    void testFindByUsernameWithNotExistingUsername() {
+    public void testFindByUsernameWithNotExistingUsername() {
         createConsumerType(ConsumerTypeEnum.PERSON.getLabel(), true);
 
-        Consumer findedConsumer = consumerCurator.findByUsername(TestUtil.randomString());
+        Consumer foundConsumer = consumerCurator.findByUsername(TestUtil.randomString());
 
-        assertNull(findedConsumer);
+        assertNull(foundConsumer);
     }
 
     @Test
-    void testGetConsumerBySystemUuid() {
+    public void testGetConsumerBySystemUuid() {
         String uuid = UUID.randomUUID().toString();
         Consumer consumer = createConsumer(owner).setFact(Consumer.Facts.DMI_SYSTEM_UUID, uuid);
 
-        Consumer findedConsumer = consumerCurator.getConsumerBySystemUuid(
+        Consumer foundConsumer = consumerCurator.getConsumerBySystemUuid(
             owner.getId(), uuid);
 
-        assertEquals(consumer.getId(), findedConsumer.getId());
+        assertEquals(consumer.getId(), foundConsumer.getId());
     }
 
     @Test
-    void testGetConsumerBySystemUuidWithNonExistingUuid() {
-        Consumer findedConsumer = consumerCurator.getConsumerBySystemUuid(
+    public void testGetConsumerBySystemUuidWithNonExistingUuid() {
+        Consumer foundConsumer = consumerCurator.getConsumerBySystemUuid(
             owner.getId(), UUID.randomUUID().toString());
 
-        assertNull(findedConsumer);
+        assertNull(foundConsumer);
     }
 
     private IdentityCertificate createIdCert() {
