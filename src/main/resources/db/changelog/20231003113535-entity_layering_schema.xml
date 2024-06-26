@@ -6,14 +6,6 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
 
-    <!--
-        Impl note:
-        Cast types for the SQL gigablob below, because why have standards when you can have pain?
-        Also, declaration order is very important here.
-    -->
-    <property name="cast.varchar.type" value="CHAR" dbms="mysql,mariadb"/>
-    <property name="cast.varchar.type" value="VARCHAR" dbms="postgresql,all"/>
-
     <!-- content tables -->
     <changeSet id="20231003113535-1" author="crog">
         <preConditions onFail="MARK_RAN">
@@ -387,21 +379,21 @@
             -- Collect "active" global products and their children
             INSERT INTO tmp_active_global_products (uuid, pid, new_uuid, best)
                 WITH RECURSIVE parent_child_map(parent_uuid, child_uuid) AS (
-                    SELECT uuid AS parent_uuid, derived_product_uuid AS child_uuid
+                    SELECT CAST(uuid AS CHAR(32)) AS parent_uuid, CAST(derived_product_uuid AS CHAR(32)) AS child_uuid
                         FROM cp2_products
                         WHERE derived_product_uuid IS NOT NULL
                     UNION
-                    SELECT product_uuid AS parent_uuid, provided_product_uuid AS child_uuid
+                    SELECT CAST(product_uuid AS CHAR(32)) AS parent_uuid, CAST(provided_product_uuid AS CHAR(32)) AS child_uuid
                         FROM cp2_product_provided_products),
                 product_graph(uuid, depth) AS (
-                    SELECT CAST(active.uuid AS ${cast.varchar.type}) AS uuid, 0
+                    SELECT CAST(active.uuid AS CHAR(32)) AS uuid, 0
                         FROM cp2_products prod
                         JOIN (SELECT product_uuid AS uuid FROM cp2_owner_products
                             UNION
                             SELECT product_uuid AS uuid FROM cp_pool) active ON active.uuid = prod.uuid
                         WHERE prod.locked != 0
                     UNION
-                    SELECT pcmap.child_uuid, pg.depth + 1
+                    SELECT CAST(pcmap.child_uuid AS CHAR(32)) AS uuid, pg.depth + 1
                         FROM parent_child_map pcmap
                         JOIN product_graph pg ON pg.uuid = pcmap.parent_uuid
                         -- shouldn't be needed, but here just in case someone decided to be cheeky and define a
@@ -551,21 +543,21 @@
             -- Collect "active" custom products and their children
             INSERT INTO tmp_active_custom_products (owner_id, uuid, pid, new_uuid, best)
                 WITH RECURSIVE parent_child_map(parent_uuid, child_uuid) AS (
-                    SELECT uuid AS parent_uuid, derived_product_uuid AS child_uuid
+                    SELECT CAST(uuid AS CHAR(32)) AS parent_uuid, CAST(derived_product_uuid AS CHAR(32)) AS child_uuid
                         FROM cp2_products
                         WHERE derived_product_uuid IS NOT NULL
                     UNION
-                    SELECT product_uuid AS parent_uuid, provided_product_uuid AS child_uuid
+                    SELECT CAST(product_uuid AS CHAR(32)) AS parent_uuid, CAST(provided_product_uuid AS CHAR(32)) AS child_uuid
                         FROM cp2_product_provided_products),
                 product_graph(owner_id, uuid, depth) AS (
-                    SELECT active.owner_id, CAST(active.uuid AS ${cast.varchar.type}) AS uuid, 0
+                    SELECT CAST(active.owner_id AS CHAR(32)) AS owner_id, CAST(active.uuid AS CHAR(32)) AS uuid, 0
                         FROM cp2_products prod
                         JOIN (SELECT owner_id, product_uuid AS uuid FROM cp2_owner_products
                             UNION
                             SELECT owner_id, product_uuid AS uuid FROM cp_pool) active ON active.uuid = prod.uuid
                         WHERE prod.locked = 0
                     UNION
-                    SELECT pg.owner_id, pcmap.child_uuid, pg.depth + 1
+                    SELECT CAST(pg.owner_id AS CHAR(32)) AS owner_id, CAST(pcmap.child_uuid AS CHAR(32)) AS uuid, pg.depth + 1
                         FROM parent_child_map pcmap
                         JOIN product_graph pg ON pg.uuid = pcmap.parent_uuid
                         -- shouldn't be needed, but here just in case someone decided to be cheeky and define a
