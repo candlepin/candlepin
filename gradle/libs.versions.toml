@@ -40,7 +40,7 @@ gsonfire = { module = "io.gsonfire:gson-fire", version = "1.9.0" }
 guice-persist = { module = "com.google.inject.extensions:guice-persist", version.ref = "guice" }
 guice-servlet = { module = "com.google.inject.extensions:guice-servlet", version.ref = "guice" }
 hamcrest = { module = "org.hamcrest:hamcrest-library", version = "2.2" }
-hibernate = { module = "org.hibernate.javax.persistence:hibernate-jpa-2.1-api", version = "1.0.2.Final" }
+hibernate = { module = "javax.persistence:javax.persistence-api", version = "2.2" }
 hibernate-c3p0 = { module = "org.hibernate:hibernate-c3p0", version.ref = "hibernate" }
 hibernate-jcache = { module = "org.hibernate:hibernate-jcache", version.ref = "hibernate" }
 hibernate-jpamodelgen = { module = "org.hibernate:hibernate-jpamodelgen", version.ref = "hibernate" }

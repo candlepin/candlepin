@@ -75,6 +75,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificateCurator;
+import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
@@ -735,5 +736,17 @@ public class DatabaseTestFixture {
      */
     protected Configuration getConfigForParameters() {
         return TestConfig.defaults();
+    }
+
+    protected void createProductContent(Owner owner, boolean enabled, Content... contents) {
+        EntityManager entityManager = this.getEntityManager();
+        Product product = createProduct();
+        this.createPool(owner, product);
+
+        for (Content content : contents) {
+            ProductContent productContent = new ProductContent(product, content, enabled);
+            entityManager.persist(productContent);
+        }
+        entityManager.flush();
     }
 }

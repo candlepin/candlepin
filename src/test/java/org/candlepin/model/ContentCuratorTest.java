@@ -880,4 +880,84 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         Long result = this.contentCurator.getContentCount();
         assertEquals(5L, result);
     }
+
+    @Test
+    public void testGetActiveContentByOwnerEmpty() {
+        Owner owner = createOwner();
+
+        List<ProductContent> activeContentByOwner = contentCurator.getActiveContentByOwner(owner.getId());
+
+        assertThat(activeContentByOwner)
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetActiveContentByOwner() {
+        Owner owner = createOwner();
+        Content content1 = createContent();
+        Content content2 = createContent();
+        Content content3 = createContent();
+
+        createProductContent(owner, true, content1, content2, content3);
+
+        List<ProductContent> activeContentByOwner = contentCurator.getActiveContentByOwner(owner.getId());
+
+        assertThat(activeContentByOwner).hasSize(3)
+            .extracting(ProductContent::getContent)
+            .containsExactlyInAnyOrder(content1, content2, content3);
+
+        assertThat(activeContentByOwner)
+            .extracting(ProductContent::isEnabled)
+            .containsOnly(true);
+    }
+
+    @Test
+    public void testGetActiveContentByOwnerCollision() {
+        Owner owner = createOwner();
+        Content content = createContent();
+
+        createProductContent(owner, true, content);
+        createProductContent(owner, false, content);
+
+        List<ProductContent> activeContentByOwner = contentCurator.getActiveContentByOwner(owner.getId());
+
+        assertThat(activeContentByOwner).hasSize(1)
+            .extracting(ProductContent::getContent)
+            .containsExactlyInAnyOrder(content);
+
+        assertThat(activeContentByOwner)
+            .extracting(ProductContent::isEnabled)
+            .containsOnly(true);
+    }
+
+    @Test
+    public void testGetActiveContentByOwnerMultipleOwners() {
+        Owner owner1 = createOwner();
+        Owner owner2 = createOwner();
+        Content content1 = createContent();
+        Content content2 = createContent();
+        Content content3 = createContent();
+
+        createProductContent(owner1, true, content1);
+        createProductContent(owner2, false, content2, content3);
+
+        List<ProductContent> activeContentByOwner1 = contentCurator.getActiveContentByOwner(owner1.getId());
+        List<ProductContent> activeContentByOwner2 = contentCurator.getActiveContentByOwner(owner2.getId());
+
+        assertThat(activeContentByOwner1)
+            .hasSize(1)
+            .extracting(ProductContent::getContent)
+            .containsExactly(content1);
+        assertThat(activeContentByOwner1)
+            .extracting(ProductContent::isEnabled)
+            .containsOnly(true);
+
+        assertThat(activeContentByOwner2)
+            .hasSize(2)
+            .extracting(ProductContent::getContent)
+            .containsExactlyInAnyOrder(content2, content3);
+        assertThat(activeContentByOwner2)
+            .extracting(ProductContent::isEnabled)
+            .containsOnly(false);
+    }
 }

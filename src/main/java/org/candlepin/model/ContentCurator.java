@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -635,7 +636,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
     }
 
     /**
-     * Returns a mapping of content and content enabled flag.
+     * Returns a list of active product content for a given owner
      *
      * Note - If same content (say C1) is being enabled/disabled by two or more products, with at least
      * one of the product enabling the content C1 then, content (C1) with enabled (true)
@@ -645,63 +646,63 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
      *  Id of an owner
      *
      * @return
-     *  Returns a mapping of content and content enabled flag.
+     *  Returns list of active product content
      */
-    public Map<Content, Boolean> getActiveContentByOwner(String ownerId) {
+    public List<ProductContent> getActiveContentByOwner(String ownerId) {
         EntityManager entityManager = this.getEntityManager();
         Date now = new Date();
 
-        // Store all of the product UUIDs gathered between the various queries we need to do here
-        Set<String> productUuids = new HashSet<>();
+        // Use a CTE to get all derived and provided products
+        String sql = """
+                WITH RECURSIVE parent_child_map(parent_uuid, child_uuid) AS (
+                    SELECT CAST(uuid AS CHAR(32)), CAST(derived_product_uuid AS CHAR(32))
+                    FROM cp_products
+                    WHERE derived_product_uuid IS NOT NULL
+                    UNION
+                    SELECT CAST(product_uuid AS CHAR(32)), CAST(provided_product_uuid AS CHAR(32))
+                    FROM cp_product_provided_products
+                ),
+                product_graph(uuid, depth) AS (
+                    SELECT CAST(pool.product_uuid AS CHAR(32)), 0
+                    FROM cp_pool pool
+                    WHERE pool.owner_id = :owner_id
+                    AND pool.startDate <= :start_date AND pool.endDate >= :end_date
+                    UNION
+                    SELECT CAST(pcmap.child_uuid AS CHAR(32)), pgraph.depth + 1
+                    FROM parent_child_map pcmap
+                    JOIN product_graph pgraph ON pgraph.uuid = pcmap.parent_uuid
+                    WHERE pgraph.depth < 10
+                )
+                SELECT content.uuid, pc.enabled
+                FROM product_graph pgraph
+                JOIN cp_product_contents pc ON pc.product_uuid = pgraph.uuid
+                JOIN cp_contents content ON content.uuid = pc.content_uuid
+            """;
 
-        // Get all of the products from active pools for the specified owner
-        String jpql = "SELECT pool.product.uuid FROM Pool pool " +
-            "WHERE pool.owner.id = :owner_id AND pool.startDate <= :start_date AND pool.endDate >= :end_date";
-
-        String sql = "SELECT prod.derived_product_uuid FROM cp_products prod " +
-            "  WHERE prod.uuid IN (:product_uuids) AND prod.derived_product_uuid IS NOT NULL " +
-            "UNION " +
-            "SELECT prov.provided_product_uuid FROM cp_product_provided_products prov " +
-            "  WHERE prov.product_uuid IN (:product_uuids)";
-
-        productUuids.addAll(entityManager.createQuery(jpql, String.class)
+        Map<String, Boolean> contentEnablementMap =
+            (Map<String, Boolean>) entityManager.createNativeQuery(sql)
             .setParameter("owner_id", ownerId)
             .setParameter("start_date", now)
             .setParameter("end_date", now)
-            .getResultList());
+            .getResultStream()
+            .collect(Collectors.toMap(
+                row -> (String) ((Object[]) row)[0],  // UUID of the content
+                row -> (Boolean) ((Object[]) row)[1], // Enabled state
+                (enabled1, enabled2) -> enabled1 || enabled2 // Collision resolution: logical OR
+            ));
 
-        Query prodQuery = entityManager.createNativeQuery(sql);
-        int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() / 2);
+        List<ProductContent> activeContent = new ArrayList<>();
 
-        // Get all of the derived products and provided products for the products we've found, recursively
-        for (Set<String> lastBlock = productUuids; !lastBlock.isEmpty();) {
-            Set<String> children = new HashSet<>();
+        String contentLookupJPQL =
+            "SELECT content FROM Content content WHERE content.uuid IN (:content_uuids)";
+        TypedQuery<Content> contentQuery = entityManager.createQuery(contentLookupJPQL, Content.class);
 
-            for (List<String> block : this.partition(lastBlock, blockSize)) {
-                children.addAll(prodQuery.setParameter("product_uuids", block)
-                    .getResultList());
-            }
-
-            productUuids.addAll(children);
-            lastBlock = children;
-        }
-
-        // Use the product UUIDs to select all related enabled content
-        jpql = "SELECT DISTINCT pc.content, pc.enabled FROM ProductContent pc " +
-            "WHERE pc.product.uuid IN (:product_uuids)";
-
-        Query contentQuery = entityManager.createQuery(jpql);
-        HashMap<Content, Boolean> activeContent = new HashMap<>();
-
-        for (List<String> block : this.partition(productUuids)) {
-            contentQuery.setParameter("product_uuids", block)
-                .getResultList()
-                .forEach(col -> {
-                    Content content = (Content) ((Object[]) col)[0];
-                    Boolean enabled = (Boolean) ((Object[]) col)[1];
-                    activeContent.merge(content, enabled, (v1, v2) ->
-                        v1 != null && v1.booleanValue() ? v1 : v2);
-                });
+        // This step is necessary to handle large sets of UUIDs and avoid query parameter limits
+        for (List<String> block : this.partition(contentEnablementMap.keySet())) {
+            contentQuery.setParameter("content_uuids", block)
+                .getResultStream()
+                .map(content -> new ProductContent(content, contentEnablementMap.get(content.getUuid())))
+                .forEach(activeContent::add);
         }
 
         return activeContent;
