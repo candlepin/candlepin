@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.10
+Version: 4.4.11
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,24 @@ fi
 
 #raw
 %changelog
+* Mon Jul 01 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.11-1
+- CANDLEPIN-881: Refactored Consumer ContentOverride Fetching Query
+  (crog@redhat.com)
+- Bump junit from 5.10.2 to 5.10.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-874: Updated select curators to use secure predicate
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-865: Updated explicit casts in entity layering migration
+  (crog@redhat.com)
+- Bump io.smallrye.config:smallrye-config from 3.8.2 to 3.8.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-872: Updated jira_target_version_check GH action
+  (sbakaj@redhat.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.24 to 10.1.25
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-864: Gracefully handled DB driver class conf not existing
+  (sbakaj@redhat.com)
+
 * Wed Jun 19 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.10-1
 - Restored missing security predicate in OwnerInfoCurator (crog@redhat.com)
 - Bump com.github.spotbugs:spotbugs-annotations from 4.8.5 to 4.8.6
