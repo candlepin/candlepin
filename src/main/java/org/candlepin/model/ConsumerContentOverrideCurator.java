@@ -67,23 +67,35 @@ public class ConsumerContentOverrideCurator extends
      *  a list of layered content overrides for the given consumer
      */
     public List<ContentOverride<?, ?>> getLayeredContentOverrides(String consumerId) {
-        String sql = "SELECT override.created, override.updated, override.content_label, override.name, " +
-            "override.value " +
-            "FROM cp_content_override override " +
-            "LEFT JOIN cp_consumer_environments cenv ON cenv.environment_id = override.environment_id " +
-            "WHERE override.consumer_id = :consumer_id " +
-            "  OR cenv.cp_consumer_id = :consumer_id " +
-            "ORDER BY cenv.priority IS NOT NULL DESC, cenv.priority DESC";
+        // Impl note:
+        // This particular query cannot be performed with a left join on MySQL/MariaDB, as it will
+        // refuse to use the table indexes on the resultant join, triggering a full table scan over
+        // millions of rows. A union here works around the issue while still fetching the same set
+        // of overrides.
+        // Also note that we have to wrap the union to apply the ordering as hsqldb doesn't allow
+        // applying the ordering in the way we're doing here to the union directly.
+        String sql = "SELECT u.created, u.updated, u.content_label, u.name, u.value, u.priority FROM (" +
+            "SELECT override.created, override.updated, override.content_label, override.name, " +
+            " override.value, cenv.priority " +
+            "  FROM cp_content_override override " +
+            "    JOIN cp_consumer_environments cenv ON cenv.environment_id = override.environment_id " +
+            "  WHERE cenv.cp_consumer_id = :consumer_id " +
+            "UNION ALL " +
+            "SELECT override.created, override.updated, override.content_label, override.name, " +
+            " override.value, NULL AS priority  " +
+            "  FROM cp_content_override override  " +
+            "  WHERE override.consumer_id = :consumer_id) u " +
+            "ORDER BY u.priority IS NOT NULL DESC, u.priority DESC ";
 
         Map<String, Map<String, ContentOverride<?, ?>>> labelMap = new HashMap<>();
 
         // Impl note:
         // While it would be nice to let Hibernate magic this away, it cannot. Not only will it not
-        // do what we want it to do here, it crashes with a mysterious NPE deep in the result
-        // processor when it needs to populate a new instance. Worse, we can't even use getReference
-        // to make well-formed override instances for some reason, because that triggers a
-        // *different* exception within Hibernate's loading routine. Sadly, all this means that we
-        // need to handle the ORM bits ourselves here. :/
+        // do what we want it to do here, it crashes with a mysterious NPE deep in Hibernate's
+        // result processor when it needs to populate a new instance. Worse, we can't even use
+        // getReference to make well-formed override instances for some reason, because that
+        // triggers a *different* exception within Hibernate's loading routine. Sadly, all this
+        // means that we need to handle the ORM bits ourselves here. :/
         java.util.function.Consumer<Object[]> rowProcessor = (row) -> {
             String contentLabel = (String) row[2];
             String attribName = (String) row[3];
