@@ -69,6 +69,8 @@ ext {
 }
 
 dependencies {
+    implementation(libs.activemq)
+
     //  Bouncy Castle
     implementation(libs.bouncycastle.prov)
     implementation(libs.bouncycastle.pkix)

@@ -17,10 +17,14 @@ package org.candlepin.resteasy.filter;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UpdateConsumerCheckIn;
+import org.candlepin.controller.ConsumerManager;
+import org.candlepin.model.ConsumerCloudDataCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.resteasy.AnnotationLocator;
-
+import org.candlepin.service.exception.EventPublishException;
 import org.jboss.resteasy.core.ResteasyContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -42,12 +46,14 @@ import javax.ws.rs.ext.Provider;
 @Priority(Priorities.USER)
 @Provider
 public class ConsumerCheckInFilter implements ContainerRequestFilter {
-    private final ConsumerCurator consumerCurator;
+    private static final Logger log = LoggerFactory.getLogger(ContainerRequestFilter.class);
+
+    private final ConsumerManager consumerManager;
     private final AnnotationLocator annotationLocator;
 
     @Inject
-    public ConsumerCheckInFilter(ConsumerCurator consumerCurator, AnnotationLocator annotationLocator) {
-        this.consumerCurator = consumerCurator;
+    public ConsumerCheckInFilter(ConsumerManager consumerManager, AnnotationLocator annotationLocator) {
+        this.consumerManager = consumerManager;
         this.annotationLocator = annotationLocator;
     }
 
@@ -60,7 +66,13 @@ public class ConsumerCheckInFilter implements ContainerRequestFilter {
         if (principal instanceof ConsumerPrincipal &&
             annotationLocator.getAnnotation(method, UpdateConsumerCheckIn.class) != null) {
             ConsumerPrincipal p = (ConsumerPrincipal) principal;
-            consumerCurator.updateLastCheckin(p.getConsumer());
+    
+            try {
+                consumerManager.updateLastCheckIn(p.getConsumer());
+            }
+            catch(EventPublishException e) {
+                log.error("Unable to publish cloud check-in event", e);
+            }
         }
     }
 }

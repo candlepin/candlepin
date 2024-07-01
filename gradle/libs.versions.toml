@@ -21,6 +21,7 @@ sonarqube = { id = "org.sonarqube", version = "5.1.0.4882" }
 test-logger = { id = "com.adarshr.test-logger", version.ref = "test-logger" }
 
 [libraries]
+activemq = { module = "org.apache.activemq:activemq-core", version = "5.7.0" }
 artemis-server = { module = "org.apache.activemq:artemis-server", version.ref = "artemis" }
 artemis-stomp = { module = "org.apache.activemq:artemis-stomp-protocol", version.ref = "artemis" }
 assertj = { module = "org.assertj:assertj-core", version = "3.26.3" }

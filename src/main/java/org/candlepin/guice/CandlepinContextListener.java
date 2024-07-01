@@ -29,6 +29,7 @@ import org.candlepin.logging.LoggingConfigurator;
 import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.resteasy.ResourceLocatorMap;
+import org.candlepin.service.EventAdapter;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -132,31 +133,36 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
     @Override
     public synchronized void contextInitialized(ServletContextEvent sce) {
-        if (this.state != ListenerState.UNINITIALIZED) {
-            throw new IllegalStateException("context listener already initialized");
+        try {
+            if (this.state != ListenerState.UNINITIALIZED) {
+                throw new IllegalStateException("context listener already initialized");
+            }
+
+            log.info("Candlepin initializing context.");
+
+            I18nManager.getInstance().setDefaultLocale(Locale.US);
+            servletContext = sce.getServletContext();
+
+            log.info("Candlepin reading configuration.");
+            config = readConfiguration();
+
+            LoggingConfigurator.init(config);
+
+            servletContext.setAttribute(CONFIGURATION_NAME, config);
+            setCapabilities(config);
+            log.debug("Candlepin stored config on context.");
+
+            initializeDatabase();
+
+            // set things up BEFORE calling the super class' initialize method.
+            super.contextInitialized(sce);
+
+            this.state = ListenerState.INITIALIZED;
+            log.info("Candlepin context initialized.");
         }
-
-        log.info("Candlepin initializing context.");
-
-        I18nManager.getInstance().setDefaultLocale(Locale.US);
-        servletContext = sce.getServletContext();
-
-        log.info("Candlepin reading configuration.");
-        config = readConfiguration();
-
-        LoggingConfigurator.init(config);
-
-        servletContext.setAttribute(CONFIGURATION_NAME, config);
-        setCapabilities(config);
-        log.debug("Candlepin stored config on context.");
-
-        initializeDatabase();
-
-        // set things up BEFORE calling the super class' initialize method.
-        super.contextInitialized(sce);
-
-        this.state = ListenerState.INITIALIZED;
-        log.info("Candlepin context initialized.");
+        catch(Exception e) {
+            log.error(e.getMessage(), e);
+        }
     }
 
     @Override
@@ -249,6 +255,9 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
                 log.info("Failed to de-registering driver {}", driver, e);
             }
         }
+
+        EventAdapter eventAdapter = injector.getInstance(EventAdapter.class);
+        eventAdapter.shutdown();
 
         if (config.getBoolean(ACTIVEMQ_ENABLED)) {
             activeMQContextListener.contextDestroyed(injector);

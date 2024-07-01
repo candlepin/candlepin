@@ -46,6 +46,13 @@ public class ConfigProperties {
 
     public static final String CANDLEPIN_URL = "candlepin.url";
 
+    public static final String UMB_BROKER_URI = "umb.uri";
+    public static final String UMB_CLIENT_ID = "umb.client_id";
+    public static final String UMB_KEY_STORE = "umb.key_store";
+    public static final String UMB_KEY_STORE_PASSWORD = "umb.key_store_password";
+    public static final String UMB_TRUST_STORE = "umb.trust_store";
+    public static final String UMB_TRUST_STORE_PASSWORD = "umb.trust_store_password";
+
     /**
      * Whether we allow users to authenticate (e.g. HTTP Basic) over insecure
      * channel such as HTTP.

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20240708000000-1" author="jalbrech">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cp_consumer_cloud_data"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="cp_consumer_cloud_data">
+            <column name="consumer_id" type="varchar(32)">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="cloud_provider_short_name" type="varchar(15)"/>
+            <column name="cloud_account_id" type="varchar(255)"/>
+            <column name="cloud_instance_id" type="varchar(170)"/>
+            <column name="cloud_offering_ids" type="varchar(255)"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20240708000000-2" author="jalbrech">
+        <addForeignKeyConstraint baseColumnNames="consumer_id"
+            baseTableName="cp_consumer_cloud_data"
+            baseTableSchemaName="public"
+            constraintName="fk_cp_consumer_cloud_data_consumer_id"
+            onDelete="CASCADE"
+            referencedColumnNames="id"
+            referencedTableName="cp_consumer"
+            referencedTableSchemaName="public"
+            referencesUniqueColumn="true"/>
+    </changeSet>
+
+    <changeSet id="20240708000000-3" author="jalbrech">
+        <createIndex indexName="idx_account_id_offering_ids"
+            tableName="cp_consumer_cloud_data">
+        <column name="cloud_account_id" type="varchar(255)"/>
+        <column name="cloud_offering_ids" type="varchar(255)"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

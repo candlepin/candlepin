@@ -86,6 +86,8 @@ import org.candlepin.model.Certificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerActivationKey;
 import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerCloudData;
+import org.candlepin.model.ConsumerCloudDataCurator;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
@@ -182,6 +184,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -247,6 +250,7 @@ public class ConsumerResource implements ConsumerApi {
     private final AnonymousCloudConsumerCurator anonymousConsumerCurator;
     private final AnonymousContentAccessCertificateCurator anonymousCertCurator;
     private final OwnerServiceAdapter ownerService;
+    private final ConsumerCloudDataCurator consumerCloudDataCurator;
 
     private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
     private final Pattern consumerSystemNamePattern;
@@ -298,7 +302,8 @@ public class ConsumerResource implements ConsumerApi {
         AnonymousContentAccessCertificateCurator anonymousCertCurator,
         OwnerServiceAdapter ownerService,
         SCACertificateGenerator scaCertificateGenerator,
-        AnonymousCertificateGenerator anonymousCertGenerator) {
+        AnonymousCertificateGenerator anonymousCertGenerator,
+        ConsumerCloudDataCurator consumerCloudDataCurator) {
 
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
@@ -344,6 +349,7 @@ public class ConsumerResource implements ConsumerApi {
         this.ownerService = Objects.requireNonNull(ownerService);
         this.scaCertificateGenerator = Objects.requireNonNull(scaCertificateGenerator);
         this.anonymousCertGenerator = Objects.requireNonNull(anonymousCertGenerator);
+        this.consumerCloudDataCurator = Objects.requireNonNull(consumerCloudDataCurator);
 
         this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(
             entitlementCurator, environmentContentCurator);
@@ -980,6 +986,13 @@ public class ConsumerResource implements ConsumerApi {
 
         Consumer created = createConsumerFromDTO(dto, ctype, principal, userName, owner, activationKeys,
             identityCertCreation);
+
+        ConsumerCloudData cloudData = getConsumerCloudData(created);
+        if (cloudData != null) {
+            log.info("Creating cloudData for consumer ID: " + cloudData.getConsumerId());
+            consumerCloudDataCurator.create(cloudData);
+        }
+
         if (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal) {
             AnonymousCloudConsumer anonCloudConsumer = anonymPrincipal.getAnonymousCloudConsumer();
             anonymousCertCurator.delete(anonCloudConsumer.getContentAccessCert());
@@ -987,6 +1000,38 @@ public class ConsumerResource implements ConsumerApi {
         }
 
         return this.translator.translate(created, ConsumerDTO.class);
+    }
+
+    private ConsumerCloudData getConsumerCloudData(Consumer consumer) {
+        if (consumer == null) {
+            return null;
+        }
+
+        // Only checking for AWS facts for this PoC
+
+        String awsAccountId = consumer.getFact("aws_account_id");
+        if (awsAccountId == null || awsAccountId.isBlank()) {
+            return null;
+        }
+
+        String awsMarketplaceProductCodes = consumer.getFact("aws_marketplace_product_codes");
+        String awsBillingProducts = consumer.getFact("aws_billing_products");
+        String awsInstanceId = consumer.getFact("aws_instance_id");
+
+        List<String> offerIds = new ArrayList<>();
+        offerIds.addAll(Util.toList(awsMarketplaceProductCodes));
+        offerIds.addAll(Util.toList(awsBillingProducts));
+
+        if (offerIds.isEmpty()) {
+            return null;
+        }
+
+        return new ConsumerCloudData()
+            .setConsumerId(consumer.getId())
+            .setCloudAccountId(awsAccountId)
+            .setCloudProviderShortName("AWS")
+            .setCloudInstanceId(awsInstanceId)
+            .setCloudOfferingIds(offerIds);
     }
 
     public Consumer createConsumerFromDTO(ConsumerDTO consumer, ConsumerType type, Principal principal,
