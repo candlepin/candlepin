@@ -226,7 +226,6 @@ class AnonymousCertificateGeneratorTest {
         doReturn("required-tags").when(content).getRequiredTags();
         doReturn("arches").when(content).getArches();
         doReturn("url").when(content).getContentUrl();
-        doReturn("release-version").when(content).getReleaseVersion();
 
         ProductContentInfo prodContent = mock(ProductContentInfo.class);
         doReturn(content).when(prodContent).getContent();

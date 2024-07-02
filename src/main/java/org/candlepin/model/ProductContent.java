@@ -27,11 +27,15 @@ import org.hibernate.annotations.Immutable;
 import java.io.Serializable;
 import java.util.Objects;
 
+import javax.persistence.ColumnResult;
 import javax.persistence.Entity;
+import javax.persistence.EntityResult;
+import javax.persistence.FieldResult;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.SqlResultSetMapping;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
@@ -44,6 +48,32 @@ import javax.validation.constraints.NotNull;
 @Immutable
 @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 @Table(name = ProductContent.DB_TABLE)
+@SqlResultSetMapping(
+    name = "ProductContentMapping",
+    entities = {
+        @EntityResult(entityClass = Content.class, fields = {
+            @FieldResult(name = "uuid", column = "uuid"),
+            @FieldResult(name = "namespace", column = "namespace"),
+            @FieldResult(name = "id", column = "content_id"),
+            @FieldResult(name = "type", column = "type"),
+            @FieldResult(name = "label", column = "label"),
+            @FieldResult(name = "name", column = "name"),
+            @FieldResult(name = "vendor", column = "vendor"),
+            @FieldResult(name = "contentUrl", column = "content_url"),
+            @FieldResult(name = "requiredTags", column = "required_tags"),
+            @FieldResult(name = "releaseVer", column = "release_ver"),
+            @FieldResult(name = "gpgUrl", column = "gpg_url"),
+            @FieldResult(name = "metadataExpire", column = "metadata_expire"),
+            @FieldResult(name = "modifiedProductIds", column = "product_id"),
+            @FieldResult(name = "arches", column = "arches"),
+            @FieldResult(name = "created", column = "created"),
+            @FieldResult(name = "updated", column = "updated")
+        })
+    },
+    columns = {
+        @ColumnResult(name = "enabled", type = Boolean.class)
+    }
+)
 public class ProductContent extends AbstractHibernateObject<ProductContent> implements ProductContentInfo {
 
     /** Name of the table backing this object in the database */
