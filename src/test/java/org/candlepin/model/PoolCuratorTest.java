@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -30,7 +30,11 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
+import org.candlepin.auth.UserPrincipal;
+import org.candlepin.auth.permissions.OwnerPermission;
+import org.candlepin.auth.permissions.Permission;
 import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.PoolService;
@@ -154,8 +158,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
 
-        List<Pool> results = poolCurator.listAvailableEntitlementPools(
-            consumer, consumer.getOwnerId(), null, TestUtil.createDate(2450, 3, 2));
+        PoolQualifier qualifier = new PoolQualifier()
+            .setConsumer(consumer)
+            .setOwnerId(consumer.getOwnerId())
+            .setActiveOn(TestUtil.createDate(2450, 3, 2));
+
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(qualifier)
+            .getPageData();
 
         assertEquals(0, results.size());
     }
@@ -173,13 +182,23 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool);
 
-        List<Pool> results = poolCurator.listAvailableEntitlementPools(
-            consumer, consumer.getOwnerId(), null, TestUtil.createDate(2005, 3, 3));
+        PoolQualifier qualifier = new PoolQualifier()
+            .setConsumer(consumer)
+            .setOwnerId(consumer.getOwnerId())
+            .setActiveOn(TestUtil.createDate(2450, 3, 3));
+
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(qualifier)
+            .getPageData();
+
         assertEquals(0, results.size());
 
+        qualifier = new PoolQualifier()
+            .setConsumer(consumer)
+            .setOwnerId(consumer.getOwnerId());
+
         // If we specify no date filtering, the expired pool should be returned:
-        results = poolCurator.listAvailableEntitlementPools(
-            consumer, consumer.getOwnerId(), null, null);
+        results = poolCurator.listAvailableEntitlementPools(qualifier)
+            .getPageData();
 
         assertEquals(1, results.size());
     }
@@ -199,8 +218,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         ueberCertGenerator.generate(owner.getKey(), new NoAuthPrincipal().getUsername());
 
-        List<Pool> results = poolCurator.listAvailableEntitlementPools(
-            consumer, consumer.getOwnerId(), null, null);
+        PoolQualifier qualifier = new PoolQualifier()
+            .setConsumer(consumer)
+            .setOwnerId(consumer.getOwnerId());
+
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(qualifier)
+            .getPageData();
 
         assertEquals(1, results.size());
     }
@@ -227,12 +250,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         req.setOrder(PageRequest.Order.ASCENDING);
         req.setSortBy("id");
 
-        PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addAttributeFilter("cores", "8");
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .setActiveOn(activeDate)
+            .addAttribute("cores", "8");
 
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner.getId(), (Collection<String>) null, null, activeDate, filters,
-            req, false, false, false, null);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
         List<Pool> results = page.getPageData();
         assertEquals(1, results.size());
         assertEquals(pool2.getId(), results.get(0).getId());
@@ -251,19 +274,17 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool2.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         poolCurator.create(pool2);
 
-        PageRequest req = new PageRequest();
-        req.setPage(1);
-        req.setPerPage(10);
-        req.setOrder(PageRequest.Order.ASCENDING);
-        req.setSortBy("id");
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .setActiveOn(activeDate)
+            .addAttribute("virt_only", "true")
+            .setOffset(1)
+            .setLimit(10)
+            .addOrder("id", false);
 
-        PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addAttributeFilter("virt_only", "true");
-
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner.getId(), (Collection<String>) null, null, activeDate, filters,
-            req, false, false, false, null);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
         List<Pool> results = page.getPageData();
+
         assertEquals(1, results.size());
         assertEquals(pool2.getId(), results.get(0).getId());
     }
@@ -280,28 +301,23 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool2);
 
-        PageRequest req = new PageRequest();
-        req.setPage(1);
-        req.setPerPage(10);
-        req.setOrder(PageRequest.Order.ASCENDING);
-        req.setSortBy("id");
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .setConsumer(consumer)
+            .setActiveOn(activeDate)
+            .addId(pool2.getId())
+            .setOffset(1)
+            .setLimit(10)
+            .addOrder("id", false);
 
-        PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addIdFilters(pool2.getId());
-
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner.getId(), (Collection<String>) null, null, activeDate, filters, req, false,
-            false, false, null);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
         List<Pool> results = page.getPageData();
         assertEquals(1, results.size());
         assertEquals(pool2.getId(), results.get(0).getId());
 
-        filters = new PoolFilterBuilder();
-        filters.addIdFilters(pool1.getId(), pool2.getId());
+        qualifier.addId(pool1.getId());
 
-        page = poolCurator.listAvailableEntitlementPools(
-            null, owner.getId(), (Collection<String>) null, null, activeDate, filters, req, false,
-            false, false, null);
+        page = poolCurator.listAvailableEntitlementPools(qualifier);
         results = page.getPageData();
         assertEquals(2, results.size());
     }
@@ -327,12 +343,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool2.setAttribute(Product.Attributes.VIRT_ONLY, "false");
         poolCurator.create(pool2);
 
-        PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addAttributeFilter("virt_only", "true");
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .setActiveOn(activeDate)
+            .addAttribute("virt_only", "true");
 
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner.getId(), (Collection<String>) null, null, activeDate, filters, null, false,
-            false, false, null);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
         List<Pool> results = page.getPageData();
 
         assertEquals(1, results.size());
@@ -356,19 +372,16 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool2.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         poolCurator.create(pool2);
 
-        PageRequest req = new PageRequest();
-        req.setPage(1);
-        req.setPerPage(10);
-        req.setOrder(PageRequest.Order.ASCENDING);
-        req.setSortBy("id");
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .setActiveOn(activeDate)
+            .addAttribute("virt_only", "true")
+            .addAttribute("cores", "4")
+            .setOffset(1)
+            .setLimit(10)
+            .addOrder("id", false);
 
-        PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addAttributeFilter("virt_only", "true");
-        filters.addAttributeFilter("cores", "4");
-
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner.getId(), (Collection<String>) null, null, activeDate, filters, req, false,
-            false, false, null);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
         List<Pool> results = page.getPageData();
         assertEquals(1, results.size());
         assertEquals(pool2.getId(), results.get(0).getId());
@@ -389,18 +402,16 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool pool2 = createPool(owner, product2, 100L, activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool2);
 
-        PageRequest req = new PageRequest();
-        req.setPage(1);
-        req.setPerPage(10);
-        req.setOrder(PageRequest.Order.ASCENDING);
-        req.setSortBy("id");
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .setConsumer(consumer)
+            .setActiveOn(activeDate)
+            .addAttribute("empty-attr", "")
+            .setOffset(1)
+            .setLimit(10)
+            .addOrder("id", false);
 
-        PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addAttributeFilter("empty-attr", "");
-
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner.getId(), (Collection<String>) null, null, activeDate, filters, req, false,
-            false, false, null);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
         List<Pool> results = page.getPageData();
         assertEquals(1, results.size());
         assertEquals(pool2.getId(), results.get(0).getId());
@@ -419,25 +430,92 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool);
 
-        PageRequest req = new PageRequest();
-        req.setPage(1);
-        req.setPerPage(10);
-        req.setOrder(PageRequest.Order.ASCENDING);
-        req.setSortBy("id");
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .setConsumer(consumer)
+            .setActiveOn(activeDate)
+            .addAttribute("A", "FOO")
+            .setOffset(1)
+            .setLimit(10)
+            .addOrder("id", false);
 
-        PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addAttributeFilter("A", "FOO");
-
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner.getId(), (Collection<String>) null, null, activeDate, filters, req, false,
-            false, false, null);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
         List<Pool> results = page.getPageData();
         assertEquals(1, results.size());
         assertEquals(pool, results.get(0));
     }
 
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testListEntitledConsumerUuidsWithInvalidPoolId(String poolId) {
+        List<String> actual = poolCurator.listEntitledConsumerUuids(poolId);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
     @Test
-    public void testFetchEntitledConsumerUuids() {
+    public void testListEntitledConsumerUuidsWithNoConsumers() {
+        List<String> actual = poolCurator.listEntitledConsumerUuids(pool.getId());
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testListEntitledConsumerUuidsWithPrincipal() {
+        User user = new User(TestUtil.randomString(), TestUtil.randomString());
+        Set<Permission> perms = new HashSet<>();
+        perms.add(new OwnerPermission(owner, Access.ALL));
+        UserPrincipal principal = new UserPrincipal(user.getUsername(), perms, false);
+        setupPrincipal(principal);
+
+        Product product1 = new Product(TestUtil.randomString(), TestUtil.randomString(), 10L);
+        product1 = this.createProduct(product1);
+
+        Pool pool1 = new Pool()
+            .setOwner(owner)
+            .setProduct(product1)
+            .setQuantity(1L)
+            .setStartDate(new Date())
+            .setEndDate(new Date())
+            .setContractNumber(TestUtil.randomString())
+            .setAccountNumber(TestUtil.randomString())
+            .setOrderNumber(TestUtil.randomString());
+
+        poolCurator.create(pool1);
+
+        Consumer consumer1 = createMockConsumer(owner, false);
+        createEntitlement(owner, consumer1, pool1);
+
+        Owner owner2 = createOwner();
+
+        Pool pool2 = new Pool()
+            .setOwner(owner2)
+            .setProduct(product1)
+            .setQuantity(1L)
+            .setStartDate(new Date())
+            .setEndDate(new Date())
+            .setContractNumber(TestUtil.randomString())
+            .setAccountNumber(TestUtil.randomString())
+            .setOrderNumber(TestUtil.randomString());
+
+        poolCurator.create(pool2);
+
+        Consumer consumer2 = createMockConsumer(owner, false);
+        createEntitlement(owner2, consumer2, pool2);
+
+        List<String> actual = poolCurator.listEntitledConsumerUuids(pool2.getId());
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testListEntitledConsumerUuids() {
         Consumer c1 = createMockConsumer(owner, false);
         Entitlement e1 = new Entitlement(pool, c1, owner, 1);
         String id1 = Util.generateDbUUID();
@@ -486,15 +564,15 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool2.setAttribute(Pool.Attributes.REQUIRES_HOST, "poolForSomeOtherHost");
         poolCurator.create(pool2);
 
-        PageRequest req = new PageRequest();
-        req.setPage(1);
-        req.setPerPage(10);
-        req.setOrder(PageRequest.Order.ASCENDING);
-        req.setSortBy("id");
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .setConsumer(guestConsumer)
+            .setActiveOn(activeDate)
+            .setOffset(1)
+            .setLimit(10)
+            .addOrder("id", false);
 
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            guestConsumer, owner.getId(), (Collection<String>) null, null, activeDate, null, req, false,
-            false, false, null);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
         List<Pool> results = page.getPageData();
         assertEquals(1, results.size());
         assertEquals(pool, results.get(0));
@@ -544,20 +622,17 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool3);
 
-        PageRequest req = new PageRequest();
-        req.setPage(1);
-        req.setPerPage(10);
-        req.setOrder(PageRequest.Order.ASCENDING);
-        req.setSortBy("id");
+        PoolQualifier qualifier = new PoolQualifier()
+            .addAttribute("A", "foo")
+            .addAttribute("A", "biz")
+            .addAttribute("B", "zoo")
+            .setOwnerId(owner.getId())
+            .setActiveOn(activeDate)
+            .setOffset(1)
+            .setLimit(10)
+            .addOrder("id", false);
 
-        PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addAttributeFilter("A", "foo");
-        filters.addAttributeFilter("A", "biz");
-        filters.addAttributeFilter("B", "zoo");
-
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner.getId(), (Collection<String>) null, null, activeDate, filters, req, false,
-            false, false, null);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
         List<Pool> results = page.getPageData();
         assertEquals(2, results.size());
 
@@ -580,7 +655,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     private List<Pool> listPoolsByOwnerAndProduct(Product product, Owner owner) {
-        return poolCurator.listAvailableEntitlementPools(null, owner, product.getId(), null);
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .addProductId(product.getId());
+
+        return poolCurator.listAvailableEntitlementPools(qualifier).getPageData();
     }
 
     @Test
@@ -659,8 +738,36 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(newPool.getQuantity(), pools.get(0).getQuantity());
     }
 
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testGetBySubscriptionIdsWithInvalidOwnerId(String ownerId) {
+        List<Pool> pools = poolCurator.getBySubscriptionIds(ownerId, List.of(TestUtil.randomString()));
+
+        assertThat(pools)
+            .isNotNull()
+            .isEmpty();
+    }
+
     @Test
-    public void testgetBySubscriptionIds() {
+    public void testGetBySubscriptionIdsWithEmptySubscriptionIds() {
+        List<Pool> pools = poolCurator.getBySubscriptionIds(owner.getId(), List.of());
+
+        assertThat(pools)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetBySubscriptionIdsWithNullSubscriptionIds() {
+        List<Pool> pools = poolCurator.getBySubscriptionIds(owner.getId(), null);
+
+        assertThat(pools)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetBySubscriptionIds() {
         Product product = new Product("someProduct", "An Extremely Great Product", 10L);
         product = this.createProduct(product);
 
@@ -710,6 +817,86 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(2, pools.size());
         assertThat(pools, hasItems(pool1, pool2));
         assertThat(pools, not(hasItem(pool3)));
+    }
+
+    @Test
+    public void testGetBySubscriptionIdsWithManySubscriptions() {
+        List<Pool> expectedPools = new ArrayList<>();
+        List<String> subIds = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            Product product1 = new Product(TestUtil.randomString(), TestUtil.randomString(), 10L);
+            product1 = this.createProduct(product1);
+
+            Pool pool1 = new Pool()
+                .setOwner(owner)
+                .setProduct(product1)
+                .setQuantity(1L)
+                .setStartDate(new Date())
+                .setEndDate(new Date())
+                .setContractNumber(TestUtil.randomString())
+                .setAccountNumber(TestUtil.randomString())
+                .setOrderNumber(TestUtil.randomString());
+
+            String sub = Util.generateDbUUID();
+            pool1.setSourceSubscription(new SourceSubscription(sub, "master"));
+            poolCurator.create(pool1);
+
+            subIds.add(sub);
+            expectedPools.add(pool1);
+        }
+
+        List<Pool> pools = poolCurator.getBySubscriptionIds(owner, subIds);
+        assertThat(pools)
+            .hasSize(expectedPools.size())
+            .containsAll(expectedPools);
+    }
+
+    @Test
+    public void testGetBySubscriptionIdsWithPrincipal() {
+        User user = new User(TestUtil.randomString(), TestUtil.randomString());
+        Set<Permission> perms = new HashSet<>();
+        perms.add(new OwnerPermission(owner, Access.ALL));
+        UserPrincipal principal = new UserPrincipal(user.getUsername(), perms, false);
+        setupPrincipal(principal);
+
+        Product product1 = new Product(TestUtil.randomString(), TestUtil.randomString(), 10L);
+        product1 = this.createProduct(product1);
+
+        Pool pool1 = new Pool()
+            .setOwner(owner)
+            .setProduct(product1)
+            .setQuantity(1L)
+            .setStartDate(new Date())
+            .setEndDate(new Date())
+            .setContractNumber(TestUtil.randomString())
+            .setAccountNumber(TestUtil.randomString())
+            .setOrderNumber(TestUtil.randomString());
+
+        String subId1 = Util.generateDbUUID();
+        pool1.setSourceSubscription(new SourceSubscription(subId1, "master"));
+        poolCurator.create(pool1);
+
+        Owner owner2 = createOwner();
+        Pool pool2 = new Pool()
+            .setOwner(owner2)
+            .setProduct(product1)
+            .setQuantity(1L)
+            .setStartDate(new Date())
+            .setEndDate(new Date())
+            .setContractNumber(TestUtil.randomString())
+            .setAccountNumber(TestUtil.randomString())
+            .setOrderNumber(TestUtil.randomString());
+
+        String subId2 = Util.generateDbUUID();
+        pool2.setSourceSubscription(new SourceSubscription(subId2, "master"));
+        poolCurator.create(pool2);
+
+        List<Pool> pools = poolCurator.getBySubscriptionIds(owner, Arrays.asList(subId1, subId2));
+
+        assertThat(pools)
+            .isNotNull()
+            .singleElement()
+            .isEqualTo(pool1);
     }
 
     @Test
@@ -838,8 +1025,89 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testLookupOverconsumedBySubscriptionId() {
+    public void testGetBySubscriptionIdWithNullOwner() {
+        Owner nullOwner = null;
 
+        List<Pool> actual = poolCurator.getBySubscriptionId(nullOwner, TestUtil.randomString());
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testGetBySubscriptionIdWithInvalidSubId(String id) {
+        List<Pool> actual = poolCurator.getBySubscriptionId(owner, id);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetBySubscriptionIdWithPrincipal() {
+        User user = new User(TestUtil.randomString(), TestUtil.randomString());
+        Set<Permission> perms = new HashSet<>();
+        perms.add(new OwnerPermission(owner, Access.ALL));
+        UserPrincipal principal = new UserPrincipal(user.getUsername(), perms, false);
+        setupPrincipal(principal);
+
+        Product product1 = new Product(TestUtil.randomString(), TestUtil.randomString(), 10L);
+        product1 = this.createProduct(product1);
+
+        Pool pool1 = new Pool()
+            .setOwner(owner)
+            .setProduct(product1)
+            .setQuantity(1L)
+            .setStartDate(new Date())
+            .setEndDate(new Date())
+            .setContractNumber(TestUtil.randomString())
+            .setAccountNumber(TestUtil.randomString())
+            .setOrderNumber(TestUtil.randomString());
+
+        String subId1 = Util.generateDbUUID();
+        pool1.setSourceSubscription(new SourceSubscription(subId1, "master"));
+        poolCurator.create(pool1);
+
+        Owner owner2 = createOwner();
+        Pool pool2 = new Pool()
+            .setOwner(owner2)
+            .setProduct(product1)
+            .setQuantity(1L)
+            .setStartDate(new Date())
+            .setEndDate(new Date())
+            .setContractNumber(TestUtil.randomString())
+            .setAccountNumber(TestUtil.randomString())
+            .setOrderNumber(TestUtil.randomString());
+
+        String subId2 = Util.generateDbUUID();
+        pool2.setSourceSubscription(new SourceSubscription(subId2, "master"));
+        poolCurator.create(pool2);
+
+        Pool pool3 = new Pool()
+            .setOwner(owner)
+            .setProduct(product1)
+            .setQuantity(1L)
+            .setStartDate(new Date())
+            .setEndDate(new Date())
+            .setContractNumber(TestUtil.randomString())
+            .setAccountNumber(TestUtil.randomString())
+            .setOrderNumber(TestUtil.randomString());
+
+        String subId3 = Util.generateDbUUID();
+        pool3.setSourceSubscription(new SourceSubscription(subId3, "master"));
+        poolCurator.create(pool3);
+
+        List<Pool> actual = poolCurator.getBySubscriptionId(owner2, subId2);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testLookupOverconsumedBySubscriptionId() {
         Pool pool = createPool(owner, product, 1L,
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
@@ -985,14 +1253,19 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testListByActiveOnIncludesSameStartDay() {
-        Date activeOn = TestUtil.createDate(2011, 2, 2);
+        Date setActiveOn = TestUtil.createDate(2011, 2, 2);
 
         Pool pool = TestUtil.createPool(owner, product);
-        pool.setStartDate(activeOn);
+        pool.setStartDate(setActiveOn);
         poolCurator.create(pool);
 
-        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, (Collection<String>) null,
-            activeOn).size());
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .setActiveOn(setActiveOn);
+
+        assertEquals(1, poolCurator.listAvailableEntitlementPools(qualifier)
+            .getPageData()
+            .size());
     }
 
     @Test
@@ -1006,13 +1279,18 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         pool = poolCurator.create(pool);
 
-        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, (Collection<String>) null,
-            endDate).size());
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .setActiveOn(endDate);
+
+        assertEquals(1, poolCurator.listAvailableEntitlementPools(qualifier)
+            .getPageData()
+            .size());
     }
 
     @Test
     public void testListByActiveOnInTheMiddle() {
-        Date activeOn = TestUtil.createDate(2011, 2, 2);
+        Date setActiveOn = TestUtil.createDate(2011, 2, 2);
 
         Pool pool = TestUtil.createPool(owner, product)
             .setStartDate(TestUtil.createDate(2011, 1, 2))
@@ -1020,8 +1298,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         poolCurator.create(pool);
 
-        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, (Collection<String>) null,
-            activeOn).size());
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .setActiveOn(setActiveOn);
+
+        assertEquals(1, poolCurator.listAvailableEntitlementPools(qualifier)
+            .getPageData()
+            .size());
     }
 
     @Test
@@ -1042,24 +1325,20 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             poolCurator.create(pool);
         }
 
-        PageRequest req = new PageRequest();
-        req.setPage(1);
-        req.setPerPage(10);
-        req.setOrder(PageRequest.Order.ASCENDING);
-        req.setSortBy("id");
+        Date setActiveOn = TestUtil.createDate(2011, 2, 2);
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .addProductId(product.getId())
+            .setActiveOn(setActiveOn)
+            .setOffset(1)
+            .setLimit(10)
+            .addOrder("id", false);
 
-        Date activeOn = TestUtil.createDate(2011, 2, 2);
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), null, activeOn, new PoolFilterBuilder(),
-            req, false, false, false, null);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
         assertEquals(Integer.valueOf(50), page.getMaxRecords());
 
         List<Pool> pools = page.getPageData();
         assertEquals(10, pools.size());
-
-        // Make sure we have the real PageRequest, not the dummy one we send in
-        // with the order and sortBy fields.
-        assertEquals(req, page.getPageRequest());
 
         // Check that we've sorted ascending on the id
         for (int i = 0; i < pools.size(); i++) {
@@ -1078,14 +1357,15 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             poolCurator.create(pool);
         }
 
-        PageRequest req = new PageRequest();
-        req.setPage(1);
-        req.setPerPage(10);
+        Date setActiveOn = TestUtil.createDate(2011, 2, 2);
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .addProductId(product.getId())
+            .setActiveOn(setActiveOn)
+            .setOffset(1)
+            .setLimit(10);
 
-        Date activeOn = TestUtil.createDate(2011, 2, 2);
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), null, activeOn, new PoolFilterBuilder(),
-            req, false, false, false, null);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
         assertEquals(Integer.valueOf(5), page.getMaxRecords());
         assertEquals(5, page.getPageData().size());
     }
@@ -1099,14 +1379,15 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             poolCurator.create(pool);
         }
 
-        PageRequest req = new PageRequest();
-        req.setPage(5);
-        req.setPerPage(10);
+        Date setActiveOn = TestUtil.createDate(2011, 2, 2);
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .addProductId(product.getId())
+            .setActiveOn(setActiveOn)
+            .setOffset(5)
+            .setLimit(10);
 
-        Date activeOn = TestUtil.createDate(2011, 2, 2);
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), null, activeOn, new PoolFilterBuilder(),
-            req, false, false, false, null);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
         assertEquals(Integer.valueOf(5), page.getMaxRecords());
         assertEquals(0, page.getPageData().size());
     }
@@ -1120,14 +1401,15 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             poolCurator.create(pool);
         }
 
-        PageRequest req = new PageRequest();
-        req.setPage(3);
-        req.setPerPage(2);
+        Date setActiveOn = TestUtil.createDate(2011, 2, 2);
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .addProductId(product.getId())
+            .setActiveOn(setActiveOn)
+            .setOffset(3)
+            .setLimit(2);
 
-        Date activeOn = TestUtil.createDate(2011, 2, 2);
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), null, activeOn, new PoolFilterBuilder(),
-            req, false, false, false, null);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
 
         assertEquals(Integer.valueOf(5), page.getMaxRecords());
         assertEquals(1, page.getPageData().size());
@@ -1144,24 +1426,26 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             poolCurator.create(pool);
         }
 
-        PageRequest req = new PageRequest();
-        req.setPage(1);
-        req.setPerPage(10);
+        Date setActiveOn = TestUtil.createDate(2011, 2, 2);
 
-        Date activeOn = TestUtil.createDate(2011, 2, 2);
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), null, activeOn, new PoolFilterBuilder(),
-            req, false, false, false, null);
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .addProductId(product.getId())
+            .setActiveOn(setActiveOn)
+            .setOffset(1)
+            .setLimit(10);
+
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
         assertEquals(Integer.valueOf(0), page.getMaxRecords());
         assertEquals(0, page.getPageData().size());
     }
 
     @Test
     public void testActivationKeyList() {
-        Date activeOn = TestUtil.createDate(2011, 2, 2);
+        Date setActiveOn = TestUtil.createDate(2011, 2, 2);
 
         Pool pool = TestUtil.createPool(owner, product);
-        pool.setEndDate(activeOn);
+        pool.setEndDate(setActiveOn);
         poolCurator.create(pool);
         List<Pool> pools = new ArrayList<>();
         pools.add(pool);
@@ -1696,81 +1980,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(p2NoAttributes);
         poolCurator.create(p2BadAttributes);
 
-        PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addAttributeFilter("x", "true");
+        PoolQualifier qualifier = new PoolQualifier()
+            .addAttribute("x", "true");
 
-        List<Pool> results = poolCurator.listByFilter(filters);
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(qualifier)
+            .getPageData();
 
         assertThat(results, Matchers.hasItems(p1Attributes, p2Attributes));
-    }
-
-    @Test
-    public void testGetPoolsOrderedByProductNameAscending() {
-        Owner owner1 = this.createOwner();
-
-        Pool p1 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p1", "xyz"))
-            .setSourceSubscription(new SourceSubscription("subscriptionId-phil", PRIMARY_POOL_SUB_KEY));
-
-        Pool p2 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p2", "abc"))
-            .setSourceSubscription(new SourceSubscription("subscriptionId-ned", "primary1"));
-
-        Pool p3 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p3", "lmn"))
-            .setSourceSubscription(new SourceSubscription("subscriptionId-ned1", "primary11"));
-
-        this.poolCurator.create(p3);
-        this.poolCurator.create(p2);
-        this.poolCurator.create(p1);
-
-        PageRequest req = new PageRequest();
-
-        req.setOrder(PageRequest.Order.ASCENDING);
-        req.setSortBy("Product.name");
-        Date activeOn = new Date();
-
-        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(null, null, owner1.getId(),
-            null, null, activeOn, false, null, req, false, false, null);
-
-        List<Pool> pools = page.getPageData();
-        List<Pool> results = new ArrayList<>();
-        results.add(p2);
-        results.add(p3);
-        results.add(p1);
-        assertEquals(results, pools);
-
-    }
-
-    @Test
-    public void testGetPoolsOrderedByProductNameDescending() {
-        // Checking for Descending
-        Owner owner1 = this.createOwner();
-        this.ownerCurator.create(owner1);
-
-        Pool p1 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p1", "xyz"));
-        p1.setSourceSubscription(new SourceSubscription("subscriptionId-phil", PRIMARY_POOL_SUB_KEY));
-        Pool p2 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p2", "abc"));
-        p2.setSourceSubscription(new SourceSubscription("subscriptionId-ned", "primary1"));
-        Pool p3 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p3", "lmn"));
-        p3.setSourceSubscription(new SourceSubscription("subscriptionId-ned1", "primary11"));
-        this.poolCurator.create(p3);
-        this.poolCurator.create(p1);
-        this.poolCurator.create(p2);
-        PageRequest req1 = new PageRequest();
-        req1.setSortBy("Product.name");
-        req1.setOrder(PageRequest.Order.DESCENDING);
-
-        Date activeOn1 = new Date();
-
-        Page<List<Pool>> page1 = poolManager.listAvailableEntitlementPools(null, null, owner1.getId(),
-            null, null, activeOn1, false, null, req1, false, false, null);
-
-        List<Pool> pools1 = page1.getPageData();
-
-        List<Pool> results1 = new ArrayList<>();
-        results1.add(p1);
-        results1.add(p3);
-        results1.add(p2);
-
-        assertEquals(results1, pools1);
     }
 
     @Test
@@ -1787,10 +2003,106 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         this.poolCurator.create(p1);
         this.poolCurator.create(p2);
 
-        Page<List<Pool>> result = this.poolCurator.listAvailableEntitlementPools(null, owner1.getId(),
-            (Collection<String>) null, "subscriptionId-phil", new Date(), null, null, false,
-            false, false, null);
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner1.getId())
+            .addSubscriptionId("subscriptionId-phil")
+            .setActiveOn(new Date());
+
+        Page<List<Pool>> result = this.poolCurator.listAvailableEntitlementPools(qualifier);
+        assertEquals(1, result.getPageData().size());
         assertEquals("subscriptionId-phil", result.getPageData().get(0).getSubscriptionId());
+    }
+
+    @Test
+    public void testListAvailableEntitlementPoolsWithOnlyFuture() {
+        Owner owner1 = this.createOwner();
+
+        Product prod1 = this.generateProduct(owner1, TestUtil.randomString(), TestUtil.randomString());
+        Product prod2 = this.generateProduct(owner1, TestUtil.randomString(), TestUtil.randomString());
+
+        Pool pool1 = TestUtil.createPool(owner1, prod1);
+        pool1.setStartDate(TestUtil.createDateOffset(0, 3, 0));
+        pool1.setEndDate(TestUtil.createDateOffset(0, 8, 0));
+
+        Pool pool2 = TestUtil.createPool(owner1, prod2);
+        pool2.setStartDate(TestUtil.createDateOffset(0, -3, 0));
+        pool2.setEndDate(TestUtil.createDateOffset(0, 8, 0));
+
+        pool1 = this.poolCurator.create(pool1);
+        this.poolCurator.create(pool2);
+
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner1.getId())
+            .setActiveOn(new Date())
+            .setOnlyFuture(true);
+
+        List<Pool> actual = this.poolCurator.listAvailableEntitlementPools(qualifier)
+            .getPageData();
+
+        assertThat(actual)
+            .singleElement()
+            .isEqualTo(pool1);
+    }
+
+    @Test
+    public void testListAvailableEntitlementPoolsWithAddFuture() {
+        Owner owner1 = this.createOwner();
+
+        Product prod1 = this.generateProduct(owner1, TestUtil.randomString(), TestUtil.randomString());
+        Product prod2 = this.generateProduct(owner1, TestUtil.randomString(), TestUtil.randomString());
+
+        Pool pool1 = TestUtil.createPool(owner1, prod1);
+        pool1.setStartDate(TestUtil.createDateOffset(0, 3, 0));
+        pool1.setEndDate(TestUtil.createDateOffset(0, 8, 0));
+
+        Pool pool2 = TestUtil.createPool(owner1, prod2);
+        pool2.setStartDate(TestUtil.createDateOffset(0, -3, 0));
+        pool2.setEndDate(TestUtil.createDateOffset(0, -2, 0));
+
+        pool1 = this.poolCurator.create(pool1);
+        this.poolCurator.create(pool2);
+
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner1.getId())
+            .setActiveOn(new Date())
+            .setAddFuture(true);
+
+        List<Pool> actual = this.poolCurator.listAvailableEntitlementPools(qualifier)
+            .getPageData();
+
+        assertThat(actual)
+            .singleElement()
+            .isEqualTo(pool1);
+    }
+
+    @Test
+    public void testListAvailableEntitlementPoolsWithAfter() {
+        Owner owner1 = this.createOwner();
+
+        Product prod1 = this.generateProduct(owner1, TestUtil.randomString(), TestUtil.randomString());
+        Product prod2 = this.generateProduct(owner1, TestUtil.randomString(), TestUtil.randomString());
+
+        Pool pool1 = TestUtil.createPool(owner1, prod1);
+        pool1.setStartDate(TestUtil.createDateOffset(0, 3, 0));
+        pool1.setEndDate(TestUtil.createDateOffset(0, 8, 0));
+
+        Pool pool2 = TestUtil.createPool(owner1, prod2);
+        pool2.setStartDate(TestUtil.createDateOffset(0, -3, 0));
+        pool2.setEndDate(TestUtil.createDateOffset(0, -2, 0));
+
+        pool1 = this.poolCurator.create(pool1);
+        this.poolCurator.create(pool2);
+
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner1.getId())
+            .setAfter(new Date());
+
+        List<Pool> actual = this.poolCurator.listAvailableEntitlementPools(qualifier)
+            .getPageData();
+
+        assertThat(actual)
+            .singleElement()
+            .isEqualTo(pool1);
     }
 
     private Product generateProduct(Owner owner, String id, String name) {
@@ -1897,6 +2209,46 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(expected, actual);
     }
 
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testHasActiveEntitlementPoolsWithInvalidOwnerId(String ownerId) {
+        assertThat(poolCurator.hasActiveEntitlementPools(ownerId, new Date()))
+            .isFalse();
+    }
+
+    @Test
+    public void testHasAvailablePoolsWithNullDate() {
+        Date activeDate = TestUtil.createDate(2000, 3, 2);
+
+        Pool pool1 = createPool(owner, product, 100L,
+            activeDate, TestUtil.createDateOffset(1, 0, 0));
+        poolCurator.create(pool1);
+
+        assertTrue(poolCurator.hasActiveEntitlementPools(owner.getId(), null));
+    }
+
+    @Test
+    public void testHasAvailablePoolsWithPrincipal() {
+        User user = new User(TestUtil.randomString(), TestUtil.randomString());
+        Set<Permission> perms = new HashSet<>();
+        perms.add(new OwnerPermission(owner, Access.ALL));
+        UserPrincipal principal = new UserPrincipal(user.getUsername(), perms, false);
+        setupPrincipal(principal);
+
+        Date activeDate = TestUtil.createDate(2000, 3, 2);
+
+        Pool pool1 = createPool(owner, product, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool1);
+
+        Owner owner2 = createOwner();
+        Pool pool2 = createPool(owner2, product, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool2);
+
+        assertFalse(poolCurator.hasActiveEntitlementPools(owner2.getId(), activeDate));
+    }
+
     @Test
     public void testHasAvailablePools() {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
@@ -1924,6 +2276,28 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool1);
 
         assertFalse(poolCurator.hasActiveEntitlementPools(owner.getId(), activeDate));
+    }
+
+    @Test
+    public void testFindDevPoolWithPrincipal() {
+        User user = new User(TestUtil.randomString(), TestUtil.randomString());
+        Set<Permission> perms = new HashSet<>();
+        perms.add(new OwnerPermission(owner, Access.ALL));
+        UserPrincipal principal = new UserPrincipal(user.getUsername(), perms, false);
+        setupPrincipal(principal);
+
+        Owner owner2 = createOwner();
+        Pool pool1 = createPool(owner2, product, -1L, TestUtil.createDate(2010, 3, 2),
+            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
+        pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, consumer.getUuid());
+        pool1.setAttribute("another_attr", "20");
+        pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
+        poolCurator.create(pool1);
+
+        Pool actual = poolCurator.findDevPool(consumer);
+
+        assertThat(actual)
+            .isNull();
     }
 
     @Test
@@ -3642,4 +4016,129 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             .extracting(Pool::getId)
             .containsExactlyInAnyOrderElementsOf(List.of(pool1.getId(), pool2.getId()));
     }
+
+    @Test
+    public void testListAvailableEntitlementPoolsWithNullQualifier() {
+        Page<List<Pool>> actual = poolCurator.listAvailableEntitlementPools(null);
+
+        assertThat(actual.getPageData())
+            .isEmpty();
+    }
+
+    @Test
+    public void testListAvailableEntitlementPoolsWithConflictingOwners() {
+        Owner owner2 = createOwner();
+        owner2 = ownerCurator.create(owner2);
+
+        Consumer consumer1 = createMockConsumer(owner, false);
+        PoolQualifier qualifier = new PoolQualifier()
+            .setConsumer(consumer1)
+            .setOwnerId(owner2.getId());
+
+        Page<List<Pool>> actual = poolCurator.listAvailableEntitlementPools(qualifier);
+
+        assertThat(actual.getPageData())
+            .isEmpty();
+    }
+
+
+    @Test
+    public void testGetOwnerSubPoolsForStackIdWithNullOwner() {
+        List<Pool> actual = poolCurator.getOwnerSubPoolsForStackId(null, TestUtil.randomString());
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testGetOwnerSubPoolsForStackIdWithInvalidStackId(String stackId) {
+        List<Pool> actual = poolCurator.getOwnerSubPoolsForStackId(owner, stackId);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetOwnerSubPoolsForStackIdWithPrincipal() {
+        User user = new User(TestUtil.randomString(), TestUtil.randomString());
+        Set<Permission> perms = new HashSet<>();
+        perms.add(new OwnerPermission(owner, Access.ALL));
+        UserPrincipal principal = new UserPrincipal(user.getUsername(), perms, false);
+        setupPrincipal(principal);
+
+        Date startDate = TestUtil.createDate(2010, 3, 2);
+        Date endDate = TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2);
+
+        String stackId = TestUtil.randomString();
+        Product stackingProduct1 = TestUtil.createProduct();
+        stackingProduct1.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        stackingProduct1.setAttribute(Product.Attributes.STACKING_ID, stackId);
+        stackingProduct1 = this.createProduct(stackingProduct1);
+
+        Owner owner2 = createOwner();
+        Consumer consumer1 = this.createConsumer(owner2);
+        Pool pool1 = createPool(owner2, stackingProduct1, 20L, startDate, endDate);
+        pool1.setSourceStack(new SourceStack(consumer1, stackId));
+        pool1.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer1.getUuid());
+        poolCurator.create(pool1);
+
+        List<Pool> actual = poolCurator.getOwnerSubPoolsForStackId(owner2, stackId);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetOwnerSubPoolsForStackId() {
+        Consumer consumer1 = this.createConsumer(owner);
+        Consumer consumer2 = this.createConsumer(owner);
+
+        Date startDate = TestUtil.createDate(2010, 3, 2);
+        Date endDate = TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2);
+
+        String stackId1 = TestUtil.randomString();
+        Product stackingProduct1 = TestUtil.createProduct();
+        stackingProduct1.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        stackingProduct1.setAttribute(Product.Attributes.STACKING_ID, stackId1);
+        stackingProduct1 = this.createProduct(stackingProduct1);
+
+        String stackId2 = TestUtil.randomString();
+        Product stackingProduct2 = TestUtil.createProduct();
+        stackingProduct2.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        stackingProduct2.setAttribute(Product.Attributes.STACKING_ID, stackId2);
+        stackingProduct2 = this.createProduct(stackingProduct2);
+
+        String stackId3 = TestUtil.randomString();
+        Product stackingProduct3 = TestUtil.createProduct();
+        stackingProduct3.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        stackingProduct3.setAttribute(Product.Attributes.STACKING_ID, stackId3);
+        stackingProduct3 = this.createProduct(stackingProduct3);
+
+        Pool pool1 = createPool(owner, stackingProduct1, 20L, startDate, endDate);
+        pool1.setSourceStack(new SourceStack(consumer1, stackId1));
+        pool1.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer1.getUuid());
+        poolCurator.create(pool1);
+
+        Pool pool2 = createPool(owner, stackingProduct2, 20L, startDate, endDate);
+        pool2.setSourceStack(new SourceStack(consumer1, stackId2));
+        pool2.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer1.getUuid());
+        poolCurator.create(pool2);
+
+        Pool pool3 = createPool(owner, stackingProduct3, 20L, startDate, endDate);
+        pool3.setSourceStack(new SourceStack(consumer2, stackId3));
+        pool3.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer2.getUuid());
+        poolCurator.create(pool3);
+
+        List<Pool> actual = poolCurator.getOwnerSubPoolsForStackId(owner, stackId1);
+
+        assertThat(actual)
+            .hasSize(1)
+            .singleElement()
+            .isEqualTo(pool1);
+    }
+
 }

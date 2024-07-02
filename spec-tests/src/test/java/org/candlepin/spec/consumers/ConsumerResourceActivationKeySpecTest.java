@@ -578,17 +578,26 @@ public class ConsumerResourceActivationKeySpecTest {
             .addAttributesItem(ProductAttributes.SupportLevel.withValue("VIP"));
         rhelProduct = ownerProductApi.createProduct(owner.getKey(), rhelProduct);
         ProductDTO product = ownerProductApi.createProduct(owner.getKey(), Products.random());
-        ownerClient.createPool(owner.getKey(), Pools.random(rhelProduct).quantity(37L));
-        ownerClient.createPool(owner.getKey(), Pools.random(product).quantity(33L));
+        PoolDTO rhelPool = ownerClient.createPool(owner.getKey(), Pools.random(rhelProduct).quantity(37L));
+        PoolDTO productPool = ownerClient.createPool(owner.getKey(), Pools.random(product).quantity(33L));
 
         ActivationKeyDTO key1 = ownerClient.createActivationKey(owner.getKey(),
             ActivationKeys.random(owner).serviceLevel("VIP"));
 
-        PoolDTO rhelPool = ownerClient.listOwnerPoolsByProduct(owner.getKey(), rhelProduct.getId()).get(0);
-        PoolDTO productPool = ownerClient.listOwnerPoolsByProduct(owner.getKey(), product.getId()).get(0);
+        PoolDTO retrievedRhelPool = ownerClient
+            .listOwnerPoolsByProduct(owner.getKey(), rhelProduct.getId()).get(0);
+        assertThat(retrievedRhelPool)
+            .isNotNull()
+            .returns(rhelPool.getId(), PoolDTO::getId);
 
-        activationKeyApi.addPoolToKey(key1.getId(), rhelPool.getId(), 1L);
-        activationKeyApi.addPoolToKey(key1.getId(), productPool.getId(), 1L);
+        PoolDTO retrievedProductPool = ownerClient
+            .listOwnerPoolsByProduct(owner.getKey(), product.getId()).get(0);
+        assertThat(retrievedProductPool)
+            .isNotNull()
+            .returns(productPool.getId(), PoolDTO::getId);
+
+        activationKeyApi.addPoolToKey(key1.getId(), retrievedRhelPool.getId(), 1L);
+        activationKeyApi.addPoolToKey(key1.getId(), retrievedProductPool.getId(), 1L);
 
         ConsumerDTO consumer = Consumers.random(owner)
             .installedProducts(Set.of());

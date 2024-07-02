@@ -25,6 +25,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.PoolQualifier;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -366,8 +367,14 @@ public class EntitlementCertificateService {
      */
     @Transactional
     public void regenerateCertificatesOf(Owner owner, String productId, boolean lazy) {
+        PoolQualifier qualifier = new PoolQualifier()
+            .setOwnerId(owner.getId())
+            .addProductId(productId)
+            .setActiveOn(new Date());
+
         Set<Entitlement> entitlements = this.poolCurator
-            .listAvailableEntitlementPools(null, owner, productId, new Date())
+            .listAvailableEntitlementPools(qualifier)
+            .getPageData()
             .stream()
             .flatMap(pool -> pool.getEntitlements().stream())
             .collect(Collectors.toSet());
@@ -434,8 +441,14 @@ public class EntitlementCertificateService {
             Set<Entitlement> entitlements = new HashSet<>();
 
             for (Owner owner : owners) {
+                PoolQualifier qualifier = new PoolQualifier()
+                    .setOwnerId(owner.getOwnerId())
+                    .addProductIds(productIds)
+                    .setActiveOn(now);
+
                 Collection<Entitlement> poolEntitlements = this.poolCurator
-                    .listAvailableEntitlementPools(null, owner, productIds, now)
+                    .listAvailableEntitlementPools(qualifier)
+                    .getPageData()
                     .stream()
                     .flatMap(pool -> pool.getEntitlements().stream())
                     .toList();

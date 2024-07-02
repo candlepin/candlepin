@@ -57,6 +57,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -73,6 +74,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
@@ -1097,15 +1099,40 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     public List<E> takeSubList(PageRequest pageRequest, List<E> results) {
+        if (pageRequest.getPage() == null || pageRequest.getPerPage() == null ||
+            results == null || results.isEmpty()) {
+
+            return results;
+        }
+
         int fromIndex = (pageRequest.getPage() - 1) * pageRequest.getPerPage();
+        int toIndex = fromIndex + pageRequest.getPerPage();
+
+        return takeSubList(fromIndex, toIndex, results);
+    }
+
+    public List<E> takeSubList(QueryArguments<?> query, List<E> results) {
+        if (query.getOffset() == null || query.getLimit() == null ||
+            results == null || results.isEmpty()) {
+
+            return results;
+        }
+
+        int fromIndex = (query.getOffset() - 1) * query.getLimit();
+        int toIndex = fromIndex + query.getLimit();
+
+        return takeSubList(fromIndex, toIndex, results);
+    }
+
+    private List<E> takeSubList(int fromIndex, int toIndex, List<E> results) {
         if (fromIndex >= results.size()) {
             return new ArrayList<>();
         }
 
-        int toIndex = fromIndex + pageRequest.getPerPage();
         if (toIndex > results.size()) {
             toIndex = results.size();
         }
+
         // sublist returns a portion of the list between the specified fromIndex,
         // inclusive, and toIndex, exclusive.
         return results.subList(fromIndex, toIndex);
@@ -1484,6 +1511,36 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
 
         return false;
+    }
+
+    /**
+     * Creates an IN statement predicate based on the provided path and collection of elements from
+     * a query argument.
+     *
+     * @param path
+     *  path to create the IN statement predicate for
+     *
+     * @param collection
+     *  the collection of elements for the IN statement
+     *
+     * @throws IllegalArgumentException
+     *  if the number of elements exceeds the limit of elements for a query argument
+     *
+     * @return an IN statement predicate for the provided path and collection of elements
+     */
+    protected Optional<Predicate> buildQueryArgumentInPredicate(Path<?> path, Collection<?> collection) {
+        if (path == null || collection == null || collection.isEmpty()) {
+            return Optional.empty();
+        }
+
+        int size = collection.size();
+        if (size > QueryArguments.COLLECTION_SIZE_LIMIT) {
+            String msg = String.format("In statement collection of size %d exceeds the limit of %d",
+                size, QueryArguments.COLLECTION_SIZE_LIMIT);
+            throw new IllegalArgumentException(msg);
+        }
+
+        return Optional.of(path.in(collection));
     }
 
     /**

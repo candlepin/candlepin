@@ -37,7 +37,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
-import org.candlepin.model.PoolFilterBuilder;
+import org.candlepin.model.PoolQualifier;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
@@ -158,9 +158,19 @@ public class PoolResource implements PoolsApi {
                 principal.getPrincipalName()));
         }
 
-        Page<List<Pool>> pageResponse = poolManager.listAvailableEntitlementPools(c, null, oId,
-            productId, null, activeOnDate, listAll, new PoolFilterBuilder(), pageRequest,
-            false, false, null);
+        PoolQualifier qualifier = new PoolQualifier()
+            .setConsumer(c)
+            .setOwnerId(oId)
+            .addProductId(productId)
+            .setActiveOn(activeOnDate)
+            .setIncludeWarnings(listAll);
+
+        if (pageRequest != null) {
+            qualifier.setOffset(pageRequest.getPage())
+                .setLimit(pageRequest.getPerPage());
+        }
+
+        Page<List<Pool>> pageResponse = poolManager.listAvailableEntitlementPools(qualifier);
         List<Pool> poolList = pageResponse.getPageData();
 
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
