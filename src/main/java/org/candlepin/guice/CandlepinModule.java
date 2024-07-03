@@ -94,7 +94,6 @@ import org.candlepin.messaging.impl.artemis.ArtemisSessionFactory;
 import org.candlepin.messaging.impl.artemis.ArtemisUtil;
 import org.candlepin.messaging.impl.noop.NoopContextListener;
 import org.candlepin.messaging.impl.noop.NoopSessionFactory;
-import org.candlepin.model.CPRestrictions;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
@@ -282,7 +281,6 @@ public class CandlepinModule extends AbstractModule {
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
         bind(AttributeValidator.class);
         bind(FactValidator.class);
-        requestStaticInjection(CPRestrictions.class);
 
         bind(SystemPurposeComplianceRules.class);
         bind(JsonProvider.class);

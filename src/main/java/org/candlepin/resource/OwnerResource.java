@@ -92,7 +92,7 @@ import org.candlepin.model.OwnerNotFoundException;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
-import org.candlepin.model.PoolFilterBuilder;
+import org.candlepin.model.PoolQualifier;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
@@ -1302,24 +1302,41 @@ public class OwnerResource implements OwnerApi {
         }
 
         // Process the filters passed for the attributes
-        PoolFilterBuilder poolFilters = new PoolFilterBuilder();
+        PoolQualifier qualifier = new PoolQualifier();
 
         new KeyValueStringParser(this.i18n).parseKeyValuePairs(attrFilters)
-            .forEach(kvpair -> poolFilters.addAttributeFilter(kvpair.getKey(), kvpair.getValue()));
+            .forEach(kvpair -> qualifier.addAttribute(kvpair.getKey(), kvpair.getValue()));
+
+        if (poolIds != null && !poolIds.isEmpty()) {
+            qualifier.addIds(poolIds);
+        }
 
         if (matches != null) {
             matches.stream()
                 .filter(elem -> elem != null && !elem.isEmpty())
-                .forEach(poolFilters::addMatchesFilter);
+                .forEach(qualifier::addMatch);
         }
 
-        if (poolIds != null && !poolIds.isEmpty()) {
-            poolFilters.addIdFilters(poolIds);
+        qualifier.setConsumer(c)
+            .addIds(poolIds)
+            .addProductId(productId)
+            .addSubscriptionId(subscriptionId)
+            .setOwnerId(owner.getId())
+            .setActiveOn(afterDate == null ? activeOnDate : null)
+            .setAddFuture(addFuture)
+            .setOnlyFuture(onlyFuture)
+            .setAfter(afterDate);
+
+        if (pageRequest != null) {
+            qualifier.setOffset(pageRequest.getPage())
+                .setLimit(pageRequest.getPerPage());
         }
 
-        Page<List<Pool>> poolPage = poolManager.listAvailableEntitlementPools(
-            c, key, owner.getId(), productId, subscriptionId, afterDate == null ? activeOnDate : null,
-            listAll, poolFilters, pageRequest, addFuture, onlyFuture, afterDate);
+        if (key != null) {
+            qualifier.setActivationKey(key);
+        }
+
+        Page<List<Pool>> poolPage = poolManager.listAvailableEntitlementPools(qualifier);
 
         List<Pool> poolList = poolPage.getPageData();
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);

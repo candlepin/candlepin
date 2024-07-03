@@ -47,7 +47,6 @@ import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.messaging.CPMSessionFactory;
 import org.candlepin.messaging.impl.noop.NoopContextListener;
 import org.candlepin.messaging.impl.noop.NoopSessionFactory;
-import org.candlepin.model.CPRestrictions;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.pki.CertificateReader;
@@ -310,8 +309,6 @@ public class TestingModules {
             bind(PrincipalProvider.class).to(TestPrincipalProvider.class);
             bind(Principal.class).toProvider(TestPrincipalProvider.class);
             bind(EventSink.class).to(NoopEventSinkImpl.class);
-
-            requestStaticInjection(CPRestrictions.class);
 
             bind(AnnotationLocator.class);
             bind(StoreFactory.class);

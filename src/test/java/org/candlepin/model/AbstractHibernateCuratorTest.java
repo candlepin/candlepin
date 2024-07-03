@@ -30,7 +30,9 @@ import static org.mockito.Mockito.spy;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,11 +43,13 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -785,4 +789,218 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         assertThrows(IllegalArgumentException.class, () -> this.ownerCurator
             .getSystemLock("test_lock", null));
     }
+
+    @Test
+    public void testTakeSubListWithQueryArgumentAndNullPerPage() {
+        PageRequest request = new PageRequest()
+            .setPage(1);
+
+        List<Owner> expected = List.of(new Owner());
+
+        List<Owner> actual = this.ownerCurator.takeSubList(request, expected);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testTakeSubListWithPageRequestAndNullPage() {
+        PageRequest request = new PageRequest()
+            .setPerPage(1);
+
+        List<Owner> expected = List.of(new Owner());
+
+        List<Owner> actual = this.ownerCurator.takeSubList(request, expected);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testTakeSubListWithPageRequestAndEmptyResults() {
+        PageRequest request = new PageRequest()
+            .setPage(1)
+            .setPerPage(10);
+
+        List<Owner> actual = this.ownerCurator.takeSubList(request, new ArrayList<>());
+
+        assertEquals(0, actual.size());
+    }
+
+    @Test
+    public void testTakeSubListWithPageRequestAndNullResults() {
+        PageRequest request = new PageRequest()
+            .setPage(1)
+            .setPerPage(10);
+
+        List<Owner> actual = this.ownerCurator.takeSubList(request, null);
+
+        assertNull(actual);
+    }
+
+    @Test
+    public void testTakeSubListWithPageRequest() {
+        PageRequest request = new PageRequest()
+            .setPage(1)
+            .setPerPage(3);
+
+        Owner owner1 = TestUtil.createOwner();
+        Owner owner2 = TestUtil.createOwner();
+        Owner owner3 = TestUtil.createOwner();
+        Owner owner4 = TestUtil.createOwner();
+        Owner owner5 = TestUtil.createOwner();
+        Owner owner6 = TestUtil.createOwner();
+
+        List<Owner> owners = new LinkedList<>();
+        owners.add(owner1);
+        owners.add(owner2);
+        owners.add(owner3);
+        owners.add(owner4);
+        owners.add(owner5);
+        owners.add(owner6);
+
+        List<Owner> actual = this.ownerCurator.takeSubList(request, owners);
+
+        org.assertj.core.api.Assertions.assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(owner1, owner2, owner3);
+    }
+
+    @Test
+    public void testTakeSubListWithQueryArgumentAndNullOffset() {
+        QueryArguments argument = new QueryArguments<>();
+        argument.setLimit(1);
+
+        List<Owner> expected = List.of(new Owner());
+
+        List<Owner> actual = this.ownerCurator.takeSubList(argument, expected);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testTakeSubListWithQueryArgumentAndNullLimit() {
+        QueryArguments argument = new QueryArguments<>();
+        argument.setOffset(1);
+
+        List<Owner> expected = List.of(new Owner());
+
+        List<Owner> actual = this.ownerCurator.takeSubList(argument, expected);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testTakeSubListWithQueryArgumentAndEmptyResults() {
+        QueryArguments argument = new QueryArguments<>()
+            .setOffset(1)
+            .setLimit(10);
+
+        List<Owner> actual = this.ownerCurator.takeSubList(argument, new ArrayList<>());
+
+        assertEquals(0, actual.size());
+    }
+
+    @Test
+    public void testTakeSubListWithQueryArgumentAndNullResults() {
+        QueryArguments argument = new QueryArguments<>()
+            .setOffset(1)
+            .setLimit(10);
+
+        List<Owner> actual = this.ownerCurator.takeSubList(argument, null);
+
+        assertNull(actual);
+    }
+
+    @Test
+    public void testTakeSubListWithQueryArgument() {
+        QueryArguments argument = new QueryArguments<>()
+            .setOffset(1)
+            .setLimit(3);
+
+        Owner owner1 = TestUtil.createOwner();
+        Owner owner2 = TestUtil.createOwner();
+        Owner owner3 = TestUtil.createOwner();
+        Owner owner4 = TestUtil.createOwner();
+        Owner owner5 = TestUtil.createOwner();
+        Owner owner6 = TestUtil.createOwner();
+
+        List<Owner> owners = new LinkedList<>();
+        owners.add(owner1);
+        owners.add(owner2);
+        owners.add(owner3);
+        owners.add(owner4);
+        owners.add(owner5);
+        owners.add(owner6);
+
+        List<Owner> actual = this.ownerCurator.takeSubList(argument, owners);
+
+        org.assertj.core.api.Assertions.assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(owner1, owner2, owner3);
+    }
+
+    @Test
+    public void testBuildQueryArgumentInPredicateWithNullPath() {
+        Optional<Predicate> actual = ownerCurator
+            .buildQueryArgumentInPredicate(null, List.of(TestUtil.randomString()));
+
+        org.assertj.core.api.Assertions.assertThat(actual)
+            .isEmpty();
+    }
+
+    @Test
+    public void testBuildQueryArgumentInPredicateWithNullCollection() {
+        CriteriaBuilder builder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Owner> query = builder.createQuery(Owner.class);
+        Root<Owner> root = query.from(Owner.class);
+
+        Optional<Predicate> actual = ownerCurator.buildQueryArgumentInPredicate(root, null);
+
+        org.assertj.core.api.Assertions.assertThat(actual)
+            .isEmpty();
+    }
+
+    @Test
+    public void testBuildQueryArgumentInPredicateWithEmptyCollection() {
+        CriteriaBuilder builder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Owner> query = builder.createQuery(Owner.class);
+        Root<Owner> root = query.from(Owner.class);
+
+        Optional<Predicate> actual = ownerCurator.buildQueryArgumentInPredicate(root, List.of());
+
+        org.assertj.core.api.Assertions.assertThat(actual)
+            .isEmpty();
+    }
+
+    @Test
+    public void testBuildQueryArgumentInPredicate() {
+        CriteriaBuilder builder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Owner> query = builder.createQuery(Owner.class);
+        Root<Owner> root = query.from(Owner.class);
+
+        List<String> ids = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            ids.add(TestUtil.randomString());
+        }
+
+        Optional<Predicate> actual = ownerCurator.buildQueryArgumentInPredicate(root, ids);
+        org.assertj.core.api.Assertions.assertThat(actual)
+            .isNotEmpty()
+            .containsInstanceOf(Predicate.class);
+    }
+
+    @Test
+    public void testBuildQueryArgumentInPredicateWithCollectionExceedingMaxSize() {
+        CriteriaBuilder builder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Owner> query = builder.createQuery(Owner.class);
+        Root<Owner> root = query.from(Owner.class);
+
+        List<String> ids = new ArrayList<>();
+        for (int i = 0; i < QueryArguments.COLLECTION_SIZE_LIMIT + 10; i++) {
+            ids.add(TestUtil.randomString());
+        }
+
+        assertThrows(IllegalArgumentException.class, () -> ownerCurator
+            .buildQueryArgumentInPredicate(root, ids));
+    }
+
 }

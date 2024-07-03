@@ -39,12 +39,11 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
-import org.candlepin.model.PoolFilterBuilder;
+import org.candlepin.model.PoolQualifier;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.paging.Page;
-import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
@@ -92,8 +91,6 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-
-
 
 public class PoolManager {
     private static final Logger log = LoggerFactory.getLogger(PoolManager.class);
@@ -967,18 +964,22 @@ public class PoolManager {
         if (entitleDate == null) {
             activePoolDate = new Date();
         }
-        PoolFilterBuilder poolFilter = new PoolFilterBuilder();
-        poolFilter.addIdFilters(fromPools);
-        List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
-            host, null, ownerId, null, null, activePoolDate, false,
-            poolFilter, null, false, false, null).getPageData();
+
+        PoolQualifier qualifier = new PoolQualifier()
+            .addIds(fromPools)
+            .setOwnerId(ownerId)
+            .setConsumer(host)
+            .setActiveOn(activePoolDate);
+
+        List<Pool> allOwnerPools = this.listAvailableEntitlementPools(qualifier)
+            .getPageData();
         log.debug("Found {} total pools in org.", allOwnerPools.size());
         logPools(allOwnerPools);
 
-        List<Pool> allOwnerPoolsForGuest = this.listAvailableEntitlementPools(
-            guest, null, ownerId, null, null, activePoolDate,
-            false, poolFilter,
-            null, false, false, null).getPageData();
+        qualifier.setConsumer(guest);
+
+        List<Pool> allOwnerPoolsForGuest = this.listAvailableEntitlementPools(qualifier)
+            .getPageData();
         log.debug("Found {} total pools already available for guest", allOwnerPoolsForGuest.size());
         logPools(allOwnerPoolsForGuest);
 
@@ -1242,11 +1243,14 @@ public class PoolManager {
             activePoolDate = new Date();
         }
 
-        PoolFilterBuilder poolFilter = new PoolFilterBuilder();
-        poolFilter.addIdFilters(fromPools);
-        List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
-            consumer, null, ownerId, null, null, activePoolDate, false,
-            poolFilter, null, false, false, null).getPageData();
+        PoolQualifier qualifier = new PoolQualifier()
+            .addIds(fromPools)
+            .setOwnerId(ownerId)
+            .setConsumer(consumer)
+            .setActiveOn(activePoolDate);
+
+        List<Pool> allOwnerPools = this.listAvailableEntitlementPools(qualifier)
+            .getPageData();
         List<Pool> filteredPools = new LinkedList<>();
 
         // We have to check compliance status here so we can replace an empty
@@ -1541,38 +1545,33 @@ public class PoolManager {
     }
 
     /**
-     * List entitlement pools.
+     * Lists available entitlement pools that match the provided criteria.
      *
-     * If a consumer is specified, a pass through the rules will be done for
-     * each potentially usable pool.
+     * @param qualifier
+     *  a {@link PoolQualifier} with defined criteria for determining which pools should be returned
      *
-     * @param consumer Consumer being entitled.
-     * @param ownerId Owner whose subscriptions should be inspected.
-     * @param productId only entitlements which provide this product are included.
-     * @param activeOn Indicates to return only pools valid on this date.
-     *        Set to null for no date filtering.
-     * @param includeWarnings When filtering by consumer, include pools that
-     *        triggered a rule warning. (errors will still be excluded)
-     * @param filters builds and applies all filters when looking up pools.
-     * @param pageRequest used to determine if results paging is required.
-     * @return List of entitlement pools.
+     * @return a list of pools that meet the defined criteria
      */
-    public Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer,
-        ActivationKey key, String ownerId, String productId, String subscriptionId, Date activeOn,
-        boolean includeWarnings, PoolFilterBuilder filters,
-        PageRequest pageRequest, boolean addFuture, boolean onlyFuture, Date after) {
+    public Page<List<Pool>> listAvailableEntitlementPools(PoolQualifier qualifier) {
+        if (qualifier == null) {
+            Page<List<Pool>> emptyPage = new Page<>();
+            emptyPage.setPageData(Collections.emptyList());
+            emptyPage.setMaxRecords(0);
 
-        // Only postfilter if we have to
-        boolean postFilter = consumer != null || key != null;
-
-        if (consumer != null && !consumer.isDev()) {
-            filters.addAttributeFilter(Pool.Attributes.DEVELOPMENT_POOL, "!true");
+            return emptyPage;
         }
 
-        Page<List<Pool>> page = this.poolCurator.listAvailableEntitlementPools(consumer,
-            ownerId, productId, subscriptionId, activeOn, filters, pageRequest, postFilter,
-            addFuture, onlyFuture, after);
+        Consumer consumer = qualifier.getConsumer();
+        if (consumer != null && !consumer.isDev()) {
+            qualifier.addAttribute(Pool.Attributes.DEVELOPMENT_POOL, "!true");
+        }
 
+        Page<List<Pool>> page = this.poolCurator.listAvailableEntitlementPools(qualifier);
+        if (page.getPageData() == null || page.getPageData().isEmpty()) {
+            return page;
+        }
+
+        ActivationKey key = qualifier.getActivationKey();
         if (consumer == null && key == null) {
             return page;
         }
@@ -1586,6 +1585,7 @@ public class PoolManager {
         // request still could fail.
         List<Pool> resultingPools = page.getPageData();
 
+        boolean includeWarnings = qualifier.includeWarnings();
         if (consumer != null) {
             resultingPools = enforcer.filterPools(consumer, resultingPools, includeWarnings);
         }
@@ -1597,8 +1597,8 @@ public class PoolManager {
         // Set maxRecords once we are done filtering
         page.setMaxRecords(resultingPools.size());
 
-        if (pageRequest != null && pageRequest.isPaging()) {
-            resultingPools = poolCurator.takeSubList(pageRequest, resultingPools);
+        if (qualifier.getOffset() != null && qualifier.getLimit() != null) {
+            resultingPools = poolCurator.takeSubList(qualifier, resultingPools);
         }
 
         page.setPageData(resultingPools);
