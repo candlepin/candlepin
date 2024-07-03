@@ -83,17 +83,18 @@ jobs:
           name: unit_test_reports
           allow_forks: true
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
       - name: Analyze
         if: ${{ fromJson(steps.get_pr_data.outputs.data).base.ref == 'main' || startsWith(fromJson(steps.get_pr_data.outputs.data).base.ref, 'feature/') }}
-        uses: gradle/gradle-build-action@v3
+        run: ./gradlew sonar -x coverage
+          -Dsonar.scm.provider=git
+          -Dsonar.scm.revision=${{ github.event.workflow_run.head_sha }}
+          -Dsonar.pullrequest.key=${{ fromJson(steps.get_pr_data.outputs.data).number }}
+          -Dsonar.pullrequest.base=${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
+          -Dsonar.pullrequest.branch=${{ fromJson(steps.get_pr_data.outputs.data).head.ref }}
+          -Dorg.gradle.jvmargs=-Xmx1g
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          arguments: sonar -x coverage
-            -Dsonar.scm.provider=git
-            -Dsonar.scm.revision=${{ github.event.workflow_run.head_sha }}
-            -Dsonar.pullrequest.key=${{ fromJson(steps.get_pr_data.outputs.data).number }}
-            -Dsonar.pullrequest.base=${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
-            -Dsonar.pullrequest.branch=${{ fromJson(steps.get_pr_data.outputs.data).head.ref }}
-            -Dorg.gradle.jvmargs=-Xmx1g

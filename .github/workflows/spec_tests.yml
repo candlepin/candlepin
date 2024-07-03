@@ -67,10 +67,11 @@ jobs:
           echo "CANDLEPIN_AUTH_CLOUD_ENABLE=true" >> .env
           echo "MODULE_CONFIG_MANIFESTGEN_CONFIGURATION_MODULE=org.candlepin.testext.manifestgen.ManifestGeneratorModule" >> .env
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
       - name: Build Candlepin war file
-        uses: gradle/gradle-build-action@v3
-        with:
-          arguments: war -Ptest_extensions=hostedtest,manifestgen
+        run: ./gradlew war -Ptest_extensions=hostedtest,manifestgen
 
       - name: Create Candlepin and database containers
         shell: bash
@@ -80,11 +81,9 @@ jobs:
           docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml --env-file ./.github/containers/.env up --build -d --wait
 
       - name: Run Spec tests
-        uses: gradle/gradle-build-action@v3
+        run: ./gradlew spec
         env:
           MYSQL_IN_USE: ${{ matrix.database == 'mariadb' }}
-        with:
-          arguments: spec
 
       - name: Collect docker logs on failure
         if: failure()
