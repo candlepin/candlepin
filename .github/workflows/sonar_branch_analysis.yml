@@ -49,12 +49,13 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
       - name: Run unit tests & Analyze
-        uses: gradle/gradle-build-action@v3
+        run: ./gradlew test coverage sonar
+          -Dsonar.branch.name=${{ inputs.branch-name || github.ref_name }}
+          -Dorg.gradle.jvmargs=-Xmx1g
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          arguments: test coverage sonar
-            -Dsonar.branch.name=${{ inputs.branch-name || github.ref_name }}
-            -Dorg.gradle.jvmargs=-Xmx1g
