@@ -14,15 +14,32 @@
  */
 package org.candlepin.model;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * A filter builder that allows filtering Entitlements based on it's pools product
  * attributes. When using this builder, a criteria is expected to have the Pool
  * class aliased as 'p'.
  */
-public class EntitlementFilterBuilder extends PoolFilterBuilder {
+public class EntitlementFilterBuilder extends FilterBuilder {
+
+    private final List<String> matchFilters = new ArrayList<>();
 
     public EntitlementFilterBuilder() {
         super();
+    }
+
+    public void addMatchesFilter(String matches) {
+        if (matches != null && !matches.isEmpty()) {
+            this.matchFilters.add(matches);
+        }
+    }
+
+    public Collection<String> getMatchesFilters() {
+        return Collections.unmodifiableList(this.matchFilters);
     }
 
 }

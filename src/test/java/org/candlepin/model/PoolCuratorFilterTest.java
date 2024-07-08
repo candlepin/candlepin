@@ -26,7 +26,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 
@@ -93,10 +92,9 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         return searchPool;
     }
 
-    private void searchTest(PoolFilterBuilder filters, int expectedResults, String... expectedIds) {
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner.getId(), (Collection<String>) null, null, null, filters, req, false,
-            false, false, null);
+    private void searchTest(PoolQualifier qualifier, int expectedResults, String... expectedIds) {
+        qualifier.setOwnerId(owner.getId());
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
         List<Pool> results = page.getPageData();
 
         assertEquals(expectedResults, results.size());
@@ -113,9 +111,10 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
     }
 
     private void searchTest(String searchFor, int expectedResults, String... expectedIds) {
-        PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addMatchesFilter(searchFor);
-        searchTest(filters, expectedResults, expectedIds);
+        PoolQualifier qualifier = new PoolQualifier();
+        qualifier.addMatch(searchFor);
+
+        searchTest(qualifier, expectedResults, expectedIds);
     }
 
     @Test
@@ -157,13 +156,13 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
 
     @Test
     public void negationOfAKeyValueFilter() {
-        PoolFilterBuilder filter = new PoolFilterBuilder();
-        filter.addAttributeFilter("hello", "true");
-        searchTest(filter, 1, searchPool.getId());
+        PoolQualifier qualifier = new PoolQualifier();
+        qualifier.addAttribute("hello", "true");
+        searchTest(qualifier, 1, searchPool.getId());
 
-        filter = new PoolFilterBuilder();
-        filter.addAttributeFilter("hello", "!true");
-        searchTest(filter, 1, hidePool.getId());
+        qualifier = new PoolQualifier();
+        qualifier.addAttribute("hello", "!true");
+        searchTest(qualifier, 1, hidePool.getId());
     }
 
     @Test

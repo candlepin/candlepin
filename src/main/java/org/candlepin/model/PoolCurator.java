@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -17,23 +17,11 @@ package org.candlepin.model;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.paging.Page;
-import org.candlepin.paging.PageRequest;
 import org.candlepin.util.Util;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Criteria;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Disjunction;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Property;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.criterion.Subqueries;
-import org.hibernate.sql.JoinType;
-import org.hibernate.type.StringType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,20 +36,32 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.MapJoin;
+import javax.persistence.criteria.Order;
+import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.SetJoin;
+import javax.persistence.criteria.Subquery;
+
 
 /**
  * PoolCurator
@@ -115,7 +115,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             predicates.add(cb.greaterThanOrEqualTo(root.get(Pool_.endDate), activeOn));
         }
 
-        query.where(predicates.toArray(new Predicate[predicates.size()]));
+        query.where(predicates.toArray(new Predicate[0]));
 
         return this.getEntityManager()
             .createQuery(query)
@@ -259,310 +259,434 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return results != null ? results : new LinkedList<>();
     }
 
-    @Transactional
-    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o, String productId, Date activeOn) {
-        String ownerId = (o == null) ? null : o.getId();
-        return listAvailableEntitlementPools(c, ownerId,
-            (productId != null ? Arrays.asList(productId) : (Collection<String>) null), null, activeOn,
-            new PoolFilterBuilder(), null, false, false, false, null).getPageData();
-    }
-
-    @Transactional
-    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o, Collection<String> productIds,
-        Date activeOn) {
-
-        String ownerId = (o == null) ? null : o.getId();
-        return listAvailableEntitlementPools(c, ownerId, productIds, null, activeOn,
-            new PoolFilterBuilder(), null, false, false, false, null).getPageData();
-    }
-
-    @Transactional
-    public List<Pool> listAvailableEntitlementPools(Consumer c, String ownerId, Collection<String> productIds,
-        Date activeOn) {
-
-        return listAvailableEntitlementPools(c, ownerId, productIds, null, activeOn,
-            new PoolFilterBuilder(), null, false, false, false, null).getPageData();
-    }
-
-    @Transactional
-    public List<Pool> listByFilter(PoolFilterBuilder filters) {
-        return listAvailableEntitlementPools(
-            null, null, (Set<String>) null, null, null, filters, null, false,
-            false, false, null).getPageData();
-    }
-
-    @Transactional
-    public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, String ownerId, String productId,
-        String subscriptionId, Date activeOn, PoolFilterBuilder filters,
-        PageRequest pageRequest, boolean postFilter, boolean addFuture, boolean onlyFuture, Date after) {
-
-        return this.listAvailableEntitlementPools(c, ownerId,
-            (productId != null ? Arrays.asList(productId) : (Collection<String>) null), subscriptionId,
-            activeOn, filters, pageRequest, postFilter, addFuture, onlyFuture, after);
-    }
-
-    @Transactional
-    public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o, String productId,
-        String subscriptionId, Date activeOn, PoolFilterBuilder filters,
-        PageRequest pageRequest, boolean postFilter, boolean addFuture, boolean onlyFuture, Date after) {
-
-        String ownerId = (o == null) ? null : o.getId();
-        return this.listAvailableEntitlementPools(c, ownerId,
-            (productId != null ? Arrays.asList(productId) : (Collection<String>) null), subscriptionId,
-            activeOn, filters, pageRequest, postFilter, addFuture, onlyFuture, after);
-    }
-
+    /**
+     * Retrieves the UUIDs for all the {@Link Consumer}s that have an entitlement for the pool that
+     * corresponds to the provided pool ID.
+     *
+     * @param poolId
+     *  the ID to the pool to retrieve entitled Consumer UUIDs for
+     *
+     * @return all the UUIDs for {@Link Consumer}s that are entitled to the provided pool ID
+     */
     @Transactional
     public List<String> listEntitledConsumerUuids(String poolId) {
-        return createSecureCriteria("pool")
-            .add(Restrictions.eq("pool.id", poolId))
-            .createAlias("entitlements", "entitlements", JoinType.INNER_JOIN)
-            .createAlias("entitlements.consumer", "consumer", JoinType.INNER_JOIN)
-            .setProjection(Projections.property("consumer.uuid"))
-            .list();
+        if (poolId == null || poolId.isBlank()) {
+            return new ArrayList<>();
+        }
+
+        CriteriaBuilder builder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<String> query = builder.createQuery(String.class);
+        Root<Consumer> root = query.from(Consumer.class);
+
+        Join<Consumer, Entitlement> entitlements = root.join(Consumer_.entitlements);
+        Join<Entitlement, Pool> pool = entitlements.join(Entitlement_.pool);
+
+        List<Predicate> predicates = new ArrayList<>();
+        Predicate securityPredicate = this.getSecurityPredicate(Pool.class, builder, pool);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        predicates.add(builder.equal(pool.get(Pool_.id), poolId));
+
+        query.select(root.get(Consumer_.uuid))
+            .distinct(true)
+            .where(predicates.toArray(new Predicate[0]));
+
+        return this.getEntityManager()
+            .createQuery(query)
+            .getResultList();
     }
 
     /**
-     * List entitlement pools.
+     * Retrieves a paged list of {@Pool}s that fulffill the restrictions dictated by the provided
+     * {@link PoolQualifier}.
      *
-     * Pools will be refreshed from the underlying subscription service.
+     * @param qualifier
+     *  an object that dictates criteria that a pool must meet
      *
-     * @param consumer Consumer being entitled.
-     * @param ownerId Owner whose subscriptions should be inspected.
-     * @param productIds only entitlements which provide these products are included.
-     * @param activeOn Indicates to return only pools valid on this date.
-     *        Set to null for no date filtering.
-     * @param filters filter builder with set filters to apply to the criteria.
-     * @param pageRequest used to specify paging criteria.
-     * @param postFilter if you plan on filtering the list in java
-     * @return List of entitlement pools.
+     * @return a paged list of all the pools that fulfill the requirements provided by the
+     *  {@link PoolQualifier}
      */
     @Transactional
-    @SuppressWarnings({ "unchecked", "checkstyle:indentation", "checkstyle:methodlength" })
-    // TODO: Remove the methodlength suppression once this method is cleaned up
-    public Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer, String ownerId,
-        Collection<String> productIds, String subscriptionId, Date activeOn, PoolFilterBuilder filters,
-        PageRequest pageRequest, boolean postFilter, boolean addFuture, boolean onlyFuture, Date after) {
-
-        if (log.isDebugEnabled()) {
-            log.debug("Listing available pools for:");
-            log.debug("    consumer: {}", consumer);
-            log.debug("    owner: {}", ownerId);
-            log.debug("    products: {}", productIds);
-            log.debug("    subscription: {}", subscriptionId);
-            log.debug("    active on: {}", activeOn);
-            log.debug("    after: {}", after);
+    public Page<List<Pool>> listAvailableEntitlementPools(PoolQualifier qualifier) {
+        if (qualifier == null) {
+            return emptyPage();
         }
 
-        Criteria criteria = this.createSecureCriteria("Pool")
-            .createAlias("product", "Product")
-            .setProjection(Projections.distinct(Projections.id()));
+        Consumer consumer = qualifier.getConsumer();
+        String ownerId = qualifier.getOwnerId();
+        if (consumer != null && ownerId != null && !ownerId.equals(consumer.getOwnerId())) {
+            // Both a consumer and an owner were specified, but the consumer belongs to a different owner.
+            // We can't possibly match a pool on two owners, so we can just abort immediately with an
+            // empty page
+            log.warn("Attempting to filter entitlement pools by owner and a consumer belonging to a " +
+                "different owner: {}, {}", ownerId, consumer);
+
+            return emptyPage();
+        }
+
+        CriteriaBuilder builder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Pool> query = builder.createQuery(Pool.class);
+        Root<Pool> root = query.from(Pool.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+        Predicate securityPredicate = this.getSecurityPredicate(Pool.class, builder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
 
         if (consumer != null) {
-            // Impl note: This block was inherited from the current implementation of the
-            // CriteriaRules.availableEntitlementCriteria method.
-
-            if (ownerId != null && !ownerId.equals(consumer.getOwnerId())) {
-                // Both a consumer and an owner were specified, but the consumer belongs to a different owner.
-                // We can't possibly match a pool on two owners, so we can just abort immediately with an
-                // empty page
-                log.warn("Attempting to filter entitlement pools by owner and a consumer belonging to a " +
-                    "different owner: {}, {}", ownerId, consumer);
-
-                return emptyPage();
-            }
-
-            // We'll set the owner restriction later
             ownerId = consumer.getOwnerId();
-
-            ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-            if (ctype.isManifest()) {
-                DetachedCriteria hostPoolSubquery = DetachedCriteria.forClass(Pool.class, "PoolI")
-                    .createAlias("PoolI.attributes", "attrib")
-                    .setProjection(Projections.id())
-                    .add(Property.forName("Pool.id").eqProperty("PoolI.id"))
-                    .add(Restrictions.eq("attrib.indices", Pool.Attributes.REQUIRES_HOST));
-
-                criteria.add(Subqueries.notExists(hostPoolSubquery));
-            }
-            else if (!consumer.isGuest()) {
-                criteria.add(Restrictions.not(
-                    this.addAttributeFilterSubquery(Pool.Attributes.VIRT_ONLY, Arrays.asList("true"))));
-            }
-            else if (consumer.hasFact(Consumer.Facts.VIRT_UUID)) {
-                String uuidFact = consumer.getFact(Consumer.Facts.VIRT_UUID);
-                Consumer host = null;
-
-                if (uuidFact != null) {
-                    host = this.consumerCurator.getHost(uuidFact, ownerId);
-                }
-
-                // Impl note:
-                // This query matches pools with the "requires_host" attribute explicitly set to a
-                // value other than the host we're looking for. We then negate the results of this
-                // subquery, so our final result is: fetch pools which do not have a required host
-                // or have a required host equal to our host.
-
-                // TODO: If we don't have a host, should this be filtering at all? Seems strange to
-                // be filtering pools which have a null/empty required host value. Probably just
-                // wasted cycles.
-                DetachedCriteria hostPoolSubquery = DetachedCriteria.forClass(Pool.class, "PoolI")
-                    .createAlias("PoolI.attributes", "attrib")
-                    .setProjection(Projections.id())
-                    .add(Property.forName("Pool.id").eqProperty("PoolI.id"))
-                    .add(Restrictions.eq("attrib.indices", Pool.Attributes.REQUIRES_HOST))
-                    .add(Restrictions.ne("attrib.elements", host != null ? host.getUuid() : "").ignoreCase());
-
-                criteria.add(Subqueries.notExists(hostPoolSubquery));
-            }
         }
+
+        getConsumerPredicate(query, root, builder, consumer, ownerId)
+            .ifPresent(predicates::add);
 
         if (ownerId != null) {
-            criteria.add(Restrictions.eq("Pool.owner.id", ownerId));
+            predicates.add(builder.equal(root.get(Pool_.owner).get(Owner_.id), ownerId));
         }
 
+        getQualifierPredicates(query, root, builder, qualifier)
+            .ifPresent(predicates::addAll);
+
+        query.select(root)
+            .distinct(true)
+            .where(predicates.toArray(new Predicate[0]));
+
+        if (qualifier.getOrder() != null) {
+            List<Order> order = this.buildJPAQueryOrder(builder, root, qualifier);
+            query.orderBy(order);
+        }
+
+        List<Pool> pools = this.getEntityManager()
+            .createQuery(query)
+            .getResultList();
+
+        int maxSize = pools.size();
+
+        // Filter the Pools if paging is needed
+        if (qualifier.getOffset() != null && qualifier.getLimit() != null) {
+            pools = this.takeSubList(qualifier, pools);
+        }
+
+        Page<List<Pool>> output = new Page<>();
+        output.setPageData(pools);
+        output.setMaxRecords(maxSize);
+
+        return output;
+    }
+
+    private Optional<List<Predicate>> getQualifierPredicates(CriteriaQuery<?> query, Root<Pool> root,
+        CriteriaBuilder builder, PoolQualifier qualifier) {
+
+        List<Predicate> predicates = new ArrayList<>();
+        buildQueryArgumentInPredicate(root.get(Pool_.id), qualifier.getIds())
+            .ifPresent(predicates::add);
+
+        getPoolExpirationPredicate(root, builder, qualifier.getActiveOn(), qualifier.getAfter(),
+            qualifier.isOnlyFuture(), qualifier.getAddFuture())
+            .ifPresent(predicates::add);
+
+        getSubscriptionPredicate(root, builder, qualifier.getSubscriptionIds())
+            .ifPresent(predicates::add);
+
+        Join<Pool, Product> product = root.join(Pool_.product);
+        SetJoin<Product, Product> providedProduct = null;
+        getProductsPredicate(root, builder, product, providedProduct, qualifier.getProductIds())
+            .ifPresent(predicates::add);
+
+        getMatchesPredicates(query, root, builder, product, providedProduct, qualifier.getMatches())
+            .ifPresent(predicates::addAll);
+
+        getAttributesPredicate(query, root, builder, qualifier.getAttributes())
+            .ifPresent(predicates::addAll);
+
+        return Optional.of(predicates);
+    }
+
+    private Optional<Predicate> getPoolExpirationPredicate(Root<Pool> root, CriteriaBuilder builder,
+        Date activeOn, Date after, boolean onlyFuture, boolean addFuture) {
+
+        List<Predicate> predicates = new ArrayList<>();
         if (activeOn != null) {
             if (onlyFuture) {
-                criteria.add(Restrictions.ge("Pool.startDate", activeOn));
+                predicates.add(builder.greaterThanOrEqualTo(root.get(Pool_.startDate), activeOn));
             }
             else if (!addFuture) {
-                criteria.add(Restrictions.le("Pool.startDate", activeOn));
-                criteria.add(Restrictions.ge("Pool.endDate", activeOn));
+                predicates.add(builder.lessThanOrEqualTo(root.get(Pool_.startDate), activeOn));
+                predicates.add(builder.greaterThanOrEqualTo(root.get(Pool_.endDate), activeOn));
             }
             else {
-                criteria.add(Restrictions.ge("Pool.endDate", activeOn));
+                predicates.add(builder.greaterThanOrEqualTo(root.get(Pool_.endDate), activeOn));
             }
         }
 
         if (after != null) {
-            criteria.add(Restrictions.gt("Pool.startDate", after));
+            predicates.add(builder.greaterThanOrEqualTo(root.get(Pool_.startDate), after));
         }
 
-        // TODO: This section is sloppy. If we're going to clobber the bits in the filter with our own input
-        // parameters, why bother accepting a filter to begin with? Similarly, why bother accepting a filter
-        // if the method takes the arguments directly? If we're going to abstract out the filtering bits, we
-        // should go all-in, cut down on the massive argument list and simply take a single filter object.
-        // -C
-
-        if (subscriptionId != null && !subscriptionId.isEmpty()) {
-            criteria.createAlias("Pool.sourceSubscription", "srcsub")
-                .add(Restrictions.eq("srcsub.subscriptionId", subscriptionId));
+        if (predicates.isEmpty()) {
+            return Optional.empty();
         }
 
-        boolean joinedProvided = false;
-        if (productIds != null && !productIds.isEmpty()) {
-            if (!joinedProvided) {
-                criteria.createAlias("Product.providedProducts", "Provided", JoinType.LEFT_OUTER_JOIN);
-                joinedProvided = true;
+        return Optional.of(builder.and(predicates.toArray(new Predicate[0])));
+    }
+
+    private Optional<Predicate> getSubscriptionPredicate(Root<Pool> root, CriteriaBuilder builder,
+        Set<String> subscriptionIds) {
+
+        if (subscriptionIds == null || subscriptionIds.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Join<Pool, SourceSubscription> subJoin = root.join(Pool_.sourceSubscription);
+
+        return buildQueryArgumentInPredicate(subJoin.get(SourceSubscription_.subscriptionId),
+            subscriptionIds);
+    }
+
+    private Optional<Predicate> getProductsPredicate(Root<Pool> root, CriteriaBuilder builder,
+        Join<Pool, Product> product, SetJoin<Product, Product> providedProduct, Set<String> productIds) {
+
+        if ((productIds == null || productIds.isEmpty())) {
+            return Optional.empty();
+        }
+
+        if (providedProduct == null) {
+            providedProduct = product.join(Product_.providedProducts, JoinType.LEFT);
+        }
+
+        List<Predicate> predicates = new ArrayList<>();
+        buildQueryArgumentInPredicate(product.get(Product_.id), productIds)
+            .ifPresent(predicates::add);
+
+        buildQueryArgumentInPredicate(providedProduct.get(Product_.id), productIds)
+            .ifPresent(predicates::add);
+
+        if (predicates.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(builder.or(predicates.toArray(new Predicate[0])));
+    }
+
+    private Optional<List<Predicate>> getMatchesPredicates(CriteriaQuery<?> query, Root<Pool> root,
+        CriteriaBuilder builder, Join<Pool, Product> product, SetJoin<Product, Product> providedProduct,
+        Set<String> matches) {
+
+        if (matches == null || matches.isEmpty()) {
+            return Optional.empty();
+        }
+
+        if (providedProduct == null) {
+            providedProduct = product.join(Product_.providedProducts, JoinType.LEFT);
+        }
+
+        Join<Product, ProductContent> providedProdContent = providedProduct
+            .join(Product_.productContent, JoinType.LEFT);
+
+        Join<ProductContent, Content> content = providedProdContent
+            .join(ProductContent_.content, JoinType.LEFT);
+
+        List<Predicate> predicates = new ArrayList<>();
+        for (String match : matches) {
+            String sanitized = this.sanitizeMatchesFilter(match);
+
+            Predicate supportLevelPredicate = null;
+            if (sanitized == null || sanitized.isEmpty()) {
+                supportLevelPredicate = buildPoolAttributePredicate(builder, query, root,
+                    Product.Attributes.SUPPORT_LEVEL, attr ->
+                    builder.or(builder.isNull(attr), builder.equal(attr, "")));
+            }
+            else {
+                supportLevelPredicate = buildPoolAttributePredicate(builder, query, root,
+                    Product.Attributes.SUPPORT_LEVEL, attr -> ilike(builder, attr, sanitized));
             }
 
-            criteria.add(Restrictions.or(
-                CPRestrictions.in("Product.id", productIds),
-                CPRestrictions.in("Provided.id", productIds)));
+            Predicate matchesDisjunction = builder.or(
+                ilike(builder, root.get(Pool_.contractNumber), sanitized),
+                ilike(builder, root.get(Pool_.orderNumber), sanitized),
+                ilike(builder, product.get(Product_.id), sanitized),
+                ilike(builder, product.get(Product_.name), sanitized),
+                ilike(builder, providedProduct.get(Product_.id), sanitized),
+                ilike(builder, providedProduct.get(Product_.name), sanitized),
+                ilike(builder, content.get(Content_.name), sanitized),
+                ilike(builder, content.get(Content_.label), sanitized),
+                supportLevelPredicate
+            );
+
+            predicates.add(matchesDisjunction);
         }
 
-        if (filters != null) {
-            // Pool ID filters
-            Collection<String> idFilters = filters.getIdFilters();
+        return Optional.of(predicates);
+    }
 
-            if (idFilters != null && !idFilters.isEmpty()) {
-                criteria.add(CPRestrictions.in("Pool.id", idFilters));
-            }
+    private Optional<List<Predicate>> getAttributesPredicate(CriteriaQuery<?> query, Root<Pool> root,
+        CriteriaBuilder builder, Map<String, List<String>> attributes) {
 
-            // Matches stuff
-            Collection<String> matchesFilters = filters.getMatchesFilters();
-            if (matchesFilters != null && !matchesFilters.isEmpty()) {
-                if (!joinedProvided) {
-                    // This was an inner join -- might end up being important later
-                    criteria.createAlias("Product.providedProducts", "Provided",
-                        JoinType.LEFT_OUTER_JOIN);
-                    joinedProvided = true;
+        if (attributes == null || attributes.isEmpty()) {
+            return Optional.empty();
+        }
+
+        List<Predicate> predicates = new ArrayList<>();
+        for (Map.Entry<String, List<String>> entry : attributes.entrySet()) {
+            String key = entry.getKey();
+            Collection<String> attributeFilters = entry.getValue();
+
+            if (key != null && !key.isEmpty()) {
+                if (attributeFilters == null || attributeFilters.isEmpty()) {
+                    predicates.add(buildPoolAttributePredicate(builder, query, root, key,
+                        attr -> builder.or(builder.isNull(attr), builder.equal(attr, ""))));
                 }
 
-                criteria.createAlias("Provided.productContent", "PPC", JoinType.LEFT_OUTER_JOIN);
-                criteria.createAlias("PPC.content", "Content", JoinType.LEFT_OUTER_JOIN);
+                List<Predicate> inclusionPredicates = new ArrayList<>();
+                List<Predicate> exclusionPredicates = new ArrayList<>();
+                for (String attributeValue : attributeFilters) {
+                    String sanitized = attributeValue.startsWith("!") ?
+                        sanitizeMatchesFilter(attributeValue.substring(1)) :
+                        sanitizeMatchesFilter(attributeValue);
 
-                for (String matches : matchesFilters) {
-                    String sanitized = this.sanitizeMatchesFilter(matches);
-
-                    Disjunction matchesDisjunction = Restrictions.disjunction();
-
-                    matchesDisjunction.add(CPRestrictions.ilike("Pool.contractNumber", sanitized, '!'))
-                        .add(CPRestrictions.ilike("Pool.orderNumber", sanitized, '!'))
-                        .add(CPRestrictions.ilike("Product.id", sanitized, '!'))
-                        .add(CPRestrictions.ilike("Product.name", sanitized, '!'))
-                        .add(CPRestrictions.ilike("Provided.id", sanitized, '!'))
-                        .add(CPRestrictions.ilike("Provided.name", sanitized, '!'))
-                        .add(CPRestrictions.ilike("Content.name", sanitized, '!'))
-                        .add(CPRestrictions.ilike("Content.label", sanitized, '!'))
-                        .add(this.addProductAttributeFilterSubquery(Product.Attributes.SUPPORT_LEVEL,
-                            Arrays.asList(matches)));
-
-                    criteria.add(matchesDisjunction);
-                }
-            }
-
-            // Attribute filters
-            for (Map.Entry<String, List<String>> entry : filters.getAttributeFilters().entrySet()) {
-                String attrib = entry.getKey();
-                List<String> attributeFilters = entry.getValue();
-
-                if (attrib != null && !attrib.isEmpty()) {
-                    // TODO:
-                    // Searching both pool and product attributes is likely an artifact from the days
-                    // when we copied SKU product attributes to the pool. I don't believe there's any
-                    // precedence for attribute lookups now that they're no longer being copied over.
-                    // If this is not the case, then the following logic is broken and will need to be
-                    // adjusted to account for one having priority over the other.
-
-                    if (attributeFilters != null && !attributeFilters.isEmpty()) {
-                        List<String> positives = new LinkedList<>();
-                        List<String> negatives = new LinkedList<>();
-
-                        for (String attrValue : attributeFilters) {
-                            if (attrValue.startsWith("!")) {
-                                negatives.add(attrValue.substring(1));
-                            }
-                            else {
-                                positives.add(attrValue);
-                            }
-                        }
-
-                        if (!positives.isEmpty()) {
-                            criteria.add(this.addAttributeFilterSubquery(attrib, positives));
-                        }
-
-                        if (!negatives.isEmpty()) {
-                            criteria.add(Restrictions.not(
-                                this.addAttributeFilterSubquery(attrib, negatives)));
-                        }
+                    if (attributeValue.startsWith("!")) {
+                        exclusionPredicates.add(buildPoolAttributePredicate(builder, query, root, key,
+                            attr -> ilike(builder, attr, sanitized)));
                     }
                     else {
-                        criteria.add(this.addAttributeFilterSubquery(attrib, attributeFilters));
+                        inclusionPredicates.add(buildPoolAttributePredicate(builder, query, root, key,
+                            attr -> ilike(builder, attr, sanitized)));
                     }
+                }
+
+                if (!inclusionPredicates.isEmpty()) {
+                    predicates.add(builder.or(inclusionPredicates.toArray(new Predicate[0])));
+                }
+
+                if (!exclusionPredicates.isEmpty()) {
+                    predicates.add(builder.or(exclusionPredicates.toArray(new Predicate[0])).not());
                 }
             }
         }
 
-        // Impl note:
-        // Hibernate has an issue with properly hydrating objects within collections of the pool
-        // when only a subset of the collection matches the criteria. To work around this, we pull
-        // the ID list from the main filtering query, then pull the pools again using the ID list.
-        // This also makes it easier to eventually start using a cursor, since the distinct entity
-        // functionality doesn't work with cursors.
+        return Optional.of(predicates);
+    }
 
-        List<String> poolIds = criteria.list();
+    private Optional<Predicate> getConsumerPredicate(CriteriaQuery<?> query, Root<Pool> root,
+        CriteriaBuilder builder, Consumer consumer, String ownerId) {
 
-        if (poolIds != null && !poolIds.isEmpty()) {
-            criteria = this.currentSession()
-                .createCriteria(Pool.class)
-                .createAlias("product", "Product");
-            criteria.add(CPRestrictions.in("id", poolIds));
-
-            return this.listByCriteria(criteria, pageRequest, postFilter);
+        if (consumer == null) {
+            return Optional.empty();
         }
 
-        return emptyPage();
+        ConsumerType consumerType = this.consumerTypeCurator.getConsumerType(consumer);
+        if (consumerType.isManifest()) {
+            Subquery<String> subQuery = query.subquery(String.class);
+            Root<Pool> subQueryRoot = subQuery.from(Pool.class);
+            Predicate idPredicate = builder
+                .equal(subQueryRoot.get(Pool_.id), query.from(Pool.class).get(Pool_.id));
+
+            MapJoin<Pool, String, String> attributes = subQueryRoot.join(Pool_.attributes);
+            Predicate attributePredicate = builder.equal(attributes.key(), Pool.Attributes.REQUIRES_HOST);
+
+            subQuery.select(subQueryRoot.get(Pool_.id))
+                .where(idPredicate, attributePredicate);
+
+            return Optional.of(builder.exists(subQuery).not());
+        }
+        else if (!consumer.isGuest()) {
+            return Optional.of(buildPoolAttributePredicate(builder, query, root, Pool.Attributes.VIRT_ONLY,
+                attr -> builder.equal(attr, "true"))
+                .not());
+        }
+        else if (consumer.hasFact(Consumer.Facts.VIRT_UUID)) {
+            String uuidFact = consumer.getFact(Consumer.Facts.VIRT_UUID);
+            if (uuidFact == null) {
+                return Optional.empty();
+            }
+
+            Consumer host = this.consumerCurator.getHost(uuidFact, ownerId);
+            if (host == null) {
+                return Optional.empty();
+            }
+
+            // Impl note:
+            // This query matches pools with the "requires_host" attribute explicitly set to a
+            // value other than the host we're looking for. We then negate the results of this
+            // subquery, so our final result is: fetch pools which do not have a required host
+            // or have a required host equal to our host.
+
+            Subquery<String> subQuery = query.subquery(String.class);
+            Root<Pool> subQueryRoot = subQuery.from(Pool.class);
+            subQuery.select(subQueryRoot.get(Pool_.id));
+
+            Predicate idPredicate = builder.equal(subQueryRoot.get(Pool_.id), root.get(Pool_.id));
+
+            MapJoin<Pool, String, String> attributes = subQueryRoot.join(Pool_.attributes);
+            Predicate attributeKeyPredicate = builder
+                .equal(attributes.key(), Pool.Attributes.REQUIRES_HOST);
+            Predicate attributeValuePredicate = builder
+                .notEqual(builder.lower(attributes.value()), host.getUuid().toLowerCase());
+
+            subQuery.where(idPredicate, attributeKeyPredicate, attributeValuePredicate);
+
+            return Optional.of(builder.exists(subQuery).not());
+        }
+
+        return Optional.empty();
+    }
+
+    /**
+     * Builds a JPA predicate for performing an attribute equality check using the given builder,
+     * query, and root. Note that the predicate is built using a correlated subquery matching the
+     * provided pool root.
+     * <p></p>
+     * The attribute name is checked against the pool's attributes, and then against the pool's
+     * product's attributes if, and only if, the pool itself does not define the attribute. The
+     * check is performed using a standard equality operation which uses the underlying character
+     * collation to determine case-sensitivity.
+     *
+     * @param builder
+     *  the criteria builder to use for building various JPA criteria objects
+     *
+     * @param query
+     *  the base query which needs to check for attribute equality
+     *
+     * @param root
+     *  the query root which will be correlated to the subqueries built by this subquery; must be
+     *  a pool root
+     *
+     * @param attribute
+     *  the name of the attribute to match
+     *
+     * @param valuePredicateFunc
+     *  a function which receives an expression representing the value for the attribute for each
+     *  matching pool, and returns a predicate for determining if the value matches
+     *
+     * @return
+     *  a predicate for performing attribute equality checks for pools
+     */
+    private Predicate buildPoolAttributePredicate(CriteriaBuilder builder, CriteriaQuery<?> query,
+        Root<Pool> root, String attribute, Function<Expression<String>, Predicate> valuePredicateFunc) {
+
+        Subquery<Pool> subquery = query.subquery(Pool.class);
+        Root<Pool> correlation = subquery.correlate(root);
+
+        Root<Pool> subqueryRoot = subquery.from(Pool.class);
+        Join<Pool, Product> prodJoin = subqueryRoot.join(Pool_.product);
+        MapJoin<Pool, String, String> poolAttr = subqueryRoot.join(Pool_.attributes, JoinType.LEFT);
+        poolAttr.on(builder.equal(poolAttr.key(), attribute));
+        MapJoin<Product, String, String> prodAttr = prodJoin.join(Product_.attributes, JoinType.LEFT);
+        prodAttr.on(builder.equal(prodAttr.key(), attribute));
+
+        subquery.select(subqueryRoot)
+            .where(builder.equal(subqueryRoot, correlation),
+                builder.or(builder.isNotNull(poolAttr.value()), builder.isNotNull(prodAttr.value())),
+                valuePredicateFunc.apply(builder.coalesce(poolAttr.value(), prodAttr.value())));
+
+        return builder.exists(subquery);
+    }
+
+    private Predicate ilike(CriteriaBuilder cb, Expression<String> expression, String attrValue) {
+        return cb.like(cb.lower(expression), cb.lower(cb.literal(attrValue)), '!');
     }
 
     private Page<List<Pool>> emptyPage() {
@@ -570,106 +694,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         output.setPageData(Collections.emptyList());
         output.setMaxRecords(0);
         return output;
-    }
-
-    @SuppressWarnings("checkstyle:indentation")
-    private Criterion addAttributeFilterSubquery(String key, Collection<String> values) {
-        // key = this.sanitizeMatchesFilter(key);
-
-        // Find all pools which have the given attribute (and values) on a product, unless the pool
-        // defines that same attribute
-        DetachedCriteria poolAttrSubquery = DetachedCriteria.forClass(Pool.class, "PoolI")
-            .createAlias("PoolI.attributes", "attrib")
-            .setProjection(Projections.id())
-            .add(Property.forName("Pool.id").eqProperty("PoolI.id"))
-            .add(Restrictions.eq("attrib.indices", key));
-
-        // Impl note:
-        // The SQL restriction below uses some Hibernate magic value to get the pool ID from the
-        // outer-most query. We can't use {alias} here, since we're basing the subquery on Product
-        // instead of Pool to save ourselves an unnecessary join. Similarly, we use an SQL
-        // restriction here because we can query the information we need, hitting only one table
-        // with direct SQL, whereas the matching criteria query would end up requiring a minimum of
-        // one join to get from pool to pool attributes.
-        DetachedCriteria prodAttrSubquery = DetachedCriteria.forClass(Product.class, "ProdI")
-            .createAlias("ProdI.attributes", "attrib")
-            .setProjection(Projections.id())
-            .add(Property.forName("Product.uuid").eqProperty("ProdI.uuid"))
-            .add(Restrictions.eq("attrib.indices", key))
-            .add(Restrictions.sqlRestriction(
-                "NOT EXISTS (SELECT poolattr.pool_id FROM cp_pool_attribute poolattr " +
-                    "WHERE poolattr.pool_id = this_.id AND poolattr.name = ?)",
-                key, StringType.INSTANCE));
-
-        if (values != null && !values.isEmpty()) {
-            Disjunction poolAttrValueDisjunction = Restrictions.disjunction();
-            Disjunction prodAttrValueDisjunction = Restrictions.disjunction();
-
-            for (String attrValue : values) {
-                if (attrValue == null || attrValue.isEmpty()) {
-                    poolAttrValueDisjunction.add(Restrictions.isNull("attrib.elements"))
-                        .add(Restrictions.eq("attrib.elements", ""));
-
-                    prodAttrValueDisjunction.add(Restrictions.isNull("attrib.elements"))
-                        .add(Restrictions.eq("attrib.elements", ""));
-                }
-                else {
-                    attrValue = this.sanitizeMatchesFilter(attrValue);
-                    poolAttrValueDisjunction.add(CPRestrictions.ilike("attrib.elements", attrValue, '!'));
-                    prodAttrValueDisjunction.add(CPRestrictions.ilike("attrib.elements", attrValue, '!'));
-                }
-            }
-
-            poolAttrSubquery.add(poolAttrValueDisjunction);
-            prodAttrSubquery.add(prodAttrValueDisjunction);
-        }
-
-        return Restrictions.or(
-            Subqueries.exists(poolAttrSubquery),
-            Subqueries.exists(prodAttrSubquery));
-    }
-
-    @SuppressWarnings("checkstyle:indentation")
-    private Criterion addProductAttributeFilterSubquery(String key, Collection<String> values) {
-        // Find all pools which have the given attribute (and values) on a product, unless the pool
-        // defines that same attribute
-
-        // Impl note:
-        // The SQL restriction below uses some Hibernate magic value to get the pool ID from the
-        // outer-most query. We can't use {alias} here, since we're basing the subquery on Product
-        // instead of Pool to save ourselves an unnecessary join. Similarly, we use an SQL
-        // restriction here because we can query the information we need, hitting only one table
-        // with direct SQL, whereas the matching criteria query would end up requiring a minimum of
-        // one join to get from pool to pool attributes.
-        DetachedCriteria prodAttrSubquery = DetachedCriteria.forClass(Product.class, "ProdI")
-            .createAlias("ProdI.attributes", "attrib")
-            .setProjection(Projections.id())
-            .add(Property.forName("Product.uuid").eqProperty("ProdI.uuid"))
-            .add(Restrictions.eq("attrib.indices", key))
-            .add(Restrictions.sqlRestriction(
-                "NOT EXISTS (SELECT poolattr.pool_id FROM cp_pool_attribute poolattr " +
-                    "WHERE poolattr.pool_id = this_.id AND poolattr.name = ?)",
-                key, StringType.INSTANCE));
-
-        if (values != null && !values.isEmpty()) {
-            Disjunction prodAttrValueDisjunction = Restrictions.disjunction();
-
-            for (String attrValue : values) {
-                if (attrValue == null || attrValue.isEmpty()) {
-                    prodAttrValueDisjunction.add(Restrictions.isNull("attrib.elements"))
-                        .add(Restrictions.eq("attrib.elements", ""));
-                }
-                else {
-                    attrValue = this.sanitizeMatchesFilter(attrValue);
-                    prodAttrValueDisjunction.add(
-                        CPRestrictions.ilike("attrib.elements", attrValue, '!'));
-                }
-            }
-
-            prodAttrSubquery.add(prodAttrValueDisjunction);
-        }
-
-        return Subqueries.exists(prodAttrSubquery);
     }
 
     private String sanitizeMatchesFilter(String matches) {
@@ -720,7 +744,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @Transactional
     public boolean hasActiveEntitlementPools(String ownerId, Date date) {
-        if (ownerId == null) {
+        if (ownerId == null || ownerId.isBlank()) {
             return false;
         }
 
@@ -728,15 +752,33 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             date = new Date();
         }
 
-        Criteria crit = createSecureCriteria();
-        crit.add(Restrictions.eq("activeSubscription", Boolean.TRUE));
-        crit.add(Restrictions.eq("owner.id", ownerId));
-        crit.add(Restrictions.le("startDate", date));
-        crit.add(Restrictions.ge("endDate", date));
-        crit.setProjection(Projections.rowCount());
+        EntityManager entityManager = this.getEntityManager();
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<Pool> root = query.from(Pool.class);
 
-        long count = (Long) crit.uniqueResult();
-        return count > 0;
+        List<Predicate> predicates = new ArrayList<>();
+        Predicate securityPredicate = this.getSecurityPredicate(Pool.class, builder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        predicates.add(builder.equal(root.get(Pool_.owner).get(Owner_.id), ownerId));
+        predicates.add(builder.lessThanOrEqualTo(root.get(Pool_.startDate), date));
+        predicates.add(builder.greaterThanOrEqualTo(root.get(Pool_.endDate), date));
+
+        query.select(builder.count(root))
+            .where(predicates.toArray(new Predicate[0]));
+
+        try {
+            Long count = entityManager.createQuery(query)
+                .getSingleResult();
+
+            return count > 0;
+        }
+        catch (NoResultException e) {
+            return false;
+        }
     }
 
     /**
@@ -827,17 +869,41 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     /**
      * Query pools by the subscription that generated them.
      *
-     * @param owner The owner of the subscriptions to query
-     * @param subId Subscription to look up pools by
+     * @param owner
+     *  the owner of the subscriptions to query
+     *
+     * @param subId
+     *  subscription to look up pools by
+     *
      * @return pools from the given subscription, sorted by pool.id to avoid deadlocks
      */
-    @SuppressWarnings("unchecked")
     public List<Pool> getBySubscriptionId(Owner owner, String subId) {
-        return createSecureCriteria()
-            .createAlias("sourceSubscription", "sourceSub")
-            .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("sourceSub.subscriptionId", subId))
-            .addOrder(Order.asc("id")).list();
+        if (owner == null || subId == null || subId.isBlank()) {
+            return new ArrayList<>();
+        }
+
+        EntityManager entityManager = this.getEntityManager();
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Pool> query = builder.createQuery(Pool.class);
+        Root<Pool> root = query.from(Pool.class);
+
+        Join<Pool, SourceSubscription> subJoin = root.join(Pool_.sourceSubscription);
+
+        List<Predicate> predicates = new ArrayList<>();
+        Predicate securityPredicate = this.getSecurityPredicate(Pool.class, builder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        predicates.add(builder.equal(root.get(Pool_.owner), owner));
+        predicates.add(builder.equal(subJoin.get(SourceSubscription_.subscriptionId), subId));
+
+        query.select(root)
+            .where(predicates.toArray(new Predicate[0]))
+            .orderBy(builder.asc(root.get(Pool_.id)));
+
+        return entityManager.createQuery(query)
+            .getResultList();
     }
 
     /**
@@ -855,19 +921,50 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     /**
      * Query pools by the subscriptions that generated them.
      *
-     * @param ownerId The owner of the subscriptions to query
-     * @param subIds Subscriptions to look up pools by
+     * @param ownerId
+     *  the owner of the subscriptions to query
+     *
+     * @param subIds
+     *  subscriptions to look up pools by
+     *
      * @return pools from the given subscriptions, sorted by pool.id to avoid
-     *         deadlocks
+     *  deadlocks
      */
-    @SuppressWarnings("unchecked")
     public List<Pool> getBySubscriptionIds(String ownerId, Collection<String> subIds) {
-        return createSecureCriteria()
-            .createAlias("sourceSubscription", "sourceSub")
-            .add(Restrictions.eq("owner.id", ownerId))
-            .add(CPRestrictions.in("sourceSub.subscriptionId", subIds))
-            .addOrder(Order.asc("id"))
-            .list();
+        if (ownerId == null || ownerId.isBlank() || subIds == null || subIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        EntityManager entityManager = this.getEntityManager();
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Pool> query = builder.createQuery(Pool.class);
+        Root<Pool> root = query.from(Pool.class);
+
+        Join<Pool, SourceSubscription> subJoin = root.join(Pool_.sourceSubscription);
+
+        List<Predicate> predicates = new ArrayList<>();
+        Predicate securityPredicate = this.getSecurityPredicate(Pool.class, builder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        predicates.add(builder.equal(root.get(Pool_.owner).get(Owner_.id), ownerId));
+
+        List<Pool> pools = new ArrayList<>();
+        for (List<String> block : this.partition(subIds)) {
+            ParameterExpression<Collection> inArgs = builder.parameter(Collection.class, "subIds");
+            predicates.add(subJoin.get(SourceSubscription_.subscriptionId).in(inArgs));
+
+            query.select(root)
+                .where(predicates.toArray(new Predicate[0]))
+                .orderBy(builder.asc(root.get(Pool_.id)));
+
+            pools.addAll(entityManager.createQuery(query)
+                .setParameter("subIds", block)
+                .getResultList());
+        }
+
+        return pools;
     }
 
     /**
@@ -1159,13 +1256,45 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return output;
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Retrieves pools that have a {@SourceSubscription} that has a source stack ID equal to the provided
+     * stack ID.
+     *
+     * @param owner
+     *  the owner of the pools to retrieve
+     *
+     * @param stackId
+     *  the ID of the stack for the source subscriptions to retrieve pools for
+     *
+     * @return the pools that have a source subscription with a source stack ID equal to the provided
+     *  stack ID.
+     */
     public List<Pool> getOwnerSubPoolsForStackId(Owner owner, String stackId) {
-        return createSecureCriteria()
-            .createAlias("sourceStack", "ss")
-            .add(Restrictions.eq("ss.sourceStackId", stackId))
-            .add(Restrictions.eq("owner", owner))
-            .list();
+        if (owner == null || stackId == null || stackId.isBlank()) {
+            return new ArrayList<>();
+        }
+
+        EntityManager entityManager = this.getEntityManager();
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Pool> query = builder.createQuery(Pool.class);
+        Root<Pool> root = query.from(Pool.class);
+
+        Join<Pool, SourceStack> stackJoin = root.join(Pool_.sourceStack);
+
+        List<Predicate> predicates = new ArrayList<>();
+        Predicate securityPredicate = this.getSecurityPredicate(Pool.class, builder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        predicates.add(builder.equal(root.get(Pool_.owner), owner));
+        predicates.add(builder.equal(stackJoin.get(SourceStack_.sourceStackId), stackId));
+
+        query.select(root)
+            .where(predicates.toArray(new Predicate[0]));
+
+        return entityManager.createQuery(query)
+            .getResultList();
     }
 
     /**
@@ -1401,7 +1530,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
               AND sourceSub.subscriptionId IS NULL
             ORDER BY p.id ASC""";
 
-
         return getEntityManager().createQuery(jpql, Pool.class)
             .setParameter(Pool_.OWNER, owner)
             .getResultList();
@@ -1421,48 +1549,45 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .getResultList();
     }
 
-    @SuppressWarnings("checkstyle:indentation")
+    /**
+     * Retrieves the development pool for the provided consumer if it exists.
+     *
+     * @param consumer
+     *  the consumer to retrieve a development pool for
+     *
+     * @return the development pool, or null if it does not exist.
+     */
     public Pool findDevPool(Consumer consumer) {
-        PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addAttributeFilter(Pool.Attributes.DEVELOPMENT_POOL, "true");
-        filters.addAttributeFilter(Pool.Attributes.REQUIRES_CONSUMER, consumer.getUuid());
-
-        Criteria criteria = this.createSecureCriteria("Pool")
-            .createAlias("product", "Product")
-            .setProjection(Projections.distinct(Projections.id()));
-
-        criteria.add(Restrictions.eq("owner.id", consumer.getOwnerId()))
-            .add(this.addAttributeFilterSubquery(
-                Pool.Attributes.DEVELOPMENT_POOL, Arrays.asList("true")))
-            .add(this.addAttributeFilterSubquery(
-                Pool.Attributes.REQUIRES_CONSUMER, Arrays.asList(consumer.getUuid())));
-
-        // Impl note:
-        // Hibernate has an issue with properly hydrating objects within collections of the pool
-        // when only a subset of the collection matches the criteria. To work around this, we pull
-        // the ID list from the main filtering query, then pull the pools again using the ID list.
-        // This also makes it easier to eventually start using a cursor, since the distinct entity
-        // functionality doesn't work with cursors.
-
-        List<String> poolIds = criteria.list();
-
-        if (poolIds != null && !poolIds.isEmpty()) {
-            if (poolIds.size() > 1) {
-                // This is probably (see: definitely) bad.
-                throw new IllegalStateException("More than one dev pool found for consumer: " + consumer);
-            }
-
-            String jpql = """
-                SELECT p FROM Pool p
-                WHERE p.id = :id""";
-
-            return getEntityManager()
-                .createQuery(jpql, Pool.class)
-                .setParameter("id", poolIds.get(0))
-                .getSingleResult();
+        if (consumer == null) {
+            return null;
         }
 
-        return null;
+        EntityManager em = this.entityManager.get();
+        CriteriaBuilder builder = em.getCriteriaBuilder();
+        CriteriaQuery<Pool> query = builder.createQuery(Pool.class);
+        Root<Pool> root = query.from(Pool.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+        Predicate securityPredicate = this.getSecurityPredicate(Pool.class, builder, root);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        predicates.add(buildPoolAttributePredicate(builder, query, root, Pool.Attributes.DEVELOPMENT_POOL,
+            attr -> builder.equal(attr, "true")));
+        predicates.add(buildPoolAttributePredicate(builder, query, root, Pool.Attributes.REQUIRES_CONSUMER,
+            attr -> builder.equal(attr, consumer.getUuid())));
+        predicates.add(builder.equal(root.get(Pool_.owner), consumer.getOwner()));
+
+        query.where(predicates.toArray(new Predicate[0]));
+
+        try {
+            return em.createQuery(query)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**

@@ -21,6 +21,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.PoolQualifier;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
@@ -363,8 +364,13 @@ public class ProductManager {
         }
 
         // Fetch the affected entitlements if we're going to regenerate certs
+        PoolQualifier qualifer = new PoolQualifier()
+            .setOwnerId(owner.getOwnerId())
+            .addProductId(product.getId())
+            .setActiveOn(new Date());
+
         List<Pool> affectedPools = regenCerts ?
-            this.poolCurator.listAvailableEntitlementPools(null, owner, product.getId(), new Date()) :
+            this.poolCurator.listAvailableEntitlementPools(qualifer).getPageData() :
             List.of();
 
         Set<Entitlement> entitlements = affectedPools.stream()
