@@ -1,5 +1,5 @@
 ---
-name: Build Candlepin image and run spec tests
+name: Run spec tests
 
 on:
   pull_request:
@@ -11,77 +11,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_image:
-    name: build Candlepin image
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Install packages
-        if: ${{ ! github.event.pull_request.head.repo.fork }}
-        run: |
-          sudo apt-get update
-          sudo apt-get -y install \
-            git-core \
-            buildah
-
-      - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Rebase
-        uses: ./.github/actions/rebase
-
-      - name: Log in to the registry
-        if: ${{ ! github.event.pull_request.head.repo.fork }}
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build Candlepin image
-        if: ${{ ! github.event.pull_request.head.repo.fork }}
-        id: build-image
-        uses: redhat-actions/buildah-build@v2
-        with:
-          image: ghcr.io/candlepin/gha_build
-          tags: pr-${{ github.event.pull_request.number }}
-          containerfiles: ./.github/containers/Dockerfile
-
-      - name: Push to registry
-        if: ${{ ! github.event.pull_request.head.repo.fork }}
-        uses: redhat-actions/push-to-registry@v2
-        with:
-          image: ghcr.io/candlepin/gha_build
-          tags: pr-${{ github.event.pull_request.number }}
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        if: ${{ github.event.pull_request.head.repo.fork }}
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and export
-        if: ${{ github.event.pull_request.head.repo.fork }}
-        uses: docker/build-push-action@v5
-        with:
-          file: ./.github/containers/Dockerfile
-          tags: ghcr.io/candlepin/gha_build:pr-${{ github.event.pull_request.number }}
-          outputs: type=docker,dest=/tmp/gha_build.tar
-
-      - name: Upload artifact
-        if: ${{ github.event.pull_request.head.repo.fork }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: gha_build
-          path: /tmp/gha_build.tar
-
   spec_tests:
     name: spec tests
     runs-on: ubuntu-latest
@@ -91,7 +20,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    needs: build_image
     strategy:
       fail-fast: false
       matrix:
@@ -127,34 +55,6 @@ jobs:
           curl -SL https://github.com/docker/compose/releases/download/v2.18.1/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
           sudo chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 
-      - name: Log in to the registry
-        if: ${{ ! github.event.pull_request.head.repo.fork }}
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Pull candlepin image
-        if: ${{ ! github.event.pull_request.head.repo.fork }}
-        shell: bash
-        run: docker image pull ghcr.io/candlepin/gha_build:pr-${{ github.event.pull_request.number }}
-
-      - name: Set up Docker Buildx
-        if: ${{ github.event.pull_request.head.repo.fork }}
-        uses: docker/setup-buildx-action@v3
-
-      - name: Download artifact
-        if: ${{ github.event.pull_request.head.repo.fork }}
-        uses: actions/download-artifact@v3
-        with:
-          name: gha_build
-          path: /tmp
-
-      - name: Load image
-        if: ${{ github.event.pull_request.head.repo.fork }}
-        run: docker load --input /tmp/gha_build.tar
-
       - if: matrix.mode == 'standalone'
         name: Add standalone env variable
         working-directory: ./.github/containers
@@ -172,13 +72,19 @@ jobs:
           echo "MODULE_CONFIG_HOSTED_CONFIGURATION_MODULE=org.candlepin.hostedtest.AdapterOverrideModule" >> .env
           echo "CANDLEPIN_AUTH_CLOUD_ENABLE=true" >> .env
 
+      - name: Build Candlepin war file
+        uses: gradle/gradle-build-action@v3
+        with:
+          arguments: war -Phostedtest=true
+
       - name: Create Candlepin and database containers
         shell: bash
         run: |
-          echo "CANDLEPIN_IMAGE=ghcr.io/candlepin/gha_build:pr-${{ github.event.pull_request.number }}" >> ./.github/containers/.env
           BRIDGE_NETWORK=$(docker network ls --filter=name=github_network_ --format="{{ .Name }}")
           echo "NETWORK=$BRIDGE_NETWORK" >> ./.github/containers/.env
-          docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml --env-file ./.github/containers/.env up -d --wait
+          WAR_FILE=$(find ./build/libs -name 'candlepin*.war' | head -n 1)
+          echo "WAR_FILE=$WAR_FILE" >> ./.github/containers/.env
+          docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml --env-file ./.github/containers/.env up --build -d --wait
 
       - name: Set up Java
         uses: actions/setup-java@v3
@@ -192,6 +98,38 @@ jobs:
           MYSQL_IN_USE: ${{ matrix.database == 'mariadb' }}
         with:
           arguments: spec -Dspec.test.client.host=candlepin
+
+      - name: Collect docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@2741064ab9d7af54b0b1ffb6076cf64c16f0220e
+        with:
+          dest: './logs-${{ matrix.database }}-${{ matrix.mode }}'
+
+      - name: Collect candlepin and Tomcat logs on failure
+        if: failure()
+        shell: bash
+        run: |
+          docker cp candlepin:/var/log/candlepin/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/candlepin/
+          docker cp candlepin:/opt/tomcat/logs/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/tomcat/
+
+      - name: Collect postgress logs on failure
+        if: failure() && matrix.database == 'postgres'
+        run: docker cp postgres:/var/log/postgresql/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/postgresql/
+
+      - name: Collect mariadb logs on failure
+        if: failure() && matrix.database == 'mariadb'
+        run: docker cp mariadb:/var/log/mysql/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/mysql/
+
+      - name: Tar logs
+        if: failure()
+        run: sudo tar cvzf ./logs-${{ matrix.database }}-${{ matrix.mode }}.tgz ./logs-${{ matrix.database }}-${{ matrix.mode }}
+
+      - name: Upload logs to GitHub
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-${{ matrix.database }}-${{ matrix.mode }}.tgz
+          path: ./logs-${{ matrix.database }}-${{ matrix.mode }}.tgz
 
       - if: always()
         name: Stop containers
