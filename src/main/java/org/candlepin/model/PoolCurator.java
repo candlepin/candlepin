@@ -156,12 +156,23 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return Pools created as a result of this entitlement.
      */
     public List<Pool> listBySourceEntitlement(Entitlement e) {
-        String jpql = "SELECT p FROM Pool p WHERE p.sourceEntitlement.id = :ent_id";
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Pool> cq = cb.createQuery(Pool.class);
+        Root<Pool> pool = cq.from(Pool.class);
 
-        return this.getEntityManager()
-            .createQuery(jpql, Pool.class)
-            .setParameter("ent_id", e.getId())
-            .getResultList();
+        Predicate entitlementPredicate = cb.equal(pool.get(Pool_.SOURCE_ENTITLEMENT)
+            .get(Entitlement_.ID), e.getId());
+        Predicate securityPredicate = this.getSecurityPredicate(Pool.class, cb, pool);
+
+        if (securityPredicate != null) {
+            cq.where(cb.and(entitlementPredicate, securityPredicate));
+        }
+        else {
+            cq.where(entitlementPredicate);
+        }
+
+        return em.createQuery(cq).getResultList();
     }
 
     /**
@@ -180,21 +191,31 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         Set<Pool> output = new HashSet<>();
 
-        String jpql = """
-            SELECT p FROM Pool p
-            JOIN FETCH p.sourceEntitlement e
-            WHERE e IN :block""";
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        // Impl note:
-        // We're using the partitioning here as it's slightly faster to do individual queries,
-        // and we eliminate the risk of hitting the query param limit. Since we weren't using
-        // a CPQuery object to begin with, this is a low-effort win here.
-        TypedQuery<Pool> query = getEntityManager().createQuery(jpql, Pool.class);
+        // Define a parameter for the entitlements
+        ParameterExpression<List> entitlementsParam = cb.parameter(List.class, "entitlements");
 
+        CriteriaQuery<Pool> cq = cb.createQuery(Pool.class);
+        Root<Pool> pool = cq.from(Pool.class);
+
+        Predicate entitlementPredicate = pool.get(Pool_.SOURCE_ENTITLEMENT).in(entitlementsParam);
+        Predicate securityPredicate = this.getSecurityPredicate(Pool.class, cb, pool);
+
+        if (securityPredicate != null) {
+            cq.where(cb.and(entitlementPredicate, securityPredicate));
+        }
+        else {
+            cq.where(entitlementPredicate);
+        }
+
+        TypedQuery<Pool> query = em.createQuery(cq);
+
+        // Handling partitioning and setting the parameter dynamically
         for (List<Entitlement> block : this.partition(ents)) {
-            List<Pool> pools = query
-                .setParameter("block", block)
-                .getResultList();
+            query.setParameter("entitlements", block);
+            List<Pool> pools = query.getResultList();
 
             if (pools != null) {
                 output.addAll(pools);
@@ -237,20 +258,39 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @Transactional
     public List<Pool> listExpiredPools(int blockSize) {
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Pool> cq = cb.createQuery(Pool.class);
+        Root<Pool> tgtPool = cq.from(Pool.class);
+
         Date now = new Date();
 
-        String jpql = """
-            SELECT tgtPool FROM Pool tgtPool
-            WHERE tgtPool.endDate < :now
-              AND NOT EXISTS (
-                  SELECT 1 FROM Pool entPool
-                  JOIN entPool.entitlements ent
-                  WHERE entPool.id = tgtPool.id
-                      AND ent.endDateOverride >= :now)""";
+        // Subquery to check for existing entitlements with endDateOverride >= now
+        Subquery<Long> subquery = cq.subquery(Long.class);
+        Root<Pool> entPool = subquery.from(Pool.class);
+        Join<Pool, Entitlement> ent = entPool.join(Pool_.ENTITLEMENTS);
 
-        TypedQuery<Pool> query = getEntityManager().createQuery(jpql, Pool.class)
-            .setParameter("now", now);
+        subquery.select(cb.literal(1L))
+            .where(cb.equal(entPool.get(Pool_.ID), tgtPool.get(Pool_.ID)),
+                cb.greaterThanOrEqualTo(ent.get(Entitlement_.END_DATE_OVERRIDE), now));
 
+        // Main query predicates
+        Predicate endDatePredicate = cb.lessThan(tgtPool.get(Pool_.END_DATE), now);
+        Predicate notExistsPredicate = cb.not(cb.exists(subquery));
+
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(endDatePredicate);
+        predicates.add(notExistsPredicate);
+
+        // Security predicate
+        Predicate securityPredicate = this.getSecurityPredicate(Pool.class, cb, tgtPool);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        cq.select(tgtPool).where(cb.and(predicates.toArray(new Predicate[0])));
+
+        TypedQuery<Pool> query = em.createQuery(cq);
         if (blockSize > 0) {
             query.setMaxResults(blockSize);
         }
@@ -1503,20 +1543,35 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             return new ArrayList<>();
         }
 
-        String jpql = "SELECT DISTINCT p FROM SourceSubscription ss " +
-            "JOIN Pool p ON p.id = ss.pool.id " +
-            "WHERE ss.subscriptionId IN (:subIds) " +
-            "ORDER BY p.id ASC";
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Pool> cq = cb.createQuery(Pool.class);
+        Root<SourceSubscription> sourceSubscription = cq.from(SourceSubscription.class);
+        Join<SourceSubscription, Pool> poolJoin = sourceSubscription.join(SourceSubscription_.POOL);
 
-        TypedQuery<Pool> query = this.getEntityManager()
-            .createQuery(jpql, Pool.class);
+        // Define a parameter for the subscription IDs
+        ParameterExpression<List> subIdsParam = cb.parameter(List.class, "subIds");
 
+        // Common predicates
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(sourceSubscription.get(SourceSubscription_.SUBSCRIPTION_ID).in(subIdsParam));
+
+        Predicate securityPredicate = this.getSecurityPredicate(Pool.class, cb, poolJoin);
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
+        }
+
+        cq.select(poolJoin).distinct(true)
+            .where(cb.and(predicates.toArray(new Predicate[0])))
+            .orderBy(cb.asc(poolJoin.get(Pool_.ID)));
+
+        TypedQuery<Pool> query = em.createQuery(cq);
+
+        // Handling partitioning and setting the parameter dynamically
         List<Pool> pools = new ArrayList<>();
         for (List<String> block : this.partition(subIds)) {
-            List<Pool> result = query.setParameter("subIds", block)
-                .getResultList();
-
-            pools.addAll(result);
+            query.setParameter("subIds", block);
+            pools.addAll(query.getResultList());
         }
 
         return pools;
