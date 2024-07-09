@@ -258,7 +258,6 @@ tasks.register('generateApiDocs', GenerateTask) {
     generateModelDocumentation = true
     generateModelTests = false
     generateApiTests = false
-    withXml = false
 }
 
 tasks.register('generateOpenApiJson', GenerateTask) {
@@ -269,7 +268,6 @@ tasks.register('generateOpenApiJson', GenerateTask) {
     generateModelDocumentation = true
     generateModelTests = false
     generateApiTests = false
-    withXml = false
 }
 
 //Update the compileJava & processResourcesTasks depend on the openapi generation so that the generated classes
