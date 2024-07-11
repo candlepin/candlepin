@@ -15,15 +15,10 @@
 package org.candlepin.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -44,7 +39,6 @@ import java.util.List;
  * that Hibernate will pick up automatically.
  */
 public class CuratorPaginationTest extends DatabaseTestFixture {
-    private Session session;
 
     @BeforeEach
     @Override
@@ -57,129 +51,6 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
             o.setKey(String.valueOf(i));
             ownerCurator.create(o);
         }
-
-        session = (Session) this.getEntityManager().getDelegate();
-    }
-
-    @Test
-    public void testPaging() {
-        PageRequest pageRequest = new PageRequest();
-        pageRequest.setSortBy("key");
-        pageRequest.setOrder(PageRequest.Order.ASCENDING);
-        pageRequest.setPage(3);
-        pageRequest.setPerPage(2);
-
-        Page<List<Owner>> p = ownerCurator.listAll(pageRequest);
-        assertEquals(Integer.valueOf(10), p.getMaxRecords());
-
-        List<Owner> ownerList = p.getPageData();
-        assertEquals(2, ownerList.size());
-
-        // Page 1 is (0, 1); page 2 is (2, 3); page 3 is (4, 5)
-        assertEquals("4", ownerList.get(0).getKey());
-        assertEquals("5", ownerList.get(1).getKey());
-
-        PageRequest pageRequest2 = p.getPageRequest();
-        assertEquals(pageRequest, pageRequest2);
-    }
-
-    @Test
-    public void testNoPaging() {
-        Page<List<Owner>> p = ownerCurator.listAll((PageRequest) null);
-        List<Owner> ownerList = p.getPageData();
-        assertEquals(10, ownerList.size());
-    }
-
-    @Test
-    public void testPagingWithCriteria() {
-        PageRequest pageRequest = new PageRequest();
-        pageRequest.setSortBy("key");
-        pageRequest.setOrder(PageRequest.Order.ASCENDING);
-        pageRequest.setPage(1);
-        pageRequest.setPerPage(2);
-
-        Criteria criteria = session.createCriteria(Owner.class).add(Restrictions.gt("key", "5"));
-
-        Page<List<Owner>> p = ownerCurator.listByCriteria(criteria, pageRequest);
-        assertEquals(Integer.valueOf(4), p.getMaxRecords());
-
-        List<Owner> ownerList = p.getPageData();
-        assertEquals(2, ownerList.size());
-        assertEquals("6", ownerList.get(0).getKey());
-
-        PageRequest pageRequest2 = p.getPageRequest();
-        assertEquals(pageRequest, pageRequest2);
-    }
-
-    @Test
-    public void testNoPagingWithCriteria() {
-        Criteria criteria = session.createCriteria(Owner.class).add(Restrictions.gt("key", "5"));
-
-        Page<List<Owner>> p = ownerCurator.listByCriteria(criteria, null);
-        List<Owner> ownerList = p.getPageData();
-        assertEquals(4, ownerList.size());
-    }
-
-    @Test
-    public void testReturnsAllResultsWhenNotPaging() {
-        PageRequest pageRequest = new PageRequest();
-        pageRequest.setSortBy("key");
-        pageRequest.setOrder(PageRequest.Order.ASCENDING);
-        assertFalse(pageRequest.isPaging());
-
-        Page<List<Owner>> p = ownerCurator.listAll(pageRequest);
-        assertEquals(Integer.valueOf(10), p.getMaxRecords());
-
-        List<Owner> ownerList = p.getPageData();
-        assertEquals(10, ownerList.size());
-    }
-
-    @Test
-    public void testReturnsAllResultsWhenPostFilteringByCriteria() {
-        PageRequest pageRequest = new PageRequest();
-        pageRequest.setSortBy("key");
-        pageRequest.setOrder(PageRequest.Order.ASCENDING);
-        pageRequest.setPage(1);
-        pageRequest.setPerPage(2);
-
-        Criteria criteria = session.createCriteria(Owner.class).add(Restrictions.gt("key", "5"));
-
-        /*
-         * Since we are telling listByCriteria that we are doing post-filtering it should return us all
-         * results, but ordered and sorted by what we provide
-         */
-        Page<List<Owner>> p = ownerCurator.listByCriteria(criteria, pageRequest, true);
-        assertEquals(Integer.valueOf(4), p.getMaxRecords());
-
-        List<Owner> ownerList = p.getPageData();
-        assertEquals(4, ownerList.size());
-        assertEquals("6", ownerList.get(0).getKey());
-
-        PageRequest pageRequest2 = p.getPageRequest();
-        assertEquals(pageRequest, pageRequest2);
-    }
-
-    @Test
-    public void testReturnsAllResultsWhenPostFiltering() {
-        PageRequest pageRequest = new PageRequest();
-        pageRequest.setSortBy("key");
-        pageRequest.setOrder(PageRequest.Order.ASCENDING);
-        pageRequest.setPage(1);
-        pageRequest.setPerPage(2);
-
-        /*
-         * Since we are telling listByCriteria that we are doing post-filtering it should return us all
-         * results, but ordered and sorted by what we provide
-         */
-        Page<List<Owner>> p = ownerCurator.listAll(pageRequest, true);
-        assertEquals(Integer.valueOf(10), p.getMaxRecords());
-
-        List<Owner> ownerList = p.getPageData();
-        assertEquals(10, ownerList.size());
-        assertEquals("0", ownerList.get(0).getKey());
-
-        PageRequest pageRequest2 = p.getPageRequest();
-        assertEquals(pageRequest, pageRequest2);
     }
 
     private List<Owner> createOwners(int owners) {

@@ -27,11 +27,8 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.QueryHints;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,6 +68,7 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.MapJoin;
 import javax.persistence.criteria.Order;
+import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -393,15 +391,41 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @Transactional
     public Collection<Consumer> findByUuids(Collection<String> uuids) {
+        if (uuids == null || uuids.isEmpty()) {
+            return new HashSet<>();
+        }
+
         Set<Consumer> consumers = new HashSet<>();
 
-        for (List<String> block : this.partition(uuids)) {
-            // Unfortunately, this needs to be a secure criteria due to the contexts in which this
-            // is called.
-            Criteria criteria = this.createSecureCriteria()
-                .add(Restrictions.in("uuid", block));
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-            consumers.addAll(criteria.list());
+        // Define a parameter for the UUIDs
+        ParameterExpression<List> uuidsParam = cb.parameter(List.class, "uuids");
+
+        CriteriaQuery<Consumer> cq = cb.createQuery(Consumer.class);
+        Root<Consumer> consumerRoot = cq.from(Consumer.class);
+
+        Predicate uuidPredicate = consumerRoot.get("uuid").in(uuidsParam);
+        Predicate securityPredicate = this.getSecurityPredicate(Consumer.class, cb, consumerRoot);
+
+        if (securityPredicate != null) {
+            cq.where(cb.and(uuidPredicate, securityPredicate));
+        }
+        else {
+            cq.where(uuidPredicate);
+        }
+
+        TypedQuery<Consumer> query = em.createQuery(cq);
+
+        // Handling partitioning and setting the parameter dynamically
+        for (List<String> block : this.partition(uuids)) {
+            query.setParameter("uuids", block);
+            List<Consumer> blockConsumers = query.getResultList();
+
+            if (blockConsumers != null) {
+                consumers.addAll(blockConsumers);
+            }
         }
 
         return consumers;
@@ -436,10 +460,27 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     // to bypass the authentication. Do not call it!
     // TODO: Come up with a better way to do this!
     public Consumer getConsumer(String uuid) {
-        Criteria criteria = this.createSecureCriteria()
-            .add(Restrictions.eq("uuid", uuid));
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Consumer> query = cb.createQuery(Consumer.class);
+        Root<Consumer> consumerRoot = query.from(Consumer.class);
 
-        return (Consumer) criteria.uniqueResult();
+        Predicate securityPredicate = this.getSecurityPredicate(Consumer.class, cb, consumerRoot);
+        Predicate uuidPredicate = cb.equal(consumerRoot.get("uuid"), uuid);
+
+        if (securityPredicate != null) {
+            query.select(consumerRoot).where(cb.and(securityPredicate, uuidPredicate));
+        }
+        else {
+            query.select(consumerRoot).where(uuidPredicate);
+        }
+
+        try {
+            return em.createQuery(query).getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**
@@ -1116,12 +1157,22 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     public boolean doesConsumerExist(String uuid) {
-        long result = (Long) createSecureCriteria()
-            .add(Restrictions.eq("uuid", uuid))
-            .setProjection(Projections.count("id"))
-            .uniqueResult();
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Long> query = cb.createQuery(Long.class);
+        Root<Consumer> consumerRoot = query.from(Consumer.class);
 
-        return result != 0;
+        Predicate securityPredicate = this.getSecurityPredicate(Consumer.class, cb, consumerRoot);
+        Predicate uuidPredicate = cb.equal(consumerRoot.get("uuid"), uuid);
+
+        if (securityPredicate != null) {
+            query.select(cb.count(consumerRoot.get("id"))).where(cb.and(securityPredicate, uuidPredicate));
+        }
+        else {
+            query.select(cb.count(consumerRoot.get("id"))).where(uuidPredicate);
+        }
+
+        return em.createQuery(query).getSingleResult() != 0;
     }
 
     /**

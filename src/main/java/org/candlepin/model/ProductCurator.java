@@ -588,7 +588,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
         for (ProductContent productContent : entity.getProductContent()) {
             if (productContent.getId() == null) {
-                this.currentSession().save(productContent);
+                this.getEntityManager().persist(productContent);
             }
         }
 
@@ -609,7 +609,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Transactional
     public void delete(Product entity) {
         Product toDelete = this.get(entity.getUuid());
-        currentSession().delete(toDelete);
+        this.getEntityManager().remove(toDelete);
     }
 
     /**

@@ -22,10 +22,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Blob;
+import java.sql.SQLException;
 import java.util.Date;
 
 import javax.inject.Singleton;
 import javax.persistence.Query;
+import javax.sql.rowset.serial.SerialBlob;
 
 /**
  * Provides DB management for stored manifest archive files.
@@ -51,17 +53,33 @@ public class ManifestFileRecordCurator extends AbstractHibernateCurator<Manifest
     // streaming must be done in the same transaction as the object
     // was looked up in.
     public ManifestFileRecord findFile(String id) {
-        return id == null ? null : ManifestFileRecord.class.cast(
-            currentSession().get(ManifestFileRecord.class, id));
+        return id == null ? null : this.getEntityManager().find(ManifestFileRecord.class, id);
     }
 
     @Transactional
-    public ManifestFileRecord createFile(ManifestFileType type, File fileToStore, String principalName,
-        String targetId) throws IOException {
-        Blob data = currentSession().getLobHelper().createBlob(new FileInputStream(fileToStore),
-            fileToStore.length());
+    public ManifestFileRecord createFile(ManifestFileType type, File fileToStore,
+        String principalName, String targetId) throws IOException {
+        Blob data = createBlob(fileToStore);
 
-        return create(new ManifestFileRecord(type, fileToStore.getName(), principalName, targetId, data));
+        ManifestFileRecord manifestFileRecord =
+            new ManifestFileRecord(type, fileToStore.getName(), principalName, targetId, data);
+        this.getEntityManager().persist(manifestFileRecord);
+
+        return manifestFileRecord;
+    }
+
+    private Blob createBlob(File fileToStore) throws IOException {
+        FileInputStream inputStream = new FileInputStream(fileToStore);
+        byte[] fileBytes = new byte[(int) fileToStore.length()];
+        inputStream.read(fileBytes);
+        inputStream.close();
+
+        try {
+            return new SerialBlob(fileBytes);
+        }
+        catch (SQLException e) {
+            throw new IOException("Error creating Blob from file bytes", e);
+        }
     }
 
     @Transactional

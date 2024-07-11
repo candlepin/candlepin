@@ -27,23 +27,10 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Criteria;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.annotations.QueryHints;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projection;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.internal.CriteriaImpl;
-import org.hibernate.internal.SessionImpl;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.transform.ResultTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -67,12 +54,14 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.LockModeType;
+import javax.persistence.NoResultException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.From;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
@@ -96,13 +85,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject private PrincipalProvider principalProvider;
 
     private final Class<E> entityType;
-    private NaturalIdLoadAccess<E> natIdLoader;
 
     public AbstractHibernateCurator(Class<E> entityType) {
-        //entityType = (Class<E>) ((ParameterizedType)
-        //getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         this.entityType = entityType;
-        this.natIdLoader = null;
     }
 
     public Class<E> entityType() {
@@ -111,10 +96,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     public int getInBlockSize() {
         return config.getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE);
-    }
-
-    public int getCaseBlockSize() {
-        return config.getInt(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE);
     }
 
     public int getBatchBlockSize() {
@@ -130,17 +111,29 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             .get("hibernate.dialect")).toLowerCase();
     }
 
-    public void enableFilter(String filterName, String parameterName, Object value) {
-        currentSession().enableFilter(filterName).setParameter(parameterName, value);
-    }
-
-    public void enableFilterList(String filterName, String parameterName, Collection value) {
-        currentSession().enableFilter(filterName).setParameterList(parameterName, value);
-    }
-
     @Transactional
     protected final <T> T secureGet(Class<T> clazz, Serializable id) {
-        return clazz.cast(createSecureCriteria().add(Restrictions.idEq(id)).uniqueResult());
+        EntityManager em = this.getEntityManager();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<T> query = cb.createQuery(clazz);
+        Root<T> root = query.from(clazz);
+
+        Predicate securityPredicate = this.getSecurityPredicate(clazz, cb, root);
+        Predicate idPredicate = cb.equal(root.get("id"), id);
+
+        if (securityPredicate != null) {
+            query.select(root).where(cb.and(securityPredicate, idPredicate));
+        }
+        else {
+            query.select(root).where(idPredicate);
+        }
+
+        try {
+            return em.createQuery(query).getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**
@@ -159,7 +152,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @Transactional
     protected <T> T get(Class<T> clazz, Serializable id) {
-        return this.currentSession().get(clazz, id);
+        return this.getEntityManager().find(clazz, id);
     }
 
     /**
@@ -182,13 +175,14 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         String columnName = getPrimaryKeyName();
 
         if (columnName != null) {
-            CriteriaBuilder builder = this.getEntityManager().getCriteriaBuilder();
+            EntityManager em = this.getEntityManager();
+            CriteriaBuilder builder = em.getCriteriaBuilder();
             CriteriaQuery<Long> query = builder.createQuery(Long.class);
             query.select(builder.count(query.from(entityType)));
             Root<E> root = query.from(entityType);
             query.where(builder.equal(root.get(columnName), id));
 
-            if (this.getEntityManager().createQuery(query).getSingleResult() > 0) {
+            if (em.createQuery(query).getSingleResult() > 0) {
                 doesExists = true;
             }
         }
@@ -303,66 +297,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
-    @Transactional
-    public Page<List<E>> listAll(PageRequest pageRequest, boolean postFilter) {
-        Page<List<E>> resultsPage;
-        if (postFilter) {
-            // Create a copy of the page request with just the order and sort by values.
-            // Since we are filtering after the results are returned, we don't want
-            // to send the page or page size values in.
-            PageRequest orderAndSortByPageRequest = null;
-            if (pageRequest != null) {
-                orderAndSortByPageRequest = new PageRequest();
-                orderAndSortByPageRequest.setOrder(pageRequest.getOrder());
-                orderAndSortByPageRequest.setSortBy(pageRequest.getSortBy());
-            }
-
-            resultsPage = listAll(orderAndSortByPageRequest);
-
-            // Set the pageRequest to the correct object here.
-            resultsPage.setPageRequest(pageRequest);
-        }
-        else {
-            resultsPage = listAll(pageRequest);
-        }
-        return resultsPage;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Transactional
-    public Page<List<E>> listAll(PageRequest pageRequest) {
-        Page<List<E>> page = new Page<>();
-
-        if (pageRequest != null) {
-            Criteria count = createSecureCriteria();
-            page.setMaxRecords(findRowCount(count));
-
-            Criteria c = createSecureCriteria();
-            page.setPageData(loadPageData(c, pageRequest));
-            page.setPageRequest(pageRequest);
-        }
-        else {
-            List<E> pageData = this.listAll();
-            page.setMaxRecords(pageData.size());
-            page.setPageData(pageData);
-        }
-
-        return page;
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<E> loadPageData(Criteria c, PageRequest pageRequest) {
-        c.addOrder(createPagingOrder(pageRequest));
-
-        if (pageRequest.isPaging()) {
-            c.setFirstResult((pageRequest.getPage() - 1) * pageRequest.getPerPage());
-            c.setMaxResults(pageRequest.getPerPage());
-        }
-
-        return c.list();
-    }
-
     private List<E> loadPageData(CriteriaQuery<E> criteria, PageRequest pageRequest) {
         TypedQuery<E> query = this.entityManager.get().createQuery(criteria);
         if (pageRequest.isPaging()) {
@@ -373,21 +307,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return query.getResultList();
     }
 
-    private Order createPagingOrder(PageRequest p) {
-        String sortBy = (p.getSortBy() == null) ? PageRequest.DEFAULT_SORT_FIELD : p.getSortBy();
-        PageRequest.Order order = (p.getOrder() == null) ? PageRequest.DEFAULT_ORDER : p.getOrder();
-
-        switch (order) {
-            case ASCENDING:
-                return Order.asc(sortBy);
-
-            //DESCENDING
-            default:
-                return Order.desc(sortBy);
-        }
-    }
-
-    private javax.persistence.criteria.Order createPagingOrder(Root<?> root, PageRequest p) {
+    private Order createPagingOrder(Root<?> root, PageRequest p) {
         String sortBy = (p.getSortBy() == null) ? PageRequest.DEFAULT_SORT_FIELD : p.getSortBy();
         PageRequest.Order order = (p.getOrder() == null) ? PageRequest.DEFAULT_ORDER : p.getOrder();
         CriteriaBuilder criteriaBuilder = this.entityManager.get().getCriteriaBuilder();
@@ -399,56 +319,11 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return criteriaBuilder.desc(root.get(sortBy));
     }
 
-    private Integer findRowCount(Criteria c) {
-        c.setProjection(Projections.rowCount());
-        return ((Long) c.uniqueResult()).intValue();
-    }
-
-    private Long findRowCount() {
-        CriteriaBuilder criteriaBuilder = this.entityManager.get().getCriteriaBuilder();
-        CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
-        countQuery.select(criteriaBuilder.count(countQuery.from(this.entityType)));
-        return this.entityManager.get().createQuery(countQuery).getSingleResult();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Transactional
-    public List<E> listByCriteria(Criteria query) {
-        return query.list();
-    }
-
     @Transactional
     public List<E> listByCriteria(CriteriaQuery<E> query) {
         return this.getEntityManager()
             .createQuery(query)
             .getResultList();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Transactional
-    public Page<List<E>> listByCriteria(Criteria query, PageRequest pageRequest, boolean postFilter) {
-        Page<List<E>> resultsPage;
-        if (postFilter) {
-            // Create a copy of the page request with just the order and sort by values.
-            // Since we are filtering after the results are returned, we don't want
-            // to send the page or page size values in.
-            PageRequest orderAndSortByPageRequest = null;
-            if (pageRequest != null) {
-                orderAndSortByPageRequest = new PageRequest();
-                orderAndSortByPageRequest.setOrder(pageRequest.getOrder());
-                orderAndSortByPageRequest.setSortBy(pageRequest.getSortBy());
-            }
-
-            resultsPage = listByCriteria(query, orderAndSortByPageRequest);
-
-            // Set the pageRequest to the correct object here.
-            resultsPage.setPageRequest(pageRequest);
-        }
-        else {
-            resultsPage = listByCriteria(query, pageRequest);
-        }
-
-        return resultsPage;
     }
 
     /**
@@ -460,175 +335,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      */
     protected Principal getPrincipal() {
         return this.principalProvider.get();
-    }
-
-    /**
-     * Gives the permissions a chance to add aliases and then restrictions to the query.
-     * Uses an "or" so a principal could carry permissions for multiple owners
-     * (for example), but still have their results filtered without one of the perms
-     * hiding the results from the other.
-     *
-     * @deprecated
-     *  This method relies upon Hibernate criteria, which has been removed from Hibernate 6
-     *
-     * @return Criteria Final criteria query with all filters applied.
-     */
-    @Deprecated(since = "4.2", forRemoval = true)
-    protected Criteria createSecureCriteria() {
-        return this.createSecureCriteria(null);
-    }
-
-    /**
-     * Gives the permissions a chance to add aliases and then restrictions to the query.
-     * Uses an "or" so a principal could carry permissions for multiple owners
-     * (for example), but still have their results filtered without one of the perms
-     * hiding the results from the other.
-     *
-     * @deprecated
-     *  This method relies upon Hibernate criteria, which has been removed from Hibernate 6
-     *
-     * @param alias
-     *  The alias to assign to the entity managed by the resultant Criteria.
-     *
-     * @return Criteria Final criteria query with all filters applied.
-     */
-    @Deprecated(since = "4.2", forRemoval = true)
-    protected Criteria createSecureCriteria(String alias) {
-        return this.createSecureCriteria(this.entityType, alias);
-    }
-
-    /**
-     * Creates a "secure" criteria for the given entity class. The criteria object returned will
-     * have zero or more restrictions applied to the entity class based on the current principal's
-     * permissions.
-     *
-     * @deprecated
-     *  This method relies upon Hibernate criteria, which has been removed from Hibernate 6
-     *
-     * @param entityClass
-     *  The class of entity to be retrieved and restricted by the generated criteria
-     *
-     * @param alias
-     *  The alias to assign to the root entity; ignored if null
-     *
-     * @return
-     *  a new Criteria instance with any applicable entity restrictions
-     */
-    @Deprecated(since = "4.2", forRemoval = true)
-    protected Criteria createSecureCriteria(Class entityClass, String alias) {
-        Criteria criteria = (alias != null && alias.length() > 0) ?
-            this.currentSession().createCriteria(entityClass, alias) :
-            this.currentSession().createCriteria(entityClass);
-
-        Criterion restrictions = this.getSecureCriteriaRestrictions(entityClass);
-
-        if (restrictions != null) {
-            criteria.add(restrictions);
-        }
-
-        return criteria;
-    }
-
-    /**
-     * Creates a detached criteria object to use as the basis of a permission-oriented entity
-     * lookup query.
-     *
-     * @deprecated
-     *  This method relies upon Hibernate criteria, which has been removed from Hibernate 6
-     *
-     * @return
-     *  a detached criteria object containing permission restrictions
-     */
-    @Deprecated(since = "4.2", forRemoval = true)
-    protected DetachedCriteria createSecureDetachedCriteria() {
-        return this.createSecureDetachedCriteria(null);
-    }
-
-    /**
-     * Creates a detached criteria object to use as the basis of a permission-oriented entity
-     * lookup query.
-     *
-     * @deprecated
-     *  This method relies upon Hibernate criteria, which has been removed from Hibernate 6
-     *
-     * @param alias
-     *  The alias to use for the main entity, or null to omit an alias
-     *
-     * @return
-     *  a detached criteria object containing permission restrictions
-     */
-    @Deprecated(since = "4.2", forRemoval = true)
-    protected DetachedCriteria createSecureDetachedCriteria(String alias) {
-        return this.createSecureDetachedCriteria(this.entityType, null);
-    }
-
-    /**
-     * Creates a detached criteria object to use as the basis of a permission-oriented entity
-     * lookup query.
-     *
-     * @deprecated
-     *  This method relies upon Hibernate criteria, which has been removed from Hibernate 6
-     *
-     * @param entityClass
-     *  The class of entity to be retrieved and restricted by the generated criteria
-     *
-     * @param alias
-     *  The alias to assign to the root entity; ignored if null
-     *
-     * @return
-     *  a detached criteria object containing permission restrictions
-     */
-    @Deprecated(since = "4.2", forRemoval = true)
-    protected DetachedCriteria createSecureDetachedCriteria(Class entityClass, String alias) {
-        DetachedCriteria criteria = (alias != null && !alias.equals("")) ?
-            DetachedCriteria.forClass(entityClass, alias) :
-            DetachedCriteria.forClass(entityClass);
-
-        Criterion restrictions = this.getSecureCriteriaRestrictions(entityClass);
-
-        if (restrictions != null) {
-            criteria.add(restrictions);
-        }
-
-        return criteria;
-    }
-
-    /**
-     * Builds the criteria restrictions for the given entity class. If the entity does not need any
-     * restrictions or the current principal otherwise has full access, this method returns null.
-     *
-     * @deprecated
-     *  This method relies upon Hibernate criteria, which has been removed from Hibernate 6
-     *
-     * @param entityClass
-     *  The entity class for which to build secure criteria restrictions
-     *
-     * @return
-     *  the criteria restrictions for the given entity class, or null if no restrictions are
-     *  necessary.
-     */
-    @Deprecated(since = "4.2", forRemoval = true)
-    protected Criterion getSecureCriteriaRestrictions(Class entityClass) {
-        Principal principal = this.getPrincipal();
-        Criterion restrictions = null;
-
-        // If we do not yet have a principal (during authentication) or the principal has full
-        // access, skip the restriction building
-        if (principal != null && !principal.hasFullAccess()) {
-            for (Permission permission : principal.getPermissions()) {
-                Criterion restriction = permission.getCriteriaRestrictions(entityClass);
-
-                if (restriction != null) {
-                    log.debug("Adding criteria restriction from permission {} for {}: {}",
-                        permission, entityClass, restriction);
-
-                    restrictions = (restrictions != null) ?
-                        Restrictions.or(restrictions, restriction) : restriction;
-                }
-            }
-        }
-
-        return restrictions;
     }
 
     /**
@@ -694,37 +400,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return predicate;
     }
 
-    @SuppressWarnings("unchecked")
-    @Transactional
-    public Page<List<E>> listByCriteria(Criteria c, PageRequest pageRequest) {
-        Page<List<E>> page = new Page<>();
-
-        if (pageRequest != null) {
-            // see https://forum.hibernate.org/viewtopic.php?t=974802
-
-            // Save original Projection and ResultTransformer
-            CriteriaImpl cImpl = (CriteriaImpl) c;
-            Projection origProjection = cImpl.getProjection();
-            ResultTransformer origRt = cImpl.getResultTransformer();
-
-            // Get total number of records by setting a rowCount projection
-            page.setMaxRecords(findRowCount(c));
-
-            // Restore original Projection and ResultTransformer
-            c.setProjection(origProjection);
-            c.setResultTransformer(origRt);
-
-            page.setPageData(loadPageData(c, pageRequest));
-            page.setPageRequest(pageRequest);
-        }
-        else {
-            List<E> pageData = listByCriteria(c);
-            page.setMaxRecords(pageData.size());
-            page.setPageData(pageData);
-        }
-
-        return page;
-    }
 
     @Transactional
     public Page<List<E>> listByCriteria(Root<E> root, CriteriaQuery<E> criteria, PageRequest pageRequest,
@@ -752,8 +427,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Transactional
     public void delete(E entity) {
         if (entity != null) {
-            Session session = this.currentSession();
-            session.delete(session.get(this.entityType, entity.getId()));
+            EntityManager em = this.getEntityManager();
+            em.remove(em.find(this.entityType, entity.getId()));
         }
     }
 
@@ -790,9 +465,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @Transactional
     public E saveOrUpdate(E entity) {
-        Session session = this.currentSession();
-        session.saveOrUpdate(entity);
-
+        EntityManager em = this.getEntityManager();
+        if (isEntityNew(entity)) {
+            em.persist(entity);
+        }
+        else {
+            em.merge(entity);
+        }
         return entity;
     }
 
@@ -826,11 +505,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     public Session currentSession() {
         return (Session) entityManager.get().getDelegate();
-    }
-
-    public Session openSession() {
-        SessionFactory factory = this.currentSession().getSessionFactory();
-        return factory.openSession();
     }
 
     public EntityManager getEntityManager() {
@@ -881,69 +555,16 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             .run(action);
     }
 
-    /**
-     * Fetches the natural ID loader for this entity. This loader can be used and reused to
-     * quickly load entities using their natural IDs. Once a natural ID loader has been created for
-     * a given curator instance, this method will return that single natural ID loader.
-     * <p></p>
-     * To load an entity using the loader, the following template can be followed:
-     *
-     * <pre>
-     *  EntityType entity = this.getNaturalIdLoader()
-     *      .using("field_name_1", "value_1)
-     *      .using("field_name_2", "value_2)
-     *      ...
-     *      .using("field_name_n", "value_n)
-     *      .load()
-     * </pre>
-     *
-     * Where each field name represents the fields that make up the natural ID.
-     * <p></p>
-     * It should be noted that the field values set on the loader will be retained between calls so
-     * long as the loader is not reinstantiated. This can have both positive or negative
-     * consequences depending on the context. This could be used to optimize out some unnecessary
-     * value assignments, but it could also lead to incorrect lookups succeeding when they should
-     * fail. Care should be taken to ensure that the loader is either reinstantiated on every call
-     * (which is slightly inefficient), or that every field is assigned properly before calling the
-     * loader's "load" method.
-     *
-     * @return
-     *  A natural ID loader for this curator's entity type
-     */
-    protected NaturalIdLoadAccess<E> getNaturalIdLoader() {
-        return this.getNaturalIdLoader(false);
-    }
-
-    /**
-     * Fetches the natural ID loader for this entity. See the zero-parameter getNaturalIdLoader
-     * method for expected usage of this method and the natural ID loader.
-     *
-     * @param reinstantiate
-     *  If set, forces the natural ID loader to be reinstantiated even if a natural ID loader had
-     *  already been created for this curator.
-     *
-     * @return
-     *  A natural ID loader for this curator's entity type
-     */
-    protected NaturalIdLoadAccess<E> getNaturalIdLoader(boolean reinstantiate) {
-        if (this.natIdLoader == null || reinstantiate) {
-            this.natIdLoader = this.currentSession().byNaturalId(this.entityType);
-        }
-
-        return this.natIdLoader;
-    }
-
     @Transactional
     public Collection<E> saveAll(Collection<E> entities, boolean flush, boolean evict) {
         if (entities != null && !entities.isEmpty()) {
             try {
-                Session session = this.currentSession();
                 EntityManager em = this.getEntityManager();
                 Iterable<List<E>> blocks = Iterables.partition(entities, getBatchBlockSize());
 
                 for (List<E> block : blocks) {
                     for (E entity : block) {
-                        session.save(entity);
+                        em.persist(entity);
                     }
 
                     if (flush) {
@@ -951,7 +572,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
                         if (evict) {
                             for (E entity : block) {
-                                session.evict(entity);
+                                em.detach(entity);
                             }
                         }
                     }
@@ -968,13 +589,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public Collection<E> updateAll(Collection<E> entities, boolean flush, boolean evict) {
         if (entities != null && !entities.isEmpty()) {
             try {
-                Session session = this.currentSession();
                 EntityManager em = this.getEntityManager();
                 Iterable<List<E>> blocks = Iterables.partition(entities, getBatchBlockSize());
 
                 for (List<E> block : blocks) {
                     for (E entity : block) {
-                        session.update(entity);
+                        em.merge(entity);
                     }
 
                     if (flush) {
@@ -982,7 +602,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
                         if (evict) {
                             for (E entity : block) {
-                                session.evict(entity);
+                                em.detach(entity);
                             }
                         }
                     }
@@ -996,16 +616,53 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return entities;
     }
 
+    /**
+     * Retrieves the primary key of the given entity.
+     * <p>
+     * This method utilizes the EntityManager to access the PersistenceUnitUtil and fetch the
+     * identifier of the entity. We employ this approach because not all entities in our
+     * application use "id" as their primary key. Some entities, such as Content and Product, use
+     * "uuid" as their primary key.
+     *
+     * @param entity the entity whose primary key is to be retrieved
+     *
+     * @return the primary key of the entity as an Object, or null if the entity is not yet persisted
+     */
+    private Object getEntityPrimaryKey(E entity) {
+        return this.getEntityManager()
+            .getEntityManagerFactory()
+            .getPersistenceUnitUtil()
+            .getIdentifier(entity);
+    }
+    /**
+     * Checks if the given entity is new (not yet persisted).
+     * <p>
+     * This method determines if the entity is new by checking if its primary key is null.
+     * An entity is considered new if its primary key is null, indicating it has not been
+     * persisted in the database.
+     *
+     * @param entity the entity to check
+     *
+     * @return true if the entity is new (i.e., its primary key is null), false otherwise
+     */
+    private boolean isEntityNew(E entity) {
+        return getEntityPrimaryKey(entity) == null;
+    }
+
     public Iterable<E> saveOrUpdateAll(Iterable<E> entities, boolean flush, boolean evict) {
         if (entities != null) {
             try {
-                Session session = this.currentSession();
                 EntityManager em = this.getEntityManager();
                 Iterable<List<E>> blocks = Iterables.partition(entities, getBatchBlockSize());
 
                 for (List<E> block : blocks) {
                     for (E entity : block) {
-                        session.saveOrUpdate(entity);
+                        if (isEntityNew(entity)) {
+                            em.persist(entity);
+                        }
+                        else {
+                            em.merge(entity);
+                        }
                     }
 
                     if (flush) {
@@ -1013,7 +670,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
                         if (evict) {
                             for (E entity : block) {
-                                session.evict(entity);
+                                em.detach(entity);
                             }
                         }
                     }
@@ -1030,28 +687,27 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public Collection<E> mergeAll(Collection<E> entities, boolean flush) {
         if (entities != null && !entities.isEmpty()) {
             try {
-                Session session = this.currentSession();
                 EntityManager em = this.getEntityManager();
 
                 if (flush) {
                     int i = 0;
                     for (E entity : entities) {
-                        session.merge(entity);
+                        em.merge(entity);
 
                         if (++i % getBatchBlockSize() == 0) {
                             em.flush();
-                            session.clear();
+                            em.clear();
                         }
                     }
 
                     if (i % getBatchBlockSize() != 0) {
                         em.flush();
-                        session.clear();
+                        em.clear();
                     }
                 }
                 else {
                     for (E entity : entities) {
-                        session.merge(entity);
+                        em.merge(entity);
                     }
                 }
             }
@@ -1080,22 +736,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     public E evict(E entity) {
-        this.currentSession().evict(entity);
+        this.getEntityManager().detach(entity);
         return entity;
-    }
-
-    /**
-     * Evicts all of the given entities from the level-one cache.
-     *
-     * @param collection
-     *  An iterable collection of entities to evict from the session
-     */
-    public void evictAll(Iterable<E> collection) {
-        Session session = this.currentSession();
-
-        for (E entity : collection) {
-            session.evict(entity);
-        }
     }
 
     public List<E> takeSubList(PageRequest pageRequest, List<E> results) {
@@ -1156,14 +798,11 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public Collection<E> lock(Iterable<E> entities) {
         Map<Serializable, E> entityMap = new TreeMap<>();
 
-        SessionImpl session = (SessionImpl) this.currentSession();
-        ClassMetadata metadata = session.getSessionFactory().getClassMetadata(this.entityType);
-
         // Step through and toss all the entities into our TreeMap, which orders its entries using
         // the natural order of the key. This will ensure that we have our entity collection sorted
         // by entity ID, which should help avoid deadlock by having a deterministic locking order.
         for (E entity : entities) {
-            entityMap.put(metadata.getIdentifier(entity, session), entity);
+            entityMap.put((Serializable) getEntityPrimaryKey(entity), entity);
         }
 
         for (E entity : entityMap.values()) {
@@ -1271,12 +910,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return
      *  A locked entity instance, or null if a matching entity could not be found
      */
-    @SuppressWarnings("unchecked")
     protected E lockAndLoad(Class<E> entityClass, Serializable id) {
-        return this.currentSession()
-            .byId(entityClass)
-            .with(new LockOptions(LockMode.PESSIMISTIC_WRITE))
-            .load(id);
+        return this.getEntityManager().find(entityClass, id, LockModeType.PESSIMISTIC_WRITE);
     }
 
     /**
@@ -1408,7 +1043,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                 .setLockMode(lockMode)
                 .getSingleResult();
         }
-        catch (javax.persistence.NoResultException e) {
+        catch (NoResultException e) {
             this.createSystemLock(lockName);
             this.getSystemLock(lockName, lockMode);
         }
@@ -1561,10 +1196,10 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return
      *  a list of order instances to sort the query results
      */
-    protected List<javax.persistence.criteria.Order> buildJPAQueryOrder(CriteriaBuilder criteriaBuilder,
+    protected List<Order> buildJPAQueryOrder(CriteriaBuilder criteriaBuilder,
         Root<?> root, QueryArguments<?> queryArguments) {
 
-        List<javax.persistence.criteria.Order> orderList = new ArrayList<>();
+        List<Order> orderList = new ArrayList<>();
 
         if (queryArguments != null && queryArguments.getOrder() != null) {
             for (QueryArguments.Order order : queryArguments.getOrder()) {

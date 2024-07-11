@@ -68,7 +68,7 @@ public class AnonymousContentAccessCertificateCurator
 
         int deleted = 0;
         for (Collection<String> idsToDeleteBlock : this.partition(ids)) {
-            deleted += this.currentSession()
+            deleted += this.getEntityManager()
                 .createQuery(query)
                 .setParameter("ids", idsToDeleteBlock)
                 .executeUpdate();

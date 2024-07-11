@@ -201,7 +201,7 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
 
         int deleted = 0;
         for (Collection<String> block : this.partition(ids)) {
-            deleted += this.currentSession()
+            deleted += this.getEntityManager()
                 .createQuery(deleteJpql)
                 .setParameter("ids", block)
                 .executeUpdate();
