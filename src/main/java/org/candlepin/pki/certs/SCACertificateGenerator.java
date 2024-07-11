@@ -289,17 +289,28 @@ public class SCACertificateGenerator {
     }
 
     private Content createContent(Owner owner, Environment environment) {
-        Content dContent = new Content();
-
         String path = "";
         if (owner != null) {
             path += "/" + Util.encodeUrl(owner.getKey());
         }
         if (environment != null) {
-            path += "/" + Util.encodeUrl(environment.getName());
+            StringBuilder envPrefix = new StringBuilder();
+            for (String chunk : environment.getName().split("/")) {
+                if (chunk.isEmpty()) {
+                    continue;
+                }
+
+                envPrefix.append("/");
+                envPrefix.append(Util.encodeUrl(chunk));
+            }
+
+            path += envPrefix.toString();
         }
-        dContent.setPath(path);
-        return dContent;
+
+        Content content = new Content();
+        content.setPath(path);
+
+        return content;
     }
 
     private String createPayloadAndSignature(byte[] payloadBytes) {

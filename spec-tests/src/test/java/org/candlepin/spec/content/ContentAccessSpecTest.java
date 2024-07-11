@@ -298,6 +298,53 @@ public class ContentAccessSpecTest {
     }
 
     @Test
+    public void shouldNotEncodeEnvironmentNameSlashesInContentPaths() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        EnvironmentDTO env = Environments.random();
+        env.setName(StringUtil.random("test/env/name"));
+        env.setContentPrefix(StringUtil.random("/test/env/name"));
+        env = adminClient.owners().createEnvironment(ownerKey, env);
+        promoteContentToEnvironment(adminClient, env.getId(), content, false);
+
+        ConsumerDTO consumer = adminClient.consumers()
+            .createConsumer(Consumers.random(owner).addEnvironmentsItem(env));
+        assertThat(consumer.getEnvironments()).singleElement().returns(env.getId(), EnvironmentDTO::getId);
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        ConsumerApi consumerApi = new ConsumerApi(consumerClient.getApiClient());
+        Object export = consumerApi.exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = CertificateUtil
+            .extractEntitlementCertificatesFromPayload(export, ApiClient.MAPPER);
+        assertThat(certs).singleElement();
+        Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
+        assertThat(prodIdToContentIds)
+            .hasSize(1)
+            .extractingByKey("content_access", as(collection(String.class)))
+            .hasSize(1)
+            .containsExactly(content.getId());
+
+        JsonNode certContent = certs.get(0).get("products").get(0).get("content").get(0);
+        assertEquals("false", certContent.get("enabled").asText());
+        verifyCertContentPath(owner.getContentPrefix(), content.getContentUrl(), env,
+            certContent.get("path").asText());
+
+        List<String> payloadCerts = extractCertsFromPayload(export);
+        assertThat(payloadCerts).singleElement();
+
+        assertThatCert(X509Cert.from(payloadCerts.get(0)))
+            .extractingEntitlementPayload()
+            .containsOnly(contentUrl(ownerKey, env));
+    }
+
+    @Test
     public void shouldIncludeEnvironmentForTheContentAccessCertOnlyInStandaloneMode() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());

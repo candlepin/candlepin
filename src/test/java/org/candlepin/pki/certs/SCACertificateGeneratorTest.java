@@ -196,6 +196,40 @@ class SCACertificateGeneratorTest {
         this.verifyContainerContentPath(expectedPrefix);
     }
 
+    @Test
+    public void testContentPrefixDoesNotEncodeSlashesInEnvironmentName() throws Exception {
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner);
+        org.candlepin.model.Content content = this.createContent();
+
+        String environmentTestName = "test//env/name";
+        String expectedEnvironmentTestName = "/test/env/name";
+        Environment environment = new Environment()
+            .setId(TestUtil.randomString())
+            .setName(environmentTestName)
+            .setOwner(owner);
+
+        EnvironmentContent environmentContent = new EnvironmentContent()
+            .setEnvironment(environment)
+            .setContent(content)
+            .setEnabled(true);
+
+        environment.addEnvironmentContent(environmentContent);
+        consumer.addEnvironment(environment);
+
+        when(this.v3CapabilityCheck.isCertV3Capable(consumer)).thenReturn(true);
+        mockTransactional();
+        when(this.environmentCurator.getConsumerEnvironments(any(Consumer.class)))
+            .thenReturn(List.of(environment));
+
+        SCACertificate output = this.generator.generate(consumer);
+
+        Assertions.assertNotNull(output);
+
+        String expectedPrefix = "/" + owner.getKey() + expectedEnvironmentTestName;
+        this.verifyContainerContentPath(expectedPrefix);
+    }
+
     private void verifyContainerContentPath(String expected) throws Exception {
         ArgumentCaptor<List<Product>> captor = ArgumentCaptor.forClass(List.class);
 
