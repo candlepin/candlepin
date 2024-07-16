@@ -650,7 +650,29 @@
             "name": "donaldduck",
             "displayName": "Donald Duck",
             "contentAccessModeList": "entitlement,org_environment",
-            "contentAccessMode": "org_environment"
+            "contentAccessMode": "org_environment",
+            "products": [
+                {
+                    "name": "Duck OS Premium Architecture Bits",
+                    "id": "6050",
+                    "version": "6.1",
+                    "arch": "ppc64",
+                    "provided_products": [
+                        "37060"
+                    ],
+                    "attributes": {
+                        "sockets": 2,
+                        "vcpu": 4,
+                        "warning_period": 30
+                    },
+                    "content": [
+                        [
+                            6000,
+                            false
+                        ]
+                    ]
+                }
+            ]
         }
     ],
     "users": [
