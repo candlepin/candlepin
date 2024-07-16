@@ -52,7 +52,6 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
@@ -66,6 +65,8 @@ import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+
+
 
 /**
  * Builder for the construction of {@link X509Certificate}s.
@@ -212,7 +213,7 @@ public class X509CertificateBuilder {
     private void addKeyUsage(X509v3CertificateBuilder builder) {
         KeyUsage usage = new KeyUsage(KeyUsage.digitalSignature |
             KeyUsage.keyEncipherment | KeyUsage.dataEncipherment);
-        this.addExtension(builder, Extension.keyUsage, false, usage);
+        this.addExtension(builder, Extension.keyUsage, true, usage);
 
         ExtendedKeyUsage exUsage = new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth);
         this.addExtension(builder, Extension.extendedKeyUsage, false, exUsage);
@@ -220,12 +221,16 @@ public class X509CertificateBuilder {
 
     private void addAuthorityKeyIdentifier(X509v3CertificateBuilder builder, X509Certificate caCertificate) {
         try {
+            // The AKI must only contain the issuer's key ID, due to an issue with openssl failing
+            // to verify the cert if the issuer is present in the AKI, even if the issuer is valid
+            // and even with the correct key ID. As such, we'll just drop the CA's pub key in here
+            // instead of using the cert directly.
             AuthorityKeyIdentifier aki = extensionUtil()
-                .createAuthorityKeyIdentifier(caCertificate);
+                .createAuthorityKeyIdentifier(caCertificate.getPublicKey());
 
             builder.addExtension(Extension.authorityKeyIdentifier, false, aki.getEncoded());
         }
-        catch (CertificateEncodingException | IOException e) {
+        catch (IOException e) {
             throw new CertificateCreationException("Failed to add authority key identifier.", e);
         }
     }
