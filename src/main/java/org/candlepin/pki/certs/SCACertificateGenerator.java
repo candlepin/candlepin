@@ -48,12 +48,14 @@ import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -288,18 +290,28 @@ public class SCACertificateGenerator {
             .build();
     }
 
+    // FIXME: TODO: Why are we not using the same path-building logic in every cert generator?
     private Content createContent(Owner owner, Environment environment) {
-        Content dContent = new Content();
+        List<String> components = new ArrayList<>();
 
-        String path = "";
         if (owner != null) {
-            path += "/" + Util.encodeUrl(owner.getKey());
+            components.add(owner.getKey());
         }
+
         if (environment != null) {
-            path += "/" + Util.encodeUrl(environment.getName());
+            components.add(environment.getName());
         }
-        dContent.setPath(path);
-        return dContent;
+
+        // add more components here as necessary
+
+        String path = components.stream()
+            .flatMap(component -> Arrays.stream(component.split("/")))
+            .filter(segment -> !segment.isBlank())
+            .map(Util::encodeUrl)
+            .collect(Collectors.joining("/", "/", ""));
+
+        return new Content()
+            .setPath(path);
     }
 
     private String createPayloadAndSignature(byte[] payloadBytes) {

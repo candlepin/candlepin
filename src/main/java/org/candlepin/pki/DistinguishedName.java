@@ -25,9 +25,6 @@ import java.util.stream.Stream;
 
 /**
  * Class represents a X509 Distinguished Name.
- * <p><br>
- * Only CN and O attributes are currently supporter. These get formatted into
- * a DN string such as "CN=name, O=org".
  *
  * @param commonName an attribute used for CN
  * @param organizationName an attribute used for O
@@ -36,14 +33,15 @@ public record DistinguishedName(String commonName, String organizationName) {
 
     public DistinguishedName {
         if (StringUtils.isBlank(commonName) && StringUtils.isBlank(organizationName)) {
-            throw new IllegalArgumentException("DN requires at least one attribute!");
+            throw new IllegalArgumentException("Distinguished name requires at least one attribute!");
         }
 
-        if (StringUtils.isNotBlank(commonName)) {
-            commonName = "CN=" + commonName;
+        if (StringUtils.isBlank(commonName)) {
+            commonName = null;
         }
-        if (StringUtils.isNotBlank(organizationName)) {
-            organizationName = "O=" + organizationName;
+
+        if (StringUtils.isBlank(organizationName)) {
+            organizationName = null;
         }
     }
 
@@ -56,12 +54,17 @@ public record DistinguishedName(String commonName, String organizationName) {
     }
 
     /**
-     * Method uses DN attributes to produce a DN string such as "CN=name, O=org".
+     * Returns a string representation of this distinguished name; e.g. "O=org, CN=name".
      *
-     * @return DN string
+     * @return
+     *  a string representation of this distinguished name
      */
-    public String value() {
-        return Stream.of(this.commonName, this.organizationName)
+    @Override
+    public String toString() {
+        String orgName = this.organizationName != null ? "O=" + this.organizationName : null;
+        String commonName = this.commonName != null ? "CN=" + this.commonName : null;
+
+        return Stream.of(commonName, orgName)
             .filter(Objects::nonNull)
             .collect(Collectors.joining(", "));
     }
