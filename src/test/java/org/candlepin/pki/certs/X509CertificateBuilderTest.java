@@ -15,6 +15,7 @@
 
 package org.candlepin.pki.certs;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -60,11 +61,16 @@ import java.security.spec.RSAPublicKeySpec;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
-class X509CertificateBuilderTest {
-    private static final DistinguishedName DN = new DistinguishedName("candlepinproject.org");
+import javax.security.auth.x500.X500Principal;
 
+
+
+class X509CertificateBuilderTest {
     private CertificateReaderForTesting certificateAuthority;
     private X509CertificateBuilder builder;
 
@@ -83,8 +89,10 @@ class X509CertificateBuilderTest {
         Instant end = LocalDate.now().plusDays(365).atStartOfDay(ZoneId.systemDefault()).toInstant();
         KeyPair keyPair = createKeyPair();
 
+        DistinguishedName distinguishedName = new DistinguishedName("candlepinproject.org", "common name");
+
         X509Certificate cert = this.builder
-            .withDN(DN)
+            .withDN(distinguishedName)
             .withValidity(start, end)
             .withSerial(1999L)
             .withKeyPair(keyPair)
@@ -96,6 +104,16 @@ class X509CertificateBuilderTest {
 
         X509CertificateHolder holder = new X509CertificateHolder(cert.getEncoded());
         Extensions bcExtensions = holder.getExtensions();
+
+        // Verify the DN is set as intended
+        X500Principal principal = cert.getSubjectX500Principal();
+        assertNotNull(principal);
+
+        String dnstr = principal.getName(X500Principal.RFC2253);
+        assertThat(dnstr)
+            .isNotNull()
+            .containsOnlyOnce("CN=" + distinguishedName.commonName())
+            .containsOnlyOnce("O=" + distinguishedName.organizationName());
 
         // KeyUsage extension incorrect
         assertTrue(KeyUsage.fromExtensions(bcExtensions)
@@ -132,11 +150,20 @@ class X509CertificateBuilderTest {
         assertEquals(expected, actual);
     }
 
+    // TODO: FIXME: Add more tests for the expected default properties of certs built with the builder
+    //  - verifying the SAN includes both any explicitly provided SAN and the provided (required) DN
+
+    // TODO: FIXME: Add more tests surrounding the various mutators of the builder:
+    //  - setting null or empty values
+    //  - verifying the field itself resulted in the expected change
+
     @Test
     public void testCustomExtensions() throws Exception {
         Instant start = Instant.now();
         Instant end = LocalDate.now().plusDays(365).atStartOfDay(ZoneId.systemDefault()).toInstant();
         KeyPair keyPair = createKeyPair();
+
+        DistinguishedName distinguishedName = new DistinguishedName("candlepinproject.org", "common name");
 
         String extOid = OID.EntitlementType.namespace();
         String byteExtOid = OID.EntitlementData.namespace();
@@ -147,7 +174,7 @@ class X509CertificateBuilderTest {
         );
 
         X509Certificate cert = this.builder
-            .withDN(DN)
+            .withDN(distinguishedName)
             .withValidity(start, end)
             .withSerial(2000L)
             .withKeyPair(keyPair)
@@ -165,6 +192,104 @@ class X509CertificateBuilderTest {
         value = (ASN1OctetString) ASN1OctetString.fromByteArray(cert.getExtensionValue(byteExtOid));
         ASN1OctetString actualBytes = ASN1OctetString.getInstance(value.getOctets());
         assertArrayEquals(someBytes, actualBytes.getOctets());
+    }
+
+    // TODO: FIXME: Add more tests for custom extensions:
+    //  - calling .withExtensions with a null or empty collection
+    //  - calling .withExtensions with a collection that contains multiple instances of the same extension
+    //  - calling .withExtensions with a collection that contains null or malformed extensions
+    //  - calling .withExtensions multiple times with the same collection
+    //  - calling .withExtensions multiple times with different collections
+    //  - calling .withExtensions and then changing the collection before calling build
+
+    @Test
+    public void testNonLatin1CharactersInDistinguishedNameAreEncoded() throws Exception {
+        Instant start = Instant.now();
+        Instant end = LocalDate.now().plusDays(365).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        KeyPair keyPair = this.createKeyPair();
+
+        String junkChars = "#$%&'()*+,:;=?@[] \".<>\\^_`{|}~£円ßЯ∑#$%&'()*+,:;=?@[] \".<>\\^_`{|}~£円ßЯ∑";
+
+        String cnComponent = "CN=\\#$%&'()*\\+\\,:\\;\\=?@[] \\\".\\<\\>\\\\^_`{|}~£円ßЯ∑" +
+            "\\#$%&'()*\\+\\,:\\;\\=?@[] \\\".\\<\\>\\\\^_`{|}~£円ßЯ∑";
+
+        String oComponent = "O=\\#$%&'()*\\+\\,:\\;\\=?@[] \\\".\\<\\>\\\\^_`{|}~£円ßЯ∑" +
+            "\\#$%&'()*\\+\\,:\\;\\=?@[] \\\".\\<\\>\\\\^_`{|}~£円ßЯ∑";
+
+        DistinguishedName distinguishedName = new DistinguishedName(junkChars, junkChars);
+
+        X509Certificate cert = this.builder
+            .withDN(distinguishedName)
+            .withValidity(start, end)
+            .withSerial(2000L)
+            .withKeyPair(keyPair)
+            .build();
+
+        assertNotNull(cert);
+
+        X500Principal principal = cert.getSubjectX500Principal();
+        assertNotNull(principal);
+
+        String dnstr = principal.getName(X500Principal.RFC2253);
+
+        // At the time of writing, our logging subsystem eats some characters (backslashes
+        // primarily), making debugging a mismatch here impossible from the test failure output.
+        // Uncomment this block to sort out which character(s) have gone missing from the output to
+        // determine exactly what is going wrong.
+        /*
+        try (java.io.FileWriter writer = new java.io.FileWriter("x509CertificateBuilderTest_chardump.txt",
+            java.nio.charset.StandardCharsets.UTF_8)) {
+
+            writer.append("Expected CN: ")
+                .append(cnComponent)
+                .append("\nExpected O: ")
+                .append(oComponent)
+                .append("\nActual DN:   ")
+                .append(dnstr)
+                .append("\n");
+        }
+        */
+
+        assertThat(dnstr)
+            .isNotNull()
+            .containsOnlyOnce(cnComponent)
+            .containsOnlyOnce(oComponent);
+    }
+
+    @Test
+    public void testNonLatin1CharacterInSubjectAltNameAreEncoded() throws Exception {
+        Instant start = Instant.now();
+        Instant end = LocalDate.now().plusDays(365).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        KeyPair keyPair = this.createKeyPair();
+
+        DistinguishedName distinguishedName = new DistinguishedName("candlepinproject.org");
+        String junkChars = "#$%&'()*+,:;=?@[] \".<>\\^_`{|}~£円ßЯ∑#$%&'()*+,:;=?@[] \".<>\\^_`{|}~£円ßЯ∑";
+
+        String expectedDN = "CN=candlepinproject.org";
+        String expectedSAN = "CN=\\#$%&'()*\\+\\,:\\;\\=?@[] \\\".\\<\\>\\\\^_`{|}~£円ßЯ∑" +
+            "\\#$%&'()*\\+\\,:\\;\\=?@[] \\\".\\<\\>\\\\^_`{|}~£円ßЯ∑";
+
+        X509Certificate cert = this.builder
+            .withDN(distinguishedName)
+            .withValidity(start, end)
+            .withSerial(2000L)
+            .withKeyPair(keyPair)
+            .withSubjectAltName(junkChars)
+            .build();
+
+        assertNotNull(cert);
+
+        Collection<List<?>> sans = cert.getSubjectAlternativeNames();
+        assertNotNull(sans);
+
+        List<String> sanList = new ArrayList<>();
+        sans.forEach(elem -> sanList.add((String) elem.get(1)));
+
+        assertThat(sanList)
+            .isNotNull()
+            .hasSize(2)
+            .contains(expectedDN)
+            .contains(expectedSAN);
     }
 
     private KeyPair createKeyPair() {

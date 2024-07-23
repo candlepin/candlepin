@@ -37,7 +37,7 @@ class DistinguishedNameTest {
     void shouldBuildDnWithOnlyCN() {
         DistinguishedName build = new DistinguishedName(CN_VALUE);
 
-        assertThat(build.value())
+        assertThat(build.toString())
             .isEqualTo("CN=" + CN_VALUE);
     }
 
@@ -45,7 +45,7 @@ class DistinguishedNameTest {
     void shouldBuildDnWithOnlyO() {
         DistinguishedName build = new DistinguishedName(null, O_VALUE);
 
-        assertThat(build.value())
+        assertThat(build.toString())
             .isEqualTo("O=" + O_VALUE);
     }
 
@@ -53,7 +53,7 @@ class DistinguishedNameTest {
     void shouldBuildDnWithCnAndO() {
         DistinguishedName build = new DistinguishedName(CN_VALUE, O_VALUE);
 
-        assertThat(build.value())
+        assertThat(build.toString())
             .isEqualTo("CN=%s, O=%s".formatted(CN_VALUE, O_VALUE));
     }
 

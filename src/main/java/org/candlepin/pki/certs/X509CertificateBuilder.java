@@ -26,6 +26,8 @@ import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.X500NameBuilder;
+import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
@@ -55,10 +57,12 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -68,6 +72,7 @@ import javax.inject.Provider;
  */
 public class X509CertificateBuilder {
     private static final String SIGNATURE_ALGORITHM = "SHA256WithRSA";
+    private static final Pattern X500_SPECIAL_SYMBOL_REGEX = Pattern.compile("\\A([,=+<>#;\"])");
 
     private final Provider<BouncyCastleProvider> securityProvider;
     private final CertificateReader certificateAuthority;
@@ -135,20 +140,16 @@ public class X509CertificateBuilder {
         return this.withSerial(serial);
     }
 
-    public X509CertificateBuilder withExtensions(X509Extension... extensions) {
-        if (extensions != null && extensions.length != 0) {
-            this.certExtensions.addAll(List.of(extensions));
-        }
-
-        return this;
-    }
-
     public X509CertificateBuilder withExtensions(Collection<X509Extension> extensions) {
         if (extensions != null && !extensions.isEmpty()) {
             this.certExtensions.addAll(extensions);
         }
 
         return this;
+    }
+
+    public X509CertificateBuilder withExtensions(X509Extension... extensions) {
+        return this.withExtensions(extensions != null ? Arrays.asList(extensions) : null);
     }
 
     public X509Certificate build() {
@@ -162,7 +163,7 @@ public class X509CertificateBuilder {
             this.certSerial,
             Date.from(this.validAfter),
             Date.from(this.validUntil),
-            new X500Name(this.distinguishedName.value()),
+            this.buildX500Name(this.distinguishedName),
             SubjectPublicKeyInfo.getInstance(clientPubKey.getEncoded()));
 
         this.addSSLCertificateType(builder);
@@ -174,6 +175,33 @@ public class X509CertificateBuilder {
         this.addExtensions(builder, this.certExtensions);
 
         return buildCertificate(builder, this.signer());
+    }
+
+    private X500Name buildX500Name(DistinguishedName distinguishedName) {
+        X500NameBuilder builder = new X500NameBuilder();
+
+        String orgName = distinguishedName.organizationName();
+        if (orgName != null && !orgName.isBlank()) {
+            // Impl note:
+            // RFC 2253 defines three ways of specifying the DN according to the opening character,
+            // which causes our name builder to not escape the first character of our string. And
+            // since our input are strings intended to be used raw, we must manually escape any
+            // special opening character to avoid causing an error at this step.
+            orgName = X500_SPECIAL_SYMBOL_REGEX.matcher(orgName)
+                .replaceFirst("\\\\$1");
+
+            builder.addRDN(BCStyle.O, orgName);
+        }
+
+        String commonName = distinguishedName.commonName();
+        if (commonName != null && !commonName.isBlank()) {
+            commonName = X500_SPECIAL_SYMBOL_REGEX.matcher(commonName)
+                .replaceFirst("\\\\$1");
+
+            builder.addRDN(BCStyle.CN, commonName);
+        }
+
+        return builder.build();
     }
 
     private void addSSLCertificateType(X509v3CertificateBuilder builder) {
@@ -230,8 +258,8 @@ public class X509CertificateBuilder {
         //  - http://stackoverflow.com/questions/5935369
         //  - https://tools.ietf.org/html/rfc6125#section-6.4.4
 
-        GeneralName subject = new GeneralName(GeneralName.directoryName, distinguishedName.value());
-        GeneralName name = new GeneralName(GeneralName.directoryName, subjectAltName.value());
+        GeneralName subject = new GeneralName(this.buildX500Name(distinguishedName));
+        GeneralName name = new GeneralName(this.buildX500Name(subjectAltName));
         ASN1Encodable[] altNameArray = {subject, name};
 
         GeneralNames altNames = GeneralNames.getInstance(new DERSequence(altNameArray));

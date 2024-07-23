@@ -46,44 +46,68 @@ public class Content {
 
     /**
      * @param id
+     *
+     * @return
+     *  a reference to this Content DTO
      */
-    public void setId(String id) {
+    public Content setId(String id) {
         this.id = id;
+        return this;
     }
 
     /**
      * @param type
+     *
+     * @return
+     *  a reference to this Content DTO
      */
-    public void setType(String type) {
+    public Content setType(String type) {
         this.type = type;
+        return this;
     }
 
     /**
      * @param name
+     *
+     * @return
+     *  a reference to this Content DTO
      */
-    public void setName(String name) {
+    public Content setName(String name) {
         this.name = name;
+        return this;
     }
 
     /**
      * @param label
+     *
+     * @return
+     *  a reference to this Content DTO
      */
-    public void setLabel(String label) {
+    public Content setLabel(String label) {
         this.label = label;
+        return this;
     }
 
     /**
      * @param vendor
+     *
+     * @return
+     *  a reference to this Content DTO
      */
-    public void setVendor(String vendor) {
+    public Content setVendor(String vendor) {
         this.vendor = vendor;
+        return this;
     }
 
     /**
      * @param path
+     *
+     * @return
+     *  a reference to this Content DTO
      */
-    public void setPath(String path) {
+    public Content setPath(String path) {
         this.path = path;
+        return this;
     }
 
     /**
@@ -95,9 +119,13 @@ public class Content {
 
     /**
      * @param gpgUrl
+     *
+     * @return
+     *  a reference to this Content DTO
      */
-    public void setGpgUrl(String gpgUrl) {
+    public Content setGpgUrl(String gpgUrl) {
         this.gpgUrl = gpgUrl;
+        return this;
     }
 
     public Boolean getEnabled() {
@@ -106,23 +134,35 @@ public class Content {
 
     /**
      * @param enabled
+     *
+     * @return
+     *  a reference to this Content DTO
      */
-    public void setEnabled(Boolean enabled) {
+    public Content setEnabled(Boolean enabled) {
         this.enabled = enabled;
+        return this;
     }
 
     /**
      * @param metadataExpire
+     *
+     * @return
+     *  a reference to this Content DTO
      */
-    public void setMetadataExpiration(Long metadataExpire) {
+    public Content setMetadataExpiration(Long metadataExpire) {
         this.metadataExpire = metadataExpire;
+        return this;
     }
 
     /**
      * @param requiredTags
+     *
+     * @return
+     *  a reference to this Content DTO
      */
-    public void setRequiredTags(List<String> requiredTags) {
+    public Content setRequiredTags(List<String> requiredTags) {
         this.requiredTags = requiredTags;
+        return this;
     }
 
     /**
@@ -134,8 +174,12 @@ public class Content {
 
     /**
      * @param arches the arches to set
+     *
+     * @return
+     *  a reference to this Content DTO
      */
-    public void setArches(List<String> arches) {
+    public Content setArches(List<String> arches) {
         this.arches = arches;
+        return this;
     }
 }

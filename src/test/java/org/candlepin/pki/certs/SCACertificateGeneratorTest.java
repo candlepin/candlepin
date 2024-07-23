@@ -15,14 +15,13 @@
 
 package org.candlepin.pki.certs;
 
-import static io.smallrye.common.constraint.Assert.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.config.Configuration;
@@ -44,7 +43,7 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.SCACertificate;
-import org.candlepin.model.dto.Product;
+import org.candlepin.pki.OID;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.huffman.Huffman;
 import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
@@ -54,23 +53,30 @@ import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.Signer;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.TestUtil;
+import org.candlepin.test.X509HuffmanDecodeUtil;
 import org.candlepin.util.Transactional;
 import org.candlepin.util.X509V3ExtensionUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.junit.jupiter.api.Assertions;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.DEROctetString;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Set;
+
 
 @ExtendWith(MockitoExtension.class)
 class SCACertificateGeneratorTest {
@@ -129,99 +135,240 @@ class SCACertificateGeneratorTest {
         );
     }
 
+    private X509Certificate getX509Certificate(SCACertificate container) throws CertificateException {
+        ByteArrayInputStream istream = new ByteArrayInputStream(container.getCertAsBytes());
+
+        return (X509Certificate) CertificateFactory.getInstance("X.509")
+            .generateCertificate(istream);
+    }
+
+    private ASN1Primitive extractExtensionValue(X509Certificate cert, String oid) throws IOException {
+        byte[] extDerValue = cert.getExtensionValue(oid);
+        return extDerValue != null ? ASN1Primitive.fromByteArray(extDerValue) : null;
+    }
+
+    private byte[] extractEntitlementDataPayload(X509Certificate cert) throws CertificateException,
+        IOException {
+
+        ASN1Primitive extValuePrimitive = this.extractExtensionValue(cert, OID.EntitlementData.namespace());
+        assertNotNull(extValuePrimitive);
+        assertInstanceOf(DEROctetString.class, extValuePrimitive);
+
+        // Yes, this two-stage extraction is necessary (and weird)
+        byte[] octets = ((DEROctetString) extValuePrimitive).getOctets();
+        return ((DEROctetString) DEROctetString.fromByteArray(octets)).getOctets();
+    }
+
+    private String urlEncode(String text) {
+        return URLEncoder.encode(text, StandardCharsets.UTF_8);
+    }
+
     @Test
-    void shouldCreateCertificate() {
+    public void shouldCreateCertificate() {
         Owner owner = createOwner();
         Consumer consumer = createConsumer(owner);
         mockTransactional();
         when(this.v3CapabilityCheck.isCertV3Capable(consumer)).thenReturn(true);
 
         SCACertificate result = this.generator.generate(consumer);
-
         assertNotNull(result);
     }
 
     @Test
-    public void testContainerContentPathShouldUseOwnerKeyInHosted() throws Exception {
+    public void testGeneratedCertificateIncludesOwnerKeyInContainerContentPath() throws Exception {
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner);
+
+        List<String> expected = List.of("/" + owner.getKey());
+
+        this.mockTransactional();
+        when(this.v3CapabilityCheck.isCertV3Capable(consumer))
+            .thenReturn(true);
+
+        SCACertificate result = this.generator.generate(consumer);
+        assertNotNull(result);
+
+        X509Certificate cert = this.getX509Certificate(result);
+        assertNotNull(cert);
+
+        byte[] payload = this.extractEntitlementDataPayload(cert);
+        assertNotNull(payload);
+
+        List<String> contentPaths = new X509HuffmanDecodeUtil().extractContentPaths(payload);
+        assertThat(contentPaths)
+            .isNotNull()
+            .isNotEmpty()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    public void testCertificateIncludesEnvironmentNameInContainerContentPath() throws Exception {
         Owner owner = this.createOwner();
         Consumer consumer = this.createConsumer(owner);
         Content content = this.createContent();
-        Environment environment = this.createEnvironment(owner, consumer, content);
-        when(this.v3CapabilityCheck.isCertV3Capable(consumer)).thenReturn(true);
-        mockTransactional();
-        when(this.environmentCurator.getConsumerEnvironments(any(Consumer.class)))
-            .thenReturn(List.of(environment));
-        String expectedPath = "/" + owner.getKey() + "/" + environment.getName();
+        Environment env = this.createEnvironment(owner, consumer, content);
 
-        SCACertificate output = this.generator.generate(consumer);
+        List<String> expected = List.of("/" + owner.getKey() + "/" + env.getName());
 
-        Assertions.assertNotNull(output);
-        this.verifyContainerContentPath(expectedPath);
+        this.mockTransactional();
+        when(this.environmentCurator.getConsumerEnvironments(consumer))
+            .thenReturn(List.of(env));
+        when(this.v3CapabilityCheck.isCertV3Capable(consumer))
+            .thenReturn(true);
+
+        SCACertificate result = this.generator.generate(consumer);
+        assertNotNull(result);
+
+        X509Certificate cert = this.getX509Certificate(result);
+        assertNotNull(cert);
+
+        byte[] payload = this.extractEntitlementDataPayload(cert);
+        assertNotNull(payload);
+
+        List<String> contentPaths = new X509HuffmanDecodeUtil().extractContentPaths(payload);
+        assertThat(contentPaths)
+            .isNotNull()
+            .isNotEmpty()
+            .containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    public void testContainerContentPathShouldBeContentPrefixInStandalone() throws Exception {
-        Owner owner = this.createOwner();
+    public void testCertificateURLEncodesContainerContentPaths() throws Exception {
+        Owner owner = this.createOwner()
+            .setKey("org-#$%&'()*+,123:;=?@[] \".<>\\^_`{|}~£円ßЯ∑");
         Consumer consumer = this.createConsumer(owner);
-        org.candlepin.model.Content content = this.createContent();
-        Environment environment = this.createEnvironment(owner, consumer, content);
-        when(this.v3CapabilityCheck.isCertV3Capable(consumer)).thenReturn(true);
-        mockTransactional();
-        when(this.environmentCurator.getConsumerEnvironments(any(Consumer.class)))
-            .thenReturn(List.of(environment));
 
-        String expectedPath = "/" + owner.getKey() + "/" + environment.getName();
+        Content content = this.createContent();
+        Environment env = this.createEnvironment(owner, consumer, content)
+            .setName("env-#$%&'()*+,123:;=?@[] \".<>\\^_`{|}~£円ßЯ∑");
 
-        SCACertificate output = this.generator.generate(consumer);
+        List<String> expected = List.of(
+            "/" + this.urlEncode(owner.getKey()) + "/" + this.urlEncode(env.getName()));
 
-        Assertions.assertNotNull(output);
-        this.verifyContainerContentPath(expectedPath);
+        this.mockTransactional();
+        when(this.environmentCurator.getConsumerEnvironments(consumer))
+            .thenReturn(List.of(env));
+        when(this.v3CapabilityCheck.isCertV3Capable(consumer))
+            .thenReturn(true);
+
+        SCACertificate result = this.generator.generate(consumer);
+        assertNotNull(result);
+
+        X509Certificate cert = this.getX509Certificate(result);
+        assertNotNull(cert);
+
+        byte[] payload = this.extractEntitlementDataPayload(cert);
+        assertNotNull(payload);
+
+        List<String> contentPaths = new X509HuffmanDecodeUtil().extractContentPaths(payload);
+        assertThat(contentPaths)
+            .isNotNull()
+            .isNotEmpty()
+            .containsExactlyInAnyOrderElementsOf(expected);
     }
 
+    /**
+     * Verify that any forward slashes (path segment separators) present in either the owner key
+     * or environment name do not get encoded.
+     */
     @Test
-    public void testContentPrefixIncludesEnvironmentWhenPresent() throws Exception {
-        Owner owner = this.createOwner();
+    public void testCertificateDoesNotEncodeForwardSlashesInContainerPathComponents() throws Exception {
+        Owner owner = this.createOwner()
+            .setKey("segmented/owner/key");
+
         Consumer consumer = this.createConsumer(owner);
-        org.candlepin.model.Content content = this.createContent();
-        Environment environment = this.createEnvironment(owner, consumer, content);
-        when(this.v3CapabilityCheck.isCertV3Capable(consumer)).thenReturn(true);
-        mockTransactional();
-        when(this.environmentCurator.getConsumerEnvironments(any(Consumer.class)))
-            .thenReturn(List.of(environment));
-        String expectedPrefix = "/" + owner.getKey() + "/" + environment.getName();
 
-        SCACertificate output = this.generator.generate(consumer);
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+        Content content3 = this.createContent();
 
-        Assertions.assertNotNull(output);
-        this.verifyContainerContentPath(expectedPrefix);
+        Environment env1 = this.createEnvironment(owner, consumer, content1)
+            .setName("env1/path/as/name");
+        Environment env2 = this.createEnvironment(owner, consumer, content2)
+            .setName("env2/path/as/name");
+        Environment env3 = this.createEnvironment(owner, consumer, content3)
+            .setName("env3/path/as/name");
+
+        List<String> expected = List.of(
+            "/" + owner.getKey() + "/" + env1.getName(),
+            "/" + owner.getKey() + "/" + env2.getName(),
+            "/" + owner.getKey() + "/" + env3.getName());
+
+        this.mockTransactional();
+        when(this.environmentCurator.getConsumerEnvironments(consumer))
+            .thenReturn(List.of(env1, env2, env3));
+        when(this.v3CapabilityCheck.isCertV3Capable(consumer))
+            .thenReturn(true);
+
+        SCACertificate result = this.generator.generate(consumer);
+        assertNotNull(result);
+
+        X509Certificate cert = this.getX509Certificate(result);
+        assertNotNull(cert);
+
+        byte[] payload = this.extractEntitlementDataPayload(cert);
+        assertNotNull(payload);
+
+        List<String> contentPaths = new X509HuffmanDecodeUtil().extractContentPaths(payload);
+        assertThat(contentPaths)
+            .isNotNull()
+            .isNotEmpty()
+            .containsExactlyInAnyOrderElementsOf(expected);
     }
 
-    private void verifyContainerContentPath(String expected) throws Exception {
-        ArgumentCaptor<List<Product>> captor = ArgumentCaptor.forClass(List.class);
+    /**
+     * Verify that any forward slashes (path segment separators) present in either the owner key
+     * or environment name do not get encoded.
+     */
+    @Test
+    public void testCertificateContainerContentPathDiscardsEmptyPathSegments() throws Exception {
+        Owner owner = this.createOwner()
+            .setKey("segmented//owner//key");
 
-        verify(this.extensionUtil, times(1)).getByteExtensions(captor.capture());
+        Consumer consumer = this.createConsumer(owner);
 
-        List<org.candlepin.model.dto.Product> products = captor.getValue();
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+        Content content3 = this.createContent();
 
-        Assertions.assertNotNull(products);
-        assertEquals(1, products.size());
+        Environment env1 = this.createEnvironment(owner, consumer, content1)
+            .setName("/env1/path/as/name");
+        Environment env2 = this.createEnvironment(owner, consumer, content2)
+            .setName("//env2///path////as/////name");
+        Environment env3 = this.createEnvironment(owner, consumer, content3)
+            .setName("/ /env3/  /path/  /  /as/   /   /   /name");
 
-        org.candlepin.model.dto.Product product = products.get(0);
-        Assertions.assertNotNull(product);
+        List<String> expected = List.of(
+            ("/" + owner.getKey() + "/" + env1.getName()).replaceAll("/[\s/]*/", "/"),
+            ("/" + owner.getKey() + "/" + env2.getName()).replaceAll("/[\s/]*/", "/"),
+            ("/" + owner.getKey() + "/" + env3.getName()).replaceAll("/[\s/]*/", "/"));
 
-        List<org.candlepin.model.dto.Content> contents = product.getContent();
-        Assertions.assertNotNull(contents);
-        assertEquals(1, contents.size());
+        this.mockTransactional();
+        when(this.environmentCurator.getConsumerEnvironments(consumer))
+            .thenReturn(List.of(env1, env2, env3));
+        when(this.v3CapabilityCheck.isCertV3Capable(consumer))
+            .thenReturn(true);
 
-        org.candlepin.model.dto.Content content = contents.get(0);
-        Assertions.assertNotNull(content);
+        SCACertificate result = this.generator.generate(consumer);
+        assertNotNull(result);
 
-        assertEquals(expected, content.getPath());
+        X509Certificate cert = this.getX509Certificate(result);
+        assertNotNull(cert);
+
+        byte[] payload = this.extractEntitlementDataPayload(cert);
+        assertNotNull(payload);
+
+        List<String> contentPaths = new X509HuffmanDecodeUtil().extractContentPaths(payload);
+        assertThat(contentPaths)
+            .isNotNull()
+            .isNotEmpty()
+            .containsExactlyInAnyOrderElementsOf(expected);
     }
 
     private Owner createOwner() {
         String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
         String orgEnvironmentMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
+
         return new Owner()
             .setId("test_owner")
             .setKey("test_owner")
@@ -245,28 +392,28 @@ class SCACertificateGeneratorTest {
     }
 
     private Content createContent() {
-        Content content = new Content();
-        content.setUuid("test_content-uuid");
-        content.setId("1234");
-        content.setName("test_content");
-        content.setLabel("test_content-label");
-        content.setType("yum");
-        content.setVendor("vendor");
-        content.setContentUrl("/content/dist/rhel/$releasever/$basearch/os");
-        content.setGpgUrl("gpgUrl");
-        content.setArches("x86_64");
-        content.setMetadataExpiration(3200L);
-        content.setRequiredTags("TAG1,TAG2");
+        String id = TestUtil.randomString(6, TestUtil.CHARSET_NUMERIC);
 
-        return content;
+        return new Content()
+            .setUuid("test_content-" + id)
+            .setId(id)
+            .setName("test_content-" + id)
+            .setLabel("label")
+            .setType("yum")
+            .setVendor("vendor")
+            .setContentUrl("/content/dist/rhel/$releasever/$basearch/os")
+            .setGpgUrl("gpgUrl")
+            .setArches("x86_64")
+            .setMetadataExpiration(3200L)
+            .setRequiredTags("TAG1,TAG2");
     }
 
     private Environment createEnvironment(Owner owner, Consumer consumer, Content content) {
-        int rnd = TestUtil.randomInt();
+        String id = TestUtil.randomString(6, TestUtil.CHARSET_NUMERIC);
 
         Environment environment = new Environment()
-            .setId("test_environment-" + rnd)
-            .setName("test_environment-" + rnd)
+            .setId("test_environment-" + id)
+            .setName("test_environment-" + id)
             .setOwner(owner);
 
         EnvironmentContent ec = new EnvironmentContent()
