@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
-class DistinguishedNameTest {
+public class DistinguishedNameTest {
 
     private static final String CN_VALUE = "test_name";
     private static final String O_VALUE = "test_org";

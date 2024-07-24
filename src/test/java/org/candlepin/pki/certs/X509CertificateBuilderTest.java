@@ -38,6 +38,7 @@ import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
+import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
@@ -48,16 +49,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.spec.RSAPrivateCrtKeySpec;
-import java.security.spec.RSAPublicKeySpec;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -85,6 +81,8 @@ class X509CertificateBuilderTest {
 
     @Test
     public void testCreateX509Certificate() throws Exception {
+        X509Certificate caCert = this.certificateAuthority.getCACert();
+
         Instant start = Instant.now();
         Instant end = LocalDate.now().plusDays(365).atStartOfDay(ZoneId.systemDefault()).toInstant();
         KeyPair keyPair = createKeyPair();
@@ -115,17 +113,32 @@ class X509CertificateBuilderTest {
             .containsOnlyOnce("CN=" + distinguishedName.commonName())
             .containsOnlyOnce("O=" + distinguishedName.organizationName());
 
-        // KeyUsage extension incorrect
-        assertTrue(KeyUsage.fromExtensions(bcExtensions)
-            .hasUsages(KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.dataEncipherment));
+        // Verify key usage extension is present and critical
+        Extension keyUsageExt = bcExtensions.getExtension(Extension.keyUsage);
+        assertNotNull(keyUsageExt);
+        assertTrue(keyUsageExt.isCritical());
 
-        // ExtendedKeyUsage extension incorrect
-        assertTrue(ExtendedKeyUsage
-            .fromExtensions(bcExtensions).hasKeyPurposeId(KeyPurposeId.id_kp_clientAuth));
+        KeyUsage keyUsage = KeyUsage.fromExtensions(bcExtensions);
 
-        // Basic constraints incorrectly identify this cert as a CA
+        assertTrue(keyUsage.hasUsages(KeyUsage.digitalSignature));
+        assertTrue(keyUsage.hasUsages(KeyUsage.keyEncipherment));
+        assertTrue(keyUsage.hasUsages(KeyUsage.dataEncipherment));
+
+        // Verify the extended key usage is present, non-critical, and is configured correctly
+        Extension exKeyUsageExt = bcExtensions.getExtension(Extension.extendedKeyUsage);
+        assertNotNull(exKeyUsageExt);
+        assertFalse(exKeyUsageExt.isCritical());
+
+        assertTrue(ExtendedKeyUsage.fromExtensions(bcExtensions)
+            .hasKeyPurposeId(KeyPurposeId.id_kp_clientAuth));
+
+        // Verify we aren't generating any CA certs with this builder
+        Extension basicConstraintExt = bcExtensions.getExtension(Extension.basicConstraints);
+        assertNotNull(basicConstraintExt);
+
         assertFalse(BasicConstraints.fromExtensions(bcExtensions).isCA());
 
+        // Verify the cert type extensions
         NetscapeCertType expected = new NetscapeCertType(
             NetscapeCertType.sslClient | NetscapeCertType.smime);
 
@@ -133,21 +146,29 @@ class X509CertificateBuilderTest {
             (DERBitString) bcExtensions.getExtension(MiscObjectIdentifiers.netscapeCertType)
                 .getParsedValue());
 
-        assertArrayEquals(
-            new JcaX509ExtensionUtils().createSubjectKeyIdentifier(keyPair.getPublic()).getEncoded(),
-            SubjectKeyIdentifier.fromExtensions(bcExtensions).getEncoded());
-
-        PrivateKey key = this.certificateAuthority.getCaKey();
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        RSAPrivateCrtKeySpec ks = kf.getKeySpec(key, RSAPrivateCrtKeySpec.class);
-        RSAPublicKeySpec pubKs = new RSAPublicKeySpec(ks.getModulus(), ks.getPublicExponent());
-        PublicKey pubKey = kf.generatePublic(pubKs);
-        assertArrayEquals(
-            new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(
-                this.certificateAuthority.getCACert()).getEncoded(),
-            AuthorityKeyIdentifier.fromExtensions(bcExtensions).getEncoded());
-
         assertEquals(expected, actual);
+
+        // Verify the SKI is built from the provided public key
+        byte[] expectedSKI = new JcaX509ExtensionUtils()
+            .createSubjectKeyIdentifier(keyPair.getPublic())
+            .getEncoded();
+
+        Extension ski = bcExtensions.getExtension(Extension.subjectKeyIdentifier);
+        assertNotNull(ski);
+
+        assertArrayEquals(expectedSKI, SubjectKeyIdentifier.fromExtensions(bcExtensions).getEncoded());
+
+        // Verify the AKI only contains the keyid field, referencing our CA cert
+        // Note: at the time of writing, adding the issuer causes problems with various cert
+        // processors, even if the extension is correctly defined
+        byte[] expectedAKI = new JcaX509ExtensionUtils()
+            .createAuthorityKeyIdentifier(caCert.getPublicKey())
+            .getEncoded();
+
+        Extension aki = bcExtensions.getExtension(Extension.authorityKeyIdentifier);
+        assertNotNull(aki);
+
+        assertArrayEquals(expectedAKI, AuthorityKeyIdentifier.fromExtensions(bcExtensions).getEncoded());
     }
 
     // TODO: FIXME: Add more tests for the expected default properties of certs built with the builder
