@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.11
+Version: 4.4.12
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,48 @@ fi
 
 #raw
 %changelog
+* Thu Jul 25 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.12-1
+- CANDLEPIN-891: Updated X.509 certificate extension generation
+  (crog@redhat.com)
+- Bump nebula.lint from 19.0.2 to 19.0.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-888: Fixed several encoding errors during certificate generation
+  (crog@redhat.com)
+- Bump org.apache.commons:commons-lang3 from 3.14.0 to 3.15.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mariadb.jdbc:mariadb-java-client from 3.4.0 to 3.4.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.owasp.dependencycheck from 10.0.2 to 10.0.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump commons-codec:commons-codec from 1.17.0 to 1.17.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.25 to 10.1.26
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.8.3 to 3.9.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Update Gradle Wrapper from 8.8 to 8.9. (gradle-update-robot@regolo.cc)
+- Bump org.assertj:assertj-core from 3.26.0 to 3.26.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-873: Rewrited methods in PoolCurator to use secure predicate
+  (sbakaj@redhat.com)
+- CANDLEPIN-885: Upgraded to openapi-generator 7.7.0 (sbakaj@redhat.com)
+- Bump org.owasp.dependencycheck from 10.0.1 to 10.0.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson from 2.17.1 to 2.17.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.sonarqube from 5.1.0.4872 to 5.1.0.4882
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.sonarqube from 5.0.0.4638 to 5.1.0.4872
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-871: Added CS8 container to CI (sbakaj@redhat.com)
+- CANDLEPIN-818: Updated PoolCurator to not use hibernate criteria
+  (joshmalbrecht@gmail.com)
+- Updated deprecated gradle step in CI (sbakaj@redhat.com)
+- Bump org.owasp.dependencycheck from 9.2.0 to 10.0.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+
 * Mon Jul 01 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.11-1
 - CANDLEPIN-881: Refactored Consumer ContentOverride Fetching Query
   (crog@redhat.com)
