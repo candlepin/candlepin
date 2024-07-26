@@ -28,6 +28,7 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
 import org.candlepin.model.SCACertificate;
 import org.candlepin.model.dto.Content;
 import org.candlepin.pki.DistinguishedName;
@@ -55,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -186,8 +188,14 @@ public class SCACertificateGenerator {
         ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(owner, environments);
         PromotedContent promotedContent = new PromotedContent(contentPathBuilder).withAll(environments);
 
-        Map<org.candlepin.model.Content, Boolean> ownerContent = this.contentCurator
-            .getActiveContentByOwner(owner.getId());
+        Function<ProductContent, String> cidFetcher = pcinfo -> pcinfo.getContent().getId();
+
+        Map<String, ProductContent> ownerContent = this.contentCurator
+            .getActiveContentByOwner(owner.getId())
+            .stream()
+            .collect(Collectors.toMap(cidFetcher, Function.identity(),
+                (v1, v2) -> new ProductContent(v2.getContent(), v1.isEnabled() || v2.isEnabled())));
+
 
         byte[] payloadBytes = createContentAccessDataPayload(consumer, ownerContent, promotedContent);
 
@@ -236,8 +244,13 @@ public class SCACertificateGenerator {
             ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(owner, environments);
             PromotedContent promotedContent = new PromotedContent(contentPathBuilder).withAll(environments);
 
-            Map<org.candlepin.model.Content, Boolean> ownerContent = this.contentCurator
-                .getActiveContentByOwner(owner.getId());
+            Function<ProductContent, String> cidFetcher = pcinfo -> pcinfo.getContent().getId();
+
+            Map<String, ProductContent> ownerContent = this.contentCurator
+                .getActiveContentByOwner(owner.getId())
+                .stream()
+                .collect(Collectors.toMap(cidFetcher, Function.identity(),
+                    (v1, v2) -> new ProductContent(v2.getContent(), v1.isEnabled() || v2.isEnabled())));
 
             byte[] payloadBytes = createContentAccessDataPayload(consumer, ownerContent, promotedContent);
             existing.setContent(this.createPayloadAndSignature(payloadBytes));
@@ -345,16 +358,15 @@ public class SCACertificateGenerator {
     }
 
     private byte[] createContentAccessDataPayload(Consumer consumer,
-        Map<org.candlepin.model.Content, Boolean> ownerContent, PromotedContent promotedContent) {
+        Map<String, ProductContent> activateContent, PromotedContent promotedContent) {
 
         String consumerUuid = consumer != null ? consumer.getUuid() : null;
         log.info("Generating SCA payload for consumer \"{}\"...", consumerUuid);
 
         Product engProduct = new Product()
             .setId("content_access")
-            .setName(" Content Access");
-
-        ownerContent.forEach(engProduct::addContent);
+            .setName(" Content Access")
+            .setProductContent(activateContent.values());
 
         Product skuProduct = new Product()
             .setId("content_access")
