@@ -355,6 +355,15 @@
     </changeSet>
 
    <changeSet id="20231003113535-11" author="crog" dbms="postgresql, mysql, mariadb">
+        <!-- 4.4.2 -->
+        <validCheckSum>9:c77aee66084df6a5c15ac442b4fc8090</validCheckSum>
+        <!-- 4.4.9 -->
+        <validCheckSum>9:16c11c8edc80574ab030cd5fbcec5a07</validCheckSum>
+        <!-- 4.4.10 -->
+        <validCheckSum>9:56c16786668c16c345e8ce64ae890851</validCheckSum>
+        <!-- 4.4.11+ -->
+        <validCheckSum>9:d11ca759108c7919ce364d946c825460</validCheckSum>
+
         <sql>
             -- Migrate global products and content
             DROP TABLE IF EXISTS tmp_active_global_products;
