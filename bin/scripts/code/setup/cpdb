@@ -88,7 +88,7 @@ class DbSetup(object):
             classpath = "%s:%s" % (classpath, JBOSS_CLASSPATH)
 
         liquibase_options = "--driver=%s --classpath=%s --changelog-file=%s --url=\"%s\" --username=$DBUSERNAME \
-            --headless=true" % (
+            " % (
             self.driver_class,
             classpath,
             changelog_path,
@@ -107,7 +107,7 @@ class DbSetup(object):
 
         print(liquibase_options)
 
-        command = "/usr/share/candlepin/liquibase.sh %s %s -Dcommunity=%s" % (liquibase_options, action, self.community)
+        command = "/vagrant/bin/deployment/liquibase.sh %s %s -Dcommunity=%s" % (liquibase_options, action, self.community)
         (status, output) = getstatusoutput(command)
         if status > 0 and output.find('database "%s" does not exist' % self.db) > 0:
             print ('ERROR: The database "%s" does not exist.' % self.db)
