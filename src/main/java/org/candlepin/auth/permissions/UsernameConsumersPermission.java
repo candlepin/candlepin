@@ -22,9 +22,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.service.model.UserInfo;
 
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Restrictions;
-
 import java.io.Serializable;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -83,15 +80,6 @@ public class UsernameConsumersPermission implements Permission, Serializable {
         }
 
         return false;
-    }
-
-    @Override
-    public Criterion getCriteriaRestrictions(Class entityClass) {
-        if (entityClass.equals(Consumer.class)) {
-            return Restrictions.eq("username", user.getUsername());
-        }
-
-        return null;
     }
 
     /**

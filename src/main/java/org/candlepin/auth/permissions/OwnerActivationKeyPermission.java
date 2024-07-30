@@ -18,8 +18,6 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.model.Owner;
 
-import org.hibernate.criterion.Criterion;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Predicate;
@@ -92,16 +90,6 @@ public class OwnerActivationKeyPermission extends TypedPermission<Owner> {
         return target != null && this.ownerId.equals(target.getId()) &&
             subresource == SubResource.ACTIVATION_KEYS &&
             this.access.provides(required);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Criterion getCriteriaRestrictions(Class entityClass) {
-        // deprecated functionality; never return anything from this, as dynamically modifying
-        // arbitrary queries is error prone and a maintenance nightmare.
-        return null;
     }
 
     /**

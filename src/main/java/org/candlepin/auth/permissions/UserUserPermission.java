@@ -20,9 +20,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.User;
 import org.candlepin.model.User_;
 
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Restrictions;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Predicate;
@@ -49,14 +46,6 @@ public class UserUserPermission extends TypedPermission<User> {
     public boolean canAccessTarget(User target, SubResource subResource,
         Access required) {
         return target.getUsername().equals(username);
-    }
-
-    @Override
-    public Criterion getCriteriaRestrictions(Class entityClass) {
-        if (entityClass.equals(User.class)) {
-            return Restrictions.eq("username", username);
-        }
-        return null;
     }
 
     /**

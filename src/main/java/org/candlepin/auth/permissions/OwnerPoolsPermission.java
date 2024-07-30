@@ -18,8 +18,6 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.model.Owner;
 
-import org.hibernate.criterion.Criterion;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Predicate;
@@ -49,11 +47,6 @@ public class OwnerPoolsPermission extends TypedPermission<Owner> {
             (subResource.equals(SubResource.POOLS) ||
                 subResource.equals(SubResource.SUBSCRIPTIONS)) &&
                     access.provides(required);
-    }
-
-    @Override
-    public Criterion getCriteriaRestrictions(Class entityClass) {
-        return null;
     }
 
     /**

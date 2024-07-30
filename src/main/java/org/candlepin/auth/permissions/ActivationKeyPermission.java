@@ -19,8 +19,6 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.model.Owner;
 import org.candlepin.model.activationkeys.ActivationKey;
 
-import org.hibernate.criterion.Criterion;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Predicate;
@@ -87,16 +85,6 @@ public class ActivationKeyPermission extends TypedPermission<ActivationKey> {
     public boolean canAccessTarget(ActivationKey target, SubResource subresource, Access required) {
         return target != null && this.ownerId.equals(target.getOwnerId()) &&
             this.access.provides(required);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Criterion getCriteriaRestrictions(Class entityClass) {
-        // deprecated functionality; never return anything from this, as dynamically modifying
-        // arbitrary queries is error prone and a maintenance nightmare.
-        return null;
     }
 
     /**

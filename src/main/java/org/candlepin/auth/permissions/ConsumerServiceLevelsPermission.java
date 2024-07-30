@@ -20,9 +20,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Owner_;
 
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Restrictions;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Predicate;
@@ -54,14 +51,6 @@ public class ConsumerServiceLevelsPermission extends TypedPermission<Owner> {
     public boolean canAccessTarget(Owner target, SubResource subResource, Access required) {
         return target.getKey().equals(owner.getKey()) &&
             subResource.equals(SubResource.SERVICE_LEVELS) && access.provides(required);
-    }
-
-    @Override
-    public Criterion getCriteriaRestrictions(Class entityClass) {
-        if (entityClass.equals(Owner.class)) {
-            return Restrictions.eq("key", owner.getKey());
-        }
-        return null;
     }
 
     /**

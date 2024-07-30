@@ -20,9 +20,6 @@ import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumer_;
 import org.candlepin.model.Owner;
 
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Restrictions;
-
 import java.util.Objects;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -40,15 +37,6 @@ public class AnonymousCloudConsumerPermission extends TypedPermission<AnonymousC
 
     public AnonymousCloudConsumerPermission(AnonymousCloudConsumer consumer) {
         this.consumer = Objects.requireNonNull(consumer);
-    }
-
-    @Override
-    public Criterion getCriteriaRestrictions(Class entityClass) {
-        if (AnonymousCloudConsumer.class.equals(entityClass)) {
-            return Restrictions.idEq(consumer.getId());
-        }
-
-        return null;
     }
 
     @Override
