@@ -166,7 +166,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
             " SET s.revoked = true, s.updated = :updated" +
             " WHERE s.revoked = false AND s.id = :serial_id";
 
-        this.currentSession().createQuery(query)
+        this.getEntityManager().createQuery(query)
             .setParameter("updated", new Date())
             .setParameter("serial_id", serialToRevoke)
             .executeUpdate();
@@ -189,7 +189,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
 
         int updated = 0;
         for (Collection<Long> serialsToRevokeBlock : this.partition(serialsToRevoke)) {
-            updated += this.currentSession().createQuery(query)
+            updated += this.getEntityManager().createQuery(query)
                 .setParameter("serials", serialsToRevokeBlock)
                 .executeUpdate();
         }

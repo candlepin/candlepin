@@ -165,7 +165,7 @@ public class AnonymousCloudConsumerCurator extends AbstractHibernateCurator<Anon
         }
 
         String query = "SELECT c FROM AnonymousCloudConsumer c WHERE c.cloudAccountId =:accountId";
-        return this.currentSession().createQuery(query, AnonymousCloudConsumer.class)
+        return this.getEntityManager().createQuery(query, AnonymousCloudConsumer.class)
             .setParameter("accountId", accountId)
             .getResultList();
     }
@@ -190,7 +190,7 @@ public class AnonymousCloudConsumerCurator extends AbstractHibernateCurator<Anon
         int updated = 0;
         Date updateTime = new Date();
         for (Collection<String> certIdBlock : this.partition(certIds)) {
-            updated += this.currentSession().createQuery(query)
+            updated += this.getEntityManager().createQuery(query)
                 .setParameter("date", updateTime)
                 .setParameter("cert_ids", certIdBlock)
                 .executeUpdate();

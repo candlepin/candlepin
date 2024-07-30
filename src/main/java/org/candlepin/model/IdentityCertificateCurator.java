@@ -76,7 +76,7 @@ public class IdentityCertificateCurator extends AbstractHibernateCurator<Identit
 
         int deleted = 0;
         for (Collection<String> idsToDeleteBlock : this.partition(idsToDelete)) {
-            deleted += this.currentSession().createQuery(query)
+            deleted += this.getEntityManager().createQuery(query)
                 .setParameter("idsToDelete", idsToDeleteBlock)
                 .executeUpdate();
         }

@@ -515,7 +515,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
     @Transactional
     public void delete(Content entity) {
         Content toDelete = this.get(entity.getUuid());
-        currentSession().delete(toDelete);
+        this.getEntityManager().remove(toDelete);
     }
 
     /**

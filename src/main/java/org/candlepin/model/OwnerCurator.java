@@ -20,8 +20,6 @@ import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +35,7 @@ import java.util.TreeSet;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
@@ -128,7 +127,17 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      */
     @Transactional
     public Owner getByKey(String key) {
-        return this.currentSession().bySimpleNaturalId(Owner.class).load(key);
+        String jpql = "SELECT o FROM Owner o WHERE o.key = :key";
+
+        TypedQuery<Owner> query = this.getEntityManager().createQuery(jpql, Owner.class)
+            .setParameter("key", key);
+
+        try {
+            return query.getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**
@@ -218,12 +227,19 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      */
     public Owner lockAndLoadByKey(String key) {
         if (key != null && !key.isEmpty()) {
-            return this.currentSession()
-                .bySimpleNaturalId(Owner.class)
-                .with(new LockOptions(LockMode.PESSIMISTIC_WRITE))
-                .load(key);
-        }
+            String jpql = "SELECT o FROM Owner o WHERE o.key = :key";
 
+            TypedQuery<Owner> query = this.getEntityManager().createQuery(jpql, Owner.class)
+                .setParameter("key", key)
+                .setLockMode(LockModeType.PESSIMISTIC_WRITE);
+
+            try {
+                return query.getSingleResult();
+            }
+            catch (NoResultException e) {
+                return null;
+            }
+        }
         return null;
     }
 
