@@ -19,9 +19,6 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Owner_;
 
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Restrictions;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Predicate;
@@ -53,15 +50,6 @@ public class ConsumerOrgHypervisorPermission extends TypedPermission<Owner> {
         return subResource.equals(SubResource.HYPERVISOR) &&
             Access.READ_ONLY.provides(required) &&
             this.owner.getKey().equals(target.getKey());
-    }
-
-    @Override
-    public Criterion getCriteriaRestrictions(Class entityClass) {
-        if (entityClass.equals(Owner.class)) {
-            return Restrictions.eq("key", owner.getKey());
-        }
-
-        return null;
     }
 
     /**

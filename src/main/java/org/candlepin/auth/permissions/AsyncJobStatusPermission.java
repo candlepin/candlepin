@@ -20,8 +20,6 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Owner;
 
-import org.hibernate.criterion.Criterion;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
@@ -65,12 +63,6 @@ public class AsyncJobStatusPermission extends TypedPermission<AsyncJobStatus> {
     @Override
     public Owner getOwner() {
         // This permission is not specific to any owner.
-        return null;
-    }
-
-    @Override
-    public Criterion getCriteriaRestrictions(Class entityClass) {
-        // This behavior is deprecated. Always return null.
         return null;
     }
 

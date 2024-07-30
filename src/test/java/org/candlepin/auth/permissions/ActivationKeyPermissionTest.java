@@ -100,7 +100,6 @@ public class ActivationKeyPermissionTest {
         ActivationKeyPermission perm = new ActivationKeyPermission(owner, Access.ALL);
 
         // These should always return null
-        assertNull(perm.getCriteriaRestrictions(ActivationKey.class));
         assertNull(perm.getQueryRestriction(ActivationKey.class, mock(CriteriaBuilder.class),
             mock(From.class)));
     }

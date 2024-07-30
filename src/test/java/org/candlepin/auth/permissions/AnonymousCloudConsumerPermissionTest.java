@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.test.TestUtil;
 
-import org.hibernate.criterion.Criterion;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -36,23 +35,6 @@ public class AnonymousCloudConsumerPermissionTest {
     @Test
     public void testAnonymousCloudConsumerWithNullAnonymousCloudConsumer() {
         assertThrows(NullPointerException.class, () -> new AnonymousCloudConsumerPermission(null));
-    }
-
-    @Test
-    public void testGetCriteriaRestrictionsWithUnknownClass() {
-        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
-            .setId("id")
-            .setUuid("uuid")
-            .setCloudAccountId("cloudAccountId")
-            .setCloudInstanceId("instanceId")
-            .setProductIds(List.of("productId"))
-            .setCloudProviderShortName(TestUtil.randomString());
-
-        AnonymousCloudConsumerPermission permission = new AnonymousCloudConsumerPermission(consumer);
-
-        Criterion criterion = permission.getCriteriaRestrictions(List.class);
-
-        assertNull(criterion);
     }
 
     @Test

@@ -20,8 +20,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 
-import org.hibernate.criterion.Criterion;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Predicate;
@@ -49,11 +47,6 @@ public class ConsumerEntitlementPermission extends TypedPermission<Entitlement> 
     @Override
     public boolean canAccessTarget(Entitlement target, SubResource subResource, Access required) {
         return target.getConsumer().getUuid().equals(consumer.getUuid());
-    }
-
-    @Override
-    public Criterion getCriteriaRestrictions(Class entityClass) {
-        return null;
     }
 
     /**

@@ -28,9 +28,6 @@ import org.candlepin.model.Pool_;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKey_;
 
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Restrictions;
-
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -70,27 +67,6 @@ public class OwnerPermission implements Permission, Serializable {
         // If asked to verify access to an object that does not implement Owned,
         // as far as this permission goes, we probably have to deny access.
         return false;
-    }
-
-    @Override
-    public Criterion getCriteriaRestrictions(Class entityClass) {
-        if (Owner.class.equals(entityClass)) {
-            return Restrictions.eq("key", owner.getKey());
-        }
-        else if (Consumer.class.equals(entityClass)) {
-            return Restrictions.eq("ownerId", owner.getId());
-        }
-        else if (Pool.class.equals(entityClass)) {
-            return Restrictions.eq("owner", owner);
-        }
-        else if (ActivationKey.class.equals(entityClass)) {
-            return Restrictions.eq("owner", owner);
-        }
-        else if (Environment.class.equals(entityClass)) {
-            return Restrictions.eq("owner", owner);
-        }
-
-        return null;
     }
 
     /**
