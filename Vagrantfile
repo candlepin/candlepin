@@ -78,8 +78,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   config.vm.define("el8", primary: true) do |vm_config|
-    vm_config.vm.box = "centos.cloud/centos8s"
-    vm_config.vm.box_url = "https://cloud.centos.org/centos/8-stream/x86_64/images/CentOS-Stream-Vagrant-8-latest.x86_64.vagrant-libvirt.box"
+    vm_config.vm.box = "almalinux/8"
     vm_config.vm.host_name = "candlepin-el8.example.com"
 
     # Vagrant allows to create a forwarded port mapping which allows access to a specific port
