@@ -734,6 +734,11 @@ paths:
             items:
               type: string
               format: key:value
+        - name: environment_id
+          in: query
+          description: Environment identifier
+          schema:
+            type: string
         - $ref: "#/components/parameters/paging_page"
         - $ref: "#/components/parameters/paging_per_page"
         - $ref: "#/components/parameters/paging_order"

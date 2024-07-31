@@ -26,6 +26,7 @@ import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.client.v1.ConsumerInstalledProductDTO;
+import org.candlepin.dto.api.client.v1.EnvironmentDTO;
 import org.candlepin.dto.api.client.v1.GuestIdDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
@@ -41,6 +42,7 @@ import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
+import org.candlepin.spec.bootstrap.data.builder.Environments;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Permissions;
 import org.candlepin.spec.bootstrap.data.builder.Roles;
@@ -295,7 +297,8 @@ public class ConsumerResourceSpecTest {
 
         List<String> uuids = List.of(consumer1.getUuid(), consumer2.getUuid());
         List<ConsumerDTOArrayElement> consumers = adminClient.consumers()
-            .searchConsumers(null, Set.of("system"), null, uuids, null, null, null, null, null, null, null);
+            .searchConsumers(null, Set.of("system"), null, uuids, null, null,
+                null, null, null, null, null, null);
 
         assertThat(consumers)
             .extracting(ConsumerDTOArrayElement::getUuid)
@@ -311,7 +314,7 @@ public class ConsumerResourceSpecTest {
 
         List<ConsumerDTOArrayElement> consumers = adminClient.consumers()
             .searchConsumers(null, null, null, List.of(consumer1.getUuid(), consumer2.getUuid()), null, null,
-            null, null, null, null, null);
+            null, null, null, null, null, null);
 
         assertThat(consumers)
             .extracting(ConsumerDTOArrayElement::getUuid)
@@ -324,7 +327,8 @@ public class ConsumerResourceSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
 
         List<ConsumerDTOArrayElement> consumers = adminClient.consumers()
-            .searchConsumers(null, null, owner.getKey(), null, null, null, null, null, null, null, null);
+            .searchConsumers(null, null, owner.getKey(), null, null, null,
+                null, null, null, null, null, null);
 
         assertThat(consumers)
             .singleElement()
@@ -341,7 +345,7 @@ public class ConsumerResourceSpecTest {
             .type(ConsumerTypes.Person.value()), user.getUsername());
 
         List<ConsumerDTOArrayElement> consumers = adminClient.consumers()
-            .searchConsumers(user.getUsername(), Set.of("person"), null, null, null, null, null, null,
+            .searchConsumers(user.getUsername(), Set.of("person"), null, null, null, null, null, null, null,
             null, null, null);
 
         assertThat(consumers)
@@ -360,7 +364,7 @@ public class ConsumerResourceSpecTest {
             .type(ConsumerTypes.Person.value()), user.getUsername());
 
         List<ConsumerDTOArrayElement> consumers = adminClient.consumers()
-            .searchConsumers(user.getUsername(), Set.of("person"), owner2.getKey(), null, null, null,
+            .searchConsumers(user.getUsername(), Set.of("person"), owner2.getKey(), null, null, null, null,
             null, null, null, null, null);
 
         assertThat(consumers)
@@ -856,7 +860,7 @@ public class ConsumerResourceSpecTest {
         List<String> facts = List.of("fact1:value1");
 
         List<ConsumerDTOArrayElement> output = this.adminClient.consumers()
-            .searchConsumers(null, null, this.owner.getKey(), null, null, null, facts, null, null,
+            .searchConsumers(null, null, this.owner.getKey(), null, null, null, facts, null, null, null,
             null, null);
 
         assertThat(output)
@@ -889,7 +893,7 @@ public class ConsumerResourceSpecTest {
         userClient.consumers().createConsumer(Consumers.random(owner)
             .facts(Map.of("newkey", "some" + valueRand)));
         assertThat(adminClient.consumers().searchConsumers(null, null, null, null,
-            null, null, List.of("*key*:*" + valueRand + "*"), null, null, null, null))
+            null, null, List.of("*key*:*" + valueRand + "*"), null, null, null, null, null))
             .hasSize(3);
     }
 
@@ -907,7 +911,7 @@ public class ConsumerResourceSpecTest {
 
         List<String> expectedUuids = List.of(consumer1.getUuid(), consumer2.getUuid());
         List<ConsumerDTOArrayElement> consumers = adminClient.consumers().searchConsumers(null, null, null,
-            expectedUuids, null, null, List.of("oth*key*:*" + valueRand), null, null, null, null);
+            expectedUuids, null, null, List.of("oth*key*:*" + valueRand), null, null, null, null, null);
         assertThat(consumers).hasSize(2)
             .map(x -> x.getUuid())
             .containsAll(expectedUuids);
@@ -921,10 +925,99 @@ public class ConsumerResourceSpecTest {
         ConsumerDTO consumer1 = userClient.consumers().createConsumer(Consumers.random(owner)
             .facts(Map.of("trolol", valueRand + "); DROP TABLE cp_consumer;")));
         assertThat(adminClient.consumers().searchConsumers(null, null, null, null,
-            null, null, List.of("trolol:" + valueRand + "); DROP TABLE cp_consumer;"), null, null,
+            null, null, List.of("trolol:" + valueRand + "); DROP TABLE cp_consumer;"), null, null, null,
             null, null))
             .singleElement()
             .returns(consumer1.getUuid(), x -> x.getUuid());
+    }
+
+    @Test
+    public void shouldNotListConsumersWhenJustEnvironmentIdIsSpecified() {
+        assertBadRequest(() -> adminClient.consumers().searchConsumers(null, null, null, null,
+            null, null, null, "envId", null, null, null, null));
+    }
+
+    @Test
+    public void shouldNotFindAnyConsumerWithUnknownEnvironmentId() {
+        List<ConsumerDTOArrayElement> consumers = adminClient.consumers().searchConsumers(null, null,
+            owner.getKey(), null, null, null, null, "envId", null, null, null, null);
+
+        assertThat(consumers)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void shouldFindConsumersForGivenEnvironmentId() {
+        EnvironmentDTO environment = adminClient.owners().createEnvironment(
+            owner.getKey(), Environments.random());
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(
+            Consumers.random(owner).environments(List.of(environment)));
+        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(
+            Consumers.random(owner).environments(List.of(environment)));
+
+        List<ConsumerDTOArrayElement> consumers = adminClient.consumers().searchConsumers(null, null,
+            owner.getKey(), null, null, null, null, environment.getId(), null, null, null, null);
+
+        assertThat(consumers)
+            .isNotNull()
+            .hasSize(2)
+            .extracting(ConsumerDTOArrayElement::getId)
+            .containsOnly(consumer1.getId(), consumer2.getId());
+    }
+
+    @Test
+    public void shouldOnlyFindConsumerForGivenEnvironmentId() {
+        EnvironmentDTO environment = adminClient.owners().createEnvironment(
+            owner.getKey(), Environments.random());
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(
+            Consumers.random(owner).environments(List.of(environment)));
+        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(Consumers.random(owner));
+
+        List<ConsumerDTOArrayElement> consumers = adminClient.consumers().searchConsumers(null, null,
+            owner.getKey(), null, null, null, null, environment.getId(), null, null, null, null);
+
+        assertThat(consumers)
+            .isNotNull()
+            .hasSize(1)
+            .extracting(ConsumerDTOArrayElement::getId)
+            .containsOnly(consumer1.getId())
+            .doesNotContain(consumer2.getId());
+    }
+
+    @Test
+    public void shouldOnlyFindConsumersForGivenEnvironmentIdAndOwner() {
+        OwnerDTO anotherOwner = adminClient.owners().createOwner(Owners.random());
+        EnvironmentDTO environment1 = adminClient.owners().createEnvironment(
+            owner.getKey(), Environments.random());
+        EnvironmentDTO environment2 = adminClient.owners().createEnvironment(
+            anotherOwner.getKey(), Environments.random());
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(
+            Consumers.random(owner).environments(List.of(environment1)));
+        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(
+            Consumers.random(owner).environments(List.of(environment1)));
+        ConsumerDTO consumer3 = adminClient.consumers().createConsumer(
+            Consumers.random(anotherOwner).environments(List.of(environment2)));
+
+        List<ConsumerDTOArrayElement> ownerConsumers = adminClient.consumers().searchConsumers(null, null,
+            owner.getKey(), null, null, null, null, environment1.getId(), null, null, null, null);
+        List<ConsumerDTOArrayElement> anotherOwnerConsumers =
+            adminClient.consumers().searchConsumers(null, null, anotherOwner.getKey(), null, null, null, null,
+                environment2.getId(), null, null, null, null);
+
+        assertThat(ownerConsumers)
+            .isNotNull()
+            .hasSize(2)
+            .extracting(ConsumerDTOArrayElement::getId)
+            .containsOnly(consumer1.getId(), consumer2.getId())
+            .doesNotContain(consumer3.getId());
+
+        assertThat(anotherOwnerConsumers)
+            .isNotNull()
+            .hasSize(1)
+            .extracting(ConsumerDTOArrayElement::getId)
+            .containsOnly(consumer3.getId())
+            .doesNotContain(consumer1.getId(), consumer2.getId());
     }
 
     private UserDTO createUserTypeAllAccess(ApiClient client, OwnerDTO owner) {
