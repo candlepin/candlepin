@@ -58,7 +58,7 @@ end
 
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.synced_folder ".", "/vagrant", type: "sshfs"
+  config.vm.synced_folder ".", "/vagrant", type: "sshfs", :owner => 'vagrant', :group => 'vagrant'
   config.vm.host_name = "candlepin.example.com"
   config.ssh.forward_agent = true
 
