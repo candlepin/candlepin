@@ -9,7 +9,7 @@
   ansible.builtin.include_tasks:
     file: el8/el8_tasks.yml
   when:
-    - ansible_distribution in ["CentOS", "RedHat"]
+    - ansible_distribution in ["CentOS", "AlmaLinux", "RedHat"]
     - ansible_distribution_major_version == "8"
   tags:
     - always
