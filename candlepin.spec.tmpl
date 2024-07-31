@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.12
+Version: 4.4.13
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,26 @@ fi
 
 #raw
 %changelog
+* Wed Jul 31 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.13-1
+- CANDLEPIN-901: Rolled back to previous version of Apache Commons lang
+  (crog@redhat.com)
+- CANDLEPIN-901: Added missing validCheckSum to the entity layering changeset
+  (crog@redhat.com)
+- Bump artemis from 2.35.0 to 2.36.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-902: Removed usage of Hibernate Criteria in Permissions classes
+  (sbakaj@redhat.com)
+- CANDLEPIN-64:Updated AbstractHibernateCurator not use Hibernate Criteria
+  (sbakaj@redhat.com)
+- Bump net.logstash.logback:logstash-logback-encoder from 7.4 to 8.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Do not use the unsafe 'pull_request_target' GH action trigger
+  (nmoumoul@redhat.com)
+- Bump org.liquibase:liquibase-core from 4.28.0 to 4.29.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-868: Anon Registration results in Ents with all repos Enabled
+  (sbakaj@redhat.com)
+
 * Thu Jul 25 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.12-1
 - CANDLEPIN-891: Updated X.509 certificate extension generation
   (crog@redhat.com)
