@@ -602,14 +602,20 @@ public class ConsumerResource implements ConsumerApi {
         List<String> hypervisorIds,
         String registrationAuthenticationMethod,
         List<String> facts,
+        String environmentId,
         Integer page, Integer perPage, String order, String sortBy) {
+        if (!(environmentId == null || environmentId.isEmpty()) && (ownerKey == null || ownerKey.isEmpty())) {
+            throw new BadRequestException(i18n.tr("The 'environmentId' query parameter cannot be " +
+                "used without also specifying the 'owner' query parameter."));
+        }
 
         if ((username == null || username.isEmpty()) &&
             (typeLabels == null || typeLabels.isEmpty()) &&
             (ownerKey == null || ownerKey.isEmpty()) &&
             (uuids == null || uuids.isEmpty()) &&
             (hypervisorIds == null || hypervisorIds.isEmpty()) &&
-            (facts == null || facts.isEmpty())) {
+            (facts == null || facts.isEmpty()) &&
+            (environmentId == null || environmentId.isEmpty())) {
 
             throw new BadRequestException(i18n.tr("Must specify at least one search criteria."));
         }
@@ -622,7 +628,8 @@ public class ConsumerResource implements ConsumerApi {
             .setUsername(username)
             .setUuids(uuids)
             .setTypes(types)
-            .setHypervisorIds(hypervisorIds);
+            .setHypervisorIds(hypervisorIds)
+            .setEnvironmentId(environmentId);
 
         new KeyValueStringParser(this.i18n).parseKeyValuePairs(facts)
             .forEach(kvpair -> queryArgs.addFact(kvpair.getKey(), kvpair.getValue()));

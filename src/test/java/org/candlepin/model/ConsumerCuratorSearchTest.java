@@ -54,7 +54,7 @@ import java.util.stream.Stream;
 public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
     private Consumer createConsumer(Owner owner, String name, String uuid, ConsumerType type, String username,
-        Map<String, String> facts, String hypervisorId) {
+        Map<String, String> facts, String hypervisorId, List<String> environmentIds) {
 
         HypervisorId hid = null;
         if (hypervisorId != null) {
@@ -70,7 +70,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             .setType(type)
             .setUsername(username)
             .setHypervisorId(hid)
-            .setFacts(facts);
+            .setFacts(facts)
+            .setEnvironmentIds(environmentIds);
 
         return this.consumerCurator.create(consumer);
     }
@@ -123,16 +124,17 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         int count = 0;
 
         for (Owner owner : owners) {
+            Environment environment = createEnvironment(owner);
             for (ConsumerType type : types) {
                 for (String username : usernames) {
                     for (Map<String, String> factMap : facts) {
                         ++count;
                         created.add(this.createConsumer(owner, "consumer-" + count, "uuid-" + count, type,
-                            username, factMap, null));
+                            username, factMap, null, List.of(environment.getId())));
 
                         ++count;
                         created.add(this.createConsumer(owner, "consumer-" + count, "uuid-" + count, type,
-                            username, factMap, "hypervisor-" + count));
+                            username, factMap, "hypervisor-" + count, List.of(environment.getId())));
                     }
                 }
             }
@@ -1070,4 +1072,51 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         }
     }
 
+    @Test
+    public void testFindConsumersByEnvironmentId() {
+        List<Consumer> created = this.createConsumersForQueryTests();
+
+        String environmentId = created.stream()
+            .map(Consumer::getEnvironmentIds)
+            .flatMap(List::stream)
+            .findFirst()
+            .orElse(null);
+
+        long expected = created.stream()
+            .filter(consumer -> consumer.getEnvironmentIds().contains(environmentId))
+            .count();
+        assertTrue(expected > 0);
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setEnvironmentId(environmentId);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertThat(consumer.getEnvironmentIds(), hasItem(environmentId));
+        }
+    }
+
+    @Test
+    public void testFindConsumersByEnvironmentIdNoMatch() {
+        this.createConsumersForQueryTests();
+
+        String environmentId = "bad environment id";
+        long expected = 0;
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setEnvironmentId(environmentId);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+    }
 }

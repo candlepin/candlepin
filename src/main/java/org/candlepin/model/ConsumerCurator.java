@@ -97,6 +97,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         private Collection<ConsumerType> types;
         private Collection<String> hypervisorIds;
         private Map<String, Collection<String>> facts;
+        private String environmentId;
 
         public ConsumerQueryArguments setOwner(Owner owner) {
             this.owner = owner;
@@ -172,6 +173,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         public Map<String, Collection<String>> getFacts() {
             return this.facts;
+        }
+
+        public ConsumerQueryArguments setEnvironmentId(String environmentId) {
+            this.environmentId = environmentId;
+            return this;
+        }
+
+        public String getEnvironmentId() {
+            return this.environmentId;
         }
     }
 
@@ -1434,6 +1444,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                         entry.getKey(), entry.getValue()))
                     .filter(Objects::nonNull)
                     .forEach(predicates::add);
+            }
+
+            if (queryArgs.getEnvironmentId() != null) {
+                MapJoin<Consumer, String, String> environmentIdsJoin =
+                    root.joinMap(Consumer_.ENVIRONMENT_IDS);
+                predicates.add(
+                    criteriaBuilder.equal(environmentIdsJoin.value(), queryArgs.getEnvironmentId()));
             }
         }
 
