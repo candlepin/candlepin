@@ -21,7 +21,6 @@
     - [Candlepin Configuration](#candlepin-configuration)
     - [Development Image Default Configurations](#development-image-default-configurations)
     - [Paths](#paths)
-* [Miscellaneous](#miscellaneous)
 * [Frequently Asked Questions](#frequently-asked-questions)
 
 ## Legal
@@ -134,25 +133,6 @@ The reports will be generated automatically under the build/reports folder.
 * `./gradlew checkstyleTest` Runs checkstyle only for test code.
 * `./gradlew checkstyleSpec` Runs checkstyle only for spec test code.
 
-Buildr provides a Checkstyle task, but we have our own that reads from the
-Eclipse Checkstyle Plugin configuration.  The Eclipse configuration defines
-several variables that are then passed in to the `project_conf/checks.xml`
-(which is the actual Checkstyle configuration).  This practice allows us to
-have slightly different style requirements for tests versus production code.
-The Eclipse Checkstyle Plugin defaults to reading from a file named
-`.checkstyle` in the root of the Eclipse project and that file points to the
-location of `checks.xml`.  Unfortunately, `checks.xml` isn't in the Eclipse
-project root and the plugin doesn't know how to look outside of the Eclipse
-project directory except by using an absolute path.
-
-To solve this problem, we generate the `.checkstyle` file programmatically when
-running the `buildr eclipse` task.  The template is located at
-`project_conf/.checkstyle` and uses an XML entity to represent the location of
-`checks.xml`.  When you run `buildr eclipse`, we set the value of the
-`conf_dir` entity in `project_conf/eclipse-checkstyle.xml` to the absolute
-path to `checks.xml` and drop the result into `.checkstyle` in your Eclipse
-project directory.
-
 ### Unit Tests
 * `./gradlew test` runs all of the unit tests.
 * `./gradlew test --tests org.candlepin.controller.Cdn*` runs only the unit
@@ -176,11 +156,24 @@ To run Java spec tests:
 [More information on Java spec tests](/spec-tests/README.md#Contributing)
 
 ### Liquibase
-* `buildr "changeset:my changeset name"`
-  The `changeset` task is followed by a
-  colon and an argument.  In this case the argument is a brief description of
-  the nature of the changeset.  Be sure to quote the task name to prevent the
-  shell from interpreting the spaces.
+
+#### Adding a Changeset
+
+Adding a changeset to be run during the liquibase database migration is a two step process.
+
+1. Create changeset file in the `src/main/resource/db` directory.
+2. Include the new changeset file in the `src/main/resources/db/changelog/changelog-update.xml` file.
+
+##### Changeset filename format
+
+The date and time prefix for the filename is the year, month, day, second, and millisecond that the changeset was created.
+You concatenate the numeric values in that order. For example, a date time prefix for a changeset created in 2024 on August 2nd, might look like: `20240802109000`
+
+You then append a title of your changes to the date time prefix to complete the filename.
+
+Example changeset filename:
+
+`20240802101300-test-change.xml`
 
 ### OpenApi / Swagger
 
@@ -329,10 +322,5 @@ Default Tomcat server.xml connector configuration:
   </SSLHostConfig>
 </Connector>
 ```
-
-## Miscellaneous
-* `buildr pom` creates a `pom.xml` file with the project dependencies in it
-* `buildr rpmlint` runs `rpmlint` on all `*.spec` files
-
 ## Frequently Asked Questions
 TODO
