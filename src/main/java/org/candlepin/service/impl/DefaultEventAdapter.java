@@ -106,9 +106,7 @@ public class DefaultEventAdapter implements EventAdapter {
     public void shutdown() {
         log.info("Entering DefaultEventAdapter.shutdown");
         try {
-            connection.stop();
             connection.close();
-            session.close();
             log.info("Successfully shutdown UMB connection and session.");
         }
         catch(JMSException e) {
