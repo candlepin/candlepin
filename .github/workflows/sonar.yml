@@ -84,7 +84,7 @@ jobs:
           allow_forks: true
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Analyze
         if: ${{ fromJson(steps.get_pr_data.outputs.data).base.ref == 'main' || startsWith(fromJson(steps.get_pr_data.outputs.data).base.ref, 'feature/') }}
