@@ -28,17 +28,17 @@ public class DefaultEventAdapter implements EventAdapter {
     private static final Logger log = LoggerFactory.getLogger(DefaultEventAdapter.class);
 
     private Connection connection;
-    private Session session;
 
-    private static final String TOPIC_NAME = "VirtualTopic.teamnado.system.cloud.check-in";
+    // TODO: We should be creating and closing the session when we use it!
+
+    private static final String TOPIC_NAME = "VirtualTopic.services.candlepin.system.cloud.check-in";
 
     @Inject
     public DefaultEventAdapter(Configuration configuration) throws Exception {
         Instant start = Instant.now();
         this.connection = createConnection(configuration);
-        this.connection.start();
-
-        this.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        // TODO: There should be no need to start the connection when we are only publishing and not consuming
+        // this.connection.start();
 
         Instant end = Instant.now();
         log.info("Duration of establishing UMB connection and session duration (ms): " + Duration.between(start, end).toMillis());
@@ -48,9 +48,8 @@ public class DefaultEventAdapter implements EventAdapter {
     public void preDestroy() {
         log.info("Entering DefaultEventAdapter.preDestroy");
         try {
-            connection.stop();
+            // connection.stop();
             connection.close();
-            session.close();
         }
         catch(JMSException e) {
             log.error("An error occurred while closing UMB connection and session", e);
@@ -62,7 +61,10 @@ public class DefaultEventAdapter implements EventAdapter {
         log.info("Attempting to publish event: " + event.getBody());
         Instant start = Instant.now();
         MessageProducer producer = null;
+        Session session= null;
         try {
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
             Topic topic = session.createTopic(TOPIC_NAME);
             producer = session.createProducer(topic);
             producer.setDeliveryMode(DeliveryMode.PERSISTENT);
@@ -86,6 +88,15 @@ public class DefaultEventAdapter implements EventAdapter {
                 }
                 catch (JMSException e) {
                     throw new EventPublishException("Unable to close MessageProducer", e);
+                }
+            }
+
+            if (session != null) {
+                try {
+                    session.close();
+                }
+                catch (JMSException e) {
+                    throw new EventPublishException("Unable to close Session", e);
                 }
             }
         }
