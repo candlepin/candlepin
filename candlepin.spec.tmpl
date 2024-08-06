@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.13
+Version: 4.4.14
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,25 @@ fi
 
 #raw
 %changelog
+* Tue Aug 06 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.14-1
+- Add new translations using Weblate (noreply@weblate.org)
+- Bump gradle/actions from 3 to 4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- CANDLEPIN-907: Updated cp_anonymous_certificate cert column to longblob
+  (joshmalbrecht@gmail.com)
+- Removed buildr from contributing.md (joshmalbrecht@gmail.com)
+- Bump org.hamcrest:hamcrest-library from 2.2 to 3.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.9.0 to 3.9.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-893: Added API for listing consumers in a specific environment
+  (sbakaj@redhat.com)
+- Added owner and group options to synced folder configuration
+  (sbakaj@redhat.com)
+- CANDLEPIN-878: Updated Vagrant el8 to use AlmaLinux instead of CentOS
+  (joshmalbrecht@gmail.com)
+
 * Wed Jul 31 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.13-1
 - CANDLEPIN-901: Rolled back to previous version of Apache Commons lang
   (crog@redhat.com)
