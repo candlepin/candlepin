@@ -48,6 +48,7 @@ import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.CloudIdentifierFacts;
 import org.candlepin.model.CloudProfileFacts;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -923,5 +924,80 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         Date profileModified = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
         assertEquals(profileCreated, profileModified);
+    }
+
+    @Test
+    public void testCreateConsumerWithCloudData() {
+        ConsumerDTO dto = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
+        dto.putFactsItem(CloudIdentifierFacts.AWS_ACCOUNT_ID.getValue(), "account-1");
+        dto.putFactsItem(CloudIdentifierFacts.AWS_INSTANCE_ID.getValue(), "instance-1");
+        dto.putFactsItem(CloudIdentifierFacts.AWS_MARKETPLACE_PRODUCT_CODES.getValue(), "product-1");
+        ConsumerDTO submitted = consumerResource.createConsumer(
+            dto, someuser.getUsername(), owner.getKey(), null, false);
+
+        assertNotNull(submitted);
+        Consumer result = consumerCurator.get(submitted.getId());
+        assertNotNull(result);
+        assertNotNull(result.getConsumerCloudData());
+    }
+
+    @Test
+    public void testCreateConsumerWithCloudDataWithoutFacts() {
+        ConsumerDTO dto = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
+        ConsumerDTO submitted = consumerResource.createConsumer(
+            dto, someuser.getUsername(), owner.getKey(), null, false);
+
+        assertNotNull(submitted);
+        Consumer result = consumerCurator.get(submitted.getId());
+        assertNull(result.getConsumerCloudData());
+    }
+
+    @Test
+    public void testCreateConsumerWithCloudDataJustOneFactSpecifiedAccount() {
+        ConsumerDTO dto = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
+        dto.putFactsItem(CloudIdentifierFacts.AWS_ACCOUNT_ID.getValue(), "account-1");
+        ConsumerDTO submitted = consumerResource.createConsumer(
+            dto, someuser.getUsername(), owner.getKey(), null, false);
+
+        assertNotNull(submitted);
+        Consumer result = consumerCurator.get(submitted.getId());
+        assertNotNull(result);
+        assertNotNull(result.getConsumerCloudData());
+    }
+
+    @Test
+    public void testCreateConsumerWithCloudDataJustOneFactSpecifiedInstance() {
+        ConsumerDTO dto = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
+        dto.putFactsItem(CloudIdentifierFacts.AWS_INSTANCE_ID.getValue(), "instance-1");
+        ConsumerDTO submitted = consumerResource.createConsumer(
+            dto, someuser.getUsername(), owner.getKey(), null, false);
+
+        assertNotNull(submitted);
+        Consumer result = consumerCurator.get(submitted.getId());
+        assertNotNull(result);
+        assertNotNull(result.getConsumerCloudData());
+    }
+
+    @Test
+    public void testCreateConsumerWithCloudDataJustOneFactSpecifiedOffering() {
+        ConsumerDTO dto = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
+        dto.putFactsItem(CloudIdentifierFacts.AWS_MARKETPLACE_PRODUCT_CODES.getValue(), "product-1");
+        ConsumerDTO submitted = consumerResource.createConsumer(
+            dto, someuser.getUsername(), owner.getKey(), null, false);
+
+        assertNotNull(submitted);
+        Consumer result = consumerCurator.get(submitted.getId());
+        assertNotNull(result);
+        assertNotNull(result.getConsumerCloudData());
+    }
+
+    @Test
+    public void testCreateConsumerWithCloudDataFailDueToMultipleFacts() {
+        ConsumerDTO dto = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
+        dto.putFactsItem(CloudIdentifierFacts.AZURE_INSTANCE_ID.getValue(), "instance-1");
+        dto.putFactsItem(CloudIdentifierFacts.AWS_ACCOUNT_ID.getValue(), "account-1");
+
+        assertThrows(BadRequestException.class, () ->
+            consumerResource.createConsumer(dto, someuser.getUsername(), owner.getKey(), null, false));
     }
 }
