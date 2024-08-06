@@ -13,7 +13,8 @@
     <property name="serial.type" value="BIGINT" dbms="mysql,mariadb,hsqldb"/>
     <property name="serial.type" value="int8" dbms="postgresql"/>
 
-    <property name="cert.type" value="BLOB" dbms="mysql,mariadb,hsqldb"/>
+    <property name="cert.type" value="BLOB(1G)" dbms="hsqldb"/>
+    <property name="cert.type" value="LONGBLOB" dbms="mysql,mariadb"/>
     <property name="cert.type" value="bytea" dbms="postgresql"/>
 
     <property name="blob.type" value="BLOB" dbms="mysql,mariadb,hsqldb"/>
@@ -22,4 +23,3 @@
     <property name="text.type" value="TEXT" dbms="postgresql,hsqldb"/>
     <property name="text.type" value="LONGTEXT" dbms="mysql,mariadb"/>
 </databaseChangeLog>
-
