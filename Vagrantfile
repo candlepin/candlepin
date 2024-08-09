@@ -75,11 +75,16 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     provider.memory = 4096
     provider.graphics_type = "spice"
     provider.video_type = "qxl"
+    provider.machine_virtual_size = 30
   end
 
   config.vm.define("el8", primary: true) do |vm_config|
     vm_config.vm.box = "almalinux/8"
     vm_config.vm.host_name = "candlepin-el8.example.com"
+
+    # Increase box disk size and resize partitions accordingly
+    vm_config.vm.disk :disk, size: "30GB", primary: true
+    vm_config.vm.provision "shell", inline: "echo '- +' | sfdisk --no-reread -N 4 /dev/vda && partprobe && xfs_growfs /dev/vda4"
 
     # Vagrant allows to create a forwarded port mapping which allows access to a specific port
     # within the guest machine from a port on the host machine.
@@ -88,6 +93,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8080, host: 8080
     # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8443, host: 8443
     vm_config.vm.provision "shell", inline: "dnf update -y dnf ca-certificates"
+
     configure_ansible_provisioning(vm_config)
   end
 
@@ -95,7 +101,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     vm_config.vm.box = "centos.cloud/centos9s"
     vm_config.vm.box_url = "https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-Vagrant-9-latest.x86_64.vagrant-libvirt.box"
     vm_config.vm.host_name = "candlepin-el9.example.com"
+
+    # Increase box disk size and resize partitions accordingly
+    vm_config.vm.disk :disk, size: "30GB", primary: true
+    vm_config.vm.provision "shell", inline: "echo '- +' | sfdisk --no-reread -N 1 /dev/vda && partprobe && resize2fs /dev/vda1"
+
+    # Update DNF CA certs
     vm_config.vm.provision "shell", inline: "dnf update -y dnf ca-certificates"
+
     configure_ansible_provisioning(vm_config)
   end
 
