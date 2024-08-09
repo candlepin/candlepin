@@ -75,12 +75,14 @@ import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.filter.StoreFactory;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
+import org.candlepin.service.EventAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.impl.DefaultCloudRegistrationAdapter;
+import org.candlepin.service.impl.DefaultEventAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
@@ -298,6 +300,7 @@ public class TestingModules {
             bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
             bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);
             bind(EntitlementCertServiceAdapter.class).to(StubEntitlementCertServiceAdapter.class);
+            bind(EventAdapter.class).to(DefaultEventAdapter.class);
             bind(ManifestFileService.class).to(DBManifestService.class);
             bind(ScriptEngineProvider.class);
 
