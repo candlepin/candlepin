@@ -14,6 +14,11 @@
  */
 package org.candlepin.resource;
 
+import static org.candlepin.model.CloudIdentifierFacts.extractCloudAccountId;
+import static org.candlepin.model.CloudIdentifierFacts.extractCloudInstanceId;
+import static org.candlepin.model.CloudIdentifierFacts.extractCloudOfferingIds;
+import static org.candlepin.model.CloudIdentifierFacts.extractCloudProviderShortName;
+
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
@@ -86,6 +91,7 @@ import org.candlepin.model.Certificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerActivationKey;
 import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerCloudData;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
@@ -202,6 +208,22 @@ import javax.ws.rs.core.Response;
 public class ConsumerResource implements ConsumerApi {
 
     private static final Logger log = LoggerFactory.getLogger(ConsumerResource.class);
+
+    // Cloud Offering IDs
+    public static final String AZURE_OFFER = "azure_offer";
+    public static final String AWS_MARKETPLACE_PRODUCT_CODES = "aws_marketplace_product_codes";
+    public static final String AWS_BILLING_PRODUCTS = "aws_billing_products";
+    public static final String GCP_LICENSE_CODES = "gcp_license_codes";
+
+    // Cloud Account IDs
+    public static final String AWS_ACCOUNT_ID = "aws_account_id";
+    public static final String AZURE_SUBSCRIPTION_ID = "azure_subscription_id";
+    public static final String GCP_PROJECT_ID = "gcp_project_id";
+
+    // Instance IDs
+    public static final String AWS_INSTANCE_ID = "aws_instance_id";
+    public static final String AZURE_INSTANCE_ID = "azure_instance_id";
+    public static final String GCP_INSTANCE_ID = "gcp_instance_id";
 
     private final ConsumerCurator consumerCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
@@ -987,6 +1009,14 @@ public class ConsumerResource implements ConsumerApi {
 
         Consumer created = createConsumerFromDTO(dto, ctype, principal, userName, owner, activationKeys,
             identityCertCreation);
+
+        ConsumerCloudData consumerCloudData = createConsumerCloudData(created);
+
+        if (consumerCloudData != null) {
+            created.setConsumerCloudData(consumerCloudData);
+            this.consumerCurator.update(created);
+        }
+
         if (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal) {
             AnonymousCloudConsumer anonCloudConsumer = anonymPrincipal.getAnonymousCloudConsumer();
             anonymousCertCurator.delete(anonCloudConsumer.getContentAccessCert());
@@ -994,6 +1024,37 @@ public class ConsumerResource implements ConsumerApi {
         }
 
         return this.translator.translate(created, ConsumerDTO.class);
+    }
+
+    private ConsumerCloudData createConsumerCloudData(Consumer consumer) {
+        Map<String, String> facts = consumer.getFacts();
+
+        String cloudProviderShortName;
+        try {
+            cloudProviderShortName = extractCloudProviderShortName(facts);
+        }
+        catch (IllegalArgumentException e) {
+            throw new BadRequestException(i18n.tr(e.getMessage()));
+        }
+
+        if (cloudProviderShortName != null) {
+            String cloudAccountId = extractCloudAccountId(facts);
+            String cloudInstanceId = extractCloudInstanceId(facts);
+
+            ConsumerCloudData consumerCloudData = new ConsumerCloudData()
+                .setConsumer(consumer)
+                .setCloudProviderShortName(cloudProviderShortName)
+                .setCloudAccountId(cloudAccountId)
+                .setCloudInstanceId(cloudInstanceId);
+
+            for (String offeringId: extractCloudOfferingIds(facts)) {
+                consumerCloudData.setCloudOfferingIds(offeringId);
+            }
+
+            return consumerCloudData;
+        }
+
+        return null;
     }
 
     public Consumer createConsumerFromDTO(ConsumerDTO consumer, ConsumerType type, Principal principal,
