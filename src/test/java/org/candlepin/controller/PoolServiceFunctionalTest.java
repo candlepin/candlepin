@@ -15,8 +15,6 @@
 package org.candlepin.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.audit.EventSink;
@@ -26,7 +24,6 @@ import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
@@ -34,11 +31,9 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQualifier;
 import org.candlepin.model.Product;
-import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.resource.dto.AutobindData;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -51,7 +46,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -182,10 +176,8 @@ public class PoolServiceFunctionalTest extends DatabaseTestFixture {
         subscriptions.add(sub4);
 
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
-        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(virtHost, virtHostPlatform,
-            virtGuest, monitoring, provisioning);
 
-        refresherFactory.getRefresher(subAdapter, prodAdapter).add(o).run();
+        refresherFactory.getRefresher(subAdapter).add(o).run();
 
         this.systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumerTypeCurator.create(systemType);
@@ -275,46 +267,6 @@ public class PoolServiceFunctionalTest extends DatabaseTestFixture {
                 bind(EventSink.class).toInstance(eventSink);
             }
         };
-    }
-
-    @Test
-    public void testDevPoolRemovalAtUnbind() throws EntitlementRefusedException {
-        Owner owner = createOwner();
-        Product p = TestUtil.createProduct("test-product", "Test Product");
-        productCurator.create(p);
-
-        Consumer devSystem = new Consumer()
-            .setName("dev")
-            .setUsername("user")
-            .setOwner(owner)
-            .setType(systemType)
-            .setFact(Consumer.Facts.DEV_SKU, p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
-            .setProductId(p.getId())
-            .setProductName(p.getName()));
-        consumerCurator.create(devSystem);
-
-        Pool pool1 = createPool(owner, p, 10L,
-            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-        pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid());
-        poolCurator.create(pool1);
-        Pool pool2 = createPool(owner, p, 10L,
-            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        poolCurator.create(pool2);
-        List<String> possPools = new ArrayList<>();
-        possPools.add(pool1.getId());
-
-        AutobindData ad = new AutobindData(devSystem, owner);
-        ad.setPossiblePools(possPools);
-        List<Entitlement> results = poolManager.entitleByProducts(ad);
-        assertEquals(1, results.size());
-        assertEquals(results.get(0).getPool(), pool1);
-
-        Entitlement e = entitlementCurator.get(results.get(0).getId());
-        this.poolService.revokeEntitlement(e);
-        assertNull(poolCurator.get(pool1.getId()));
-        assertNotNull(poolCurator.get(pool2.getId()));
     }
 
     @Test

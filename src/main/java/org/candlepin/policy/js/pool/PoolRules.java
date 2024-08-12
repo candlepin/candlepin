@@ -280,10 +280,6 @@ public class PoolRules {
                 continue;
             }
 
-            if (p.isDevelopmentPool()) {
-                continue;
-            }
-
             if (p.getSourceStack() != null) {
                 Consumer c = p.getSourceStack().getSourceConsumer();
                 if (c == null) {

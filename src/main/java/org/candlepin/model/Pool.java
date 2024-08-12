@@ -77,9 +77,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         /** Attribute used to determine whether or not the pool is derived from the use of an entitlement */
         public static final String DERIVED_POOL = "pool_derived";
 
-        /** Attribute used to determine whether or not the pool was created for a development entitlement */
-        public static final String DEVELOPMENT_POOL = "dev_pool";
-
         /** Attribute used to specify consumer types allowed to consume this pool */
         public static final String ENABLED_CONSUMER_TYPES = "enabled_consumer_types";
 
@@ -138,9 +135,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         ENTITLEMENT_DERIVED,
         STACK_DERIVED,
         BONUS,
-        UNMAPPED_GUEST,
-        DEVELOPMENT;
-
+        UNMAPPED_GUEST;
         /**
          * Checks if this type represents a derived pool type
          *
@@ -1138,9 +1133,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
                 return PoolType.BONUS;
             }
         }
-        else if (hasAttribute(Attributes.DEVELOPMENT_POOL)) {
-            return PoolType.DEVELOPMENT;
-        }
 
         return PoolType.NORMAL;
     }
@@ -1182,10 +1174,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     public boolean isUnmappedGuestPool() {
         return "true".equalsIgnoreCase(this.getAttributeValue(Attributes.UNMAPPED_GUESTS_ONLY));
-    }
-
-    public boolean isDevelopmentPool() {
-        return "true".equalsIgnoreCase(this.getAttributeValue(Attributes.DEVELOPMENT_POOL));
     }
 
     public SourceSubscription getSourceSubscription() {

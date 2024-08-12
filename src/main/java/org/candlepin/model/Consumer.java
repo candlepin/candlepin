@@ -19,7 +19,6 @@ import org.candlepin.exceptions.DuplicateEntryException;
 import org.candlepin.service.model.ConsumerInfo;
 import org.candlepin.util.Util;
 
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Fetch;
@@ -99,9 +98,6 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
 
         /** The number of sockets on a given consumer; also part of the cloud profile and rules.js */
         public static final String CPU_SOCKETS = "cpu.cpu_socket(s)";
-
-        /** The developer SKU for a given consumer */
-        public static final String DEV_SKU = "dev_sku";
 
         /** */
         public static final String DISTRIBUTOR_VERSION = "distributor_version";
@@ -1114,10 +1110,6 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     public Consumer setAnnotations(String annotations) {
         this.annotations = annotations;
         return this;
-    }
-
-    public boolean isDev() {
-        return !StringUtils.isEmpty(this.getFact(Facts.DEV_SKU));
     }
 
     public boolean isGuest() {

@@ -23,7 +23,6 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.controller.RefresherFactory;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import java.util.Objects;
@@ -41,7 +40,6 @@ public class RefreshPoolsForProductJob implements AsyncJob {
 
     private final ProductCurator productCurator;
     private final SubscriptionServiceAdapter subAdapter;
-    private final ProductServiceAdapter prodAdapter;
     private final RefresherFactory refresherFactory;
 
 
@@ -49,12 +47,10 @@ public class RefreshPoolsForProductJob implements AsyncJob {
     public RefreshPoolsForProductJob(
         ProductCurator productCurator,
         SubscriptionServiceAdapter subAdapter,
-        ProductServiceAdapter prodAdapter,
         RefresherFactory refresherFactory) {
 
         this.productCurator = Objects.requireNonNull(productCurator);
         this.subAdapter = Objects.requireNonNull(subAdapter);
-        this.prodAdapter = Objects.requireNonNull(prodAdapter);
         this.refresherFactory = Objects.requireNonNull(refresherFactory);
     }
 
@@ -69,7 +65,7 @@ public class RefreshPoolsForProductJob implements AsyncJob {
         final Product product = this.productCurator.get(productUuid);
 
         if (product != null) {
-            this.refresherFactory.getRefresher(this.subAdapter, this.prodAdapter)
+            this.refresherFactory.getRefresher(this.subAdapter)
                 .setLazyCertificateRegeneration(true)
                 .add(product)
                 .run();

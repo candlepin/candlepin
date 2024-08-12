@@ -19,7 +19,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.exception.product.ProductServiceException;
 import org.candlepin.service.exception.subscription.SubscriptionServiceException;
@@ -46,7 +45,6 @@ public class Refresher {
 
     private final PoolManager poolManager;
     private final SubscriptionServiceAdapter subAdapter;
-    private final ProductServiceAdapter prodAdapter;
     private final OwnerCurator ownerCurator;
     private final PoolCurator poolCurator;
     private final PoolConverter poolConverter;
@@ -56,12 +54,10 @@ public class Refresher {
     private boolean lazy;
 
     public Refresher(PoolManager poolManager, SubscriptionServiceAdapter subAdapter,
-        ProductServiceAdapter prodAdapter, OwnerCurator ownerCurator, PoolCurator poolCurator,
-        PoolConverter poolConverter) {
+        OwnerCurator ownerCurator, PoolCurator poolCurator, PoolConverter poolConverter) {
 
         this.poolManager = Objects.requireNonNull(poolManager);
         this.subAdapter = Objects.requireNonNull(subAdapter);
-        this.prodAdapter = Objects.requireNonNull(prodAdapter);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.poolCurator = Objects.requireNonNull(poolCurator);
         this.poolConverter = Objects.requireNonNull(poolConverter);
@@ -185,7 +181,7 @@ public class Refresher {
 
         for (Owner owner : this.owners.values()) {
             try {
-                poolManager.refreshPoolsWithRegeneration(this.subAdapter, this.prodAdapter, owner, this.lazy);
+                poolManager.refreshPoolsWithRegeneration(this.subAdapter, owner, this.lazy);
                 recalculatePoolQuantitiesForOwner(owner);
                 updateRefreshDate(owner);
             }

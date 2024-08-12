@@ -16,7 +16,6 @@ package org.candlepin.controller;
 
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PoolCurator;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import java.util.Objects;
@@ -41,8 +40,8 @@ public class RefresherFactory {
         this.poolConverter = Objects.requireNonNull(poolConverter);
     }
 
-    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, ProductServiceAdapter prodAdapter) {
-        return new Refresher(this.poolManager, subAdapter, prodAdapter, this.ownerCurator, this.poolCurator,
+    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter) {
+        return new Refresher(this.poolManager, subAdapter, this.ownerCurator, this.poolCurator,
             this.poolConverter);
     }
 

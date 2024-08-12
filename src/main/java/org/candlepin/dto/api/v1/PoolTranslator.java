@@ -102,7 +102,6 @@ public class PoolTranslator implements ObjectTranslator<Pool, PoolDTO> {
             .upstreamConsumerId(source.getUpstreamConsumerId())
             .stackId(source.getStackId())
             .stacked(source.isStacked())
-            .developmentPool(source.isDevelopmentPool())
             .sourceStackId(source.getSourceStackId())
             .subscriptionSubKey(source.getSubscriptionSubKey())
             .subscriptionId(source.getSubscriptionId())

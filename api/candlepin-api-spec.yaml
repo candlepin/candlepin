@@ -9417,8 +9417,6 @@ components:
               type: boolean
             sourceStackId:
               type: string
-            developmentPool:
-              type: boolean
             href:
               type: string
             derivedProductAttributes:

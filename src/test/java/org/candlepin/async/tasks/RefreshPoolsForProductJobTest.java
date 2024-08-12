@@ -33,7 +33,6 @@ import org.candlepin.controller.Refresher;
 import org.candlepin.controller.RefresherFactory;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -47,7 +46,6 @@ public class RefreshPoolsForProductJobTest {
     private static final String VALID_NAME = "valid_name";
     private static final String INVALID_ID = "";
     private ProductCurator productCurator;
-    private ProductServiceAdapter prodAdapter;
     private SubscriptionServiceAdapter subAdapter;
     private RefresherFactory refresherFactory;
 
@@ -55,15 +53,13 @@ public class RefreshPoolsForProductJobTest {
     public void setUp() {
         productCurator = mock(ProductCurator.class);
         subAdapter = mock(SubscriptionServiceAdapter.class);
-        prodAdapter = mock(ProductServiceAdapter.class);
         refresherFactory = mock(RefresherFactory.class);
     }
 
     @Test
     public void shouldSucceed() throws Exception {
         final String expected = "Pools refreshed for product: " + VALID_ID + "\n";
-        final AsyncJob job = new RefreshPoolsForProductJob(productCurator, subAdapter,
-            prodAdapter, refresherFactory);
+        final AsyncJob job = new RefreshPoolsForProductJob(productCurator, subAdapter, refresherFactory);
         final Product product = new Product(INVALID_ID, VALID_NAME);
         product.setUuid(VALID_ID);
         final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
@@ -74,7 +70,7 @@ public class RefreshPoolsForProductJobTest {
         doReturn(product).when(productCurator).get(eq(VALID_ID));
 
         Refresher mockRefresher = mock(Refresher.class);
-        doReturn(mockRefresher).when(this.refresherFactory).getRefresher(any(), any());
+        doReturn(mockRefresher).when(this.refresherFactory).getRefresher(any());
         doReturn(mockRefresher).when(mockRefresher).add(any(Product.class));
         doReturn(mockRefresher).when(mockRefresher).setLazyCertificateRegeneration(anyBoolean());
 
@@ -107,8 +103,7 @@ public class RefreshPoolsForProductJobTest {
 
     @Test
     public void shouldFailWhenProductNotFound() throws Exception {
-        final AsyncJob job = new RefreshPoolsForProductJob(productCurator, subAdapter,
-            prodAdapter, refresherFactory);
+        final AsyncJob job = new RefreshPoolsForProductJob(productCurator, subAdapter, refresherFactory);
         final Product product = new Product(INVALID_ID, VALID_NAME);
         final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
             .setProduct(product)

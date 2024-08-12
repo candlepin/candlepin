@@ -52,7 +52,6 @@ import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.resource.dto.AutobindData;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -208,10 +207,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscriptions.add(sub4);
 
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
-        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(virtHost, virtHostPlatform,
-            virtGuest, monitoring, provisioning);
 
-        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(o).run();
+        this.refresherFactory.getRefresher(subAdapter).add(o).run();
 
         this.systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumerTypeCurator.create(systemType);
@@ -350,9 +347,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscriptions.add(sub);
 
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
-        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(modifier);
 
-        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(o).run();
+        this.refresherFactory.getRefresher(subAdapter).add(o).run();
 
         // This test simulates https://bugzilla.redhat.com/show_bug.cgi?id=676870
         // where entitling first to the modifier then to the modifiee causes the modifier's
@@ -404,9 +400,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         // set up initial pool
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
-        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(product1, product2);
 
-        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(o).run();
+        this.refresherFactory.getRefresher(subAdapter).add(o).run();
 
         List<Pool> pools = listPoolsByOwnerAndProduct(o, product1.getId());
         assertEquals(1, pools.size());
@@ -415,7 +410,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscription.setProduct(this.modelTranslator.translate(product2, ProductDTO.class));
 
         // set up initial pool
-        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(o).run();
+        this.refresherFactory.getRefresher(subAdapter).add(o).run();
 
         pools = listPoolsByOwnerAndProduct(o, product2.getId());
         assertEquals(1, pools.size());
@@ -585,119 +580,27 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testListConditionDevPools() {
+    public void testBatchBindError() {
         Owner owner = createOwner();
-        Product p = TestUtil.createProduct("test-product", "Test Product");
-        productCurator.create(p);
+        Product product = TestUtil.createProduct("test-product", "Test Product");
+        product.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
+        productCurator.create(product);
 
-        Pool pool1 = createPool(owner, p, 10L,
-            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-        poolCurator.create(pool1);
-        Pool pool2 = createPool(owner, p, 10L,
-            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        poolCurator.create(pool2);
-
-        Consumer devSystem = new Consumer()
+        Consumer system = new Consumer()
             .setName("dev")
-            .setUsername("user")
-            .setOwner(owner)
-            .setType(systemType)
-            .setFact(Consumer.Facts.DEV_SKU, p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
-            .setProductId(p.getId())
-            .setProductName(p.getName()));
-        Consumer nonDevSystem = new Consumer()
-            .setName("system")
             .setUsername("user")
             .setOwner(owner)
             .setType(systemType);
-        nonDevSystem.addInstalledProduct(new ConsumerInstalledProduct()
-            .setProductId(p.getId())
-            .setProductName(p.getName()));
+        system.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(product.getId())
+            .setProductName(product.getName()));
+        consumerCurator.create(system);
 
-        PoolQualifier qualifier = new PoolQualifier()
-            .setConsumer(devSystem)
-            .setOwnerId(owner.getId());
-
-        Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(qualifier);
-        assertEquals(2, results.getPageData().size());
-
-        qualifier.setConsumer(nonDevSystem);
-
-        results = poolManager.listAvailableEntitlementPools(qualifier);
-        assertEquals(1, results.getPageData().size());
-        Pool found2 = results.getPageData().get(0);
-        assertEquals(pool2, found2);
-    }
-
-    @Test
-    public void testDevPoolBatchBind() throws EntitlementRefusedException {
-        Owner owner = createOwner();
-        Product p = TestUtil.createProduct("test-product", "Test Product");
-        productCurator.create(p);
-
-        Consumer devSystem = new Consumer()
-            .setName("dev")
-            .setUsername("user")
-            .setOwner(owner)
-            .setType(systemType)
-            .setFact(Consumer.Facts.DEV_SKU, p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
-            .setProductId(p.getId())
-            .setProductName(p.getName()));
-        consumerCurator.create(devSystem);
-
-        Pool pool1 = createPool(owner, p, 10L, TestUtil.createDate(2000, 3, 2),
+        Pool pool1 = createPool(owner, product, 1L, TestUtil.createDate(2000, 3, 2),
             TestUtil.createDate(2050, 3, 2));
-        pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-        pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid());
+        pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, system.getUuid());
         poolCurator.create(pool1);
-        Pool pool2 = createPool(owner, p, 10L, TestUtil.createDate(2000, 3, 2),
-            TestUtil.createDate(2050, 3, 2));
-        poolCurator.create(pool2);
-
-        Map<String, Integer> poolQuantities = new HashMap<>();
-        poolQuantities.put(pool1.getId(), 1);
-        poolQuantities.put(pool2.getId(), 1);
-
-        List<Entitlement> results = poolManager.entitleByPools(devSystem, poolQuantities);
-        assertEquals(2, results.size());
-        assertTrue(results.get(0).getPool() == pool1 || results.get(0).getPool() == pool2);
-        assertTrue(results.get(1).getPool() == pool1 || results.get(1).getPool() == pool2);
-
-        pool1 = poolCurator.get(pool1.getId());
-        pool2 = poolCurator.get(pool2.getId());
-
-        assertEquals(1, pool1.getConsumed().intValue());
-        assertEquals(1, pool2.getConsumed().intValue());
-
-    }
-
-    @Test
-    public void testBatchBindError() {
-        Owner owner = createOwner();
-        Product p = TestUtil.createProduct("test-product", "Test Product");
-        p.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
-        productCurator.create(p);
-
-        Consumer devSystem = new Consumer()
-            .setName("dev")
-            .setUsername("user")
-            .setOwner(owner)
-            .setType(systemType)
-            .setFact(Consumer.Facts.DEV_SKU, p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
-            .setProductId(p.getId())
-            .setProductName(p.getName()));
-        consumerCurator.create(devSystem);
-
-        Pool pool1 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
-            TestUtil.createDate(2050, 3, 2));
-        pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-        pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid());
-        poolCurator.create(pool1);
-        Entitlement ent = createEntitlement(owner, devSystem, pool1,
+        Entitlement ent = createEntitlement(owner, system, pool1,
             createEntitlementCertificate("keycert", "cert"));
         ent.setQuantity(1);
         entitlementCurator.create(ent);
@@ -706,10 +609,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         poolCurator.flush();
 
         assertEquals(1, poolCurator.get(pool1.getId()).getConsumed().intValue());
-        Pool pool2 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
+        Pool pool2 = createPool(owner, product, 1L, TestUtil.createDate(2000, 3, 2),
             TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool2);
-        Entitlement ent2 = createEntitlement(owner, devSystem, pool2,
+        Entitlement ent2 = createEntitlement(owner, system, pool2,
             createEntitlementCertificate("keycert", "cert"));
         ent2.setQuantity(1);
         entitlementCurator.create(ent2);
@@ -722,7 +625,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         poolQuantities.put(pool2.getId(), 1);
 
         try {
-            List<Entitlement> results = poolManager.entitleByPools(devSystem, poolQuantities);
+            poolManager.entitleByPools(system, poolQuantities);
             fail();
         }
         catch (EntitlementRefusedException e) {
@@ -739,29 +642,27 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testBatchBindZeroQuantity() throws EntitlementRefusedException {
         Owner owner = createOwner();
-        Product p = TestUtil.createProduct("test-product", "Test Product");
-        productCurator.create(p);
+        Product product = TestUtil.createProduct("test-product", "Test Product");
+        productCurator.create(product);
 
-        Consumer devSystem = new Consumer()
+        Consumer system = new Consumer()
             .setName("dev")
             .setUsername("user")
             .setOwner(owner)
-            .setType(systemType)
-            .setFact(Consumer.Facts.DEV_SKU, p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
-            .setProductId(p.getId())
-            .setProductName(p.getName()));
-        consumerCurator.create(devSystem);
+            .setType(systemType);
+        system.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(product.getId())
+            .setProductName(product.getName()));
+        consumerCurator.create(system);
 
-        Pool pool1 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
+        Pool pool1 = createPool(owner, product, 1L, TestUtil.createDate(2000, 3, 2),
             TestUtil.createDate(2050, 3, 2));
-        pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-        pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid());
+        pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, system.getUuid());
         pool1.setConsumed(1L);
         poolCurator.create(pool1);
 
         assertEquals(1, poolCurator.get(pool1.getId()).getConsumed().intValue());
-        Pool pool2 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
+        Pool pool2 = createPool(owner, product, 1L, TestUtil.createDate(2000, 3, 2),
             TestUtil.createDate(2050, 3, 2));
         pool2.setConsumed(1L);
         poolCurator.create(pool2);
@@ -770,7 +671,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         poolQuantities.put(pool1.getId(), 0);
         poolQuantities.put(pool2.getId(), 0);
 
-        List<Entitlement> results = poolManager.entitleByPools(devSystem, poolQuantities);
+        List<Entitlement> results = poolManager.entitleByPools(system, poolQuantities);
         assertEquals(2, results.size());
         assertEquals(1, results.get(0).getQuantity().intValue());
         assertEquals(1, results.get(1).getQuantity().intValue());
@@ -937,9 +838,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         // Trigger the refresh:
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
-        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
 
-        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter).add(owner).run();
         List<Pool> pools = listPoolsByOwnerAndProduct(owner, prod.getId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
@@ -980,8 +880,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         poolCurator.merge(pool);
 
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
-        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
-        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter).add(owner).run();
 
         pool = poolCurator.get(pool.getId());
         assertEquals(sub.getId(), pool.getSubscriptionId());
@@ -1016,8 +915,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         // Trigger the refresh:
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
-        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
-        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter).add(owner).run();
 
         List<Pool> pools = listPoolsByOwnerAndProduct(owner, prod.getId());
         assertEquals(1, pools.size());
@@ -1029,8 +927,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         // Trigger the refresh:
         subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
-        prodAdapter = new MockProductServiceAdapter(prod);
-        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter).add(owner).run();
         assertNull(poolCurator.get(poolId));
     }
 
@@ -1066,8 +963,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         // Trigger the refresh:
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
-        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod, prod2);
-        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter).add(owner).run();
 
         List<Pool> pools = poolCurator.listByOwner(owner);
         assertEquals(2, pools.size());
@@ -1100,9 +996,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         // Trigger the refresh:
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
-        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
 
-        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter).add(owner).run();
 
         List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
@@ -1121,8 +1016,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         // Trigger the refresh:
         subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
-        prodAdapter = new MockProductServiceAdapter(prod);
-        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter).add(owner).run();
 
         assertNull(poolCurator.get(primaryId), "Original Primary Pool should be gone");
         assertNotNull(poolCurator.get(bonusId), "Bonus Pool should be the same");
@@ -1164,9 +1058,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         // Trigger the refresh:
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
-        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
 
-        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter).add(owner).run();
 
         List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
@@ -1184,7 +1077,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         }
 
         // Trigger the refresh:
-        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter).add(owner).run();
 
         assertNull(poolCurator.get(bonusId), "Original bonus pool should be gone");
         assertNotNull(poolCurator.get(primaryId), "Primary pool should be the same");
@@ -1258,9 +1151,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertEquals(pool.getConsumed(), Long.valueOf(e1 + e2));
 
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
-        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
 
-        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(retrieved).run();
+        this.refresherFactory.getRefresher(subAdapter).add(retrieved).run();
         pool = poolCurator.get(pool.getId());
         return pool;
     }

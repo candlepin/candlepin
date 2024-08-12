@@ -1605,47 +1605,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     /**
-     * Retrieves the development pool for the provided consumer if it exists.
-     *
-     * @param consumer
-     *  the consumer to retrieve a development pool for
-     *
-     * @return the development pool, or null if it does not exist.
-     */
-    public Pool findDevPool(Consumer consumer) {
-        if (consumer == null) {
-            return null;
-        }
-
-        EntityManager em = this.entityManager.get();
-        CriteriaBuilder builder = em.getCriteriaBuilder();
-        CriteriaQuery<Pool> query = builder.createQuery(Pool.class);
-        Root<Pool> root = query.from(Pool.class);
-
-        List<Predicate> predicates = new ArrayList<>();
-        Predicate securityPredicate = this.getSecurityPredicate(Pool.class, builder, root);
-        if (securityPredicate != null) {
-            predicates.add(securityPredicate);
-        }
-
-        predicates.add(buildPoolAttributePredicate(builder, query, root, Pool.Attributes.DEVELOPMENT_POOL,
-            attr -> builder.equal(attr, "true")));
-        predicates.add(buildPoolAttributePredicate(builder, query, root, Pool.Attributes.REQUIRES_CONSUMER,
-            attr -> builder.equal(attr, consumer.getUuid())));
-        predicates.add(builder.equal(root.get(Pool_.owner), consumer.getOwner()));
-
-        query.where(predicates.toArray(new Predicate[0]));
-
-        try {
-            return em.createQuery(query)
-                .getSingleResult();
-        }
-        catch (NoResultException e) {
-            return null;
-        }
-    }
-
-    /**
     * Uses a database query to check if the pool is still
     * in the database.
     * @param pool pool to be searched in the database
@@ -2097,27 +2056,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
 
         return this.getSyspurposeAttributesByOwner(owner.getId());
-    }
-
-    /**
-     * Fetches a list of product IDs currently used by development pools for the specified owner.
-     * If no such pools exist, or the owner has no pools, this method returns an empty list.
-     *
-     * @param ownerId
-     *  the ID of the owner for which to look up development product IDs
-     *
-     * @return
-     *  a list of development product IDs for the given owner
-     */
-    public List<String> getDevPoolProductIds(String ownerId) {
-        String jpql = "SELECT prod.id FROM Pool pool JOIN pool.product prod " +
-            "WHERE pool.owner.id = :owner_id AND pool.type = :pool_type";
-
-        return this.getEntityManager()
-            .createQuery(jpql, String.class)
-            .setParameter("owner_id", ownerId)
-            .setParameter("pool_type", PoolType.DEVELOPMENT)
-            .getResultList();
     }
 
     /**

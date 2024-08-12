@@ -941,24 +941,6 @@ public class PoolRulesTest {
     }
 
     @Test
-    public void productNameChangedDevPool() {
-        PoolRules poolRules = createRules(new DevConfig(Map.of(ConfigProperties.STANDALONE, "true")));
-        Pool p = TestUtil.createPool(TestUtil.createProduct());
-        p.setSourceSubscription(null);
-        p.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-        List<Pool> floatingPools = new ArrayList<>();
-        floatingPools.add(p);
-
-        Product changed = p.getProduct();
-        changed.setName("somethingelse");
-
-        List<PoolUpdate> updates = poolRules.updatePools(floatingPools,
-            TestUtil.stubChangedProducts(changed));
-
-        assertEquals(0, updates.size());
-    }
-
-    @Test
     public void noPoolsCreatedTest() {
         PoolRules poolRules = createRules(new DevConfig(Map.of(ConfigProperties.STANDALONE, "true")));
         Product product = TestUtil.createProduct();

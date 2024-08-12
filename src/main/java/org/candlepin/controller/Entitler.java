@@ -19,9 +19,6 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.controller.refresher.RefreshResult;
-import org.candlepin.controller.refresher.RefreshResult.EntityState;
-import org.candlepin.controller.refresher.RefreshWorker;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
@@ -37,14 +34,11 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
-import org.candlepin.model.Product;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
-import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.service.model.ProductInfo;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
@@ -55,8 +49,6 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -69,14 +61,12 @@ import java.util.Objects;
 import java.util.SortedSet;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 
 
 public class Entitler {
 
     private static final Logger log = LoggerFactory.getLogger(Entitler.class);
-    private static final int MAX_DEV_LIFE_DAYS = 90;
 
     private final Configuration config;
     private final ConsumerCurator consumerCurator;
@@ -90,15 +80,12 @@ public class Entitler {
     private final PoolCurator poolCurator;
     private final PoolManager poolManager;
     private final PoolService poolService;
-    private final ProductServiceAdapter productAdapter;
-    private final Provider<RefreshWorker> refreshWorkerProvider;
 
     @Inject
     public Entitler(PoolManager pm, PoolService poolService, ConsumerCurator cc, I18n i18n,
         EventFactory evtFactory, EventSink sink, EntitlementRulesTranslator messageTranslator,
         EntitlementCurator entitlementCurator, Configuration config,
-        OwnerCurator ownerCurator, PoolCurator poolCurator, ProductServiceAdapter productAdapter,
-        ConsumerTypeCurator ctc, Provider<RefreshWorker> refreshWorkerProvider) {
+        OwnerCurator ownerCurator, PoolCurator poolCurator, ConsumerTypeCurator ctc) {
 
         this.poolManager = Objects.requireNonNull(pm);
         this.poolService = Objects.requireNonNull(poolService);
@@ -111,9 +98,7 @@ public class Entitler {
         this.config = Objects.requireNonNull(config);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.poolCurator = Objects.requireNonNull(poolCurator);
-        this.productAdapter = Objects.requireNonNull(productAdapter);
         this.consumerTypeCurator = Objects.requireNonNull(ctc);
-        this.refreshWorkerProvider = Objects.requireNonNull(refreshWorkerProvider);
     }
 
     public List<Entitlement> bindByPoolQuantity(Consumer consumer, String poolId, Integer quantity) {
@@ -218,37 +203,33 @@ public class Entitler {
         Owner owner = data.getOwner();
         ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
 
-        if (!consumer.isDev()) {
-            // Don't autobind if the org's autobind is entirely disabled
-            if (owner.isAutobindDisabled()) {
-                log.info("Auto-attach is disabled for org {}; skipping auto-attach for consumer {}",
-                    owner.getKey(), consumer.getUuid());
-                throw new AutobindDisabledForOwnerException(this.i18n.tr(
-                    "Auto-attach is disabled for owner {0}", owner.getKey()));
-            }
+        // Don't autobind if the org's autobind is entirely disabled
+        if (owner.isAutobindDisabled()) {
+            log.info("Auto-attach is disabled for org {}; skipping auto-attach for consumer {}",
+                owner.getKey(), consumer.getUuid());
+            throw new AutobindDisabledForOwnerException(this.i18n.tr(
+                "Auto-attach is disabled for owner {0}", owner.getKey()));
+        }
 
-            // Don't autobind if the consumer is a hypervisor and hypervisor autobind is disabled in this org
-            if (owner.isAutobindHypervisorDisabled() && ConsumerTypeEnum.HYPERVISOR.matches(type)) {
-                log.info("Auto-attach is disabled for hypervisors of org {}; skipping auto-attach for " +
-                    "consumer {}", owner.getKey(), consumer.getUuid());
-                throw new AutobindHypervisorDisabledException(this.i18n.tr(
-                    "Auto-attach is disabled for hypervisors of owner {0}", owner.getKey()));
-            }
+        // Don't autobind if the consumer is a hypervisor and hypervisor autobind is disabled in this org
+        if (owner.isAutobindHypervisorDisabled() && ConsumerTypeEnum.HYPERVISOR.matches(type)) {
+            log.info("Auto-attach is disabled for hypervisors of org {}; skipping auto-attach for " +
+                "consumer {}", owner.getKey(), consumer.getUuid());
+            throw new AutobindHypervisorDisabledException(this.i18n.tr(
+                "Auto-attach is disabled for hypervisors of owner {0}", owner.getKey()));
+        }
 
-            // Don't autobind if the org is in SCA mode; but also don't fail?
-            if (owner.isUsingSimpleContentAccess()) {
-                log.info("Auto-attach is disabled for owner {} while using simple content access",
-                    owner.getKey());
+        // Don't autobind if the org is in SCA mode; but also don't fail?
+        if (owner.isUsingSimpleContentAccess()) {
+            log.info("Auto-attach is disabled for owner {} while using simple content access",
+                owner.getKey());
 
-                // TODO: Investigate why this path doesn't fail, but the other disabled cases do
-                return Collections.EMPTY_LIST;
-            }
+            // TODO: Investigate why this path doesn't fail, but the other disabled cases do
+            return Collections.EMPTY_LIST;
         }
 
         // If the consumer is a guest, and has a host, try to heal the host first
-        // Dev consumers should not need to worry about the host or unmapped guest
-        // entitlements based on the planned design of the subscriptions
-        if (consumer.hasFact(Consumer.Facts.VIRT_UUID) && !consumer.isDev()) {
+        if (consumer.hasFact(Consumer.Facts.VIRT_UUID)) {
             String guestUuid = consumer.getFact(Consumer.Facts.VIRT_UUID);
             // Remove any expired unmapped guest entitlements
             revokeUnmappedGuestEntitlements(consumer);
@@ -293,28 +274,6 @@ public class Entitler {
             }
         }
 
-        if (consumer.isDev()) {
-            if (config.getBoolean(ConfigProperties.STANDALONE) ||
-                !poolCurator.hasActiveEntitlementPools(consumer.getOwnerId(), null)) {
-
-                throw new ForbiddenException(i18n.tr("Development units may only be used on hosted servers" +
-                    " and with orgs that have active subscriptions."));
-            }
-
-            // Look up the dev pool for this consumer, and if not found
-            // create one. If a dev pool already exists, remove it and
-            // create a new one.
-            String sku = consumer.getFact(Consumer.Facts.DEV_SKU);
-            Pool devPool = poolCurator.findDevPool(consumer);
-            if (devPool != null) {
-                this.poolService.deletePool(devPool);
-            }
-            devPool = this.poolService.createPool(assembleDevPool(consumer, owner, sku));
-
-            data.setPossiblePools(Arrays.asList(devPool.getId()))
-                .setProductIds(Arrays.asList(sku));
-        }
-
         // Attempt to create entitlements:
         try {
             // the pools are only used to bind the guest
@@ -334,152 +293,6 @@ public class Entitler {
         }
     }
 
-    private Date getEndDate(Product prod, Date startTime) {
-        int interval = MAX_DEV_LIFE_DAYS;
-        String prodExp = prod.getAttributeValue(Product.Attributes.TTL);
-
-        if (prodExp != null && Integer.parseInt(prodExp) < MAX_DEV_LIFE_DAYS) {
-            interval = Integer.parseInt(prodExp);
-        }
-
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(startTime);
-        cal.add(Calendar.DAY_OF_YEAR, interval);
-
-        return cal.getTime();
-    }
-
-    /**
-     * Create a development pool for the specified consumer that starts when
-     * the consumer was registered and expires after the duration specified
-     * by the SKU. The pool will be bound to the consumer via the
-     * requires_consumer attribute, meaning only the consumer can bind to
-     * entitlements from it.
-     *
-     * @param consumer the consumer the associate the pool with.
-     * @param sku the product id of the developer SKU.
-     * @return the newly created developer pool (note: not yet persisted)
-     */
-    protected Pool assembleDevPool(Consumer consumer, Owner owner, String sku) {
-        DeveloperProducts devProducts = getDeveloperPoolProducts(owner, sku);
-        Product skuProduct = devProducts.getSku();
-        Date startDate = consumer.getCreated();
-        Date endDate = getEndDate(skuProduct, startDate);
-
-        Pool pool = new Pool()
-            .setOwner(owner)
-            .setProduct(skuProduct)
-            .setQuantity(1L)
-            .setStartDate(startDate)
-            .setEndDate(endDate);
-
-        log.info("Created development pool with SKU {}", skuProduct.getId());
-        pool.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-        pool.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, consumer.getUuid());
-        return pool;
-    }
-
-    private DeveloperProducts getDeveloperPoolProducts(Owner owner, String sku) {
-        DeveloperProducts devProducts = getDevProductMap(owner, sku);
-        verifyDevProducts(sku, devProducts);
-        return devProducts;
-    }
-
-    /**
-     * Looks up all Products and their provided products
-     * matching the specified SKU.
-     *
-     * @param sku the product id of the SKU.
-     * @return a {@link DeveloperProducts} object that contains the Product objects
-     *         from the adapter.
-     */
-    private DeveloperProducts getDevProductMap(Owner owner, String sku) {
-        Collection<? extends ProductInfo> productsByIds = this.productAdapter
-            .getProductsByIds(owner.getKey(), Arrays.asList(sku));
-
-        Map<String, Product> devProductMap = new HashMap<>();
-
-        if (productsByIds != null && !productsByIds.isEmpty()) {
-            log.debug("Received {} dev product definition(s) for sku: {}", productsByIds.size(), sku);
-
-            // We're apparently only interested in the first product returned for the given sku
-            ProductInfo devProduct = productsByIds.iterator().next();
-
-            // Collect the dev product IDs from the potential tree of products we received
-            List<String> devProductIds = new ArrayList<>();
-            this.collectDevProductIds(devProductIds, devProduct);
-
-            // Do a refresh, so we're all up to date here
-            log.debug("Importing products for dev pool resolution...");
-
-            RefreshResult refreshResult = this.refreshWorkerProvider.get()
-                .addProducts(this.productAdapter.getProductsByIds(owner.getKey(), devProductIds))
-                .execute(owner);
-
-            // Step through the items we refreshed and add the resulting products to our map
-            List<EntityState> states = Arrays.asList(
-                EntityState.CREATED, EntityState.UPDATED, EntityState.UNCHANGED);
-
-            for (String pid : devProductIds) {
-                Product product = refreshResult.getEntity(Product.class, pid, states);
-
-                if (product != null) {
-                    devProductMap.put(product.getId(), product);
-                }
-            }
-        }
-
-        log.debug("Resolved {} dev product(s) for sku: {}", devProductMap.size(), sku);
-        return new DeveloperProducts(sku, devProductMap);
-    }
-
-    /**
-     * Recursively collects product IDs from the specified developer product, or any of its provided
-     * products, storing them in the given collection.
-     *
-     * @param accumulator
-     *  a collection in which to store the collected developer product IDs
-     *
-     * @param devProduct
-     *  a developer product from which to fetch product IDs
-     */
-    private void collectDevProductIds(Collection<String> accumulator, ProductInfo devProduct) {
-        if (devProduct != null) {
-            String pid = devProduct.getId();
-
-            if (pid == null || pid.isEmpty()) {
-                log.debug("Received a dev product with a null or empty ID: {}", devProduct);
-                throw new IllegalStateException("Received a dev product with a null or empty ID");
-            }
-
-            accumulator.add(pid);
-
-            Collection<? extends ProductInfo> providedProducts = devProduct.getProvidedProducts();
-            if (providedProducts != null) {
-                for (ProductInfo provided : providedProducts) {
-                    this.collectDevProductIds(accumulator, provided);
-                }
-            }
-        }
-    }
-
-    /**
-     * Verifies that the expected developer SKU product was found.
-     *
-     * @param expectedSku the product id of the developer sku that must be found
-     *                    in order to build the development pool.
-     * @param devProducts all products retrieved from the adapter that are validated.
-     * @throws ForbiddenException thrown if the sku was not found by the adapter.
-     */
-    protected void verifyDevProducts(String expectedSku, DeveloperProducts devProducts)
-        throws ForbiddenException {
-
-        if (!devProducts.foundSku()) {
-            throw new ForbiddenException(i18n.tr("SKU product not available to this development unit: " +
-                "\"{0}\"", expectedSku));
-        }
-    }
-
     /**
      * Entitles the given Consumer to the given Product. Will seek out pools
      * which provide access to this product, either directly or as a child, and
@@ -493,28 +306,9 @@ public class Entitler {
 
         List<PoolQuantity> result = new ArrayList<>();
         try {
-            if (consumer.isDev()) {
-                if (config.getBoolean(ConfigProperties.STANDALONE) ||
-                    !poolCurator.hasActiveEntitlementPools(consumer.getOwnerId(), null)) {
-                    throw new ForbiddenException(i18n.tr("Development units may only be used on" +
-                        " hosted servers and with orgs that have active subscriptions."));
-                }
 
-                // Look up the dev pool for this consumer, and if not found
-                // create one. If a dev pool already exists, remove it and
-                // create a new one.
-                String sku = consumer.getFact(Consumer.Facts.DEV_SKU);
-                Pool devPool = poolCurator.findDevPool(consumer);
-                if (devPool != null) {
-                    this.poolService.deletePool(devPool);
-                }
-                devPool = this.poolService.createPool(assembleDevPool(consumer, owner, sku));
-                result.add(new PoolQuantity(devPool, 1));
-            }
-            else {
-                result = poolManager.getBestPools(
-                    consumer, null, null, owner.getId(), serviceLevelOverride, null);
-            }
+            result = poolManager.getBestPools(
+                consumer, null, null, owner.getId(), serviceLevelOverride, null);
             log.debug("Created Pool Quantity list: {}", result);
         }
         catch (EntitlementRefusedException e) {
@@ -575,39 +369,5 @@ public class Entitler {
                 sink.queueEvent(event);
             }
         }
-    }
-
-    /**
-     * A private sub class that encapsulates the products obtained from the
-     * product adapter that are used to create the development pool. Its
-     * general purpose is to distinguish between the sku and the provided
-     * products without having to iterate a map to identify the sku.
-     */
-    private class DeveloperProducts {
-
-        private Product sku;
-        private Map<String, Product> provided;
-
-        public DeveloperProducts(String expectedSku, Map<String, Product> products) {
-            this.sku = products.remove(expectedSku);
-            this.provided = products;
-        }
-
-        public Product getSku() {
-            return sku;
-        }
-
-        public Collection<Product> getProvided() {
-            return provided.values();
-        }
-
-        public boolean foundSku() {
-            return sku != null;
-        }
-
-        public boolean containsProduct(String productId) {
-            return (foundSku() && productId.equals(sku.getId())) || provided.containsKey(productId);
-        }
-
     }
 }

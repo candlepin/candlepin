@@ -35,7 +35,6 @@ import org.candlepin.controller.RefresherFactory;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.TestUtil;
 
@@ -51,13 +50,11 @@ public class RefreshPoolsJobTest {
 
     @Mock protected OwnerCurator ownerCurator;
     @Mock protected RefresherFactory refresherFactory;
-    @Mock protected ProductServiceAdapter prodAdapter;
     @Mock protected SubscriptionServiceAdapter subAdapter;
     @Mock protected Refresher refresher;
 
     private RefreshPoolsJob buildRefreshPoolsJob() {
-        return new RefreshPoolsJob(this.ownerCurator, this.refresherFactory,
-            this.subAdapter, this.prodAdapter);
+        return new RefreshPoolsJob(this.ownerCurator, this.refresherFactory, this.subAdapter);
     }
 
     private Owner createTestOwner(String key, String logLevel) {
@@ -135,7 +132,7 @@ public class RefreshPoolsJobTest {
         doReturn(jobConfig.getJobArguments()).when(status).getJobArguments();
 
         doReturn(owner).when(ownerCurator).getByKey("my-test-owner");
-        doReturn(refresher).when(refresherFactory).getRefresher(subAdapter, prodAdapter);
+        doReturn(refresher).when(refresherFactory).getRefresher(subAdapter);
         doReturn(refresher).when(refresher).add(owner);
         doReturn(refresher).when(refresher).setLazyCertificateRegeneration(anyBoolean());
 
@@ -164,7 +161,7 @@ public class RefreshPoolsJobTest {
         doReturn(jobConfig.getJobArguments()).when(status).getJobArguments();
 
         doReturn(owner).when(ownerCurator).getByKey("my-test-owner");
-        doReturn(refresher).when(refresherFactory).getRefresher(subAdapter, prodAdapter);
+        doReturn(refresher).when(refresherFactory).getRefresher(subAdapter);
         doReturn(refresher).when(refresher).add(owner);
         doReturn(refresher).when(refresher).setLazyCertificateRegeneration(anyBoolean());
         doThrow(new RuntimeException("something went wrong with refresh")).when(refresher).run();

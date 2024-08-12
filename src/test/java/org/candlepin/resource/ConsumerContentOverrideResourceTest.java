@@ -55,7 +55,6 @@ import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
@@ -88,8 +87,6 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     private EntitlementCertServiceAdapter entitlementCertServiceAdapter;
     @Mock
     private SubscriptionServiceAdapter subscriptionServiceAdapter;
-    @Mock
-    private ProductServiceAdapter mockProductServiceAdapter;
     @Mock
     private PoolManager poolManager;
     @Mock
@@ -154,7 +151,6 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             this.consumerCurator,
             this.consumerTypeCurator,
             this.subscriptionServiceAdapter,
-            this.mockProductServiceAdapter,
             this.entitlementCurator,
             this.idCertGenerator,
             this.entitlementCertServiceAdapter,

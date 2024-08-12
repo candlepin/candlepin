@@ -144,9 +144,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         /** Attribute providing a human-readable description of the support type; passed to the certificate */
         public static final String SUPPORT_TYPE = "support_type";
 
-        /** Attribute for specifying the TTL of a product, in days */
-        public static final String TTL = "expires_after";
-
         /** Attribute representing the product type; passed down to the certificate */
         public static final String TYPE = "type";
 

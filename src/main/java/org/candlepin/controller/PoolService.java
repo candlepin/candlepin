@@ -647,12 +647,6 @@ public class PoolService {
         Set<Pool> poolsToLock = new HashSet<>(poolsToDelete);
         for (Entitlement ent : entsToRevoke) {
             poolsToLock.add(ent.getPool());
-
-            // If we are deleting a developer entitlement, be sure to delete the
-            // associated pool as well.
-            if (ent.getPool() != null && ent.getPool().isDevelopmentPool()) {
-                poolsToDelete.add(ent.getPool());
-            }
         }
 
         this.poolCurator.lock(poolsToLock);

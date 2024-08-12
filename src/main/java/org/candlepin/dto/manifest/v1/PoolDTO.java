@@ -131,8 +131,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
     private Boolean stacked;
     private String sourceStackId;
 
-    private Boolean developmentPool;
-
     private Map<String, String> derivedProductAttributes;
 
     private String derivedProductId;
@@ -883,29 +881,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
     }
 
     /**
-     * Returns true if this is a development pool, false otherwise.
-     *
-     * @return true if this is a development pool, false otherwise.
-     */
-    @JsonProperty
-    public Boolean isDevelopmentPool() {
-        return developmentPool;
-    }
-
-    /**
-     * Sets if this is a development pool or not.
-     *
-     * @param developmentPool set if this is a development pool or not.
-     *
-     * @return a reference to this PoolDTO object.
-     */
-    @JsonIgnore
-    public PoolDTO setDevelopmentPool(Boolean developmentPool) {
-        this.developmentPool = developmentPool;
-        return this;
-    }
-
-    /**
      * Retrieves a view of the derived product attributes for the pool represented by this DTO.
      * If the derived product attributes have not yet been defined, this method returns null.
      * <p></p>
@@ -1313,7 +1288,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
                 .append(this.getProductAttributes(), that.getProductAttributes())
                 .append(this.getStackId(), that.getStackId())
                 .append(this.isStacked(), that.isStacked())
-                .append(this.isDevelopmentPool(), that.isDevelopmentPool())
                 .append(this.getDerivedProductAttributes(), that.getDerivedProductAttributes())
                 .append(this.getDerivedProductId(), that.getDerivedProductId())
                 .append(this.getDerivedProductName(), that.getDerivedProductName())
@@ -1362,7 +1336,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
             .append(this.getProductAttributes())
             .append(this.getStackId())
             .append(this.isStacked())
-            .append(this.isDevelopmentPool())
             .append(this.getDerivedProductAttributes())
             .append(this.getDerivedProductId())
             .append(this.getDerivedProductName())
@@ -1438,7 +1411,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
         this.setProductAttributes(source.getProductAttributes());
         this.setStackId(source.getStackId());
         this.setStacked(source.isStacked());
-        this.setDevelopmentPool(source.isDevelopmentPool());
         this.setDerivedProductAttributes(source.getDerivedProductAttributes());
         this.setDerivedProductId(source.getDerivedProductId());
         this.setDerivedProductName(source.getDerivedProductName());
