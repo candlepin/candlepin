@@ -113,7 +113,7 @@ public class GuestIdResourceTest {
 
         this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
             this.ownerCurator);
-        this.pagingUtilFactory = new PagingUtilFactory(i18nProvider);
+        this.pagingUtilFactory = new PagingUtilFactory(this.config, i18nProvider);
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.owner = TestUtil.createOwner();

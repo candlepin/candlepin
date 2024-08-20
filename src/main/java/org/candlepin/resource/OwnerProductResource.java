@@ -41,6 +41,8 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.ProductQueryBuilder;
+import org.candlepin.model.QueryBuilder.Inclusion;
 import org.candlepin.paging.PagingUtilFactory;
 import org.candlepin.pki.certs.ProductCertificateGenerator;
 import org.candlepin.resource.server.v1.OwnerProductApi;
@@ -553,30 +555,29 @@ public class OwnerProductResource implements OwnerProductApi {
 
     @Override
     @Transactional
+    // GET /owners/{key}/products
     public Stream<ProductDTO> getProductsByOwner(@Verify(Owner.class) String ownerKey,
-        List<String> productIds, Boolean omitGlobalEntities) {
+        List<String> productIds, List<String> productNames, String active, String custom) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        String namespace = owner.getKey();
 
-        Collection<Product> products;
+        Inclusion activeInc = Inclusion.fromApiName(active, Inclusion.EXCLUSIVE)
+            .orElseThrow(() ->
+                new BadRequestException(i18n.tr("Invalid active inclusion type: {0}", active)));
+        Inclusion customInc = Inclusion.fromApiName(custom, Inclusion.INCLUDE)
+            .orElseThrow(() ->
+                new BadRequestException(i18n.tr("Invalid custom inclusion type: {0}", custom)));
 
-        if (omitGlobalEntities == null || !omitGlobalEntities) {
-            products = productIds != null && !productIds.isEmpty() ?
-                this.productCurator.resolveProductIds(namespace, productIds).values() :
-                this.productCurator.resolveProductsByNamespace(namespace);
-        }
-        else {
-            products = productIds != null && !productIds.isEmpty() ?
-                this.productCurator.getProductsByIds(namespace, productIds).values() :
-                this.productCurator.getProductsByNamespace(namespace);
-        }
+        ProductQueryBuilder queryBuilder = this.productCurator.getProductQueryBuilder()
+            .addOwners(owner)
+            .addProductIds(productIds)
+            .addProductNames(productNames)
+            .setActive(activeInc)
+            .setCustom(customInc);
 
-        Stream<ProductDTO> stream = products.stream()
+        return this.pagingUtilFactory.forClass(Product.class)
+            .applyPaging(queryBuilder)
             .map(this.translator.getStreamMapper(Product.class, ProductDTO.class));
-
-        return this.pagingUtilFactory.forClass(ProductDTO.class)
-            .applyPaging(stream, products.size());
     }
 
     @Override

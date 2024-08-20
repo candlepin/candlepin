@@ -22,9 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 
-import org.candlepin.async.JobManager;
 import org.candlepin.dto.api.server.v1.AttributeDTO;
 import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.dto.api.server.v1.ProductCertificateDTO;
@@ -39,18 +37,28 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductContent;
+import org.candlepin.model.QueryBuilder.Inclusion;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
+import org.jboss.resteasy.core.ResteasyContext;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -59,12 +67,25 @@ import java.util.stream.Stream;
 public class OwnerProductResourceTest extends DatabaseTestFixture {
 
     private OwnerProductResource ownerProductResource;
-    private JobManager jobManager;
 
     @BeforeEach
     public void setUp() {
         ownerProductResource = this.injector.getInstance(OwnerProductResource.class);
-        this.jobManager = mock(JobManager.class);
+
+        // Make sure we don't have any latent page requests in the context
+        ResteasyContext.clearContextData();
+    }
+
+    @AfterEach
+    public void cleanup() throws Exception {
+        // Also cleanup after ourselves for other tests
+        ResteasyContext.clearContextData();
+    }
+
+    private OwnerProductResource buildResource() {
+        // TODO: We could probably move the actual invocation/creation here and removing it from the class
+        // scope, but for now, just prime our new tests to be ready for such a refactor.
+        return this.ownerProductResource;
     }
 
     private ProductDTO buildTestProductDTO() {
@@ -95,159 +116,6 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         content.setEnabled(true);
 
         product.getProductContent().add(content);
-    }
-
-    @Test
-    public void testGetProductsByOwnerFetchesAllVisibleEntities() {
-        Owner owner1 = this.createOwner("test_owner-1");
-        Owner owner2 = this.createOwner("test_owner-2");
-
-        Product product1 = TestUtil.createProduct("test_product-1", "test_product-1")
-            .setNamespace((Owner) null);
-        Product product2 = TestUtil.createProduct("test_product-2", "test_product-2")
-            .setNamespace(owner1.getKey());
-        Product product3 = TestUtil.createProduct("test_product-3", "test_product-3")
-            .setNamespace(owner2.getKey());
-
-        this.createProduct(product1);
-        this.createProduct(product2);
-        this.createProduct(product3);
-
-        ProductDTO cdto1 = this.modelTranslator.translate(product1, ProductDTO.class);
-        ProductDTO cdto2 = this.modelTranslator.translate(product2, ProductDTO.class);
-
-        Stream<ProductDTO> response = this.ownerProductResource
-            .getProductsByOwner(owner1.getKey(), List.of(), false);
-
-        assertNotNull(response);
-        assertThat(response.toList())
-            .hasSize(2)
-            .containsOnly(cdto1, cdto2);
-    }
-
-    @Test
-    public void testGetProductsByOwnerOmitsGlobalsWhenOmitFlagIsSet() {
-        Owner owner1 = this.createOwner("test_owner-1");
-        Owner owner2 = this.createOwner("test_owner-2");
-
-        Product product1 = TestUtil.createProduct("test_product-1", "test_product-1")
-            .setNamespace((Owner) null);
-        Product product2 = TestUtil.createProduct("test_product-2", "test_product-2")
-            .setNamespace(owner1.getKey());
-        Product product3 = TestUtil.createProduct("test_product-3", "test_product-3")
-            .setNamespace(owner2.getKey());
-
-        this.createProduct(product1);
-        this.createProduct(product2);
-        this.createProduct(product3);
-
-        ProductDTO cdto2 = this.modelTranslator.translate(product2, ProductDTO.class);
-
-        Stream<ProductDTO> response = this.ownerProductResource
-            .getProductsByOwner(owner1.getKey(), List.of(), true);
-
-        assertNotNull(response);
-        assertThat(response.toList())
-            .hasSize(1)
-            .containsOnly(cdto2);
-    }
-
-    @Test
-    public void testGetProductsByOwnerWithEntityIDFiltering() {
-        Owner owner1 = this.createOwner("test_owner-1");
-        Owner owner2 = this.createOwner("test_owner-2");
-
-        Product product1 = TestUtil.createProduct("test_product-1", "test_product-1")
-            .setNamespace((Owner) null);
-        Product product2 = TestUtil.createProduct("test_product-2", "test_product-2")
-            .setNamespace(owner1.getKey());
-        Product product3 = TestUtil.createProduct("test_product-3", "test_product-3")
-            .setNamespace((Owner) null);
-        Product product4 = TestUtil.createProduct("test_product-4", "test_product-4")
-            .setNamespace(owner1.getKey());
-        Product product5 = TestUtil.createProduct("test_product-5", "test_product-5")
-            .setNamespace(owner2.getKey());
-
-        this.createProduct(product1);
-        this.createProduct(product2);
-        this.createProduct(product3);
-        this.createProduct(product4);
-        this.createProduct(product5);
-
-        List<String> ids = Stream.of(product3, product4, product5)
-            .map(Product::getId)
-            .toList();
-
-        Stream<ProductDTO> response = this.ownerProductResource
-            .getProductsByOwner(owner1.getKey(), ids, false);
-
-        List<ProductDTO> expected = Stream.of(product3, product4)
-            .map(this.modelTranslator.getStreamMapper(Product.class, ProductDTO.class))
-            .toList();
-
-        assertNotNull(response);
-        assertThat(response.toList())
-            .hasSize(expected.size())
-            .containsAll(expected);
-    }
-
-    @Test
-    public void testGetProductsByOwnerWithEntityIDFilteringAndOmitGlobalsSet() {
-        Owner owner1 = this.createOwner("test_owner-1");
-        Owner owner2 = this.createOwner("test_owner-2");
-
-        Product product1 = TestUtil.createProduct("test_product-1", "test_product-1")
-            .setNamespace((Owner) null);
-        Product product2 = TestUtil.createProduct("test_product-2", "test_product-2")
-            .setNamespace(owner1.getKey());
-        Product product3 = TestUtil.createProduct("test_product-3", "test_product-3")
-            .setNamespace((Owner) null);
-        Product product4 = TestUtil.createProduct("test_product-4", "test_product-4")
-            .setNamespace(owner1.getKey());
-        Product product5 = TestUtil.createProduct("test_product-5", "test_product-5")
-            .setNamespace(owner2.getKey());
-
-        this.createProduct(product1);
-        this.createProduct(product2);
-        this.createProduct(product3);
-        this.createProduct(product4);
-        this.createProduct(product5);
-
-        List<String> ids = Stream.of(product3, product4, product5)
-            .map(Product::getId)
-            .toList();
-
-        Stream<ProductDTO> response = this.ownerProductResource
-            .getProductsByOwner(owner1.getKey(), ids, true);
-
-        List<ProductDTO> expected = Stream.of(product4)
-            .map(this.modelTranslator.getStreamMapper(Product.class, ProductDTO.class))
-            .toList();
-
-        assertNotNull(response);
-        assertThat(response.toList())
-            .hasSize(expected.size())
-            .containsAll(expected);
-    }
-
-    @Test
-    public void testGetProductsByOwnerWithNoProduct() throws Exception {
-        Owner owner = this.createOwner("test_owner");
-
-        Stream<ProductDTO> response = this.ownerProductResource
-            .getProductsByOwner(owner.getKey(), List.of(), false);
-        assertNotNull(response);
-
-        List<ProductDTO> received = response.toList();
-        assertEquals(0, received.size());
-    }
-
-    @Test
-    public void testGetProductsByOwnerBadOwner() throws Exception {
-        Owner owner = this.createOwner("test_owner");
-
-        assertThrows(NotFoundException.class,
-            () -> this.ownerProductResource.getProductsByOwner("bad owner", List.of(), false));
     }
 
     @Test
@@ -961,4 +829,547 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         assertThrows(BadRequestException.class,
             () -> ownerProductResource.getProductCertificateById(owner.getKey(), entity.getId()));
     }
+
+
+    /**
+     * Creates a set of products for use with the "testGetProductsByOwner..." family of tests below. Do
+     * not make changes to these products unless you are updating the testing for the
+     * OwnerProductResource.getProductsByOwner method, and do not use this method to set up data for any
+     * other test!
+     *
+     * Note that this test data does not create full product graphs for products. Testing the definition
+     * of "active" is left to a set of explicit tests which validates it in full.
+     */
+    private void createDataForEndpointQueryTesting() {
+        List<Owner> owners = List.of(
+            this.createOwner("owner1"),
+            this.createOwner("owner2"),
+            this.createOwner("owner3"));
+
+        List<Product> globalProducts = new ArrayList<>();
+        for (int i = 1; i <= 3; ++i) {
+            Product gprod = new Product()
+                .setId("g-prod-" + i)
+                .setName("global product " + i);
+
+            globalProducts.add(this.productCurator.create(gprod));
+        }
+
+        for (int oidx = 1; oidx <= owners.size(); ++oidx) {
+            Owner owner = owners.get(oidx - 1);
+
+            List<Product> ownerProducts = new ArrayList<>();
+
+            // create two custom products
+            for (int i = 1; i <= 3; ++i) {
+                Product cprod = new Product()
+                    .setId(String.format("o%d-prod-%d", oidx, i))
+                    .setName(String.format("%s product %d", owner.getKey(), i))
+                    .setNamespace(owner.getKey());
+
+                ownerProducts.add(this.productCurator.create(cprod));
+            }
+
+            // create some pools:
+            // - two which references a global product
+            // - two which references a custom product
+            Pool globalPool1 = this.createPool(owner, globalProducts.get(0));
+            Pool globalPool2 = this.createPool(owner, globalProducts.get(1));
+
+            Pool customPool1 = this.createPool(owner, ownerProducts.get(0));
+            Pool customPool2 = this.createPool(owner, ownerProducts.get(1));
+        }
+    }
+
+    @Test
+    public void testGetProductsByOwnerFetchesWithNoFiltering() {
+        this.createDataForEndpointQueryTesting();
+        String ownerKey = "owner2";
+
+        List<String> expectedPids = List.of("g-prod-1", "g-prod-2", "g-prod-3", "o2-prod-1", "o2-prod-2",
+            "o2-prod-3");
+
+        OwnerProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProductsByOwner(ownerKey, null, null,
+            Inclusion.INCLUDE.getAPIName(), Inclusion.INCLUDE.getAPIName());
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
+    @Test
+    public void testGetProductsByOwnerDefaultsToActiveOnly() {
+        this.createDataForEndpointQueryTesting();
+        String ownerKey = "owner2";
+
+        List<String> expectedPids = List.of("g-prod-1", "g-prod-2", "o2-prod-1", "o2-prod-2");
+
+        OwnerProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProductsByOwner(ownerKey, null, null, null, null);
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "invalid_owner" })
+    @NullAndEmptySource
+    public void testGetProductsByOwnerErrorsWithInvalidOwners(String ownerKey) {
+        this.createDataForEndpointQueryTesting();
+
+        OwnerProductResource resource = this.buildResource();
+
+        assertThrows(NotFoundException.class, () -> resource.getProductsByOwner(ownerKey, null, null,
+            Inclusion.INCLUDE.getAPIName(), Inclusion.INCLUDE.getAPIName()));
+    }
+
+    @Test
+    public void testGetProductsByOwnerFetchesWithIDFilter() {
+        this.createDataForEndpointQueryTesting();
+        String ownerKey = "owner2";
+
+        List<String> productIds = List.of("g-prod-2", "o1-prod-1", "o2-prod-2", "o3-prod-3");
+        List<String> expectedPids = List.of("g-prod-2", "o2-prod-2");
+
+        OwnerProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProductsByOwner(ownerKey, productIds, null,
+            Inclusion.INCLUDE.getAPIName(), Inclusion.INCLUDE.getAPIName());
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "invalid_prod_id" })
+    @NullAndEmptySource
+    public void testGetProductsByOwnerFetchesWithInvalidIDs(String invalidProductId) {
+        this.createDataForEndpointQueryTesting();
+        String ownerKey = "owner2";
+
+        List<String> productIds = Arrays.asList("o2-prod-1", invalidProductId);
+        List<String> expectedPids = List.of("o2-prod-1");
+
+        OwnerProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProductsByOwner(ownerKey, productIds, null,
+            Inclusion.INCLUDE.getAPIName(), Inclusion.INCLUDE.getAPIName());
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
+    @Test
+    public void testGetProductsByOwnerFetchesWithNameFilter() {
+        this.createDataForEndpointQueryTesting();
+        String ownerKey = "owner2";
+
+        List<String> productNames = Arrays.asList("global product 2", "owner1 product 1", "owner2 product 2",
+            "owner3 product 3");
+        List<String> expectedPids = List.of("g-prod-2", "o2-prod-2");
+
+        OwnerProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProductsByOwner(ownerKey, null, productNames,
+            Inclusion.INCLUDE.getAPIName(), Inclusion.INCLUDE.getAPIName());
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "invalid_prod_name" })
+    @NullAndEmptySource
+    public void testGetProductsByOwnerFetchesWithInvalidNames(String invalidProductName) {
+        this.createDataForEndpointQueryTesting();
+        String ownerKey = "owner2";
+
+        List<String> productNames = Arrays.asList("global product 2", invalidProductName);
+        List<String> expectedPids = List.of("g-prod-2");
+
+        OwnerProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProductsByOwner(ownerKey, null, productNames,
+            Inclusion.INCLUDE.getAPIName(), Inclusion.INCLUDE.getAPIName());
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
+    @Test
+    public void testGetProductsByOwnerFetchesWithOmitActiveFilter() {
+        this.createDataForEndpointQueryTesting();
+        String ownerKey = "owner2";
+
+        List<String> expectedPids = List.of("g-prod-3", "o2-prod-3");
+
+        OwnerProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProductsByOwner(ownerKey, null, null,
+            Inclusion.EXCLUDE.getAPIName(), Inclusion.INCLUDE.getAPIName());
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
+    @Test
+    public void testGetProductsByOwnerFetchesWithOnlyActiveFilter() {
+        this.createDataForEndpointQueryTesting();
+        String ownerKey = "owner2";
+
+        List<String> expectedPids = List.of("g-prod-1", "g-prod-2", "o2-prod-1", "o2-prod-2");
+
+        OwnerProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProductsByOwner(ownerKey, null, null,
+            Inclusion.EXCLUSIVE.getAPIName(), Inclusion.INCLUDE.getAPIName());
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
+    @Test
+    public void testGetProductsByOwnerFetchesWithIncludeActiveFilter() {
+        this.createDataForEndpointQueryTesting();
+        String ownerKey = "owner2";
+
+        // active = "include" with no other filters is effectively a "fetch the world" kind of option.
+        List<String> expectedPids = List.of("g-prod-1", "g-prod-2", "g-prod-3", "o2-prod-1", "o2-prod-2",
+            "o2-prod-3");
+
+        OwnerProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProductsByOwner(ownerKey, null, null,
+            Inclusion.INCLUDE.getAPIName(), Inclusion.INCLUDE.getAPIName());
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
+    @Test
+    public void testGetProductsByOwnerErrorsWithInvalidActiveFilter() {
+        Owner owner = this.createOwner("test_org");
+
+        OwnerProductResource resource = this.buildResource();
+        assertThrows(BadRequestException.class, () -> resource.getProductsByOwner(owner.getKey(), null, null,
+            "invalid_type", Inclusion.INCLUDE.getAPIName()));
+    }
+
+    @Test
+    public void testGetProductsByOwnerFetchesWithOmitCustomFilter() {
+        this.createDataForEndpointQueryTesting();
+        String ownerKey = "owner2";
+
+        List<String> expectedPids = List.of("g-prod-1", "g-prod-2", "g-prod-3");
+
+        OwnerProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProductsByOwner(ownerKey, null, null,
+            Inclusion.INCLUDE.getAPIName(), Inclusion.EXCLUDE.getAPIName());
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
+    @Test
+    public void testGetProductsByOwnerFetchesWithOnlyCustomFilter() {
+        this.createDataForEndpointQueryTesting();
+        String ownerKey = "owner2";
+
+        List<String> expectedPids = List.of("o2-prod-1", "o2-prod-2", "o2-prod-3");
+
+        OwnerProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProductsByOwner(ownerKey, null, null,
+            Inclusion.INCLUDE.getAPIName(), Inclusion.EXCLUSIVE.getAPIName());
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
+    @Test
+    public void testGetProductsByOwnerFetchesWithIncludeCustomFilter() {
+        this.createDataForEndpointQueryTesting();
+        String ownerKey = "owner2";
+
+        // custom = "include" with no other filters is effectively a "fetch the world" kind of option.
+        List<String> expectedPids = List.of("g-prod-1", "g-prod-2", "g-prod-3", "o2-prod-1", "o2-prod-2",
+            "o2-prod-3");
+
+        OwnerProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProductsByOwner(ownerKey, null, null,
+            Inclusion.INCLUDE.getAPIName(), Inclusion.INCLUDE.getAPIName());
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
+    @Test
+    public void testGetProductsByOwnerErrorsWithInvalidCustomFilter() {
+        Owner owner = this.createOwner("test_org");
+
+        OwnerProductResource resource = this.buildResource();
+        assertThrows(BadRequestException.class, () -> resource.getProductsByOwner(owner.getKey(), null, null,
+            Inclusion.INCLUDE.getAPIName(), "invalid_type"));
+    }
+
+    @Test
+    public void testGetProductsByOwnerFetchesWithMultipleFilters() {
+        this.createDataForEndpointQueryTesting();
+        String ownerKey = "owner2";
+
+        // This test configures a bunch of filters which loosely resolve to the following:
+        // - active global products: not custom, not inactive (active = only, custom = omit)
+        // - in orgs 2 or 3
+        // - matching the given list of product IDs (gp1, gp2, o1p1, o2p1, o3p2)
+        // - matching the given list of product names (gp1, gp2, gp3, o2p1, o2p2)
+        //
+        // These filters should be applied as an intersection, resulting in a singular match on gp1
+
+        List<String> productIds = List.of("g-prod-1", "g-prod-2", "o1-prod-1", "o2-prod-1", "o3-prod-2");
+        List<String> productNames = List.of("global product 1", "global product 3", "owner2 product 1",
+            "owner2 product 2");
+        String activeInclusion = Inclusion.EXCLUSIVE.getAPIName();
+        String customInclusion = Inclusion.EXCLUDE.getAPIName();
+
+        List<String> expectedPids = List.of("g-prod-1");
+
+        OwnerProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProductsByOwner(ownerKey, productIds, productNames,
+            activeInclusion, customInclusion);
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 1, 2, 3, 6, 10, 1000 })
+    public void testGetProductsByOwnerFetchesPagedResults(int pageSize) {
+        this.createDataForEndpointQueryTesting();
+        String ownerKey = "owner2";
+
+        List<String> expectedPids = List.of("g-prod-1", "g-prod-2", "g-prod-3", "o2-prod-1", "o2-prod-2",
+            "o2-prod-3");
+
+        int expectedPages = pageSize < expectedPids.size() ?
+            (expectedPids.size() / pageSize) + (expectedPids.size() % pageSize != 0 ? 1 : 0) :
+            1;
+
+        OwnerProductResource resource = this.buildResource();
+
+        List<String> found = new ArrayList<>();
+        int pages = 0;
+        while (pages < expectedPages) {
+            // Set the context page request
+            ResteasyContext.popContextData(PageRequest.class);
+            ResteasyContext.pushContext(PageRequest.class, new PageRequest()
+                .setPage(++pages)
+                .setPerPage(pageSize));
+
+            Stream<ProductDTO> output = resource.getProductsByOwner(ownerKey, null, null,
+                Inclusion.INCLUDE.getAPIName(), Inclusion.INCLUDE.getAPIName());
+
+            assertNotNull(output);
+            List<String> receivedPids = output.map(ProductDTO::getId)
+                .toList();
+
+            if (receivedPids.isEmpty()) {
+                break;
+            }
+
+            found.addAll(receivedPids);
+        }
+
+        assertEquals(expectedPages, pages);
+        assertThat(found)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "id", "name", "uuid" })
+    public void testGetProductsByOwnerFetchesOrderedResults(String field) {
+        this.createDataForEndpointQueryTesting();
+
+        String ownerKey = "owner2";
+
+        Map<String, Comparator<Product>> comparatorMap = Map.of(
+            "id", Comparator.comparing(Product::getId),
+            "name", Comparator.comparing(Product::getName),
+            "uuid", Comparator.comparing(Product::getUuid));
+
+        List<String> expectedPids = this.productCurator.resolveProductsByNamespace(ownerKey)
+            .stream()
+            .sorted(comparatorMap.get(field))
+            .map(Product::getId)
+            .toList();
+
+        ResteasyContext.pushContext(PageRequest.class, new PageRequest().setSortBy(field));
+
+        OwnerProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProductsByOwner(ownerKey, null, null,
+            Inclusion.INCLUDE.getAPIName(), Inclusion.INCLUDE.getAPIName());
+
+        // Note that this output needs to be ordered according to our expected ordering!
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyElementsOf(expectedPids);
+    }
+
+    @Test
+    public void testGetProductsByOwnerErrorsWithInvalidOrderingRequest() {
+        Owner owner = this.createOwner("test_org");
+
+        ResteasyContext.pushContext(PageRequest.class, new PageRequest().setSortBy("invalid_field_name"));
+
+        OwnerProductResource resource = this.buildResource();
+        assertThrows(BadRequestException.class, () -> resource.getProductsByOwner(owner.getKey(), null, null,
+            null, null));
+    }
+
+    // These tests verify the definition of "active" is properly implemented, ensuring "active" is defined
+    // as a product which is attached to a pool which has started and has not expired, or attached to
+    // another active product (recursively).
+    //
+    // This definition is recursive in nature, so the effect is that it should consider any product that
+    // is a descendant of a product attached to a non-future pool that hasn't yet expired.
+
+    @Test
+    public void testGetActiveProductsOnlyConsidersActivePools() {
+        // - "active" only considers pools which have started but not expired (start time < now() < end time)
+        Owner owner = this.createOwner("test_org");
+
+        Product prod1 = this.createProduct("prod1");
+        Product prod2 = this.createProduct("prod2");
+        Product prod3 = this.createProduct("prod3");
+
+        Function<Integer, Date> days = (offset) -> TestUtil.createDateOffset(0, 0, offset);
+        Date now = new Date();
+
+        // Create three pools: expired, current (active), future
+        Pool pool1 = this.createPool(owner, prod1, 1L, days.apply(-3), days.apply(-1));
+        Pool pool2 = this.createPool(owner, prod2, 1L, days.apply(-1), days.apply(1));
+        Pool pool3 = this.createPool(owner, prod3, 1L, days.apply(1), days.apply(3));
+
+        // Active = exclusive should only find the active pool; future and expired pools should be omitted
+        OwnerProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProductsByOwner(owner.getKey(), null, null,
+            Inclusion.EXCLUSIVE.getAPIName(), Inclusion.INCLUDE.getAPIName());
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .singleElement()
+            .isEqualTo(prod2.getId());
+    }
+
+    @Test
+    public void testGetActiveProductsAlsoConsidersDescendantsOfActivePoolProducts() {
+        // - "active" includes descendants of products attached to a pool
+        Owner owner = this.createOwner("test_org");
+
+        List<Product> products = new ArrayList<>();
+        for (int i = 0; i < 20; ++i) {
+            Product product = new Product()
+                .setId("p" + i)
+                .setName("product " + i);
+
+            products.add(product);
+        }
+
+        /*
+        pool -> prod - p0
+                    derived - p1
+                        provided - p2
+                        provided - p3
+                            provided - p4
+                    provided - p5
+                    provided - p6
+
+        pool -> prod - p7
+                    derived - p8*
+                    provided - p9
+
+        pool -> prod - p8*
+                    provided - p10
+                        provided - p11
+                    provided - p12
+                        provided - p13
+
+                prod - p14
+                    derived - p15
+                        provided - p16
+
+                prod - p17
+                    provided - p18
+
+        pool -> prod - p19
+                prod - p20
+        */
+
+        products.get(0).setDerivedProduct(products.get(1));
+        products.get(0).addProvidedProduct(products.get(5));
+        products.get(0).addProvidedProduct(products.get(6));
+
+        products.get(1).addProvidedProduct(products.get(2));
+        products.get(1).addProvidedProduct(products.get(3));
+
+        products.get(3).addProvidedProduct(products.get(4));
+
+        products.get(7).setDerivedProduct(products.get(8));
+        products.get(7).addProvidedProduct(products.get(9));
+
+        products.get(8).addProvidedProduct(products.get(10));
+        products.get(8).addProvidedProduct(products.get(12));
+
+        products.get(10).addProvidedProduct(products.get(11));
+
+        products.get(12).addProvidedProduct(products.get(13));
+
+        products.get(14).setDerivedProduct(products.get(15));
+
+        products.get(15).setDerivedProduct(products.get(16));
+
+        products.get(17).setDerivedProduct(products.get(18));
+
+        // persist the products in reverse order so we don't hit any hibernate errors
+        for (int i = products.size() - 1; i >= 0; --i) {
+            this.productCurator.create(products.get(i));
+        }
+
+        Pool pool1 = this.createPool(owner, products.get(0));
+        Pool pool2 = this.createPool(owner, products.get(7));
+        Pool pool3 = this.createPool(owner, products.get(8));
+        Pool pool4 = this.createPool(owner, products.get(19));
+
+        List<String> expectedPids = List.of("p0", "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9",
+            "p10", "p11", "p12", "p13", "p19");
+
+        OwnerProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProductsByOwner(owner.getKey(), null, null,
+            Inclusion.EXCLUSIVE.getAPIName(), Inclusion.INCLUDE.getAPIName());
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
 }

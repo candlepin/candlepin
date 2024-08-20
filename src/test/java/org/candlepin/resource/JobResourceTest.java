@@ -878,7 +878,7 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         ResteasyContext.pushContext(PageRequest.class, pageRequest);
 
-        doThrow(new InvalidOrderKeyException()).when(this.jobManager).findJobs(any());
+        doThrow(new InvalidOrderKeyException("bad key", null)).when(this.jobManager).findJobs(any());
 
         JobResource resource = this.buildJobResource();
         assertThrows(BadRequestException.class,

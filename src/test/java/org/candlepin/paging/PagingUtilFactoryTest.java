@@ -22,6 +22,9 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
+
 import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,12 +43,14 @@ import javax.inject.Provider;
 
 public class PagingUtilFactoryTest {
 
+    private Configuration config;
     private Provider<I18n> i18nProvider;
 
     @BeforeEach
     public void beforeEach() {
         ResteasyContext.clearContextData();
 
+        this.config = TestConfig.defaults();
         this.i18nProvider = () -> I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
     }
 
@@ -55,7 +60,7 @@ public class PagingUtilFactoryTest {
     }
 
     private PagingUtilFactory buildPagingUtilFactory() {
-        return new PagingUtilFactory(this.i18nProvider);
+        return new PagingUtilFactory(this.config, this.i18nProvider);
     }
 
     private void setSortingPageRequestContext(String sortBy, PageRequest.Order order) {
