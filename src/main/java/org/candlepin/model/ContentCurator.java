@@ -69,6 +69,16 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
     }
 
     /**
+     * Fetches a query builder to use for fetching products by various criteria.
+     *
+     * @return
+     *  a new ContentQueryBuilder instance backed by this curator's data provider
+     */
+    public ContentQueryBuilder getContentQueryBuilder() {
+        return new ContentQueryBuilder(this.entityManager);
+    }
+
+    /**
      * Fetches a list of contents with the given content UUIDs. If a given content UUID was not
      * found, it will not be included in the resultant list.If no contents could be found, this
      * method returns an empty list.

@@ -642,7 +642,8 @@ public class RefreshPoolsSpecTest {
             .map(ContentDTO::getId)
             .toList();
 
-        List<ContentDTO> actualContent = adminClient.ownerContent().getContentsByOwner(ownerKey, cids, false);
+        List<ContentDTO> actualContent = adminClient.ownerContent()
+            .getContentsByOwner(ownerKey, cids, List.of(), null, null);
         assertThat(actualContent)
             .map(ContentDTO::getId)
             .containsAll(cids);

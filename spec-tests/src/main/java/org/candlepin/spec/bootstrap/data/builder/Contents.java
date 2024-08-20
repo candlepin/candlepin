@@ -15,6 +15,7 @@
 package org.candlepin.spec.bootstrap.data.builder;
 
 import org.candlepin.dto.api.client.v1.ContentDTO;
+import org.candlepin.dto.api.client.v1.ProductContentDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 import java.util.Collection;
@@ -107,5 +108,23 @@ public final class Contents {
         }
 
         return content.stream().collect(Collectors.toMap(ContentDTO::getId, Function.identity()));
+    }
+
+    /**
+     * Wraps the given content in a product content DTO, for attaching to a product
+     *
+     * @param content
+     *  the content to wrap
+     *
+     * @param enabled
+     *  the initial state of the "enabled" flag in the generated wrapper
+     *
+     * @return
+     *  a new product content DTO wrapping the given content instance
+     */
+    public static ProductContentDTO toProductContent(ContentDTO content, boolean enabled) {
+        return new ProductContentDTO()
+            .content(content)
+            .enabled(enabled);
     }
 }
