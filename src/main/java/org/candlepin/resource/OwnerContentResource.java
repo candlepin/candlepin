@@ -269,23 +269,14 @@ public class OwnerContentResource implements OwnerContentApi {
     @Override
     @Transactional
     public Stream<ContentDTO> getContentsByOwner(@Verify(Owner.class) String ownerKey,
-        List<String> contentIds, Boolean omitGlobalEntities) {
+        List<String> contentIds, List<String> contentLabels, String active, String custom) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         String namespace = owner.getKey();
 
-        Collection<Content> contents;
-
-        if (omitGlobalEntities == null || !omitGlobalEntities) {
-            contents = contentIds != null && !contentIds.isEmpty() ?
-                this.contentCurator.resolveContentIds(namespace, contentIds).values() :
-                this.contentCurator.resolveContentsByNamespace(namespace);
-        }
-        else {
-            contents = contentIds != null && !contentIds.isEmpty() ?
-                this.contentCurator.getContentsByIds(namespace, contentIds).values() :
-                this.contentCurator.getContentsByNamespace(namespace);
-        }
+        Collection<Content> contents = contentIds != null && !contentIds.isEmpty() ?
+            this.contentCurator.resolveContentIds(namespace, contentIds).values() :
+            this.contentCurator.resolveContentsByNamespace(namespace);
 
         Stream<ContentDTO> stream = contents.stream()
             .map(this.translator.getStreamMapper(Content.class, ContentDTO.class));

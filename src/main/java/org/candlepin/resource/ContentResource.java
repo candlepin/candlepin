@@ -30,10 +30,13 @@ import org.candlepin.resource.server.v1.ContentApi;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+
+
 
 public class ContentResource implements ContentApi {
 
@@ -52,7 +55,11 @@ public class ContentResource implements ContentApi {
     }
 
     @Override
-    public Stream<ContentDTO> getContents(Integer page, Integer perPage, String order, String sortBy) {
+    public Stream<ContentDTO> getContents(List<String> ownerKeys, List<String> contentIds,
+        List<String> contentLabels, String active, String custom) {
+
+        // TODO: Finish this
+
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
         ContentQueryArguments queryArgs = new ContentQueryArguments();
         long count = this.contentCurator.getContentCount();
