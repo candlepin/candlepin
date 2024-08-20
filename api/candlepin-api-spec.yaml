@@ -6076,23 +6076,90 @@ paths:
         - name: product
           in: query
           description: |
-            The ID of a product to fetch. If defined, the list of products returned by this method
-            will only include those matching the given ID. May be specified multiple times to filter
-            on multiple product IDs.
+            The ID of a product to fetch. If defined, the list of products returned by this endpoint will
+            only include those matching the given ID. May be specified multiple times to filter on multiple
+            product IDs. If multiple IDs are provided, any products matching any of the provided IDs will
+            be returned.
           required: false
           schema:
             type: array
             items:
               type: string
-        - name: omit_global
+        - name: name
           in: query
           description: |
-            whether or not to limit the lookup to only products defined within the organization's
-            namespace, excluding any globally defined products
+            The names of products to fetch. If defined, the list of products returned by this endpoint
+            will only include those matching the given names (case-insensitive). May be specified multiple
+            times to filter on multiple names. If multiple names are provided, any products matching any
+            of the provided names will be returned.
           required: false
           schema:
-            type: boolean
-            default: false
+            type: array
+            items:
+              type: string
+        - name: active
+          in: query
+          description: |
+            A value indicating how custom products are considered when fetching products, where 'active'
+            is defined as a product that is currently used by a subscription that has begun and has not
+            yet expired. Must be one of 'include', 'omit', or 'only', indicating that custom products
+            should be included, omitted (excluded), or the only types of products returned respectively.
+            Defaults to 'only'.
+          required: false
+          schema:
+            type: string
+            enum:
+              - only
+              - include
+              - omit
+            default: only
+            example:
+              only:
+                value: only
+                description: |
+                  indicates the query should only include matching active products, excluding any inactive
+                  products
+              include:
+                value: include
+                description: |
+                  indicates the query should include matching active products, along with any inactive
+                  products
+              omit:
+                value: omit
+                description: |
+                  indicates the query should omit or exclude active products, returning only matching
+                  inactive products
+        - name: custom
+          in: query
+          description: |
+            A value indicating how custom products are considered when fetching products, where 'custom'
+            is defined as a product that did not originate from a refresh operation nor manifest import.
+            Must be one of 'include', 'omit', or 'only', indicating that custom products should be included,
+            omitted (excluded), or the only types of products returned respectively. Defaults to 'include'.
+          required: false
+          schema:
+            type: string
+            enum:
+              - only
+              - include
+              - omit
+            default: include
+            example:
+              only:
+                value: only
+                description: |
+                  indicates the query should only include matching custom products, excluding any globally
+                  defined products
+              include:
+                value: include
+                description: |
+                  indicates the query should include matching custom products, along with any globally
+                  defined products
+              omit:
+                value: omit
+                description: |
+                  indicates the query should omit or exclude custom products, returning only matching
+                  globally defined products
       responses:
         200:
           description: Retrieves a list of products by owner
@@ -6988,10 +7055,105 @@ paths:
         type: java.util.stream.Stream
         isContainer: true
       parameters:
-        - $ref: "#/components/parameters/paging_page"
-        - $ref: "#/components/parameters/paging_per_page"
-        - $ref: "#/components/parameters/paging_order"
-        - $ref: "#/components/parameters/paging_sort_by"
+        - name: owner
+          in: query
+          description: |
+            The key of an owner to use to limit the product search. If defined, the list of products returned
+            by this endpoint will only include those available to the given owner. May be specified multiple
+            times to filter by multiple owners. If multiple owners are provided, products available to
+            any of the provided owners will be returned.
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: product
+          in: query
+          description: |
+            The ID of a product to fetch. If defined, the list of products returned by this endpoint will
+            only include those matching the given ID. May be specified multiple times to filter on multiple
+            product IDs. If multiple IDs are provided, any products matching any of the provided IDs will
+            be returned.
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: name
+          in: query
+          description: |
+            The names of products to fetch. If defined, the list of products returned by this endpoint
+            will only include those matching the given names (case-insensitive). May be specified multiple
+            times to filter on multiple names. If multiple names are provided, any products matching any
+            of the provided names will be returned.
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: active
+          in: query
+          description: |
+            A value indicating how custom products are considered when fetching products, where 'active'
+            is defined as a product that is currently used by a subscription that has begun and has not
+            yet expired. Must be one of 'include', 'omit', or 'only', indicating that custom products
+            should be included, omitted (excluded), or the only types of products returned respectively.
+            Defaults to 'only'.
+          required: false
+          schema:
+            type: string
+            enum:
+              - only
+              - include
+              - omit
+            default: only
+            example:
+              only:
+                value: only
+                description: |
+                  indicates the query should only include matching active products, excluding any inactive
+                  products
+              include:
+                value: include
+                description: |
+                  indicates the query should include matching active products, along with any inactive
+                  products
+              omit:
+                value: omit
+                description: |
+                  indicates the query should omit or exclude active products, returning only matching
+                  inactive products
+        - name: custom
+          in: query
+          description: |
+            A value indicating how custom products are considered when fetching products, where 'custom'
+            is defined as a product that did not originate from a refresh operation nor manifest import.
+            Must be one of 'include', 'omit', or 'only', indicating that custom products should be included,
+            omitted (excluded), or the only types of products returned respectively. Defaults to 'include'.
+          required: false
+          schema:
+            type: string
+            enum:
+              - only
+              - include
+              - omit
+            default: include
+            example:
+              only:
+                value: only
+                description: |
+                  indicates the query should only include matching custom products, excluding any globally
+                  defined products
+              include:
+                value: include
+                description: |
+                  indicates the query should include matching custom products, along with any globally
+                  defined products
+              omit:
+                value: omit
+                description: |
+                  indicates the query should omit or exclude custom products, returning only matching
+                  globally defined products
       security: []
       responses:
         200:
@@ -9481,12 +9643,12 @@ components:
         - $ref: '#/components/schemas/TimestampedEntity'
         - type: object
           properties:
-            id:
-              type: string
-              example: 5051
             uuid:
               type: string
               example: ff808081554a3e4101554a3e9033005d
+            id:
+              type: string
+              example: 5051
             name:
               type: string
               example: Admin OS Developer Bits

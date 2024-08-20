@@ -14,6 +14,10 @@
  */
 package org.candlepin.model;
 
+import java.util.Optional;
+
+import javax.persistence.metamodel.ManagedType;
+
 
 
 /**
@@ -22,55 +26,70 @@ package org.candlepin.model;
  */
 public class InvalidOrderKeyException extends IllegalArgumentException {
 
-    /**
-     * Constructs a new exception with null as its detail message. The cause is not initialized,
-     * and may subsequently be initialized by a call to initCause(java.lang.Throwable).
-     */
-    public InvalidOrderKeyException() {
-        super();
-    }
+    private final String column;
+    private final Optional<ManagedType<?>> type;
 
     /**
-     * Constructs a new exception with the specified detail message. The cause is not initialized,
-     * and may subsequently be initialized by a call to initCause(java.lang.Throwable).
+     * Constructs a new exception indicating the specified ordering column could not be applied.
      *
-     * @param message
-     *  the detail message. The detail message is saved for later retrieval by the getMessage()
-     *  method.
+     * @param column
+     *  the name of the column triggering this exception; also used as the exception message
+     *
+     * @param type
+     *  the metamodel type for the root to which the column was applied, if available
      */
-    public InvalidOrderKeyException(String message) {
-        super(message);
+    public InvalidOrderKeyException(String column, ManagedType<?> type) {
+        super(column);
+
+        if (column == null || column.isBlank()) {
+            throw new IllegalArgumentException("column is null or empty");
+        }
+
+        this.column = column;
+        this.type = Optional.ofNullable(type);
     }
 
     /**
-     * Constructs a new exception with the specified cause and a detail message of
-     * <tt>(cause == null ? null : cause.toString())</tt> (which typically contains the and
-     * detail message of cause). This constructor is useful for exceptions that are little more
-     * than wrappers for other throwables (for example, PrivilegedActionException).
+     * Constructs a new exception indicating the specified ordering column could not be applied.
+     *
+     * @param column
+     *  the name of the column triggering this exception; also used as the exception message
+     *
+     * @param type
+     *  the metamodel type for the root to which the column was applied, if available
      *
      * @param cause
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
-     *  value is permitted, and indicates that the cause is nonexistent or unknown.
+     *  value is permitted, and indicates that the cause is nonexistent or unknown
      */
-    public InvalidOrderKeyException(Throwable cause) {
-        super(cause);
+    public InvalidOrderKeyException(String column, ManagedType<?> type, Throwable cause) {
+        super(column, cause);
+
+        if (column == null || column.isBlank()) {
+            throw new IllegalArgumentException("column is null or empty");
+        }
+
+        this.column = column;
+        this.type = Optional.ofNullable(type);
     }
 
     /**
-     * Constructs a new exception with the specified detail message and cause.
-     * <p></p>
-     * Note that the detail message associated with cause is not automatically incorporated in this
-     * exception's detail message.
+     * Fetches the column name that triggered this exception.
      *
-     * @param message
-     *  the detail message. The detail message is saved for later retrieval by the getMessage()
-     *  method.
-     *
-     * @param cause
-     *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
-     *  value is permitted, and indicates that the cause is nonexistent or unknown.
+     * @return
+     *  the name of the column that triggered this exception
      */
-    public InvalidOrderKeyException(String message, Throwable cause) {
-        super(message, cause);
+    public String getColumn() {
+        return this.column;
+    }
+
+    /**
+     * Fetches the type of the root on which the order column was attempted to be applied.
+     *
+     * @return
+     *  the metamodel of the entity type, if available
+     */
+    public Optional<ManagedType<?>> getManagedType() {
+        return this.type;
     }
 }
