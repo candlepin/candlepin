@@ -14,13 +14,25 @@
  */
 package org.candlepin.paging;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.model.InvalidOrderKeyException;
+import org.candlepin.model.QueryBuilder;
 
 import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.AfterEach;
@@ -29,11 +41,14 @@ import org.junit.jupiter.api.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Stream;
+
+import javax.persistence.Query;
 
 
 
@@ -61,13 +76,14 @@ public class PagingUtilTest {
         }
     }
 
-
+    private DevConfig config;
     private I18n i18n;
 
     @BeforeEach
     public void beforeEach() {
         ResteasyContext.clearContextData();
 
+        this.config = TestConfig.defaults();
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
     }
 
@@ -77,7 +93,7 @@ public class PagingUtilTest {
     }
 
     private PagingUtil<Pageable> buildPagingUtil() {
-        return new PagingUtil<>(this.i18n, new PageableComparatorFactory());
+        return new PagingUtil<>(this.config, this.i18n, new PageableComparatorFactory());
     }
 
     public void validateContextPage(PageRequest pageRequest, int maxRecords) {
@@ -487,7 +503,7 @@ public class PagingUtilTest {
 
     @Test
     public void testNullCollectionConvertedToEmptyStream() {
-        Stream<Pageable> pagedStream = this.buildPagingUtil().applyPaging(null);
+        Stream<Pageable> pagedStream = this.buildPagingUtil().applyPaging((Collection) null);
         assertNotNull(pagedStream);
         assertEquals(0, pagedStream.count());
 
@@ -504,7 +520,7 @@ public class PagingUtilTest {
 
         ResteasyContext.pushContext(PageRequest.class, pageRequest);
 
-        Stream<Pageable> pagedStream = this.buildPagingUtil().applyPaging(null);
+        Stream<Pageable> pagedStream = this.buildPagingUtil().applyPaging((Collection) null);
         assertNotNull(pagedStream);
         assertEquals(0, pagedStream.count());
 
@@ -546,7 +562,7 @@ public class PagingUtilTest {
     }
 
     @Test
-    public void testBadRequestExceptionWhenDefaultSortByIsUnsupportedWhenPagingStream() {
+    public void testBadRequestExceptionWhenDefaultOrderingIsUnsupportedWhilePagingStream() {
         // This test verifies a BadRequestException is thrown in the case where the underlying
         // field comparator factory does not provide a default comparator, and paging has been
         // requested without specifying the sort-by field.
@@ -556,7 +572,7 @@ public class PagingUtilTest {
 
         ResteasyContext.pushContext(PageRequest.class, pageRequest);
 
-        PagingUtil<Pageable> pagingUtil = new PagingUtil<>(this.i18n, field -> null);
+        PagingUtil<Pageable> pagingUtil = new PagingUtil<>(this.config, this.i18n, field -> null);
         Stream<Pageable> input = Stream.of(new Pageable("1", "a"));
 
         Exception exception = assertThrows(BadRequestException.class, () -> pagingUtil.applyPaging(input, 1));
@@ -565,7 +581,8 @@ public class PagingUtilTest {
         assertTrue(errmsg.contains("no sort-by field provided"));
     }
 
-    public void testBadRequestExceptionWhenDefaultSortByIsUnsupportedWhenPagingCollection() {
+    @Test
+    public void testBadRequestExceptionWhenDefaultOrderingIsUnsupportedWhilePagingCollection() {
         // This test verifies a BadRequestException is thrown in the case where the underlying
         // field comparator factory does not provide a default comparator, and paging has been
         // requested without specifying the sort-by field.
@@ -575,12 +592,131 @@ public class PagingUtilTest {
 
         ResteasyContext.pushContext(PageRequest.class, pageRequest);
 
-        PagingUtil<Pageable> pagingUtil = new PagingUtil<>(this.i18n, field -> null);
+        PagingUtil<Pageable> pagingUtil = new PagingUtil<>(this.config, this.i18n, field -> null);
         List<Pageable> input = List.of(new Pageable("1", "a"));
 
         Exception exception = assertThrows(BadRequestException.class, () -> pagingUtil.applyPaging(input));
         String errmsg = exception.getMessage();
         assertNotNull(errmsg);
         assertTrue(errmsg.contains("no sort-by field provided"));
+    }
+
+    // TODO: FIXME:
+    // These tests use mocks due primarily to a lack of proper means of validating input is received and
+    // outputs are generated properly. Really this test suite should become DB backed so none of these
+    // mocks are necessary.
+
+    private QueryBuilder<QueryBuilder, QueryBuilder.Order> mockQueryBuilder(Query query, int count) {
+        return new QueryBuilder<>(() -> null) {
+            @Override
+            public long getResultCount() {
+                return count;
+            }
+
+            @Override
+            public List<QueryBuilder.Order> getResultList() {
+                this.applyQueryOffset(query);
+                this.applyQueryLimit(query);
+
+                return this.getQueryOrdering();
+            }
+
+            @Override
+            public Stream<QueryBuilder.Order> getResultStream() {
+                this.applyQueryOffset(query);
+                this.applyQueryLimit(query);
+
+                return this.getQueryOrdering()
+                    .stream();
+            }
+        };
+    }
+
+    @Test
+    public void testRequestPagingAppliedToQueryBuilder() {
+        int page = 2;
+        int pageSize = 3;
+        int offset = (page - 1) * pageSize;
+
+        Query query = mock(Query.class);
+        QueryBuilder<QueryBuilder, QueryBuilder.Order> queryBuilder = this.mockQueryBuilder(query, 10);
+
+        PageRequest pageRequest = new PageRequest()
+            .setPage(page)
+            .setPerPage(pageSize);
+
+        ResteasyContext.pushContext(PageRequest.class, pageRequest);
+
+        Stream<QueryBuilder.Order> output = this.buildPagingUtil()
+            .applyPaging(queryBuilder);
+
+        assertNotNull(output);
+
+        verify(query, times(1)).setFirstResult(eq(offset));
+        verify(query, times(1)).setMaxResults(eq(pageSize));
+    }
+
+    @Test
+    public void testRequestOrderingAppliedToQueryBuilder() {
+        String sortField = "some_column";
+        boolean descending = false;
+
+        Query query = mock(Query.class);
+        QueryBuilder<QueryBuilder, QueryBuilder.Order> queryBuilder = this.mockQueryBuilder(query, 10);
+
+        PageRequest pageRequest = new PageRequest()
+            .setSortBy(sortField)
+            .setOrder(descending ? PageRequest.Order.DESCENDING : PageRequest.Order.ASCENDING);
+
+        ResteasyContext.pushContext(PageRequest.class, pageRequest);
+
+        List<QueryBuilder.Order> output = this.buildPagingUtil()
+            .applyPaging(queryBuilder)
+            .toList();
+
+        assertThat(output)
+            .isNotNull()
+            .singleElement()
+            .returns(sortField, QueryBuilder.Order::column)
+            .returns(descending, QueryBuilder.Order::reverse);
+    }
+
+    @Test
+    public void testBadRequestExceptionWhenNoPagingSpecifiedOnLargeResultSetFromQueryBuilder() {
+        // This test verifies a BadRequestException is thrown when paging is applied to a query builder
+        // that returns more results than the configured max page size, and no paging is specified in
+        // the request context.
+
+        int count = 100;
+        int maxPageSize = 10;
+
+        this.config.setProperty(ConfigProperties.PAGING_MAX_PAGE_SIZE, String.valueOf(maxPageSize));
+
+        Query query = mock(Query.class);
+        QueryBuilder<QueryBuilder, QueryBuilder.Order> queryBuilder = this.mockQueryBuilder(query, count);
+
+        PagingUtil pagingUtil = new PagingUtil<>(this.config, this.i18n, field -> null);
+        BadRequestException exception = assertThrows(BadRequestException.class,
+            () -> pagingUtil.applyPaging(queryBuilder));
+
+        assertThat(exception.getMessage())
+            .isNotNull()
+            .contains("apply paging with a page size no larger than " + maxPageSize);
+    }
+
+    @Test
+    public void testBadRequestExceptionWhenRequestedOrderingIsUnsupportedWhilePagingQueryBuilder() {
+        Query query = mock(Query.class);
+        QueryBuilder<QueryBuilder, QueryBuilder.Order> queryBuilder = spy(this.mockQueryBuilder(query, 10));
+
+        doThrow(new InvalidOrderKeyException("bad_column", null)).when(queryBuilder).getResultList();
+
+        PagingUtil pagingUtil = new PagingUtil<>(this.config, this.i18n, field -> null);
+        BadRequestException exception = assertThrows(BadRequestException.class,
+            () -> pagingUtil.applyPaging(queryBuilder));
+
+        assertThat(exception.getMessage())
+            .isNotNull()
+            .contains("Invalid or unsupported sort-by field: ");
     }
 }

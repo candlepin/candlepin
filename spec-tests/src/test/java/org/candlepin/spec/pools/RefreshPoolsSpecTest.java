@@ -633,7 +633,7 @@ public class RefreshPoolsSpecTest {
             .toList();
 
         List<ProductDTO> actualProducts = adminClient.ownerProducts()
-            .getProductsByOwner(ownerKey, pids, false);
+            .getProductsByOwner(ownerKey, pids, null, null, "include");
         assertThat(actualProducts)
             .map(ProductDTO::getId)
             .containsAll(pids);

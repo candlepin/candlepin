@@ -20,6 +20,7 @@ import org.candlepin.spec.bootstrap.client.ApiClient;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -254,6 +255,43 @@ public class Request {
 
         this.queryParams.computeIfAbsent(key, (k) -> new ArrayList<>())
             .add(value);
+
+        return this;
+    }
+
+    /**
+     * Adds the given collection of values as query parameters to the request. Any existing values already
+     * defined for the query parameter will be retained, and the new values in the given collection will
+     * be appended. If the values collection is null or empty, it will be silently ignored and no changes
+     * will be made to the query parameter.
+     * As with the single-value form of this method, adding multiple values for a given parameter will
+     * cause all of the values to be individually mapped in the request. For example, if the query parameter
+     * "key" is assigned to values "a", "b", and "c", the request URI will contain the string
+     * "key=a&key=b&key=c".
+     *
+     * @param key
+     *  the query parameter name, or key, to set; cannot be null or empty
+     *
+     * @param values
+     *  the collection of values to assign to the query parameter
+     *
+     * @throws IllegalArgumentException
+     *  if the key is null or empty
+     *
+     * @return
+     *  a reference to this Request
+     */
+    public Request addQueryParam(String key, Collection<String> values) {
+        if (key == null || key.isEmpty()) {
+            throw new IllegalArgumentException("key is null or empty");
+        }
+
+        if (values == null || values.isEmpty()) {
+            return this;
+        }
+
+        this.queryParams.computeIfAbsent(key, (k) -> new ArrayList<>())
+            .addAll(values);
 
         return this;
     }

@@ -23,7 +23,7 @@ import java.util.LinkedList;
 
 
 /**
- * Container object for providing various arguments to the consumerlookup method(s).
+ * Container object for providing various arguments to the consumer lookup method(s).
  *
  * @param <T>
  *  The type of the QueryArguments subclass; used for method chaining
