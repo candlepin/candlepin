@@ -2881,10 +2881,107 @@ paths:
         isContainer: true
       security: []
       parameters:
-        - $ref: "#/components/parameters/paging_page"
-        - $ref: "#/components/parameters/paging_per_page"
-        - $ref: "#/components/parameters/paging_order"
-        - $ref: "#/components/parameters/paging_sort_by"
+        - name: owner
+          in: query
+          description: |
+            The key of an owner to use to limit the content search. If defined, the list of contents returned
+            by this endpoint will only include those available to the given owner. May be specified multiple
+            times to filter by multiple owners. If multiple owners are provided, contents available to
+            any of the provided owners will be returned.
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: content
+          in: query
+          description: |
+            The ID of a content to fetch. If defined, the list of contents returned by this method
+            will only include those matching the given ID. May be specified multiple times to filter
+            on multiple content IDs.
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: label
+          in: query
+          description: |
+            The labels of content to fetch. If defined, the list of content returned by this endpoint
+            will only include those matching the given labels (case-insensitive). May be specified multiple
+            times to filter on multiple labels. If multiple labels are provided, any content matching any
+            of the provided labels will be returned.
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: active
+          in: query
+          description: |
+            A value indicating how 'active' content should be considered when fetching content, where
+            'active' is defined as a content that is currently in use by a subscription with a start time
+            in the past and that has not yet expired, or in use by a product which itself is considered
+            'active.' Must be one of 'include', 'exclude', or 'exclusive' indicating that active content
+            should be included along with inactive content, excluded (omitted) from the results, or
+            exclusively selected as the only content to return.
+            Defaults to 'exclusive'.
+          required: false
+          schema:
+            type: string
+            enum:
+              - include
+              - exclude
+              - exclusive
+            default: exclusive
+            example:
+              include:
+                value: include
+                description: |
+                  indicates the query should include matching active content, along with any inactive
+                  content
+              exclude:
+                value: exclude
+                description: |
+                  indicates the query should exclude, or omit, active content, returning only matching
+                  inactive content
+              exclusive:
+                value: exclusive
+                description: |
+                  indicates the query should only include matching active content, excluding any inactive
+                  content
+        - name: custom
+          in: query
+          description: |
+            A value indicating how custom content are considered when fetching content, where 'custom'
+            is defined as content that did not originate from a refresh operation nor manifest import.
+            Must be one of 'include', 'exclude', or 'exclusive' indicating that custom content should
+            be passively included, excluded or omitted from the output, or exclusively selected
+            as the only content to return.
+          required: false
+          schema:
+            type: string
+            enum:
+              - include
+              - exclude
+              - exclusive
+            default: include
+            example:
+              include:
+                value: include
+                description: |
+                  indicates the query should include matching custom content, along with any matching
+                  globally defined content
+              exclude:
+                value: exclude
+                description: |
+                  indicates the query should exclude, or omit, custom content, returning only matching
+                  globally defined content
+              exclusive:
+                value: exclusive
+                description: |
+                  indicates the query should only include matching custom content, excluding any globally
+                  defined content
       responses:
         200:
           description: Content successfully listed
@@ -4769,15 +4866,84 @@ paths:
             type: array
             items:
               type: string
-        - name: omit_global
+        - name: label
           in: query
           description: |
-            whether or not to limit the lookup to only contents defined within the organization's
-            namespace, excluding any globally defined contents
+            The labels of content to fetch. If defined, the list of content returned by this endpoint
+            will only include those matching the given labels (case-insensitive). May be specified multiple
+            times to filter on multiple labels. If multiple labels are provided, any content matching any
+            of the provided labels will be returned.
           required: false
           schema:
-            type: boolean
-            default: false
+            type: array
+            items:
+              type: string
+        - name: active
+          in: query
+          description: |
+            A value indicating how 'active' content should be considered when fetching content, where
+            'active' is defined as a content that is currently in use by a subscription with a start time
+            in the past and that has not yet expired, or in use by a product which itself is considered
+            'active.' Must be one of 'include', 'exclude', or 'exclusive' indicating that active content
+            should be included along with inactive content, excluded (omitted) from the results, or
+            exclusively selected as the only content to return.
+            Defaults to 'exclusive'.
+          required: false
+          schema:
+            type: string
+            enum:
+              - include
+              - exclude
+              - exclusive
+            default: exclusive
+            example:
+              include:
+                value: include
+                description: |
+                  indicates the query should include matching active content, along with any inactive
+                  content
+              exclude:
+                value: exclude
+                description: |
+                  indicates the query should exclude, or omit, active content, returning only matching
+                  inactive content
+              exclusive:
+                value: exclusive
+                description: |
+                  indicates the query should only include matching active content, excluding any inactive
+                  content
+        - name: custom
+          in: query
+          description: |
+            A value indicating how custom content are considered when fetching content, where 'custom'
+            is defined as content that did not originate from a refresh operation nor manifest import.
+            Must be one of 'include', 'exclude', or 'exclusive' indicating that custom content should
+            be passively included, excluded or omitted from the output, or exclusively selected
+            as the only content to return.
+          required: false
+          schema:
+            type: string
+            enum:
+              - include
+              - exclude
+              - exclusive
+            default: include
+            example:
+              include:
+                value: include
+                description: |
+                  indicates the query should include matching custom content, along with any matching
+                  globally defined content
+              exclude:
+                value: exclude
+                description: |
+                  indicates the query should exclude, or omit, custom content, returning only matching
+                  globally defined content
+              exclusive:
+                value: exclusive
+                description: |
+                  indicates the query should only include matching custom content, excluding any globally
+                  defined content
       responses:
         200:
           description: Content successfully listed
