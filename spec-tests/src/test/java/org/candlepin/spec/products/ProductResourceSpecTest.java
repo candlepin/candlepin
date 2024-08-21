@@ -32,8 +32,12 @@ import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.JobsClient;
+import org.candlepin.spec.bootstrap.client.request.Request;
+import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
+
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
@@ -220,7 +224,20 @@ public class ProductResourceSpecTest {
                 }
             });
 
-            List<ProductDTO> products = adminClient.products().getProducts(1, 4, "asc", "created");
+            Request request = Request.from(adminClient)
+                .setPath("/products")
+                .addQueryParam("page", "1")
+                .addQueryParam("per_page", "4")
+                .addQueryParam("order", "asc")
+                .addQueryParam("sort_by", "created");
+
+            Response response = request.execute();
+            assertThat(response)
+                .isNotNull()
+                .returns(200, Response::getCode);
+
+            List<ProductDTO> products = response.deserialize(new TypeReference<List<ProductDTO>>() {});
+
             assertThat(products)
                 .isNotNull()
                 .hasSize(4);

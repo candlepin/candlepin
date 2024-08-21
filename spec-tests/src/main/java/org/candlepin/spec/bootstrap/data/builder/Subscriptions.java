@@ -38,7 +38,7 @@ public final class Subscriptions {
         return new SubscriptionDTO()
             .id(StringUtil.random("test_sub-", 8, StringUtil.CHARSET_NUMERIC_HEX))
             .quantity(10L)
-            .startDate(startDate)
+            .startDate(startDate.minusDays(1))
             .endDate(startDate.plusYears(1));
     }
 
