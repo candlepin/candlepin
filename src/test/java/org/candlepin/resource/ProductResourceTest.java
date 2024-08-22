@@ -663,6 +663,76 @@ public class ProductResourceTest extends DatabaseTestFixture {
         assertEquals(expectedPages, pages);
         assertThat(found)
             .containsExactlyInAnyOrderElementsOf(expectedPids);
+    public void testGetProductsFetchesWithMultipleFilters() {
+        this.createProductsForEndpointQueryTesting();
+
+        // This test configures a bunch of filters which loosely resolve to the following:
+        // - active global products: not custom, not inactive (active = only, custom = omit)
+        // - in orgs 2 or 3
+        // - matching the given list of product IDs (gp1, gp2, o1p1, o2p1, o3p2)
+        // - matching the given list of product names (gp1, gp2, gp3, o2p1, o2p2)
+        //
+        // These filters should be applied as an intersection, resulting in a singular match on gp1
+
+        List<String> ownerKeys = List.of("owner2", "owner3");
+        List<String> productIds = List.of("g-prod-1", "g-prod-2", "o1-prod-1", "o2-prod-1", "o3-prod-2");
+        List<String> productNames = List.of("global product 1", "global product 2", "global product 3",
+            "owner2 product 1", "owner2 product 2");
+        String activeInclusion = "only";
+        String customInclusion = "omit";
+
+        List<String> expectedPids = List.of("g-prod-1");
+
+        ProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProducts(ownerKeys, productIds, productNames, activeInclusion,
+            customInclusion);
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 1, 2, 3, 6, 10, 1000 })
+    public void testGetProductsFetchesPagedResults(int pageSize) {
+        this.createProductsForEndpointQueryTesting();
+
+        List<String> expectedPids = List.of("g-prod-1", "g-prod-2", "g-prod-3", "o1-prod-1", "o1-prod-2",
+            "o2-prod-1", "o2-prod-2", "o3-prod-1", "o3-prod-2");
+
+        int expectedPages = pageSize < expectedPids.size() ?
+            (expectedPids.size() / pageSize) + (expectedPids.size() % pageSize != 0 ? 1 : 0) :
+            1;
+
+        ProductResource resource = this.buildResource();
+
+        List<String> found = new ArrayList<>();
+        int pages = 0;
+        while (pages < expectedPages) {
+            // Set the context page request
+            ResteasyContext.popContextData(PageRequest.class);
+            ResteasyContext.pushContext(PageRequest.class, new PageRequest()
+                .setPage(++pages)
+                .setPerPage(pageSize));
+
+            Stream<ProductDTO> output = resource.getProducts(null, null, null, Inclusion.INCLUDE.getAPIName(),
+                Inclusion.INCLUDE.getAPIName());
+
+            assertNotNull(output);
+            List<String> receivedPids = output.map(ProductDTO::getId)
+                .toList();
+
+            if (receivedPids.isEmpty()) {
+                break;
+            }
+
+            found.addAll(receivedPids);
+        }
+
+        assertEquals(expectedPages, pages);
+        assertThat(found)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
     }
 
     @ParameterizedTest
@@ -825,6 +895,175 @@ public class ProductResourceTest extends DatabaseTestFixture {
         ProductResource resource = this.buildResource();
         Stream<ProductDTO> output = resource.getProducts(null, null, null, Inclusion.EXCLUSIVE.name(),
             Inclusion.INCLUDE.name());
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(expectedPids);
+    }
+
+
+    @ParameterizedTest
+    @ValueSource(strings = { "id", "name", "uuid" })
+    public void testGetProductsFetchesOrderedResults(String field) {
+        this.createProductsForEndpointQueryTesting();
+
+        Map<String, Comparator<Product>> comparatorMap = Map.of(
+            "id", Comparator.comparing(Product::getId),
+            "name", Comparator.comparing(Product::getName),
+            "uuid", Comparator.comparing(Product::getUuid));
+
+        List<String> expectedPids = this.productCurator.listAll()
+            .stream()
+            .sorted(comparatorMap.get(field))
+            .map(Product::getId)
+            .toList();
+
+        ResteasyContext.pushContext(PageRequest.class, new PageRequest().setSortBy(field));
+
+        ProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProducts(null, null, null, Inclusion.INCLUDE.getAPIName(),
+            Inclusion.INCLUDE.getAPIName());
+
+        // Note that this output needs to be ordered according to our expected ordering!
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .containsExactlyElementsOf(expectedPids);
+    }
+
+    @Test
+    public void testGetProductsErrorsWithInvalidOrderingRequest() {
+        this.createProductsForEndpointQueryTesting();
+
+        ResteasyContext.pushContext(PageRequest.class, new PageRequest().setSortBy("invalid_field_name"));
+
+        ProductResource resource = this.buildResource();
+        assertThrows(BadRequestException.class, () -> resource.getProducts(null, null, null, null, null));
+    }
+
+    /**
+     * These tests verifies the definition of "active" is properly implemented, ensuring "active" is defined
+     * as a product which is attached to a pool which has started and has not expired, or attached to
+     * another active product (recursively).
+     *
+     * This definition is recursive in nature, so the effect is that it should consider any product that
+     * is a descendant of a product attached to a non-future pool that hasn't yet expired.
+     */
+    @Test
+    public void testGetActiveProductsOnlyConsidersActivePools() {
+        // - "active" only considers pools which have started but not expired (start time < now() < end time)
+        Owner owner = this.createOwner("test_org");
+
+        Product prod1 = this.createProduct("prod1");
+        Product prod2 = this.createProduct("prod2");
+        Product prod3 = this.createProduct("prod3");
+
+        Function<Integer, Date> days = (offset) -> TestUtil.createDateOffset(0, 0, offset);
+        Date now = new Date();
+
+        // Create three pools: expired, current (active), future
+        Pool pool1 = this.createPool(owner, prod1, 1L, days.apply(-3), days.apply(-1));
+        Pool pool2 = this.createPool(owner, prod2, 1L, days.apply(-1), days.apply(1));
+        Pool pool3 = this.createPool(owner, prod3, 1L, days.apply(1), days.apply(3));
+
+        // Active = exclusive should only find the active pool; future and expired pools should be omitted
+        ProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProducts(null, null, null, Inclusion.EXCLUSIVE.getAPIName(),
+            Inclusion.INCLUDE.getAPIName());
+
+        assertThat(output)
+            .isNotNull()
+            .map(ProductDTO::getId)
+            .singleElement()
+            .isEqualTo(prod2.getId());
+    }
+
+    @Test
+    public void testGetActiveProductsAlsoConsidersDescendantsOfActivePoolProducts() {
+        // - "active" includes descendants of products attached to a pool
+        Owner owner = this.createOwner("test_org");
+
+        List<Product> products = new ArrayList<>();
+        for (int i = 0; i < 20; ++i) {
+            Product product = new Product()
+                .setId("p" + i)
+                .setName("product " + i);
+
+            products.add(product);
+        }
+
+        /*
+        pool -> prod - p0
+                    derived - p1
+                        provided - p2
+                        provided - p3
+                            provided - p4
+                    provided - p5
+                    provided - p6
+
+        pool -> prod - p7
+                    derived - p8*
+                    provided - p9
+
+        pool -> prod - p8*
+                    provided - p10
+                        provided - p11
+                    provided - p12
+                        provided - p13
+
+                prod - p14
+                    derived - p15
+                        provided - p16
+
+                prod - p17
+                    provided - p18
+
+        pool -> prod - p19
+                prod - p20
+        */
+
+        products.get(0).setDerivedProduct(products.get(1));
+        products.get(0).addProvidedProduct(products.get(5));
+        products.get(0).addProvidedProduct(products.get(6));
+
+        products.get(1).addProvidedProduct(products.get(2));
+        products.get(1).addProvidedProduct(products.get(3));
+
+        products.get(3).addProvidedProduct(products.get(4));
+
+        products.get(7).setDerivedProduct(products.get(8));
+        products.get(7).addProvidedProduct(products.get(9));
+
+        products.get(8).addProvidedProduct(products.get(10));
+        products.get(8).addProvidedProduct(products.get(12));
+
+        products.get(10).addProvidedProduct(products.get(11));
+
+        products.get(12).addProvidedProduct(products.get(13));
+
+        products.get(14).setDerivedProduct(products.get(15));
+
+        products.get(15).setDerivedProduct(products.get(16));
+
+        products.get(17).setDerivedProduct(products.get(18));
+
+        // persist the products in reverse order so we don't hit any hibernate errors
+        for (int i = products.size() - 1; i >= 0; --i) {
+            this.productCurator.create(products.get(i));
+        }
+
+        Pool pool1 = this.createPool(owner, products.get(0));
+        Pool pool2 = this.createPool(owner, products.get(7));
+        Pool pool3 = this.createPool(owner, products.get(8));
+        Pool pool4 = this.createPool(owner, products.get(19));
+
+        List<String> expectedPids = List.of("p0", "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9",
+            "p10", "p11", "p12", "p13", "p19");
+
+        ProductResource resource = this.buildResource();
+        Stream<ProductDTO> output = resource.getProducts(null, null, null, Inclusion.EXCLUSIVE.getAPIName(),
+            Inclusion.INCLUDE.getAPIName());
 
         assertThat(output)
             .isNotNull()

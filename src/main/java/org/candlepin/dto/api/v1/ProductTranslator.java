@@ -81,6 +81,7 @@ public class ProductTranslator implements ObjectTranslator<Product, ProductDTO> 
             .updated(Util.toDateTime(source.getUpdated()))
             .uuid(source.getUuid())
             .id(source.getId())
+            // .custom(source.getNamespace() != null)
             .name(source.getName())
             .multiplier(source.getMultiplier())
             .href(source.getHref())
