@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -69,6 +70,7 @@ import org.candlepin.dto.api.server.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.server.v1.ContentAccessDTO;
+import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.GoneException;
@@ -83,6 +85,7 @@ import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerCurator.ConsumerQueryArguments;
@@ -128,6 +131,7 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.exception.product.ProductServiceException;
 import org.candlepin.service.exception.subscription.SubscriptionServiceException;
+import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.FactValidator;
@@ -141,6 +145,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -275,6 +281,8 @@ public class ConsumerResourceTest {
     private SCACertificateGenerator scaCertificateGenerator;
     @Mock
     private AnonymousCertificateGenerator anonymousCertificateGenerator;
+    @Mock
+    private Principal principal;
 
     private ModelTranslator translator;
     private ConsumerResource consumerResource;
@@ -299,6 +307,11 @@ public class ConsumerResourceTest {
 
         this.consumerResource = this.buildConsumerResource();
         mockedConsumerResource = Mockito.spy(consumerResource);
+
+        ResteasyContext.pushContext(Principal.class, principal);
+
+        when(this.principal.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))
+            .thenReturn(true);
     }
 
     @AfterEach
@@ -1875,4 +1888,67 @@ public class ConsumerResourceTest {
         return idCert;
     }
 
+    @Nested
+    @DisplayName("Consumer Content Overrides Tests")
+    public class ConsumerContentOverridesTests extends DatabaseTestFixture {
+        private ConsumerResource buildResource() {
+            return this.injector.getInstance(ConsumerResource.class);
+        }
+
+        @Test
+        public void testAddConsumerContentOverrides() {
+            Owner owner = this.createOwner(TestUtil.randomString());
+            Consumer c1 = this.createConsumer(owner);
+            Consumer c2 = this.createConsumer(owner);
+
+            List<ContentOverrideDTO> overridesToAdd = new ArrayList<>();
+
+            for (int idx = 1; idx <= 3; ++idx) {
+                String name = String.format("existing-c1-co-%d", idx);
+                String label = String.format("existing-c1-label-%d", idx);
+
+                // Create and persist some initial consumer 1 content overrides
+                ConsumerContentOverride contentOverride = new ConsumerContentOverride()
+                    .setConsumer(c1)
+                    .setName(name)
+                    .setContentLabel(label)
+                    .setValue(TestUtil.randomString());
+
+                this.consumerContentOverrideCurator.create(contentOverride);
+
+                // Create and persist some initial consumer 2 content overrides
+                ConsumerContentOverride c2ContentOverride = new ConsumerContentOverride()
+                    .setConsumer(c2)
+                    .setName(String.format("c2-co-%d", idx))
+                    .setContentLabel(String.format("c2-label-%d", idx))
+                    .setValue(TestUtil.randomString());
+
+                this.consumerContentOverrideCurator.create(c2ContentOverride);
+
+                // Add a content override to update the persisted ConsumerContentOverride
+                ContentOverrideDTO contentOverrideUpdate = new ContentOverrideDTO();
+                contentOverrideUpdate.setName(name);
+                contentOverrideUpdate.setContentLabel(label);
+                contentOverrideUpdate.setValue(TestUtil.randomString(label + "-modified-"));
+
+                overridesToAdd.add(contentOverrideUpdate);
+
+                // Add an unpersisted net new content overrides
+                ContentOverrideDTO netNewContentOverride = new ContentOverrideDTO();
+                netNewContentOverride.setName(String.format("new-co-%d", idx));
+                netNewContentOverride.setContentLabel(String.format("new-co-label-%d", idx));
+                netNewContentOverride.setValue(TestUtil.randomString());
+
+                overridesToAdd.add(netNewContentOverride);
+            }
+
+            Stream<ContentOverrideDTO> actual = this.buildResource()
+                .addConsumerContentOverrides(c1.getUuid(), overridesToAdd);
+
+            assertThat(actual)
+                .isNotNull()
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
+                .containsExactlyInAnyOrderElementsOf(overridesToAdd);
+        }
+    }
 }

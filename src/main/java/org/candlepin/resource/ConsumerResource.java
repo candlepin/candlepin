@@ -401,24 +401,29 @@ public class ConsumerResource implements ConsumerApi {
         // Fetch the "parent" content override object...
         Consumer parent = this.verifyAndGetParent(consumerUuid, principal, Access.ALL);
 
-        try {
-            for (ContentOverrideDTO dto : entries) {
-                ConsumerContentOverride override = this.ccoCurator
-                    .retrieve(parent, dto.getContentLabel(), dto.getName());
+        List<ConsumerContentOverride> overrides = entries.stream()
+            .map(dto -> new ConsumerContentOverride()
+                .setConsumer(parent)
+                .setContentLabel(dto.getContentLabel())
+                .setName(dto.getName())
+                .setValue(dto.getValue()))
+            .toList();
 
-                // We're counting on Hibernate to do our batching for us here...
-                if (override != null) {
-                    override.setValue(dto.getValue());
-                    this.ccoCurator.merge(override);
+        Map<String, Map<String, ConsumerContentOverride>> overrideMap = this.ccoCurator
+            .retrieveAll(parent, overrides);
+
+        try {
+            for (ConsumerContentOverride inbound : overrides) {
+                ConsumerContentOverride existing = overrideMap
+                    .getOrDefault(inbound.getContentLabel(), Map.of())
+                    .get(inbound.getName());
+
+                if (existing != null) {
+                    existing.setValue(inbound.getValue());
+                    this.ccoCurator.merge(existing);
                 }
                 else {
-                    override = new ConsumerContentOverride()
-                        .setConsumer(parent)
-                        .setContentLabel(dto.getContentLabel())
-                        .setName(dto.getName())
-                        .setValue(dto.getValue());
-
-                    this.ccoCurator.create(override);
+                    this.ccoCurator.create(inbound);
                 }
             }
         }

@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -23,11 +24,13 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 
 
@@ -256,5 +259,69 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
 
         assertTrue(activationKeyContentOverrideCurator.getList(key).isEmpty());
         assertEquals(1, activationKeyContentOverrideCurator.getList(key2).size());
+    }
+
+    @Test
+    public void testRetrieveAllWithNullConsumer() {
+        ActivationKeyContentOverride override = new ActivationKeyContentOverride()
+            .setContentLabel(TestUtil.randomString())
+            .setName(TestUtil.randomString())
+            .setValue(TestUtil.randomString());
+
+        Map<String, Map<String, ActivationKeyContentOverride>> actual = activationKeyContentOverrideCurator
+            .retrieveAll(null, List.of(override));
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testRetrieveAll() {
+        Owner owner = this.createOwner();
+        ActivationKey key1 = this.createActivationKey(owner);
+        ActivationKey key2 = this.createActivationKey(owner);
+
+        ActivationKeyContentOverride key1Override1 = new ActivationKeyContentOverride()
+            .setKey(key1)
+            .setContentLabel("c1-repo1")
+            .setName(TestUtil.randomString())
+            .setValue(TestUtil.randomString());
+
+        ActivationKeyContentOverride key2Override1 = new ActivationKeyContentOverride()
+            .setKey(key2)
+            .setContentLabel("c2-repo1")
+            .setName(TestUtil.randomString())
+            .setValue(TestUtil.randomString());
+
+        ActivationKeyContentOverride key2Override2 = new ActivationKeyContentOverride()
+            .setKey(key2)
+            .setContentLabel("c2-repo2")
+            .setName(TestUtil.randomString())
+            .setValue(TestUtil.randomString());
+
+        ActivationKeyContentOverride key2Override3 = new ActivationKeyContentOverride()
+            .setKey(key2)
+            .setContentLabel("c2-repo3")
+            .setName(TestUtil.randomString())
+            .setValue(TestUtil.randomString());
+
+        key1Override1 = activationKeyContentOverrideCurator.create(key1Override1);
+        key2Override1 = activationKeyContentOverrideCurator.create(key2Override1);
+        key2Override2 = activationKeyContentOverrideCurator.create(key2Override2);
+        key2Override3 = activationKeyContentOverrideCurator.create(key2Override3);
+
+        Map<String, Map<String, ActivationKeyContentOverride>> actual = activationKeyContentOverrideCurator
+            .retrieveAll(key2, List.of(key2Override1, key2Override2));
+
+        Map<String, ActivationKeyContentOverride> expected1 = Map.of(key2Override1.getName(), key2Override1);
+        Map<String, ActivationKeyContentOverride> expected2 = Map.of(key2Override2.getName(), key2Override2);
+
+        assertThat(actual)
+            .isNotNull()
+            .hasSize(2)
+            .containsOnlyKeys(List.of(key2Override1.getContentLabel(), key2Override2.getContentLabel()))
+            .extractingByKeys(key2Override1.getContentLabel(), key2Override2.getContentLabel())
+            .containsExactly(expected1, expected2);
     }
 }

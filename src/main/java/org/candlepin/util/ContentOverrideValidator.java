@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -121,43 +122,31 @@ public class ContentOverrideValidator {
 
             if (!invalidLabels.isEmpty() || !invalidProps.isEmpty() || !invalidValues.isEmpty() ||
                 !invalidLengthValues.isEmpty()) {
-                StringBuilder builder = new StringBuilder();
+                StringJoiner joiner = new StringJoiner("\n");
 
                 if (!invalidLabels.isEmpty()) {
-                    builder.append(i18n.tr("The following content labels are invalid: {0}",
+                    joiner.add(i18n.tr("The following content labels are invalid: {0}",
                         String.join(", ", invalidLabels)));
                 }
 
                 if (!invalidProps.isEmpty()) {
-                    if (builder.length() > 0) {
-                        builder.append('\n');
-                    }
-
-                    builder.append(i18n.tr("The following content properties cannot be overridden: {0}",
+                    joiner.add(i18n.tr("The following content properties cannot be overridden: {0}",
                         String.join(", ", invalidProps)));
                 }
 
                 if (!invalidValues.isEmpty()) {
-                    if (builder.length() > 0) {
-                        builder.append('\n');
-                    }
-
-                    builder.append(i18n.tr("The following override values are invalid: {0}",
+                    joiner.add(i18n.tr("The following override values are invalid: {0}",
                         String.join(", ", invalidValues)));
                 }
 
                 if (!invalidLengthValues.isEmpty()) {
-                    if (builder.length() > 0) {
-                        builder.append('\n');
-                    }
-
-                    builder.append(i18n.tr("The following overrides have values longer than the " +
+                    joiner.add(i18n.tr("The following overrides have values longer than the " +
                         "maximum length of {0}: {1}",
                         ContentOverride.MAX_VALUE_LENGTH,
                         String.join(", ", invalidLengthValues)));
                 }
 
-                throw new BadRequestException(builder.toString());
+                throw new BadRequestException(joiner.toString());
             }
         }
     }

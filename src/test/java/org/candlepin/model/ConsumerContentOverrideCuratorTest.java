@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 
 
@@ -618,5 +619,69 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
             .hasSize(3)
             .usingRecursiveFieldByFieldElementComparatorOnFields("contentLabel", "name", "value")
             .containsExactlyInAnyOrder(consumerOverride1, envOverride2, consumerOverride2);
+    }
+
+    @Test
+    public void testRetrieveAllWithNullConsumer() {
+        ConsumerContentOverride override = new ConsumerContentOverride()
+            .setContentLabel(TestUtil.randomString())
+            .setName(TestUtil.randomString())
+            .setValue(TestUtil.randomString());
+
+        Map<String, Map<String, ConsumerContentOverride>> actual = consumerContentOverrideCurator
+            .retrieveAll(null, List.of(override));
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testRetrieveAll() {
+        Owner owner = this.createOwner();
+        Consumer c1 = this.createConsumer(owner);
+        Consumer c2 = this.createConsumer(owner);
+
+        ConsumerContentOverride c1Override1 = new ConsumerContentOverride()
+            .setConsumer(c1)
+            .setContentLabel("c1-repo1")
+            .setName(TestUtil.randomString())
+            .setValue(TestUtil.randomString());
+
+        ConsumerContentOverride c2Override1 = new ConsumerContentOverride()
+            .setConsumer(c2)
+            .setContentLabel("c2-repo1")
+            .setName(TestUtil.randomString())
+            .setValue(TestUtil.randomString());
+
+        ConsumerContentOverride c2Override2 = new ConsumerContentOverride()
+            .setConsumer(c2)
+            .setContentLabel("c2-repo2")
+            .setName(TestUtil.randomString())
+            .setValue(TestUtil.randomString());
+
+        ConsumerContentOverride c2Override3 = new ConsumerContentOverride()
+            .setConsumer(c2)
+            .setContentLabel("c2-repo3")
+            .setName(TestUtil.randomString())
+            .setValue(TestUtil.randomString());
+
+        c1Override1 = consumerContentOverrideCurator.create(c1Override1);
+        c2Override1 = consumerContentOverrideCurator.create(c2Override1);
+        c2Override2 = consumerContentOverrideCurator.create(c2Override2);
+        c2Override3 = consumerContentOverrideCurator.create(c2Override3);
+
+        Map<String, Map<String, ConsumerContentOverride>> actual = consumerContentOverrideCurator
+            .retrieveAll(c2, List.of(c2Override1, c2Override2));
+
+        Map<String, ConsumerContentOverride> expected1 = Map.of(c2Override1.getName(), c2Override1);
+        Map<String, ConsumerContentOverride> expected2 = Map.of(c2Override2.getName(), c2Override2);
+
+        assertThat(actual)
+            .isNotNull()
+            .hasSize(2)
+            .containsOnlyKeys(List.of(c2Override1.getContentLabel(), c2Override2.getContentLabel()))
+            .extractingByKeys(c2Override1.getContentLabel(), c2Override2.getContentLabel())
+            .containsExactly(expected1, expected2);
     }
 }

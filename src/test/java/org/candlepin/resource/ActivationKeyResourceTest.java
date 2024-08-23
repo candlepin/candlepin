@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -40,6 +41,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.activationkey.ActivationKeyRules;
@@ -52,9 +54,12 @@ import org.candlepin.util.ServiceLevelValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 
 
@@ -442,6 +447,61 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         verify(toUpdate, times(1)).setAutoAttach(update.getAutoAttach());
     }
 
+    @Test
+    public void testAddActivationKeyContentOverrides() {
+        Owner owner = this.createOwner(TestUtil.randomString());
+        ActivationKey key1 = this.createActivationKey(owner);
+        ActivationKey key2 = this.createActivationKey(owner);
+
+        List<ContentOverrideDTO> overridesToAdd = new ArrayList<>();
+
+        for (int idx = 1; idx <= 3; ++idx) {
+            String name = String.format("existing-key1-co-%d", idx);
+            String label = String.format("existing-key1-label-%d", idx);
+
+            // Create and persist some initial key 1 content overrides
+            ActivationKeyContentOverride contentOverride = new ActivationKeyContentOverride()
+                .setKey(key1)
+                .setName(name)
+                .setContentLabel(label)
+                .setValue(TestUtil.randomString());
+
+            contentOverride = this.activationKeyContentOverrideCurator.create(contentOverride);
+
+            // Create and persist some initial key 2 content overrides
+            ActivationKeyContentOverride key2ContentOverride = new ActivationKeyContentOverride()
+                .setKey(key2)
+                .setName(String.format("existing-key2-co-%d", idx))
+                .setContentLabel(String.format("existing-key2-label-%d", idx))
+                .setValue(TestUtil.randomString());
+
+            key2ContentOverride = this.activationKeyContentOverrideCurator.create(key2ContentOverride);
+
+            // Add a content override to update the persisted ActivationKeyContentOverride
+            ContentOverrideDTO contentOverrideUpdate = new ContentOverrideDTO();
+            contentOverrideUpdate.setName(name);
+            contentOverrideUpdate.setContentLabel(label);
+            contentOverrideUpdate.setValue(TestUtil.randomString(label + "-modified-"));
+
+            overridesToAdd.add(contentOverrideUpdate);
+
+            // Add an unpersisted net new content overrides
+            ContentOverrideDTO netNewContentOverride = new ContentOverrideDTO();
+            netNewContentOverride.setName(String.format("new-co-%d", idx));
+            netNewContentOverride.setContentLabel(String.format("new-label-%d", idx));
+            netNewContentOverride.setValue(TestUtil.randomString());
+
+            overridesToAdd.add(netNewContentOverride);
+        }
+
+        Stream<ContentOverrideDTO> actual = this.activationKeyResource
+            .addActivationKeyContentOverrides(key1.getId(), overridesToAdd);
+
+        assertThat(actual)
+            .isNotNull()
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
+            .containsExactlyInAnyOrderElementsOf(overridesToAdd);
+    }
 
     private Pool genPool() {
         Pool pool = new Pool();
