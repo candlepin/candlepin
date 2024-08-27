@@ -24,8 +24,10 @@ import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.ContentQueryBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.QueryBuilder.Inclusion;
 import org.candlepin.paging.PagingUtilFactory;
 import org.candlepin.resource.server.v1.OwnerContentApi;
 import org.candlepin.resource.util.InfoAdapter;
@@ -39,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -268,21 +269,29 @@ public class OwnerContentResource implements OwnerContentApi {
 
     @Override
     @Transactional
+    // GET /owners/{key}/contents
     public Stream<ContentDTO> getContentsByOwner(@Verify(Owner.class) String ownerKey,
         List<String> contentIds, List<String> contentLabels, String active, String custom) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        String namespace = owner.getKey();
 
-        Collection<Content> contents = contentIds != null && !contentIds.isEmpty() ?
-            this.contentCurator.resolveContentIds(namespace, contentIds).values() :
-            this.contentCurator.resolveContentsByNamespace(namespace);
+        Inclusion activeInc = Inclusion.fromName(active, Inclusion.EXCLUSIVE)
+            .orElseThrow(() ->
+                new BadRequestException(i18n.tr("Invalid active inclusion type: {0}", active)));
+        Inclusion customInc = Inclusion.fromName(custom, Inclusion.INCLUDE)
+            .orElseThrow(() ->
+                new BadRequestException(i18n.tr("Invalid custom inclusion type: {0}", custom)));
 
-        Stream<ContentDTO> stream = contents.stream()
+        ContentQueryBuilder queryBuilder = this.contentCurator.getContentQueryBuilder()
+            .addOwners(owner)
+            .addContentIds(contentIds)
+            .addContentLabels(contentLabels)
+            .setActive(activeInc)
+            .setCustom(customInc);
+
+        return this.pagingUtilFactory.forClass(Content.class)
+            .applyPaging(queryBuilder)
             .map(this.translator.getStreamMapper(Content.class, ContentDTO.class));
-
-        return this.pagingUtilFactory.forClass(ContentDTO.class)
-            .applyPaging(stream, contents.size());
     }
 
     @Override

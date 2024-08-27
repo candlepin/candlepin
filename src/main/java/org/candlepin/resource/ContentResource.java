@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,7 +14,6 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.ContentDTO;
@@ -22,12 +21,15 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
-import org.candlepin.model.ContentCurator.ContentQueryArguments;
-import org.candlepin.paging.Page;
-import org.candlepin.paging.PageRequest;
+import org.candlepin.model.ContentQueryBuilder;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.QueryBuilder.Inclusion;
+import org.candlepin.paging.PagingUtilFactory;
 import org.candlepin.resource.server.v1.ContentApi;
 
-import org.jboss.resteasy.core.ResteasyContext;
+import com.google.inject.persist.Transactional;
+
 import org.xnap.commons.i18n.I18n;
 
 import java.util.List;
@@ -40,60 +42,81 @@ import javax.inject.Inject;
 
 public class ContentResource implements ContentApi {
 
-    private final ContentCurator contentCurator;
-    private final I18n i18n;
-    private final ModelTranslator modelTranslator;
     private final Configuration config;
+    private final I18n i18n;
+    private final OwnerCurator ownerCurator;
+    private final ContentCurator contentCurator;
+    private final ModelTranslator modelTranslator;
+    private final PagingUtilFactory pagingUtilFactory;
 
     @Inject
-    public ContentResource(ContentCurator contentCurator, I18n i18n, ModelTranslator modelTranslator,
-        Configuration config) {
+    public ContentResource(
+        Configuration config,
+        I18n i18n,
+        OwnerCurator ownerCurator,
+        ContentCurator contentCurator,
+        ModelTranslator modelTranslator,
+        PagingUtilFactory pagingUtilFactory) {
+
+        this.config = Objects.requireNonNull(config);
         this.i18n = Objects.requireNonNull(i18n);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.contentCurator = Objects.requireNonNull(contentCurator);
         this.modelTranslator = Objects.requireNonNull(modelTranslator);
-        this.config = Objects.requireNonNull(config);
+        this.pagingUtilFactory = Objects.requireNonNull(pagingUtilFactory);
+    }
+
+    /**
+     * Retrieves an Owner instance for the owner with the specified key/account. If a matching owner could
+     * not be found, this method throws an exception.
+     *
+     * @param key
+     *  The key for the owner to retrieve
+     *
+     * @throws NotFoundException
+     *  if an owner could not be found for the specified key.
+     *
+     * @return
+     *  the Owner instance for the owner with the specified key.
+     *
+     * @httpcode 200
+     * @httpcode 404
+     */
+    private Owner resolveOwner(String key) {
+        Owner owner = this.ownerCurator.getByKey(key);
+        if (owner == null) {
+            throw new NotFoundException(i18n.tr("Owner with key \"{0}\" was not found.", key));
+        }
+
+        return owner;
     }
 
     @Override
+    @Transactional
+    // GET /contents
     public Stream<ContentDTO> getContents(List<String> ownerKeys, List<String> contentIds,
         List<String> contentLabels, String active, String custom) {
 
-        // TODO: Finish this
+        List<Owner> owners = (ownerKeys != null ? ownerKeys.stream() : Stream.<String>empty())
+            .map(this::resolveOwner)
+            .toList();
 
-        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
-        ContentQueryArguments queryArgs = new ContentQueryArguments();
-        long count = this.contentCurator.getContentCount();
+        Inclusion activeInc = Inclusion.fromName(active, Inclusion.EXCLUSIVE)
+            .orElseThrow(() ->
+                new BadRequestException(i18n.tr("Invalid active inclusion type: {0}", active)));
+        Inclusion customInc = Inclusion.fromName(custom, Inclusion.INCLUDE)
+            .orElseThrow(() ->
+                new BadRequestException(i18n.tr("Invalid custom inclusion type: {0}", custom)));
 
-        if (pageRequest != null) {
-            Page<Stream<ContentDTO>> pageResponse = new Page<>();
-            pageResponse.setPageRequest(pageRequest);
+        ContentQueryBuilder queryBuilder = this.contentCurator.getContentQueryBuilder()
+            .addOwners(owners)
+            .addContentIds(contentIds)
+            .addContentLabels(contentLabels)
+            .setActive(activeInc)
+            .setCustom(customInc);
 
-            if (pageRequest.isPaging()) {
-                queryArgs.setOffset((pageRequest.getPage() - 1) * pageRequest.getPerPage())
-                    .setLimit(pageRequest.getPerPage());
-            }
-
-            if (pageRequest.getSortBy() != null) {
-                boolean reverse = pageRequest.getOrder() == PageRequest.DEFAULT_ORDER;
-                queryArgs.addOrder(pageRequest.getSortBy(), reverse);
-            }
-
-            pageResponse.setMaxRecords((int) count);
-
-            // Store the page for the LinkHeaderResponseFilter
-            ResteasyContext.pushContext(Page.class, pageResponse);
-        }
-        // If no paging was specified, force a limit on amount of results
-        else {
-            int maxSize = config.getInt(ConfigProperties.PAGING_MAX_PAGE_SIZE);
-            if (count > maxSize) {
-                String errmsg = this.i18n.tr("This endpoint does not support returning more than {0} " +
-                    "results at a time, please use paging.", maxSize);
-                throw new BadRequestException(errmsg);
-            }
-        }
-
-        return this.contentCurator.listAll(queryArgs).stream()
+        return this.pagingUtilFactory.forClass(Content.class)
+            .applyPaging(queryBuilder)
             .map(this.modelTranslator.getStreamMapper(Content.class, ContentDTO.class));
     }
 
