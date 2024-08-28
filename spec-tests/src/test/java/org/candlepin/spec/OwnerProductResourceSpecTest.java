@@ -18,6 +18,7 @@ import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.collection;
+import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
@@ -26,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.candlepin.dto.api.client.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.client.v1.ActivationKeyProductDTO;
@@ -43,6 +45,7 @@ import org.candlepin.resource.client.v1.ActivationKeyApi;
 import org.candlepin.resource.client.v1.OwnerContentApi;
 import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.resource.client.v1.ProductsApi;
+import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
 import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
@@ -55,6 +58,7 @@ import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.ActivationKeys;
 import org.candlepin.spec.bootstrap.data.builder.Branding;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.ExportGenerator;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
@@ -75,6 +79,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.File;
+import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -295,7 +302,8 @@ public class OwnerProductResourceSpecTest {
         ProductDTO prod3 = ownerProductApi.createProduct(ownerKey, Products.random());
 
         // Note: We must account for other globals that may have been created as well
-        List<ProductDTO> products = ownerProductApi.getProductsByOwner(ownerKey, List.of(), false);
+        List<ProductDTO> products = ownerProductApi.getProductsByOwner(
+            ownerKey, List.of(), null, "include", "include");
         assertThat(products)
             .isNotNull()
             .hasSizeGreaterThanOrEqualTo(3)
@@ -313,7 +321,7 @@ public class OwnerProductResourceSpecTest {
 
         // Pick two products to use in a bulk get
         List<ProductDTO> products = ownerProductApi
-            .getProductsByOwner(ownerKey, List.of(prod1.getId(), prod3.getId()), false);
+            .getProductsByOwner(ownerKey, List.of(prod1.getId(), prod3.getId()), null, "include", "include");
 
         assertThat(products)
             .isNotNull()
@@ -370,7 +378,8 @@ public class OwnerProductResourceSpecTest {
             .setPathParam("owner_key", ownerKey)
             .addQueryParam("page", "1")
             .addQueryParam("per_page", "1")
-            .addQueryParam("omit_global", "true")
+            .addQueryParam("custom", "exclusive")
+            .addQueryParam("active", "include")
             .execute();
         assertNotNull(response);
         assertEquals(200, response.getCode());
@@ -384,7 +393,8 @@ public class OwnerProductResourceSpecTest {
             .setPathParam("owner_key", ownerKey)
             .addQueryParam("page", "2")
             .addQueryParam("per_page", "1")
-            .addQueryParam("omit_global", "true")
+            .addQueryParam("custom", "exclusive")
+            .addQueryParam("active", "include")
             .execute();
         assertNotNull(response);
         assertEquals(200, response.getCode());
@@ -398,7 +408,8 @@ public class OwnerProductResourceSpecTest {
             .setPathParam("owner_key", ownerKey)
             .addQueryParam("page", "3")
             .addQueryParam("per_page", "1")
-            .addQueryParam("omit_global", "true")
+            .addQueryParam("custom", "exclusive")
+            .addQueryParam("active", "include")
             .execute();
         assertNotNull(response);
         assertEquals(200, response.getCode());
@@ -412,7 +423,8 @@ public class OwnerProductResourceSpecTest {
             .setPathParam("owner_key", ownerKey)
             .addQueryParam("page", "4")
             .addQueryParam("per_page", "1")
-            .addQueryParam("omit_global", "true")
+            .addQueryParam("custom", "exclusive")
+            .addQueryParam("active", "include")
             .execute();
         assertNotNull(response);
         assertEquals(200, response.getCode());
@@ -443,7 +455,8 @@ public class OwnerProductResourceSpecTest {
             .addQueryParam("per_page", "1")
             .addQueryParam("sort_by", "id")
             .addQueryParam("sort_order", "asc")
-            .addQueryParam("omit_global", "true")
+            .addQueryParam("custom", "exclusive")
+            .addQueryParam("active", "include")
             .execute();
         assertNotNull(response);
         assertEquals(200, response.getCode());
@@ -459,7 +472,8 @@ public class OwnerProductResourceSpecTest {
             .addQueryParam("per_page", "1")
             .addQueryParam("sort_by", "id")
             .addQueryParam("sort_order", "asc")
-            .addQueryParam("omit_global", "true")
+            .addQueryParam("custom", "exclusive")
+            .addQueryParam("active", "include")
             .execute();
         assertNotNull(response);
         assertEquals(200, response.getCode());
@@ -475,7 +489,8 @@ public class OwnerProductResourceSpecTest {
             .addQueryParam("per_page", "1")
             .addQueryParam("sort_by", "id")
             .addQueryParam("sort_order", "asc")
-            .addQueryParam("omit_global", "true")
+            .addQueryParam("custom", "exclusive")
+            .addQueryParam("active", "include")
             .execute();
         assertNotNull(response);
         assertEquals(200, response.getCode());
@@ -491,7 +506,8 @@ public class OwnerProductResourceSpecTest {
             .addQueryParam("per_page", "1")
             .addQueryParam("sort_by", "id")
             .addQueryParam("sort_order", "asc")
-            .addQueryParam("omit_global", "true")
+            .addQueryParam("custom", "exclusive")
+            .addQueryParam("active", "include")
             .execute();
         assertNotNull(response);
         assertEquals(200, response.getCode());
@@ -759,6 +775,223 @@ public class OwnerProductResourceSpecTest {
         }
     }
 
+    @Test
+    public void shouldGetProductsByOwnerFetchesWithIDFilter() throws IOException {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        ProductDTO globalProd = createGlobalProduct(owner);
+        createCustomProduct(owner);
+
+        List<ProductDTO> products = ownerProductApi
+            .getProductsByOwner(ownerKey, List.of(globalProd.getId()), null, null, "include");
+
+        assertThat(products)
+            .isNotNull()
+            .extracting(ProductDTO::getId)
+            .containsOnly(globalProd.getId());
+    }
+
+    @Test
+    public void shouldGetProductsByOwnerFetchesWithInvalidIDs() {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        List<ProductDTO> products = ownerProductApi
+            .getProductsByOwner(ownerKey, List.of("invalid-id"), null, null, "include");
+
+        assertThat(products)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void shouldGetProductsByOwnerFetchesWithNameFilter() throws IOException {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        ProductDTO globalProd = createGlobalProduct(owner);
+        createCustomProduct(owner);
+
+        List<ProductDTO> products = ownerProductApi
+            .getProductsByOwner(ownerKey, null, List.of(globalProd.getName()), null, "include");
+
+        assertThat(products)
+            .isNotNull()
+            .extracting(ProductDTO::getId)
+            .containsOnly(globalProd.getId());
+    }
+
+    @Test
+    public void shouldGetProductsByOwnerFetchesWithInvalidNames() {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        List<ProductDTO> products = ownerProductApi
+            .getProductsByOwner(ownerKey, null, List.of("InvalidName"), null, "include");
+
+        assertThat(products)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void shouldGetProductsByOwnerFetchesWithExcludeActiveFilter() throws IOException {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        createGlobalProduct(owner);
+        ProductDTO customExpiredProd = createExpiredCustomProduct(owner);
+
+        List<ProductDTO> products = ownerProductApi
+            .getProductsByOwner(ownerKey, null, null, "exclude", null);
+
+        assertThat(products)
+            .isNotNull()
+            .extracting(ProductDTO::getId)
+            .contains(customExpiredProd.getId());
+    }
+
+    @Test
+    public void shouldGetProductsByOwnerFetchesWithExclusiveActiveFilter() throws IOException {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        ProductDTO globalProd = createGlobalProduct(owner);
+        ProductDTO customProd = createCustomProduct(owner);
+
+        List<ProductDTO> products = ownerProductApi
+            .getProductsByOwner(ownerKey, null, null, "exclusive", null);
+
+        assertThat(products)
+            .isNotNull()
+            .extracting(ProductDTO::getId)
+            .contains(globalProd.getId(), customProd.getId());
+    }
+
+    @Test
+    public void shouldGetProductsByOwnerFetchesWithIncludeActiveFilter()
+        throws IOException, InterruptedException {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        ProductDTO globalExpiredProd = createExpiredGlobalProduct(owner);
+        ProductDTO customProd = createCustomProduct(owner);
+
+        List<ProductDTO> products = ownerProductApi
+            .getProductsByOwner(ownerKey, null, null, "include", null);
+
+        assertThat(products)
+            .isNotNull()
+            .extracting(ProductDTO::getId)
+            .contains(globalExpiredProd.getId(), customProd.getId());
+    }
+
+    @Test
+    public void shouldGetProductsByOwnerErrorsWithInvalidActiveFilter() {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        assertBadRequest(
+            () -> ownerProductApi.getProductsByOwner(ownerKey, null, null, "invalid-filter", "include"));
+    }
+
+    @Test
+    public void shouldGetProductsByOwnerFetchesWithExcludeCustomFilter() throws IOException {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        ProductDTO globalProd = createGlobalProduct(owner);
+        createCustomProduct(owner);
+
+        List<ProductDTO> products = ownerProductApi
+            .getProductsByOwner(ownerKey, null, null, null, "exclude");
+
+        assertThat(products)
+            .isNotNull()
+            .extracting(ProductDTO::getId)
+            .containsOnly(globalProd.getId());
+    }
+
+    @Test
+    public void shouldGetProductsByOwnerFetchesWithExclusiveCustomFilter() throws IOException {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        createGlobalProduct(owner);
+        ProductDTO customProd = createCustomProduct(owner);
+
+        List<ProductDTO> products = ownerProductApi
+            .getProductsByOwner(ownerKey, null, null, null, "exclusive");
+
+        assertThat(products)
+            .isNotNull()
+            .extracting(ProductDTO::getId)
+            .containsOnly(customProd.getId());
+    }
+
+    @Test
+    public void shouldGetProductsByOwnerFetchesWithIncludeCustomFilter() throws IOException {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        ProductDTO globalProd = createGlobalProduct(owner);
+        ProductDTO customProd = createCustomProduct(owner);
+
+        List<ProductDTO> products = ownerProductApi
+            .getProductsByOwner(ownerKey, null, null, null, "include");
+
+        assertThat(products)
+            .isNotNull()
+            .extracting(ProductDTO::getId)
+            .contains(globalProd.getId(), customProd.getId());
+    }
+
+    @Test
+    public void shouldGetProductsByOwnerErrorsWithInvalidCustomFilter() {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        assertBadRequest(
+            () -> ownerProductApi.getProductsByOwner(ownerKey, null, null, null, "invalid-filter"));
+    }
+
+    @Test
+    public void shouldGetProductsByOwnerFetchesWithMultipleFilters() throws IOException {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        ProductDTO globalProd = createGlobalProduct(owner);
+        createCustomProduct(owner);
+
+        List<ProductDTO> products = ownerProductApi.getProductsByOwner(
+            ownerKey, List.of(globalProd.getId()), List.of(globalProd.getName()), "exclusive", "exclude");
+
+        assertThat(products)
+            .isNotNull()
+            .extracting(ProductDTO::getId)
+            .containsOnly(globalProd.getId());
+    }
+
+    @Test
+    public void shouldGetProductsByOwnerFetchesWithDefaultActiveCustomFilters() throws IOException {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        ProductDTO globalProd = createGlobalProduct(owner);
+        ProductDTO customProd = createCustomProduct(owner);
+        createExpiredCustomProduct(owner);
+
+        List<ProductDTO> products = ownerProductApi
+            .getProductsByOwner(ownerKey, null, null, null, null);
+
+        assertThat(products)
+            .isNotNull()
+            .extracting(ProductDTO::getId)
+            .contains(globalProd.getId(), customProd.getId());
+    }
+
+
     private ProductDTO createProductWithProvidedProduct(String ownerKey) {
         ProductDTO derivedProvProduct = ownerProductApi.createProduct(ownerKey, Products.random());
         ProductDTO derivedProduct = Products.random();
@@ -781,10 +1014,102 @@ public class OwnerProductResourceSpecTest {
         return product;
     }
 
-    private void compareBranding(BrandingDTO expected, BrandingDTO actual) {
-        assertEquals(expected.getProductId(), actual.getProductId());
-        assertEquals(expected.getName(), actual.getName());
-        assertEquals(expected.getType(), actual.getType());
+    private AsyncJobStatusDTO importAsync(OwnerDTO owner, File manifest, String... force) {
+        List<String> forced = force != null ? Arrays.asList(force) : List.of();
+
+        AsyncJobStatusDTO importJob = ownerApi
+            .importManifestAsync(owner.getKey(), forced, manifest);
+
+        importJob = jobsApi.waitForJob(importJob);
+        assertThatJob(importJob)
+            .isFinished()
+            .contains("SUCCESS")
+            .doesNotContain("_WITH_WARNING");
+
+        return importJob;
+    }
+
+    private AsyncJobStatusDTO refreshPools(ApiClient client, String ownerKey) {
+        AsyncJobStatusDTO job = client.owners().refreshPools(ownerKey, true);
+        if (!CandlepinMode.isHosted()) {
+            return null;
+        }
+
+        assertNotNull(job);
+        job = client.jobs().waitForJob(job);
+
+        assertThatJob(job)
+            .isFinished();
+
+        return job;
+    }
+
+    public ProductDTO createGlobalProduct(OwnerDTO owner) throws IOException {
+        if (CandlepinMode.isStandalone()) {
+            // Standalone mode
+            assumeTrue(CandlepinMode::hasManifestGenTestExtension);
+            ProductDTO prod = Products.random();
+            File manifest = new ExportGenerator()
+                .addProduct(prod)
+                .export();
+
+            this.importAsync(owner, manifest);
+            return prod;
+        }
+        else {
+            // Hosted mode
+            ProductDTO prod = hostedTestApi.createProduct(Products.random());
+            hostedTestApi.createSubscription(Subscriptions.random(owner, prod));
+
+            refreshPools(client, owner.getKey());
+            return prod;
+        }
+    }
+
+    public ProductDTO createExpiredGlobalProduct(OwnerDTO owner) throws IOException, InterruptedException {
+        if (CandlepinMode.isStandalone()) {
+            // Standalone mode
+            ProductDTO prod = Products.random();
+            Subscriptions.random(owner, prod)
+                .endDate(OffsetDateTime.now().minusSeconds(2L));
+            File manifest = new ExportGenerator()
+                .addProduct(prod)
+                .export();
+
+            this.importAsync(owner, manifest);
+            sleep(2000);
+            return prod;
+        }
+        else {
+            // Hosted mode
+            ProductDTO prod = hostedTestApi.createProduct(Products.random());
+            hostedTestApi.createSubscription(
+                Subscriptions.random(owner, prod).endDate(OffsetDateTime.now().minusSeconds(2L)));
+
+            refreshPools(client, owner.getKey());
+            sleep(2000);
+            return prod;
+        }
+    }
+
+    public ProductDTO createExpiredCustomProduct(OwnerDTO owner) {
+        ProductDTO prod = ownerProductApi.createProduct(owner.getKey(), Products.random());
+        PoolDTO pool = Pools.random(prod)
+            .startDate(OffsetDateTime.now().minusDays(2L))
+            .endDate(OffsetDateTime.now().minusDays(1L));
+
+        ownerApi.createPool(owner.getKey(), pool);
+        return prod;
+    }
+
+    public ProductDTO createCustomProduct(OwnerDTO owner) {
+        ProductDTO prod = ownerProductApi.createProduct(owner.getKey(), Products.random());
+        PoolDTO pool = Pools.random(prod)
+            .startDate(OffsetDateTime.now().minusDays(1L))
+            .endDate(OffsetDateTime.now().plusYears(1L));
+
+        ownerApi.createPool(owner.getKey(), pool);
+        return prod;
     }
 
     private void verifyRefreshPoolJob(String ownerKey, String productId, boolean lazyRegen) {

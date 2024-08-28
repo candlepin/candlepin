@@ -6109,10 +6109,10 @@ paths:
           schema:
             type: string
             enum:
-              - only
+              - exclude
               - include
-              - omit
-            default: only
+              - exclusive
+            default: exclusive
             example:
               only:
                 value: only
@@ -6140,9 +6140,9 @@ paths:
           schema:
             type: string
             enum:
-              - only
+              - exclude
               - include
-              - omit
+              - exclusive
             default: include
             example:
               only:
