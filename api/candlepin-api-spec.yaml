@@ -6076,23 +6076,93 @@ paths:
         - name: product
           in: query
           description: |
-            The ID of a product to fetch. If defined, the list of products returned by this method
-            will only include those matching the given ID. May be specified multiple times to filter
-            on multiple product IDs.
+            The ID of a product to fetch. If defined, the list of products returned by this endpoint will
+            only include those matching the given ID. May be specified multiple times to filter on multiple
+            product IDs. If multiple IDs are provided, any products matching any of the provided IDs will
+            be returned.
           required: false
           schema:
             type: array
             items:
               type: string
-        - name: omit_global
+        - name: name
           in: query
           description: |
-            whether or not to limit the lookup to only products defined within the organization's
-            namespace, excluding any globally defined products
+            The names of products to fetch. If defined, the list of products returned by this endpoint
+            will only include those matching the given names (case-insensitive). May be specified multiple
+            times to filter on multiple names. If multiple names are provided, any products matching any
+            of the provided names will be returned.
           required: false
           schema:
-            type: boolean
-            default: false
+            type: array
+            items:
+              type: string
+        - name: active
+          in: query
+          description: |
+            A value indicating how 'active' products should be considered when fetching products, where
+            'active' is defined as a product that is currently in use by a subscription with a start time
+            in the past and that has not yet expired, or in use by a product which itself is considered
+            'active.' Must be one of 'include', 'exclude', or 'exclusive' indicating that active products
+            should be included along with inactive products, excluded (omitted) from the results, or
+            exclusively selected as the only products to return.
+            Defaults to 'exclusive'.
+          required: false
+          schema:
+            type: string
+            enum:
+              - include
+              - exclude
+              - exclusive
+            default: exclusive
+            example:
+              include:
+                value: include
+                description: |
+                  indicates the query should include matching active products, along with any inactive
+                  products
+              exclude:
+                value: exclude
+                description: |
+                  indicates the query should exclude, or omit, active products, returning only matching
+                  inactive products
+              exclusive:
+                value: exclusive
+                description: |
+                  indicates the query should only include matching active products, excluding any inactive
+                  products
+        - name: custom
+          in: query
+          description: |
+            A value indicating how custom products are considered when fetching products, where 'custom'
+            is defined as a product that did not originate from a refresh operation nor manifest import.
+            Must be one of 'include', 'exclude', or 'exclusive' indicating that custom products should
+            be passively included, excluded or omitted from the output, or exclusively selected
+            as the only products to return.
+          required: false
+          schema:
+            type: string
+            enum:
+              - include
+              - exclude
+              - exclusive
+            default: include
+            example:
+              include:
+                value: include
+                description: |
+                  indicates the query should include matching custom products, along with any matching
+                  globally defined products
+              exclude:
+                value: exclude
+                description: |
+                  indicates the query should exclude, or omit, custom products, returning only matching
+                  globally defined products
+              exclusive:
+                value: exclusive
+                description: |
+                  indicates the query should only include matching custom products, excluding any globally
+                  defined products
       responses:
         200:
           description: Retrieves a list of products by owner
@@ -6988,10 +7058,108 @@ paths:
         type: java.util.stream.Stream
         isContainer: true
       parameters:
-        - $ref: "#/components/parameters/paging_page"
-        - $ref: "#/components/parameters/paging_per_page"
-        - $ref: "#/components/parameters/paging_order"
-        - $ref: "#/components/parameters/paging_sort_by"
+        - name: owner
+          in: query
+          description: |
+            The key of an owner to use to limit the product search. If defined, the list of products returned
+            by this endpoint will only include those available to the given owner. May be specified multiple
+            times to filter by multiple owners. If multiple owners are provided, products available to
+            any of the provided owners will be returned.
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: product
+          in: query
+          description: |
+            The ID of a product to fetch. If defined, the list of products returned by this endpoint will
+            only include those matching the given ID. May be specified multiple times to filter on multiple
+            product IDs. If multiple IDs are provided, any products matching any of the provided IDs will
+            be returned.
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: name
+          in: query
+          description: |
+            The names of products to fetch. If defined, the list of products returned by this endpoint
+            will only include those matching the given names (case-insensitive). May be specified multiple
+            times to filter on multiple names. If multiple names are provided, any products matching any
+            of the provided names will be returned.
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: active
+          in: query
+          description: |
+            A value indicating how 'active' products should be considered when fetching products, where
+            'active' is defined as a product that is currently in use by a subscription with a start time
+            in the past and that has not yet expired, or in use by a product which itself is considered
+            'active.' Must be one of 'include', 'exclude', or 'exclusive' indicating that active products
+            should be included along with inactive products, excluded (omitted) from the results, or
+            exclusively selected as the only products to return.
+            Defaults to 'exclusive'.
+          required: false
+          schema:
+            type: string
+            enum:
+              - include
+              - exclude
+              - exclusive
+            default: exclusive
+            example:
+              include:
+                value: include
+                description: |
+                  indicates the query should include matching active products, along with any inactive
+                  products
+              exclude:
+                value: exclude
+                description: |
+                  indicates the query should exclude, or omit, active products, returning only matching
+                  inactive products
+              exclusive:
+                value: exclusive
+                description: |
+                  indicates the query should only include matching active products, excluding any inactive
+                  products
+        - name: custom
+          in: query
+          description: |
+            A value indicating how custom products are considered when fetching products, where 'custom'
+            is defined as a product that did not originate from a refresh operation nor manifest import.
+            Must be one of 'include', 'exclude', or 'exclusive' indicating that custom products should
+            be passively included, excluded or omitted from the output, or exclusively selected
+            as the only products to return.
+          required: false
+          schema:
+            type: string
+            enum:
+              - include
+              - exclude
+              - exclusive
+            default: include
+            example:
+              include:
+                value: include
+                description: |
+                  indicates the query should include matching custom products, along with any matching
+                  globally defined products
+              exclude:
+                value: exclude
+                description: |
+                  indicates the query should exclude, or omit, custom products, returning only matching
+                  globally defined products
+              exclusive:
+                value: exclusive
+                description: |
+                  indicates the query should only include matching custom products, excluding any globally
+                  defined products
       security: []
       responses:
         200:
@@ -9481,12 +9649,12 @@ components:
         - $ref: '#/components/schemas/TimestampedEntity'
         - type: object
           properties:
-            id:
-              type: string
-              example: 5051
             uuid:
               type: string
               example: ff808081554a3e4101554a3e9033005d
+            id:
+              type: string
+              example: 5051
             name:
               type: string
               example: Admin OS Developer Bits

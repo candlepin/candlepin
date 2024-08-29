@@ -14,7 +14,11 @@
  */
 package org.candlepin.paging;
 
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.model.InvalidOrderKeyException;
+import org.candlepin.model.QueryBuilder;
 
 import org.jboss.resteasy.core.ResteasyContext;
 import org.xnap.commons.i18n.I18n;
@@ -35,8 +39,12 @@ import java.util.stream.Stream;
  *  the type this util will page
  */
 public class PagingUtil<T> {
+
+    private final Configuration config;
     private final I18n i18n;
     private final FieldComparatorFactory<T> comparatorFactory;
+
+    private final int maxPageSize;
 
     /**
      * Builds a new PagingUtil with the given internationalization and comparator factory.
@@ -47,9 +55,37 @@ public class PagingUtil<T> {
      * @param comparatorFactory
      *  the comparator factory to use for sorting elements paged by this paging util
      */
-    public PagingUtil(I18n i18n, FieldComparatorFactory<T> comparatorFactory) {
+    public PagingUtil(Configuration config, I18n i18n, FieldComparatorFactory<T> comparatorFactory) {
+        this.config = Objects.requireNonNull(config);
         this.i18n = Objects.requireNonNull(i18n);
         this.comparatorFactory = Objects.requireNonNull(comparatorFactory);
+
+        this.maxPageSize = this.config.getInt(ConfigProperties.PAGING_MAX_PAGE_SIZE);
+    }
+
+    /**
+     * Checks the given page size against the max page size and throws a bad request exception if the
+     * page size exceeds the maximum configured page size.
+     *
+     * @param pageSize
+     *  the request page size to validate
+     *
+     * @throws BadRequestException
+     *  if the requested page size is larger than the maximum configured page size
+     *
+     * @return
+     *  the validated page size
+     */
+    private long validateRequestedPageSize(long pageSize) {
+        if (pageSize <= this.maxPageSize) {
+            return pageSize;
+        }
+
+        String errmsg = this.i18n.tr("This endpoint does not support returning {0} elements in a single" +
+            "request; please apply paging with a page size no larger than {1}",
+            pageSize, this.maxPageSize);
+
+        throw new BadRequestException(errmsg);
     }
 
     /**
@@ -151,6 +187,88 @@ public class PagingUtil<T> {
         return collection != null ?
             this.applyPaging(collection.stream(), collection.size()) :
             this.applyPaging(Stream.of(), 0);
+    }
+
+
+    // TODO: This could use some nicer, cleaner integration; it's rather bolted on at the moment.
+
+    /**
+     * Applies any paging in the request context to the provided query builder, then executes it, returning
+     * a stream consisting of the results of the query's execution. While applying any requested paging,
+     * this method will also validate that the number of elements fetched won't exceed the configured
+     * maximum paging size, and the sorting fields are valid. If either of these checks fail, this method
+     * throws an exception. If the provided query is null, or  otherwise fetches nothing, this method
+     * returns an empty stream.
+     *
+     * @param queryBuilder
+     *  the query builder to which any request context paging should be applied
+     *
+     * @throws BadRequestException
+     *  if the number of results the query builder will return exceeds the maximum page size
+     *
+     * @throws InvalidOrderKeyException
+     *  if the query has been ordered by an invalid field name
+     *
+     * @return
+     *  A stream consisting of the results of executing the provided query once paging has been applied
+     */
+    public <T> Stream<T> applyPaging(QueryBuilder<?, T> queryBuilder) {
+        if (queryBuilder == null) {
+            return Stream.of();
+        }
+
+        try {
+            long count = queryBuilder.getResultCount();
+
+            PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
+            if (pageRequest != null) {
+                // Impl note:
+                // Sorting will always be required (for consistency) if a page request object is present --
+                // either .isPaging() will be true, or we'll have ordering config.
+                String sortField = pageRequest.getSortBy();
+                if (sortField == null || sortField.isBlank()) {
+                    // This is actually a very bad default, but it's here for backwards compatibility
+                    // purposes. Existing solutions use this field whenever the sort-by field is absent,
+                    // so to be drop-in compliant, we do the same.
+                    sortField = PageRequest.DEFAULT_SORT_FIELD;
+                }
+
+                boolean reverse = pageRequest.getOrder() == PageRequest.DEFAULT_ORDER;
+                queryBuilder.addOrder(sortField, reverse);
+
+                if (pageRequest.isPaging()) {
+                    queryBuilder.setPage(pageRequest.getPage(), pageRequest.getPerPage());
+
+                    // Create a page object for the link header response
+                    Page<T> contextPage = new Page<T>()
+                        .setMaxRecords(count < Integer.MAX_VALUE ? (int) count : Integer.MAX_VALUE)
+                        .setPageRequest(pageRequest);
+
+                    // Note: we don't need to (nor should we) store the page data in the page
+                    ResteasyContext.pushContext(Page.class, contextPage);
+                }
+            }
+            else {
+                this.validateRequestedPageSize(count);
+            }
+
+            // TODO: This should be left to the caller so the decision between returning a list or a stream
+            // can be made on a call-by-call basis, but at the time of writing, the sort-by- field validation
+            // happens on query execution time, so kicking this back to the caller means forcing the
+            // boilerplate of the order key exception translation onto them.
+            //
+            // Impl note:
+            // We're getting the list and them streaming it explicitly to avoid the issue with
+            // .getResultStream() potentially returning a stream of entities with lazily loaded values,
+            // backed by a cursor. In such a case, .getResultStream() can lead to premature cursor closure
+            // and exceptions when the lazy fields are fetched.
+            return queryBuilder.getResultList()
+                .stream();
+        }
+        catch (InvalidOrderKeyException e) {
+            String errmsg = this.i18n.tr("Invalid or unsupported sort-by field: {0}", e.getColumn());
+            throw new BadRequestException(errmsg, e);
+        }
     }
 
 }

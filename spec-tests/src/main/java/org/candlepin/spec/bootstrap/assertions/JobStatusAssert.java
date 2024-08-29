@@ -143,6 +143,40 @@ public class JobStatusAssert extends AbstractAssert<JobStatusAssert, AsyncJobSta
     }
 
     /**
+     * Verifies the job has a given name
+     *
+     * @return this instance
+     */
+    public JobStatusAssert isNamed(String name) {
+        if (name == null && this.actual.getName() != null) {
+            failWithMessage("Expected job name to be null, but was: \"%s\"", this.actual.getName());
+        }
+
+        if (name != null && !name.equals(this.actual.getName())) {
+            failWithMessage("Expected job name to be \"%s\", but was: \"%s\"", this.actual.getName());
+        }
+
+        return this;
+    }
+
+    /**
+     * Verifies the job is of the given type, specified by job key.
+     *
+     * @return this instance
+     */
+    public JobStatusAssert isType(String jobKey) {
+        if (jobKey == null && this.actual.getKey() != null) {
+            failWithMessage("Expected job type/key to be null, but was: \"%s\"", this.actual.getKey());
+        }
+
+        if (jobKey != null && !jobKey.equals(this.actual.getKey())) {
+            failWithMessage("Expected job type/key to be \"%s\", but was: \"%s\"", this.actual.getKey());
+        }
+
+        return this;
+    }
+
+    /**
      * Verifies whether the job result contains the given text.
      *
      * @return this instance

@@ -14,6 +14,8 @@
  */
 package org.candlepin.paging;
 
+import org.candlepin.config.Configuration;
+
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Objects;
@@ -29,10 +31,12 @@ import javax.inject.Provider;
  */
 public class PagingUtilFactory {
 
+    private final Configuration config;
     private final Provider<I18n> i18nProvider;
 
     @Inject
-    public PagingUtilFactory(Provider<I18n> i18nProvider) {
+    public PagingUtilFactory(Configuration config, Provider<I18n> i18nProvider) {
+        this.config = Objects.requireNonNull(config);
         this.i18nProvider = Objects.requireNonNull(i18nProvider);
     }
 
@@ -51,7 +55,7 @@ public class PagingUtilFactory {
             throw new IllegalArgumentException("comparatorFactory is null");
         }
 
-        return new PagingUtil<>(this.i18nProvider.get(), comparatorFactory);
+        return new PagingUtil<>(this.config, this.i18nProvider.get(), comparatorFactory);
     }
 
     /**

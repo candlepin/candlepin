@@ -1210,7 +1210,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                 }
                 catch (IllegalArgumentException e) {
                     String errmsg = String.format("Invalid attribute key: %s", order.column());
-                    throw new InvalidOrderKeyException(errmsg, e);
+                    throw new InvalidOrderKeyException(errmsg, root.getModel());
                 }
             }
         }

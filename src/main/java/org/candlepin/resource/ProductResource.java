@@ -31,12 +31,13 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ProductCurator.ProductQueryArguments;
-import org.candlepin.paging.Page;
-import org.candlepin.paging.PageRequest;
+import org.candlepin.model.ProductQueryBuilder;
+import org.candlepin.model.QueryBuilder.Inclusion;
+import org.candlepin.paging.PagingUtilFactory;
 import org.candlepin.resource.server.v1.ProductsApi;
 
-import org.jboss.resteasy.core.ResteasyContext;
+import com.google.inject.persist.Transactional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -52,26 +53,34 @@ import javax.inject.Inject;
  * API Gateway into /product
  */
 public class ProductResource implements ProductsApi {
-
     private static final Logger log = LoggerFactory.getLogger(ProductResource.class);
+
+    private final Configuration config;
+    private final I18n i18n;
     private final ProductCurator productCurator;
     private final OwnerCurator ownerCurator;
     private final ProductCertificateCurator productCertCurator;
-    private final Configuration config;
-    private final I18n i18n;
+    private final PagingUtilFactory pagingUtilFactory;
     private final ModelTranslator translator;
     private final JobManager jobManager;
 
     @Inject
-    public ProductResource(ProductCurator productCurator, OwnerCurator ownerCurator,
-        ProductCertificateCurator productCertCurator, Configuration config, I18n i18n,
-        ModelTranslator translator, JobManager jobManager) {
+    public ProductResource(
+        Configuration config,
+        I18n i18n,
+        ProductCurator productCurator,
+        OwnerCurator ownerCurator,
+        ProductCertificateCurator productCertCurator,
+        PagingUtilFactory pagingUtilFactory,
+        ModelTranslator translator,
+        JobManager jobManager) {
 
+        this.config = Objects.requireNonNull(config);
+        this.i18n = Objects.requireNonNull(i18n);
         this.productCurator = Objects.requireNonNull(productCurator);
         this.productCertCurator = Objects.requireNonNull(productCertCurator);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
-        this.config = Objects.requireNonNull(config);
-        this.i18n = Objects.requireNonNull(i18n);
+        this.pagingUtilFactory = Objects.requireNonNull(pagingUtilFactory);
         this.translator = Objects.requireNonNull(translator);
         this.jobManager = Objects.requireNonNull(jobManager);
     }
@@ -101,43 +110,58 @@ public class ProductResource implements ProductsApi {
         return product;
     }
 
+    /**
+     * Retrieves an Owner instance for the owner with the specified key/account. If a matching owner could
+     * not be found, this method throws an exception.
+     *
+     * @param key
+     *  The key for the owner to retrieve
+     *
+     * @throws NotFoundException
+     *  if an owner could not be found for the specified key.
+     *
+     * @return
+     *  the Owner instance for the owner with the specified key.
+     *
+     * @httpcode 200
+     * @httpcode 404
+     */
+    private Owner resolveOwner(String key) {
+        Owner owner = this.ownerCurator.getByKey(key);
+        if (owner == null) {
+            throw new NotFoundException(i18n.tr("Owner with key \"{0}\" was not found.", key));
+        }
+
+        return owner;
+    }
+
     @Override
-    public Stream<ProductDTO> getProducts(Integer page, Integer perPage, String order, String sortBy) {
-        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
+    @Transactional
+    // GET /products
+    public Stream<ProductDTO> getProducts(List<String> ownerKeys, List<String> productIds,
+        List<String> productNames, String active, String custom) {
 
-        ProductQueryArguments queryArgs = new ProductQueryArguments();
+        List<Owner> owners = (ownerKeys != null ? ownerKeys.stream() : Stream.<String>empty())
+            .map(this::resolveOwner)
+            .toList();
 
-        long count = this.productCurator.getProductCount(queryArgs);
+        Inclusion activeInc = Inclusion.fromName(active, Inclusion.EXCLUSIVE)
+            .orElseThrow(() ->
+                new BadRequestException(i18n.tr("Invalid active inclusion type: {0}", active)));
 
-        if (pageRequest != null) {
-            Page<Stream<ProductDTO>> pageResponse = new Page<>();
-            pageResponse.setPageRequest(pageRequest);
+        Inclusion customInc = Inclusion.fromName(custom, Inclusion.INCLUDE)
+            .orElseThrow(() ->
+                new BadRequestException(i18n.tr("Invalid custom inclusion type: {0}", custom)));
 
-            if (pageRequest.isPaging()) {
-                queryArgs.setOffset((pageRequest.getPage() - 1) * pageRequest.getPerPage())
-                    .setLimit(pageRequest.getPerPage());
-            }
+        ProductQueryBuilder queryBuilder = this.productCurator.getProductQueryBuilder()
+            .addOwners(owners)
+            .addProductIds(productIds)
+            .addProductNames(productNames)
+            .setActive(activeInc)
+            .setCustom(customInc);
 
-            if (pageRequest.getSortBy() != null) {
-                boolean reverse = pageRequest.getOrder() == PageRequest.DEFAULT_ORDER;
-                queryArgs.addOrder(pageRequest.getSortBy(), reverse);
-            }
-            pageResponse.setMaxRecords((int) count);
-
-            // Store the page for the LinkHeaderResponseFilter
-            ResteasyContext.pushContext(Page.class, pageResponse);
-        }
-        // If no paging was specified, force a limit on amount of results
-        else {
-            int maxSize = config.getInt(ConfigProperties.PAGING_MAX_PAGE_SIZE);
-            if (count > maxSize) {
-                String errmsg = this.i18n.tr("This endpoint does not support returning more than {0} " +
-                    "results at a time, please use paging.", maxSize);
-                throw new BadRequestException(errmsg);
-            }
-        }
-
-        return this.productCurator.listAll(queryArgs).stream()
+        return this.pagingUtilFactory.forClass(Product.class)
+            .applyPaging(queryBuilder)
             .map(this.translator.getStreamMapper(Product.class, ProductDTO.class));
     }
 
@@ -149,9 +173,7 @@ public class ProductResource implements ProductsApi {
     }
 
     @Override
-    public Stream<AsyncJobStatusDTO> refreshPoolsForProducts(
-        List<String> productIds, Boolean lazyRegen) {
-
+    public Stream<AsyncJobStatusDTO> refreshPoolsForProducts(List<String> productIds, Boolean lazyRegen) {
         if (productIds.isEmpty()) {
             throw new BadRequestException(i18n.tr("No product IDs specified"));
         }
