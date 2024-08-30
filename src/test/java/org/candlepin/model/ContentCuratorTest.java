@@ -900,6 +900,8 @@ public class ContentCuratorTest extends DatabaseTestFixture {
 
         createProductContent(owner, true, content1, content2, content3);
 
+        this.contentCurator.flush();
+        this.contentCurator.clear();
         List<ProductContent> activeContentByOwner = contentCurator.getActiveContentByOwner(owner.getId());
 
         assertThat(activeContentByOwner).hasSize(3)
@@ -919,6 +921,8 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         createProductContent(owner, true, content);
         createProductContent(owner, false, content);
 
+        this.contentCurator.flush();
+        this.contentCurator.clear();
         List<ProductContent> activeContentByOwner = contentCurator.getActiveContentByOwner(owner.getId());
 
         assertThat(activeContentByOwner).hasSize(1)
@@ -941,7 +945,11 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         createProductContent(owner1, true, content1);
         createProductContent(owner2, false, content2, content3);
 
+        this.contentCurator.flush();
+        this.contentCurator.clear();
         List<ProductContent> activeContentByOwner1 = contentCurator.getActiveContentByOwner(owner1.getId());
+
+        this.contentCurator.clear();
         List<ProductContent> activeContentByOwner2 = contentCurator.getActiveContentByOwner(owner2.getId());
 
         assertThat(activeContentByOwner1)
