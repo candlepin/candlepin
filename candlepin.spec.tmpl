@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.14
+Version: 4.4.15
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,38 @@ fi
 
 #raw
 %changelog
+* Fri Aug 30 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.15-1
+- Optimized the ContentCurator.getActiveContentByOwner query (crog@redhat.com)
+- CANDLEPIN-913: Updated content endpoints to support improved querying
+  (crog@redhat.com)
+- CANDLEPIN-912: Updated product endpoints to support improved querying
+  (crog@redhat.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.12.0 to 5.13.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.17.0 to 10.18.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.postgresql:postgresql from 42.7.3 to 42.7.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump openapi-generator from 7.7.0 to 7.8.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.6 to 1.5.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Update Gradle Wrapper from 8.9 to 8.10. (gradle-update-robot@regolo.cc)
+- Bump junit from 5.10.3 to 5.11.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump slf4j from 2.0.15 to 2.0.16
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-903: Increased el8 and el9 Vagrant VM filesystem size
+  (joshmalbrecht@gmail.com)
+- Bump slf4j from 2.0.14 to 2.0.15
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.26 to 10.1.28
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump slf4j from 2.0.13 to 2.0.14
+  (49699333+dependabot[bot]@users.noreply.github.com)
+
 * Tue Aug 06 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.14-1
 - Add new translations using Weblate (noreply@weblate.org)
 - Bump gradle/actions from 3 to 4
