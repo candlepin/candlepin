@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -660,62 +659,72 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
      */
     public List<ProductContent> getActiveContentByOwner(String ownerId) {
         EntityManager entityManager = this.getEntityManager();
-        Date now = new Date();
 
-        // Use a CTE to get all derived and provided products
+        // Use CTEs to fetch the graph of active products from which we will pull content
+
+        // Impl note:
+        // This query is written primarily as a function of what works best for MySQL and the shape of
+        // the data in production. It may make sense to periodically update it as the shape of prod's
+        // data changes. Or if/when we update the model to not have two N-tier paths that have to be
+        // traversed to fully/correctly build the product graph. :/
         String sql = """
-                WITH RECURSIVE parent_child_map(parent_uuid, child_uuid) AS (
-                    SELECT CAST(uuid AS CHAR(32)), CAST(derived_product_uuid AS CHAR(32))
+            WITH RECURSIVE pool_products (product_uuid) AS (
+                SELECT DISTINCT pool.product_uuid
+                    FROM cp_pool pool
+                    WHERE pool.owner_id = :owner_id AND now() BETWEEN pool.startdate AND pool.enddate
+            ),
+            pcmap_anchor (product_uuid, child_uuid) AS (
+                SELECT uuid AS product_uuid, derived_product_uuid AS child_uuid
                     FROM cp_products
                     WHERE derived_product_uuid IS NOT NULL
-                    UNION
-                    SELECT CAST(product_uuid AS CHAR(32)), CAST(provided_product_uuid AS CHAR(32))
-                    FROM cp_product_provided_products
-                ),
-                product_graph(uuid, depth) AS (
-                    SELECT CAST(pool.product_uuid AS CHAR(32)), 0
-                    FROM cp_pool pool
-                    WHERE pool.owner_id = :owner_id
-                    AND pool.startDate <= :start_date AND pool.endDate >= :end_date
-                    UNION
-                    SELECT CAST(pcmap.child_uuid AS CHAR(32)), pgraph.depth + 1
+                UNION
+                SELECT ppp.product_uuid, ppp.provided_product_uuid AS child_uuid
+                    FROM cp_product_provided_products ppp
+                    JOIN pool_products pp ON pp.product_uuid = ppp.product_uuid
+            ),
+            parent_child_map (product_uuid, child_uuid, depth) AS (
+                SELECT product_uuid, child_uuid, 1 AS depth FROM pcmap_anchor
+                UNION ALL
+                SELECT ppp.product_uuid, ppp.provided_product_uuid AS child_uuid, pcmap.depth + 1 AS depth
                     FROM parent_child_map pcmap
-                    JOIN product_graph pgraph ON pgraph.uuid = pcmap.parent_uuid
-                    WHERE pgraph.depth < 10
-                )
-                SELECT content.uuid, pc.enabled
-                FROM product_graph pgraph
-                JOIN cp_product_contents pc ON pc.product_uuid = pgraph.uuid
-                JOIN cp_contents content ON content.uuid = pc.content_uuid
+                    JOIN cp_product_provided_products ppp ON ppp.product_uuid = pcmap.child_uuid
+            ),
+            active_products (uuid) AS (
+                SELECT product_uuid AS uuid FROM pool_products
+                UNION
+                SELECT pcmap.child_uuid AS uuid
+                    FROM active_products ap
+                    JOIN parent_child_map pcmap ON pcmap.product_uuid = ap.uuid
+            )
+            SELECT DISTINCT pc.content_uuid, pc.enabled
+                FROM cp_product_contents pc
+                JOIN active_products ap ON ap.uuid = pc.product_uuid
             """;
 
-        Map<String, Boolean> contentEnablementMap =
+        Map<String, Boolean> enablementMap =
             (Map<String, Boolean>) entityManager.createNativeQuery(sql)
             .setParameter("owner_id", ownerId)
-            .setParameter("start_date", now)
-            .setParameter("end_date", now)
-            .getResultStream()
+            .getResultList()
+            .stream()
             .collect(Collectors.toMap(
                 row -> (String) ((Object[]) row)[0],  // UUID of the content
                 row -> (Boolean) ((Object[]) row)[1], // Enabled state
                 (enabled1, enabled2) -> enabled1 || enabled2 // Collision resolution: logical OR
             ));
 
-        List<ProductContent> activeContent = new ArrayList<>();
+        List<ProductContent> output = new ArrayList<>();
 
-        String contentLookupJPQL =
-            "SELECT content FROM Content content WHERE content.uuid IN (:content_uuids)";
-        TypedQuery<Content> contentQuery = entityManager.createQuery(contentLookupJPQL, Content.class);
+        String jpql = "SELECT content FROM Content content WHERE content.uuid IN (:content_uuids)";
+        TypedQuery<Content> query = entityManager.createQuery(jpql, Content.class);
 
         // This step is necessary to handle large sets of UUIDs and avoid query parameter limits
-        for (List<String> block : this.partition(contentEnablementMap.keySet())) {
-            contentQuery.setParameter("content_uuids", block)
-                .getResultStream()
-                .map(content -> new ProductContent(content, contentEnablementMap.get(content.getUuid())))
-                .forEach(activeContent::add);
+        for (List<String> block : this.partition(enablementMap.keySet())) {
+            query.setParameter("content_uuids", block)
+                .getResultList()
+                .forEach(elem -> output.add(new ProductContent(elem, enablementMap.get(elem.getUuid()))));
         }
 
-        return activeContent;
+        return output;
     }
 
     /**
