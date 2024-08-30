@@ -116,13 +116,11 @@ public class EntityMapper {
                 throw new IllegalStateException("content lacks an id: " + cdto);
             }
 
-            // Impl note:
-            // We won't namespace stuff here since it'll be vanishing in a moment anyway, and at the
-            // time of writing, this best reflects how export works and is used today.
             Content fetched = this.contentCurator.getContentById(null, cid);
             if (fetched == null) {
                 fetched = new Content()
-                    .setId(cid);
+                    .setId(cid)
+                    .setNamespace(this.owner.getKey());
             }
 
             return fetched;
@@ -170,10 +168,11 @@ public class EntityMapper {
             // Impl note:
             // We won't namespace stuff here since it'll be vanishing in a moment anyway, and at the
             // time of writing, this best reflects how export works and is used today.
-            Product fetched = this.productCurator.getProductById(null, pid);
+            Product fetched = this.productCurator.getProductById(this.owner.getKey(), pid);
             if (fetched == null) {
                 fetched = new Product()
-                    .setId(pid);
+                    .setId(pid)
+                    .setNamespace(this.owner.getKey());
             }
 
             return fetched;

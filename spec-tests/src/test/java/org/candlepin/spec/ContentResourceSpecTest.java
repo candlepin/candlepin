@@ -14,48 +14,82 @@
  */
 package org.candlepin.spec;
 
-import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.AttributeDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
+import org.candlepin.dto.api.client.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
+import org.candlepin.dto.api.client.v1.ProductContentDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
+import org.candlepin.dto.api.client.v1.SubscriptionDTO;
 import org.candlepin.resource.client.v1.OwnerApi;
 import org.candlepin.resource.client.v1.OwnerContentApi;
 import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.resource.client.v1.ProductsApi;
+import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
+import org.candlepin.spec.bootstrap.client.request.Request;
+import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.ExportGenerator;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
+import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
+import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @SpecTest
 public class ContentResourceSpecTest {
@@ -230,44 +264,6 @@ public class ContentResourceSpecTest {
         assertEquals("ppc64", actualArch);
     }
 
-    @Nested
-    @Isolated
-    @Execution(ExecutionMode.SAME_THREAD)
-    class GetPages {
-        @Test
-        public void shouldListContentPagedAndSorted() {
-            ApiClient adminClient = ApiClients.admin();
-
-            OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
-            String ownerKey = owner.getKey();
-
-            // Ensure that there is data for this test.
-            // Most likely, there will already be data left from other test runs that will show up
-            IntStream.range(0, 5).forEach(entry -> {
-                adminClient.ownerContent().createContent(ownerKey, Contents.random());
-                // for timestamp separation
-                try {
-                    sleep(1000);
-                }
-                catch (InterruptedException ie) {
-                    throw new RuntimeException("Unable to sleep as expected");
-                }
-            });
-
-            List<ContentDTO> contents = adminClient.content().getContents(1, 4, "asc", "created");
-            assertThat(contents)
-                .isNotNull()
-                .hasSize(4);
-            assertThat(contents.get(0).getCreated().compareTo(contents.get(1).getCreated()))
-                .isLessThanOrEqualTo(0);
-            assertThat(contents.get(1).getCreated().compareTo(contents.get(2).getCreated()))
-                .isLessThanOrEqualTo(0);
-            assertThat(contents.get(2).getCreated().compareTo(contents.get(3).getCreated()))
-                .isLessThanOrEqualTo(0);
-
-        }
-    }
-
     private ContentDTO createContent(String ownerKey, String contentUrl, String arches) {
         ContentDTO newContent = Contents.random();
         newContent.setContentUrl(contentUrl);
@@ -291,4 +287,956 @@ public class ContentResourceSpecTest {
         pool.setProductName(product.getName());
         return ownerApi.createPool(ownerKey, pool);
     }
+
+    @Nested
+    @Isolated
+    @TestInstance(Lifecycle.PER_CLASS)
+    @Execution(ExecutionMode.SAME_THREAD)
+    public class ContentResourceQueryTests {
+
+        private static final String QUERY_PATH = "/content";
+
+        private static final String INCLUSION_INCLUDE = "include";
+        private static final String INCLUSION_EXCLUDE = "exclude";
+        private static final String INCLUSION_EXCLUSIVE = "exclusive";
+
+        private static record ProductInfo(ProductDTO dto, OwnerDTO owner, Set<String> activeOwners) {
+
+            public String id() {
+                return this.dto() != null ? this.dto().getId() : null;
+            }
+
+            public boolean active() {
+                return !this.activeOwners().isEmpty();
+            }
+
+            public boolean custom() {
+                return this.owner() != null;
+            }
+
+            public Stream<ContentDTO> content() {
+                return Optional.ofNullable(this.dto())
+                  .map(ProductDTO::getProductContent)
+                  .map(Collection::stream)
+                  .orElse(Stream.empty())
+                  .map(ProductContentDTO::getContent);
+            }
+        };
+
+        private ApiClient adminClient;
+
+        private List<OwnerDTO> owners;
+        private Map<String, ProductInfo> productMap;
+
+        /**
+         * Verifies either the manifest generator extension or the hosted test extension is present as
+         * required by the current operating mode.
+         */
+        private void checkRequiredExtensions() {
+            if (CandlepinMode.isStandalone()) {
+                assumeTrue(CandlepinMode::hasManifestGenTestExtension);
+            }
+            else {
+                assumeTrue(CandlepinMode::hasHostedTestExtension);
+            }
+        }
+
+        private OwnerDTO createOwner(String keyPrefix) {
+            OwnerDTO owner = Owners.random()
+                .key(StringUtil.random(keyPrefix + "-"));
+
+            return this.adminClient.owners()
+                .createOwner(owner);
+        }
+
+        private SubscriptionDTO createSubscription(OwnerDTO owner, ProductDTO product, boolean active) {
+            OffsetDateTime now = Instant.now()
+                .atOffset(ZoneOffset.UTC);
+
+            // Impl note:
+            // We create active subscriptions in the future to work around a limitation on manifests
+            // disallowing and ignoring expired pools
+            return Subscriptions.random(owner, product)
+                .startDate(active ? now.minus(7, ChronoUnit.DAYS) : now.plus(7, ChronoUnit.DAYS))
+                .endDate(now.plus(30, ChronoUnit.DAYS));
+        }
+
+        private PoolDTO createPool(OwnerDTO owner, ProductDTO product, boolean active) {
+            OffsetDateTime now = Instant.now()
+                .atOffset(ZoneOffset.UTC);
+
+            PoolDTO pool = Pools.random(product)
+                .startDate(now.minus(7, ChronoUnit.DAYS))
+                .endDate(active ? now.plus(7, ChronoUnit.DAYS) : now.minus(3, ChronoUnit.DAYS));
+
+            return this.adminClient.owners()
+                .createPool(owner.getKey(), pool);
+        }
+
+        private void mapProductInfo(ProductDTO product, OwnerDTO owner, OwnerDTO activeOwner) {
+            Set<String> activeOwnerKeys = new HashSet<>();
+            if (activeOwner != null) {
+                activeOwnerKeys.add(activeOwner.getKey());
+            }
+
+            ProductInfo existing = this.productMap.get(product.getId());
+            if (existing != null) {
+                activeOwnerKeys.addAll(existing.activeOwners());
+            }
+
+            ProductInfo pinfo = new ProductInfo(product, owner, activeOwnerKeys);
+            this.productMap.put(product.getId(), pinfo);
+
+        }
+
+        private void commitGlobalSubscriptions(Collection<SubscriptionDTO> subscriptions) throws Exception {
+            Map<String, List<SubscriptionDTO>> subscriptionMap = new HashMap<>();
+
+            for (SubscriptionDTO subscription : subscriptions) {
+                NestedOwnerDTO owner = subscription.getOwner();
+
+                subscriptionMap.computeIfAbsent(owner.getKey(), key -> new ArrayList<>())
+                    .add(subscription);
+            }
+
+            for (Map.Entry<String, List<SubscriptionDTO>> entry : subscriptionMap.entrySet()) {
+                String ownerKey = entry.getKey();
+                List<SubscriptionDTO> ownerSubs = entry.getValue();
+
+                AsyncJobStatusDTO job;
+                if (CandlepinMode.isStandalone()) {
+                    File manifest = new ExportGenerator()
+                        .addSubscriptions(ownerSubs)
+                        .export();
+
+                    job = this.adminClient.owners()
+                        .importManifestAsync(ownerKey, List.of(), manifest);
+                }
+                else {
+                    ownerSubs.forEach(subscription -> this.adminClient.hosted()
+                        .createSubscription(subscription, true));
+
+                    job = this.adminClient.owners()
+                        .refreshPools(ownerKey, false);
+                }
+
+                assertThatJob(job)
+                    .isNotNull()
+                    .terminates(this.adminClient)
+                    .isFinished();
+            }
+        }
+
+        @BeforeAll
+        public void setup() throws Exception {
+            // Ensure we have our required test extensions or we'll be very broken...
+            this.checkRequiredExtensions();
+
+            this.adminClient = ApiClients.admin();
+
+            this.owners = List.of(
+                this.createOwner("owner1"),
+                this.createOwner("owner2"),
+                this.createOwner("owner3"));
+
+            this.productMap = new HashMap<>();
+
+            List<SubscriptionDTO> subscriptions = new ArrayList<>();
+
+            // Dummy org we use for creating a bunch of future pools for our global products. We'll also
+            // create per-org subscriptions for these products later. Also note that these will never be
+            // fully resolved.
+            OwnerDTO globalOwner = this.createOwner("global");
+
+            List<ProductDTO> globalProducts = new ArrayList<>();
+            for (int i = 1; i <= 3; ++i) {
+                List<ContentDTO> contents = new ArrayList<>();
+
+                for (int c = 0; c < 2; ++c) {
+                    ContentDTO content = Contents.random()
+                        .id(String.format("g-content-%d%s", i, (char) ('a' + c)))
+                        .name(String.format("global_content_%d%s", i, (char) ('a' + c)))
+                        .label(String.format("global content %d%s", i, (char) ('a' + c)));
+
+                    contents.add(content);
+                }
+
+                ProductDTO gprod = new ProductDTO()
+                    .id("g-prod-" + i)
+                    .name("global product " + i)
+                    .addProductContentItem(Contents.toProductContent(contents.get(0), true))
+                    .addProductContentItem(Contents.toProductContent(contents.get(1), false));
+
+                subscriptions.add(this.createSubscription(globalOwner, gprod, false));
+                globalProducts.add(gprod);
+                this.mapProductInfo(gprod, null, null);
+            }
+
+            for (int oidx = 1; oidx <= owners.size(); ++oidx) {
+                OwnerDTO owner = owners.get(oidx - 1);
+
+                List<ProductDTO> ownerProducts = new ArrayList<>();
+                for (int i = 1; i <= 2; ++i) {
+                    List<ContentDTO> contents = new ArrayList<>();
+
+                    for (int c = 0; c < 2; ++c) {
+                        ContentDTO content = Contents.random()
+                            .id(String.format("o%d-content-%d%s", oidx, i, (char) ('a' + c)))
+                            .name(String.format("%s_content_%d%s", owner.getKey(), i, (char) ('a' + c)))
+                            .label(String.format("%s content %d%s", owner.getKey(), i, (char) ('a' + c)));
+
+                        contents.add(this.adminClient.ownerContent()
+                            .createContent(owner.getKey(), content));
+                    }
+
+                    ProductDTO cprod = new ProductDTO()
+                        .id(String.format("o%d-prod-%d", oidx, i))
+                        .name(String.format("%s product %d", owner.getKey(), i))
+                        .addProductContentItem(Contents.toProductContent(contents.get(0), true))
+                        .addProductContentItem(Contents.toProductContent(contents.get(1), false));
+
+                    cprod = this.adminClient.ownerProducts()
+                        .createProduct(owner.getKey(), cprod);
+
+                    ownerProducts.add(cprod);
+                    this.mapProductInfo(cprod, owner, null);
+                }
+
+                // Create an active and inactive global subscription for this org
+                subscriptions.add(this.createSubscription(owner, globalProducts.get(0), true));
+                subscriptions.add(this.createSubscription(owner, globalProducts.get(1), false));
+                this.mapProductInfo(globalProducts.get(0), null, owner);
+
+                // Create an active and inactive custom subscription
+                this.createPool(owner, ownerProducts.get(0), true);
+                this.createPool(owner, ownerProducts.get(1), false);
+                this.mapProductInfo(ownerProducts.get(0), owner, owner);
+            }
+
+            this.commitGlobalSubscriptions(subscriptions);
+        }
+
+        // Impl note:
+        // Since we cannot depend on the global state being prestine from run to run (or even test to
+        // test), we cannot use exact matching on our output as extraneous products from previous test
+        // runs or otherwise pre-existing data may show up in the result set. Instead, these tests will
+        // verify our expected products are present, and unexpected products from the test data are not.
+
+        private List<String> getUnexpectedIds(List<String> expectedIds) {
+            return this.productMap.values()
+                .stream()
+                .flatMap(ProductInfo::content)
+                .map(ContentDTO::getId)
+                .filter(Predicate.not(expectedIds::contains))
+                .toList();
+        }
+
+        @Test
+        public void shouldAllowQueryingWithoutAnyFilters() {
+            List<String> expectedCids = this.productMap.values()
+                .stream()
+                .flatMap(ProductInfo::content)
+                .map(ContentDTO::getId)
+                .toList();
+
+            List<ContentDTO> output = this.adminClient.content()
+                .getContents(null, null, null, INCLUSION_INCLUDE, INCLUSION_INCLUDE);
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsAll(expectedCids);
+        }
+
+        @Test
+        public void shouldDefaultToActiveExclusiveCustomInclusive() {
+            List<String> expectedCids = this.productMap.values()
+                .stream()
+                .filter(ProductInfo::active)
+                .flatMap(ProductInfo::content)
+                .map(ContentDTO::getId)
+                .toList();
+
+            List<ContentDTO> output = this.adminClient.content()
+                .getContents(null, null, null, null, null);
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsAll(expectedCids)
+                .doesNotContainAnyElementsOf(this.getUnexpectedIds(expectedCids));
+        }
+
+        @Test
+        public void shouldAllowFilteringOnOwnerKeys() {
+            List<String> ownerKeys = List.of(
+                this.owners.get(0).getKey(),
+                this.owners.get(1).getKey());
+
+            Predicate<ProductInfo> ownerMatchPredicate = pinfo -> pinfo.owner() == null ||
+                ownerKeys.contains(pinfo.owner().getKey());
+
+            List<String> expectedCids = this.productMap.values()
+                .stream()
+                .filter(ownerMatchPredicate)
+                .flatMap(ProductInfo::content)
+                .map(ContentDTO::getId)
+                .toList();
+
+            List<ContentDTO> output = this.adminClient.content()
+                .getContents(ownerKeys, null, null, INCLUSION_INCLUDE, INCLUSION_INCLUDE);
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsAll(expectedCids)
+                .doesNotContainAnyElementsOf(this.getUnexpectedIds(expectedCids));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = { "invalid_owner" })
+        @NullAndEmptySource
+        public void shouldFailWithInvalidOwners(String ownerKey) {
+            List<String> ownerKeys = Arrays.asList(ownerKey);
+
+            assertNotFound(() -> this.adminClient.content().getContents(ownerKeys, null, null, null, null));
+        }
+
+        @Test
+        public void shouldAllowFilteringOnIDs() {
+            // Randomly seeded for consistency; seed itself chosen randomly
+            Random rand = new Random(2182137L);
+
+            List<String> cids = this.productMap.values()
+                .stream()
+                .filter(elem -> rand.nextBoolean())
+                .flatMap(ProductInfo::content)
+                .map(ContentDTO::getId)
+                .toList();
+
+            List<ContentDTO> output = this.adminClient.content()
+                .getContents(null, cids, null, INCLUSION_INCLUDE, INCLUSION_INCLUDE);
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsAll(cids)
+                .doesNotContainAnyElementsOf(this.getUnexpectedIds(cids));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = { "invalid_id" })
+        @NullAndEmptySource
+        public void shouldAllowFilteringOnInvalidIds(String cid) {
+            // This test verifies that invalid IDs are "allowed", but they won't match on anything
+
+            String expectedCid = this.productMap.values()
+                .stream()
+                .flatMap(ProductInfo::content)
+                .map(ContentDTO::getId)
+                .findAny()
+                .get();
+
+            List<String> cids = Arrays.asList(expectedCid, cid);
+
+            List<ContentDTO> output = this.adminClient.content()
+                .getContents(null, cids, null, INCLUSION_INCLUDE, INCLUSION_INCLUDE);
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsAll(List.of(expectedCid))
+                .doesNotContainAnyElementsOf(this.getUnexpectedIds(List.of(expectedCid)));
+        }
+
+        @Test
+        public void shouldAllowFilteringOnLabel() {
+            Random rand = new Random(55851);
+
+            List<String> expectedCids = this.productMap.values()
+                .stream()
+                .filter(elem -> rand.nextBoolean())
+                .flatMap(ProductInfo::content)
+                .map(ContentDTO::getId)
+                .toList();
+
+            List<String> contentLabels = this.productMap.values()
+                .stream()
+                .flatMap(ProductInfo::content)
+                .filter(content -> expectedCids.contains(content.getId()))
+                .map(ContentDTO::getLabel)
+                .toList();
+
+            List<ContentDTO> output = this.adminClient.content()
+                .getContents(null, null, contentLabels, INCLUSION_INCLUDE, INCLUSION_INCLUDE);
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsAll(expectedCids)
+                .doesNotContainAnyElementsOf(this.getUnexpectedIds(expectedCids));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = { "invalid_label" })
+        @NullAndEmptySource
+        public void shouldAllowFilteringOnInvalidLabels(String label) {
+            // This test verifies that invalid IDs are "allowed", but they won't match on anything
+
+            List<String> expectedCids = this.productMap.values()
+                .stream()
+                .findAny()
+                .get()
+                .content()
+                .map(ContentDTO::getId)
+                .toList();
+
+            List<String> labels = this.productMap.values()
+                .stream()
+                .flatMap(ProductInfo::content)
+                .filter(content -> expectedCids.contains(content.getId()))
+                .map(ContentDTO::getLabel)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+            labels.add(label);
+
+            List<ContentDTO> output = this.adminClient.content()
+                .getContents(null, null, labels, INCLUSION_INCLUDE, INCLUSION_INCLUDE);
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsAll(expectedCids)
+                .doesNotContainAnyElementsOf(this.getUnexpectedIds(expectedCids));
+        }
+
+        @Test
+        public void shouldAllowFilteringWithActiveIncluded() {
+            // This is effectively the same as no filter -- we expect everything back
+            List<String> expectedCids = this.productMap.values()
+                .stream()
+                .flatMap(ProductInfo::content)
+                .map(ContentDTO::getId)
+                .toList();
+
+            List<ContentDTO> output = this.adminClient.content()
+                .getContents(null, null, null, INCLUSION_INCLUDE, INCLUSION_INCLUDE);
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsAll(expectedCids);
+        }
+
+        @Test
+        public void shouldAllowFilteringWithActiveExcluded() {
+            List<String> expecteCids = this.productMap.values()
+                .stream()
+                .filter(pinfo -> !pinfo.active())
+                .flatMap(ProductInfo::content)
+                .map(ContentDTO::getId)
+                .toList();
+
+            List<ContentDTO> output = this.adminClient.content()
+                .getContents(null, null, null, INCLUSION_EXCLUDE, INCLUSION_INCLUDE);
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsAll(expecteCids)
+                .doesNotContainAnyElementsOf(this.getUnexpectedIds(expecteCids));
+        }
+
+        @Test
+        public void shouldAllowFilteringWithActiveExclusive() {
+            List<String> expectedCids = this.productMap.values()
+                .stream()
+                .filter(ProductInfo::active)
+                .flatMap(ProductInfo::content)
+                .map(ContentDTO::getId)
+                .toList();
+
+            List<ContentDTO> output = this.adminClient.content()
+                .getContents(null, null, null, INCLUSION_EXCLUSIVE, INCLUSION_INCLUDE);
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsAll(expectedCids)
+                .doesNotContainAnyElementsOf(this.getUnexpectedIds(expectedCids));
+        }
+
+        @Test
+        public void shouldErrorWithInvalidActiveInclusion() {
+            assertBadRequest(() -> this.adminClient.content()
+                .getContents(null, null, null, "invalid_type", INCLUSION_INCLUDE));
+        }
+
+        @Test
+        public void shouldAllowFilteringWithCustomIncluded() {
+            // This is effectively the same as no filter -- we expect everything back
+
+            List<String> expectedCids = this.productMap.values()
+                .stream()
+                .flatMap(ProductInfo::content)
+                .map(ContentDTO::getId)
+                .toList();
+
+            List<ContentDTO> output = this.adminClient.content()
+                .getContents(null, null, null, INCLUSION_INCLUDE, INCLUSION_INCLUDE);
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsAll(expectedCids);
+        }
+
+        @Test
+        public void shouldAllowFilteringWithCustomExcluded() {
+            List<String> expectedCids = this.productMap.values()
+                .stream()
+                .filter(pinfo -> !pinfo.custom())
+                .flatMap(ProductInfo::content)
+                .map(ContentDTO::getId)
+                .toList();
+
+            List<ContentDTO> output = this.adminClient.content()
+                .getContents(null, null, null, INCLUSION_INCLUDE, INCLUSION_EXCLUDE);
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsAll(expectedCids)
+                .doesNotContainAnyElementsOf(this.getUnexpectedIds(expectedCids));
+        }
+
+        @Test
+        public void shouldAllowFilteringWithCustomExclusive() {
+            List<String> expectedCids = this.productMap.values()
+                .stream()
+                .filter(ProductInfo::custom)
+                .flatMap(ProductInfo::content)
+                .map(ContentDTO::getId)
+                .toList();
+
+            List<ContentDTO> output = this.adminClient.content()
+                .getContents(null, null, null, INCLUSION_INCLUDE, INCLUSION_EXCLUSIVE);
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsAll(expectedCids)
+                .doesNotContainAnyElementsOf(this.getUnexpectedIds(expectedCids));
+        }
+
+        @Test
+        public void shouldErrorWithInvalidCustomInclusion() {
+            assertBadRequest(() -> this.adminClient.content()
+                .getContents(null, null, null, INCLUSION_INCLUDE, "invalid_type"));
+        }
+
+        @Test
+        public void shouldAllowQueryingWithMultipleFilters() {
+            Random rand = new Random(711769L);
+
+            // Hand pick a content to ensure that we have *something* that comes out of the filter, should
+            // our random selection process not have any intersection.
+
+            ContentDTO selectedContent = this.productMap.values()
+                .stream()
+                .filter(ProductInfo::active)
+                .filter(ProductInfo::custom)
+                .flatMap(ProductInfo::content)
+                .findAny()
+                .get();
+
+            List<String> ownerKeys = this.owners.stream()
+                .filter(elem -> rand.nextBoolean())
+                .map(OwnerDTO::getKey)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+            List<String> cids = this.productMap.values()
+                .stream()
+                .filter(elem -> rand.nextBoolean())
+                .flatMap(ProductInfo::content)
+                .map(ContentDTO::getId)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+            List<String> labels = this.productMap.values()
+                .stream()
+                .filter(elem -> rand.nextBoolean())
+                .flatMap(ProductInfo::content)
+                .map(ContentDTO::getLabel)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+            cids.add(selectedContent.getId());
+            labels.add(selectedContent.getLabel());
+
+            List<String> expectedCids = this.productMap.values()
+                .stream()
+                .filter(ProductInfo::active)
+                .filter(ProductInfo::custom)
+                .filter(pinfo -> pinfo.activeOwners().stream().anyMatch(ownerKeys::contains))
+                .flatMap(ProductInfo::content)
+                .filter(content -> cids.contains(content.getId()))
+                .filter(content -> labels.contains(content.getLabel()))
+                .map(ContentDTO::getId)
+                .toList();
+
+            assertThat(expectedCids)
+                .isNotEmpty();
+
+            List<ContentDTO> output = this.adminClient.content()
+                .getContents(ownerKeys, cids, labels, INCLUSION_EXCLUSIVE, INCLUSION_EXCLUSIVE);
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsAll(expectedCids)
+                .doesNotContainAnyElementsOf(this.getUnexpectedIds(expectedCids));
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = { 1, 2, 3, 6, 10, 1000 })
+        public void shouldAllowQueryingInPages(int pageSize) {
+            List<String> ownerKeys = this.owners.stream()
+                .map(OwnerDTO::getKey)
+                .toList();
+
+            List<String> expectedCids = this.productMap.values()
+                .stream()
+                .filter(ProductInfo::custom)
+                .flatMap(ProductInfo::content)
+                .map(ContentDTO::getId)
+                .toList();
+
+            List<String> received = new ArrayList<>();
+
+            int page = 0;
+            while (true) {
+                Response response = Request.from(this.adminClient)
+                    .setPath(QUERY_PATH)
+                    .addQueryParam("owner", ownerKeys)
+                    .addQueryParam("page", String.valueOf(++page))
+                    .addQueryParam("per_page", String.valueOf(pageSize))
+                    .addQueryParam("active", "include")
+                    .addQueryParam("custom", "exclusive")
+                    .execute();
+
+                assertEquals(200, response.getCode());
+
+                List<ProductDTO> output = response.deserialize(new TypeReference<List<ProductDTO>>() {});
+                assertNotNull(output);
+
+                if (output.isEmpty()) {
+                    break;
+                }
+
+                output.stream()
+                    .map(ProductDTO::getId)
+                    .sequential()
+                    .forEach(received::add);
+            }
+
+            assertThat(received)
+                .containsAll(expectedCids)
+                .doesNotContainAnyElementsOf(this.getUnexpectedIds(expectedCids));
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = { 0, -1, -100 })
+        public void shouldFailWithInvalidPage(int page) {
+            Response response = Request.from(this.adminClient)
+                .setPath(QUERY_PATH)
+                .addQueryParam("page", String.valueOf(page))
+                .execute();
+
+            assertEquals(400, response.getCode());
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = { 0, -1, -100 })
+        public void shouldFailWithInvalidPageSize(int pageSize) {
+            Response response = Request.from(this.adminClient)
+                .setPath(QUERY_PATH)
+                .addQueryParam("per_page", String.valueOf(pageSize))
+                .execute();
+
+            assertEquals(400, response.getCode());
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = { "id", "name", "uuid" })
+        public void shouldAllowQueryingWithAscendingOrderedOutput(String field) {
+            List<String> ownerKeys = this.owners.stream()
+                .map(OwnerDTO::getKey)
+                .toList();
+
+            Map<String, Comparator<ContentDTO>> comparatorMap = Map.of(
+                "id", Comparator.comparing(ContentDTO::getId),
+                "name", Comparator.comparing(ContentDTO::getName),
+                "uuid", Comparator.comparing(ContentDTO::getUuid));
+
+            List<ContentDTO> content = this.adminClient.content()
+                .getContents(ownerKeys, null, null, INCLUSION_INCLUDE, INCLUSION_EXCLUSIVE);
+
+            List<String> expectedCids = content.stream()
+                .sorted(comparatorMap.get(field))
+                .map(ContentDTO::getId)
+                .toList();
+
+            Response response = Request.from(this.adminClient)
+                .setPath(QUERY_PATH)
+                .addQueryParam("owner", ownerKeys)
+                .addQueryParam("sort_by", field)
+                .addQueryParam("order", "asc")
+                .addQueryParam("active", INCLUSION_INCLUDE)
+                .addQueryParam("custom", INCLUSION_EXCLUSIVE)
+                .execute();
+
+            assertEquals(200, response.getCode());
+
+            List<ContentDTO> output = response.deserialize(new TypeReference<List<ContentDTO>>() {});
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsExactlyElementsOf(expectedCids); // this must be an ordered check
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = { "id", "name", "uuid" })
+        public void shouldAllowQueryingWithDescendingOrderedOutput(String field) {
+            List<String> ownerKeys = this.owners.stream()
+                .map(OwnerDTO::getKey)
+                .toList();
+
+            Map<String, Comparator<ContentDTO>> comparatorMap = Map.of(
+                "id", Comparator.comparing(ContentDTO::getId),
+                "name", Comparator.comparing(ContentDTO::getName),
+                "uuid", Comparator.comparing(ContentDTO::getUuid));
+
+            List<ContentDTO> contents = this.adminClient.content()
+                .getContents(ownerKeys, null, null, INCLUSION_INCLUDE, INCLUSION_EXCLUSIVE);
+
+            List<String> expectedCids = contents.stream()
+                .sorted(comparatorMap.get(field).reversed())
+                .map(ContentDTO::getId)
+                .toList();
+
+            Response response = Request.from(this.adminClient)
+                .setPath(QUERY_PATH)
+                .addQueryParam("owner", ownerKeys)
+                .addQueryParam("sort_by", field)
+                .addQueryParam("order", "desc")
+                .addQueryParam("active", INCLUSION_INCLUDE)
+                .addQueryParam("custom", INCLUSION_EXCLUSIVE)
+                .execute();
+
+            assertEquals(200, response.getCode());
+
+            List<ContentDTO> output = response.deserialize(new TypeReference<List<ContentDTO>>() {});
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsExactlyElementsOf(expectedCids); // this must be an ordered check
+        }
+
+        @Test
+        public void shouldFailWithInvalidOrderField() {
+            Response response = Request.from(this.adminClient)
+                .setPath(QUERY_PATH)
+                .addQueryParam("sort_by", "invalid field")
+                .execute();
+
+            assertEquals(400, response.getCode());
+        }
+
+        @Test
+        public void shouldFailWithInvalidOrderDirection() {
+            Response response = Request.from(this.adminClient)
+                .setPath(QUERY_PATH)
+                .addQueryParam("order", "invalid order")
+                .execute();
+
+            assertEquals(400, response.getCode());
+        }
+
+        // These tests verify the definition of "active" is properly implemented, ensuring "active" is
+        // defined as a product which is attached to a pool which has started and has not expired, or
+        // attached to another active product (recursively).
+        //
+        // This definition is recursive in nature, so the effect is that it should consider any product
+        // that is a descendant of a product attached to a non-future pool that hasn't yet expired.
+
+        @Test
+        public void shouldOnlySelectActiveProductsFromActivePools() {
+            // "active" only considers pools which have started but have not yet expired -- that is:
+            // (start time < now() < end time)
+            OwnerDTO owner = this.createOwner("test_org");
+
+            ProductDTO prod1 = this.adminClient.ownerProducts()
+                .createProduct(owner.getKey(), Products.random());
+            ContentDTO c1 = this.adminClient.ownerContent()
+                .createContent(owner.getKey(), Contents.random());
+            this.adminClient.ownerProducts()
+                .addContentToProduct(owner.getKey(), prod1.getId(), c1.getId(), true);
+
+            ProductDTO prod2 = this.adminClient.ownerProducts()
+                .createProduct(owner.getKey(), Products.random());
+            ContentDTO c2 = this.adminClient.ownerContent()
+                .createContent(owner.getKey(), Contents.random());
+            this.adminClient.ownerProducts()
+                .addContentToProduct(owner.getKey(), prod2.getId(), c2.getId(), true);
+
+            ProductDTO prod3 = this.adminClient.ownerProducts()
+                .createProduct(owner.getKey(), Products.random());
+            ContentDTO c3 = this.adminClient.ownerContent()
+                .createContent(owner.getKey(), Contents.random());
+            this.adminClient.ownerProducts()
+                .addContentToProduct(owner.getKey(), prod3.getId(), c3.getId(), true);
+
+            OffsetDateTime now = Instant.now()
+                .atOffset(ZoneOffset.UTC);
+
+            // Create three pools: expired, current (active), future
+            PoolDTO pool1 = Pools.random(prod1)
+                .startDate(now.minus(7, ChronoUnit.DAYS))
+                .endDate(now.minus(3, ChronoUnit.DAYS));
+            PoolDTO pool2 = Pools.random(prod2)
+                .startDate(now.minus(3, ChronoUnit.DAYS))
+                .endDate(now.plus(3, ChronoUnit.DAYS));
+            PoolDTO pool3 = Pools.random(prod3)
+                .startDate(now.plus(3, ChronoUnit.DAYS))
+                .endDate(now.plus(7, ChronoUnit.DAYS));
+
+            this.adminClient.owners().createPool(owner.getKey(), pool1);
+            this.adminClient.owners().createPool(owner.getKey(), pool2);
+            this.adminClient.owners().createPool(owner.getKey(), pool3);
+
+            // Active = exclusive should only find the active pool; future and expired pools should be omitted
+            List<ContentDTO> output = this.adminClient.content()
+                .getContents(List.of(owner.getKey()), null, null, INCLUSION_EXCLUSIVE, INCLUSION_EXCLUSIVE);
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .singleElement()
+                .isEqualTo(c2.getId());
+        }
+
+        @Test
+        public void shouldAlsoIncludeDescendantProductsOfActiveProducts() {
+            // "active" includes descendants of products attached to an active pool
+            OwnerDTO owner = this.createOwner("test_org");
+
+            List<ProductDTO> products = new ArrayList<>();
+            for (int i = 0; i < 20; ++i) {
+                ProductDTO product = new ProductDTO()
+                    .id("p" + i)
+                    .name("product " + i);
+
+                products.add(product);
+            }
+
+            List<ContentDTO> content = new ArrayList<>();
+            for (int i = 0; i < 20; ++i) {
+                ContentDTO c = new ContentDTO()
+                    .id("c" + i)
+                    .name("content " + i)
+                    .type("type")
+                    .vendor("vendor")
+                    .label("label " + i);
+
+                content.add(c);
+            }
+
+            /*
+            pool -> prod - p0
+                        derived - p1
+                            provided - p2
+                            provided - p3
+                                provided - p4
+                        provided - p5
+                        provided - p6
+
+            pool -> prod - p7
+                        derived - p8*
+                        provided - p9
+
+            pool -> prod - p8*
+                        provided - p10
+                            provided - p11
+                        provided - p12
+                            provided - p13
+
+                    prod - p14
+                        derived - p15
+                            provided - p16
+
+                    prod - p17
+                        provided - p18
+
+            pool -> prod - p19
+                    prod - p20
+            */
+
+            products.get(0).setDerivedProduct(products.get(1));
+            products.get(0).addProvidedProductsItem(products.get(5));
+            products.get(0).addProvidedProductsItem(products.get(6));
+
+            products.get(1).addProvidedProductsItem(products.get(2));
+            products.get(1).addProvidedProductsItem(products.get(3));
+
+            products.get(3).addProvidedProductsItem(products.get(4));
+
+            products.get(7).setDerivedProduct(products.get(8));
+            products.get(7).addProvidedProductsItem(products.get(9));
+
+            products.get(8).addProvidedProductsItem(products.get(10));
+            products.get(8).addProvidedProductsItem(products.get(12));
+
+            products.get(10).addProvidedProductsItem(products.get(11));
+
+            products.get(12).addProvidedProductsItem(products.get(13));
+
+            products.get(14).setDerivedProduct(products.get(15));
+
+            products.get(15).setDerivedProduct(products.get(16));
+
+            products.get(17).setDerivedProduct(products.get(18));
+
+            // persist the products in reverse order so we don't hit any linkage errors
+            for (int i = products.size() - 1; i >= 0; --i) {
+                this.adminClient.ownerProducts().createProduct(owner.getKey(), products.get(i));
+            }
+
+            // Persist the content
+            for (int i = 0; i < content.size(); i++) {
+                this.adminClient.ownerContent().createContent(owner.getKey(), content.get(i));
+                this.adminClient.ownerProducts()
+                    .addContentToProduct(owner.getKey(), products.get(i).getId(), content.get(i).getId(),
+                        true);
+            }
+
+            // create some pools to link to our product tree
+            this.adminClient.owners().createPool(owner.getKey(), Pools.random(products.get(0)));
+            this.adminClient.owners().createPool(owner.getKey(), Pools.random(products.get(7)));
+            this.adminClient.owners().createPool(owner.getKey(), Pools.random(products.get(8)));
+            this.adminClient.owners().createPool(owner.getKey(), Pools.random(products.get(19)));
+
+            List<String> expectedCids = List.of("c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9",
+                "c10", "c11", "c12", "c13", "c19");
+
+            List<ContentDTO> output = this.adminClient.content()
+                .getContents(List.of(owner.getKey()), null, null, INCLUSION_EXCLUSIVE, INCLUSION_EXCLUSIVE);
+
+            assertThat(output)
+                .isNotNull()
+                .map(ContentDTO::getId)
+                .containsExactlyInAnyOrderElementsOf(expectedCids);
+        }
+    }
+
 }
