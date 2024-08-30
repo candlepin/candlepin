@@ -1122,8 +1122,8 @@ public class OwnerProductResourceSpecTest {
 
             List<String> expectedPids = this.productMap.values()
                 .stream()
+                .filter(this.buildOwnerProductPredicate(owner))
                 .filter(ProductInfo::custom)
-                .filter(pinfo -> pinfo.owner().getKey().equals(owner.getKey()))
                 .map(ProductInfo::id)
                 .toList();
 
@@ -1283,7 +1283,7 @@ public class OwnerProductResourceSpecTest {
                 "uuid", Comparator.comparing(ProductDTO::getUuid));
 
             List<ProductDTO> products = this.adminClient.ownerProducts()
-                .getProductsByOwner(owner.getKey(), null, null, INCLUSION_INCLUDE, INCLUSION_INCLUDE);
+                .getProductsByOwner(owner.getKey(), null, null, INCLUSION_INCLUDE, INCLUSION_EXCLUSIVE);
 
             List<String> expectedPids = products.stream()
                 .sorted(comparatorMap.get(field))
@@ -1296,7 +1296,7 @@ public class OwnerProductResourceSpecTest {
                 .addQueryParam("sort_by", field)
                 .addQueryParam("order", "asc")
                 .addQueryParam("active", INCLUSION_INCLUDE)
-                .addQueryParam("custom", INCLUSION_INCLUDE)
+                .addQueryParam("custom", INCLUSION_EXCLUSIVE)
                 .execute();
 
             assertEquals(200, response.getCode());
@@ -1320,7 +1320,7 @@ public class OwnerProductResourceSpecTest {
                 "uuid", Comparator.comparing(ProductDTO::getUuid));
 
             List<ProductDTO> products = this.adminClient.ownerProducts()
-                .getProductsByOwner(owner.getKey(), null, null, INCLUSION_INCLUDE, INCLUSION_INCLUDE);
+                .getProductsByOwner(owner.getKey(), null, null, INCLUSION_INCLUDE, INCLUSION_EXCLUSIVE);
 
             List<String> expectedPids = products.stream()
                 .sorted(comparatorMap.get(field).reversed())
@@ -1333,7 +1333,7 @@ public class OwnerProductResourceSpecTest {
                 .addQueryParam("sort_by", field)
                 .addQueryParam("order", "desc")
                 .addQueryParam("active", INCLUSION_INCLUDE)
-                .addQueryParam("custom", INCLUSION_INCLUDE)
+                .addQueryParam("custom", INCLUSION_EXCLUSIVE)
                 .execute();
 
             assertEquals(200, response.getCode());

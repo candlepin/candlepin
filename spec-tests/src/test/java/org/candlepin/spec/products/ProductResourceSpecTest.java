@@ -543,8 +543,9 @@ public class ProductResourceSpecTest {
 
             List<String> pids = this.productMap.values()
                 .stream()
-                .filter(elem -> rand.nextBoolean())
                 .map(ProductInfo::id)
+                .sorted()
+                .filter(elem -> rand.nextBoolean())
                 .toList();
 
             List<ProductDTO> output = this.adminClient.products()
@@ -589,6 +590,7 @@ public class ProductResourceSpecTest {
 
             List<String> names = this.productMap.values()
                 .stream()
+                .sorted(Comparator.comparing(ProductInfo::id))
                 .filter(elem -> rand.nextBoolean())
                 .map(pinfo -> pinfo.dto().getName())
                 .toList();
@@ -693,7 +695,6 @@ public class ProductResourceSpecTest {
         @Test
         public void shouldAllowFilteringWithCustomIncluded() {
             // This is effectively the same as no filter -- we expect everything back
-
             List<ProductDTO> output = this.adminClient.products()
                 .getProducts(null, null, null, INCLUSION_INCLUDE, INCLUSION_INCLUDE);
 
@@ -765,12 +766,14 @@ public class ProductResourceSpecTest {
 
             List<String> pids = this.productMap.values()
                 .stream()
-                .filter(elem -> rand.nextBoolean())
                 .map(ProductInfo::id)
+                .sorted()
+                .filter(elem -> rand.nextBoolean())
                 .collect(Collectors.toCollection(ArrayList::new));
 
             List<String> names = this.productMap.values()
                 .stream()
+                .sorted(Comparator.comparing(ProductInfo::id))
                 .filter(elem -> rand.nextBoolean())
                 .map(pinfo -> pinfo.dto().getName())
                 .collect(Collectors.toCollection(ArrayList::new));

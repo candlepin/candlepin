@@ -508,7 +508,7 @@ public class ImportSuccessSpecTest {
             .toList();
 
         List<ContentDTO> contents = adminClient.ownerContent()
-            .getContentsByOwner(owner.getKey(), cids, false);
+            .getContentsByOwner(owner.getKey(), cids, List.of(), null, null);
 
         assertThat(contents)
             .isNotNull()
