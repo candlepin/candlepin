@@ -14,6 +14,11 @@
  */
 package org.candlepin.resource;
 
+import static org.candlepin.model.CloudIdentifierFacts.extractCloudAccountId;
+import static org.candlepin.model.CloudIdentifierFacts.extractCloudInstanceId;
+import static org.candlepin.model.CloudIdentifierFacts.extractCloudOfferingIds;
+import static org.candlepin.model.CloudIdentifierFacts.extractCloudProviderShortName;
+
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
@@ -86,6 +91,7 @@ import org.candlepin.model.Certificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerActivationKey;
 import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerCloudData;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
@@ -983,6 +989,14 @@ public class ConsumerResource implements ConsumerApi {
 
         Consumer created = createConsumerFromDTO(dto, ctype, principal, userName, owner, activationKeys,
             identityCertCreation);
+
+        ConsumerCloudData consumerCloudData = createConsumerCloudData(created);
+
+        if (consumerCloudData != null) {
+            created.setConsumerCloudData(consumerCloudData);
+            this.consumerCurator.update(created);
+        }
+
         if (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal) {
             AnonymousCloudConsumer anonCloudConsumer = anonymPrincipal.getAnonymousCloudConsumer();
             anonymousCertCurator.delete(anonCloudConsumer.getContentAccessCert());
@@ -990,6 +1004,33 @@ public class ConsumerResource implements ConsumerApi {
         }
 
         return this.translator.translate(created, ConsumerDTO.class);
+    }
+
+    private ConsumerCloudData createConsumerCloudData(Consumer consumer) {
+        Map<String, String> facts = consumer.getFacts();
+
+        String cloudProviderShortName;
+        try {
+            cloudProviderShortName = extractCloudProviderShortName(facts);
+        }
+        catch (IllegalArgumentException e) {
+            throw new BadRequestException(i18n.tr(e.getMessage()));
+        }
+
+        if (cloudProviderShortName != null) {
+            String cloudAccountId = extractCloudAccountId(facts);
+            String cloudInstanceId = extractCloudInstanceId(facts);
+            List<String> cloudOfferingIds = extractCloudOfferingIds(facts);
+
+            return new ConsumerCloudData()
+                .setConsumer(consumer)
+                .setCloudProviderShortName(cloudProviderShortName)
+                .setCloudAccountId(cloudAccountId)
+                .setCloudInstanceId(cloudInstanceId)
+                .setCloudOfferingIds(cloudOfferingIds);
+        }
+
+        return null;
     }
 
     public Consumer createConsumerFromDTO(ConsumerDTO consumer, ConsumerType type, Principal principal,

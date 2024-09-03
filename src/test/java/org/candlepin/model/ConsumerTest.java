@@ -692,6 +692,17 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertNull(consumer.getOwnerKey());
     }
 
+    @Test
+    public void testSetConsumerCloudData() {
+        Consumer consumer = new Consumer();
+        ConsumerCloudData consumerCloudData = new ConsumerCloudData()
+            .setId("id-123");
+
+        consumer.setConsumerCloudData(consumerCloudData);
+
+        assertEquals(consumerCloudData.getId(), consumer.getConsumerCloudData().getId());
+    }
+
     private Consumer createConsumerWithIdCert(Owner owner) {
         IdentityCertificate idCert = createIdCert();
         Consumer consumer = createConsumer(owner)

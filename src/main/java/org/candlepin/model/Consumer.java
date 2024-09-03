@@ -322,6 +322,10 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @Column(name = "reg_auth_method")
     private AuthenticationMethod registrationAuthenticationMethod;
 
+    @OneToOne(mappedBy = "consumer",
+        orphanRemoval = true, cascade = { CascadeType.ALL })
+    private ConsumerCloudData consumerCloudData;
+
     public Consumer() {
         this.addOns = new HashSet<>();
         this.entitlements = new HashSet<>();
@@ -1255,6 +1259,15 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
             return null;
         }
         return this.registrationAuthenticationMethod.getDescription();
+    }
+
+    public Consumer setConsumerCloudData(ConsumerCloudData consumerCloudData) {
+        this.consumerCloudData = consumerCloudData;
+        return this;
+    }
+
+    public ConsumerCloudData getConsumerCloudData() {
+        return this.consumerCloudData;
     }
 
     /**

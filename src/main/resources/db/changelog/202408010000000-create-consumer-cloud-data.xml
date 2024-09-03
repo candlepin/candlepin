@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="202408010000000-1" author="sbakaj">
+        <createTable tableName="cp_consumer_cloud_data">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="consumer_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cloud_provider_short_name" type="varchar(15)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cloud_account_id" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="cloud_instance_id" type="varchar(170)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="cloud_offering_ids" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="cp_consumer_cloud_data"
+                                 baseColumnNames="consumer_id"
+                                 referencedTableName="cp_consumer"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE" constraintName="fk_cp_consumer_cloud_data_consumer_id"/>
+    </changeSet>
+
+    <changeSet id="202408010000000-2" author="sbakaj">
+        <addUniqueConstraint tableName="cp_consumer_cloud_data"
+                             columnNames="consumer_id"
+                             constraintName="uq_consumer_id"/>
+    </changeSet>
+
+    <changeSet id="202408010000000-3" author="sbakaj">
+        <createIndex indexName="idx_cloud_account_offering" tableName="cp_consumer_cloud_data">
+            <column name="cloud_account_id"/>
+            <column name="cloud_offering_ids"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
