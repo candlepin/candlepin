@@ -110,7 +110,6 @@ import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
@@ -198,8 +197,6 @@ public class ConsumerResourceUpdateTest {
     @Mock
     private SubscriptionServiceAdapter subscriptionServiceAdapter;
     @Mock
-    private ProductServiceAdapter productService;
-    @Mock
     private EntitlementCurator entitlementCurator;
     @Mock
     private ContentAccessManager contentAccessManager;
@@ -262,7 +259,6 @@ public class ConsumerResourceUpdateTest {
             this.consumerCurator,
             this.consumerTypeCurator,
             this.subscriptionServiceAdapter,
-            this.productService,
             this.entitlementCurator,
             this.identityCertificateGenerator,
             this.entitlementCertServiceAdapter,

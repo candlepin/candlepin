@@ -92,7 +92,6 @@ public class PoolTranslator implements ObjectTranslator<Pool, PoolDTO> {
         dest.setUpstreamConsumerId(source.getUpstreamConsumerId());
         dest.setStackId(source.getStackId());
         dest.setStacked(source.isStacked());
-        dest.setDevelopmentPool(source.isDevelopmentPool());
         dest.setSourceStackId(source.getSourceStackId());
         dest.setSubscriptionSubKey(source.getSubscriptionSubKey());
         dest.setSubscriptionId(source.getSubscriptionId());

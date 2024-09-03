@@ -39,7 +39,6 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.exception.product.ProductServiceException;
 import org.candlepin.service.exception.subscription.SubscriptionServiceException;
@@ -70,8 +69,6 @@ public class RefresherTest {
     @Mock
     private SubscriptionServiceAdapter subAdapter;
     @Mock
-    private ProductServiceAdapter prodAdapter;
-    @Mock
     private OwnerCurator ownerCurator;
     @Mock
     private PoolCurator poolCurator;
@@ -86,8 +83,7 @@ public class RefresherTest {
         when(poolCurator.transactional()).thenReturn(transaction);
         when(transaction.allowExistingTransactions()).thenReturn(transaction);
 
-        refresher = new Refresher(
-            poolManager, subAdapter, prodAdapter, ownerCurator, poolCurator, poolConverter)
+        refresher = new Refresher(poolManager, subAdapter, ownerCurator, poolCurator, poolConverter)
             .setLazyCertificateRegeneration(false);
     }
 
@@ -100,7 +96,7 @@ public class RefresherTest {
         refresher.run();
 
         verify(poolManager, times(1))
-            .refreshPoolsWithRegeneration(subAdapter, prodAdapter, owner, false);
+            .refreshPoolsWithRegeneration(subAdapter, owner, false);
     }
 
     @Test
@@ -153,7 +149,7 @@ public class RefresherTest {
         refresher.run();
 
         verify(poolManager, times(1))
-            .refreshPoolsWithRegeneration(subAdapter, prodAdapter, owner, false);
+            .refreshPoolsWithRegeneration(subAdapter, owner, false);
         verify(poolManager, times(0)).updatePoolsForPrimaryPool(anyList(),
             any(Pool.class), eq(pool.getQuantity()), eq(false), anyMap());
     }
@@ -177,7 +173,7 @@ public class RefresherTest {
         Product product = TestUtil.createProduct();
         doThrow(new SubscriptionServiceException())
             .when(poolManager).refreshPoolsWithRegeneration(any(SubscriptionServiceAdapter.class),
-                any(ProductServiceAdapter.class), any(Owner.class), any(Boolean.class));
+                any(Owner.class), any(Boolean.class));
 
         refresher.add(owner);
         refresher.add(product);
@@ -191,7 +187,7 @@ public class RefresherTest {
         Product product = TestUtil.createProduct();
         doThrow(new ProductServiceException())
             .when(poolManager).refreshPoolsWithRegeneration(any(SubscriptionServiceAdapter.class),
-                any(ProductServiceAdapter.class), any(Owner.class), any(Boolean.class));
+                any(Owner.class), any(Boolean.class));
 
         refresher.add(owner);
         refresher.add(product);

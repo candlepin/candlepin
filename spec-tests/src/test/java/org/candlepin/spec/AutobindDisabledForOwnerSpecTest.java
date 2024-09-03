@@ -22,13 +22,9 @@ import org.candlepin.dto.api.client.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerActivationKeyDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
-import org.candlepin.dto.api.client.v1.ConsumerInstalledProductDTO;
-import org.candlepin.dto.api.client.v1.EntitlementDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
-import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.PoolQuantityDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
-import org.candlepin.dto.api.client.v1.ProvidedProductDTO;
 import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
@@ -38,18 +34,14 @@ import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Facts;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
-import org.candlepin.spec.bootstrap.data.builder.Pools;
-import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @SpecTest
 public class AutobindDisabledForOwnerSpecTest {
@@ -94,39 +86,6 @@ public class AutobindDisabledForOwnerSpecTest {
         assertBadRequest(() -> consumerClient.consumers().bindProduct(consumer.getUuid(), product))
             .hasMessageContaining("Ignoring request to auto-attach. It is disabled for org")
             .hasMessageContaining("because of the hypervisor autobind setting.");
-    }
-
-    @Test
-    @OnlyInHosted
-    public void shouldAllowDevConsumerToAutobindWhenDisabledOnOwner() {
-        ApiClient adminClient = ApiClients.admin();
-        OwnerDTO owner = adminClient.owners().createOwner(Owners.random()
-            .autobindDisabled(true));
-
-        ProductDTO activeProd = adminClient.ownerProducts()
-            .createProduct(owner.getKey(), Products.random());
-        adminClient.owners().createPool(owner.getKey(), Pools.randomUpstream(activeProd));
-        ProductDTO provProd1 = adminClient.hosted().createProduct(Products.random());
-        ProductDTO provProd2 = adminClient.hosted().createProduct(Products.random());
-        ProductDTO devProd = adminClient.hosted().createProduct(Products.random()
-            .attributes(List.of(ProductAttributes.ExpiresAfter.withValue("60")))
-            .providedProducts(Set.of(provProd1, provProd2)));
-
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
-        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner)
-            .facts(Map.ofEntries(Facts.DevSku.withValue(devProd.getId())))
-            .installedProducts(toInstalled(provProd1, provProd2)));
-        ApiClient consumerClient = ApiClients.ssl(consumer);
-
-        consumerClient.consumers().bindProduct(consumer.getUuid(), devProd);
-
-        List<EntitlementDTO> ents = consumerClient.consumers().listEntitlements(consumer.getUuid());
-        assertThat(ents).singleElement();
-        assertThat(ents.get(0).getPool())
-            .isNotNull()
-            .returns("DEVELOPMENT", PoolDTO::getType)
-            .returns(devProd.getId(), PoolDTO::getProductId)
-            .returns(toProvidedProducts(provProd1, provProd2), PoolDTO::getProvidedProducts);
     }
 
     @Test
@@ -209,18 +168,6 @@ public class AutobindDisabledForOwnerSpecTest {
         return new ConsumerActivationKeyDTO()
             .activationKeyId(key.getId())
             .activationKeyName(key.getName());
-    }
-
-    private Set<ConsumerInstalledProductDTO> toInstalled(ProductDTO... products) {
-        return Arrays.stream(products)
-            .map(Products::toInstalled)
-            .collect(Collectors.toSet());
-    }
-
-    private Set<ProvidedProductDTO> toProvidedProducts(ProductDTO... products) {
-        return Arrays.stream(products)
-            .map(Products::toProvidedProduct)
-            .collect(Collectors.toSet());
     }
 
 }

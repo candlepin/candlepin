@@ -56,9 +56,7 @@ import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.util.Traceable;
 import org.candlepin.util.TraceableParam;
@@ -170,7 +168,6 @@ public class PoolManager {
     @SuppressWarnings("checkstyle:methodlength")
     @Traceable
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter,
-        ProductServiceAdapter prodAdapter,
         @TraceableParam("owner") Owner owner, boolean lazy) {
 
         Date now = new Date();
@@ -182,18 +179,6 @@ public class PoolManager {
         log.debug("Fetching subscriptions from adapter...");
         refresher.addSubscriptions(subAdapter.getSubscriptions(resolvedOwner.getKey()));
         Map<String, ? extends SubscriptionInfo> subMap = refresher.getSubscriptions();
-
-        // Check if there are any dev pools (products) that need refreshing
-        List<String> devProdIds = this.poolCurator.getDevPoolProductIds(resolvedOwner.getId());
-        if (devProdIds != null && !devProdIds.isEmpty()) {
-            log.info("Refreshing {} development products for owner: {}", devProdIds.size(),
-                resolvedOwner.getKey());
-
-            Collection<? extends ProductInfo> devProducts = prodAdapter
-                .getProductsByIds(resolvedOwner.getKey(), devProdIds);
-
-            refresher.addProducts(devProducts);
-        }
 
         // Execute refresh!
         RefreshResult refreshResult = refresher.execute(resolvedOwner);
@@ -872,17 +857,8 @@ public class PoolManager {
         Date entitleDate = data.getOnDate();
         String ownerId = consumer.getOwnerId();
 
-        List<PoolQuantity> bestPools = new ArrayList<>();
-        // fromPools will be empty if the dev pool was already created.
-        if (consumer != null && consumer.isDev() && !fromPools.isEmpty()) {
-            String poolId = fromPools.iterator().next();
-            PoolQuantity pq = new PoolQuantity(poolCurator.get(poolId), 1);
-            bestPools.add(pq);
-        }
-        else {
-            bestPools = getBestPools(consumer, productIds, entitleDate, ownerId, null, fromPools);
-        }
-
+        List<PoolQuantity> bestPools = getBestPools(consumer, productIds, entitleDate,
+            ownerId, null, fromPools);
         if (bestPools == null) {
             return null;
         }
@@ -1561,17 +1537,13 @@ public class PoolManager {
             return emptyPage;
         }
 
-        Consumer consumer = qualifier.getConsumer();
-        if (consumer != null && !consumer.isDev()) {
-            qualifier.addAttribute(Pool.Attributes.DEVELOPMENT_POOL, "!true");
-        }
-
         Page<List<Pool>> page = this.poolCurator.listAvailableEntitlementPools(qualifier);
         if (page.getPageData() == null || page.getPageData().isEmpty()) {
             return page;
         }
 
         ActivationKey key = qualifier.getActivationKey();
+        Consumer consumer = qualifier.getConsumer();
         if (consumer == null && key == null) {
             return page;
         }

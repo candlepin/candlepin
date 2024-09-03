@@ -77,8 +77,6 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         source.setRestrictedToUsername("restricted-to-username-value");
         source.setConsumed(6L);
 
-        source.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-
         Product mktProduct = this.generateProduct("mkt_product", 1);
         Product engProduct1 = this.generateProduct("eng_product", 1);
         Product engProduct2 = this.generateProduct("eng_product", 2);

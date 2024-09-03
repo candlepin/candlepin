@@ -800,15 +800,6 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         return pool;
     }
 
-    private Pool setupDevConsumerRestrictedPool(Consumer consumer) {
-        Product product = TestUtil.createProduct(productId, "product");
-        Pool pool = TestUtil.createPool(owner, product);
-        pool.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-        pool.setId("fakeid" + TestUtil.randomInt());
-        pool.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, consumer.getUuid());
-        return pool;
-    }
-
     private Pool setupUnmappedGuestPool() {
         Pool pool = setupVirtOnlyPool();
         pool.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
@@ -893,35 +884,6 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
         assertEquals(1, filtered.size());
         assertTrue(filtered.contains(pool));
-    }
-
-    @Test
-    public void devPoolConsumerMatches() {
-        Pool pool = setupDevConsumerRestrictedPool(consumer);
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
-        assertFalse(result.hasErrors());
-        assertFalse(result.hasWarnings());
-    }
-
-    @Test
-    public void devPoolConsumerDoesNotMatch() {
-        // Another consumer we'll make a dev pool for:
-        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
-
-        Consumer otherConsumer = new Consumer()
-            .setUuid(Util.generateUUID())
-            .setName("test consumer")
-            .setUsername("test user")
-            .setOwner(owner)
-            .setType(ctype);
-
-        Pool pool = setupDevConsumerRestrictedPool(otherConsumer);
-
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
-        assertFalse(result.hasWarnings());
-        assertEquals(1, result.getErrors().size());
-        assertEquals("consumer.does.not.match.pool.consumer.requirement",
-            result.getErrors().get(0).getResourceKey());
     }
 
 }

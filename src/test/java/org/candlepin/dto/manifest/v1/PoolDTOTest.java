@@ -114,7 +114,6 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
 
         this.values.put("StackId", "stack-id-1");
         this.values.put("Stacked", true);
-        this.values.put("DevelopmentPool", true);
 
         Map<String, String> derivedProductAttributes = new HashMap<>();
         derivedProductAttributes.put("derived-prod-attribute-key-1", "derived-prod-attribute-value-1");

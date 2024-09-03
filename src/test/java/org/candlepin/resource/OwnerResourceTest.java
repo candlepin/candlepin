@@ -476,43 +476,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertModelEqualsDTO(pool1, pools.get(0));
     }
 
-    @Test
-    public void testCanFilterOutDevPoolsByAttribute() {
-        Principal principal = setupPrincipal(owner, Access.ALL);
-
-        Product p = this.createProduct();
-
-        Pool pool1 = TestUtil.createPool(owner, p);
-        pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-        poolCurator.create(pool1);
-
-        Product p2 = this.createProduct();
-        Pool pool2 = TestUtil.createPool(owner, p2);
-        poolCurator.create(pool2);
-
-        List<String> params = List.of();
-
-        when(this.principalProvider.get()).thenReturn(principal);
-        Stream<PoolDTO> result = ownerResource.listOwnerPools(owner.getKey(), null, null, null, null, true,
-            null, null, params, false, false, null, null, null, null, null, null);
-
-        assertNotNull(result);
-        List<PoolDTO> pools = result.collect(Collectors.toList());
-
-        assertEquals(2, pools.size());
-
-        params = List.of(String.format("%s:!true", Pool.Attributes.DEVELOPMENT_POOL));
-
-        result = ownerResource.listOwnerPools(owner.getKey(), null, null, null, null,
-            true, null, null, params, false, false, null, null, null, null, null, null);
-
-        assertNotNull(result);
-        pools = result.collect(Collectors.toList());
-
-        assertEquals(1, pools.size());
-        assertModelEqualsDTO(pool2, pools.get(0));
-    }
-
     private void assertModelEqualsDTO(Pool model, PoolDTO dto) {
         assertEquals(model.getId(), dto.getId());
         assertEquals(model.getType().toString(), dto.getType());

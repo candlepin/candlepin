@@ -124,12 +124,10 @@ import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.exception.product.ProductServiceException;
 import org.candlepin.service.exception.subscription.SubscriptionServiceException;
-import org.candlepin.service.model.ProductInfo;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.FactValidator;
@@ -203,8 +201,6 @@ public class ConsumerResourceTest {
     private EntitlementCertServiceAdapter entitlementCertServiceAdapter;
     @Mock
     private SubscriptionServiceAdapter subscriptionServiceAdapter;
-    @Mock
-    private ProductServiceAdapter mockProductServiceAdapter;
     @Mock
     private PoolManager poolManager;
     @Mock
@@ -315,7 +311,6 @@ public class ConsumerResourceTest {
             this.consumerCurator,
             this.consumerTypeCurator,
             this.subscriptionServiceAdapter,
-            this.mockProductServiceAdapter,
             this.entitlementCurator,
             this.identityCertificateGenerator,
             this.entitlementCertServiceAdapter,
@@ -523,7 +518,6 @@ public class ConsumerResourceTest {
             this.consumerCurator,
             this.consumerTypeCurator,
             this.subscriptionServiceAdapter,
-            this.mockProductServiceAdapter,
             this.entitlementCurator,
             this.identityCertificateGenerator,
             this.entitlementCertServiceAdapter,
@@ -1339,10 +1333,6 @@ public class ConsumerResourceTest {
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
         ResteasyContext.pushContext(Principal.class, principal);
 
-        ProductInfo mockProdInfo = mock(ProductInfo.class);
-        doReturn(List.of(mockProdInfo)).when(mockProductServiceAdapter)
-            .getChildrenByProductIds(consumer.getProductIds());
-
         AnonymousContentAccessCertificate expectedCert = createAnonContentAccessCert("expected-key",
             "expected-cert", 18084729L);
         when(this.anonymousCertificateGenerator.generate(consumer)).thenReturn(expectedCert);
@@ -1367,10 +1357,6 @@ public class ConsumerResourceTest {
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
         ResteasyContext.pushContext(Principal.class, principal);
 
-        ProductInfo mockProdInfo = mock(ProductInfo.class);
-        doReturn(List.of(mockProdInfo)).when(mockProductServiceAdapter)
-            .getChildrenByProductIds(consumer.getProductIds());
-
         AnonymousContentAccessCertificate expectedCertificate = createAnonContentAccessCert("expected-key",
             "expected-cert", 18084729L);
         when(this.anonymousCertificateGenerator.generate(consumer))
@@ -1391,10 +1377,6 @@ public class ConsumerResourceTest {
         consumer.setProductIds(List.of("product-id"));
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
         ResteasyContext.pushContext(Principal.class, principal);
-
-        ProductInfo mockProdInfo = mock(ProductInfo.class);
-        doReturn(List.of(mockProdInfo)).when(mockProductServiceAdapter)
-            .getChildrenByProductIds(consumer.getProductIds());
 
         doThrow(new RuntimeException()).when(this.anonymousCertificateGenerator)
             .generate(any(AnonymousCloudConsumer.class));

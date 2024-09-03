@@ -96,7 +96,6 @@ import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
@@ -144,8 +143,6 @@ public class ConsumerResourceCreationTest {
     protected UserServiceAdapter userService;
     @Mock
     protected IdentityCertificateGenerator idCertGenerator;
-    @Mock
-    protected ProductServiceAdapter productService;
     @Mock
     protected SubscriptionServiceAdapter subscriptionService;
     @Mock
@@ -242,7 +239,6 @@ public class ConsumerResourceCreationTest {
             this.consumerCurator,
             this.consumerTypeCurator,
             this.subscriptionService,
-            this.productService,
             this.entitlementCurator,
             this.idCertGenerator,
             this.entitlementCertServiceAdapter,

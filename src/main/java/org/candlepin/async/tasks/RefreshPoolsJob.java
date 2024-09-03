@@ -26,7 +26,6 @@ import org.candlepin.controller.Refresher;
 import org.candlepin.controller.RefresherFactory;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import java.util.Objects;
@@ -49,7 +48,6 @@ public class RefreshPoolsJob implements AsyncJob {
     private final OwnerCurator ownerCurator;
     private final RefresherFactory refresherFactory;
     private final SubscriptionServiceAdapter subAdapter;
-    private final ProductServiceAdapter prodAdapter;
 
 
     /**
@@ -130,12 +128,11 @@ public class RefreshPoolsJob implements AsyncJob {
 
     @Inject
     public RefreshPoolsJob(OwnerCurator ownerCurator, RefresherFactory refresherFactory,
-        SubscriptionServiceAdapter subAdapter, ProductServiceAdapter prodAdapter) {
+        SubscriptionServiceAdapter subAdapter) {
 
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.refresherFactory = Objects.requireNonNull(refresherFactory);
         this.subAdapter = Objects.requireNonNull(subAdapter);
-        this.prodAdapter = Objects.requireNonNull(prodAdapter);
     }
 
     /**
@@ -157,7 +154,7 @@ public class RefreshPoolsJob implements AsyncJob {
 
         try {
             // Assume that we verified the request in the resource layer:
-            this.refresherFactory.getRefresher(this.subAdapter, this.prodAdapter)
+            this.refresherFactory.getRefresher(this.subAdapter)
                 .setLazyCertificateRegeneration(lazy)
                 .add(owner)
                 .run();

@@ -18,15 +18,10 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.nullable;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -35,17 +30,12 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.controller.refresher.RefreshResult;
-import org.candlepin.controller.refresher.RefreshResult.EntityState;
-import org.candlepin.controller.refresher.RefreshWorker;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -55,7 +45,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.dto.ProductData;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
@@ -74,8 +63,6 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -84,8 +71,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.inject.Provider;
 
 // TODO: FIXME: Rewrite this test to not be so reliant upon mocks. It's making things incredibly brittle and
 // wasting dev time tracking down non-issues when a mock silently fails because the implementation changes.
@@ -131,9 +116,6 @@ public class EntitlerTest {
     @Mock
     private ProductCurator mockProductCurator;
 
-    private RefreshWorker refreshWorker;
-    private Provider<RefreshWorker> refreshWorkerProvider;
-
     private ValidationResult fakeOutResult(String msg) {
         ValidationResult result = new ValidationResult();
         ValidationError err = new ValidationError(msg);
@@ -149,33 +131,8 @@ public class EntitlerTest {
             I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK);
         translator = new EntitlementRulesTranslator(i18n);
 
-        this.refreshWorker = spy(new RefreshWorker(this.poolCurator, this.mockProductCurator,
-            this.mockContentCurator));
-
-        this.refreshWorkerProvider = () -> refreshWorker;
-
         entitler = new Entitler(pm, poolService, cc, i18n, ef, sink, translator, entitlementCurator, config,
-            ownerCurator, poolCurator, productAdapter, consumerTypeCurator, this.refreshWorkerProvider);
-    }
-
-    private void mockRefresh(Owner owner, Collection<Product> products, Collection<Content> contents) {
-        doAnswer(iom -> {
-            RefreshResult output = new RefreshResult();
-
-            if (products != null) {
-                for (Product product : products) {
-                    output.addEntity(Product.class, product, EntityState.CREATED);
-                }
-            }
-
-            if (contents != null) {
-                for (Content content : contents) {
-                    output.addEntity(Content.class, content, EntityState.CREATED);
-                }
-            }
-
-            return output;
-        }).when(this.refreshWorker).execute(owner);
+            ownerCurator, poolCurator, consumerTypeCurator);
     }
 
     @Test
@@ -528,191 +485,6 @@ public class EntitlerTest {
         assertEquals(2, total);
         verify(poolService).revokeEntitlements(List.of(entOf(pool1)));
         verify(poolService).revokeEntitlements(List.of(entOf(pool2)));
-    }
-
-    @Test
-    public void testDevPoolCreationAtBind() throws Exception {
-        Owner owner = TestUtil.createOwner("o");
-        List<ProductData> devProdDTOs = new ArrayList<>();
-        Product p = TestUtil.createProduct("test-product", "Test Product");
-
-        p.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
-        devProdDTOs.add(p.toDTO());
-        Pool devPool = mock(Pool.class);
-
-        Consumer devSystem = TestUtil.createConsumer(owner);
-        devSystem.setFact("dev_sku", p.getId());
-
-        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
-        when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
-        doReturn(devProdDTOs).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
-
-        this.mockRefresh(owner, List.of(p), null);
-
-        when(poolService.createPool(any(Pool.class))).thenReturn(devPool);
-        when(devPool.getId()).thenReturn("test_pool_id");
-
-        AutobindData ad = new AutobindData(devSystem, owner);
-        entitler.bindByProducts(ad);
-        verify(poolService).createPool(any(Pool.class));
-    }
-
-    @Test
-    public void testDevPoolCreationAtBindFailStandalone() {
-        Owner owner = TestUtil.createOwner("o");
-        Product p = TestUtil.createProduct("test-product", "Test Product");
-
-        Consumer devSystem = TestUtil.createConsumer(owner);
-        devSystem.setFact("dev_sku", p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
-            .setProductId(p.getId())
-            .setProductName(p.getName()));
-
-        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
-
-        AutobindData ad = new AutobindData(devSystem, owner);
-
-        assertThrows(ForbiddenException.class, () -> entitler.bindByProducts(ad));
-    }
-
-    @Test
-    public void testDevPoolCreationAtBindFailNotActive() {
-        Owner owner = TestUtil.createOwner("o");
-        Product p = TestUtil.createProduct("test-product", "Test Product");
-
-        Consumer devSystem = TestUtil.createConsumer(owner);
-        devSystem.setFact("dev_sku", p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
-            .setProductId(p.getId())
-            .setProductName(p.getName()));
-
-        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
-
-        AutobindData ad = new AutobindData(devSystem, owner);
-
-        assertThrows(ForbiddenException.class, () -> entitler.bindByProducts(ad));
-    }
-
-    @Test
-    public void testDevPoolCreationAtBindFailNoSkuProduct() throws Exception {
-        Owner owner = TestUtil.createOwner("o");
-        List<ProductData> devProdDTOs = new ArrayList<>();
-        Product p = TestUtil.createProduct("test-product", "Test Product");
-        Product ip = TestUtil.createProduct("test-product-installed", "Installed Test Product");
-        devProdDTOs.add(ip.toDTO());
-
-        Consumer devSystem = TestUtil.createConsumer(owner);
-        devSystem.setFact("dev_sku", p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
-            .setProductId(ip.getId())
-            .setProductName(ip.getName()));
-
-        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
-        when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
-        doReturn(devProdDTOs).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
-
-        this.mockRefresh(owner, Arrays.asList(p, ip), null);
-
-        AutobindData ad = new AutobindData(devSystem, owner);
-        try {
-            entitler.bindByProducts(ad);
-        }
-        catch (ForbiddenException fe) {
-            assertEquals(i18n.tr("SKU product not available to this development unit: \"{0}\"",
-                p.getId()), fe.getMessage());
-        }
-    }
-
-    @Test
-    public void testDevPoolCreationAtBindNoFailMissingInstalledProduct() throws Exception {
-        Owner owner = TestUtil.createOwner("o");
-        List<ProductData> devProdDTOs = new ArrayList<>();
-        Product p = TestUtil.createProduct("test-product", "Test Product");
-        Product ip1 = TestUtil.createProduct("test-product-installed-1", "Installed Test Product 1");
-        Product ip2 = TestUtil.createProduct("test-product-installed-2", "Installed Test Product 2");
-        devProdDTOs.add(p.toDTO());
-        devProdDTOs.add(ip1.toDTO());
-
-        Consumer devSystem = TestUtil.createConsumer(owner);
-        devSystem.setFact("dev_sku", p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
-            .setProductId(ip1.getId())
-            .setProductName(ip1.getName()));
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
-            .setProductId(ip2.getId())
-            .setProductName(ip2.getName()));
-
-        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
-        when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
-        doReturn(devProdDTOs).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
-
-        this.mockRefresh(owner, Arrays.asList(p, ip1, ip2), null);
-
-        Pool expectedPool = entitler.assembleDevPool(devSystem, owner, p.getId());
-        when(poolService.createPool(any(Pool.class))).thenReturn(expectedPool);
-        AutobindData ad = new AutobindData(devSystem, owner);
-        entitler.bindByProducts(ad);
-    }
-
-    @Test
-    public void testCreatedDevPoolAttributes() {
-        Owner owner = TestUtil.createOwner("o");
-
-        Product p1 = TestUtil.createProduct("dev-product", "Dev Product");
-        Product p2 = TestUtil.createProduct("provided-product1", "Provided Product 1");
-        Product p3 = TestUtil.createProduct("provided-product2", "Provided Product 2");
-
-        p1.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
-        p1.setAttribute("expires_after", "47");
-        p1.addProvidedProduct(p2);
-        p1.addProvidedProduct(p3);
-
-        Consumer devSystem = TestUtil.createConsumer(owner);
-        devSystem.setFact("dev_sku", p1.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
-            .setProductId(p2.getId())
-            .setProductName(p2.getName()));
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
-            .setProductId(p3.getId())
-            .setProductName(p3.getName()));
-
-        doAnswer(iom -> {
-            List<ProductData> output = new ArrayList<>();
-
-            List<String> pids = (List<String>) iom.getArguments()[1];
-
-            if (pids != null) {
-                for (String pid : pids) {
-                    if (pid.equals(p1.getId())) {
-                        output.add(p1.toDTO());
-                    }
-
-                    if (pid.equals(p2.getId())) {
-                        output.add(p2.toDTO());
-                    }
-
-                    if (pid.equals(p3.getId())) {
-                        output.add(p3.toDTO());
-                    }
-                }
-            }
-
-            return output;
-        }).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
-
-        this.mockRefresh(owner, Arrays.asList(p1, p2, p3), null);
-
-        Pool created = entitler.assembleDevPool(devSystem, owner, devSystem.getFact(Consumer.Facts.DEV_SKU));
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(created.getStartDate());
-        cal.add(Calendar.DAY_OF_YEAR, 47);
-        assertEquals(created.getEndDate(), cal.getTime());
-        assertEquals("true", created.getAttributeValue(Pool.Attributes.DEVELOPMENT_POOL));
-        assertEquals(devSystem.getUuid(), created.getAttributeValue(Pool.Attributes.REQUIRES_CONSUMER));
-        assertEquals(p1.getId(), created.getProductId());
-        assertEquals(2, created.getProduct().getProvidedProducts().size());
-        assertEquals("Premium", created.getProduct().getAttributeValue(Product.Attributes.SUPPORT_LEVEL));
-        assertEquals(1L, created.getQuantity().longValue());
     }
 
     private Pool createValidPool(String id) {

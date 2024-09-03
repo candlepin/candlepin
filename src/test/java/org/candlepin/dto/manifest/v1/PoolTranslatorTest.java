@@ -148,8 +148,6 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         source.setUpstreamEntitlementId("upstream-entitlement-id-2");
         source.setUpstreamConsumerId("upstream-consumer-id-2");
 
-        source.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-
         Consumer sourceConsumer = new Consumer();
         sourceConsumer.setUuid("source-consumer-uuid");
 
@@ -190,7 +188,6 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
             assertEquals(source.getUpstreamConsumerId(), dest.getUpstreamConsumerId());
             assertEquals(source.getStackId(), dest.getStackId());
             assertEquals(source.isStacked(), dest.isStacked());
-            assertEquals(source.isDevelopmentPool(), dest.isDevelopmentPool());
             assertEquals(source.getSourceStackId(), dest.getSourceStackId());
             assertEquals(source.getSubscriptionSubKey(), dest.getSubscriptionSubKey());
             assertEquals(source.getSubscriptionId(), dest.getSubscriptionId());

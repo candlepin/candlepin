@@ -40,9 +40,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.pki.impl.Signer;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.service.impl.ImportProductServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.sync.file.ManifestFile;
 import org.candlepin.sync.file.ManifestFileService;
@@ -588,10 +586,8 @@ public class Importer {
 
         // Setup our import subscription adapter with the subscriptions imported:
         SubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(importedSubs);
-        ProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
-            importedProductsMap);
 
-        this.refresherFactory.getRefresher(subAdapter, prodAdapter)
+        this.refresherFactory.getRefresher(subAdapter)
             .add(owner)
             .run();
 

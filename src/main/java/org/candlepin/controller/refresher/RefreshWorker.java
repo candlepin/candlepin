@@ -424,7 +424,7 @@ public class RefreshWorker {
 
             log.debug("Adding existing subscriptions to mapper...");
             List<Pool> pools = this.poolCurator
-                .listByOwnerAndTypes(owner.getId(), PoolType.NORMAL, PoolType.DEVELOPMENT);
+                .listByOwnerAndTypes(owner.getId(), PoolType.NORMAL);
             this.mapExistingPools(pools);
 
             // Add globally namespaced products and content to refresh.

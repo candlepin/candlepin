@@ -1036,16 +1036,6 @@ public class OwnerResource implements OwnerApi {
         @Verify(value = Owner.class, subResource = SubResource.SERVICE_LEVELS) String ownerKey,
         String exempt) {
         Owner owner = findOwnerByKey(ownerKey);
-        Principal principal = this.principalProvider.get();
-
-        if (principal.getType().equals("consumer")) {
-            Consumer c = consumerCurator.findByUuid(principal.getName());
-            if (c.isDev()) {
-                Set<String> result = new HashSet<>();
-                result.add("");
-                return result;
-            }
-        }
 
         // test is on the string "true" and is case insensitive.
         return poolManager.retrieveServiceLevelsForOwner(owner.getId(), Boolean.parseBoolean(exempt));

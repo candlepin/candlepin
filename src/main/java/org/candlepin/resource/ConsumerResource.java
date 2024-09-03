@@ -143,7 +143,6 @@ import org.candlepin.resource.util.KeyValueStringParser;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.model.OwnerInfo;
@@ -206,7 +205,6 @@ public class ConsumerResource implements ConsumerApi {
     private final ConsumerCurator consumerCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
     private final SubscriptionServiceAdapter subAdapter;
-    private final ProductServiceAdapter prodAdapter;
     private final EntitlementCurator entitlementCurator;
     private final IdentityCertificateGenerator identityCertificateGenerator;
     private final SCACertificateGenerator scaCertificateGenerator;
@@ -257,7 +255,6 @@ public class ConsumerResource implements ConsumerApi {
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
         SubscriptionServiceAdapter subAdapter,
-        ProductServiceAdapter prodAdapter,
         EntitlementCurator entitlementCurator,
         IdentityCertificateGenerator identityCertificateGenerator,
         EntitlementCertServiceAdapter entCertServiceAdapter,
@@ -303,7 +300,6 @@ public class ConsumerResource implements ConsumerApi {
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.subAdapter = Objects.requireNonNull(subAdapter);
-        this.prodAdapter = Objects.requireNonNull(prodAdapter);
         this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
         this.identityCertificateGenerator = Objects.requireNonNull(identityCertificateGenerator);
         this.entCertAdapter = Objects.requireNonNull(entCertServiceAdapter);
@@ -1543,7 +1539,7 @@ public class ConsumerResource implements ConsumerApi {
 
                     existingOwner = ownerCurator.create(owner);
 
-                    this.refresherFactory.getRefresher(this.subAdapter, this.prodAdapter)
+                    this.refresherFactory.getRefresher(this.subAdapter)
                         .add(existingOwner)
                         .run();
                 }

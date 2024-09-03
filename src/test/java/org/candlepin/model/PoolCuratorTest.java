@@ -2279,60 +2279,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testFindDevPoolWithPrincipal() {
-        User user = new User(TestUtil.randomString(), TestUtil.randomString());
-        Set<Permission> perms = new HashSet<>();
-        perms.add(new OwnerPermission(owner, Access.ALL));
-        UserPrincipal principal = new UserPrincipal(user.getUsername(), perms, false);
-        setupPrincipal(principal);
-
-        Owner owner2 = createOwner();
-        Pool pool1 = createPool(owner2, product, -1L, TestUtil.createDate(2010, 3, 2),
-            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
-        pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, consumer.getUuid());
-        pool1.setAttribute("another_attr", "20");
-        pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-        poolCurator.create(pool1);
-
-        Pool actual = poolCurator.findDevPool(consumer);
-
-        assertThat(actual)
-            .isNull();
-    }
-
-    @Test
-    public void testLookupDevPoolForConsumer() {
-        // Make sure that multiple pools exist.
-        createPool(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
-            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
-        Pool pool = createPool(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
-            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
-        pool.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, consumer.getUuid());
-        pool.setAttribute("another_attr", "20");
-        pool.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-        poolCurator.create(pool);
-
-        Pool found = poolCurator.findDevPool(consumer);
-        assertNotNull(found);
-        assertEquals(pool.getId(), found.getId());
-    }
-
-    @Test
-    public void testDevPoolForConsumerNotFoundReturnsNullWhenNoMatchOnConsumer() {
-        // Make sure that multiple pools exist.
-        createPool(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
-            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
-        Pool pool = createPool(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
-            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
-        pool.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, "does-not-exist");
-        pool.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-        poolCurator.create(pool);
-
-        Pool found = poolCurator.findDevPool(consumer);
-        assertNull(found);
-    }
-
-    @Test
     public void testUpdateQuantityColumnsOnPool() {
         Consumer consumer = createMockConsumer(owner, true);
 
