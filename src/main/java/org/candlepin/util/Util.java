@@ -43,7 +43,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -52,6 +51,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +59,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 
@@ -71,7 +72,6 @@ public class Util {
     private static final Logger log = LoggerFactory.getLogger(Util.class);
     private static final ObjectMapper MAPPER = ObjectMapperFactory.getObjectMapper();
     private static final String UTC_STR = "UTC";
-
 
     private Util() {
         // default ctor
@@ -473,6 +473,61 @@ public class Util {
     }
 
     /**
+     * Compares two lists for equality without using the List.equals(...) method. This is primarily intended
+     * to be used when working with lists that may not properly implement the equals method (e.g. Hibernate
+     * bags and proxies), which leads to incorrect results when attempting to use the standard method.
+     * <p></p>
+     * This method uses the provided bifunction for performing the per-element equality check. Generally
+     * speaking, the equals method is safe to use here so long as the underlying type properly implements
+     * it. Otherwise, callers will need to provide a specific or custom method for comparing elements.
+     * <p></p>
+     * Note that this method is not likely to perform as well as native list equality checks and should
+     * only be used in cases where lists which do not properly implement equals are expected.
+     *
+     * @param list1
+     *  the first list to compare
+     *
+     * @param list2
+     *  the second list to compare
+     *
+     * @param comp
+     *  the function to use for comparing two elements for equality; cannot be null, nor return null
+     *
+     * @throws IllegalArgumentException
+     *  if no equality function is provided
+     *
+     * @return
+     *  true if both lists are equal in terms of elements and order; false otherwise
+     */
+    public static <T> boolean listsAreEqual(List<T> list1, List<T> list2, BiFunction<T, T, Boolean> comp) {
+        if (comp == null) {
+            throw new IllegalArgumentException("no element comparator provided");
+        }
+
+        if (list1 == list2) {
+            return true;
+        }
+
+        if (list1 == null || list2 == null || list1.size() != list2.size()) {
+            return false;
+        }
+
+        Iterator<T> itr1 = list1.iterator();
+        Iterator<T> itr2 = list2.iterator();
+
+        while (itr1.hasNext() && itr2.hasNext()) {
+            T elem1 = itr1.next();
+            T elem2 = itr2.next();
+
+            if (!(elem1 == elem2 || (elem1 != null && elem2 != null && comp.apply(elem1, elem2)))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Fetches the hostname for this system without going through the network stack and DNS
      *
      * @return
@@ -626,41 +681,6 @@ public class Util {
             return "";
         }
         return URLEncoder.encode(text, StandardCharsets.UTF_8);
-    }
-
-    /**
-     * Returns the list items which got re-ordered in modified list.
-     * Method only detect reordering of common elements present in both original
-     * & modified list. Any extra elements will are not common (in both lists) are ignored.
-     *
-     * @return
-     *  Returns the list of items which got re-prioritized
-     */
-    public static List<String> getReorderedItems(List<String> original, List<String> modified) {
-        List<String> intersectionList = new ArrayList<>();
-        List<String> reorderedList = new ArrayList<>();
-        List<String> intersectionOfOriginal = new ArrayList<>();
-        // build intersection list with ordering
-        for (String envId : modified) {
-            if (original.contains(envId)) {
-                intersectionList.add(envId);
-            }
-        }
-
-        for (String envId : original) {
-            if (intersectionList.contains(envId)) {
-                intersectionOfOriginal.add(envId);
-            }
-        }
-
-        // check the ordering
-        for (int count = 0; count < intersectionList.size(); count++) {
-            if (!intersectionOfOriginal.get(count).equals(intersectionList.get(count))) {
-                reorderedList.add(intersectionList.get(count));
-            }
-        }
-
-        return reorderedList;
     }
 
     public static String stripPrefix(String text, String prefix) {
