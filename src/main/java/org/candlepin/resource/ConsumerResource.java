@@ -1773,7 +1773,6 @@ public class ConsumerResource implements ConsumerApi {
             return false;
         }
 
-        boolean changesMade = false;
         List<String> validatedEnvIds = new ArrayList<>();
 
         for (EnvironmentDTO environment : environments) {
@@ -1801,50 +1800,46 @@ public class ConsumerResource implements ConsumerApi {
             }
 
             if (validatedEnvIds.contains(environmentId)) {
-                throw new ConflictException(i18n.tr("Environment \"{0}\"" +
-                    " specified more than once." + environmentId));
+                throw new ConflictException(i18n.tr("Environment \"{0}\" specified more than once.",
+                    environmentId));
             }
 
             validatedEnvIds.add(environmentId);
         }
 
-        if (validatedEnvIds.size() > 0) {
-            List<String> preExistingEnvIds = null;
-
-            if (!toUpdate.getEnvironmentIds().isEmpty()) {
-                preExistingEnvIds = toUpdate.getEnvironmentIds();
-            }
-
-            toUpdate.setEnvironmentIds(validatedEnvIds);
-
-            if (existing) {
-                // reset content access cert
-                Owner owner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
-
-                if (owner.isUsingSimpleContentAccess()) {
-                    toUpdate.setContentAccessCert(null);
-                    this.contentAccessManager.removeContentAccessCert(toUpdate);
-                }
-
-                // lazily regenerate certs, so the client can still work
-                if (preExistingEnvIds != null) {
-                    EnvironmentUpdates environmentUpdates = new EnvironmentUpdates();
-                    environmentUpdates.put(toUpdate.getId(), preExistingEnvIds, validatedEnvIds);
-                    Set<String> entitlementsToBeRegenerated = entitlementEnvironmentFilter
-                        .filterEntitlements(environmentUpdates);
-
-                    this.entCertService
-                        .regenerateCertificatesByEntitlementIds(entitlementsToBeRegenerated, true);
-                }
-                else {
-                    this.entCertService.regenerateCertificatesOf(toUpdate, true);
-                }
-            }
-
-            changesMade = true;
+        // Make sure we actually have a different list of environment IDs, otherwise this is an expensive
+        // no-op.
+        List<String> currentEnvironmentIds = toUpdate.getEnvironmentIds();
+        if (Util.listsAreEqual(currentEnvironmentIds, validatedEnvIds, String::equals)) {
+            return false;
         }
 
-        return changesMade;
+        toUpdate.setEnvironmentIds(validatedEnvIds);
+        if (existing) {
+            // reset content access cert
+            Owner owner = this.ownerCurator.findOwnerById(toUpdate.getOwnerId());
+
+            if (owner.isUsingSimpleContentAccess()) {
+                toUpdate.setContentAccessCert(null);
+                this.contentAccessManager.removeContentAccessCert(toUpdate);
+            }
+
+            if (currentEnvironmentIds != null && !currentEnvironmentIds.isEmpty()) {
+                EnvironmentUpdates environmentUpdates = new EnvironmentUpdates()
+                    .put(toUpdate.getId(), currentEnvironmentIds, validatedEnvIds);
+
+                Set<String> entitlements = this.entitlementEnvironmentFilter
+                    .filterEntitlements(environmentUpdates);
+
+                this.entCertService.regenerateCertificatesByEntitlementIds(entitlements, true);
+            }
+            else {
+                // Consumer was not in any environments prior to this update, so just update everything
+                this.entCertService.regenerateCertificatesOf(toUpdate, true);
+            }
+        }
+
+        return true;
     }
 
     private boolean updateSystemPurposeData(ConsumerDTO updated, Consumer toUpdate) {

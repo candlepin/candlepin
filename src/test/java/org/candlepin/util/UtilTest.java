@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -32,7 +33,6 @@ import ch.qos.logback.core.Appender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -57,6 +57,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -396,30 +397,6 @@ public class UtilTest {
         }
     }
 
-    @Test
-    public void testReorderItem() {
-        List<String> preexisting = List.of("A", "B", "C");
-        List<String> updated = List.of("A", "C");
-        assertTrue(Util.getReorderedItems(preexisting, updated).isEmpty());
-    }
-
-    @Test
-    public void testReorderItemListDifferentOrder() {
-        List<String> preexisting = List.of("A", "B", "C");
-        List<String> updated = List.of("A", "C", "B");
-        List<String> reordered = Util.getReorderedItems(preexisting, updated);
-        assertFalse(reordered.isEmpty());
-        assertFalse(reordered.contains("A"));
-        assertTrue(CollectionUtils.isEqualCollection(reordered, Arrays.asList("C", "B")));
-    }
-
-    @Test
-    public void testReorderItemListSameOrder() {
-        List<String> preexisting = List.of("A", "B");
-        List<String> updated = List.of("A", "C", "B");
-        assertTrue(Util.getReorderedItems(preexisting, updated).isEmpty());
-    }
-
     public static AttributeDTO buildAttributeDTO(String name, String value) {
         return new AttributeDTO()
             .name(name)
@@ -596,9 +573,89 @@ public class UtilTest {
     }
 
     @Test
-    void name() {
+    void testIsFalse() {
         assertEquals(true, Util.isFalse(null));
         assertEquals(true, Util.isFalse(false));
         assertEquals(false, Util.isFalse(true));
     }
+
+    @Nested
+    class ListsAreEqualTests {
+        @Test
+        public void testListsAreEqual() {
+            List<String> ulist = List.of("a", "b", "c");
+            ArrayList<String> arrlist = new ArrayList<>(ulist);
+            LinkedList<String> llist = new LinkedList<>(ulist);
+
+            assertTrue(Util.listsAreEqual(null, null, String::equals));
+            assertTrue(Util.listsAreEqual(ulist, ulist, String::equals));
+            assertTrue(Util.listsAreEqual(ulist, arrlist, String::equals));
+            assertTrue(Util.listsAreEqual(ulist, llist, String::equals));
+            assertTrue(Util.listsAreEqual(arrlist, arrlist, String::equals));
+            assertTrue(Util.listsAreEqual(arrlist, llist, String::equals));
+            assertTrue(Util.listsAreEqual(llist, llist, String::equals));
+        }
+
+        @Test
+        public void checksElementCount() {
+            List<String> list1 = List.of("a", "b", "c");
+            List<String> list2 = List.of("a", "b", "c", "d");
+
+            assertFalse(Util.listsAreEqual(list1, list2, String::equals));
+            assertFalse(Util.listsAreEqual(list2, list1, String::equals));
+        }
+
+        @Test
+        public void considersDuplicateElements() {
+            List<String> list1 = List.of("a", "b", "b", "c");
+            List<String> list2 = List.of("a", "b", "c", "c");
+
+            assertFalse(Util.listsAreEqual(list1, list2, String::equals));
+            assertFalse(Util.listsAreEqual(list2, list1, String::equals));
+        }
+
+        @Test
+        public void considersElementOrder() {
+            List<String> list1 = List.of("a", "b", "c");
+            List<String> list2 = List.of("c", "b", "a");
+
+            assertFalse(Util.listsAreEqual(list1, list2, String::equals));
+            assertFalse(Util.listsAreEqual(list2, list1, String::equals));
+        }
+
+        @Test
+        public void checksNullElementsForEquality() {
+            List<String> list1 = Arrays.asList("a", null, "c");
+            List<String> list2 = Arrays.asList("a", "b", "c");
+
+            assertFalse(Util.listsAreEqual(list1, list2, String::equals));
+            assertFalse(Util.listsAreEqual(list2, list1, String::equals));
+        }
+
+        @Test
+        public void checksForNullLists() {
+            List<String> list1 = List.of("a", "b", "c");
+
+            assertFalse(Util.listsAreEqual(list1, null, String::equals));
+            assertFalse(Util.listsAreEqual(null, list1, String::equals));
+        }
+
+        @Test
+        public void considersNullElements() {
+            List<String> list1 = Arrays.asList("a", null, "c");
+            List<String> list2 = Arrays.asList("a", null, "c");
+
+            assertTrue(Util.listsAreEqual(list1, list2, String::equals));
+            assertTrue(Util.listsAreEqual(list2, list1, String::equals));
+        }
+
+        @Test
+        public void requiresElementComparator() {
+            List<String> list1 = List.of("a", "b", "c");
+            List<String> list2 = List.of("1", "2", "3");
+
+            assertThrows(IllegalArgumentException.class, () -> Util.listsAreEqual(list1, list2, null));
+        }
+    }
+
 }

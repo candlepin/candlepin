@@ -1601,6 +1601,7 @@ public class ConsumerResourceTest {
             consumerResource.searchConsumers(null, null, null, null, null, null, null, "env", null, null,
                 null, null));
     }
+
     @Test
     public void testSearchConsumersRequiresOwnerAndEnvironmentToBeEmpty() {
         assertThrows(BadRequestException.class, () ->

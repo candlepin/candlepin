@@ -198,6 +198,29 @@ public class ConsumerResourceEnvironmentSpecTest {
             .environments(List.of(env1, env2, env1))));
     }
 
+    @Test
+    public void shouldAllowRemovingAllEnvironmentsFromConsumer() {
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
+        EnvironmentDTO env1 = adminClient.owners().createEnvironment(owner.getKey(), Environments.random());
+        EnvironmentDTO env2 = adminClient.owners().createEnvironment(owner.getKey(), Environments.random());
+
+        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner)
+            .environments(List.of(env1, env2)));
+
+        ConsumerDTO update = new ConsumerDTO()
+            .uuid(consumer.getUuid())
+            .environments(List.of());
+
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        consumerClient.consumers().updateConsumer(consumer.getUuid(), update);
+
+        ConsumerDTO result = consumerClient.consumers().getConsumer(consumer.getUuid());
+
+        assertThat(result)
+            .isNotNull()
+            .returns(null, ConsumerDTO::getEnvironments);
+    }
+
     private UserDTO createUserTypeAllAccess(ApiClient client, OwnerDTO owner) {
         return UserUtil.createWith(client,
             Permissions.USERNAME_CONSUMERS.all(owner),

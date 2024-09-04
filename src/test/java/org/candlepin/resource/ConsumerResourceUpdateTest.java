@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -30,6 +31,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -361,28 +363,54 @@ public class ConsumerResourceUpdateTest {
         verify(sink, never()).queueEvent(any());
     }
 
-    private Consumer getFakeConsumer() {
+    private Owner mockOwner(String id) {
+        Owner owner = new Owner()
+            .setId(id)
+            .setKey(id);
+
+        doReturn(owner).when(this.ownerCurator).findOwnerById(owner.getId());
+
+        return owner;
+    }
+
+    private Owner createOwner() {
+        return this.mockOwner("FAKEOWNERID");
+    }
+
+    private Consumer mockConsumer(Owner owner) {
         ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
         this.mockConsumerType(ctype);
 
-        Consumer consumer = new Consumer();
-        Owner owner = new Owner();
-        owner.setId("FAKEOWNERID");
-        String uuid = "FAKEUUID";
-        consumer.setUuid(uuid);
-        consumer.setOwner(owner);
-        consumer.setName("FAKENAME");
-        consumer.setType(ctype);
+        Consumer consumer = new Consumer()
+            .setUuid("FAKEUUID")
+            .setOwner(owner)
+            .setName("FAKENAME")
+            .setType(ctype);
 
-        // go ahead and patch the curator to match it
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(consumer);
-        when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(consumer);
+        doReturn(consumer).when(this.consumerCurator).findByUuid(consumer.getUuid());
+        doReturn(consumer).when(this.consumerCurator).verifyAndLookupConsumer(consumer.getUuid());
 
         return consumer;
     }
 
+    private Consumer getFakeConsumer() {
+        return this.mockConsumer(this.createOwner());
+    }
+
     private ConsumerDTO getFakeConsumerDTO() {
         return translator.translate(getFakeConsumer(), ConsumerDTO.class);
+    }
+
+    private Environment mockEnvironment(Owner owner, String id, String name) {
+        Environment environment = new Environment()
+            .setId(id)
+            .setName(name)
+            .setOwner(owner);
+
+        doReturn(environment).when(this.environmentCurator).get(environment.getId());
+        doReturn(true).when(this.environmentCurator).exists(environment.getId());
+
+        return environment;
     }
 
     @Test
@@ -1150,12 +1178,6 @@ public class ConsumerResourceUpdateTest {
         resource.updateConsumer(c.getUuid(), updated);
     }
 
-    private Owner createOwner() {
-        Owner owner = new Owner();
-        owner.setId("FAKEOWNERID");
-        return owner;
-    }
-
     private Consumer createConsumerWithGuests(Owner owner, String... guestIds) {
         Consumer a = new Consumer();
         ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.HYPERVISOR);
@@ -1201,7 +1223,7 @@ public class ConsumerResourceUpdateTest {
     }
 
     @Test
-    public void canUpdateConsumerNotImpactedWithEmptyEnvironments() {
+    public void canUpdateConsumerNotImpactedWithNullEnvironments() {
         Environment env1 = new Environment("1", "environment-1", null);
         Environment env2 = new Environment("2", "environment-2", null);
 
@@ -1224,35 +1246,50 @@ public class ConsumerResourceUpdateTest {
     }
 
     @Test
+    public void testUpdateConsumerCanRemoveAllEnvironmentsWithEmptyList() {
+        Owner owner = this.mockOwner("owner-1");
+        Environment env1 = this.mockEnvironment(owner, "1", "environment-1");
+        Environment env2 = this.mockEnvironment(owner, "2", "environment-2");
+
+        Consumer consumer = this.mockConsumer(owner)
+            .addEnvironment(env1)
+            .addEnvironment(env2);
+
+        ConsumerDTO update = new ConsumerDTO()
+            .uuid(consumer.getUuid())
+            .environments(List.of());
+
+        resource.updateConsumer(consumer.getUuid(), update);
+
+        assertThat(consumer.getEnvironmentIds())
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
     public void canUpdateConsumerEnvironmentWithUpdatedPriorities() {
-        Environment env1 = new Environment("1", "environment-1", null);
-        Environment env2 = new Environment("2", "environment-2", null);
+        Owner owner = this.mockOwner("owner-1");
+        Environment env1 = this.mockEnvironment(owner, "1", "environment-1");
+        Environment env2 = this.mockEnvironment(owner, "2", "environment-2");
 
-        Consumer existing = getFakeConsumer();
-        existing.addEnvironment(env1);
-        existing.addEnvironment(env2);
+        Consumer consumer = this.mockConsumer(owner)
+            .addEnvironment(env1)
+            .addEnvironment(env2);
 
-        ConsumerDTO updated = new ConsumerDTO();
-        Owner owner = createOwner();
-        OwnerDTO ownerDTO = new OwnerDTO();
-        ownerDTO.setId(owner.getId());
+        // note: order matters here
+        List<EnvironmentDTO> updatedEnvironments = List.of(
+            this.translator.translate(env2, EnvironmentDTO.class),
+            this.translator.translate(env1, EnvironmentDTO.class));
 
-        // Priorities changed
-        List<EnvironmentDTO> updatedEnvs = new ArrayList<>();
-        updatedEnvs.add(translator.translate(env2, EnvironmentDTO.class));
-        updatedEnvs.add(translator.translate(env1, EnvironmentDTO.class));
-        updated.setEnvironments(updatedEnvs);
-        updated.setOwner(new NestedOwnerDTO());
+        ConsumerDTO update = new ConsumerDTO()
+            .uuid(consumer.getUuid())
+            .environments(updatedEnvironments);
 
-        when(environmentCurator.get(env1.getId())).thenReturn(env1);
-        when(environmentCurator.get(env2.getId())).thenReturn(env2);
-        when(ownerCurator.findOwnerById(owner.getId())).thenReturn(owner);
-        when(environmentCurator.exists(env1.getId())).thenReturn(true);
-        when(environmentCurator.exists(env2.getId())).thenReturn(true);
+        resource.updateConsumer(consumer.getUuid(), update);
 
-        resource.updateConsumer(existing.getUuid(), updated);
-        assertEquals(existing.getEnvironmentIds().get(0), env2.getId());
-        assertEquals(existing.getEnvironmentIds().get(1), env1.getId());
+        assertThat(consumer.getEnvironmentIds())
+            .isNotNull()
+            .containsExactly(env2.getId(), env1.getId());
     }
 
     @Test

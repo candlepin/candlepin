@@ -115,6 +115,7 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
         if (dest == null) {
             throw new IllegalArgumentException("dest is null");
         }
+
         dest.id(source.getId())
             .uuid(source.getUuid())
             .name(source.getName())
@@ -151,6 +152,9 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
                 dest.setOwner(owner != null ? translator.translate(owner, NestedOwnerDTO.class) : null);
             }
 
+            // TODO: FIXME: WHY DOES THIS PROPERTY VIOLATE EXISTING CONVENTIONS WITH RESPECT TO NULLABILITY
+            // ON DTO COLLECTIONS? WE ADDED A NEW PROPERTY AND THEN STILL VIOLATED THOSE CONVENTIONS!
+            // WHY WHY WHY WHY WHY!?
             if (source.getEnvironmentIds() != null && !source.getEnvironmentIds().isEmpty()) {
                 List<EnvironmentDTO> environments = this.environmentCurator.getConsumerEnvironments(source)
                     .stream()
@@ -164,6 +168,7 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
             }
             else {
                 dest.setEnvironments(null);
+                dest.setEnvironment(null);
             }
 
             Set<ConsumerInstalledProduct> installedProducts = source.getInstalledProducts();
@@ -239,14 +244,15 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
             dest.setIdCert(translator.translate(source.getIdCert(), CertificateDTO.class));
         }
         else {
-            dest.setReleaseVer(null);
-            dest.setOwner(null);
-            dest.setEnvironments(null);
-            dest.setInstalledProducts(null);
-            dest.setCapabilities(null);
-            dest.setHypervisorId(null);
-            dest.setType(null);
-            dest.setIdCert(null);
+            dest.releaseVer(null)
+                .owner(null)
+                .environments(null)
+                .environment(null)
+                .installedProducts(null)
+                .capabilities(null)
+                .hypervisorId(null)
+                .type(null)
+                .idCert(null);
         }
 
         return dest;
