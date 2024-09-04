@@ -81,7 +81,7 @@ public class PagingUtil<T> {
             return pageSize;
         }
 
-        String errmsg = this.i18n.tr("This endpoint does not support returning {0} elements in a single" +
+        String errmsg = this.i18n.tr("This endpoint does not support returning {0} elements in a single " +
             "request; please apply paging with a page size no larger than {1}",
             pageSize, this.maxPageSize);
 
