@@ -708,7 +708,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Root<Pool> root, String attribute, Function<Expression<String>, Predicate> valuePredicateFunc) {
 
         Subquery<Pool> subquery = query.subquery(Pool.class);
-        Root<Pool> correlation = subquery.correlate(root);
 
         Root<Pool> subqueryRoot = subquery.from(Pool.class);
         Join<Pool, Product> prodJoin = subqueryRoot.join(Pool_.product);
@@ -718,8 +717,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         prodAttr.on(builder.equal(prodAttr.key(), attribute));
 
         subquery.select(subqueryRoot)
-            .where(builder.equal(subqueryRoot, correlation),
-                builder.or(builder.isNotNull(poolAttr.value()), builder.isNotNull(prodAttr.value())),
+            .where(builder.or(builder.isNotNull(poolAttr.value()), builder.isNotNull(prodAttr.value())),
                 valuePredicateFunc.apply(builder.coalesce(poolAttr.value(), prodAttr.value())));
 
         return builder.exists(subquery);
