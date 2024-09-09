@@ -53,6 +53,7 @@ import org.candlepin.spec.bootstrap.client.api.Paging;
 import org.candlepin.spec.bootstrap.data.builder.ActivationKeys;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
+import org.candlepin.spec.bootstrap.data.builder.Facts;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Permissions;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
@@ -74,6 +75,7 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -604,6 +606,32 @@ public class OwnerResourceSpecTest {
         admin.pools().deletePool(pool.getId());
         assertThat(owners.listOwnerPools(owner.getKey()))
             .isEmpty();
+    }
+
+    @Test
+    public void shouldListOwnerPoolsAndIgnoreWarnings() {
+        OwnerDTO owner = owners.createOwner(Owners.random());
+
+        // Create a consumer that has more cores than the product allows. This will generate a warning and
+        // will filter the pool when calling listOwnerPools unless the "listall" query parameter is true.
+
+        ConsumerDTO consumer = admin.consumers().createConsumer(Consumers.random(owner)
+            .facts(Map.ofEntries(Facts.CpuSockets.withValue("2"),
+                Facts.CoresPerSocket.withValue("12"))));
+
+        ProductDTO product = admin.ownerProducts().createProduct(owner.getKey(), Products.random()
+            .attributes(List.of(new AttributeDTO().name("cores").value("10"))));
+
+        PoolDTO expected = owners.createPool(owner.getKey(), Pools.random(product));
+
+        List<PoolDTO> actual = admin.owners().listOwnerPools(owner.getKey(), consumer.getUuid(),
+            null, null, null, true, null, null, null, null, null,
+            null, null, null, null, null, null);
+
+        assertThat(actual)
+            .isNotNull()
+            .singleElement()
+            .returns(expected.getId(), PoolDTO::getId);
     }
 
     @Test
