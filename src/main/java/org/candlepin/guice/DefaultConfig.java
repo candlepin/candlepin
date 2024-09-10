@@ -18,12 +18,14 @@ import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
+import org.candlepin.service.EventAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.impl.DefaultCloudRegistrationAdapter;
 import org.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
+import org.candlepin.service.impl.DefaultEventAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
@@ -52,5 +54,6 @@ class DefaultConfig extends AbstractModule {
         bind(ManifestFileService.class).to(DBManifestService.class);
         bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
         bind(CloudRegistrationAdapter.class).to(DefaultCloudRegistrationAdapter.class);
+        bind(EventAdapter.class).to(DefaultEventAdapter.class);
     }
 }

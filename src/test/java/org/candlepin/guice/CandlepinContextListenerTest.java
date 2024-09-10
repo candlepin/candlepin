@@ -31,11 +31,13 @@ import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.junit.LiquibaseExtension;
+import org.candlepin.service.EventAdapter;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
+import com.google.inject.util.Modules;
 
 import org.jboss.resteasy.spi.Registry;
 import org.jboss.resteasy.spi.ResteasyDeployment;
@@ -56,6 +58,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
+// TODO: Currently the tests in this class are in a state where we have mocking for some objects, but we are
+// backing up and restoring the drivers as part of some tests. We should commit to a testing paradigm in
+// this class and be consistent across all of these tests.
 
 @ExtendWith(LiquibaseExtension.class)
 public class CandlepinContextListenerTest {
@@ -67,6 +72,7 @@ public class CandlepinContextListenerTest {
     private ServletContext ctx;
     private ResteasyDeployment resteasyDeployment;
     private boolean configRead;
+    private EventAdapter mockEventAdapter;
 
     @BeforeEach
     public void init() {
@@ -77,6 +83,7 @@ public class CandlepinContextListenerTest {
 
         hqlistener = mock(ActiveMQContextListener.class);
         executorService = mock(ScheduledExecutorService.class);
+        mockEventAdapter = mock(EventAdapter.class);
         configRead = false;
 
         listener = createContextListener();
@@ -246,9 +253,6 @@ public class CandlepinContextListenerTest {
         this.config.setProperty(ConfigProperties.SUSPEND_MODE_ENABLED, "true");
 
         prepareForInitialization();
-        // we actually have to call contextInitialized before we
-        // can call contextDestroyed, otherwise the listener's
-        // member variables will be null.
         listener.contextInitialized(evt);
 
         // test & verify
@@ -256,6 +260,35 @@ public class CandlepinContextListenerTest {
 
         // re-register drivers
         registerDrivers(drivers);
+    }
+
+    @Test
+    public void ensureEventAdapterIsInitialized() {
+        prepareForInitialization();
+        // we actually have to call contextInitialized before we
+        // can call contextDestroyed, otherwise the listener's
+        // member variables will be null.
+        listener.contextInitialized(evt);
+
+        verify(mockEventAdapter).initialize();
+    }
+
+    @Test
+    public void ensureEventAdapterIsShutdown() {
+        // backup jdbc drivers before calling contextDestroyed method
+        Enumeration<Driver> drivers = DriverManager.getDrivers();
+
+        prepareForInitialization();
+        // we actually have to call contextInitialized before we
+        // can call contextDestroyed, otherwise the listener's
+        // member variables will be null.
+        listener.contextInitialized(evt);
+        listener.contextDestroyed(evt);
+
+        // re-register drivers
+        registerDrivers(drivers);
+
+        verify(mockEventAdapter).shutdown();
     }
 
     @Test
@@ -294,8 +327,14 @@ public class CandlepinContextListenerTest {
             protected List<Module> getModules(ServletContext context) {
                 List<Module> modules = new LinkedList<>();
                 modules.add(new TestingModules.JpaModule());
-                modules.add(new TestingModules.StandardTest(config));
-                modules.add(new ContextListenerTestModule());
+
+                Module testingModule = new TestingModules.StandardTest(config);
+                Module contextListenerTestModule = new ContextListenerTestModule();
+
+                // Combine both the standard testing module and the context listener test module and override
+                // existing already existing bindings in the testing module.
+                modules.add(Modules.override(testingModule).with(contextListenerTestModule));
+
                 return modules;
             }
 
@@ -313,11 +352,13 @@ public class CandlepinContextListenerTest {
     }
 
     private class ContextListenerTestModule extends AbstractModule {
+
         @SuppressWarnings("synthetic-access")
         @Override
         protected void configure() {
             bind(ActiveMQContextListener.class).toInstance(hqlistener);
             bind(ScheduledExecutorService.class).toInstance(executorService);
+            bind(EventAdapter.class).toInstance(mockEventAdapter);
         }
     }
 
