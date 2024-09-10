@@ -54,11 +54,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
 
     private ProductCurator productCurator;
 
-    /**
-     * Container object for providing various arguments to the content lookup method(s).
-     */
-    public static class ContentQueryArguments extends QueryArguments<ContentQueryArguments> {
-    }
+
 
     @Inject
     public ContentCurator(ProductCurator productCurator) {
@@ -727,60 +723,31 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         return output;
     }
 
-    /**
-     * Fetches a collection of content based on the data in the query builder. If the
-     * query builder is null or contains no arguments, the query will not limit or sort the result.
-     *
-     * @param queryArgs
-     *     a ContentQueryArguments instance containing the various arguments to use to
-     *     select contents
-     *
-     * @return a list of contents. It will be paged and sorted if specified
-     */
-    public List<Content> listAll(ContentQueryArguments queryArgs) {
-        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
-        CriteriaQuery<Content> criteriaQuery = criteriaBuilder.createQuery(Content.class);
+    public Map<String, Set<String>> getRequiredProductIds(Collection<String> contentUuids) {
+        Map<String, Set<String>> output = new HashMap<>();
 
-        Root<Content> root = criteriaQuery.from(Content.class);
-        criteriaQuery.select(root)
-            .distinct(true);
+        if (contentUuids != null && !contentUuids.isEmpty()) {
+            String sql = "SELECT content_uuid, product_id " +
+                "FROM cp_content_required_products WHERE content_uuid IN (:content_uuids)";
 
-        List<Order> order = this.buildJPAQueryOrder(criteriaBuilder, root, queryArgs);
-        if (order != null && order.size() > 0) {
-            criteriaQuery.orderBy(order);
-        }
+            Query query = this.getEntityManager()
+                .createNativeQuery(sql);
 
-        TypedQuery<Content> query = this.getEntityManager()
-            .createQuery(criteriaQuery);
+            for (List<String> block : this.partition(contentUuids)) {
+                List<Object[]> result = query.setParameter("content_uuids", block)
+                    .getResultList();
 
-        if (queryArgs != null) {
-            Integer offset = queryArgs.getOffset();
-            if (offset != null && offset > 0) {
-                query.setFirstResult(offset);
-            }
+                for (Object[] row : result) {
+                    String contentUuid = (String) row[0];
+                    String productId = (String) row[1];
 
-            Integer limit = queryArgs.getLimit();
-            if (limit != null && limit > 0) {
-                query.setMaxResults(limit);
+                    output.computeIfAbsent(contentUuid, key -> new HashSet<>())
+                        .add(productId);
+                }
             }
         }
-        return query.getResultList();
+
+        return output;
     }
 
-    /**
-     * Fetches the count of content available.
-     *
-     * @return the number of contents available
-     */
-    public long getContentCount() {
-        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
-        CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
-
-        Root<Content> root = criteriaQuery.from(Content.class);
-        criteriaQuery.select(criteriaBuilder.countDistinct(root));
-
-        return this.getEntityManager()
-            .createQuery(criteriaQuery)
-            .getSingleResult();
-    }
 }
