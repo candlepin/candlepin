@@ -1315,7 +1315,8 @@ public class OwnerResource implements OwnerApi {
             .setActiveOn(afterDate == null ? activeOnDate : null)
             .setAddFuture(addFuture)
             .setOnlyFuture(onlyFuture)
-            .setAfter(afterDate);
+            .setAfter(afterDate)
+            .setIncludeWarnings(listAll);
 
         if (pageRequest != null) {
             qualifier.setOffset(pageRequest.getPage())

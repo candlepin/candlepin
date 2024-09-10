@@ -622,7 +622,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             Subquery<String> subQuery = query.subquery(String.class);
             Root<Pool> subQueryRoot = subQuery.from(Pool.class);
             Predicate idPredicate = builder
-                .equal(subQueryRoot.get(Pool_.id), query.from(Pool.class).get(Pool_.id));
+                .equal(subQueryRoot.get(Pool_.id), root.get(Pool_.id));
 
             MapJoin<Pool, String, String> attributes = subQueryRoot.join(Pool_.attributes);
             Predicate attributePredicate = builder.equal(attributes.key(), Pool.Attributes.REQUIRES_HOST);
