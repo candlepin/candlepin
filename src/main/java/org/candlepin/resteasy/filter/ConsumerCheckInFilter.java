@@ -17,13 +17,14 @@ package org.candlepin.resteasy.filter;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UpdateConsumerCheckIn;
-import org.candlepin.model.ConsumerCurator;
+import org.candlepin.controller.ConsumerManager;
 import org.candlepin.resteasy.AnnotationLocator;
 
 import org.jboss.resteasy.core.ResteasyContext;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
@@ -42,13 +43,13 @@ import javax.ws.rs.ext.Provider;
 @Priority(Priorities.USER)
 @Provider
 public class ConsumerCheckInFilter implements ContainerRequestFilter {
-    private final ConsumerCurator consumerCurator;
     private final AnnotationLocator annotationLocator;
+    private final ConsumerManager consumerManager;
 
     @Inject
-    public ConsumerCheckInFilter(ConsumerCurator consumerCurator, AnnotationLocator annotationLocator) {
-        this.consumerCurator = consumerCurator;
-        this.annotationLocator = annotationLocator;
+    public ConsumerCheckInFilter(AnnotationLocator annotationLocator, ConsumerManager consumerManager) {
+        this.annotationLocator = Objects.requireNonNull(annotationLocator);
+        this.consumerManager = Objects.requireNonNull(consumerManager);
     }
 
     @Override
@@ -57,10 +58,9 @@ public class ConsumerCheckInFilter implements ContainerRequestFilter {
         Method method = resourceInfo.getResourceMethod();
 
         Principal principal = ResteasyContext.getContextData(Principal.class);
-        if (principal instanceof ConsumerPrincipal &&
+        if (principal instanceof ConsumerPrincipal p &&
             annotationLocator.getAnnotation(method, UpdateConsumerCheckIn.class) != null) {
-            ConsumerPrincipal p = (ConsumerPrincipal) principal;
-            consumerCurator.updateLastCheckin(p.getConsumer());
+            consumerManager.updateLastCheckIn(p.getConsumer());
         }
     }
 }

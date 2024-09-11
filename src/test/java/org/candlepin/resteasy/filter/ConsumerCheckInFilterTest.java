@@ -21,12 +21,15 @@ import static org.mockito.Mockito.when;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UpdateConsumerCheckIn;
+import org.candlepin.controller.ConsumerManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.MethodLocator;
+import org.candlepin.service.EventAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
@@ -53,11 +56,11 @@ import javax.ws.rs.container.ResourceInfo;
 public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
 
     @Mock
-    private ContainerRequestContext mockRequestContext;
-    @Mock
-    private CandlepinSecurityContext mockSecurityContext;
-    @Mock
     private ResourceInfo mockInfo;
+    @Mock
+    private EventAdapter mockEventAdapter;
+    @Mock
+    private ObjectMapper objectMapper;
 
     private ConsumerCheckInFilter interceptor;
     private MockHttpRequest mockReq;
@@ -88,7 +91,9 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
         MethodLocator methodLocator = new MethodLocator(injector);
         methodLocator.init();
         AnnotationLocator annotationLocator = new AnnotationLocator(methodLocator);
-        interceptor = new ConsumerCheckInFilter(consumerCurator, annotationLocator);
+        ConsumerManager consumerManager = new ConsumerManager(
+            consumerCurator, mockEventAdapter, objectMapper);
+        interceptor = new ConsumerCheckInFilter(annotationLocator, consumerManager);
     }
 
     private void mockResourceMethod(Method method) {
