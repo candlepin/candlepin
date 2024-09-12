@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -200,6 +201,31 @@ public class OwnerResourceOwnerClaimingTest {
         Owner claimantOwner = createAnonOwner(CLAIMANT_KEY);
         when(this.ownerCurator.getByKey(ORIGIN_KEY)).thenReturn(originOwner);
         when(this.ownerCurator.getByKey(CLAIMANT_KEY)).thenReturn(claimantOwner);
+        OwnerResource resource = buildOwnerResource();
+
+        assertThatThrownBy(() -> resource.claim(ORIGIN_KEY, createClaimant()))
+            .isInstanceOf(BadRequestException.class);
+    }
+
+    @Test
+    public void testClaimWhenClaimantOwnerExistOnlyUpstream() {
+        Owner originOwner = createAnonOwner(ORIGIN_KEY);
+        when(this.ownerCurator.getByKey(ORIGIN_KEY)).thenReturn(originOwner);
+        when(this.ownerCurator.getByKey(CLAIMANT_KEY)).thenReturn(null);
+        when(this.ownerServiceAdapter.isOwnerKeyValidForCreation(CLAIMANT_KEY)).thenReturn(true);
+        OwnerResource resource = buildOwnerResource();
+
+        resource.claim(ORIGIN_KEY, createClaimant());
+
+        verify(ownerCurator, times(1)).create(any(Owner.class));
+    }
+
+    @Test
+    public void testClaimWhenClaimantOwnerDoesNotExistUpstreamOrCandlepin() {
+        Owner originOwner = createAnonOwner(ORIGIN_KEY);
+        when(this.ownerCurator.getByKey(ORIGIN_KEY)).thenReturn(originOwner);
+        when(this.ownerCurator.getByKey(CLAIMANT_KEY)).thenReturn(null);
+        when(this.ownerServiceAdapter.isOwnerKeyValidForCreation(CLAIMANT_KEY)).thenReturn(false);
         OwnerResource resource = buildOwnerResource();
 
         assertThatThrownBy(() -> resource.claim(ORIGIN_KEY, createClaimant()))

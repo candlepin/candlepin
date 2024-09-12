@@ -1605,9 +1605,28 @@ public class OwnerResource implements OwnerApi {
         if (Util.isFalse(originOwner.getAnonymous())) {
             throw new BadRequestException(this.i18n.tr("Origin owner has to be anonymous!"));
         }
-        Owner destinationOwner = findOwnerByKey(claimantOwner.getClaimantOwnerKey());
-        if (Boolean.TRUE.equals(destinationOwner.getAnonymous())) {
-            throw new BadRequestException(this.i18n.tr("Claimant owner cannot be anonymous!"));
+        Owner destinationOwner = this.ownerCurator.getByKey(claimantOwner.getClaimantOwnerKey());
+        if (destinationOwner == null) {
+            // If the owner does not exist in CP, check if they exist upstream.
+            // If they do, create a copy in CP
+            if (ownerService.isOwnerKeyValidForCreation(claimantOwner.getClaimantOwnerKey())) {
+                Owner ownerToCreate = new Owner()
+                    .setKey(claimantOwner.getClaimantOwnerKey())
+                    .setDisplayName(claimantOwner.getClaimantOwnerKey())
+                    .setContentAccessModeList(ContentAccessManager.getListDefaultDatabaseValue())
+                    .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+
+                this.ownerCurator.create(ownerToCreate);
+            }
+            else {
+                throw new BadRequestException(
+                    this.i18n.tr("Claimant owner does not exist in Candlepin or upstream!"));
+            }
+        }
+        else {
+            if (Boolean.TRUE.equals(destinationOwner.getAnonymous())) {
+                throw new BadRequestException(this.i18n.tr("Claimant owner cannot be anonymous!"));
+            }
         }
 
         boolean claimantOwnerMatches = StringUtils.equals(
