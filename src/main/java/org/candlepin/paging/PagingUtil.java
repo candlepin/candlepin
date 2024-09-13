@@ -253,7 +253,7 @@ public class PagingUtil<T> {
             }
 
             // TODO: This should be left to the caller so the decision between returning a list or a stream
-            // can be made on a call-by-call basis, but at the time of writing, the sort-by- field validation
+            // can be made on a call-by-call basis, but at the time of writing, the sort-by field validation
             // happens on query execution time, so kicking this back to the caller means forcing the
             // boilerplate of the order key exception translation onto them.
             //

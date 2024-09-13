@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
@@ -23,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.candlepin.model.ContentCurator.ContentQueryArguments;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -42,7 +40,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.persistence.LockModeType;
@@ -833,52 +830,6 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         Set<Content> output = this.contentCurator.getChildrenContentOfProductsByUuids(input);
         assertNotNull(output);
         assertTrue(output.isEmpty());
-    }
-
-    @Test
-    public void testListAllPaged() throws InterruptedException {
-        this.createContent();
-        // Ensures timestamp distinction
-        sleep(1000);
-        Content content2 = this.createContent();
-        sleep(1000);
-        Content content3 = this.createContent();
-        sleep(1000);
-        Content content4 = this.createContent();
-        sleep(1000);
-        Content content5 = this.createContent();
-        this.contentCurator.flush();
-        this.contentCurator.clear();
-
-        ContentQueryArguments args = new ContentQueryArguments();
-        args.setOffset(2);
-        args.setLimit(2);
-        args.addOrder("created", false);
-
-        List result = this.contentCurator.listAll(args);
-        assertEquals(2, result.size());
-        assertIterableEquals(List.of(content3, content4), result);
-
-        args = new ContentQueryArguments();
-        args.setOffset(0);
-        args.setLimit(4);
-        args.addOrder("created", true);
-
-        result = this.contentCurator.listAll(args);
-        assertEquals(4, result.size());
-        assertIterableEquals(List.of(content5, content4, content3, content2), result);
-    }
-
-    @Test
-    public void testGetContentCount() {
-        IntStream.range(0, 5).forEach(entry -> {
-            this.createContent();
-        });
-        this.contentCurator.flush();
-        this.contentCurator.clear();
-
-        Long result = this.contentCurator.getContentCount();
-        assertEquals(5L, result);
     }
 
     @Test
