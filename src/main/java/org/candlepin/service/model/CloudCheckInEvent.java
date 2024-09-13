@@ -64,8 +64,7 @@ public class CloudCheckInEvent implements AdapterEvent {
      * @throws RuntimeException
      *  if unable to serialize the body of the event
      */
-    public CloudCheckInEvent(ConsumerCloudData cloudData, ObjectMapper mapper)
-        throws JsonProcessingException {
+    public CloudCheckInEvent(ConsumerCloudData cloudData, ObjectMapper mapper) {
         if (cloudData == null) {
             throw new IllegalArgumentException("consumer cloud data is null");
         }
