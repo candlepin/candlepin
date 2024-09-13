@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -115,7 +115,6 @@ public class ActiveMQSessionFactory {
         }
     }
 
-
     private Configuration config;
 
     private SessionManager ingressSessionManager;
@@ -137,6 +136,9 @@ public class ActiveMQSessionFactory {
     /**
      * Fetches the ingress session manager, creating a new instance as necessary.
      *
+     * @throws Exception
+     *  if unable to create a {@link ServerLocator} with the configured broker URL
+     *
      * @return
      *  a SessionManager for sessions configured for receiving messages
      */
@@ -150,6 +152,9 @@ public class ActiveMQSessionFactory {
             String brokerUrl = this.config.getString(ConfigProperties.ACTIVEMQ_BROKER_URL);
             ServerLocator locator = ActiveMQClient.createServerLocator(brokerUrl);
 
+            // Continuously attempt reconnects to the broker if the connection is lost.
+            locator.setReconnectAttempts(-1);
+
             // TODO: Maybe make this a bit more defensive and skip setting the property if it's
             // not present in the configuration rather than crashing out?
             locator.setMinLargeMessageSize(this.config.getInt(ConfigProperties.ACTIVEMQ_LARGE_MSG_SIZE));
@@ -162,6 +167,9 @@ public class ActiveMQSessionFactory {
 
     /**
      * Fetches the egress session manager, creating a new instance as necessary.
+     *
+     * @throws Exception
+     *  if unable to create a {@link ServerLocator} with the configured broker URL
      *
      * @return
      *  a SessionManager for sessions configured for sending messages
