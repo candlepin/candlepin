@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-05 07:08+0000\n"
+"POT-Creation-Date: 2024-09-15 07:08+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -840,7 +840,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:156
 #: src/main/java/org/candlepin/resource/JobResource.java:361
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:726
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1779
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1799
 #, java-format
 msgid "An unexpected exception occurred while scheduling job \"{0}\""
 msgstr ""
@@ -889,7 +889,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/JobResource.java:215
 #: src/main/java/org/candlepin/resource/OwnerResource.java:811
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1201
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1734
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1735
 #, java-format
 msgid ""
 "This endpoint does not support returning more than {0} results at a time, "
@@ -969,7 +969,7 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1519
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:170
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1366
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1367
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr ""
@@ -1579,73 +1579,77 @@ msgid ""
 "The flags add_future and only_future cannot be used with the parameter after."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1406
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1407
 msgid "Pool product ID not specified"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1414
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1415
 msgid ""
 "Cannot create pools using products defined outside of the organization's "
 "namespace"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1443
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1444
 #, java-format
 msgid "Unable to find a pool with the ID \"{0}\""
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1451
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1452
 #, java-format
 msgid "Pool \"{0}\" does not belong to the specified owner \"{1}\""
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1458
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1459
 msgid "Cannot update bonus pools, as they are auto generated"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1551
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1552
 msgid "Unknown conflict to force"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1578
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1579
 msgid "Error reading export archive"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1582
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1583
 msgid "Error storing uploaded archive for asynchronous processing"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1658
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1659
 #, java-format
 msgid "uber certificate for owner {0} was not found. Please generate one."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1744
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1745
 msgid "Claimant owner has to be present!"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1748
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1749
 msgid "Origin owner has to be anonymous!"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1752
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1766
+msgid "Claimant owner does not exist in Candlepin or upstream!"
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1771
 msgid "Claimant owner cannot be anonymous!"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1758
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1778
 msgid "Claimant owners don't match!"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1805
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1825
 msgid "Owners must be created with a valid key"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1814
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1834
 msgid "The default service level cannot be specified during owner creation"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1854
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1866
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1874
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1886
 #, java-format
 msgid "Could not create the Owner: {0}"
 msgstr ""
