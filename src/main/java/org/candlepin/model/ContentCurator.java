@@ -717,4 +717,45 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         return output;
     }
 
+    /**
+     * Fetches the required product IDs for the contents specified by the collection of content UUIDs.
+     * The required product IDs will be returned as a mapping of content UUID to required product ID
+     * collection. If a given content does not have any required product IDs, or the content UUID itself
+     * does not map to an existing content, it will not be represented in the output map. If none of the
+     * given content have any required product IDs, or none of the contents could be found, this method
+     * returns an empty map.
+     *
+     * @param contentUuids
+     *  a collection of UUIDs of the content for which to fetch required (modified) product IDs
+     *
+     * @return
+     *  the required product IDs for the given contents, represented as a map of content UUIDs to required
+     *  product IDs
+     */
+    public Map<String, Set<String>> getRequiredProductIds(Collection<String> contentUuids) {
+        Map<String, Set<String>> output = new HashMap<>();
+
+        if (contentUuids != null && !contentUuids.isEmpty()) {
+            String sql = "SELECT content_uuid, product_id " +
+                "FROM cp_content_required_products WHERE content_uuid IN (:content_uuids)";
+
+            Query query = this.getEntityManager()
+                .createNativeQuery(sql);
+
+            for (List<String> block : this.partition(contentUuids)) {
+                List<Object[]> result = query.setParameter("content_uuids", block)
+                    .getResultList();
+
+                for (Object[] row : result) {
+                    String contentUuid = (String) row[0];
+                    String productId = (String) row[1];
+
+                    output.computeIfAbsent(contentUuid, key -> new HashSet<>())
+                        .add(productId);
+                }
+            }
+        }
+
+        return output;
+    }
 }
