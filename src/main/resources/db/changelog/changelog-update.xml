@@ -198,7 +198,6 @@
     <include file="db/changelog/202401081559-add-claimant-owner-column.xml"/>
     <include file="db/changelog/20240104162911-unrevoke-subscription-certs.xml"/>
     <include file="db/changelog/20240329143555-add_environment_content_override_schema.xml"/>
-    <include file="db/changelog/20240502145033-fix_entity_namespace_type.xml"/>
     <include file="db/changelog/20240802101300-update-anon-cert-table-cert-column.xml"/>
     <include file="db/changelog/202408010000000-create-consumer-cloud-data.xml"/>
 </databaseChangeLog>
