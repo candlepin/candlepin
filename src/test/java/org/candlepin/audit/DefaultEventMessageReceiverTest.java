@@ -104,7 +104,7 @@ public class DefaultEventMessageReceiverTest {
         doReturn(type).when(this.clientMessage).getType();
 
         if (type == ClientMessage.TEXT_TYPE) {
-            this.activeMQBuffer.writeNullableSimpleString(SimpleString.toSimpleString(value));
+            this.activeMQBuffer.writeNullableSimpleString(SimpleString.of(value));
         }
         else {
             // Old method, injects extra sizes into the message which are not properly translated
