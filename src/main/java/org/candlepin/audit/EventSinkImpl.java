@@ -89,7 +89,7 @@ public class EventSinkImpl implements EventSink {
             session.start();
             for (String listenerClassName : ActiveMQContextListener.getActiveMQListeners(config)) {
                 String queueName = "event." + listenerClassName;
-                long msgCount = session.queueQuery(SimpleString.toSimpleString(queueName)).getMessageCount();
+                long msgCount = session.queueQuery(SimpleString.of(queueName)).getMessageCount();
                 results.add(new QueueStatus()
                     .queueName(queueName)
                     .pendingMessageCount(msgCount)
@@ -275,7 +275,7 @@ public class EventSinkImpl implements EventSink {
             }
 
             ClientMessage message = session.createMessage(ClientMessage.TEXT_TYPE, true);
-            message.getBodyBuffer().writeNullableSimpleString(SimpleString.toSimpleString(eventString));
+            message.getBodyBuffer().writeNullableSimpleString(SimpleString.of(eventString));
 
             // Set the event type and target if provided
             if (type != null) {

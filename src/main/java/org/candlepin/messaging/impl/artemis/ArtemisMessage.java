@@ -130,7 +130,7 @@ public class ArtemisMessage implements CPMMessage {
         ActiveMQBuffer buffer = this.message.getBodyBuffer();
 
         buffer.clear();
-        buffer.writeNullableSimpleString(SimpleString.toSimpleString(body));
+        buffer.writeNullableSimpleString(SimpleString.of(body));
 
         return this;
     }
