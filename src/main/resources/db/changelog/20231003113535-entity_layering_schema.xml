@@ -67,6 +67,12 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="20231003113535-1-b" author="jalbrech">
+        <modifyDataType tableName="cp_contents"
+            columnName="namespace"
+            newDataType="varchar(255)" />
+    </changeSet>
+
     <changeSet id="20231003113535-2" author="crog">
         <preConditions onFail="MARK_RAN">
             <not>
@@ -146,6 +152,12 @@
             referencedTableName="cp_products"
             referencedColumnNames="uuid"
             onDelete="SET NULL"/>
+    </changeSet>
+
+    <changeSet id="20231003113535-3-b" author="jalbrech">
+        <modifyDataType tableName="cp_products"
+            columnName="namespace"
+            newDataType="varchar(255)" />
     </changeSet>
 
     <changeSet id="20231003113535-4" author="crog">
