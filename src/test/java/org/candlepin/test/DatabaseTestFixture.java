@@ -438,7 +438,7 @@ public class DatabaseTestFixture {
         ActivationKey key = new ActivationKey();
 
         key.setOwner(owner);
-        key.setName("A Test Key");
+        key.setName(TestUtil.randomString("key-"));
         key.setServiceLevel("TestLevel");
         key.setDescription("A test description for the test key.");
 

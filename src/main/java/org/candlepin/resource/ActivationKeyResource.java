@@ -48,6 +48,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -297,25 +298,29 @@ public class ActivationKeyResource implements ActivationKeyApi {
         this.coValidator.validate(entries);
         ActivationKey key = this.fetchActivationKey(activationKeyId);
 
-        try {
-            for (ContentOverrideDTO dto : entries) {
-                ActivationKeyContentOverride override = this.contentOverrideCurator
-                    .retrieve(key, dto.getContentLabel(), dto.getName());
+        List<ActivationKeyContentOverride> overrides = entries.stream()
+            .map(dto -> new ActivationKeyContentOverride()
+                .setKey(key)
+                .setContentLabel(dto.getContentLabel())
+                .setName(dto.getName())
+                .setValue(dto.getValue()))
+            .toList();
 
-                // We're counting on Hibernate to do our batching for us here...
-                if (override != null) {
-                    override.setValue(dto.getValue());
-                    this.contentOverrideCurator.merge(override);
+        Map<String, Map<String, ActivationKeyContentOverride>> overrideMap = this.contentOverrideCurator
+            .retrieveAll(key, overrides);
+
+        try {
+            for (ActivationKeyContentOverride inbound : overrides) {
+                ActivationKeyContentOverride existing = overrideMap
+                    .getOrDefault(inbound.getContentLabel(), Map.of())
+                    .get(inbound.getName());
+
+                if (existing != null) {
+                    existing.setValue(inbound.getValue());
+                    this.contentOverrideCurator.merge(existing);
                 }
                 else {
-                    override = new ActivationKeyContentOverride();
-
-                    override.setParent(key);
-                    override.setContentLabel(dto.getContentLabel());
-                    override.setName(dto.getName());
-                    override.setValue(dto.getValue());
-
-                    this.contentOverrideCurator.create(override);
+                    this.contentOverrideCurator.create(inbound);
                 }
             }
         }

@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -38,6 +39,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.SimpleModelTranslator;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.ContentDTO;
+import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentContentDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
@@ -58,17 +60,21 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
+import org.candlepin.model.EnvironmentContentOverride;
 import org.candlepin.model.EnvironmentContentOverrideCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.SCACertificate;
 import org.candlepin.resource.validation.DTOValidator;
+import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.RdbmsExceptionTranslator;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -83,10 +89,12 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Stream;
 
 
 
@@ -682,5 +690,97 @@ class EnvironmentResourceTest {
         certificate.setCert("cert_1");
         certificate.setContent("content_1");
         return certificate;
+    }
+
+    @Nested
+    @DisplayName("Environment Content Overrides Tests")
+    public class EnvironmentContentOverridesTests extends DatabaseTestFixture {
+        private EnvironmentResource buildResource() {
+            return this.injector.getInstance(EnvironmentResource.class);
+        }
+
+        @Test
+        public void testPutEnvironmentContentOverrides() {
+            Owner owner = this.createOwner(TestUtil.randomString());
+            Environment e1 = this.createEnvironment(owner);
+            Environment e2 = this.createEnvironment(owner);
+
+            List<ContentOverrideDTO> overridesToAdd = new ArrayList<>();
+
+            for (int idx = 1; idx <= 3; ++idx) {
+                String name = String.format("existing-e1-co-%d", idx);
+                String label = String.format("existing-e1-label-%d", idx);
+
+                // Create and persist some initial environment 1 content overrides
+                EnvironmentContentOverride contentOverride = new EnvironmentContentOverride()
+                    .setEnvironment(e1)
+                    .setName(name)
+                    .setContentLabel(label)
+                    .setValue(TestUtil.randomString());
+
+                this.environmentContentOverrideCurator.create(contentOverride);
+
+                // Create and persist some initial environment 2 content overrides
+                EnvironmentContentOverride e2ContentOverride = new EnvironmentContentOverride()
+                    .setEnvironment(e2)
+                    .setName(String.format("existing-e2-co-%d", idx))
+                    .setContentLabel(String.format("existing-e2-label-%d", idx))
+                    .setValue(TestUtil.randomString());
+
+                this.environmentContentOverrideCurator.create(e2ContentOverride);
+
+                // Add a content override to update the persisted EnvironmentContentOverride
+                ContentOverrideDTO contentOverrideUpdate = new ContentOverrideDTO();
+                contentOverrideUpdate.setName(name);
+                contentOverrideUpdate.setContentLabel(label);
+                contentOverrideUpdate.setValue(TestUtil.randomString(label + "-modified-"));
+
+                overridesToAdd.add(contentOverrideUpdate);
+
+                // Add an unpersisted net new content overrides
+                ContentOverrideDTO netNewContentOverride = new ContentOverrideDTO();
+                netNewContentOverride.setName(String.format("new-co-%d", idx));
+                netNewContentOverride.setContentLabel(String.format("new-label-%d", idx));
+                netNewContentOverride.setValue(TestUtil.randomString());
+
+                overridesToAdd.add(netNewContentOverride);
+            }
+
+            Stream<ContentOverrideDTO> actual = this.buildResource()
+                .putEnvironmentContentOverrides(e1.getId(), overridesToAdd);
+
+            assertThat(actual)
+                .isNotNull()
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
+                .containsExactlyInAnyOrderElementsOf(overridesToAdd);
+        }
+
+        @Test
+        public void testPutEnvironmentContentOverridesWithSameNameAndDifferentValues() {
+            Owner owner = this.createOwner(TestUtil.randomString());
+            Environment environment = this.createEnvironment(owner);
+
+            String expectedLabel = "label";
+
+            ContentOverrideDTO co1 = new ContentOverrideDTO();
+            co1.setName("override");
+            co1.setContentLabel(expectedLabel);
+            co1.setValue("co1-value");
+
+            ContentOverrideDTO co2 = new ContentOverrideDTO();
+            co2.setName("OvErRiDE");
+            co2.setContentLabel(expectedLabel);
+            co2.setValue("co2-value");
+
+            Stream<ContentOverrideDTO> actual = this.buildResource()
+                .putEnvironmentContentOverrides(environment.getId(), List.of(co1, co2));
+
+            assertThat(actual)
+                .isNotNull()
+                .singleElement()
+                .returns(co1.getName(), ContentOverrideDTO::getName)
+                .returns(expectedLabel, ContentOverrideDTO::getContentLabel)
+                .returns(co2.getValue(), ContentOverrideDTO::getValue);
+        }
     }
 }

@@ -512,28 +512,36 @@ public class EnvironmentResource implements EnvironmentApi {
         this.contentOverrideValidator.validate(contentOverrideDTOs);
         Environment environment = this.lookupEnvironment(environmentId);
 
+        List<EnvironmentContentOverride> overrides = contentOverrideDTOs.stream()
+            .map(dto -> new EnvironmentContentOverride()
+                .setEnvironment(environment)
+                .setContentLabel(dto.getContentLabel())
+                .setName(dto.getName())
+                .setValue(dto.getValue()))
+            .toList();
+
+        Map<String, Map<String, EnvironmentContentOverride>> overrideMap = this.envContentOverrideCurator
+            .retrieveAll(environment, overrides);
+
         try {
-            for (ContentOverrideDTO dto : contentOverrideDTOs) {
-                if (dto == null) {
-                    continue;
-                }
+            for (EnvironmentContentOverride inbound : overrides) {
+                EnvironmentContentOverride existing = overrideMap
+                    .getOrDefault(inbound.getContentLabel(), Map.of())
+                    .get(inbound.getName());
 
-                EnvironmentContentOverride override = this.envContentOverrideCurator
-                    .retrieve(environment, dto.getContentLabel(), dto.getName());
-
-                // We're counting on Hibernate to do our batching for us here...
-                if (override != null) {
-                    override.setValue(dto.getValue());
-                    this.envContentOverrideCurator.merge(override);
+                if (existing != null) {
+                    existing.setValue(inbound.getValue());
+                    this.envContentOverrideCurator.merge(existing);
                 }
                 else {
-                    override = new EnvironmentContentOverride()
-                        .setEnvironment(environment)
-                        .setContentLabel(dto.getContentLabel())
-                        .setName(dto.getName())
-                        .setValue(dto.getValue());
+                    EnvironmentContentOverride created = this.envContentOverrideCurator.create(inbound);
 
-                    this.envContentOverrideCurator.create(override);
+                    // Add the created override to the map so that additional overrides with the same content
+                    // label and name but different value will be updated.
+                    Map<String, EnvironmentContentOverride> nameToOverride = overrideMap
+                        .getOrDefault(created.getContentLabel(), new HashMap<>());
+                    nameToOverride.put(created.getName(), created);
+                    overrideMap.put(created.getContentLabel(), nameToOverride);
                 }
             }
         }
