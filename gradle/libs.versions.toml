@@ -31,7 +31,7 @@ checkstyle = { module = "com.puppycrawl.tools:checkstyle", version = "10.18.1" }
 checkstyle-sevntu = { module = "com.github.sevntu-checkstyle:sevntu-checks", version = "1.44.1" }
 commons-codec = { module = "commons-codec:commons-codec", version = "1.17.1" }
 commons-collections = { module = "org.apache.commons:commons-collections4", version = "4.4" }
-commons-io = { module = "commons-io:commons-io", version = "2.16.1" }
+commons-io = { module = "commons-io:commons-io", version = "2.17.0" }
 # Do not upgrade commons-lang beyond 3.14 until Liquibase has stopped using RandomStringUtils.random(...)
 commons-lang = { module = "org.apache.commons:commons-lang3", version = { strictly = "3.14.0" } }
 ehcache = { module = "org.ehcache:ehcache", version = "3.10.8" }
