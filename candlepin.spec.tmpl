@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.15
+Version: 4.4.16
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,55 @@ fi
 
 #raw
 %changelog
+* Thu Sep 19 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.16-1
+- Add new translations using Weblate (noreply@weblate.org)
+- Bump commons-io:commons-io from 2.16.1 to 2.17.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-923: Optimized content DTO translation (crog@redhat.com)
+- Updated creation of SimpleString instances (crog@redhat.com)
+- CANDLEPIN-925: Updated namespace column size (joshmalbrecht@gmail.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.29 to 10.1.30
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump gradle-update/update-gradle-wrapper-action from 1 to 2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-923: Added BatchSpliterator utility class (crog@redhat.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- CANDLEPIN-924: Added reconnection attempts to ingress session
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-922: Updated Owner claim to create owner if it exists upstream
+  (sbakaj@redhat.com)
+- CANDLEPIN-899: Created ConsumerManager class with updateLastCheckIn
+  (sbakaj@redhat.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.28 to 10.1.29
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Added a utility script for creating consumers for testing (crog@redhat.com)
+- CANDLEPIN-913: Removed obsoleted content queries (crog@redhat.com)
+- CANDLEPIN-898: Create EventAdapter interface (joshmalbrecht@gmail.com)
+- CANDLEPIN-921: Improved listAvailableEntitlementPools performance
+  (joshmalbrecht@gmail.com)
+- Bump ch.qos.logback:logback-classic from 1.5.7 to 1.5.8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-914: Optimized the update content overrides endpoints
+  (crog@redhat.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- CANDLEPIN-918: Fixed bug preventing removal of consumer environments
+  (crog@redhat.com)
+- Added a missing space to the "paging required" error message
+  (crog@redhat.com)
+- CANDLEPIN-897: Created cp_consumer_cloud_data table (sbakaj@redhat.com)
+- Bump org.owasp.dependencycheck from 10.0.3 to 10.0.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Revert "Update Gradle Wrapper from 8.9 to 8.10"
+  (74252828+bakajstep@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.18.0 to 10.18.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 24.0.5 to 25.0.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-883: Removed the 'Dev Sku' feature (joshmalbrecht@gmail.com)
+
 * Fri Aug 30 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.15-1
 - Optimized the ContentCurator.getActiveContentByOwner query (crog@redhat.com)
 - CANDLEPIN-913: Updated content endpoints to support improved querying
