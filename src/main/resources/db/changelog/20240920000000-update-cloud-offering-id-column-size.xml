@@ -1,0 +1,13 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="20240920000000-1" author="jalbrech" >
+        <modifyDataType tableName="cp_anonymous_cloud_consumers"
+            columnName="cloud_offering_id"
+            newDataType="varchar(255)" />
+    </changeSet>
+
+</databaseChangeLog>

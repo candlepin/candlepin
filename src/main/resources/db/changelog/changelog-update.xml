@@ -200,4 +200,5 @@
     <include file="db/changelog/20240329143555-add_environment_content_override_schema.xml"/>
     <include file="db/changelog/20240802101300-update-anon-cert-table-cert-column.xml"/>
     <include file="db/changelog/202408010000000-create-consumer-cloud-data.xml"/>
+    <include file="db/changelog/20240920000000-update-cloud-offering-id-column-size.xml"/>
 </databaseChangeLog>
