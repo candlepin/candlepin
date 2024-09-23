@@ -57,9 +57,11 @@ public class CloudCheckInEvent implements AdapterEvent {
      *  the object mapper used to serialize the event body
      *
      * @throws IllegalArgumentException
-     *  if the provided consumer cloud data or object mapper is null or if the consumer cloud data has no
-     *  cloud provider shortname, cloud account ID, consumer, or has a consumer that does not have a UUID, or
-     *  last check in date
+     *  if the provided object mapper, consumer cloud data, or consumer in the consumer cloud data is null
+     *
+     * @throws IllegalStateException
+     *  if the consumer cloud data has no cloud provider shortname, cloud account ID, consumer, or has a
+     *  consumer that does not have a UUID, or last check in date
      *
      * @throws RuntimeException
      *  if unable to serialize the body of the event
@@ -80,22 +82,22 @@ public class CloudCheckInEvent implements AdapterEvent {
 
         String consumerUuid = consumer.getUuid();
         if (consumerUuid == null || consumerUuid.isBlank()) {
-            throw new IllegalArgumentException("consumer UUID is null or blank");
+            throw new IllegalStateException("consumer UUID is null or blank");
         }
 
         Date checkIn = consumer.getLastCheckin();
         if (checkIn == null) {
-            throw new IllegalArgumentException("last check-in is null");
+            throw new IllegalStateException("last check-in is null");
         }
 
         String cloudProviderId = cloudData.getCloudProviderShortName();
         if (cloudProviderId == null || cloudProviderId.isBlank()) {
-            throw new IllegalArgumentException("cloud provider shortname is null or blank");
+            throw new IllegalStateException("cloud provider shortname is null or blank");
         }
 
         String cloudAccountId = cloudData.getCloudAccountId();
         if (cloudAccountId == null || cloudAccountId.isBlank()) {
-            throw new IllegalArgumentException("cloud account ID is null or blank");
+            throw new IllegalStateException("cloud account ID is null or blank");
         }
 
         this.consumerUuid = consumerUuid;

@@ -1020,6 +1020,28 @@ public class ConsumerResourceSpecTest {
             .doesNotContain(consumer1.getId(), consumer2.getId());
     }
 
+    @Test
+    public void shouldProduceCheckInForCloudConsumer() {
+        ApiClient adminClient = ApiClients.admin();
+
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.randomAWS(owner));
+
+        OffsetDateTime before = consumer.getLastCheckin();
+
+        // Produce a check-in event
+        ApiClients.ssl(consumer)
+            .consumers()
+            .getEntitlementCertificateSerials(consumer.getUuid());
+
+        ConsumerDTO consumerAfterCheckIn = adminClient.consumers().getConsumer(consumer.getUuid());
+
+        // Verify that the last check-in time has been updated
+        assertThat(consumerAfterCheckIn)
+            .isNotNull()
+            .doesNotReturn(before, ConsumerDTO::getLastCheckin);
+    }
+
     private UserDTO createUserTypeAllAccess(ApiClient client, OwnerDTO owner) {
         return UserUtil.createWith(client,
             Permissions.USERNAME_CONSUMERS.all(owner),
