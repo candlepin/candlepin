@@ -61,6 +61,20 @@ public class PathNode {
         }
     }
 
+    /**
+     * Determine if the nodes are equivalent. This node is equivalent to the other node if each
+     * point is true:
+     *
+     * <ul>
+     *   <li>Every child in this node has a matching child in the other node with the same name.
+     *   <li>The matching child-pairs' connections are equivalent.
+     * </ul>
+     *
+     * Alternatively, if the two nodes are actually the same node, then they are equivalent.
+     *
+     * @param that the comparing node
+     * @return true if this node is equivalent to that node.
+     */
     boolean isEquivalentTo(PathNode that) {
         if (this.getId() == that.getId()) {
             return true;
@@ -72,24 +86,27 @@ public class PathNode {
         for (NodePair thisNodePair : this.getChildren()) {
             boolean found = false;
             for (NodePair thatNodePair : that.getChildren()) {
-                if (areNodesEquivalent(thisNodePair, thatNodePair)) {
-                    found = true;
-                    break;
-                }
-                else {
-                    return false;
+                // Does "this" node have a child node that "that" node has?
+                if (thisNodePair.getName().equals(thatNodePair.getName())) {
+                    // Yes. Are the child nodes' connections equivalent?
+                    if (thisNodePair.getConnection().isEquivalentTo(thatNodePair.getConnection())) {
+                        // Yes. Look for the next child compare.
+                        found = true;
+                        break;
+                    }
+                    else {
+                        // No, the child nodes' connections aren't equivalent.
+                        // So, "this" and "that" are not equivalent.
+                        return false;
+                    }
                 }
             }
+            // If "this" has a child node not found in "that", then the nodes are not equivalent.
             if (!found) {
                 return false;
             }
         }
         return true;
-    }
-
-    private boolean areNodesEquivalent(NodePair thisNodePair, NodePair thatNodePair) {
-        return thisNodePair.getName().equals(thatNodePair.getName()) &&
-            thisNodePair.getConnection().isEquivalentTo(thatNodePair.getConnection());
     }
 
     @Override
