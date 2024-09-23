@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.16
+Version: 4.4.17
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,13 @@ fi
 
 #raw
 %changelog
+* Mon Sep 23 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.17-1
+- CANDLEPIN-928: Updated updateLastCheckIn to refresh updated consumer
+  (joshmalbrecht@gmail.com)
+- Fixed Huffman content path compression regression (sriley@redhat.com)
+- CANDLEPIN-917: Updated anon consumer cloud_offering_id column size
+  (joshmalbrecht@gmail.com)
+
 * Thu Sep 19 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.4.16-1
 - Add new translations using Weblate (noreply@weblate.org)
 - Bump commons-io:commons-io from 2.16.1 to 2.17.0
