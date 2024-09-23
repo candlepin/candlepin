@@ -87,7 +87,7 @@ public class CloudCheckInEventTest {
         ConsumerCloudData cloudData = createCloudData()
             .setConsumer(consumer);
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(IllegalStateException.class, () -> {
             new CloudCheckInEvent(cloudData, mapper);
         });
     }
@@ -101,7 +101,7 @@ public class CloudCheckInEventTest {
         ConsumerCloudData cloudData = createCloudData()
             .setConsumer(consumer);
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(IllegalStateException.class, () -> {
             new CloudCheckInEvent(cloudData, mapper);
         });
     }
@@ -117,7 +117,7 @@ public class CloudCheckInEventTest {
             .setConsumer(createConsumer())
             .setCreated(new Date());
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(IllegalStateException.class, () -> {
             new CloudCheckInEvent(cloudData, mapper);
         });
     }
@@ -128,7 +128,7 @@ public class CloudCheckInEventTest {
         ConsumerCloudData cloudData = createCloudData()
             .setCloudAccountId(accountId);
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(IllegalStateException.class, () -> {
             new CloudCheckInEvent(cloudData, mapper);
         });
     }

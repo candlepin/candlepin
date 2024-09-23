@@ -18,6 +18,7 @@ package org.candlepin.controller;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -65,10 +66,11 @@ public class ConsumerManagerTest {
     public void testUpdateLastCheckInWithoutCloudData() {
         ConsumerManager consumerManager = buildConsumerManager();
         Consumer consumer = new Consumer();
+        doReturn(consumer).when(consumerCurator).merge(any(Consumer.class));
 
         consumerManager.updateLastCheckIn(consumer);
 
-        verify(consumerCurator).updateLastCheckin(consumer);
+        verify(consumerCurator).merge(consumer);
         verify(eventAdapter, never()).publish(any());
     }
 
@@ -80,9 +82,11 @@ public class ConsumerManagerTest {
         consumerCloudData.setConsumer(consumer);
         consumer.setConsumerCloudData(consumerCloudData);
 
+        doReturn(consumer).when(consumerCurator).merge(any(Consumer.class));
+
         consumerManager.updateLastCheckIn(consumer);
 
-        verify(consumerCurator).updateLastCheckin(consumer);
+        verify(consumerCurator).merge(consumer);
         verify(eventAdapter).publish(any(CloudCheckInEvent.class));
     }
 
@@ -94,9 +98,11 @@ public class ConsumerManagerTest {
         consumerCloudData.setConsumer(consumer);
         consumer.setConsumerCloudData(consumerCloudData);
 
+        doReturn(consumer).when(consumerCurator).merge(any(Consumer.class));
+
         consumerManager.updateLastCheckIn(consumer);
 
-        verify(consumerCurator).updateLastCheckin(consumer);
+        verify(consumerCurator).merge(consumer);
         verify(eventAdapter).publish(argThat(event ->
             event instanceof CloudCheckInEvent &&
                 ((CloudCheckInEvent) event).getConsumerUuid()

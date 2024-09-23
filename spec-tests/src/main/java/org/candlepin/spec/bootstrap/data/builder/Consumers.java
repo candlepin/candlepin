@@ -20,6 +20,9 @@ import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Class meant to provide fully randomized instances of consumer.
  *
@@ -42,6 +45,26 @@ public final class Consumers {
     public static ConsumerDTO random(OwnerDTO owner, ConsumerTypes type) {
         return random(owner)
             .type(type.value());
+    }
+
+    /**
+     * Creates a randomly generated cloud consumer with AWS facts.
+     *
+     * @param owner
+     *  the owner of the randomly generated consumer
+     *
+     * @return a randomly generated AWS cloud consumer
+     */
+    public static ConsumerDTO randomAWS(OwnerDTO owner) {
+        ConsumerDTO consumer  = random(owner != null ? Owners.toNested(owner) : null);
+
+        Map<String, String> cloudFacts = new HashMap<>();
+        cloudFacts.put("aws_instance_id", StringUtil.random("instance-"));
+        cloudFacts.put("aws_account_id", StringUtil.random("cloud-account-"));
+
+        consumer.facts(cloudFacts);
+
+        return consumer;
     }
 
     private static ConsumerDTO random(NestedOwnerDTO owner) {

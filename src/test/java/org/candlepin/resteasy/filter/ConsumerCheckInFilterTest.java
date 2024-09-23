@@ -23,6 +23,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.controller.ConsumerManager;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.MethodLocator;
@@ -125,8 +126,6 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
 
         ConsumerPrincipal p = (ConsumerPrincipal) ResteasyContext.getContextData(Principal.class);
 
-        this.consumerCurator.refresh(this.consumer);
-
         Date updatedLastCheckin = p.getConsumer().getLastCheckin();
         assertNotEquals(lastCheckin, updatedLastCheckin);
     }
@@ -151,8 +150,6 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
         interceptor.filter(getContext());
 
         ConsumerPrincipal p = (ConsumerPrincipal) ResteasyContext.getContextData(Principal.class);
-
-        this.consumerCurator.refresh(this.consumer);
 
         Date updatedLastCheckin = p.getConsumer().getLastCheckin();
         assertEquals(lastCheckin, updatedLastCheckin);
@@ -203,6 +200,7 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
         protected void configure() {
             bind(FakeApiImpl.class);
             bind(FakeResource.class);
+            bind(ConsumerCurator.class);
         }
     }
 }

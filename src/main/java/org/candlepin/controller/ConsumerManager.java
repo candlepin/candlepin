@@ -21,7 +21,9 @@ import org.candlepin.service.EventAdapter;
 import org.candlepin.service.model.CloudCheckInEvent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.persist.Transactional;
 
+import java.util.Date;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -52,12 +54,14 @@ public class ConsumerManager {
      *
      * @param consumer The Consumer object to be updated.
      */
+    @Transactional
     public void updateLastCheckIn(Consumer consumer) {
         if (consumer == null) {
             throw new IllegalArgumentException("Consumer cannot be null");
         }
 
-        consumerCurator.updateLastCheckin(consumer);
+        consumer.setLastCheckin(new Date());
+        consumer = consumerCurator.merge(consumer);
 
         if (consumer.getConsumerCloudData() != null) {
             CloudCheckInEvent cloudCheckInEvent =
