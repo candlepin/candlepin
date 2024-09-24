@@ -34,6 +34,7 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.auth.Verify;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.controller.ConsumerManager;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.ManifestManager;
@@ -61,6 +62,7 @@ import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.dto.api.server.v1.SubscriptionDTO;
 import org.candlepin.dto.api.server.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.server.v1.UeberCertificateDTO;
+import org.candlepin.dto.api.server.v1.UpdateConsumerEnvironmentsDTO;
 import org.candlepin.dto.api.server.v1.UpstreamConsumerDTOArrayElement;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.CandlepinException;
@@ -157,6 +159,8 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 
 /**
@@ -198,6 +202,7 @@ public class OwnerResource implements OwnerApi {
     private final PrincipalProvider principalProvider;
     private final PagingUtilFactory pagingUtilFactory;
     private final int maxPagingSize;
+    private final ConsumerManager consumerManager;
 
     @Inject
     @SuppressWarnings("checkstyle:parameternumber")
@@ -231,7 +236,8 @@ public class OwnerResource implements OwnerApi {
         JobManager jobManager,
         DTOValidator validator,
         PrincipalProvider principalProvider,
-        PagingUtilFactory pagingUtilFactory) {
+        PagingUtilFactory pagingUtilFactory,
+        ConsumerManager consumerManager) {
 
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.ownerInfoCurator = Objects.requireNonNull(ownerInfoCurator);
@@ -265,6 +271,7 @@ public class OwnerResource implements OwnerApi {
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.pagingUtilFactory = Objects.requireNonNull(pagingUtilFactory);
         this.maxPagingSize = this.config.getInt(ConfigProperties.PAGING_MAX_PAGE_SIZE);
+        this.consumerManager = Objects.requireNonNull(consumerManager);
     }
 
     /**
@@ -1889,5 +1896,24 @@ public class OwnerResource implements OwnerApi {
         log.info("Created owner: {}", owner);
         sink.emitOwnerCreated(owner);
         return owner;
+    }
+
+    @Override
+    public void addConsumersToEnvironments(@Verify(Owner.class) String ownerKey,
+        @Valid @NotNull UpdateConsumerEnvironmentsDTO updateConsumerEnvironmentsDTO) {
+
+        List<String> consumerUuids = updateConsumerEnvironmentsDTO.getConsumerUuids();
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            log.info("null or empty consumer UUIDs");
+            return;
+        }
+
+        List<String> envIds = updateConsumerEnvironmentsDTO.getEnvironmentIds();
+        if (envIds == null || envIds.isEmpty()) {
+            log.info("null or empty environment IDs");
+            return;
+        }
+
+        this.consumerManager.addConsumersToEnvironments(consumerUuids, envIds).stream();
     }
 }

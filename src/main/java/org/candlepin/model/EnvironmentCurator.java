@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
@@ -238,6 +239,66 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         }
 
         return consumerEnvironments;
+    }
+
+    public Map<String, List<String>> findEnvironmentsOf(Collection<String> consumerUuids) {
+        if (consumerUuids.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        String jpql = "SELECT c.uuid, e" +
+            " FROM Consumer c" +
+            " JOIN c.environmentIds e" +
+            " WHERE c.uuid IN (:uuids)" +
+            " ORDER BY c.uuid, key(e) ASC";
+
+        Query query = this.getEntityManager()
+            .createQuery(jpql);
+
+        Map<String, List<String>> consumerEnvironments = new HashMap<>(consumerUuids.size());
+        for (List<String> uuids : partition(consumerUuids)) {
+            List<Object[]> result = query.setParameter("uuids", uuids).getResultList();
+            Map<String, List<String>> map = toMap(result);
+            consumerEnvironments.putAll(map);
+        }
+
+        return consumerEnvironments;
+    }
+
+    public int removeConsumerFromOtherEnvironments(Collection<String> consumerUuids,
+        Collection<String> environmentIds) {
+
+        String statement = "DELETE FROM cp_consumer_environments " + 
+            "WHERE environment_id NOT IN (:envIds) " + 
+            "AND cp_consumer_id IN (SELECT id FROM cp_consumer WHERE uuid IN (:uuids))";
+
+        Query query = this.getEntityManager()
+            .createNativeQuery(statement);
+
+        query.setParameter("uuids", consumerUuids);
+        query.setParameter("envIds", environmentIds);
+
+        return query.executeUpdate();
+    }
+
+    public int addConsumersToEnvironments(Map<String, List<String>> consumerUuidToEnvs) {
+        String jpql = "INSERT INTO cp_consumer_environments (cp_consumer_id, environment_id, priority) " + 
+            "SELECT id, :envId, '0' FROM cp_consumer WHERE uuid = :uuid";
+
+        int changes = 0;
+        for (Entry<String, List<String>> entry : consumerUuidToEnvs.entrySet()) {
+            for (String envId : entry.getValue()) {
+                Query query = this.getEntityManager()
+                    .createNativeQuery(jpql);
+
+                query.setParameter("uuid", entry.getKey());
+                query.setParameter("envId", envId);
+
+                changes += query.executeUpdate();
+            }
+        }
+
+        return changes;
     }
 
     private Map<String, List<String>> toMap(List<Object[]> rawData) {

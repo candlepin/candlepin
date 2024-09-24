@@ -195,6 +195,22 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<SC
         return deleted;
     }
 
+    public List<String> listCertSerialIdsByConsumerUuids(Collection<String> consumerUuids) {
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String hql = "SELECT c.contentAccessCert.id FROM Consumer c WHERE c.uuid IN (:uuids)";
+        Query query = entityManager.get().createQuery(hql, String.class);
+
+        List<String> uuids = new ArrayList<>(consumerUuids.size());
+        for (Collection<String> uuidBlock : this.partition(consumerUuids)) {
+            uuids.addAll(query.setParameter("uuids", uuidBlock).getResultList());
+        }
+
+        return uuids;
+    }
+
     /**
      * Takes a list of consumer ids and lists certificate serials of their content access certificates.
      *

@@ -15,8 +15,10 @@
 package org.candlepin.spec.owners;
 
 import static java.lang.Thread.sleep;
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
+import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
@@ -34,6 +36,9 @@ import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.client.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.client.v1.ContentAccessDTO;
+import org.candlepin.dto.api.client.v1.ContentDTO;
+import org.candlepin.dto.api.client.v1.ContentToPromoteDTO;
+import org.candlepin.dto.api.client.v1.EnvironmentDTO;
 import org.candlepin.dto.api.client.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
@@ -41,6 +46,7 @@ import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.client.v1.RoleDTO;
 import org.candlepin.dto.api.client.v1.SystemPurposeAttributesDTO;
+import org.candlepin.dto.api.client.v1.UpdateConsumerEnvironmentsDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
 import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.OwnerProductApi;
@@ -53,6 +59,8 @@ import org.candlepin.spec.bootstrap.client.api.Paging;
 import org.candlepin.spec.bootstrap.data.builder.ActivationKeys;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
+import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.Environments;
 import org.candlepin.spec.bootstrap.data.builder.Facts;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Permissions;
@@ -73,9 +81,12 @@ import org.junit.jupiter.api.parallel.Isolated;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -97,6 +108,124 @@ public class OwnerResourceSpecTest {
 
     private ProductDTO createProduct(OwnerDTO owner, AttributeDTO... attributes) throws ApiException {
         return ownerProducts.createProduct(owner.getKey(), Products.withAttributes(attributes));
+    }
+
+    @Test
+    public void testAddConsumersToEnvironments() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        List<String> expectedUuids = new ArrayList<>();
+
+        // Create consumers that will not be included in the request.
+        for (int i=0; i<5; i++) {
+            admin.consumers().createConsumer(Consumers.random(owner));
+        }
+
+        // Create consumers not in any environment. These consumers should be added to the target environments.
+        for (int i=0; i<5; i++) {
+            ConsumerDTO consumer = admin.consumers().createConsumer(Consumers.random(owner));
+            expectedUuids.add(consumer.getUuid());
+        }
+
+        ContentDTO content = admin.ownerContent().createContent(ownerKey, Contents.random());
+        ProductDTO prod = admin.ownerProducts().createProduct(ownerKey, Products.random());
+        admin.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
+        admin.owners().createPool(ownerKey, Pools.random(prod));
+
+        EnvironmentDTO otherEnv = admin.owners().createEnvironment(ownerKey, Environments.random());
+        ContentToPromoteDTO promote = new ContentToPromoteDTO()
+            .environmentId(otherEnv.getId())
+            .contentId(content.getId())
+            .enabled(true);
+        admin.environments().promoteContent(otherEnv.getId(), List.of(promote), true);
+
+        // Create consumers in random environments. These consumers should have their current environment
+        // removed and replaced with the target environments.
+        for (int i=0; i<5; i++) {
+            ConsumerDTO consumer = admin.consumers()
+                .createConsumer(Consumers.random(owner).environments(List.of(otherEnv)));
+            expectedUuids.add(consumer.getUuid());
+
+            // generate content access certificate
+            admin.consumers().exportCertificates(consumer.getUuid(), null);
+        }
+
+        EnvironmentDTO targetEnv1 = admin.owners().createEnvironment(ownerKey, Environments.random());
+        EnvironmentDTO targetEnv2 = admin.owners().createEnvironment(ownerKey, Environments.random());
+
+        // Create consumers in one of the target environments.
+        for (int i=0; i<5; i++) {
+            ConsumerDTO consumer = Consumers.random(owner);
+            if (Math.random() > .5) {
+                consumer.environments(List.of(targetEnv1));
+            }
+            else {
+                consumer.environments(List.of(targetEnv2));
+            }
+
+            consumer = admin.consumers().createConsumer(consumer);
+            expectedUuids.add(consumer.getUuid());
+        }
+
+        UpdateConsumerEnvironmentsDTO req = new UpdateConsumerEnvironmentsDTO();
+        req.setConsumerUuids(expectedUuids);
+        req.setEnvironmentIds(List.of(targetEnv1.getId(), targetEnv2.getId()));
+
+        admin.owners().addConsumersToEnvironments(ownerKey, req);
+
+        // validate that the consumers in the addConsumersToEnvironments were migrated into the target
+        // environments and that the other environments were also removed.
+        for (String uuid : expectedUuids) {
+            ConsumerDTO actual = admin.consumers().getConsumer(uuid);
+
+            assertNotNull(actual);
+            assertNotNull(actual.getEnvironments());
+            assertEquals(2, actual.getEnvironments().size());
+
+            assertThat(actual)
+                .extracting(ConsumerDTO::getEnvironments, as(collection(EnvironmentDTO.class)))
+                .hasSize(2)
+                .containsExactlyInAnyOrder(targetEnv1, targetEnv2);
+        }
+
+    }
+
+    @Test
+    public void perfTest() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ContentDTO content = admin.ownerContent().createContent(ownerKey, Contents.random());
+        ProductDTO prod = admin.ownerProducts().createProduct(ownerKey, Products.random());
+        admin.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
+        admin.owners().createPool(ownerKey, Pools.random(prod));
+
+        EnvironmentDTO otherEnv = admin.owners().createEnvironment(ownerKey, Environments.random());
+        ContentToPromoteDTO promote = new ContentToPromoteDTO()
+            .environmentId(otherEnv.getId())
+            .contentId(content.getId())
+            .enabled(true);
+        admin.environments().promoteContent(otherEnv.getId(), List.of(promote), true);
+
+        List<String> expectedUuids = new ArrayList<>();
+        for (int i=0; i<1000; i++) {
+            ConsumerDTO consumer = admin.consumers()
+                .createConsumer(Consumers.random(owner).environments(List.of(otherEnv)));
+            expectedUuids.add(consumer.getUuid());
+
+            // generate content access certificate
+            admin.consumers().exportCertificates(consumer.getUuid(), null);
+        }
+
+        EnvironmentDTO targetEnv1 = admin.owners().createEnvironment(ownerKey, Environments.random());
+        EnvironmentDTO targetEnv2 = admin.owners().createEnvironment(ownerKey, Environments.random());
+
+        UpdateConsumerEnvironmentsDTO req = new UpdateConsumerEnvironmentsDTO();
+        req.setConsumerUuids(expectedUuids);
+        req.setEnvironmentIds(List.of(targetEnv1.getId(), targetEnv2.getId()));
+
+        admin.owners().addConsumersToEnvironments(ownerKey, req);
     }
 
     @Test
