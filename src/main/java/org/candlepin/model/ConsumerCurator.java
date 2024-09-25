@@ -765,7 +765,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         String jpql = """
             SELECT g.consumer FROM GuestId g
             WHERE g.consumer.owner.id = :ownerId
-                AND LOWER(g.guestId) IN :possibleIds
+                AND g.guestIdLower IN :possibleIds
             ORDER BY g.updated DESC
             """;
 
@@ -773,7 +773,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         try {
             host = getEntityManager().createQuery(jpql, Consumer.class)
                 .setParameter("ownerId", ownerId)
-                .setParameter("possibleIds", Util.getPossibleUuids(guestId))
+                .setParameter("possibleIds", Util.getPossibleUuids(guestLower))
                 .setMaxResults(1)
                 .getSingleResult();
         }
