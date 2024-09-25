@@ -64,7 +64,7 @@ public class GuestIdCurator extends AbstractHibernateCurator<GuestId> {
         String jpql = """
                 SELECT g FROM GuestId g
                 WHERE g.consumer = :consumer
-                    AND LOWER(g.guestIdLower) = :guestId
+                    AND g.guestIdLower = :guestId
                 """;
 
         try {
@@ -83,7 +83,7 @@ public class GuestIdCurator extends AbstractHibernateCurator<GuestId> {
         String jpql = """
                 SELECT g FROM GuestId g
                 JOIN g.consumer c
-                WHERE LOWER(g.guestIdLower) = :guestUuid
+                WHERE g.guestIdLower = :guestUuid
                     AND c.ownerId = :ownerId
                 """;
 
