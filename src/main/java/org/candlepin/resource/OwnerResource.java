@@ -1916,6 +1916,6 @@ public class OwnerResource implements OwnerApi {
 
         Owner owner = findOwnerByKey(ownerKey);
 
-        this.consumerManager.addConsumersToEnvironments(consumerUuids, envIds, owner.getOwnerId());
+        this.consumerManager.setConsumersEnvironments(consumerUuids, envIds, owner.getOwnerId());
     }
 }

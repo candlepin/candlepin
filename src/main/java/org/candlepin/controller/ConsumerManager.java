@@ -89,7 +89,7 @@ public class ConsumerManager {
     }
 
     @Transactional
-    public Set<String> addConsumersToEnvironments(Collection<String> consumerUuids,
+    public Set<String> setConsumersEnvironments(Collection<String> consumerUuids,
         Collection<String> environmentIds, String ownerId) {
 
         if (consumerUuids == null || consumerUuids.isEmpty()) {
