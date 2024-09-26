@@ -103,7 +103,8 @@ RUN echo "jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQL92Dialect
     echo "candlepin.auth.oauth.enable=true" >> /etc/candlepin/candlepin.conf; \
     echo "candlepin.auth.oauth.consumer.rspec.secret=rspec-oauth-secret" >> /etc/candlepin/candlepin.conf; \
     echo "candlepin.db.database_manage_on_startup=Manage" >> /etc/candlepin/candlepin.conf; \
-    echo "candlepin.standalone=true" >> /etc/candlepin/candlepin.conf;
+    echo "candlepin.standalone=true" >> /etc/candlepin/candlepin.conf; \
+    echo "candlepin.hidden_resources=" >> /etc/candlepin/candlepin.conf;
 
 # Setup development certificate and key
 WORKDIR /etc/candlepin/certs
