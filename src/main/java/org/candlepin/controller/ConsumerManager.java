@@ -90,24 +90,22 @@ public class ConsumerManager {
 
     @Transactional
     public Set<String> addConsumersToEnvironments(Collection<String> consumerUuids,
-        Collection<String> environmentIds) {
+        Collection<String> environmentIds, String ownerId) {
 
         if (consumerUuids == null || consumerUuids.isEmpty()) {
             return new HashSet<>();
         }
 
-        if (environmentIds == null || environmentIds.isEmpty()) {
-            return new HashSet<>();
-        }
-
         long startTime = new Date().getTime();
 
-        Map<String, List<String>> consumerUuidToEnvs = envCurator.findEnvironmentsOf(consumerUuids);
+        Collection<Consumer> consumers  = consumerCurator.findByUuidsAndOwner(consumerUuids, ownerId);
+        consumerCurator.lock(consumers);
 
         Set<String> consumersToClearEnvs = new HashSet<>();
         Map<String, List<String>> addConsumerToEnvs = new HashMap<>();
-        for (String consumerUuid : consumerUuids) {
-            List<String> currentEnvironments = consumerUuidToEnvs.get(consumerUuid);
+        for (Consumer consumer : consumers) {
+            List<String> currentEnvironments = consumer.getEnvironmentIds();
+            String consumerUuid = consumer.getUuid();
 
             // Consumer is not in any environment
             if (currentEnvironments == null) {

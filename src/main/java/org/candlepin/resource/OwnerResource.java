@@ -1914,6 +1914,8 @@ public class OwnerResource implements OwnerApi {
             return;
         }
 
-        this.consumerManager.addConsumersToEnvironments(consumerUuids, envIds).stream();
+        Owner owner = findOwnerByKey(ownerKey);
+
+        this.consumerManager.addConsumersToEnvironments(consumerUuids, envIds, owner.getOwnerId());
     }
 }
