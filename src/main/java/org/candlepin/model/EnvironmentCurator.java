@@ -282,19 +282,22 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
     }
 
     public int addConsumersToEnvironments(Map<String, List<String>> consumerUuidToEnvs) {
-        String jpql = "INSERT INTO cp_consumer_environments (cp_consumer_id, environment_id, priority) " + 
-            "SELECT id, :envId, '0' FROM cp_consumer WHERE uuid = :uuid";
+        String statement = "INSERT INTO cp_consumer_environments (cp_consumer_id, environment_id, priority) " + 
+            "SELECT id, :envId, :priority FROM cp_consumer WHERE uuid = :uuid";
 
         int changes = 0;
         for (Entry<String, List<String>> entry : consumerUuidToEnvs.entrySet()) {
+            int priority = 0;
             for (String envId : entry.getValue()) {
                 Query query = this.getEntityManager()
-                    .createNativeQuery(jpql);
+                    .createNativeQuery(statement);
 
                 query.setParameter("uuid", entry.getKey());
                 query.setParameter("envId", envId);
+                query.setParameter("priority", priority);
 
                 changes += query.executeUpdate();
+                priority++;
             }
         }
 

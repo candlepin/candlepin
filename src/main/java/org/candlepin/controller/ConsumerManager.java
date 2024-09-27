@@ -96,10 +96,6 @@ public class ConsumerManager {
             return new HashSet<>();
         }
 
-        if (environmentIds == null || environmentIds.isEmpty()) {
-            return new HashSet<>();
-        }
-
         long startTime = new Date().getTime();
 
         Map<String, List<String>> consumerUuidToEnvs = envCurator.findEnvironmentsOf(consumerUuids);

@@ -172,7 +172,7 @@ public class OwnerResourceSpecTest {
         req.setConsumerUuids(expectedUuids);
         req.setEnvironmentIds(List.of(targetEnv1.getId(), targetEnv2.getId()));
 
-        admin.owners().addConsumersToEnvironments(ownerKey, req);
+        admin.owners().setConsumersEnvironments(ownerKey, req);
 
         // validate that the consumers in the addConsumersToEnvironments were migrated into the target
         // environments and that the other environments were also removed.
@@ -225,7 +225,7 @@ public class OwnerResourceSpecTest {
         req.setConsumerUuids(expectedUuids);
         req.setEnvironmentIds(List.of(targetEnv1.getId(), targetEnv2.getId()));
 
-        admin.owners().addConsumersToEnvironments(ownerKey, req);
+        admin.owners().setConsumersEnvironments(ownerKey, req);
     }
 
     @Test

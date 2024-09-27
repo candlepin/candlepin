@@ -1899,7 +1899,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public void addConsumersToEnvironments(@Verify(Owner.class) String ownerKey,
+    public void setConsumersEnvironments(@Verify(Owner.class) String ownerKey,
         @Valid @NotNull UpdateConsumerEnvironmentsDTO updateConsumerEnvironmentsDTO) {
 
         List<String> consumerUuids = updateConsumerEnvironmentsDTO.getConsumerUuids();
