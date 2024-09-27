@@ -241,6 +241,30 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         return consumerEnvironments;
     }
 
+    public Map<String, List<String>> findEnvironmentsOf(Collection<String> consumerUuids) {
+        if (consumerUuids.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        String jpql = "SELECT c.uuid, e" +
+            " FROM Consumer c" +
+            " JOIN c.environmentIds e" +
+            " WHERE c.uuid IN (:uuids)" +
+            " ORDER BY c.uuid, key(e) ASC";
+
+        Query query = this.getEntityManager()
+            .createQuery(jpql);
+
+        Map<String, List<String>> consumerEnvironments = new HashMap<>(consumerUuids.size());
+        for (List<String> uuids : partition(consumerUuids)) {
+            List<Object[]> result = query.setParameter("uuids", uuids).getResultList();
+            Map<String, List<String>> map = toMap(result);
+            consumerEnvironments.putAll(map);
+        }
+
+        return consumerEnvironments;
+    }
+
     public int removeConsumerFromOtherEnvironments(Collection<String> consumerUuids,
         Collection<String> environmentIds) {
 
