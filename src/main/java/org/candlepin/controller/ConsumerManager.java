@@ -89,58 +89,28 @@ public class ConsumerManager {
     }
 
     @Transactional
-    public Set<String> addConsumersToEnvironments(Collection<String> consumerUuids,
+    public List<String> addConsumersToEnvironments(Collection<String> consumerUuids,
         Collection<String> environmentIds) {
 
         if (consumerUuids == null || consumerUuids.isEmpty()) {
-            return new HashSet<>();
+            return new ArrayList<>();
         }
 
         long startTime = new Date().getTime();
 
-        Map<String, List<String>> consumerUuidToEnvs = envCurator.findEnvironmentsOf(consumerUuids);
+        List<String> affectedConsumerUuids = envCurator
+            .getConsumerUuidsNotExactlyInEnvs(consumerUuids, environmentIds);
 
-        Set<String> consumersToClearEnvs = new HashSet<>();
-        Map<String, List<String>> addConsumerToEnvs = new HashMap<>();
-        for (String consumerUuid : consumerUuids) {
-            List<String> currentEnvironments = consumerUuidToEnvs.get(consumerUuid);
+        log.info("affectedConsumerUuids: " + affectedConsumerUuids);
 
-            // Consumer is not in any environment
-            if (currentEnvironments == null) {
-                addConsumerToEnvs.put(consumerUuid, new ArrayList<>(environmentIds));
-                continue;
-            }
+        int removed = envCurator.removeConsumerFromAllEnvironments(affectedConsumerUuids);
+        log.info("{} consumers removed from existing environments", removed);
 
-            // Check if the consumer needs to be added to the environments
-            List<String> addEnvironments = environmentIds.stream()
-                .filter(e -> !currentEnvironments.contains(e))
-                .collect(Collectors.toList());
-
-            if (addEnvironments.size() > 0) {
-                addConsumerToEnvs.put(consumerUuid, addEnvironments);
-            }
-
-            // Check if the consumer needs to be removed from any environments
-            long removeEnvironments = currentEnvironments.stream()
-                .filter(e -> !environmentIds.contains(e))
-                .count();
-
-            if (removeEnvironments > 0) {
-                consumersToClearEnvs.add(consumerUuid);
-            }
-        }
-
-        int removed = envCurator.removeConsumerFromOtherEnvironments(consumersToClearEnvs, environmentIds);
-        log.info("{} consumers removed from different environments", removed);
-
-        int added = envCurator.addConsumersToEnvironments(addConsumerToEnvs);
+        int added = envCurator.addConsumersToEnvironments(affectedConsumerUuids, environmentIds);
         log.info("{} consumers added to the target environments", added);
 
-        // Union the two sets together to get all updated consumers
-        consumersToClearEnvs.addAll(addConsumerToEnvs.keySet());
-
         // Delete all of the content access certificates for consumers that had an environment change
-        List<String> ids = caCertCurator.listCertSerialIdsByConsumerUuids(consumersToClearEnvs);
+        List<String> ids = caCertCurator.listCertSerialIdsByConsumerUuids(affectedConsumerUuids);
 
         int unlinked = consumerCurator.unlinkCaCertificates(ids);
         log.info("{} content access certs unlinked", unlinked);
@@ -153,7 +123,7 @@ public class ConsumerManager {
 
         log.info("ConsumerManager.addConsumersToEnvironments duration: " + duration + " ms");
 
-        return consumersToClearEnvs;
+        return affectedConsumerUuids;
     }
 
 }

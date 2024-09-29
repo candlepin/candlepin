@@ -124,7 +124,10 @@ public class OwnerResourceSpecTest {
 
         // Create consumers not in any environment. These consumers should be added to the target environments.
         for (int i=0; i<5; i++) {
-            ConsumerDTO consumer = admin.consumers().createConsumer(Consumers.random(owner));
+            ConsumerDTO consumer = Consumers.random(owner)
+                .name(StringUtil.random("no-env-"));
+
+            consumer = admin.consumers().createConsumer(consumer);
             expectedUuids.add(consumer.getUuid());
         }
 
@@ -133,7 +136,8 @@ public class OwnerResourceSpecTest {
         admin.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         admin.owners().createPool(ownerKey, Pools.random(prod));
 
-        EnvironmentDTO otherEnv = admin.owners().createEnvironment(ownerKey, Environments.random());
+        EnvironmentDTO otherEnv = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("other-")));
         ContentToPromoteDTO promote = new ContentToPromoteDTO()
             .environmentId(otherEnv.getId())
             .contentId(content.getId())
@@ -143,20 +147,26 @@ public class OwnerResourceSpecTest {
         // Create consumers in random environments. These consumers should have their current environment
         // removed and replaced with the target environments.
         for (int i=0; i<5; i++) {
-            ConsumerDTO consumer = admin.consumers()
-                .createConsumer(Consumers.random(owner).environments(List.of(otherEnv)));
+            ConsumerDTO consumer = Consumers.random(owner)
+                .name(StringUtil.random("other-env-"))
+                .environments(List.of(otherEnv));
+
+            consumer = admin.consumers().createConsumer(consumer);
             expectedUuids.add(consumer.getUuid());
 
             // generate content access certificate
             admin.consumers().exportCertificates(consumer.getUuid(), null);
         }
 
-        EnvironmentDTO targetEnv1 = admin.owners().createEnvironment(ownerKey, Environments.random());
-        EnvironmentDTO targetEnv2 = admin.owners().createEnvironment(ownerKey, Environments.random());
+        EnvironmentDTO targetEnv1 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("target-1-")));
+        EnvironmentDTO targetEnv2 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("target-2-")));
 
         // Create consumers in one of the target environments.
         for (int i=0; i<5; i++) {
-            ConsumerDTO consumer = Consumers.random(owner);
+            ConsumerDTO consumer = Consumers.random(owner)
+                .name(StringUtil.random("subset-env-"));
             if (Math.random() > .5) {
                 consumer.environments(List.of(targetEnv1));
             }
