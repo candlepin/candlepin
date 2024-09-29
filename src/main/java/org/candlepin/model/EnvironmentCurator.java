@@ -295,7 +295,7 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         return result;
     }
 
-    public int removeConsumerFromAllEnvironments(Collection<String> consumerUuids) {
+    public int removeConsumersFromAllEnvironments(Collection<String> consumerUuids) {
         String statement = "DELETE FROM cp_consumer_environments " + 
             "WHERE cp_consumer_id IN (SELECT id FROM cp_consumer WHERE uuid IN (:uuids))";
 
@@ -323,7 +323,7 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         return query.executeUpdate();
     }
 
-    public int addConsumersToEnvironments(Collection<String> consumerUuids, Collection<String> envIds) {
+    public int addConsumersToEnvironments(Collection<String> consumerUuids, List<String> envIds) {
         String statement = "INSERT INTO cp_consumer_environments (cp_consumer_id, environment_id, priority) " + 
             "SELECT id, :envId, :priority FROM cp_consumer WHERE uuid = :uuid";
 

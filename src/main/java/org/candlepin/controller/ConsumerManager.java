@@ -90,7 +90,7 @@ public class ConsumerManager {
 
     @Transactional
     public List<String> addConsumersToEnvironments(Collection<String> consumerUuids,
-        Collection<String> environmentIds) {
+        List<String> environmentIds) {
 
         if (consumerUuids == null || consumerUuids.isEmpty()) {
             return new ArrayList<>();
@@ -103,7 +103,7 @@ public class ConsumerManager {
 
         log.info("affectedConsumerUuids: " + affectedConsumerUuids);
 
-        int removed = envCurator.removeConsumerFromAllEnvironments(affectedConsumerUuids);
+        int removed = envCurator.removeConsumersFromAllEnvironments(affectedConsumerUuids);
         log.info("{} consumers removed from existing environments", removed);
 
         int added = envCurator.addConsumersToEnvironments(affectedConsumerUuids, environmentIds);
