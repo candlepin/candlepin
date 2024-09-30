@@ -30,13 +30,8 @@ import com.google.inject.persist.Transactional;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -89,7 +84,7 @@ public class ConsumerManager {
     }
 
     @Transactional
-    public List<String> addConsumersToEnvironments(Collection<String> consumerUuids,
+    public List<String> setConsumersEnvironments(Collection<String> consumerUuids,
         List<String> environmentIds) {
 
         if (consumerUuids == null || consumerUuids.isEmpty()) {
@@ -100,8 +95,10 @@ public class ConsumerManager {
 
         List<String> affectedConsumerUuids = envCurator
             .getConsumerUuidsNotExactlyInEnvs(consumerUuids, environmentIds);
-
         log.info("affectedConsumerUuids: " + affectedConsumerUuids);
+        if (affectedConsumerUuids.isEmpty()) {
+            return new ArrayList<>();
+        }
 
         int removed = envCurator.removeConsumersFromAllEnvironments(affectedConsumerUuids);
         log.info("{} consumers removed from existing environments", removed);

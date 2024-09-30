@@ -262,7 +262,7 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
             "FROM cte " +
             "JOIN cp_consumer c on c.uuid = cte.consumerUuid " +
             "LEFT JOIN cp_consumer_environments ce ON cte.consumerUuid = c.uuid AND " +
-            "cte.envId = ce.environment_id AND" +
+            "cte.envId = ce.environment_id AND " +
             "cte.priority = ce.priority " +
             "WHERE ce.cp_consumer_id IS NULL OR cte.consumerUuid IS NULL;";
 
