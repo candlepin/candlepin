@@ -44,8 +44,6 @@ public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData
 
     /** Max length for a value in the ID field */
     public static final int ID_MAX_LENGTH = 32;
-    /** Max length for a value in the UUID field */
-    public static final int UUID_MAX_LENGTH = 36;
     /** Max length for a value in the cloud account ID field */
     public static final int CLOUD_ACCOUNT_ID_MAX_LENGTH = 255;
     /** Max length for a value in the cloud instance ID field */
@@ -177,7 +175,21 @@ public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData
     }
 
     /**
-     * @return the list of cloud offering IDs for this cloud consumer
+     * Retrieves the list of cloud offering IDs associated with this cloud consumer.
+     *
+     * <p>This method parses the internal comma-separated string of cloud offering IDs
+     * and returns them as a list of individual IDs. It handles redundant whitespace,
+     * repeated commas, and ensures that the returned list does not contain empty strings.</p>
+     *
+     * <p>If there are no cloud offering IDs set (i.e., the internal string is {@code null} or blank),
+     * this method returns an empty list.</p>
+     *
+     * <p><strong>Note:</strong> The returned list is a fixed-size list backed by an array.
+     * Modifications to the list (such as adding or removing elements) are not supported and
+     * will result in an {@code UnsupportedOperationException}. However, you can modify the elements
+     * within the list if needed.</p>
+     *
+     * @return a list of cloud offering IDs; never {@code null}, possibly empty
      */
     public List<String> getCloudOfferingIds() {
         if (this.cloudOfferingIds == null) {
@@ -187,23 +199,63 @@ public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData
     }
 
     /**
-     * @param cloudOfferingIds
-     *  the cloud offering IDs to set
+     * Adds the specified cloud offering IDs to the current list of offering IDs.
      *
-     * @return a reference to this ConsumerCloudData instance
+     * <p>This method accepts a variable number of cloud offering ID strings, which are appended
+     * to the existing list of cloud offering IDs in this {@code ConsumerCloudData} instance.
+     * The IDs are stored internally as a comma-separated string.</p>
+     *
+     * @param cloudOfferingIds
+     *         the cloud offering IDs to be added; must not be {@code null} or contain {@code null} elements;
+     *         if there is empty list the attribute remains unchanged
+     *
+     * @return a reference to this {@code ConsumerCloudData} instance
+     *
+     * @throws IllegalArgumentException
+     *         if {@code cloudOfferingIds} is {@code null} or contains {@code null} elements,
+     *         or if the combined cloud offering IDs exceed the maximum allowed length of 255 characters
      */
-    public ConsumerCloudData setCloudOfferingIds(String... cloudOfferingIds) {
-        this.setCloudOfferingIds(Arrays.asList(cloudOfferingIds));
+    public ConsumerCloudData addCloudOfferingIds(String... cloudOfferingIds) {
+        if (cloudOfferingIds == null) {
+            throw new IllegalArgumentException("cloudOfferingIds is null");
+        }
+
+        this.addCloudOfferingIds(Arrays.asList(cloudOfferingIds));
         return this;
     }
 
     /**
-     * @param cloudOfferingIds
-     *  collection of the cloud offering IDs to set
+     * Adds the specified collection of cloud offering IDs to the current list of offering IDs.
      *
-     * @return a reference to this ConsumerCloudData instance
+     * <p>This method accepts a collection of cloud offering ID strings, which are appended
+     * to the existing list of cloud offering IDs in this {@code ConsumerCloudData} instance.
+     * The IDs are stored internally as a comma-separated string.</p>
+     *
+     * @param cloudOfferingIds
+     *         the cloud offering IDs to be added; must not be {@code null},
+     *         or contain {@code null} elements; if there is empty list the attribute remains unchanged
+     *
+     * @return a reference to this {@code ConsumerCloudData} instance
+     *
+     * @throws IllegalArgumentException
+     *         if {@code cloudOfferingIds} is {@code null}, contains {@code null} elements,
+     *         or if the combined cloud offering IDs exceed the maximum allowed length of 255 characters
      */
-    public ConsumerCloudData setCloudOfferingIds(Collection<String> cloudOfferingIds) {
+    public ConsumerCloudData addCloudOfferingIds(Collection<String> cloudOfferingIds) {
+        if (cloudOfferingIds == null) {
+            throw new IllegalArgumentException("cloudOfferingIds is null or empty");
+        }
+
+        if (cloudOfferingIds.isEmpty()) {
+            return this;
+        }
+
+        for (String cloudOfferingId : cloudOfferingIds) {
+            if (cloudOfferingId == null) {
+                throw new IllegalArgumentException("cloudOfferingIds contains null element");
+            }
+        }
+
         String joinedCloudOfferingIds = String.join(",", cloudOfferingIds);
 
         String combinedCloudOfferingIds;
@@ -215,10 +267,79 @@ public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData
         }
 
         if (combinedCloudOfferingIds.length() > CLOUD_OFFERING_ID_MAX_LENGTH) {
-            throw new IllegalArgumentException("cloudOfferingId exceeds the max length");
+            throw new IllegalArgumentException(
+                "Combined cloudOfferingIds exceed the max length of 255 characters");
         }
 
         this.cloudOfferingIds = combinedCloudOfferingIds;
+        return this;
+    }
+
+    /**
+     * Sets the cloud offering IDs to the specified IDs, replacing any existing IDs.
+     *
+     * <p>This method replaces the current list of cloud offering IDs with the provided IDs.
+     * The IDs are stored internally as a comma-separated string.</p>
+     *
+     * @param cloudOfferingIds
+     *         the cloud offering IDs to be set; must not be {@code null} or contain {@code null} elements;
+     *         if there is empty list it will store {@code null}
+     *
+     * @return a reference to this {@code ConsumerCloudData} instance
+     *
+     * @throws IllegalArgumentException
+     *         if {@code cloudOfferingIds} is {@code null} or contains {@code null} elements,
+     *         or if the combined cloud offering IDs exceed the maximum allowed length of 255 characters
+     */
+    public ConsumerCloudData setCloudOfferingIds(String... cloudOfferingIds) {
+        if (cloudOfferingIds == null) {
+            throw new IllegalArgumentException("cloudOfferingIds is null");
+        }
+
+        this.setCloudOfferingIds(Arrays.asList(cloudOfferingIds));
+        return this;
+    }
+
+    /**
+     * Sets the cloud offering IDs to the specified collection of IDs, replacing any existing IDs.
+     *
+     * <p>This method replaces the current list of cloud offering IDs with the provided collection.
+     * The IDs are stored internally as a comma-separated string.</p>
+     *
+     * @param cloudOfferingIds
+     *         the cloud offering IDs to be set; must not be {@code null},
+     *         or contain {@code null} elements; if there is empty list it will store {@code null}
+     *
+     * @return a reference to this {@code ConsumerCloudData} instance
+     *
+     * @throws IllegalArgumentException
+     *         if {@code cloudOfferingIds} is {@code null}, contains {@code null} elements,
+     *         or if the combined cloud offering IDs exceed the maximum allowed length of 255 characters
+     */
+    public ConsumerCloudData setCloudOfferingIds(Collection<String> cloudOfferingIds) {
+        if (cloudOfferingIds == null) {
+            throw new IllegalArgumentException("cloudOfferingIds is null");
+        }
+
+        if (cloudOfferingIds.isEmpty()) {
+            this.cloudOfferingIds = null;
+            return this;
+        }
+
+        for (String cloudOfferingId : cloudOfferingIds) {
+            if (cloudOfferingId == null) {
+                throw new IllegalArgumentException("cloudOfferingIds contains null element");
+            }
+        }
+
+        String joinedCloudOfferingIds = String.join(",", cloudOfferingIds);
+
+        if (joinedCloudOfferingIds.length() > CLOUD_OFFERING_ID_MAX_LENGTH) {
+            throw new IllegalArgumentException(
+                "Combined cloudOfferingIds exceed the max length of 255 characters");
+        }
+
+        this.cloudOfferingIds = joinedCloudOfferingIds;
         return this;
     }
 
