@@ -44,11 +44,11 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -915,8 +915,10 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     /**
-     * Loads the entities represented by the given IDs with a pessimistic write lock. If no
-     * entities were found with the given IDs, this method returns an empty collection.
+     * Loads the entities represented by the given IDs with a pessimistic write lock. If no entities
+     * could be found matching the given IDs, this method returns an empty collection. Note that this
+     * method makes no attempt to ensure that an entity is loaded for every ID provided. It is possible
+     * for the output collection to be smaller than the provided set of IDs.
      * <p></p>
      * <strong>Note:</strong> There is no guarantee that the entities returned by this method will
      * be loaded from the database at the time it is called. Due to various caching mechanisms, it's
@@ -930,9 +932,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      *  A collection of entity IDs to use to load and lock the represented entities
      *
      * @return
-     *  A collection of locked entities represented by the given IDs
+     *  A list of locked entities represented by the given IDs
      */
-    public Collection<E> lockAndLoad(Iterable<? extends Serializable> ids) {
+    public List<E> lockAndLoad(Iterable<? extends Serializable> ids) {
         return this.lockAndLoad(this.entityType, ids);
     }
 
@@ -958,22 +960,28 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      *  A collection of IDs to use to load
      *
      * @return
-     *  A collection of locked entities matching the given values
+     *  A list of locked entities matching the given values
      */
-    protected Collection<E> lockAndLoad(Class<E> entityClass, Iterable<? extends Serializable> ids) {
-        // Sort and de-duplicate the provided collection of IDs so we have a deterministic locking
-        // order for the entities (helps avoid deadlock)
-        SortedSet<Serializable> idSet = new TreeSet<>();
-        for (Serializable id : ids) {
-            idSet.add(id);
+    protected List<E> lockAndLoad(Class<E> entityClass, Iterable<? extends Serializable> ids) {
+        if (ids == null) {
+            return new ArrayList<>();
         }
 
+        // Sort and de-duplicate the provided collection of IDs so we have a deterministic locking
+        // order for the entities (helps avoid deadlock)
+        List<? extends Serializable> ordered = StreamSupport.stream(ids.spliterator(), false)
+            .filter(Objects::nonNull)
+            .sorted()
+            .distinct()
+            .toList();
+
         // Fetch the entities from the DB...
-        if (idSet.size() > 0) {
+        if (ordered.size() > 0) {
             return this.currentSession()
                 .byMultipleIds(entityClass)
+                .enableOrderedReturn(false)
                 .with(new LockOptions(LockMode.PESSIMISTIC_WRITE))
-                .multiLoad(new ArrayList(idSet));
+                .multiLoad(ordered);
         }
 
         return new ArrayList<>();
