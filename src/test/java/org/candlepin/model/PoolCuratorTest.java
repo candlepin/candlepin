@@ -1878,12 +1878,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void batchDeleteTest() {
-        Owner owner2 = createOwner();
-        ownerCurator.create(owner2);
+        Owner owner = this.createOwner();
 
         List<Pool> pools = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
-            pools.add(createPool(owner2, "id123"));
+            pools.add(createPool(owner, "id123"));
         }
 
         for (Pool pool : pools) {
@@ -1898,13 +1897,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void batchDeleteAlreadyDeletedTest() {
-        Owner owner2 = createOwner();
-        ownerCurator.create(owner2);
+        Owner owner = this.createOwner();
 
         List<Pool> pools = new ArrayList<>();
         Set<String> ids = new HashSet<>();
         for (int i = 0; i < 10; i++) {
-            Pool p = createPool(owner2, "id123");
+            Pool p = createPool(owner, "id123");
             pools.add(p);
             ids.add(p.getId());
         }
@@ -1916,6 +1914,77 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.batchDelete(pools, ids);
         for (Pool pool : pools) {
             assertNotNull(poolCurator.get(pool.getId()));
+        }
+    }
+
+    @Test
+    public void testBatchDeleteAcceptsNullForAlreadyDeletedPools() {
+        Owner owner = this.createOwner();
+
+        List<Pool> existing = List.of(
+            this.createPool(owner, "pool1"),
+            this.createPool(owner, "pool2"),
+            this.createPool(owner, "pool3"));
+
+        this.poolCurator.flush();
+        this.poolCurator.clear();
+
+        this.poolCurator.batchDelete(existing, null);
+        this.poolCurator.flush();
+
+        for (Pool pool : existing) {
+            assertNull(this.poolCurator.get(pool.getId()));
+        }
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testBatchDeleteSilentlyIgnoresNullOrEmptyPoolCollection(Collection<Pool> pools) {
+        Owner owner = this.createOwner();
+
+        List<Pool> existing = List.of(
+            this.createPool(owner, "pool1"),
+            this.createPool(owner, "pool2"),
+            this.createPool(owner, "pool3"));
+
+        this.poolCurator.flush();
+        this.poolCurator.clear();
+
+        this.poolCurator.batchDelete(pools, null);
+        this.poolCurator.flush();
+
+        for (Pool pool : existing) {
+            assertNotNull(this.poolCurator.get(pool.getId()));
+        }
+    }
+
+    @Test
+    public void testBatchDeleteSilentlyIgnoresNullPoolsInCollection() {
+        Owner owner = this.createOwner();
+
+        List<Pool> existing = List.of(
+            this.createPool(owner, "pool1"),
+            this.createPool(owner, "pool2"),
+            this.createPool(owner, "pool3"));
+
+        List<Pool> pools = Arrays.asList(
+            existing.get(0),
+            null,
+            existing.get(2));
+
+        this.poolCurator.flush();
+        this.poolCurator.clear();
+
+        this.poolCurator.batchDelete(pools, null);
+        this.poolCurator.flush();
+
+        for (Pool pool : existing) {
+            if (pools.contains(pool)) {
+                assertNull(this.poolCurator.get(pool.getId()));
+            }
+            else {
+                assertNotNull(this.poolCurator.get(pool.getId()));
+            }
         }
     }
 
