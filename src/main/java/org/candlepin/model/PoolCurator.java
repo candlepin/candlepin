@@ -1205,17 +1205,26 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     /**
-     * Batch deletes a list of pools.
+     * Batch deletes a collection of pools. If the given collection is null, this method silently returns.
+     * Null elements in the collection will be ignored.
      *
      * @param pools pools to delete
      * @param alreadyDeletedPools pools to skip, they have already been deleted.
      */
     public void batchDelete(Collection<Pool> pools, Collection<String> alreadyDeletedPools) {
+        if (pools == null) {
+            return;
+        }
+
         if (alreadyDeletedPools == null) {
             alreadyDeletedPools = new HashSet<>();
         }
 
         for (Pool pool : pools) {
+            if (pool == null) {
+                continue;
+            }
+
             // As we batch pool operations, pools may be deleted at multiple places in the code path.
             // We may request to delete the same pool in multiple places too, for example if an expired
             // stack derived pool has no entitlements, ExpiredPoolsJob will request to delete it twice,
