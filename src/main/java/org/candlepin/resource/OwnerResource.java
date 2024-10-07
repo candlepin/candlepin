@@ -58,6 +58,7 @@ import org.candlepin.dto.api.server.v1.OwnerInfo;
 import org.candlepin.dto.api.server.v1.PoolDTO;
 import org.candlepin.dto.api.server.v1.ProductContentDTO;
 import org.candlepin.dto.api.server.v1.ProductDTO;
+import org.candlepin.dto.api.server.v1.SetConsumerEnvironmentsDTO;
 import org.candlepin.dto.api.server.v1.SubscriptionDTO;
 import org.candlepin.dto.api.server.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.server.v1.UeberCertificateDTO;
@@ -157,6 +158,8 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 
 /**
@@ -1889,5 +1892,12 @@ public class OwnerResource implements OwnerApi {
         log.info("Created owner: {}", owner);
         sink.emitOwnerCreated(owner);
         return owner;
+    }
+
+    @Override
+    public void setConsumersToEnvironments(String ownerKey,
+        @Valid @NotNull SetConsumerEnvironmentsDTO setConsumerEnvironmentsDTO) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setConsumersToEnvironments'");
     }
 }

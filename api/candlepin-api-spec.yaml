@@ -5324,6 +5324,57 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /owners/{owner_key}/consumers/environments:
+    put:
+      description: Sets the environments of the provided consumers to the list of provided environments.
+      tags:
+        - owner
+      operationId: setConsumersToEnvironments
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: |
+          Contains a list of consumer UUIDs and a list of environment IDs. The list of consumer UUIDs dictates
+          the consumers that will have their environments set to the list of provided environemnt IDs. The
+          ordering of the environment IDs dictates the priority of the environments. For example, environment
+          in index 0 will have priority 0 and environment in index 1 will have priority 1.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetConsumerEnvironmentsDTO'
+      security: []
+      responses:
+        204:
+          description: All of the consumers were set to the provided environments
+        400:
+          description: |
+            The provided owner key is null or empty, the list of environments contains an environment that 
+            does not exist for the owner, the list of consumer UUIDs contains one or more consumer UUIDs that
+            does not exist for the owner, or the list of consumer UUIDs or environment IDs exceeds the max
+            configured size.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Owner key could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+
   /owners/{owner_key}/consumers_system_purpose:
     get:
       description: Retrieves an aggregate of the system purpose settings of the owner's consumers
@@ -10181,6 +10232,17 @@ components:
               type: string
             type:
               $ref: '#/components/schemas/ConsumerTypeDTO'
+
+    SetConsumerEnvironmentsDTO:
+      properties:
+        consumerUuids:
+          type: array
+          items:
+            type: string
+        environmentIds:
+          type: array
+          items:
+            type: string
 
   securitySchemes:
     basicAuth:

@@ -15,14 +15,27 @@
 package org.candlepin.spec.owners;
 
 import static java.lang.Thread.sleep;
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
+import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.candlepin.dto.api.client.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
@@ -34,12 +47,16 @@ import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.client.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.client.v1.ContentAccessDTO;
+import org.candlepin.dto.api.client.v1.ContentDTO;
+import org.candlepin.dto.api.client.v1.ContentToPromoteDTO;
+import org.candlepin.dto.api.client.v1.EnvironmentDTO;
 import org.candlepin.dto.api.client.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.client.v1.RoleDTO;
+import org.candlepin.dto.api.client.v1.SetConsumerEnvironmentsDTO;
 import org.candlepin.dto.api.client.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
 import org.candlepin.invoker.client.ApiException;
@@ -53,6 +70,8 @@ import org.candlepin.spec.bootstrap.client.api.Paging;
 import org.candlepin.spec.bootstrap.data.builder.ActivationKeys;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
+import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.Environments;
 import org.candlepin.spec.bootstrap.data.builder.Facts;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Permissions;
@@ -63,22 +82,15 @@ import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 import org.candlepin.spec.bootstrap.data.util.DateUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
-
-import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 
 @SpecTest
@@ -1072,6 +1084,203 @@ public class OwnerResourceSpecTest {
                 .isNotPositive();
             assertThat(owners.get(2).getCreated().compareTo(owners.get(3).getCreated()))
                 .isNotPositive();
+        }
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void testSetConsumersToEnvironmentsWithNullAndEmptyConsumerUuids(List<String> consumerUuids) {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(consumerUuids);
+        req.setEnvironmentIds(List.of(StringUtil.random("env-"), StringUtil.random("env-")));
+
+        assertBadRequest(() -> admin.owners().setConsumersToEnvironments(ownerKey, req));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void testSetConsumersToEnvironmentsWithNullAndEmptyEnvIds(List<String> envIds) {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(StringUtil.random("c-"), StringUtil.random("c-")));
+        req.setEnvironmentIds(envIds);
+
+        assertBadRequest(() -> admin.owners().setConsumersToEnvironments(ownerKey, req));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @ValueSource(strings = { "unknown-key" })
+    @NullAndEmptySource
+    public void testSetConsumersToEnvironmentsWithInvalidOwnerKey(String ownerKey) {
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(StringUtil.random("c-"), StringUtil.random("c-")));
+        req.setEnvironmentIds(List.of(StringUtil.random("env-"), StringUtil.random("env-")));
+
+        assertBadRequest(() -> admin.owners().setConsumersToEnvironments(ownerKey, req));
+    }
+
+    @Test
+    public void testSetConsumersToEnvironmentsWithOwnerInEntitlementMode() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        EnvironmentDTO targetEnv = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("env-")));
+
+        ConsumerDTO consumer = Consumers.random(owner)
+            .environments(List.of(targetEnv));
+        consumer = admin.consumers().createConsumer(consumer);
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(consumer.getUuid(), StringUtil.random("unknown-")));
+        req.setEnvironmentIds(List.of(targetEnv.getId()));
+
+        assertBadRequest(() -> admin.owners().setConsumersToEnvironments(ownerKey, req));
+    }
+
+    @Test
+    public void testSetConsumersToEnvironmentsWithUnknownConsumerUuid() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        EnvironmentDTO targetEnv = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("env-")));
+
+        ConsumerDTO consumer = Consumers.random(owner)
+            .environments(List.of(targetEnv));
+        consumer = admin.consumers().createConsumer(consumer);
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(consumer.getUuid(), StringUtil.random("unknown-")));
+        req.setEnvironmentIds(List.of(targetEnv.getId()));
+
+        assertBadRequest(() -> admin.owners().setConsumersToEnvironments(ownerKey, req));
+    }
+
+    @Test
+    public void testSetConsumersToEnvironmentsWithUnknownEnvironmentId() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        EnvironmentDTO targetEnv = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("env-")));
+
+        ConsumerDTO consumer = Consumers.random(owner)
+            .environments(List.of(targetEnv));
+        consumer = admin.consumers().createConsumer(consumer);
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(consumer.getUuid()));
+        req.setEnvironmentIds(List.of(targetEnv.getId(), StringUtil.random("unknown-")));
+
+        assertBadRequest(() -> admin.owners().setConsumersToEnvironments(ownerKey, req));
+    }
+
+    @Test
+    public void testSetConsumersToEnvironments() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ContentDTO content = admin.ownerContent().createContent(ownerKey, Contents.random());
+        ProductDTO prod = admin.ownerProducts().createProduct(ownerKey, Products.random());
+        admin.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
+        admin.owners().createPool(ownerKey, Pools.random(prod));
+
+        EnvironmentDTO otherEnv = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("other-")));
+        ContentToPromoteDTO promote = new ContentToPromoteDTO()
+            .environmentId(otherEnv.getId())
+            .contentId(content.getId())
+            .enabled(true);
+        admin.environments().promoteContent(otherEnv.getId(), List.of(promote), true);
+
+        EnvironmentDTO targetEnv1 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("target-1-")));
+        EnvironmentDTO targetEnv2 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("target-2-")));
+
+        List<String> shouldUpdate = new ArrayList<>();
+        List<String> shouldNotUpdate = new ArrayList<>();
+        for (int i=0; i<5; i++) {
+            // Create a consumer for different owner that is not included in the request. This consumer should
+            // not be updated.
+            OwnerDTO otherOwner = admin.owners().createOwner(Owners.randomSca());
+            ConsumerDTO otherOwnerConsumer = admin.consumers().createConsumer(Consumers.random(otherOwner));
+            shouldNotUpdate.add(otherOwnerConsumer.getUuid());
+
+            // Create a consumer for the owner that will not be included in the request and should not have
+            // the environment set.
+            ConsumerDTO noUpdateConsumer = admin.consumers().createConsumer(Consumers.random(owner));
+            shouldNotUpdate.add(noUpdateConsumer.getUuid());
+
+            // Create a consumer that has no environment set, but is included in the request. This consumer
+            // should be set into the target environments.
+            ConsumerDTO noEnvConsumer = Consumers.random(owner)
+                .name(StringUtil.random("no-env-"));
+
+            noEnvConsumer = admin.consumers().createConsumer(noEnvConsumer);
+            shouldUpdate.add(noEnvConsumer.getUuid());
+
+            // Create a consumer in a different encironment. This consumer should be removed from this other
+            // environment and added to the target environments.
+            ConsumerDTO otherEnvConsumer = Consumers.random(owner)
+                .name(StringUtil.random("other-env-"))
+                .environments(List.of(otherEnv));
+
+            otherEnvConsumer = admin.consumers().createConsumer(otherEnvConsumer);
+            shouldUpdate.add(otherEnvConsumer.getUuid());
+            admin.consumers().exportCertificates(otherEnvConsumer.getUuid(), null);
+
+            // Create a consumer in one of the target environments. The consumer should be added to the other
+            // environment.
+            ConsumerDTO consumer = Consumers.random(owner)
+                .name(StringUtil.random("subset-env-"));
+            if (Math.random() > .5) {
+                consumer.environments(List.of(targetEnv1));
+            }
+            else {
+                consumer.environments(List.of(targetEnv2));
+            }
+
+            consumer = admin.consumers().createConsumer(consumer);
+            shouldUpdate.add(consumer.getUuid());
+        }
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(shouldUpdate);
+        req.setEnvironmentIds(List.of(targetEnv1.getId(), targetEnv2.getId()));
+
+        admin.owners().setConsumersToEnvironments(ownerKey, req);
+
+        // Validate that the consumers in the request were migrated into the target environments.
+        for (String uuid : shouldUpdate) {
+            ConsumerDTO actual = admin.consumers().getConsumer(uuid);
+
+            assertNotNull(actual);
+            assertNotNull(actual.getEnvironments());
+            assertEquals(2, actual.getEnvironments().size());
+
+            assertThat(actual)
+                .extracting(ConsumerDTO::getEnvironments, as(collection(EnvironmentDTO.class)))
+                .hasSize(2)
+                .containsExactlyInAnyOrder(targetEnv1, targetEnv2);
+        }
+
+        // Validate that all the consumers that were not included in the request were not added to the target
+        // environments.
+        for (String uuid : shouldNotUpdate) {
+            ConsumerDTO actual = admin.consumers().getConsumer(uuid);
+
+            assertNotNull(actual);
+
+            assertThat(actual)
+                .extracting(ConsumerDTO::getEnvironments, as(collection(EnvironmentDTO.class)))
+                .doesNotContain(targetEnv1, targetEnv2);
         }
     }
 }
