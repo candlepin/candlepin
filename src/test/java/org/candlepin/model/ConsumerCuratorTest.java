@@ -2325,6 +2325,30 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertNull(foundConsumer);
     }
 
+    @Test
+    public void testGetNonExistentConsumerUuids() {
+        Consumer c1 = createConsumer(owner);
+        Consumer c2 = createConsumer(owner);
+        Consumer c3 = createConsumer(owner);
+        Consumer c4 = createConsumer(owner);
+
+        Owner owner2 = this.createOwner();
+        Consumer c5 = createConsumer(owner2);
+        Consumer c6 = createConsumer(owner2);
+        Consumer c7 = createConsumer(owner2);
+        Consumer c8 = createConsumer(owner2);
+
+        String unknownUuid = TestUtil.randomString("unknown-");
+
+        Set<String> actual = consumerCurator
+            .getNonExistentConsumerUuids(List.of(c1.getUuid(), c2.getUuid(), c5.getUuid(), c6.getUuid(),
+                unknownUuid), owner.getOwnerKey());
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(c5.getUuid(), c6.getUuid(), unknownUuid);
+    }
+
     private IdentityCertificate createIdCert() {
         IdentityCertificate idCert = TestUtil.createIdCert(TestUtil.createDateOffset(2, 0, 0));
         return saveCert(idCert);

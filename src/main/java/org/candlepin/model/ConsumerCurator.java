@@ -1212,6 +1212,34 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return existingUuids;
     }
 
+    // TODO: JavaDoc
+    public Set<String> getNonExistentConsumerUuids(Collection<String> consumerUuids, String ownerKey) {
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            return new HashSet<>();
+        }
+
+        String jpql = "SELECT c.uuid " +
+            "FROM Consumer c " +
+            "JOIN Owner o on o.id = c.ownerId " + 
+            "WHERE c.uuid IN (:uuids) and o.key = :ownerKey";
+
+        TypedQuery<String> query = getEntityManager()
+            .createQuery(jpql, String.class);
+
+        query.setParameter("ownerKey", ownerKey);
+
+        Set<String> uniqueConsumerUuids = new HashSet<>(consumerUuids);
+        int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit());
+        Set<String> existingUuids = new HashSet<>();
+        for (List<String> block : Iterables.partition(uniqueConsumerUuids, blockSize)) {
+            existingUuids.addAll(query.setParameter("uuids", block).getResultList());
+        }
+
+        uniqueConsumerUuids.removeAll(existingUuids);
+
+        return uniqueConsumerUuids;
+    }
+
     public Consumer verifyAndLookupConsumer(String consumerUuid) {
         Consumer consumer = this.findByUuid(consumerUuid);
 

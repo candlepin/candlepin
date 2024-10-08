@@ -17,13 +17,20 @@ package org.candlepin.controller;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.service.EventAdapter;
 import org.candlepin.service.model.CloudCheckInEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.persist.Transactional;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -33,19 +40,25 @@ import javax.inject.Inject;
  * to the Consumer object.
  */
 public class ConsumerManager {
+    private static final Logger log = LoggerFactory.getLogger(ConsumerManager.class);
 
     private final ConsumerCurator consumerCurator;
+    private final ContentAccessCertificateCurator caCertCurator;
+    private final EnvironmentCurator envCurator;
     private final EventAdapter eventAdapter;
     private final ObjectMapper objectMapper;
 
     @Inject
     public ConsumerManager(ConsumerCurator consumerCurator,
+        ContentAccessCertificateCurator caCertCurator,
+        EnvironmentCurator envCurator,
         EventAdapter eventAdapter,
         ObjectMapper objectMapper) {
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.caCertCurator = Objects.requireNonNull(caCertCurator);
+        this.envCurator = Objects.requireNonNull(envCurator);
         this.eventAdapter = Objects.requireNonNull(eventAdapter);
         this.objectMapper = Objects.requireNonNull(objectMapper);
-
     }
 
     /**
@@ -68,5 +81,38 @@ public class ConsumerManager {
                 new CloudCheckInEvent(consumer.getConsumerCloudData(), objectMapper);
             eventAdapter.publish(cloudCheckInEvent);
         }
+    }
+
+    // TODO: Java Doc
+    @Transactional
+    public List<String> setConsumersEnvironments(Collection<String> consumerUuids,
+        List<String> environmentIds) {
+
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<String> consumersToUpdate = envCurator
+            .getConsumerUuidsNotExactlyInEnvs(consumerUuids, environmentIds);
+
+        log.info("{} of the consumers are not currently in the target environments");
+
+        if (consumersToUpdate.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        int added = envCurator.setConsumersEnvironments(consumersToUpdate, environmentIds);
+        log.info("{} consumers set to the target environments", added);
+
+        // Delete all of the content access certificates for consumers that had an environment change
+        List<String> ids = caCertCurator.listCertSerialIdsByConsumerUuids(consumersToUpdate);
+
+        int unlinked = consumerCurator.unlinkCaCertificates(ids);
+        log.info("{} content access certs unlinked", unlinked);
+
+        int certsRemoved = caCertCurator.deleteByIds(ids);
+        log.info("{} content access certificates removed", certsRemoved);
+
+        return consumersToUpdate;
     }
 }

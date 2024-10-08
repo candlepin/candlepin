@@ -34,6 +34,7 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.auth.Verify;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.controller.ConsumerManager;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.ManifestManager;
@@ -174,6 +175,7 @@ public class OwnerResource implements OwnerApi {
     private final ActivationKeyCurator activationKeyCurator;
     private final OwnerServiceAdapter ownerService;
     private final ConsumerCurator consumerCurator;
+    private final ConsumerManager consumerManager;
     private final I18n i18n;
     private final EventSink sink;
     private final EventFactory eventFactory;
@@ -207,6 +209,7 @@ public class OwnerResource implements OwnerApi {
     public OwnerResource(OwnerCurator ownerCurator,
         ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,
+        ConsumerManager consumerManager,
         I18n i18n,
         EventSink sink,
         EventFactory eventFactory,
@@ -240,6 +243,7 @@ public class OwnerResource implements OwnerApi {
         this.ownerInfoCurator = Objects.requireNonNull(ownerInfoCurator);
         this.activationKeyCurator = Objects.requireNonNull(activationKeyCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.consumerManager = Objects.requireNonNull(consumerManager);
         this.i18n = Objects.requireNonNull(i18n);
         this.sink = Objects.requireNonNull(sink);
         this.eventFactory = Objects.requireNonNull(eventFactory);
@@ -1895,9 +1899,38 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public void setConsumersToEnvironments(String ownerKey,
-        @Valid @NotNull SetConsumerEnvironmentsDTO setConsumerEnvironmentsDTO) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setConsumersToEnvironments'");
+    public void setConsumersToEnvironments(@Verify(Owner.class) String ownerKey,
+        SetConsumerEnvironmentsDTO request) {
+
+        List<String> consumerUuids = request.getConsumerUuids();
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            throw new BadRequestException(i18n.tr("Consumer UUIDs is null or empty"));
+        }
+
+        List<String> environmentIds = request.getEnvironmentIds();
+        if (environmentIds == null || environmentIds.isEmpty()) {
+            throw new BadRequestException(i18n.tr("Environment IDs is null or empty"));
+        }
+
+        // TODO: We can probably improve this with streams
+        Set<String> uniqueEnvironmentIds = new HashSet<>(environmentIds);
+        if (uniqueEnvironmentIds.size() != environmentIds.size()) {
+            throw new BadRequestException(i18n.tr("Environment IDs contains duplicates"));
+        }
+
+        Owner owner = findOwnerByKey(ownerKey);
+        if (!ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue().equals(owner.getContentAccessMode())) {
+            throw new BadRequestException(i18n.tr("Owner is not in SCA content access mode"));
+        }
+
+        Set<String> nonExistingConsumerUuids = consumerCurator
+            .getNonExistentConsumerUuids(consumerUuids, ownerKey);
+
+        if (!nonExistingConsumerUuids.isEmpty()) {
+            throw new BadRequestException(i18n.tr("Unkown consumer UUIDs: {}", nonExistingConsumerUuids));
+        }
+
+        // TODO: Migrate the consumerss
+        consumerManager.setConsumersEnvironments(consumerUuids, environmentIds);
     }
 }

@@ -308,4 +308,98 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         return count;
     }
 
+    // TODO: Java Doc
+    public List<String> getConsumerUuidsNotExactlyInEnvs(Collection<String> consumerUuids, Collection<String> envIds) {
+        // Build the CTE with named parameters
+        String cteValues = "";
+        for (int i = 0; i < consumerUuids.size(); i++) {
+            for (int j = 0; j < envIds.size(); j++) {
+                String consumerParam = ":c" + i;
+                String envParam = consumerParam + "e" + j;
+                String priorityParam = envParam + "p" + j;
+                cteValues = cteValues + ",(" + consumerParam + ", " + envParam + ", " + priorityParam + ")";
+            }
+        }
+        cteValues = cteValues.replaceFirst(",", "");
+
+        String statement = "" +
+            "WITH cte (consumerUuid, envId, priority) AS ( " + 
+            "    values " + cteValues + 
+            ") " +
+            "SELECT DISTINCT c.uuid " +
+            "FROM cte " +
+            "JOIN cp_consumer c on c.uuid = cte.consumerUuid " +
+            "LEFT JOIN cp_consumer_environments ce ON cte.consumerUuid = c.uuid AND " +
+            "cte.envId = ce.environment_id AND " +
+            "cte.priority = ce.priority " +
+            "WHERE ce.cp_consumer_id IS NULL;";
+
+        Query query = this.getEntityManager()
+            .createNativeQuery(statement);
+
+        // Populate the CTE values
+        int consumerIndex = 0;
+        int envIndex = 0;
+        for (String consumerUuid : consumerUuids) {
+            for (String envId : envIds) {
+                String consumerParam = "c" + consumerIndex;
+                String envParam = consumerParam + "e" + envIndex;
+                String priorityParam = envParam + "p" + envIndex;
+
+                query.setParameter(consumerParam, consumerUuid);
+                query.setParameter(envParam, envId);
+                query.setParameter(priorityParam, Integer.toString(envIndex));
+
+                envIndex++;
+            }
+
+            consumerIndex++;
+            envIndex = 0;
+        }
+
+        List<String> result = new ArrayList<>();
+        result.addAll(query.getResultList());
+
+        return result;
+    }
+
+    // TODO: Java Doc
+    private int removeConsumersFromAllEnvironments(Collection<String> consumerUuids) {
+        String statement = "DELETE FROM cp_consumer_environments " + 
+            "WHERE cp_consumer_id IN (SELECT id FROM cp_consumer WHERE uuid IN (:uuids))";
+
+        Query query = this.getEntityManager()
+            .createNativeQuery(statement);
+
+        query.setParameter("uuids", consumerUuids);
+
+        return query.executeUpdate();
+    }
+
+    // TODO: Java Doc
+    public int setConsumersEnvironments(Collection<String> consumerUuids, List<String> envIds) {
+        removeConsumersFromAllEnvironments(consumerUuids);
+
+        String statement = "INSERT INTO cp_consumer_environments (cp_consumer_id, environment_id, priority) " + 
+            "SELECT id, :envId, :priority FROM cp_consumer WHERE uuid = :uuid";
+
+        int changes = 0;
+        for (String consumerUuid : consumerUuids) {
+            int priority = 0;
+            for (String envId : envIds) {
+                Query query = this.getEntityManager()
+                    .createNativeQuery(statement);
+
+                query.setParameter("uuid", consumerUuid);
+                query.setParameter("envId", envId);
+                query.setParameter("priority", priority);
+
+                changes += query.executeUpdate();
+                priority++;
+            }
+        }
+
+        return changes;
+    }
+
 }
