@@ -264,7 +264,7 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
             "LEFT JOIN cp_consumer_environments ce ON cte.consumerUuid = c.uuid AND " +
             "cte.envId = ce.environment_id AND " +
             "cte.priority = ce.priority " +
-            "WHERE ce.cp_consumer_id IS NULL OR cte.consumerUuid IS NULL;";
+            "WHERE ce.cp_consumer_id IS NULL;";
 
         Query query = this.getEntityManager()
             .createNativeQuery(statement);
@@ -295,18 +295,6 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         return result;
     }
 
-    public int removeConsumersFromAllEnvironments(Collection<String> consumerUuids) {
-        String statement = "DELETE FROM cp_consumer_environments " + 
-            "WHERE cp_consumer_id IN (SELECT id FROM cp_consumer WHERE uuid IN (:uuids))";
-
-        Query query = this.getEntityManager()
-            .createNativeQuery(statement);
-
-        query.setParameter("uuids", consumerUuids);
-
-        return query.executeUpdate();
-    }
-
     public int removeConsumerFromOtherEnvironments(Collection<String> consumerUuids,
         Collection<String> environmentIds) {
 
@@ -323,7 +311,21 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         return query.executeUpdate();
     }
 
-    public int addConsumersToEnvironments(Collection<String> consumerUuids, List<String> envIds) {
+    private int removeConsumersFromAllEnvironments(Collection<String> consumerUuids) {
+        String statement = "DELETE FROM cp_consumer_environments " + 
+            "WHERE cp_consumer_id IN (SELECT id FROM cp_consumer WHERE uuid IN (:uuids))";
+
+        Query query = this.getEntityManager()
+            .createNativeQuery(statement);
+
+        query.setParameter("uuids", consumerUuids);
+
+        return query.executeUpdate();
+    }
+
+    public int setConsumersEnvironments(Collection<String> consumerUuids, List<String> envIds) {
+        removeConsumersFromAllEnvironments(consumerUuids);
+
         String statement = "INSERT INTO cp_consumer_environments (cp_consumer_id, environment_id, priority) " + 
             "SELECT id, :envId, :priority FROM cp_consumer WHERE uuid = :uuid";
 

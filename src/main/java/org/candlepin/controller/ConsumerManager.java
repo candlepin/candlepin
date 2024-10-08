@@ -100,11 +100,8 @@ public class ConsumerManager {
             return new ArrayList<>();
         }
 
-        int removed = envCurator.removeConsumersFromAllEnvironments(affectedConsumerUuids);
-        log.info("{} consumers removed from existing environments", removed);
-
-        int added = envCurator.addConsumersToEnvironments(affectedConsumerUuids, environmentIds);
-        log.info("{} consumers added to the target environments", added);
+        int added = envCurator.setConsumersEnvironments(affectedConsumerUuids, environmentIds);
+        log.info("{} consumers set to the target environments", added);
 
         // Delete all of the content access certificates for consumers that had an environment change
         List<String> ids = caCertCurator.listCertSerialIdsByConsumerUuids(affectedConsumerUuids);

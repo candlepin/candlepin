@@ -5495,7 +5495,7 @@ paths:
       description: Updates the environments of the provided consumers
       tags:
         - owner
-      operationId: addConsumersToEnvironments
+      operationId: setConsumersEnvironments
       parameters:
         - name: owner_key
           in: path
