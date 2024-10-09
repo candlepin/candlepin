@@ -49,6 +49,7 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ConsumerManager;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.ManifestManager;
@@ -178,6 +179,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     // Mocks used to build the owner resource
     private ActivationKeyCurator mockActivationKeyCurator;
     private ConsumerCurator mockConsumerCurator;
+    private ConsumerManager mockConsumerManager;
     private ConsumerTypeCurator mockConsumerTypeCurator;
     private EntitlementCurator mockEntitlementCurator;
     private EnvironmentCurator mockEnvironmentCurator;
@@ -227,6 +229,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Setup mocks and other such things...
         this.mockActivationKeyCurator = mock(ActivationKeyCurator.class);
         this.mockConsumerCurator = mock(ConsumerCurator.class);
+        this.mockConsumerManager = mock(ConsumerManager.class);
+
         this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
         this.mockEntitlementCurator = mock(EntitlementCurator.class);
         this.mockEnvironmentCurator = mock(EnvironmentCurator.class);
@@ -257,14 +261,15 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     private OwnerResource buildOwnerResource() {
         return new OwnerResource(this.mockOwnerCurator, this.mockActivationKeyCurator,
-            this.mockConsumerCurator, this.i18n, this.mockEventSink, this.mockEventFactory,
-            this.contentAccessManager, this.mockManifestManager, this.mockPoolManager, this.poolService,
-            this.mockPoolCurator, this.ownerManager, this.mockExportCurator, this.mockOwnerInfoCurator,
-            this.mockImportRecordCurator, this.mockEntitlementCurator, this.mockUeberCertCurator,
-            this.mockUeberCertificateGenerator, this.mockEnvironmentCurator, this.calculatedAttributesUtil,
-            this.contentOverrideValidator, this.serviceLevelValidator, this.ownerServiceAdapter, this.config,
-            this.consumerTypeValidator, this.mockProductCurator, this.modelTranslator, this.mockJobManager,
-            this.dtoValidator, this.principalProvider, this.pagingUtilFactory);
+            this.mockConsumerCurator, this.mockConsumerManager, this.i18n, this.mockEventSink,
+            this.mockEventFactory,this.contentAccessManager, this.mockManifestManager, this.mockPoolManager,
+            this.poolService, this.mockPoolCurator, this.ownerManager, this.mockExportCurator,
+            this.mockOwnerInfoCurator, this.mockImportRecordCurator, this.mockEntitlementCurator,
+            this.mockUeberCertCurator, this.mockUeberCertificateGenerator, this.mockEnvironmentCurator,
+            this.calculatedAttributesUtil, this.contentOverrideValidator, this.serviceLevelValidator,
+            this.ownerServiceAdapter, this.config, this.consumerTypeValidator, this.mockProductCurator,
+            this.modelTranslator, this.mockJobManager, this.dtoValidator, this.principalProvider,
+            this.pagingUtilFactory);
     }
 
     private ProductDTO buildTestProductDTO() {
@@ -1688,15 +1693,15 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testImportManifestAsyncSuccess() throws IOException, ImporterException, JobException {
         OwnerResource thisOwnerResource = new OwnerResource(
-            this.mockOwnerCurator, this.activationKeyCurator, this.consumerCurator, this.i18n,
-            this.mockEventSink, this.mockEventFactory, this.contentAccessManager, this.mockManifestManager,
-            this.poolManager, this.poolService, this.mockPoolCurator, this.ownerManager,
-            this.mockExportCurator, this.ownerInfoCurator, this.importRecordCurator, this.entitlementCurator,
-            this.ueberCertificateCurator, this.ueberCertGenerator, this.environmentCurator,
-            this.calculatedAttributesUtil, this.contentOverrideValidator, this.serviceLevelValidator,
-            this.ownerServiceAdapter, this.config, this.consumerTypeValidator, this.mockProductCurator,
-            this.modelTranslator, this.mockJobManager, this.dtoValidator, this.principalProvider,
-            this.pagingUtilFactory);
+            this.mockOwnerCurator, this.activationKeyCurator, this.consumerCurator, this.mockConsumerManager,
+            this.i18n, this.mockEventSink, this.mockEventFactory, this.contentAccessManager,
+            this.mockManifestManager, this.poolManager, this.poolService, this.mockPoolCurator,
+            this.ownerManager, this.mockExportCurator, this.ownerInfoCurator, this.importRecordCurator,
+            this.entitlementCurator, this.ueberCertificateCurator, this.ueberCertGenerator,
+            this.environmentCurator, this.calculatedAttributesUtil, this.contentOverrideValidator,
+            this.serviceLevelValidator, this.ownerServiceAdapter, this.config, this.consumerTypeValidator,
+            this.mockProductCurator, this.modelTranslator, this.mockJobManager, this.dtoValidator,
+            this.principalProvider, this.pagingUtilFactory);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);

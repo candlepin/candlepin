@@ -25,6 +25,8 @@ import static org.mockito.Mockito.verify;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCloudData;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.service.EventAdapter;
 import org.candlepin.service.model.CloudCheckInEvent;
 import org.candlepin.test.TestUtil;
@@ -47,6 +49,10 @@ public class ConsumerManagerTest {
     private ConsumerCurator consumerCurator;
     @Mock
     private EventAdapter eventAdapter;
+    @Mock
+    private ContentAccessCertificateCurator caCertCurator;
+    @Mock
+    private EnvironmentCurator envCurator;
 
     private ObjectMapper objectMapper;
 
@@ -111,7 +117,7 @@ public class ConsumerManagerTest {
     }
 
     private ConsumerManager buildConsumerManager() {
-        return new ConsumerManager(consumerCurator, eventAdapter, objectMapper);
+        return new ConsumerManager(consumerCurator, caCertCurator, envCurator, eventAdapter, objectMapper);
     }
 
     private Consumer createConsumer() {

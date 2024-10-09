@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map.Entry;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -309,17 +310,41 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
     }
 
     // TODO: Java Doc
-    public List<String> getConsumerUuidsNotExactlyInEnvs(Collection<String> consumerUuids, Collection<String> envIds) {
-        // Build the CTE with named parameters
-        String cteValues = "";
-        for (int i = 0; i < consumerUuids.size(); i++) {
-            for (int j = 0; j < envIds.size(); j++) {
-                String consumerParam = ":c" + i;
-                String envParam = consumerParam + "e" + j;
-                String priorityParam = envParam + "p" + j;
-                cteValues = cteValues + ",(" + consumerParam + ", " + envParam + ", " + priorityParam + ")";
-            }
+    public List<String> getConsumerUuidsNotExactlyInEnvs(Collection<String> consumerUuids,
+        Collection<String> envIds) {
+
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            return new ArrayList<>();
         }
+
+        if (envIds == null || envIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Create a CTE consisting of a row for each expected consumer UUID and the expected environment ID
+        // and priority that the consumer should belong to.
+        Map<String, String> cteParamKeyToValue = new HashMap<>();
+        String cteValues = "";
+        int consumerIndex = 0;
+        for (String consumerUuid : consumerUuids) {
+            int envIndex = 0;
+            for (String envId : envIds) {
+                String consumerParam = "c" + consumerIndex;
+                String envParam = consumerParam + "e" + envIndex;
+                String priorityParam = envParam + "p" + envIndex;
+
+                cteParamKeyToValue.put(consumerParam, consumerUuid);
+                cteParamKeyToValue.put(envParam, envId);
+                cteParamKeyToValue.put(priorityParam, Integer.toString(envIndex));
+
+                cteValues = cteValues + ",(:" + consumerParam + ", :" + envParam + ", :" + priorityParam + ")";
+
+                envIndex++;
+            }
+
+            consumerIndex++;
+        }
+
         cteValues = cteValues.replaceFirst(",", "");
 
         String statement = "" +
@@ -337,30 +362,12 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         Query query = this.getEntityManager()
             .createNativeQuery(statement);
 
-        // Populate the CTE values
-        int consumerIndex = 0;
-        int envIndex = 0;
-        for (String consumerUuid : consumerUuids) {
-            for (String envId : envIds) {
-                String consumerParam = "c" + consumerIndex;
-                String envParam = consumerParam + "e" + envIndex;
-                String priorityParam = envParam + "p" + envIndex;
-
-                query.setParameter(consumerParam, consumerUuid);
-                query.setParameter(envParam, envId);
-                query.setParameter(priorityParam, Integer.toString(envIndex));
-
-                envIndex++;
-            }
-
-            consumerIndex++;
-            envIndex = 0;
+        // Populate the CTE named parameters with values
+        for (Entry<String, String> entry : cteParamKeyToValue.entrySet()) {
+            query.setParameter(entry.getKey(), entry.getValue());
         }
 
-        List<String> result = new ArrayList<>();
-        result.addAll(query.getResultList());
-
-        return result;
+        return query.getResultList();
     }
 
     // TODO: Java Doc

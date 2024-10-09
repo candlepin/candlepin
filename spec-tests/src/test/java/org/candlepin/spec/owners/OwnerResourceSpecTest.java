@@ -1300,7 +1300,7 @@ public class OwnerResourceSpecTest {
                 .containsExactlyInAnyOrder(targetEnv1, targetEnv2);
         }
 
-        // TOD: This does not work as is
+        // TODO: This does not work as is
         // Validate that all the consumers that were not included in the request were not added to the target
         // environments.
         // for (String uuid : shouldNotUpdate) {
