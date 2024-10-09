@@ -14,8 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItem;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -82,7 +81,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         }
 
         @Override
-        public Collection<E> lockAndLoad(Class<E> entityClass, Iterable<? extends Serializable> ids) {
+        public List<E> lockAndLoad(Class<E> entityClass, Iterable<? extends Serializable> ids) {
             return super.lockAndLoad(entityClass, ids);
         }
 
@@ -412,6 +411,32 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testLockAndLoadMultiIdDoesNotReturnNullValuesForInvalidIds() {
+        Owner owner1 = this.createOwner("owner_key-1", "owner-1");
+        Owner owner2 = this.createOwner("owner_key-2", "owner-2");
+        Owner owner3 = this.createOwner("owner_key-3", "owner-3");
+
+        List<String> input = List.of(owner1.getId(), "invalid owner ID", owner3.getId());
+
+        List<Owner> output = this.testOwnerCurator.lockAndLoad(input);
+
+        assertThat(output)
+            .isNotNull()
+            .hasSize(2)
+            .contains(owner1, owner3);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testLockAndLoadMultiIdDoesNotFailWithNullOrEmptyInput(Collection<String> ids) {
+        List<Owner> output = this.testOwnerCurator.lockAndLoad(ids);
+
+        assertThat(output)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
     public void testLockAndLoadMultiIdWithClassAndIds() {
         Owner owner1 = this.createOwner("owner_key-1", "owner-1");
         Owner owner2 = this.createOwner("owner_key-2", "owner-2");
@@ -554,6 +579,32 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         for (Owner entity : output) {
             assertTrue(entity.getName().matches("owner-\\d"));
         }
+    }
+
+    @Test
+    public void testLockAndLoadMultiIdWithClassDoesNotReturnNullValuesForInvalidIds() {
+        Owner owner1 = this.createOwner("owner_key-1", "owner-1");
+        Owner owner2 = this.createOwner("owner_key-2", "owner-2");
+        Owner owner3 = this.createOwner("owner_key-3", "owner-3");
+
+        List<String> input = List.of(owner1.getId(), "invalid owner ID", owner3.getId());
+
+        List<Owner> output = this.testOwnerCurator.lockAndLoad(Owner.class, input);
+
+        assertThat(output)
+            .isNotNull()
+            .hasSize(2)
+            .contains(owner1, owner3);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testLockAndLoadMultiIdWithClassDoesNotFailWithNullOrEmptyInput(Collection<String> ids) {
+        List<Owner> output = this.testOwnerCurator.lockAndLoad(Owner.class, ids);
+
+        assertThat(output)
+            .isNotNull()
+            .isEmpty();
     }
 
     @Test
@@ -710,7 +761,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
             // the multi-predicate case.
             assertEquals(Predicate.BooleanOperator.OR, result.getOperator());
             assertEquals(1, result.getExpressions().size());
-            assertThat(result.getExpressions(), hasItem(permissionPredicate));
+            assertThat(result.getExpressions()).contains(permissionPredicate);
         }
         else {
             // In this single-predicate case, that one predicate being passed through is valid
@@ -744,8 +795,8 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         assertNotNull(result);
         assertEquals(Predicate.BooleanOperator.OR, result.getOperator());
         assertEquals(2, result.getExpressions().size());
-        assertThat(result.getExpressions(), hasItem(permissionPredicate1));
-        assertThat(result.getExpressions(), hasItem(permissionPredicate2));
+        assertThat(result.getExpressions()).contains(permissionPredicate1);
+        assertThat(result.getExpressions()).contains(permissionPredicate2);
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
@@ -859,7 +910,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
         List<Owner> actual = this.ownerCurator.takeSubList(request, owners);
 
-        org.assertj.core.api.Assertions.assertThat(actual)
+        assertThat(actual)
             .isNotNull()
             .containsExactlyInAnyOrder(owner1, owner2, owner3);
     }
@@ -933,7 +984,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
         List<Owner> actual = this.ownerCurator.takeSubList(argument, owners);
 
-        org.assertj.core.api.Assertions.assertThat(actual)
+        assertThat(actual)
             .isNotNull()
             .containsExactlyInAnyOrder(owner1, owner2, owner3);
     }
@@ -943,7 +994,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         Optional<Predicate> actual = ownerCurator
             .buildQueryArgumentInPredicate(null, List.of(TestUtil.randomString()));
 
-        org.assertj.core.api.Assertions.assertThat(actual)
+        assertThat(actual)
             .isEmpty();
     }
 
@@ -955,7 +1006,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
         Optional<Predicate> actual = ownerCurator.buildQueryArgumentInPredicate(root, null);
 
-        org.assertj.core.api.Assertions.assertThat(actual)
+        assertThat(actual)
             .isEmpty();
     }
 
@@ -967,7 +1018,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
         Optional<Predicate> actual = ownerCurator.buildQueryArgumentInPredicate(root, List.of());
 
-        org.assertj.core.api.Assertions.assertThat(actual)
+        assertThat(actual)
             .isEmpty();
     }
 
@@ -983,7 +1034,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         }
 
         Optional<Predicate> actual = ownerCurator.buildQueryArgumentInPredicate(root, ids);
-        org.assertj.core.api.Assertions.assertThat(actual)
+        assertThat(actual)
             .isNotEmpty()
             .containsInstanceOf(Predicate.class);
     }

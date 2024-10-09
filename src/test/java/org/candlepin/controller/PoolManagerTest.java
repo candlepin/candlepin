@@ -443,12 +443,11 @@ public class PoolManagerTest {
 
     @Test
     public void deletePoolsTest() {
-        Set<Pool> pools = new HashSet<>();
-
         Product prod = TestUtil.createProduct();
         Pool pool = TestUtil.createPool(prod);
         pool.setId("test-id");
-        pools.add(pool);
+
+        List<Pool> pools = List.of(pool);
 
         when(poolCurator.lockAndLoad(anyIterable())).thenReturn(pools);
 
