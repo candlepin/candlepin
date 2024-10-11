@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2024 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -24,14 +24,15 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.anySet;
-import static org.mockito.Mockito.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -49,6 +50,7 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ConsumerManager;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessMode;
@@ -74,6 +76,7 @@ import org.candlepin.dto.api.server.v1.PoolDTO;
 import org.candlepin.dto.api.server.v1.ProductContentDTO;
 import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
+import org.candlepin.dto.api.server.v1.SetConsumerEnvironmentsDTO;
 import org.candlepin.dto.api.server.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.server.v1.UeberCertificateDTO;
 import org.candlepin.dto.api.server.v1.UpstreamConsumerDTOArrayElement;
@@ -701,7 +704,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         int rnd = TestUtil.randomInt();
 
         Owner owner = new Owner()
-            .setId("test-owner-" + rnd)
             .setId("test-owner-" + rnd)
             .setKey(ownerKey)
             .setDisplayName("Test Owner " + rnd);
@@ -2496,7 +2498,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    void shouldThrowWhenOwnerNotFound() {
+    public void shouldThrowWhenOwnerNotFound() {
         when(mockOwnerCurator.getOwnerContentAccess(anyString()))
             .thenThrow(OwnerNotFoundException.class);
 
@@ -2507,7 +2509,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    void usesOwnersCAModeWhenAvailable() {
+    public void usesOwnersCAModeWhenAvailable() {
         String ownerKey = "test-owner-key";
         String expectedMode = "owner-ca-mode";
         List<String> expectedModeList = Collections.singletonList(expectedMode);
@@ -2523,7 +2525,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    void usesDefaultWhenOwnerCANotAvailable() {
+    public void usesDefaultWhenOwnerCANotAvailable() {
         String expectedMode = ContentAccessMode.getDefault().toDatabaseValue();
         List<String> expectedModeList = Arrays.asList(ContentAccessMode.ENTITLEMENT.toDatabaseValue(),
             ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
@@ -2538,7 +2540,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    void returns404WhenOwnerNotFound() {
+    public void returns404WhenOwnerNotFound() {
         when(mockOwnerCurator.getOwnerContentAccess(anyString()))
             .thenThrow(OwnerNotFoundException.class);
 
@@ -2549,8 +2551,205 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    void refreshPoolsBadOwner() {
+    public void refreshPoolsBadOwner() {
         assertThrows(NotFoundException.class,
             () -> ownerResource.refreshPools("This_key_does_not_exist", false));
     }
+
+    private SetConsumerEnvironmentsDTO createConsumerEnvsDTO(List<String> consumerUuids,
+        List<String> envIds) {
+
+        return new SetConsumerEnvironmentsDTO()
+            .consumerUuids(consumerUuids)
+            .environmentIds(envIds);
+    }
+
+    @Test
+    public void testSetConsumersToEnvironmentsWithNullConsumerUuids() {
+        OwnerResource ownerResource = buildOwnerResource();
+        SetConsumerEnvironmentsDTO dto = createConsumerEnvsDTO(null, List.of("env-id"));
+
+        assertThrows(BadRequestException.class,
+            () -> ownerResource.setConsumersToEnvironments("owner-key", dto));
+    }
+
+    @Test
+    public void testSetConsumersToEnvironmentsWithEmptyConsumerUuids() {
+        OwnerResource ownerResource = buildOwnerResource();
+        SetConsumerEnvironmentsDTO dto = createConsumerEnvsDTO(List.of(), List.of("env-id"));
+
+        assertThrows(BadRequestException.class,
+            () -> ownerResource.setConsumersToEnvironments("owner-key", dto));
+    }
+
+    @Test
+    public void testSetConsumersToEnvironmentsWithNullEnvironmentIds() {
+        OwnerResource ownerResource = buildOwnerResource();
+        SetConsumerEnvironmentsDTO dto = createConsumerEnvsDTO(List.of("consumer-uuid"), null);
+
+        assertThrows(BadRequestException.class,
+            () -> ownerResource.setConsumersToEnvironments("owner-key", dto));
+    }
+
+    @Test
+    public void testSetConsumersToEnvironmentsWithEmptyEnvironmentIds() {
+        OwnerResource ownerResource = buildOwnerResource();
+        SetConsumerEnvironmentsDTO dto = createConsumerEnvsDTO(List.of("consumer-uuid"), List.of());
+
+        assertThrows(BadRequestException.class,
+            () -> ownerResource.setConsumersToEnvironments("owner-key", dto));
+    }
+
+    @Test
+    public void testSetConsumersToEnvironmentsWithDuplicateEnvironmentIds() {
+        List<String> envIds = List.of("env-1", "env-2", "env-1");
+        SetConsumerEnvironmentsDTO dto = createConsumerEnvsDTO(List.of("consumer-uuid"), envIds);
+        OwnerResource ownerResource = buildOwnerResource();
+
+        assertThrows(BadRequestException.class,
+            () -> ownerResource.setConsumersToEnvironments("owner-key", dto));
+    }
+
+    @Test
+    public void testSetConsumersToEnvironmentsWithExceedingConsumerUuidsLimitSize() {
+        List<String> consumerUuids = new ArrayList<>();
+        for (int i = 0; i < TestConfig.BATCH_CONSUMER_ENV_SET_CONSUMER_LIMIT + 1; i++) {
+            consumerUuids.add("uuid-" + i);
+        }
+        SetConsumerEnvironmentsDTO dto = createConsumerEnvsDTO(consumerUuids, List.of("env-1"));
+        OwnerResource ownerResource = buildOwnerResource();
+        String ownerKey = TestUtil.randomString("owner-");
+        String ownerId = TestUtil.randomString("owner-");
+        Owner owner = new Owner()
+            .setId(ownerId)
+            .setKey(ownerKey)
+            .setDisplayName(ownerId)
+            .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+        doReturn(owner).when(this.mockOwnerCurator).getByKey(owner.getKey());
+
+        assertThrows(BadRequestException.class,
+            () -> ownerResource.setConsumersToEnvironments(ownerKey, dto));
+    }
+
+    @Test
+    public void testSetConsumersToEnvironmentsWithExceedingEnvironmentIdsLimitSize() {
+        List<String> envIds = new ArrayList<>();
+        for (int i = 0; i < TestConfig.BATCH_CONSUMER_ENV_SET_ENV_LIMIT + 1; i++) {
+            envIds.add("env-id-" + i);
+        }
+        SetConsumerEnvironmentsDTO dto = createConsumerEnvsDTO(List.of("consumer-uuid"), envIds);
+        OwnerResource ownerResource = buildOwnerResource();
+        String ownerKey = TestUtil.randomString("owner-");
+        String ownerId = TestUtil.randomString("owner-");
+        Owner owner = new Owner()
+            .setId(ownerId)
+            .setKey(ownerKey)
+            .setDisplayName(ownerId)
+            .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+        doReturn(owner).when(this.mockOwnerCurator).getByKey(owner.getKey());
+
+        assertThrows(BadRequestException.class,
+            () -> ownerResource.setConsumersToEnvironments(ownerKey, dto));
+    }
+
+    @Test
+    public void testSetConsumersToEnvironmentsWithNonSCAOwner() {
+        String ownerKey = TestUtil.randomString("owner-");
+        String ownerId = TestUtil.randomString("owner-");
+        Owner entOwner = new Owner()
+            .setId(ownerId)
+            .setKey(ownerKey)
+            .setDisplayName(ownerId)
+            .setContentAccessMode(ContentAccessMode.ENTITLEMENT.toDatabaseValue());
+        doReturn(entOwner).when(this.mockOwnerCurator).getByKey(entOwner.getKey());
+
+        SetConsumerEnvironmentsDTO dto = createConsumerEnvsDTO(List.of("consumer-uuid"), List.of("env-id"));
+        OwnerResource ownerResource = buildOwnerResource();
+
+        assertThrows(BadRequestException.class,
+            () -> ownerResource.setConsumersToEnvironments(ownerKey, dto));
+    }
+
+    @Test
+    public void testSetConsumersToEnvironmentsWithUnknownConsumerUuids() {
+        String ownerKey = TestUtil.randomString("owner-");
+        String ownerId = TestUtil.randomString("owner-");
+        Owner owner = new Owner()
+            .setId(ownerId)
+            .setKey(ownerKey)
+            .setDisplayName(ownerId)
+            .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+        doReturn(owner).when(this.mockOwnerCurator).getByKey(owner.getKey());
+
+        String unknownConsumerUuid = TestUtil.randomString("consumer-");
+        doReturn(Set.of(unknownConsumerUuid))
+            .when(mockConsumerCurator)
+            .getNonExistentConsumerUuids(any(Collection.class), eq(ownerKey));
+
+        OwnerResource ownerResource = buildOwnerResource();
+        SetConsumerEnvironmentsDTO dto =
+            createConsumerEnvsDTO(List.of(unknownConsumerUuid), List.of("env-id"));
+
+        assertThrows(BadRequestException.class,
+            () -> ownerResource.setConsumersToEnvironments(ownerKey, dto));
+    }
+
+    @Test
+    public void testSetConsumersToEnvironmentsWithUnknownEnvironmentIds() {
+        String ownerKey = TestUtil.randomString("owner-");
+        String ownerId = TestUtil.randomString("owner-");
+        Owner owner = new Owner()
+            .setId(ownerId)
+            .setKey(ownerKey)
+            .setDisplayName(ownerId)
+            .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+        doReturn(owner).when(this.mockOwnerCurator).getByKey(owner.getKey());
+
+        String unknownEnvironmentId = TestUtil.randomString("consumer-");
+        doReturn(Set.of())
+            .when(mockConsumerCurator)
+            .getNonExistentConsumerUuids(any(Collection.class), eq(ownerKey));
+
+        doReturn(Set.of(unknownEnvironmentId))
+            .when(mockEnvironmentCurator)
+            .getNonExistentEnvironmentIds(any(Collection.class), eq(owner));
+
+        OwnerResource ownerResource = buildOwnerResource();
+        SetConsumerEnvironmentsDTO dto =
+            createConsumerEnvsDTO(List.of("consumer-uuid"), List.of(unknownEnvironmentId));
+
+        assertThrows(BadRequestException.class,
+            () -> ownerResource.setConsumersToEnvironments(ownerKey, dto));
+    }
+
+    @Test
+    public void testSetConsumersToEnvironments() {
+        String ownerKey = TestUtil.randomString("owner-");
+        String ownerId = TestUtil.randomString("owner-");
+        Owner owner = new Owner()
+            .setId(ownerId)
+            .setKey(ownerKey)
+            .setDisplayName(ownerId)
+            .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+        doReturn(owner).when(this.mockOwnerCurator).getByKey(owner.getKey());
+
+        String consumerUuid = TestUtil.randomString("consumer-");
+        String envId = TestUtil.randomString("env-");
+        doReturn(Set.of())
+            .when(mockConsumerCurator)
+            .getNonExistentConsumerUuids(any(Collection.class), eq(ownerKey));
+
+        doReturn(Set.of())
+            .when(mockEnvironmentCurator)
+            .getNonExistentEnvironmentIds(any(Collection.class), eq(owner));
+
+        OwnerResource ownerResource = buildOwnerResource();
+        SetConsumerEnvironmentsDTO dto =
+            createConsumerEnvsDTO(List.of(consumerUuid), List.of(envId));
+
+        ownerResource.setConsumersToEnvironments(ownerKey, dto);
+
+        verify(mockConsumerManager).setConsumersEnvironments(List.of(consumerUuid), List.of(envId));
+    }
+
 }

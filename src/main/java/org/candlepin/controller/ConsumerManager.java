@@ -92,6 +92,12 @@ public class ConsumerManager {
             return new ArrayList<>();
         }
 
+        if (environmentIds == null || environmentIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        log.info("Setting {} consumers to {} environments", consumerUuids.size(), environmentIds.size());
+
         List<String> consumersToUpdate = envCurator
             .getConsumerUuidsNotExactlyInEnvs(consumerUuids, environmentIds);
 
@@ -102,7 +108,7 @@ public class ConsumerManager {
         }
 
         int added = envCurator.setConsumersEnvironments(consumersToUpdate, environmentIds);
-        log.info("{} consumers set to the target environments", added);
+        log.info("{} consumers have been set to the target environments", added);
 
         // Delete all of the content access certificates for consumers that had an environment change
         List<String> ids = caCertCurator.listCertSerialIdsByConsumerUuids(consumersToUpdate);

@@ -21,12 +21,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.test.DatabaseTestFixture;
-
+import org.candlepin.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -246,6 +247,32 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
         assertEquals(environment3.getId(), output.get(consumer2.getId()).get(0));
         assertEquals(environment2.getId(), output.get(consumer2.getId()).get(1));
         assertEquals(environment1.getId(), output.get(consumer2.getId()).get(2));
+    }
+
+    @Test
+    public void testGetConsumerUuidsNotExactlyInEnvsStressTest() {
+        Owner owner = this.createOwner(TestUtil.randomString());
+        Consumer consumer1 = this.createConsumer(owner);
+        Consumer consumer2 = this.createConsumer(owner);
+        Consumer consumer3 = this.createConsumer(owner);
+        Consumer consumer4 = this.createConsumer(owner);
+        Consumer consumer5 = this.createConsumer(owner);
+
+        List<String> consumerUuids = new ArrayList<>();
+        consumerUuids.add(consumer1.getUuid());
+        consumerUuids.add(consumer2.getUuid());
+        consumerUuids.add(consumer3.getUuid());
+        consumerUuids.add(consumer4.getUuid());
+        consumerUuids.add(consumer5.getUuid());
+
+        for (int i=0; i<1; i++) {
+            consumerUuids.add(TestUtil.randomString());
+        }
+
+        List<String> actual = environmentCurator
+            .getConsumerUuidsNotExactlyInEnvs(consumerUuids, List.of("env-1", "env-2", "env-3"));
+
+        System.out.println("actual: " + String.valueOf(actual.size()));
     }
 
 }

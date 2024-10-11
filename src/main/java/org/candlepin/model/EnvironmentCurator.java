@@ -22,8 +22,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map.Entry;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
@@ -310,6 +312,19 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
     }
 
     // TODO: Java Doc
+    private int removeConsumersFromAllEnvironments(Collection<String> consumerUuids) {
+        String statement = "DELETE FROM cp_consumer_environments " + 
+            "WHERE cp_consumer_id IN (SELECT id FROM cp_consumer WHERE uuid IN (:uuids))";
+
+        Query query = this.getEntityManager()
+            .createNativeQuery(statement);
+
+        query.setParameter("uuids", consumerUuids);
+
+        return query.executeUpdate();
+    }
+
+    // TODO: Java Doc
     public List<String> getConsumerUuidsNotExactlyInEnvs(Collection<String> consumerUuids,
         Collection<String> envIds) {
 
@@ -371,23 +386,36 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
     }
 
     // TODO: Java Doc
-    private int removeConsumersFromAllEnvironments(Collection<String> consumerUuids) {
-        String statement = "DELETE FROM cp_consumer_environments " + 
-            "WHERE cp_consumer_id IN (SELECT id FROM cp_consumer WHERE uuid IN (:uuids))";
+    public Set<String> getNonExistentEnvironmentIds(Collection<String> envIds, Owner owner) {
+        if (envIds == null || envIds.isEmpty() || owner == null) {
+            return new HashSet<>();
+        }
 
-        Query query = this.getEntityManager()
-            .createNativeQuery(statement);
+        String jpql = "SELECT DISTINCT env.id FROM Environment env " + 
+            "WHERE env.id IN (:envIds) AND env.ownerId = :ownerId";
 
-        query.setParameter("uuids", consumerUuids);
 
-        return query.executeUpdate();
+        // TODO: Need to partition this IN statement
+
+        Set<String> unknownEnvIds = new HashSet<>();
+        for (List<String> ids : partition(envIds)) {
+            List<String> result = this.getEntityManager()
+                .createQuery(jpql, String.class)
+                .setParameter("envIds", ids)
+                .setParameter("ownerId", owner.getId())
+                .getResultList();
+
+            unknownEnvIds.addAll(result);
+        }
+
+        return unknownEnvIds;
     }
 
     // TODO: Java Doc
     public int setConsumersEnvironments(Collection<String> consumerUuids, List<String> envIds) {
         removeConsumersFromAllEnvironments(consumerUuids);
 
-        String statement = "INSERT INTO cp_consumer_environments (cp_consumer_id, environment_id, priority) " + 
+        String statement = "INSERT INTO cp_consumer_environments (cp_consumer_id, environment_id, priority) " +
             "SELECT id, :envId, :priority FROM cp_consumer WHERE uuid = :uuid";
 
         int changes = 0;

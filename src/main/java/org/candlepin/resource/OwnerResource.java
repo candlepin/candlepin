@@ -16,6 +16,31 @@ package org.candlepin.resource;
 
 import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 
+import java.io.File;
+import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.inject.Inject;
+import javax.persistence.PersistenceException;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
@@ -122,14 +147,6 @@ import org.candlepin.sync.file.ManifestFileServiceException;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
-
-import ch.qos.logback.classic.Level;
-
-import com.google.inject.persist.Transactional;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.exception.ConstraintViolationException;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.core.ResteasyContext;
@@ -138,29 +155,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.File;
-import java.io.IOException;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.google.inject.persist.Transactional;
 
-import javax.inject.Inject;
-import javax.persistence.PersistenceException;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import ch.qos.logback.classic.Level;
 
 
 /**
@@ -1912,10 +1909,26 @@ public class OwnerResource implements OwnerApi {
             throw new BadRequestException(i18n.tr("Environment IDs is null or empty"));
         }
 
-        // TODO: We can probably improve this with streams
-        Set<String> uniqueEnvironmentIds = new HashSet<>(environmentIds);
+        // TODO: Rewrite this and improve this with streams
+        List<String> uniqueEnvironmentIds = new ArrayList<>();
+        for (String envId : environmentIds) {
+            if (!uniqueEnvironmentIds.contains(envId)) {
+                uniqueEnvironmentIds.add(envId);
+            }
+        }
+
         if (uniqueEnvironmentIds.size() != environmentIds.size()) {
             throw new BadRequestException(i18n.tr("Environment IDs contains duplicates"));
+        }
+
+        int consumerLimit = config.getInt(ConfigProperties.BATCH_CONSUMER_ENV_SET_CONSUMER_LIMIT);
+        if (consumerUuids.size() > consumerLimit) {
+            throw new BadRequestException(i18n.tr("{0} consumer UUIDs provided, but must be less than {1}", consumerUuids.size(), consumerLimit));
+        }
+
+        int envLimit = config.getInt(ConfigProperties.BATCH_CONSUMER_ENV_SET_ENV_LIMIT);
+        if (uniqueEnvironmentIds.size() > envLimit) {
+            throw new BadRequestException(i18n.tr("{0} unique environment IDs provided, but must be less than {1}", uniqueEnvironmentIds.size(), envLimit));
         }
 
         Owner owner = findOwnerByKey(ownerKey);
@@ -1925,12 +1938,16 @@ public class OwnerResource implements OwnerApi {
 
         Set<String> nonExistingConsumerUuids = consumerCurator
             .getNonExistentConsumerUuids(consumerUuids, ownerKey);
-
         if (!nonExistingConsumerUuids.isEmpty()) {
-            throw new BadRequestException(i18n.tr("Unkown consumer UUIDs: {}", nonExistingConsumerUuids));
+            throw new BadRequestException(i18n.tr("Unkown consumer UUIDs: {0}", nonExistingConsumerUuids));
         }
 
-        // TODO: Migrate the consumerss
+        Set<String> nonExistingEnvironmentIds = envCurator
+            .getNonExistentEnvironmentIds(uniqueEnvironmentIds, owner);
+        if (!nonExistingEnvironmentIds.isEmpty()) {
+            throw new BadRequestException(i18n.tr("Unknown environment IDs: {0}", nonExistingEnvironmentIds));
+        }
+
         consumerManager.setConsumersEnvironments(consumerUuids, environmentIds);
     }
 }
