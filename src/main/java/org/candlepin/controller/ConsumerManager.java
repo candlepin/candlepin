@@ -96,12 +96,14 @@ public class ConsumerManager {
             return new ArrayList<>();
         }
 
-        log.info("Setting {} consumers to {} environments", consumerUuids.size(), environmentIds.size());
+        log.info("setting {} consumers to {} environments",
+            consumerUuids.size(), environmentIds.size());
 
         List<String> consumersToUpdate = envCurator
             .getConsumerUuidsNotExactlyInEnvs(consumerUuids, environmentIds);
 
-        log.info("{} of the consumers are not currently in the target environments");
+        log.info("{} of the consumers are not currently in the target environments",
+            consumersToUpdate.size());
 
         if (consumersToUpdate.isEmpty()) {
             return new ArrayList<>();

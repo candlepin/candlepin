@@ -1181,7 +1181,7 @@ public class OwnerResourceSpecTest {
             .id(StringUtil.random("env-")));
 
         SetConsumerEnvironmentsDTO request = new SetConsumerEnvironmentsDTO();
-        request.setConsumerUuids(List.of(consumer.getUuid()));
+        request.setConsumerUuids(List.of(consumer.getUuid(), consumer.getUuid()));
         request.setEnvironmentIds(List.of(targetEnv.getId()));
 
         admin.owners().setConsumersToEnvironments(ownerKey, request);

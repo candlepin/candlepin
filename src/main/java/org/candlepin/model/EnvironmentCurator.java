@@ -394,21 +394,24 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         String jpql = "SELECT DISTINCT env.id FROM Environment env " + 
             "WHERE env.id IN (:envIds) AND env.ownerId = :ownerId";
 
+        // TODO: Maybe we can improve this
+        Set<String> envIdsSet = new HashSet<>(envIds);
 
-        // TODO: Need to partition this IN statement
-
-        Set<String> unknownEnvIds = new HashSet<>();
-        for (List<String> ids : partition(envIds)) {
+        Set<String> knownEnvIds = new HashSet<>();
+        for (List<String> ids : partition(envIdsSet)) {
             List<String> result = this.getEntityManager()
                 .createQuery(jpql, String.class)
                 .setParameter("envIds", ids)
                 .setParameter("ownerId", owner.getId())
                 .getResultList();
 
-            unknownEnvIds.addAll(result);
+            knownEnvIds.addAll(result);
         }
 
-        return unknownEnvIds;
+        // Remove all of the existing environment IDs to determine the environments that are unknown
+        envIdsSet.removeAll(knownEnvIds);
+
+        return envIdsSet;
     }
 
     // TODO: Java Doc
@@ -418,7 +421,6 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         String statement = "INSERT INTO cp_consumer_environments (cp_consumer_id, environment_id, priority) " +
             "SELECT id, :envId, :priority FROM cp_consumer WHERE uuid = :uuid";
 
-        int changes = 0;
         for (String consumerUuid : consumerUuids) {
             int priority = 0;
             for (String envId : envIds) {
@@ -429,12 +431,12 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
                 query.setParameter("envId", envId);
                 query.setParameter("priority", priority);
 
-                changes += query.executeUpdate();
+                query.executeUpdate();
                 priority++;
             }
         }
 
-        return changes;
+        return consumerUuids.size();
     }
 
 }
