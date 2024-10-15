@@ -114,7 +114,6 @@ public class ConsumerManager {
 
         // Delete all of the content access certificates for consumers that had an environment change
         List<String> ids = caCertCurator.listCertSerialIdsByConsumerUuids(consumersToUpdate);
-
         int unlinked = consumerCurator.unlinkCaCertificates(ids);
         log.info("{} content access certs unlinked", unlinked);
 

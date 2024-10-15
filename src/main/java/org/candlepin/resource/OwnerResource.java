@@ -1895,6 +1895,8 @@ public class OwnerResource implements OwnerApi {
         return owner;
     }
 
+    // PUT /owners/{owner_key}/consumers/environments
+
     @Override
     public void setConsumersToEnvironments(@Verify(Owner.class) String ownerKey,
         SetConsumerEnvironmentsDTO request) {
@@ -1909,13 +1911,10 @@ public class OwnerResource implements OwnerApi {
             throw new BadRequestException(i18n.tr("Environment IDs is null or empty"));
         }
 
-        // TODO: Rewrite this and improve this with streams
-        List<String> uniqueEnvironmentIds = new ArrayList<>();
-        for (String envId : environmentIds) {
-            if (!uniqueEnvironmentIds.contains(envId)) {
-                uniqueEnvironmentIds.add(envId);
-            }
-        }
+        List<String> uniqueEnvironmentIds = environmentIds.stream()
+            .filter(Objects::nonNull)
+            .distinct()
+            .collect(Collectors.toList());
 
         if (uniqueEnvironmentIds.size() != environmentIds.size()) {
             throw new BadRequestException(i18n.tr("Environment IDs contains duplicates"));
@@ -1923,12 +1922,14 @@ public class OwnerResource implements OwnerApi {
 
         int consumerLimit = config.getInt(ConfigProperties.BATCH_CONSUMER_ENV_SET_CONSUMER_LIMIT);
         if (consumerUuids.size() > consumerLimit) {
-            throw new BadRequestException(i18n.tr("{0} consumer UUIDs provided, but must be less than {1}", consumerUuids.size(), consumerLimit));
+            throw new BadRequestException(i18n.tr("{0} consumer UUIDs provided, but must be less than " +
+                "{1}", consumerUuids.size(), consumerLimit));
         }
 
         int envLimit = config.getInt(ConfigProperties.BATCH_CONSUMER_ENV_SET_ENV_LIMIT);
         if (uniqueEnvironmentIds.size() > envLimit) {
-            throw new BadRequestException(i18n.tr("{0} unique environment IDs provided, but must be less than {1}", uniqueEnvironmentIds.size(), envLimit));
+            throw new BadRequestException(i18n.tr("{0} environment IDs provided, but must be less than " +
+                "{1}", uniqueEnvironmentIds.size(), envLimit));
         }
 
         Owner owner = findOwnerByKey(ownerKey);
@@ -1939,13 +1940,15 @@ public class OwnerResource implements OwnerApi {
         Set<String> nonExistingConsumerUuids = consumerCurator
             .getNonExistentConsumerUuids(consumerUuids, ownerKey);
         if (!nonExistingConsumerUuids.isEmpty()) {
-            throw new BadRequestException(i18n.tr("Unkown consumer UUIDs: {0}", nonExistingConsumerUuids));
+            throw new BadRequestException(i18n.tr("Unkown consumer UUIDs: {0}",
+                nonExistingConsumerUuids));
         }
 
         Set<String> nonExistingEnvironmentIds = envCurator
             .getNonExistentEnvironmentIds(uniqueEnvironmentIds, owner);
         if (!nonExistingEnvironmentIds.isEmpty()) {
-            throw new BadRequestException(i18n.tr("Unknown environment IDs: {0}", nonExistingEnvironmentIds));
+            throw new BadRequestException(i18n.tr("Unknown environment IDs: {0}",
+                nonExistingEnvironmentIds));
         }
 
         consumerManager.setConsumersEnvironments(consumerUuids, environmentIds);
