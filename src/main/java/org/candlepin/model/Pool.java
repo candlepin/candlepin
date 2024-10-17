@@ -1330,7 +1330,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      *  true if the pool is a managed pool; false otherwise
      */
     public boolean isManaged() {
-        return this.managed;
+        return this.managed != null && this.managed;
     }
 
     /**

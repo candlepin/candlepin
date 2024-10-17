@@ -307,6 +307,28 @@ public class PoolTest {
         assertFalse(pool.isDerived());
     }
 
+    @Test
+    public void testPoolWithNullManagedFieldInDBIsNotFlaggedAsManaged() throws Exception {
+        // This test verifies that if the Pool.managed flag somehow ends up null in the DB, we don't crash
+        // out while trying to access it.
+
+        Owner owner = new Owner();
+        Product prod = new Product();
+
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(prod)
+            .setQuantity(1000L);
+
+        // Use reflection to set the field to null, since we have no normal way of doing that
+        Field managedField = Pool.class.getDeclaredField("managed");
+        managedField.setAccessible(true);
+        managedField.set(pool, null);
+
+        // Assert default value of "false" when managed ends up as a null
+        assertFalse(pool.isManaged());
+    }
+
     @Nested
     @DisplayName("Field Access Tests")
     public class FieldAccessTest extends DatabaseTestFixture {
