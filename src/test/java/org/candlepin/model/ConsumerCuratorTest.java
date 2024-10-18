@@ -2325,28 +2325,47 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertNull(foundConsumer);
     }
 
-    @Test
-    public void testGetNonExistentConsumerUuids() {
-        Consumer c1 = createConsumer(owner);
-        Consumer c2 = createConsumer(owner);
-        Consumer c3 = createConsumer(owner);
-        Consumer c4 = createConsumer(owner);
-
-        Owner owner2 = this.createOwner();
-        Consumer c5 = createConsumer(owner2);
-        Consumer c6 = createConsumer(owner2);
-        Consumer c7 = createConsumer(owner2);
-        Consumer c8 = createConsumer(owner2);
-
-        String unknownUuid = TestUtil.randomString("unknown-");
-
-        Set<String> actual = consumerCurator
-            .getNonExistentConsumerUuids(List.of(c1.getUuid(), c2.getUuid(), c5.getUuid(), c6.getUuid(),
-                unknownUuid), owner.getOwnerKey());
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void testGetNonExistentConsumerUuidsWithInvalidOwnerKey(String ownerKey) {
+        Set<String> actual = consumerCurator.getNonExistentConsumerUuids(List.of("uuid"), ownerKey);
 
         assertThat(actual)
             .isNotNull()
-            .containsExactlyInAnyOrder(c5.getUuid(), c6.getUuid(), unknownUuid);
+            .isEmpty();
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void testGetNonExistentConsumerUuidsWithNullOrEmptyConsumerUuids(List<String> consumerUuids) {
+        Set<String> actual = consumerCurator.getNonExistentConsumerUuids(consumerUuids, "key");
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetNonExistentConsumerUuids() {
+        Owner owner1 = this.createOwner();
+        Consumer c1 = createConsumer(owner1);
+        Consumer c2 = createConsumer(owner1);
+        createConsumer(owner1);
+
+        Owner owner2 = this.createOwner();
+        Consumer c4 = createConsumer(owner2);
+         createConsumer(owner2);
+
+        String unknown1 = TestUtil.randomString("unknown-");
+        String unknown2 = TestUtil.randomString("unknown-");
+
+        List<String> consumerUuids = List.of(c1.getUuid(), unknown1, c2.getUuid(), unknown2, c4.getUuid());
+
+        Set<String> actual = consumerCurator.getNonExistentConsumerUuids(consumerUuids, owner1.getOwnerKey());
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(unknown1, unknown2, c4.getUuid());
     }
 
     private IdentityCertificate createIdCert() {

@@ -396,11 +396,12 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
 
         Set<String> distinctEnvIds = new HashSet<>(envIds);
 
+        Query query = this.getEntityManager()
+            .createQuery(jpql, String.class);
+
         Set<String> actualEnvIds = new HashSet<>();
         for (List<String> block : partition(distinctEnvIds)) {
-            List<String> result = this.getEntityManager()
-                .createQuery(jpql, String.class)
-                .setParameter("envIds", block)
+            List<String> result = query.setParameter("envIds", block)
                 .setParameter("ownerId", owner.getId())
                 .getResultList();
 
@@ -429,11 +430,12 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         String statement = "DELETE FROM cp_consumer_environments " + 
             "WHERE cp_consumer_id IN (SELECT id FROM cp_consumer WHERE uuid IN (:uuids))";
 
+        Query query = this.getEntityManager()
+            .createNativeQuery(statement);
+
         int updated = 0;
         for (List<String> block : partition(consumerUuids)) {
-            updated += this.getEntityManager()
-                .createNativeQuery(statement)
-                .setParameter("uuids", block)
+            updated += query.setParameter("uuids", block)
                 .executeUpdate();
         }
 

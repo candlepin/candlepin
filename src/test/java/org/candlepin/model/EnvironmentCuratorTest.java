@@ -277,28 +277,36 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetNonExistentEnvironmentIds() {
-        Owner owner = this.createOwner(TestUtil.randomString());
-
+        Owner owner1 = this.createOwner(TestUtil.randomString());
         Content content1 = this.createContent("c1", "c1");
         Content content2 = this.createContent("c2", "c2");
         Content content3 = this.createContent("c3", "c3");
 
         Environment env1 = this.createEnvironment(
-            owner, "test_env-1", "test_env-1", null, null, List.of(content1));
+            owner1, "test_env-1", "test_env-1", null, null, List.of(content1));
         Environment env2 = this.createEnvironment(
-            owner, "test_env-2", "test_env-2", null, null, List.of(content2));
+            owner1, "test_env-2", "test_env-2", null, null, List.of(content2));
         this.createEnvironment(
-            owner, "test_env-3", "test_env-3", null, null, List.of(content3));
+            owner1, "test_env-3", "test_env-3", null, null, List.of(content3));
+
+        Owner owner2 = this.createOwner(TestUtil.randomString());
+        Content content4 = this.createContent("c1", "c1");
+        Content content5 = this.createContent("c2", "c2");
+
+        Environment env4 = this.createEnvironment(
+            owner2, "test_env-1", "test_env-1", null, null, List.of(content4));
+        this.createEnvironment(
+            owner2, "test_env-2", "test_env-2", null, null, List.of(content5));
 
         String unknown1 = TestUtil.randomString("unknown-");
         String unknown2 = TestUtil.randomString("unknown-");
-        List<String> envIds = List.of(env1.getId(), unknown1, env2.getId(), unknown2);
+        List<String> envIds = List.of(env1.getId(), unknown1, env2.getId(), unknown2, env4.getId());
 
-        Set<String> actual = environmentCurator.getNonExistentEnvironmentIds(envIds, owner);
+        Set<String> actual = environmentCurator.getNonExistentEnvironmentIds(envIds, owner1);
 
         assertThat(actual)
             .isNotNull()
-            .containsExactlyInAnyOrder(unknown1, unknown2);
+            .containsExactlyInAnyOrder(unknown1, unknown2, env4.getId());
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
