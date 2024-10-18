@@ -1911,13 +1911,8 @@ public class OwnerResource implements OwnerApi {
             throw new BadRequestException(i18n.tr("Environment IDs is null or empty"));
         }
 
-        List<String> uniqueEnvironmentIds = environmentIds.stream()
-            .filter(Objects::nonNull)
-            .distinct()
-            .collect(Collectors.toList());
-
-        if (uniqueEnvironmentIds.size() != environmentIds.size()) {
-            throw new BadRequestException(i18n.tr("Environment IDs contains duplicates"));
+        if (Util.containsDuplicateOrNull(environmentIds)) {
+            throw new BadRequestException(i18n.tr("Environment IDs contains duplicates or null value"));
         }
 
         int consumerLimit = config.getInt(ConfigProperties.BATCH_CONSUMER_ENV_SET_CONSUMER_LIMIT);
@@ -1927,9 +1922,9 @@ public class OwnerResource implements OwnerApi {
         }
 
         int envLimit = config.getInt(ConfigProperties.BATCH_CONSUMER_ENV_SET_ENV_LIMIT);
-        if (uniqueEnvironmentIds.size() > envLimit) {
+        if (environmentIds.size() > envLimit) {
             throw new BadRequestException(i18n.tr("{0} environment IDs provided, but must be less than " +
-                "{1}", uniqueEnvironmentIds.size(), envLimit));
+                "{1}", environmentIds.size(), envLimit));
         }
 
         Owner owner = findOwnerByKey(ownerKey);
@@ -1945,7 +1940,7 @@ public class OwnerResource implements OwnerApi {
         }
 
         Set<String> nonExistingEnvironmentIds = envCurator
-            .getNonExistentEnvironmentIds(uniqueEnvironmentIds, owner);
+            .getNonExistentEnvironmentIds(environmentIds, owner);
         if (!nonExistingEnvironmentIds.isEmpty()) {
             throw new BadRequestException(i18n.tr("Unknown environment IDs: {0}",
                 nonExistingEnvironmentIds));

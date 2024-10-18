@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.util.Util;
 import org.hibernate.annotations.QueryHints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -312,19 +313,6 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
     }
 
     // TODO: Java Doc
-    private int removeConsumersFromAllEnvironments(Collection<String> consumerUuids) {
-        String statement = "DELETE FROM cp_consumer_environments " + 
-            "WHERE cp_consumer_id IN (SELECT id FROM cp_consumer WHERE uuid IN (:uuids))";
-
-        Query query = this.getEntityManager()
-            .createNativeQuery(statement);
-
-        query.setParameter("uuids", consumerUuids);
-
-        return query.executeUpdate();
-    }
-
-    // TODO: Java Doc
     public List<String> getConsumerUuidsNotExactlyInEnvs(Collection<String> consumerUuids,
         Collection<String> envIds) {
 
@@ -385,7 +373,19 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         return query.getResultList();
     }
 
-    // TODO: Java Doc
+    /**
+     * Determines if any of the provided {@link Environment} IDs does not exist or belong to the provided
+     * owner.
+     * 
+     * @param envIds
+     *  the environment IDs to check
+     *
+     * @param owner
+     *  the owner of the environment IDs
+     *
+     * @return all of the environment IDs from the provided list that do not exist or do not belong to the
+     *  provided owner
+     */
     public Set<String> getNonExistentEnvironmentIds(Collection<String> envIds, Owner owner) {
         if (envIds == null || envIds.isEmpty() || owner == null) {
             return new HashSet<>();
@@ -394,28 +394,81 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         String jpql = "SELECT DISTINCT env.id FROM Environment env " + 
             "WHERE env.id IN (:envIds) AND env.ownerId = :ownerId";
 
-        // TODO: Maybe we can improve this
-        Set<String> envIdsSet = new HashSet<>(envIds);
+        Set<String> distinctEnvIds = new HashSet<>(envIds);
 
-        Set<String> knownEnvIds = new HashSet<>();
-        for (List<String> ids : partition(envIdsSet)) {
+        Set<String> actualEnvIds = new HashSet<>();
+        for (List<String> block : partition(distinctEnvIds)) {
             List<String> result = this.getEntityManager()
                 .createQuery(jpql, String.class)
-                .setParameter("envIds", ids)
+                .setParameter("envIds", block)
                 .setParameter("ownerId", owner.getId())
                 .getResultList();
 
-            knownEnvIds.addAll(result);
+            actualEnvIds.addAll(result);
         }
 
         // Remove all of the existing environment IDs to determine the environments that are unknown
-        envIdsSet.removeAll(knownEnvIds);
+        distinctEnvIds.removeAll(actualEnvIds);
 
-        return envIdsSet;
+        return distinctEnvIds;
     }
 
-    // TODO: Java Doc
+    /**
+     * Removes the {@link Consumer}s from all of the environments they currently exist in.
+     *
+     * @param consumerUuids
+     *  the UUIDs for all the consumers that should be removed from their environments
+     *
+     * @return the number of consumers removed from all environments
+     */
+    private int removeConsumersFromAllEnvironments(Collection<String> consumerUuids) {
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            return 0;
+        }
+
+        String statement = "DELETE FROM cp_consumer_environments " + 
+            "WHERE cp_consumer_id IN (SELECT id FROM cp_consumer WHERE uuid IN (:uuids))";
+
+        int updated = 0;
+        for (List<String> block : partition(consumerUuids)) {
+            updated += this.getEntityManager()
+                .createNativeQuery(statement)
+                .setParameter("uuids", block)
+                .executeUpdate();
+        }
+
+        return updated;
+    }
+
+    /**
+     * Sets the {@Consumer}s in the provided {@link Environment}s. The consumers will first be cleared from
+     * environments and then set to the provided environments. The ordering of the provided environment IDs
+     * dictates the priority.
+     *
+     * @param consumerUuids
+     *  the UUIDs of the consumers to set the environments for
+     *
+     * @param envIds
+     *  the IDs of the environments to set the consumers for
+     *
+     * @throws IllegalArgumentException
+     *  if the provided environment IDs contains a duplicate or null value
+     *
+     * @return the number of consumers updated
+     */
     public int setConsumersEnvironments(Collection<String> consumerUuids, List<String> envIds) {
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            return 0;
+        }
+
+        if (envIds == null || envIds.isEmpty()) {
+            return 0;
+        }
+
+        if (Util.containsDuplicateOrNull(envIds)) {
+            throw new IllegalArgumentException("environment IDs contains duplicates");
+        }
+
         removeConsumersFromAllEnvironments(consumerUuids);
 
         String statement = "INSERT INTO cp_consumer_environments (cp_consumer_id, environment_id, priority) " +
@@ -424,14 +477,13 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         for (String consumerUuid : consumerUuids) {
             int priority = 0;
             for (String envId : envIds) {
-                Query query = this.getEntityManager()
-                    .createNativeQuery(statement);
+                this.getEntityManager()
+                    .createNativeQuery(statement)
+                    .setParameter("uuid", consumerUuid)
+                    .setParameter("envId", envId)
+                    .setParameter("priority", priority)
+                    .executeUpdate();
 
-                query.setParameter("uuid", consumerUuid);
-                query.setParameter("envId", envId);
-                query.setParameter("priority", priority);
-
-                query.executeUpdate();
                 priority++;
             }
         }

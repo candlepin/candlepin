@@ -83,7 +83,23 @@ public class ConsumerManager {
         }
     }
 
-    // TODO: Java Doc
+    /**
+     * Sets the environments of the {@link Consumer}s that correspond to the provided consumer UUIDs.
+     * Consumers in this list will be removed environments they are currently in that are not in the list of 
+     * provided environment IDs or not in the right priority. Consumers will be unchanged if they already
+     * exist in the provided environments and are in the right priority. The ordering and index of the
+     * provided environment IDs dictates the priority. All updated consumers will have their content access
+     * certificate revoked.
+     *
+     * @param consumerUuids
+     *  the UUIDs of the consumers that should have the environments set
+     *
+     * @param environmentIds
+     *  the IDs of the {@link Environment}s that should be set for the consumers
+     *
+     * @return
+     *  the UUIDs of the {@link Consumer}s that were updated and had their environments set
+     */
     @Transactional
     public List<String> setConsumersEnvironments(Collection<String> consumerUuids,
         List<String> environmentIds) {
