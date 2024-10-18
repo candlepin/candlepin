@@ -289,10 +289,6 @@ public class ContentManager {
         }
 
         // Field checks
-        if (hasValueChanged(entity.getId(), update.getId(), false)) {
-            return true;
-        }
-
         if (hasValueChanged(entity.getType(), update.getType(), false)) {
             return true;
         }
@@ -306,10 +302,6 @@ public class ContentManager {
         }
 
         if (hasValueChanged(entity.getVendor(), update.getVendor(), false)) {
-            return true;
-        }
-
-        if (hasValueChanged(entity.getGpgUrl(), update.getGpgUrl(), false)) {
             return true;
         }
 

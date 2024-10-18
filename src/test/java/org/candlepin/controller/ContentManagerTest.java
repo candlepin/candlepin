@@ -98,6 +98,34 @@ public class ContentManagerTest extends DatabaseTestFixture {
             this.mockEntCertService, this.productCurator, this.contentCurator, this.environmentCurator);
     }
 
+    private ContentInfo mockContentInfo() {
+        ContentInfo mock = mock(ContentInfo.class);
+
+        // We must set this as a default, because mockito will otherwise return 0 here instead.
+        doReturn(null).when(mock).getMetadataExpiration();
+
+        return mock;
+    }
+
+    private ContentInfo mockAccessor(ContentInfo mock, String propertyName, Object value) {
+        switch (propertyName) {
+            case "Type" -> doReturn(value).when(mock).getType();
+            case "Label" -> doReturn(value).when(mock).getLabel();
+            case "Name" -> doReturn(value).when(mock).getName();
+            case "Vendor" -> doReturn(value).when(mock).getVendor();
+            case "ContentUrl" -> doReturn(value).when(mock).getContentUrl();
+            case "RequiredTags" -> doReturn(value).when(mock).getRequiredTags();
+            case "ReleaseVersion" -> doReturn(value).when(mock).getReleaseVersion();
+            case "GpgUrl" -> doReturn(value).when(mock).getGpgUrl();
+            case "MetadataExpiration" -> doReturn(value).when(mock).getMetadataExpiration();
+            case "Arches" -> doReturn(value).when(mock).getArches();
+
+            default -> throw new IllegalArgumentException("Unknown property name: " + propertyName);
+        }
+
+        return mock;
+    }
+
     @Test
     public void testCreateContent() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
@@ -251,7 +279,6 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
     protected static Stream<Arguments> equalityTestParameterProvider() {
         return Stream.of(
-            Arguments.of("Id", "test_value", "alt_value"),
             Arguments.of("Type", "test_value", "alt_value"),
             Arguments.of("Label", "test_value", "alt_value"),
             Arguments.of("Name", "test_value", "alt_value"),
@@ -304,10 +331,10 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Method mutator = methods[1];
 
         Content entity = new Content();
-        Content update = new Content(); // Note: Content is a ContentInfo impl
+        ContentInfo update = this.mockContentInfo();
 
         mutator.invoke(entity, initialValue);
-        mutator.invoke(update, updatedValue);
+        this.mockAccessor(update, propertyName, updatedValue);
 
         boolean result = ContentManager.isChangedBy(entity, update);
         assertTrue(result);
@@ -322,10 +349,10 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Method mutator = methods[1];
 
         Content entity = new Content();
-        Content update = new Content(); // Note: Content is a ContentInfo impl
+        ContentInfo update = this.mockContentInfo();
 
         mutator.invoke(entity, initialValue);
-        mutator.invoke(update, initialValue);
+        this.mockAccessor(update, propertyName, initialValue);
 
         boolean result = ContentManager.isChangedBy(entity, update);
         assertFalse(result);
@@ -340,10 +367,9 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Method mutator = methods[1];
 
         Content entity = new Content();
-        Content update = new Content(); // Note: Content is a ContentInfo impl
+        ContentInfo update = this.mockContentInfo();
 
         mutator.invoke(entity, initialValue);
-        mutator.invoke(update, new Object[] { null });
 
         boolean result = ContentManager.isChangedBy(entity, update);
         assertFalse(result);
@@ -365,10 +391,9 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Method mutator = methods[1];
 
         Content entity = new Content();
-        Content update = new Content(); // Note: Content is a ContentInfo impl
-
         mutator.invoke(entity, new Object[] { null });
-        mutator.invoke(update, "");
+
+        ContentInfo update = this.mockAccessor(this.mockContentInfo(), propertyName, "");
 
         boolean result = ContentManager.isChangedBy(entity, update);
         assertFalse(result);
@@ -376,7 +401,6 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
     protected static Stream<Arguments> standardStringFieldProvider() {
         return Stream.of(
-            Arguments.of("Id"),
             Arguments.of("Type"),
             Arguments.of("Label"),
             Arguments.of("Name"),
@@ -392,10 +416,9 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Method mutator = methods[1];
 
         Content entity = new Content();
-        Content update = new Content(); // Note: Content is a ContentInfo impl
-
         mutator.invoke(entity, new Object[] { null });
-        mutator.invoke(update, "");
+
+        ContentInfo update = this.mockAccessor(this.mockContentInfo(), propertyName, "");
 
         boolean result = ContentManager.isChangedBy(entity, update);
         assertTrue(result);
@@ -406,11 +429,10 @@ public class ContentManagerTest extends DatabaseTestFixture {
     @Test
     public void testIsChangedByDetectsChangesInRequiredProducts() {
         Content entity = new Content();
-        ContentInfo update = mock(ContentInfo.class);
+        ContentInfo update = this.mockContentInfo();
 
         entity.setModifiedProductIds(List.of("a", "b", "c"));
         doReturn(List.of("1", "2", "3")).when(update).getRequiredProductIds();
-        doReturn(null).when(update).getMetadataExpiration();
 
         boolean result = ContentManager.isChangedBy(entity, update);
         assertTrue(result);
@@ -419,11 +441,10 @@ public class ContentManagerTest extends DatabaseTestFixture {
     @Test
     public void testIsChangedByDetectsChangesInRequiredProductsWithEmptyList() {
         Content entity = new Content();
-        ContentInfo update = mock(ContentInfo.class);
+        ContentInfo update = this.mockContentInfo();
 
         entity.setModifiedProductIds(List.of("a", "b", "c"));
         doReturn(List.of()).when(update).getRequiredProductIds();
-        doReturn(null).when(update).getMetadataExpiration();
 
         boolean result = ContentManager.isChangedBy(entity, update);
         assertTrue(result);
@@ -432,11 +453,10 @@ public class ContentManagerTest extends DatabaseTestFixture {
     @Test
     public void testIsChangedByIgnoresUnchangedRequiredProductsField() {
         Content entity = new Content();
-        ContentInfo update = mock(ContentInfo.class);
+        ContentInfo update = this.mockContentInfo();
 
         entity.setModifiedProductIds(List.of("a", "b", "c"));
         doReturn(List.of("a", "b", "c")).when(update).getRequiredProductIds();
-        doReturn(null).when(update).getMetadataExpiration();
 
         boolean result = ContentManager.isChangedBy(entity, update);
         assertFalse(result);
@@ -445,11 +465,10 @@ public class ContentManagerTest extends DatabaseTestFixture {
     @Test
     public void testIsChangedByIgnoresNullRequiredProductsField() {
         Content entity = new Content();
-        ContentInfo update = mock(ContentInfo.class);
+        ContentInfo update = this.mockContentInfo();
 
         entity.setModifiedProductIds(List.of("a", "b", "c"));
         doReturn(null).when(update).getRequiredProductIds();
-        doReturn(null).when(update).getMetadataExpiration();
 
         boolean result = ContentManager.isChangedBy(entity, update);
         assertFalse(result);
