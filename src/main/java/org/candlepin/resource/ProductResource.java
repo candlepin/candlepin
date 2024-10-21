@@ -166,6 +166,7 @@ public class ProductResource implements ProductsApi {
     }
 
     @Override
+    @Transactional
     @SecurityHole
     public ProductDTO getProductByUuid(String productUuid) {
         Product product = this.fetchProduct(productUuid);
@@ -173,6 +174,7 @@ public class ProductResource implements ProductsApi {
     }
 
     @Override
+    @Transactional
     public Stream<AsyncJobStatusDTO> refreshPoolsForProducts(List<String> productIds, Boolean lazyRegen) {
         if (productIds.isEmpty()) {
             throw new BadRequestException(i18n.tr("No product IDs specified"));

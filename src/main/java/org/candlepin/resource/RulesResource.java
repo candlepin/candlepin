@@ -21,6 +21,8 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.resource.server.v1.RulesApi;
 
+import com.google.inject.persist.Transactional;
+
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +55,7 @@ public class RulesResource implements RulesApi {
     }
 
     @Override
+    @Transactional
     public String getRules() {
         try {
             String rules = rulesCurator.getRules().getRules();

@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.persist.Transactional;
 
 import java.util.Collection;
 import java.util.Date;
@@ -58,7 +57,6 @@ public class AnonymousContentAccessCertificateCurator
      * @return
      *  the number of deleted records
      */
-    @Transactional
     public int deleteByIds(Collection<String> ids) {
         if (ids == null || ids.isEmpty()) {
             return 0;

@@ -91,7 +91,9 @@ public class PoolOpProcessorTest {
         assertThat(operations.updates().keySet())
             .map(Pool::getQuantity)
             .allMatch(quantity -> quantity == 5);
-        verify(poolCurator).mergeAll(anyCollection(), anyBoolean());
+
+        // grrrr...
+        verify(poolCurator).updateAll(anyCollection(), anyBoolean(), anyBoolean());
     }
 
 }

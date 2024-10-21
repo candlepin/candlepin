@@ -375,8 +375,11 @@ public class HypervisorUpdateAction {
         if (principal != null) {
             consumer.setUsername(principal);
         }
+
         consumer.setEntitlementCount(0L);
-        // TODO: Refactor this to not call resource methods directly
+
+        // TODO: FIXME: Stop calling into consumer resource to do this work. Move common work to some
+        // consumer service/controller or something.
         consumerResource.sanitizeConsumerFacts(consumer);
 
 

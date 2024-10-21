@@ -26,6 +26,8 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.server.v1.DeletedConsumerApi;
 
+import com.google.inject.persist.Transactional;
+
 import org.jboss.resteasy.core.ResteasyContext;
 import org.xnap.commons.i18n.I18n;
 
@@ -54,6 +56,7 @@ public class DeletedConsumerResource implements DeletedConsumerApi {
     }
 
     @Override
+    @Transactional
     public Stream<DeletedConsumerDTO> listByDate(OffsetDateTime date, Integer page, Integer perPage,
         String order, String sortBy) {
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);

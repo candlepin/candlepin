@@ -28,12 +28,16 @@ import org.candlepin.model.CertificateSerial;
 import org.candlepin.resource.server.v1.CdnApi;
 import org.candlepin.util.Util;
 
+import com.google.inject.persist.Transactional;
+
 import org.xnap.commons.i18n.I18n;
 
 import java.time.OffsetDateTime;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+
+
 
 /**
  * CdnResource
@@ -54,6 +58,7 @@ public class CdnResource implements CdnApi {
     }
 
     @Override
+    @Transactional
     public Stream<CdnDTO> getContentDeliveryNetworks() {
         return curator.listAll()
             .stream()
@@ -61,6 +66,7 @@ public class CdnResource implements CdnApi {
     }
 
     @Override
+    @Transactional
     public void deleteCdn(String label) {
         Cdn cdn = curator.getByLabel(label);
         if (cdn != null) {
@@ -69,6 +75,7 @@ public class CdnResource implements CdnApi {
     }
 
     @Override
+    @Transactional
     public CdnDTO createCdn(CdnDTO cdnDTOInput) {
         Cdn existing = curator.getByLabel(cdnDTOInput.getLabel());
         if (existing != null) {
@@ -87,6 +94,7 @@ public class CdnResource implements CdnApi {
     }
 
     @Override
+    @Transactional
     public CdnDTO updateCdn(String label, CdnDTO cdnDTOInput) {
         Cdn existing = verifyAndLookupCdn(label);
         this.populateEntity(existing, cdnDTOInput);

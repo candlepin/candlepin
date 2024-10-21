@@ -46,7 +46,6 @@ public class EntitlementCertificateCurator extends AbstractHibernateCurator<Enti
         super(EntitlementCertificate.class);
     }
 
-    @Transactional
     public List<EntitlementCertificate> listForEntitlement(Entitlement entitlement) {
         if (entitlement == null) {
             return new ArrayList<>();
@@ -60,7 +59,6 @@ public class EntitlementCertificateCurator extends AbstractHibernateCurator<Enti
             .getResultList();
     }
 
-    @Transactional
     public List<EntitlementCertificate> listForConsumer(Consumer consumer) {
         if (consumer == null) {
             return new ArrayList<>();

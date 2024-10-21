@@ -95,7 +95,7 @@ public class PoolOpProcessor {
             entry.getKey().setQuantity(entry.getValue());
         }
 
-        poolCurator.mergeAll(poolQuantities.keySet(), false);
+        this.poolCurator.updateAll(poolQuantities.keySet(), false, false);
     }
 
 }

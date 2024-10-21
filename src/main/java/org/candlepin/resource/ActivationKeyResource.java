@@ -122,12 +122,14 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
+    @Transactional
     public ActivationKeyDTO getActivationKey(@Verify(ActivationKey.class) String activationKeyId) {
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
     @Override
+    @Transactional
     public Iterable<PoolDTO> getActivationKeyPools(@Verify(ActivationKey.class) String activationKeyId) {
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         return () -> new TransformedIterator<>(key.getPools().iterator(),
@@ -135,6 +137,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
+    @Transactional
     public ActivationKeyDTO updateActivationKey(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         ActivationKeyDTO update) {
@@ -193,6 +196,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
+    @Transactional
     public ActivationKeyDTO addPoolToKey(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         @Verify(value = Pool.class, require = Access.READ_ONLY) String poolId,
@@ -219,6 +223,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
+    @Transactional
     public ActivationKeyDTO removePoolFromKey(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         @Verify(value = Pool.class, require = Access.READ_ONLY) String poolId) {
@@ -232,6 +237,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
+    @Transactional
     public ActivationKeyDTO addProductIdToKey(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         String productId) {
@@ -253,6 +259,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
+    @Transactional
     public ActivationKeyDTO removeProductIdFromKey(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         String productId) {
@@ -265,6 +272,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
+    @Transactional
     public Stream<ActivationKeyDTO> findActivationKey() {
         return this.activationKeyCurator.listAll()
             .stream()
@@ -272,6 +280,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
+    @Transactional
     public void deleteActivationKey(@Verify(ActivationKey.class) String activationKeyId) {
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         log.debug("Deleting activation key: {}", activationKeyId);
@@ -279,6 +288,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
+    @Transactional
     public Stream<ContentOverrideDTO> listActivationKeyContentOverrides(
         @Verify(value = ActivationKey.class, require = Access.READ_ONLY) String activationKeyId) {
 

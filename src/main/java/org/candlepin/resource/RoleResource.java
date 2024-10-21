@@ -29,6 +29,8 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
 
+import com.google.inject.persist.Transactional;
+
 import org.jboss.resteasy.spi.BadRequestException;
 import org.xnap.commons.i18n.I18n;
 
@@ -120,6 +122,7 @@ public class RoleResource implements RolesApi {
      * {@InheritDoc}
      */
     @Override
+    @Transactional
     public RoleDTO createRole(RoleDTO dto) {
         if (dto == null) {
             throw new BadRequestException(this.i18n.tr("role data is null or empty"));
@@ -142,6 +145,7 @@ public class RoleResource implements RolesApi {
      * {@InheritDoc}
      */
     @Override
+    @Transactional
     public RoleDTO updateRole(String roleName, RoleDTO dto) {
 
         // We don't actually need the role, but we do this for quick verification and better error
@@ -158,6 +162,7 @@ public class RoleResource implements RolesApi {
      * {@InheritDoc}
      */
     @Override
+    @Transactional
     public RoleDTO addRolePermission(String roleName, PermissionBlueprintDTO permission) {
 
         // Validate role name
@@ -179,6 +184,7 @@ public class RoleResource implements RolesApi {
      * {@InheritDoc}
      */
     @Override
+    @Transactional
     public RoleDTO removeRolePermission(String roleName, String permissionId) {
 
         // Validate role name
@@ -192,6 +198,7 @@ public class RoleResource implements RolesApi {
      * {@InheritDoc}
      */
     @Override
+    @Transactional
     public RoleDTO getRoleByName(String roleName) {
         RoleInfo role = this.fetchRoleByName(roleName);
         return this.modelTranslator.translate(role, RoleDTO.class);
@@ -201,6 +208,7 @@ public class RoleResource implements RolesApi {
      * {@InheritDoc}
      */
     @Override
+    @Transactional
     public void deleteRoleByName(String roleName) {
         // Validate role name
         this.fetchRoleByName(roleName);
@@ -212,6 +220,7 @@ public class RoleResource implements RolesApi {
      * {@InheritDoc}
      */
     @Override
+    @Transactional
     public RoleDTO addUserToRole(String roleName, String username) {
 
         // Validate role name
@@ -228,6 +237,7 @@ public class RoleResource implements RolesApi {
      * {@InheritDoc}
      */
     @Override
+    @Transactional
     public RoleDTO deleteUserFromRole(String roleName, String username) {
 
         // Validate role name
@@ -244,6 +254,7 @@ public class RoleResource implements RolesApi {
      * {@InheritDoc}
      */
     @Override
+    @Transactional
     public Stream<RoleDTO> getRoles() {
         // TODO: Add in filter options
 

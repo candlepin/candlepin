@@ -14,14 +14,11 @@
  */
 package org.candlepin.sync;
 
-import org.candlepin.resource.ConsumerResource;
-
 import java.io.Serializable;
 
 /**
  * Represents the result from an async export job. This class simply defines
  * the appropriate meta data to create a link to download the manifest.
- *
  */
 public class ExportResult implements Serializable {
 
@@ -34,8 +31,19 @@ public class ExportResult implements Serializable {
     public ExportResult(String exportedConsumer, String exportId) {
         this.exportedConsumer = exportedConsumer;
         this.exportId = exportId;
-        this.href = ConsumerResource.buildAsyncDownloadManifestHref(this.exportedConsumer,
-            this.exportId);
+
+        this.href = buildAsyncDownloadManifestHref(this.exportedConsumer, this.exportId);
+    }
+
+    /**
+     * Builds an HREF to a stored manifest file.
+     *
+     * @param consumerUuid the target consumer UUID.
+     * @param manifestId the target manifest ID.
+     * @return the HREF string for the specified manifest
+     */
+    private static String buildAsyncDownloadManifestHref(String consumerUuid, String manifestId) {
+        return String.format("/consumers/%s/export/%s", consumerUuid, manifestId);
     }
 
     public String getExportedConsumer() {
