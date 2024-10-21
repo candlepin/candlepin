@@ -121,6 +121,7 @@ public class ContentResource implements ContentApi {
     }
 
     @Override
+    @Transactional
     public ContentDTO getContentByUuid(String contentUuid) {
         Content content = this.contentCurator.get(contentUuid);
 

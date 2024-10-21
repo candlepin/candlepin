@@ -35,7 +35,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+
+
 
 @SpecTest
 public class ConsumerResourceContentOverrideSpecTest {
@@ -68,30 +72,79 @@ public class ConsumerResourceContentOverrideSpecTest {
     }
 
     @Test
-    public void shouldAllowContentValueOverridesPerConsumer() {
-        ConsumerDTO consumer = admin.consumers().createConsumer(Consumers.random(this.owner));
+    public void shouldAllowAddingContentOverridesToConsumers() throws Exception {
+        ConsumerDTO consumer = this.admin.consumers().createConsumer(Consumers.random(this.owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
+
         List<ContentOverrideDTO> overrides = List.of(
             ContentOverrides.random(),
             ContentOverrides.random()
         );
 
+        Thread.sleep(1100);
+
         List<ContentOverrideDTO> createdOverrides = consumerClient.consumers()
             .addConsumerContentOverrides(consumer.getUuid(), overrides);
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
 
         assertConsumerOverrides(consumerClient, consumer)
             .hasSize(2)
             .containsExactlyInAnyOrderElementsOf(createdOverrides);
+
+        // Verify that the last update time has changed as a result
+        ConsumerDTO updated = this.admin.consumers().getConsumer(consumer.getUuid());
+
+        assertThat(updated.getCreated())
+            .isEqualTo(consumer.getCreated())
+            .isBefore(updated.getUpdated());
+
+        assertThat(updated.getUpdated())
+            .isAfter(consumer.getUpdated())
+            .isBeforeOrEqualTo(post);
     }
 
     @Test
-    public void shouldAllowContentValueOverridesUpdates() {
+    public void shouldPopulateGeneratedFieldsWhenCreatingConsumerContentOverrides() throws Exception {
+        ConsumerDTO consumer = this.admin.consumers()
+            .createConsumer(Consumers.random(this.owner));
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        List<ContentOverrideDTO> overrides = this.admin.consumers()
+            .addConsumerContentOverrides(consumer.getUuid(), List.of(ContentOverrides.random()));
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(overrides)
+            .hasSize(1);
+
+        ContentOverrideDTO output = overrides.get(0);
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(output.getUpdated());
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfterOrEqualTo(output.getCreated())
+            .isBeforeOrEqualTo(post);
+    }
+
+    @Test
+    public void shouldAllowContentValueOverridesUpdates() throws Exception {
         ConsumerDTO consumer = admin.consumers().createConsumer(Consumers.random(this.owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
         ContentOverrideDTO override1 = ContentOverrides.random();
         ContentOverrideDTO override2 = ContentOverrides.random();
         List<ContentOverrideDTO> overrides = List.of(override1, override2);
         consumerClient.consumers().addConsumerContentOverrides(consumer.getUuid(), overrides);
+
+        Thread.sleep(1100);
 
         String expectedValue = "consumer1_update";
         consumerClient.consumers()
@@ -101,6 +154,17 @@ public class ConsumerResourceContentOverrideSpecTest {
             .hasSize(2)
             .map(ContentOverrideDTO::getValue)
             .containsExactlyInAnyOrder(expectedValue, override2.getValue());
+
+        // Verify that the last update time has changed as a result
+        ConsumerDTO updated = this.admin.consumers().getConsumer(consumer.getUuid());
+
+        assertThat(updated.getCreated())
+            .isEqualTo(consumer.getCreated())
+            .isBefore(updated.getUpdated());
+
+        assertThat(updated.getUpdated())
+            .isAfter(consumer.getUpdated())
+            .isBeforeOrEqualTo(OffsetDateTime.now());
     }
 
     @Test
@@ -134,7 +198,7 @@ public class ConsumerResourceContentOverrideSpecTest {
     }
 
     @Test
-    public void shouldAllowContentValueOverrideDeletion() {
+    public void shouldAllowContentValueOverrideDeletion() throws Exception {
         ConsumerDTO consumer = admin.consumers().createConsumer(Consumers.random(this.owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
         ContentOverrideDTO override = ContentOverrides.withValue(consumer);
@@ -147,12 +211,28 @@ public class ConsumerResourceContentOverrideSpecTest {
         );
         consumerClient.consumers().addConsumerContentOverrides(consumer.getUuid(), overrides);
 
+        Thread.sleep(1100);
+
         consumerClient.consumers().deleteConsumerContentOverrides(consumer.getUuid(), List.of(override));
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
 
         assertConsumerOverrides(consumerClient, consumer)
             .hasSize(4)
             .map(ContentOverrideDTO::getName)
             .doesNotContain(override.getName());
+
+        // Verify that the last update time has changed as a result
+        ConsumerDTO updated = this.admin.consumers().getConsumer(consumer.getUuid());
+
+        assertThat(updated.getCreated())
+            .isEqualTo(consumer.getCreated())
+            .isBefore(updated.getUpdated());
+
+        assertThat(updated.getUpdated())
+            .isAfter(consumer.getUpdated())
+            .isBeforeOrEqualTo(post);
     }
 
     @Test

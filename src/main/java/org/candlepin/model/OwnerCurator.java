@@ -113,8 +113,8 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         return owner;
     }
 
-    @Transactional
     @Override
+    @Transactional
     public Owner create(Owner entity) {
         return super.create(entity);
     }
@@ -125,7 +125,6 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      * @param key owner's unique key to fetch.
      * @return the owner whose key matches the one given.
      */
-    @Transactional
     public Owner getByKey(String key) {
         String jpql = "SELECT o FROM Owner o WHERE o.key = :key";
 
@@ -146,7 +145,6 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      * @param key owner's unique key to fetch.
      * @return the owner whose key matches the one given.
      */
-    @Transactional
     public Owner getByKeySecure(String key) {
         if (key == null || key.isBlank()) {
             return null;
@@ -177,7 +175,6 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         }
     }
 
-    @Transactional
     public List<Owner> getByKeys(Collection<String> keys) {
         String jpql = "SELECT o FROM Owner o WHERE o.key in (:keys)";
 
@@ -187,7 +184,6 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
             .getResultList();
     }
 
-    @Transactional
     public List<Owner> getByKeysSecure(Collection<String> keys) {
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<Owner> cq = cb.createQuery(Owner.class);

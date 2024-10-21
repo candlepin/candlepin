@@ -111,7 +111,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             .get("hibernate.dialect")).toLowerCase();
     }
 
-    @Transactional
     protected final <T> T secureGet(Class<T> clazz, Serializable id) {
         EntityManager em = this.getEntityManager();
         CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -145,12 +144,10 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @param id db id of entity to be found.
      * @return entity matching given id, or null otherwise.
      */
-    @Transactional
     public E secureGet(Serializable id) {
         return id == null ? null : secureGet(entityType, id);
     }
 
-    @Transactional
     protected <T> T get(Class<T> clazz, Serializable id) {
         return this.getEntityManager().find(clazz, id);
     }
@@ -159,7 +156,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @param id db id of entity to be found.
      * @return entity matching given id, or null otherwise.
      */
-    @Transactional
     public E get(Serializable id) {
         return id == null ? null : this.get(entityType, id);
     }
@@ -169,7 +165,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @param id primary key of entity.
      * @return boolean value whether row exists or not
      */
-    @Transactional
     public boolean exists(Serializable id) {
         boolean doesExists = false;
         String columnName = getPrimaryKeyName();
@@ -315,11 +310,11 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         if (order == PageRequest.Order.ASCENDING) {
             return criteriaBuilder.asc(root.get(sortBy));
         }
+
         //DESCENDING
         return criteriaBuilder.desc(root.get(sortBy));
     }
 
-    @Transactional
     public List<E> listByCriteria(CriteriaQuery<E> query) {
         return this.getEntityManager()
             .createQuery(query)
@@ -401,7 +396,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
 
-    @Transactional
     public Page<List<E>> listByCriteria(Root<E> root, CriteriaQuery<E> criteria, PageRequest pageRequest,
         int maxRecords) {
         Page<List<E>> page = new Page<>();
@@ -455,12 +449,21 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      */
     @Transactional
     public E merge(E entity) {
-        return getEntityManager().merge(entity);
+        if (entity == null) {
+            return null;
+        }
+
+        return this.getEntityManager()
+            .merge(entity);
     }
 
     @Transactional
-    protected void save(E anObject) {
-        create(anObject, true);
+    protected void save(E entity) {
+        if (entity == null) {
+            return;
+        }
+
+        create(entity, true);
     }
 
     @Transactional
@@ -555,67 +558,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             .run(action);
     }
 
-    @Transactional
-    public Collection<E> saveAll(Collection<E> entities, boolean flush, boolean evict) {
-        if (entities != null && !entities.isEmpty()) {
-            try {
-                EntityManager em = this.getEntityManager();
-                Iterable<List<E>> blocks = Iterables.partition(entities, getBatchBlockSize());
-
-                for (List<E> block : blocks) {
-                    for (E entity : block) {
-                        em.persist(entity);
-                    }
-
-                    if (flush) {
-                        em.flush();
-
-                        if (evict) {
-                            for (E entity : block) {
-                                em.detach(entity);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (OptimisticLockException e) {
-                throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
-            }
-        }
-
-        return entities;
-    }
-
-    public Collection<E> updateAll(Collection<E> entities, boolean flush, boolean evict) {
-        if (entities != null && !entities.isEmpty()) {
-            try {
-                EntityManager em = this.getEntityManager();
-                Iterable<List<E>> blocks = Iterables.partition(entities, getBatchBlockSize());
-
-                for (List<E> block : blocks) {
-                    for (E entity : block) {
-                        em.merge(entity);
-                    }
-
-                    if (flush) {
-                        em.flush();
-
-                        if (evict) {
-                            for (E entity : block) {
-                                em.detach(entity);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (OptimisticLockException e) {
-                throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
-            }
-        }
-
-        return entities;
-    }
-
     /**
      * Retrieves the primary key of the given entity.
      * <p>
@@ -634,6 +576,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             .getPersistenceUnitUtil()
             .getIdentifier(entity);
     }
+
     /**
      * Checks if the given entity is new (not yet persisted).
      * <p>
@@ -649,6 +592,61 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return getEntityPrimaryKey(entity) == null;
     }
 
+    @Transactional
+    public Collection<E> saveAll(Collection<E> entities, boolean flush, boolean evict) {
+        if (entities != null && !entities.isEmpty()) {
+            try {
+                EntityManager em = this.getEntityManager();
+                Iterable<List<E>> blocks = Iterables.partition(entities, getBatchBlockSize());
+
+                for (List<E> block : blocks) {
+                    block.forEach(em::persist);
+
+                    if (flush) {
+                        em.flush();
+
+                        if (evict) {
+                            block.forEach(em::detach);
+                        }
+                    }
+                }
+            }
+            catch (OptimisticLockException e) {
+                throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
+            }
+        }
+
+        return entities;
+    }
+
+    @Transactional
+    public Collection<E> updateAll(Collection<E> entities, boolean flush, boolean evict) {
+        if (entities != null && !entities.isEmpty()) {
+            try {
+                EntityManager em = this.getEntityManager();
+                Iterable<List<E>> blocks = Iterables.partition(entities, getBatchBlockSize());
+
+                for (List<E> block : blocks) {
+                    block.forEach(em::merge);
+
+                    if (flush) {
+                        em.flush();
+
+                        if (evict) {
+                            block.forEach(em::detach);
+                        }
+                    }
+                }
+            }
+            catch (OptimisticLockException e) {
+                throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
+            }
+        }
+
+        return entities;
+    }
+
+    @Transactional
     public Iterable<E> saveOrUpdateAll(Iterable<E> entities, boolean flush, boolean evict) {
         if (entities != null) {
             try {
@@ -669,45 +667,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                         em.flush();
 
                         if (evict) {
-                            for (E entity : block) {
-                                em.detach(entity);
-                            }
+                            block.forEach(em::detach);
                         }
-                    }
-                }
-            }
-            catch (OptimisticLockException e) {
-                throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
-            }
-        }
-
-        return entities;
-    }
-
-    public Collection<E> mergeAll(Collection<E> entities, boolean flush) {
-        if (entities != null && !entities.isEmpty()) {
-            try {
-                EntityManager em = this.getEntityManager();
-
-                if (flush) {
-                    int i = 0;
-                    for (E entity : entities) {
-                        em.merge(entity);
-
-                        if (++i % getBatchBlockSize() == 0) {
-                            em.flush();
-                            em.clear();
-                        }
-                    }
-
-                    if (i % getBatchBlockSize() != 0) {
-                        em.flush();
-                        em.clear();
-                    }
-                }
-                else {
-                    for (E entity : entities) {
-                        em.merge(entity);
                     }
                 }
             }
@@ -722,10 +683,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public void refresh(Iterable<E> entities) {
         if (entities != null) {
             EntityManager manager = this.getEntityManager();
-
-            for (E entity : entities) {
-                manager.refresh(entity);
-            }
+            entities.forEach(manager::refresh);
         }
     }
 
@@ -738,19 +696,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public E evict(E entity) {
         this.getEntityManager().detach(entity);
         return entity;
-    }
-
-    public List<E> takeSubList(PageRequest pageRequest, List<E> results) {
-        if (pageRequest.getPage() == null || pageRequest.getPerPage() == null ||
-            results == null || results.isEmpty()) {
-
-            return results;
-        }
-
-        int fromIndex = (pageRequest.getPage() - 1) * pageRequest.getPerPage();
-        int toIndex = fromIndex + pageRequest.getPerPage();
-
-        return takeSubList(fromIndex, toIndex, results);
     }
 
     public List<E> takeSubList(QueryArguments<?> query, List<E> results) {

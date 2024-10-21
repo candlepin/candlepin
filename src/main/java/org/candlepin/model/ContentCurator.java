@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.persist.Transactional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -521,7 +519,6 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
      *  a content instance representing the entity to delete
      */
     @Override
-    @Transactional
     public void delete(Content entity) {
         Content target = Optional.ofNullable(entity)
             .map(Content::getUuid)

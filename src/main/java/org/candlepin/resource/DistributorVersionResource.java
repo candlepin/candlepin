@@ -24,6 +24,8 @@ import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.resource.server.v1.DistributorVersionsApi;
 import org.candlepin.resource.validation.DTOValidator;
 
+import com.google.inject.persist.Transactional;
+
 import org.apache.commons.lang3.StringUtils;
 import org.xnap.commons.i18n.I18n;
 
@@ -67,7 +69,7 @@ public class DistributorVersionResource implements DistributorVersionsApi {
      * @throws IllegalArgumentException
      *  if either entity or dto are null
      */
-    protected void populateEntity(DistributorVersion entity, DistributorVersionDTO dto) {
+    private void populateEntity(DistributorVersion entity, DistributorVersionDTO dto) {
         if (entity == null) {
             throw new IllegalArgumentException("the distributor version model entity is null");
         }
@@ -99,6 +101,7 @@ public class DistributorVersionResource implements DistributorVersionsApi {
     }
 
     @Override
+    @Transactional
     public Stream<DistributorVersionDTO> getVersions(String nameSearch, String capability) {
         List<DistributorVersion> versions;
         if (!StringUtils.isBlank(nameSearch)) {
@@ -116,6 +119,7 @@ public class DistributorVersionResource implements DistributorVersionsApi {
     }
 
     @Override
+    @Transactional
     public void delete(String id) {
         DistributorVersion dv = curator.get(id);
         if (dv != null) {
@@ -124,20 +128,24 @@ public class DistributorVersionResource implements DistributorVersionsApi {
     }
 
     @Override
+    @Transactional
     public DistributorVersionDTO create(DistributorVersionDTO dto) {
         this.validator.validateCollectionElementsNotNull(dto::getCapabilities);
         DistributorVersion existing = curator.findByName(dto.getName());
         if (existing != null) {
             throw new BadRequestException(
-                i18n.tr("A distributor version with name {0} " +
-                        "already exists", dto.getName()));
+                this.i18n.tr("A distributor version with name {0} already exists", dto.getName()));
         }
         DistributorVersion toCreate = new DistributorVersion();
         populateEntity(toCreate, dto);
-        return this.translator.translate(curator.create(toCreate), DistributorVersionDTO.class);
+
+        toCreate = this.curator.create(toCreate, true);
+
+        return this.translator.translate(toCreate, DistributorVersionDTO.class);
     }
 
     @Override
+    @Transactional
     public DistributorVersionDTO update(String id, DistributorVersionDTO dto) {
         this.validator.validateCollectionElementsNotNull(dto::getCapabilities);
 
@@ -148,8 +156,10 @@ public class DistributorVersionResource implements DistributorVersionsApi {
             .map(capability -> new DistributorVersionCapability(existing, capability.getName()))
             .collect(Collectors.toSet()));
 
-        curator.merge(existing);
-        return this.translator.translate(existing, DistributorVersionDTO.class);
+        DistributorVersion updated = this.curator.merge(existing);
+        this.curator.flush();
+
+        return this.translator.translate(updated, DistributorVersionDTO.class);
     }
 
     private DistributorVersion verifyAndLookupDistributorVersion(String id) {

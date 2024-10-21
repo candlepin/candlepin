@@ -46,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -122,12 +123,14 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
+    @Transactional
     public ActivationKeyDTO getActivationKey(@Verify(ActivationKey.class) String activationKeyId) {
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
     @Override
+    @Transactional
     public Iterable<PoolDTO> getActivationKeyPools(@Verify(ActivationKey.class) String activationKeyId) {
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         return () -> new TransformedIterator<>(key.getPools().iterator(),
@@ -135,6 +138,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
+    @Transactional
     public ActivationKeyDTO updateActivationKey(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         ActivationKeyDTO update) {
@@ -188,11 +192,13 @@ public class ActivationKeyResource implements ActivationKeyApi {
         }
 
         toUpdate = activationKeyCurator.merge(toUpdate);
+        this.activationKeyCurator.flush();
 
         return this.translator.translate(toUpdate, ActivationKeyDTO.class);
     }
 
     @Override
+    @Transactional
     public ActivationKeyDTO addPoolToKey(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         @Verify(value = Pool.class, require = Access.READ_ONLY) String poolId,
@@ -213,25 +219,39 @@ public class ActivationKeyResource implements ActivationKeyApi {
         }
 
         key.addPool(pool, quantity);
-        activationKeyCurator.update(key);
+        // We have to manually invoke the "on update" here due to a strange quirk in the way Hibernate
+        // handles element collections with respect to persist and update hooks. Namely, it won't invoke
+        // them on the parent entity when the only change made is on the collection.
+        key.setUpdated(new Date());
+        key = this.activationKeyCurator.merge(key);
+        this.activationKeyCurator.flush();
 
         return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
     @Override
+    @Transactional
     public ActivationKeyDTO removePoolFromKey(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         @Verify(value = Pool.class, require = Access.READ_ONLY) String poolId) {
 
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         Pool pool = findPool(poolId);
-        key.removePool(pool);
-        activationKeyCurator.update(key);
+
+        if (key.removePool(pool)) {
+            // We have to manually invoke the "on update" here due to a strange quirk in the way Hibernate
+            // handles element collections with respect to persist and update hooks. Namely, it won't invoke
+            // them on the parent entity when the only change made is on the collection.
+            key.setUpdated(new Date());
+            this.activationKeyCurator.merge(key);
+            this.activationKeyCurator.flush();
+        }
 
         return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
     @Override
+    @Transactional
     public ActivationKeyDTO addProductIdToKey(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         String productId) {
@@ -246,25 +266,41 @@ public class ActivationKeyResource implements ActivationKeyApi {
                     productId));
         }
 
-        key.addProduct(product);
-        activationKeyCurator.update(key);
+        if (key.addProduct(product)) {
+            // We have to manually invoke the "on update" here due to a strange quirk in the way Hibernate
+            // handles element collections with respect to persist and update hooks. Namely, it won't invoke
+            // them on the parent entity when the only change made is on the collection.
+            key.setUpdated(new Date());
+            key = this.activationKeyCurator.merge(key);
+            this.activationKeyCurator.flush();
+        }
 
         return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
     @Override
+    @Transactional
     public ActivationKeyDTO removeProductIdFromKey(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         String productId) {
 
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         Product product = confirmProduct(key.getOwner(), productId);
-        key.removeProduct(product);
-        activationKeyCurator.update(key);
+
+        if (key.removeProduct(product)) {
+            // We have to manually invoke the "on update" here due to a strange quirk in the way Hibernate
+            // handles element collections with respect to persist and update hooks. Namely, it won't invoke
+            // them on the parent entity when the only change made is on the collection.
+            key.setUpdated(new Date());
+            key = this.activationKeyCurator.merge(key);
+            this.activationKeyCurator.flush();
+        }
+
         return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
     @Override
+    @Transactional
     public Stream<ActivationKeyDTO> findActivationKey() {
         return this.activationKeyCurator.listAll()
             .stream()
@@ -272,6 +308,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
+    @Transactional
     public void deleteActivationKey(@Verify(ActivationKey.class) String activationKeyId) {
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         log.debug("Deleting activation key: {}", activationKeyId);
@@ -279,6 +316,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
+    @Transactional
     public Stream<ContentOverrideDTO> listActivationKeyContentOverrides(
         @Verify(value = ActivationKey.class, require = Access.READ_ONLY) String activationKeyId) {
 
@@ -333,9 +371,8 @@ public class ActivationKeyResource implements ActivationKeyApi {
             throw e;
         }
 
-        // Hibernate typically persists automatically before executing a query against a table with
-        // pending changes, but if it doesn't, we can add a flush here to make sure this outputs the
-        // correct values
+        key.setUpdated(new Date());
+        this.activationKeyCurator.flush();
 
         return this.contentOverrideCurator.getList(key)
             .stream()
@@ -371,6 +408,9 @@ public class ActivationKeyResource implements ActivationKeyApi {
                 }
             }
         }
+
+        key.setUpdated(new Date());
+        this.activationKeyCurator.flush();
 
         return this.contentOverrideCurator.getList(key)
             .stream()

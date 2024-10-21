@@ -37,6 +37,7 @@ import org.candlepin.dto.api.client.v1.ContentDTO;
 import org.candlepin.dto.api.client.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
+import org.candlepin.dto.api.client.v1.ProductContentDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ProvidedProductDTO;
 import org.candlepin.dto.api.client.v1.SubscriptionDTO;
@@ -135,6 +136,62 @@ public class OwnerProductResourceSpecTest {
     }
 
     @Test
+    public void shouldPopulateGeneratedFieldsWhenCreatingProducts() {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        ProductDTO output = ownerProductApi.createProduct(owner.getKey(), Products.random());
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getId())
+            .isNotNull()
+            .isNotBlank();
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isAfterOrEqualTo(output.getCreated())
+            .isBeforeOrEqualTo(post);
+    }
+
+    @Test
+    public void shouldUpdateGeneratedFieldsWhenUpdatingOwnerProducts() throws Exception {
+        OwnerDTO owner = this.ownerApi.createOwner(Owners.random());
+        ProductDTO entity = this.ownerProductApi.createProduct(owner.getKey(), Products.random());
+
+        Thread.sleep(1100);
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        entity.setName(entity.getName() + "-update");
+        ProductDTO output = this.ownerProductApi.updateProduct(owner.getKey(), entity.getId(), entity);
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isEqualTo(entity.getCreated())
+            .isBeforeOrEqualTo(init);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfter(output.getCreated())
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
+    }
+
+    @Test
     public void shouldAllowCreatingProductsInOrgsWithLongKeys() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random()
             .key(StringUtil.random("test_org-", 245, StringUtil.CHARSET_NUMERIC_HEX)));
@@ -217,18 +274,71 @@ public class OwnerProductResourceSpecTest {
     }
 
     @Test
-    public void shouldRemoveContentFromProducts() {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ProductDTO prod = ownerProductApi.createProduct(owner.getKey(), Products.random());
-        ContentDTO content = ownerContentApi.createContent(owner.getKey(), Contents.random());
-        ownerProductApi.addContentToProduct(owner.getKey(), prod.getId(), content.getId(), true);
-        prod = ownerProductApi.getProductById(owner.getKey(), prod.getId());
-        assertEquals(1, prod.getProductContent().size());
-        assertEquals(content, Iterables.getOnlyElement(prod.getProductContent()).getContent());
+    public void shouldAllowAddingContentToProducts() throws Exception {
+        OwnerDTO owner = this.ownerApi.createOwner(Owners.random());
+        ContentDTO content = this.ownerContentApi.createContent(owner.getKey(), Contents.random());
+        ProductDTO product = ownerProductApi.createProduct(owner.getKey(), Products.random());
 
-        ownerProductApi.removeContentFromProduct(owner.getKey(), prod.getId(), content.getId());
-        prod = ownerProductApi.getProductById(owner.getKey(), prod.getId());
-        assertEquals(0, prod.getProductContent().size());
+        assertThat(product.getProductContent())
+            .isNotNull()
+            .isEmpty();
+
+        Thread.sleep(1100);
+
+        ProductDTO output = this.ownerProductApi
+            .addContentToProduct(owner.getKey(), product.getId(), content.getId(), true);
+
+        assertThat(output.getProductContent())
+            .singleElement()
+            .returns(true, ProductContentDTO::getEnabled)
+            .extracting(ProductContentDTO::getContent)
+            .isEqualTo(content);
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isEqualTo(product.getCreated())
+            .isBeforeOrEqualTo(output.getUpdated());
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfterOrEqualTo(product.getUpdated())
+            .isAfterOrEqualTo(product.getCreated())
+            .isAfterOrEqualTo(output.getCreated())
+            .isBeforeOrEqualTo(OffsetDateTime.now());
+    }
+
+    @Test
+    public void shouldAllowRemovingContentFromProducts() throws Exception {
+        OwnerDTO owner = this.ownerApi.createOwner(Owners.random());
+        ContentDTO content = this.ownerContentApi.createContent(owner.getKey(), Contents.random());
+        ProductDTO product = ownerProductApi.createProduct(owner.getKey(), Products.random()
+            .addProductContentItem(Contents.toProductContent(content, true)));
+
+        assertThat(product.getProductContent())
+            .singleElement()
+            .extracting(ProductContentDTO::getContent)
+            .isEqualTo(content);
+
+        Thread.sleep(1100);
+
+        ProductDTO output = this.ownerProductApi
+            .removeContentFromProduct(owner.getKey(), product.getId(), content.getId());
+
+        assertThat(output.getProductContent())
+            .isNotNull()
+            .isEmpty();
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isEqualTo(product.getCreated())
+            .isBeforeOrEqualTo(output.getUpdated());
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfterOrEqualTo(product.getUpdated())
+            .isAfterOrEqualTo(product.getCreated())
+            .isAfterOrEqualTo(output.getCreated())
+            .isBeforeOrEqualTo(OffsetDateTime.now());
     }
 
     @Test

@@ -224,7 +224,9 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
         return this;
     }
 
-    public ActivationKey removePool(Pool pool) {
+    public boolean removePool(Pool pool) {
+        boolean found = false;
+
         if (pool != null && pool.getId() != null) {
             String poolId = pool.getId();
             Iterator<ActivationKeyPool> iterator = this.pools.iterator();
@@ -233,11 +235,12 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
                 ActivationKeyPool akp = iterator.next();
                 if (poolId.equals(akp.getPoolId())) {
                     iterator.remove();
+                    found = true;
                 }
             }
         }
 
-        return this;
+        return found;
     }
 
     /**
@@ -278,7 +281,8 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
 
     /**
      * Adds the specified product ID to this activation key. If the productId is null or empty, this
-     * method throws an exception.
+     * method throws an exception. If the product ID had already been added to this activation key, this
+     * method returns false.
      *
      * @param productId
      *  the Red Hat ID of the product to add to this activation key; cannot be null or empty
@@ -287,20 +291,20 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
      *  if productId is null or empty
      *
      * @return
-     *  a reference to this activation key
+     *  true if the product ID was added successfully; false otherwise
      */
-    public ActivationKey addProductId(String productId) {
+    public boolean addProductId(String productId) {
         if (productId == null || productId.isEmpty()) {
             throw new IllegalArgumentException("productId is null or empty");
         }
 
-        this.productIds.add(productId);
-        return this;
+        return this.productIds.add(productId);
     }
 
     /**
-     * Adds the specified product to this activation key, using its Red Hat product ID. If the
-     * product is null, or lacks a product ID, this method throws an exception.
+     * Adds the specified product to this activation key, using its Red Hat product ID. If the product
+     * is null, or lacks a product ID, this method throws an exception. If the product had already been
+     * added to this activation key, this method returns false.
      *
      * @param product
      *  the product to add to this activation key; cannot be null and must have a valid product ID
@@ -309,15 +313,14 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
      *  if product is null or lacks a valid Red Hat product ID
      *
      * @return
-     *  a reference to this activation key
+     *  true if the product was added successfully; false otherwise
      */
-    public ActivationKey addProduct(Product product) {
+    public boolean addProduct(Product product) {
         if (product == null) {
             throw new IllegalArgumentException("product is null");
         }
 
-        this.addProductId(product.getId());
-        return this;
+        return this.addProductId(product.getId());
     }
 
     public boolean removeProductId(String productId) {

@@ -102,29 +102,29 @@ public class OwnerResourceSpecTest {
     @Test
     public void shouldCreateOwner() {
         OwnerDTO ownerDTO = Owners.random();
-        OwnerDTO status = owners.createOwner(ownerDTO);
+        OwnerDTO actual = owners.createOwner(ownerDTO);
 
-        assertThat(status.getId()).isNotNull();
-        assertThat(status.getCreated()).isNotNull();
-        assertThat(status.getUpdated()).isNotNull();
-        assertThat(status.getContentAccessMode()).isNotNull();
-        assertThat(status.getContentAccessModeList()).isNotNull();
-        assertThat(status.getKey()).isEqualTo(ownerDTO.getKey());
-        assertThat(status.getDisplayName()).isEqualTo(ownerDTO.getDisplayName());
+        assertThat(actual.getId()).isNotNull();
+        assertThat(actual.getCreated()).isNotNull();
+        assertThat(actual.getUpdated()).isNotNull();
+        assertThat(actual.getContentAccessMode()).isNotNull();
+        assertThat(actual.getContentAccessModeList()).isNotNull();
+        assertThat(actual.getKey()).isEqualTo(ownerDTO.getKey());
+        assertThat(actual.getDisplayName()).isEqualTo(ownerDTO.getDisplayName());
     }
 
     @Test
     public void shouldCreateScaOwner() {
         OwnerDTO ownerDTO = Owners.randomSca();
-        OwnerDTO status = owners.createOwner(ownerDTO);
+        OwnerDTO actual = owners.createOwner(ownerDTO);
 
-        assertThat(status.getId()).isNotNull();
-        assertThat(status.getCreated()).isNotNull();
-        assertThat(status.getUpdated()).isNotNull();
-        assertThat(status.getContentAccessMode()).isEqualTo(ownerDTO.getContentAccessMode());
-        assertThat(status.getContentAccessModeList()).isEqualTo(ownerDTO.getContentAccessModeList());
-        assertThat(status.getKey()).isEqualTo(ownerDTO.getKey());
-        assertThat(status.getDisplayName()).isEqualTo(ownerDTO.getDisplayName());
+        assertThat(actual.getId()).isNotNull();
+        assertThat(actual.getCreated()).isNotNull();
+        assertThat(actual.getUpdated()).isNotNull();
+        assertThat(actual.getContentAccessMode()).isEqualTo(ownerDTO.getContentAccessMode());
+        assertThat(actual.getContentAccessModeList()).isEqualTo(ownerDTO.getContentAccessModeList());
+        assertThat(actual.getKey()).isEqualTo(ownerDTO.getKey());
+        assertThat(actual.getDisplayName()).isEqualTo(ownerDTO.getDisplayName());
     }
 
     @Test
@@ -149,6 +149,122 @@ public class OwnerResourceSpecTest {
 
         assertThat(actual)
             .returns(expectedOwner.getClaimed(), OwnerDTO::getClaimed);
+    }
+
+    @Test
+    public void shouldPopulateGeneratedFieldsWhenCreatingOwners() {
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        OwnerDTO output = this.owners.createOwner(Owners.random());
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getId())
+            .isNotNull()
+            .isNotBlank();
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isAfterOrEqualTo(output.getCreated())
+            .isBeforeOrEqualTo(post);
+    }
+
+    @Test
+    public void shouldUpdateGeneratedFieldsWhenUpdatingOwners() throws Exception {
+        OwnerDTO entity = this.owners.createOwner(Owners.random());
+
+        Thread.sleep(1100);
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        entity.setDisplayName(entity.getDisplayName() + "-update");
+        OwnerDTO output = this.owners.updateOwner(entity.getKey(), entity);
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isEqualTo(entity.getCreated())
+            .isBeforeOrEqualTo(init);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfter(output.getCreated())
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
+    }
+
+    @Test
+    public void shouldPopulateGeneratedFieldsWhenCreatingOwnerPools() {
+        OwnerDTO owner = this.owners.createOwner(Owners.random());
+        ProductDTO product = this.createProduct(owner);
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        PoolDTO output = this.owners.createPool(owner.getKey(), Pools.random(product));
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getId())
+            .isNotNull()
+            .isNotBlank();
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isAfterOrEqualTo(output.getCreated())
+            .isBeforeOrEqualTo(post);
+    }
+
+    // Techincally this test isn't necessary, since we know that by starting a second request to actually
+    // fetch the results, a new transaction has started and the previous one has been committed. But we're
+    // leaving this here for the sake of completion
+    @Test
+    public void shouldUpdateGeneratedFieldsWhenUpdatingOwnerPools() throws Exception {
+        OwnerDTO owner = this.owners.createOwner(Owners.random());
+        ProductDTO product = this.createProduct(owner);
+        PoolDTO entity = this.owners.createPool(owner.getKey(), Pools.random(product));
+
+        Thread.sleep(1100);
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        entity.setStartDate(entity.getStartDate().plusYears(1));
+        this.owners.updatePool(owner.getKey(), entity);
+
+        PoolDTO output = this.admin.pools().getPool(entity.getId(), null, null);
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isEqualTo(entity.getCreated())
+            .isBeforeOrEqualTo(init);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfter(output.getCreated())
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
     }
 
     @Test

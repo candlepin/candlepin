@@ -82,6 +82,60 @@ public class ConsumerResourceSpecTest {
     }
 
     @Test
+    public void shouldPopulateGeneratedFieldsWhenCreatingConsumers() {
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        ConsumerDTO output = this.adminClient.consumers().createConsumer(Consumers.random(this.owner));
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getId())
+            .isNotNull()
+            .isNotBlank();
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isAfterOrEqualTo(output.getCreated())
+            .isBeforeOrEqualTo(post);
+    }
+
+    @Test
+    public void shouldPopulateGeneratedFieldsWhenUpdatingConsumers() throws Exception {
+        ConsumerDTO entity = this.adminClient.consumers().createConsumer(Consumers.random(this.owner));
+
+        Thread.sleep(1100);
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        entity.setName(entity.getName() + "-update");
+        this.adminClient.consumers().updateConsumer(entity.getUuid(), entity);
+        ConsumerDTO output = this.adminClient.consumers().getConsumer(entity.getUuid());
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isEqualTo(entity.getCreated())
+            .isBeforeOrEqualTo(init);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfter(output.getCreated())
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
+    }
+
+    @Test
     public void shouldCreateGuestWhenUpdatingConsumerWithGuestIdObject() throws Exception {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         String expectedGuestId = StringUtil.random("guestId-");

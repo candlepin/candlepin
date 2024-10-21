@@ -20,6 +20,8 @@ import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.resource.server.v1.CertificateSerialApi;
 
+import com.google.inject.persist.Transactional;
+
 import javax.inject.Inject;
 
 
@@ -40,6 +42,7 @@ public class CertificateSerialResource implements CertificateSerialApi {
     }
 
     @Override
+    @Transactional
     public CertificateSerialDTO getCertificateSerial(Long serialId) {
         CertificateSerial serial = this.certificateSerialCurator.get(serialId);
         return this.translator.translate(serial, CertificateSerialDTO.class);

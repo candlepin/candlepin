@@ -51,7 +51,6 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<SC
      *
      * @return the {@link SCACertificate} for the provided consumer, or null if one does not exist
      */
-    @Transactional
     public SCACertificate getForConsumer(Consumer consumer) {
         log.debug("Retrieving content access certificate for consumer: {}",
             consumer == null ? "null" : consumer.getId());

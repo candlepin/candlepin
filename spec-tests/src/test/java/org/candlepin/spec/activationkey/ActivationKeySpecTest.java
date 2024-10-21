@@ -57,6 +57,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -210,6 +212,67 @@ public class ActivationKeySpecTest {
         return listRolesExcludingRoles(listRolesWithActivationKeyRead());
     }
 
+    @Test
+    public void shouldPopulateGeneratedFieldsWhenCreatingActivationKeys() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = this.createOwner(adminClient);
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        ActivationKeyDTO output = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getId())
+            .isNotNull()
+            .isNotBlank();
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isAfterOrEqualTo(output.getCreated())
+            .isBeforeOrEqualTo(post);
+    }
+
+    @Test
+    public void shouldUpdateGeneratedFieldsWhenUpdatingActivationKeys() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = this.createOwner(adminClient);
+
+        ActivationKeyDTO entity = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        Thread.sleep(1100);
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        entity.setName(entity.getName() + "-update");
+        ActivationKeyDTO output = adminClient.activationKeys().updateActivationKey(entity.getId(), entity);
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isEqualTo(entity.getCreated())
+            .isBeforeOrEqualTo(init);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfter(output.getCreated())
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
+    }
+
     @ParameterizedTest
     @MethodSource("listRolesWithActivationKeyRead")
     public void shouldAllowAuthorizedAccountsToReadActivationKeys(Permissions permission, String access) {
@@ -328,7 +391,7 @@ public class ActivationKeySpecTest {
     @ParameterizedTest
     @MethodSource("listRolesWithActivationKeyUpdateOrDelete")
     public void shouldAllowAuthorizedAccountsToAddProductsToActivationKeys(Permissions permission,
-        String access) {
+        String access) throws Exception {
 
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = createOwner(adminClient);
@@ -338,9 +401,14 @@ public class ActivationKeySpecTest {
 
         ApiClient userClient = this.createUserClient(owner, permission, access);
 
+        Thread.sleep(1100);
+
         // attempt update
         userClient.activationKeys()
             .addProductIdToKey(key.getId(), product.getId());
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
 
         // verify the modification
         ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
@@ -349,12 +417,21 @@ public class ActivationKeySpecTest {
             .extracting(ActivationKeyDTO::getProducts, as(collection(ActivationKeyProductDTO.class)))
             .singleElement()
             .returns(product.getId(), ActivationKeyProductDTO::getProductId);
+
+        // Verify that the last update time has changed as a result
+        assertThat(result.getCreated())
+            .isEqualTo(key.getCreated())
+            .isBefore(result.getUpdated());
+
+        assertThat(result.getUpdated())
+            .isAfter(key.getUpdated())
+            .isBeforeOrEqualTo(post);
     }
 
     @ParameterizedTest
     @MethodSource("listRolesWithActivationKeyUpdateOrDelete")
     public void shouldAllowAuthorizedAccountsToRemoveProductsFromActivationKeys(Permissions permission,
-        String access) {
+        String access) throws Exception {
 
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = createOwner(adminClient);
@@ -373,9 +450,14 @@ public class ActivationKeySpecTest {
 
         ApiClient userClient = this.createUserClient(owner, permission, access);
 
+        Thread.sleep(1100);
+
         // attempt update
         userClient.activationKeys()
             .removeProductIdFromKey(key.getId(), product.getId());
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
 
         // verify the modification
         ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
@@ -383,12 +465,55 @@ public class ActivationKeySpecTest {
             .isNotNull()
             .extracting(ActivationKeyDTO::getProducts, as(collection(ActivationKeyProductDTO.class)))
             .isEmpty();
+
+        // Verify that the last update time has changed as a result
+        assertThat(result.getCreated())
+            .isEqualTo(key.getCreated())
+            .isBefore(result.getUpdated());
+
+        assertThat(result.getUpdated())
+            .isAfter(key.getUpdated())
+            .isBeforeOrEqualTo(post);
+    }
+
+    @Test
+    public void shouldPopulateGeneratedFieldsWhenCreatingActivationKeyContentOverrides() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = this.createOwner(adminClient);
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        Thread.sleep(1100);
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        List<ContentOverrideDTO> overrides = adminClient.activationKeys()
+            .addActivationKeyContentOverrides(key.getId(), List.of(ContentOverrides.random()));
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(overrides)
+            .hasSize(1);
+
+        ContentOverrideDTO output = overrides.get(0);
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(output.getUpdated());
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfterOrEqualTo(output.getCreated())
+            .isBeforeOrEqualTo(post);
     }
 
     @ParameterizedTest
     @MethodSource("listRolesWithActivationKeyUpdateOrDelete")
     public void shouldAllowAuthorizedAccountsToAddContentOverridesToActivationKeys(Permissions permission,
-        String access) {
+        String access) throws Exception {
 
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = createOwner(adminClient);
@@ -398,9 +523,14 @@ public class ActivationKeySpecTest {
 
         ApiClient userClient = this.createUserClient(owner, permission, access);
 
+        Thread.sleep(1100);
+
         // attempt update
         userClient.activationKeys()
             .addActivationKeyContentOverrides(key.getId(), List.of(contentOverride));
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
 
         // verify the modification
         ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
@@ -411,12 +541,21 @@ public class ActivationKeySpecTest {
             .usingRecursiveComparison()
             .ignoringFields("created", "updated")
             .isEqualTo(contentOverride);
+
+        // Verify that the last update time has changed as a result
+        assertThat(result.getCreated())
+            .isEqualTo(key.getCreated())
+            .isBefore(result.getUpdated());
+
+        assertThat(result.getUpdated())
+            .isAfter(key.getUpdated())
+            .isBeforeOrEqualTo(post);
     }
 
     @ParameterizedTest
     @MethodSource("listRolesWithActivationKeyUpdateOrDelete")
     public void shouldAllowAuthorizedAccountsToRemoveContentOverridesFromActivationKeys(
-        Permissions permission, String access) {
+        Permissions permission, String access) throws Exception {
 
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = createOwner(adminClient);
@@ -437,9 +576,14 @@ public class ActivationKeySpecTest {
 
         ApiClient userClient = this.createUserClient(owner, permission, access);
 
+        Thread.sleep(1100);
+
         // attempt update
         userClient.activationKeys()
             .deleteActivationKeyContentOverrides(key.getId(), List.of(contentOverride));
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
 
         // verify the modification
         ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
@@ -447,6 +591,15 @@ public class ActivationKeySpecTest {
             .isNotNull()
             .extracting(ActivationKeyDTO::getContentOverrides, as(collection(ContentOverrideDTO.class)))
             .isEmpty();
+
+        // Verify that the last update time has changed as a result
+        assertThat(result.getCreated())
+            .isEqualTo(key.getCreated())
+            .isBefore(result.getUpdated());
+
+        assertThat(result.getUpdated())
+            .isAfter(key.getUpdated())
+            .isBeforeOrEqualTo(post);
     }
 
     @ParameterizedTest
@@ -651,7 +804,7 @@ public class ActivationKeySpecTest {
     @ParameterizedTest
     @MethodSource("listRolesWithActivationKeyUpdateOrDelete")
     public void shouldAllowAuthorizedAccountsToAddPoolsToActivationKeys(Permissions permission,
-        String access) {
+        String access) throws Exception {
 
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = createOwner(adminClient);
@@ -683,9 +836,14 @@ public class ActivationKeySpecTest {
 
         ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
 
+        Thread.sleep(1100);
+
         // attempt update
         userClient.activationKeys()
             .addPoolToKey(key.getId(), pool.getId(), null);
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
 
         // verify the modification
         ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
@@ -694,12 +852,21 @@ public class ActivationKeySpecTest {
             .extracting(ActivationKeyDTO::getPools, as(collection(ActivationKeyPoolDTO.class)))
             .singleElement()
             .returns(pool.getId(), ActivationKeyPoolDTO::getPoolId);
+
+        // Verify that the last update time has changed as a result
+        assertThat(result.getCreated())
+            .isEqualTo(key.getCreated())
+            .isBefore(result.getUpdated());
+
+        assertThat(result.getUpdated())
+            .isAfter(key.getUpdated())
+            .isBeforeOrEqualTo(post);
     }
 
     @ParameterizedTest
     @MethodSource("listRolesWithActivationKeyUpdateOrDelete")
     public void shouldAllowAuthorizedAccountsToRemovePoolsFromActivationKeys(Permissions permission,
-        String access) {
+        String access) throws Exception {
 
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = createOwner(adminClient);
@@ -740,9 +907,14 @@ public class ActivationKeySpecTest {
 
         ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
 
+        Thread.sleep(1100);
+
         // attempt update
         userClient.activationKeys()
             .removePoolFromKey(key.getId(), pool.getId());
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
 
         // verify the modification
         ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
@@ -750,6 +922,15 @@ public class ActivationKeySpecTest {
             .isNotNull()
             .extracting(ActivationKeyDTO::getPools, as(collection(ActivationKeyPoolDTO.class)))
             .isEmpty();
+
+        // Verify that the last update time has changed as a result
+        assertThat(result.getCreated())
+            .isEqualTo(key.getCreated())
+            .isBefore(result.getUpdated());
+
+        assertThat(result.getUpdated())
+            .isAfter(key.getUpdated())
+            .isBeforeOrEqualTo(post);
     }
 
     @ParameterizedTest

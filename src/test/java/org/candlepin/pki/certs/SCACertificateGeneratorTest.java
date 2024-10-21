@@ -54,7 +54,6 @@ import org.candlepin.pki.impl.Signer;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.TestUtil;
 import org.candlepin.test.X509HuffmanDecodeUtil;
-import org.candlepin.util.Transactional;
 import org.candlepin.util.X509V3ExtensionUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -167,7 +166,6 @@ class SCACertificateGeneratorTest {
     public void shouldCreateCertificate() {
         Owner owner = createOwner();
         Consumer consumer = createConsumer(owner);
-        mockTransactional();
         when(this.v3CapabilityCheck.isCertV3Capable(consumer)).thenReturn(true);
 
         SCACertificate result = this.generator.generate(consumer);
@@ -181,7 +179,6 @@ class SCACertificateGeneratorTest {
 
         List<String> expected = List.of("/" + owner.getKey());
 
-        this.mockTransactional();
         when(this.v3CapabilityCheck.isCertV3Capable(consumer))
             .thenReturn(true);
 
@@ -210,7 +207,6 @@ class SCACertificateGeneratorTest {
 
         List<String> expected = List.of("/" + owner.getKey() + "/" + env.getName());
 
-        this.mockTransactional();
         when(this.environmentCurator.getConsumerEnvironments(consumer))
             .thenReturn(List.of(env));
         when(this.v3CapabilityCheck.isCertV3Capable(consumer))
@@ -245,7 +241,6 @@ class SCACertificateGeneratorTest {
         List<String> expected = List.of(
             "/" + this.urlEncode(owner.getKey()) + "/" + this.urlEncode(env.getName()));
 
-        this.mockTransactional();
         when(this.environmentCurator.getConsumerEnvironments(consumer))
             .thenReturn(List.of(env));
         when(this.v3CapabilityCheck.isCertV3Capable(consumer))
@@ -294,7 +289,6 @@ class SCACertificateGeneratorTest {
             "/" + owner.getKey() + "/" + env2.getName(),
             "/" + owner.getKey() + "/" + env3.getName());
 
-        this.mockTransactional();
         when(this.environmentCurator.getConsumerEnvironments(consumer))
             .thenReturn(List.of(env1, env2, env3));
         when(this.v3CapabilityCheck.isCertV3Capable(consumer))
@@ -343,7 +337,6 @@ class SCACertificateGeneratorTest {
             ("/" + owner.getKey() + "/" + env2.getName()).replaceAll("/[\s/]*/", "/"),
             ("/" + owner.getKey() + "/" + env3.getName()).replaceAll("/[\s/]*/", "/"));
 
-        this.mockTransactional();
         when(this.environmentCurator.getConsumerEnvironments(consumer))
             .thenReturn(List.of(env1, env2, env3));
         when(this.v3CapabilityCheck.isCertV3Capable(consumer))
@@ -426,18 +419,6 @@ class SCACertificateGeneratorTest {
         consumer.addEnvironment(environment);
 
         return environment;
-    }
-
-    private void mockTransactional() {
-        Transactional transactional = mock(Transactional.class);
-        when(this.consumerCurator.transactional()).thenReturn(transactional);
-        when(transactional.allowExistingTransactions()).thenReturn(transactional);
-        when(transactional.onRollback(any(Transactional.Listener.class))).thenReturn(transactional);
-        when(transactional.execute(any(Transactional.Action.class))).thenAnswer(invocation -> {
-            Transactional.Action<SCACertificate> action =
-                (Transactional.Action<SCACertificate>) invocation.getArguments()[0];
-            return action.execute();
-        });
     }
 
 }

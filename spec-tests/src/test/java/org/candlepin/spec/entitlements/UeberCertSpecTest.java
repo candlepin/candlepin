@@ -42,6 +42,8 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -65,6 +67,34 @@ public class UeberCertSpecTest {
         ownerApi = client.owners();
         ownerProductApi = client.ownerProducts();
         ownerContentApi = client.ownerContent();
+    }
+
+    @Test
+    public void shouldPopulateGeneratedFieldsWhenCreatingUeberCertificates() {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        UeberCertificateDTO output = this.ownerApi.createUeberCertificate(owner.getKey());
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getId())
+            .isNotNull()
+            .isNotBlank();
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isAfterOrEqualTo(output.getCreated())
+            .isBeforeOrEqualTo(post);
     }
 
     @Test

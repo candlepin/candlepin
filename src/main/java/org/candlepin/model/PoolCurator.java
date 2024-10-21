@@ -88,7 +88,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param owner Owner to filter
      * @return pools owned by the given Owner.
      */
-    @Transactional
     public List<Pool> listByOwner(Owner owner) {
         return listByOwner(owner, null);
     }
@@ -99,7 +98,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param activeOn only include pools active on the given date.
      * @return pools owned by the given Owner.
      */
-    @Transactional
     public List<Pool> listByOwner(Owner owner, Date activeOn) {
         CriteriaBuilder cb = this.getEntityManager().getCriteriaBuilder();
         CriteriaQuery<Pool> query = cb.createQuery(this.entityType());
@@ -256,7 +254,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return
      *  a list of non-derived, expired pools no larger than the specified block size
      */
-    @Transactional
     public List<Pool> listExpiredPools(int blockSize) {
         EntityManager em = this.getEntityManager();
         CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -308,7 +305,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *
      * @return all the UUIDs for {@Link Consumer}s that are entitled to the provided pool ID
      */
-    @Transactional
     public List<String> listEntitledConsumerUuids(String poolId) {
         if (poolId == null || poolId.isBlank()) {
             return new ArrayList<>();
@@ -348,7 +344,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return a paged list of all the pools that fulfill the requirements provided by the
      *  {@link PoolQualifier}
      */
-    @Transactional
     public Page<List<Pool>> listAvailableEntitlementPools(PoolQualifier qualifier) {
         if (qualifier == null) {
             return emptyPage();
@@ -782,7 +777,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *        Set to null for current.
      * @return boolean is active on test date.
      */
-    @Transactional
     public boolean hasActiveEntitlementPools(String ownerId, Date date) {
         if (ownerId == null || ownerId.isBlank()) {
             return false;
@@ -858,7 +852,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return productsWithPools.containsAll(productIds);
     }
 
-    @Transactional
     public List<Pool> listPoolsRestrictedToUser(String username) {
         String jpql = """
             SELECT p FROM Pool p
@@ -895,7 +888,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param entitlementPool entitlement pool to search.
      * @return entitlements in the given pool.
      */
-    @Transactional
     public List<Entitlement> entitlementsIn(Pool entitlementPool) {
         String jpql = """
             SELECT e FROM Entitlement e

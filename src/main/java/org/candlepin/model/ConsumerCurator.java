@@ -205,8 +205,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         this.principalProvider = Objects.requireNonNull(principalProvider);
     }
 
-    @Transactional
     @Override
+    @Transactional
     public Consumer create(Consumer entity, boolean flush) {
         entity.ensureUUID();
         this.validateFacts(entity);
@@ -254,9 +254,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      *     consumer virt.uuid to find
      * @return Consumer whose name matches the given virt.uuid, null otherwise.
      */
-    @Transactional
     public Consumer findByVirtUuid(String uuid, String ownerId) {
-
         String jpql = """
             SELECT c FROM Consumer c JOIN c.facts f
             WHERE KEY(f) = 'virt.uuid'
@@ -352,7 +350,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      *     the username to use to find a consumer
      * @return Consumer for this user if one exists, null otherwise.
      */
-    @Transactional
     public Consumer findByUsername(String username) {
         ConsumerType person = consumerTypeCurator
             .getByLabel(ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
@@ -394,7 +391,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      *     Consumer UUID sought.
      * @return Consumer whose UUID matches the given value, or null otherwise.
      */
-    @Transactional
     public Consumer findByUuid(String uuid) {
         return getConsumer(uuid);
     }
@@ -565,8 +561,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Updates an existing consumer with the state specified by the given Consumer instance. If the
      * consumer has not yet been created, it will be created.
-     * <p>
-     * </p>
+     * <p></p>
      * <strong>Warning:</strong> Using an pre-existing and persisted Consumer entity as the update to
      * apply may cause issues, as Hibernate may opt to save changes to nested collections (facts,
      * guestIds, tags, etc.) when any other database operation is performed. To avoid this issue, it is
@@ -620,8 +615,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             existingConsumer.setUuid(updatedConsumer.getUuid());
         }
 
+        this.getEntityManager()
+            .persist(existingConsumer);
+
         if (flush) {
-            save(existingConsumer);
+            this.flush();
         }
 
         return existingConsumer;
@@ -833,7 +831,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      *     Id of org namespace to search
      * @return Consumer that matches the given
      */
-    @Transactional
     public Consumer getHypervisor(String hypervisorId, String ownerId) {
         String jpql = """
             SELECT c FROM Consumer c
@@ -853,7 +850,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
     }
 
-    @Transactional
     public Consumer getConsumerBySystemUuid(String ownerId, String systemUuid) {
         String jpql = """
                 SELECT c FROM Consumer c
@@ -1032,12 +1028,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .getResultList();
     }
 
-    @Transactional
     public List<Consumer> getHypervisorsBulk(String ownerId, Collection<String> hypervisorIds) {
         return this.getHypervisorsBulk(ownerId, hypervisorIds, null);
     }
 
-    @Transactional
     public List<Consumer> getHypervisorsBulk(String ownerId, Collection<String> hypervisorIds,
         PageRequest pageRequest) {
         if (hypervisorIds == null || hypervisorIds.isEmpty()) {
@@ -1079,7 +1073,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return query.getResultList();
     }
 
-    @Transactional
     public Integer countHypervisorsBulk(String ownerId, Collection<String> hypervisorIds) {
         if (hypervisorIds == null || hypervisorIds.isEmpty()) {
             return 0;
@@ -1099,7 +1092,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return getEntityManager().createQuery(jpql, Long.class)
             .setParameter("ownerId", ownerId)
             .setParameter("lowerCaseHypervisorIds", lowerCaseHypervisorIds)
-            .getSingleResult().intValue();
+            .getSingleResult()
+            .intValue();
     }
 
     private static List<String> toLowerCase(Collection<String> hypervisorIds) {
@@ -1110,12 +1104,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .toList();
     }
 
-    @Transactional
     public List<Consumer> getHypervisorsForOwner(String ownerId) {
         return getHypervisorsForOwner(ownerId, null);
     }
 
-    @Transactional
     public List<Consumer> getHypervisorsForOwner(String ownerId, PageRequest pageRequest) {
         CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
         CriteriaQuery<Consumer> criteriaQuery = criteriaBuilder.createQuery(Consumer.class);
@@ -1153,7 +1145,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return query.getResultList();
     }
 
-    @Transactional
     public int countHypervisorsForOwner(String ownerId) {
         String jpql = """
             SELECT COUNT(c) FROM Consumer c
@@ -1163,7 +1154,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return this.getEntityManager()
             .createQuery(jpql, Long.class)
             .setParameter("ownerId", ownerId)
-            .getSingleResult().intValue();
+            .getSingleResult()
+            .intValue();
     }
 
     public boolean doesConsumerExist(String uuid) {
