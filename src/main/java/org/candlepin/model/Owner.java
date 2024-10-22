@@ -23,6 +23,8 @@ import org.candlepin.util.Util;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.NaturalId;
 import org.slf4j.event.Level;
@@ -52,6 +54,7 @@ import javax.validation.constraints.Size;
  */
 @Entity
 @Table(name = Owner.DB_TABLE)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Owner extends AbstractHibernateObject<Owner>
     implements Serializable, Linkable, Owned, Named, Eventful, OwnerInfo {
 
