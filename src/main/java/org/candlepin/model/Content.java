@@ -21,6 +21,8 @@ import org.candlepin.util.Util;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
@@ -48,6 +50,7 @@ import javax.validation.constraints.Size;
  */
 @Entity
 @Table(name = Content.DB_TABLE)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Content extends AbstractHibernateObject implements SharedEntity, Cloneable, ContentInfo {
 
     /** Name of the table backing this object in the database */
@@ -128,6 +131,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @CollectionTable(name = "cp_content_required_products", joinColumns = @JoinColumn(name = "content_uuid"))
     @Column(name = "product_id")
     @Size(max = 255)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<String> modifiedProductIds;
 
     @Column(nullable = true)

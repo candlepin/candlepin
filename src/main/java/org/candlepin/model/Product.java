@@ -23,6 +23,8 @@ import org.candlepin.util.Util;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Fetch;
@@ -75,6 +77,7 @@ import javax.validation.constraints.Size;
  */
 @Entity
 @Table(name = Product.DB_TABLE)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Product extends AbstractHibernateObject implements SharedEntity, Linkable, Cloneable, Eventful,
     ProductInfo {
 
@@ -211,12 +214,14 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @Column(name = "value")
     @Cascade({ CascadeType.ALL })
     @Fetch(FetchMode.SUBSELECT)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Map<String, String> attributes;
 
     @OneToMany(mappedBy = "product", orphanRemoval = true)
     @BatchSize(size = 32)
     @Cascade({ CascadeType.ALL })
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<ProductContent> productContent;
 
     /*
@@ -229,11 +234,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @Column(name = "product_id")
     @BatchSize(size = 32)
     @LazyCollection(LazyCollectionOption.FALSE)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<String> dependentProductIds;
 
     @OneToMany(mappedBy = "product", orphanRemoval = true)
     @Cascade({ CascadeType.ALL })
     @BatchSize(size = 1000)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Branding> branding;
 
     @ManyToMany
@@ -241,6 +248,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         joinColumns = {@JoinColumn(name = "product_uuid", insertable = false, updatable = false)},
         inverseJoinColumns = {@JoinColumn(name = "provided_product_uuid")})
     @BatchSize(size = 1000)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Product> providedProducts;
 
     @ManyToOne
