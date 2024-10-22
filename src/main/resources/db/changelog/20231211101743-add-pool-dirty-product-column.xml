@@ -15,7 +15,7 @@
     <changeSet id="20231211101743-1" author="crog">
         <preConditions onFail="MARK_RAN">
             <not>
-                <columnExists tableName="cp_pool" columnName="dirtyProduct"/>
+                <columnExists tableName="cp_pool" columnName="dirty_product"/>
             </not>
         </preConditions>
 
