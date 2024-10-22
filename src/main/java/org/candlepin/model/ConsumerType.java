@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
@@ -34,6 +36,7 @@ import javax.validation.constraints.Size;
  */
 @Entity
 @Table(name = ConsumerType.DB_TABLE)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
 
     /** Name of the table backing this object in the database */
