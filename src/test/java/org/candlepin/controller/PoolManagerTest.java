@@ -748,8 +748,8 @@ public class PoolManagerTest {
         Product product = TestUtil.createProduct();
 
         Subscription sub = TestUtil.createSubscription(owner, product);
-        Branding b1 = new Branding(null, "8000", "Branded Awesome OS", "OS");
-        Branding b2 = new Branding(null, "8001", "Branded Awesome OS 2", "OS");
+        Branding b1 = new Branding("8000", "Branded Awesome OS", "OS");
+        Branding b2 = new Branding("8001", "Branded Awesome OS 2", "OS");
         product.addBranding(b1);
         product.addBranding(b2);
 

@@ -99,10 +99,7 @@ public class EntityMapper {
             return null;
         }
 
-        return new Branding()
-            .setName(bdto.getName())
-            .setProductId(bdto.getProductId())
-            .setType(bdto.getType());
+        return new Branding(bdto.getProductId(), bdto.getName(), bdto.getType());
     }
 
     private Content mergeContentData(ContentDTO cdto) {

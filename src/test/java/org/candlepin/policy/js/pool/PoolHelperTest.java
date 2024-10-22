@@ -36,7 +36,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -227,14 +226,17 @@ public class PoolHelperTest {
 
     @Test
     public void clonePoolTest() {
+        Branding branding = new Branding("id", "name", "type");
+
         Product product = TestUtil.createProduct();
-        Product product2 = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct()
+            .addBranding(branding);
+
         Map<String, String> attributes = new HashMap<>();
         for (int i = 0; i < 3; i++) {
             attributes.put("a" + i, "b" + i);
         }
-        Branding branding = new Branding(null, "id", "name", "type");
-        product2.setBranding(Arrays.asList(branding));
+
         Pool pool = TestUtil.createPool(owner, product);
         String quant = "unlimited";
         Pool clone = PoolHelper.clonePool(pool, product2, quant, attributes, "TaylorSwift",
@@ -250,8 +252,7 @@ public class PoolHelperTest {
         assertEquals(pool.getSourceSubscription().getSubscriptionId(), clone.getSubscriptionId());
         assertEquals(pool.getSourceSubscription().getSubscriptionId(),
             clone.getSourceSubscription().getSubscriptionId());
-        assertEquals("TaylorSwift",
-            clone.getSourceSubscription().getSubscriptionSubKey());
+        assertEquals("TaylorSwift", clone.getSourceSubscription().getSubscriptionSubKey());
 
         assertEquals(1, clone.getProduct().getBranding().size());
         Branding brandingClone = clone.getProduct().getBranding().iterator().next();

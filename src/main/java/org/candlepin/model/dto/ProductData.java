@@ -958,7 +958,7 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
         }
 
         // This is a DTO; we don't want references to Product model entities.
-        branding.setProduct(null);
+        branding = new Branding(branding.getProductId(), branding.getName(), branding.getType());
         return this.branding.add(branding);
     }
 
@@ -1093,17 +1093,7 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
             copy.setProvidedProducts(null);
         }
 
-        Collection<Branding> srcBranding = this.getBranding();
-        if (srcBranding != null) {
-            Set<Branding> destBranding = srcBranding.stream()
-                .map(dto -> dto.clone())
-                .collect(Collectors.toSet());
-
-            copy.setBranding(destBranding);
-        }
-        else {
-            copy.setBranding(null);
-        }
+        copy.setBranding(this.getBranding());
 
         return copy;
     }

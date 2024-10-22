@@ -37,7 +37,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
@@ -83,17 +82,15 @@ public class ProductTest {
             new ProductContent(content[5], true)
         );
 
-        Set<Branding> brandings1 = Stream.of(
-            new Branding(null, "eng_prod_id_1", "eng_prod_name_1", "OS"),
-            new Branding(null, "eng_prod_id_2", "eng_prod_name_2", "OS"),
-            new Branding(null, "eng_prod_id_3", "eng_prod_name_3", "OS")
-        ).collect(Collectors.toSet());
+        Set<Branding> brandings1 = Set.of(
+            new Branding("eng_prod_id_1", "eng_prod_name_1", "OS"),
+            new Branding("eng_prod_id_2", "eng_prod_name_2", "OS"),
+            new Branding("eng_prod_id_3", "eng_prod_name_3", "OS"));
 
-        Set<Branding> brandings2 = Stream.of(
-            new Branding(null, "eng_prod_id_4", "eng_prod_name_4", "OS"),
-            new Branding(null, "eng_prod_id_5", "eng_prod_name_5", "OS"),
-            new Branding(null, "eng_prod_id_6", "eng_prod_name_6", "OS")
-        ).collect(Collectors.toSet());
+        Set<Branding> brandings2 = Set.of(
+            new Branding("eng_prod_id_4", "eng_prod_name_4", "OS"),
+            new Branding("eng_prod_id_5", "eng_prod_name_5", "OS"),
+            new Branding("eng_prod_id_6", "eng_prod_name_6", "OS"));
 
         Set<Product> provProducts1 = Set.of(
             new Product("prov_prod-1", "prov_prod-1", "var1", "ver1", "arch1", "type1").setUuid("pp_uuid-1"),

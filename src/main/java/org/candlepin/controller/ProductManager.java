@@ -730,21 +730,14 @@ public class ProductManager {
     private static void applyBrandingChanges(Product entity, ProductInfo update) {
         Collection<? extends BrandingInfo> branding = update.getBranding();
         if (branding != null) {
-            Set<Branding> resolved = new HashSet<>();
+            Function<BrandingInfo, Branding> converter = (binfo) -> {
+                return new Branding(entity, binfo.getProductId(), binfo.getName(), binfo.getType());
+            };
 
-            if (!branding.isEmpty()) {
-                for (BrandingInfo binfo : branding) {
-                    if (binfo == null) {
-                        continue;
-                    }
-
-                    resolved.add(new Branding(
-                        entity,
-                        binfo.getProductId(),
-                        binfo.getName(),
-                        binfo.getType()));
-                }
-            }
+            List<Branding> resolved = branding.stream()
+                .filter(Objects::nonNull)
+                .map(converter)
+                .toList();
 
             entity.setBranding(resolved);
         }

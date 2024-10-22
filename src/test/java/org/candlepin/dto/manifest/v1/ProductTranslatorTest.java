@@ -80,7 +80,7 @@ public class ProductTranslatorTest extends
         }
 
         IntStream.rangeClosed(1, 3)
-            .forEach(i -> source.addBranding(TestUtil.createProductBranding(source)));
+            .forEach(i -> source.addBranding(TestUtil.createBranding("b" + 1, "brand" + 1)));
 
         source.setDerivedProduct(this.generateChildProduct(0));
 
@@ -115,7 +115,7 @@ public class ProductTranslatorTest extends
         }
 
         IntStream.rangeClosed(1, 3)
-            .forEach(i -> child.addBranding(TestUtil.createProductBranding(child)));
+            .forEach(i -> child.addBranding(TestUtil.createBranding("b" + 1, "brand" + 1)));
 
         return child;
     }

@@ -22,14 +22,11 @@ import org.candlepin.util.Util;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +37,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -53,6 +49,7 @@ import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -75,6 +72,7 @@ import javax.validation.constraints.Size;
  */
 @Entity
 @Table(name = Product.DB_TABLE)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Product extends AbstractHibernateObject implements SharedEntity, Linkable, Cloneable, Eventful,
     ProductInfo {
 
@@ -204,43 +202,35 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @Column
     private Long multiplier;
 
-    @ElementCollection
-    @BatchSize(size = 32)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "cp_product_attributes", joinColumns = @JoinColumn(name = "product_uuid"))
     @MapKeyColumn(name = "name")
     @Column(name = "value")
     @Cascade({ CascadeType.ALL })
-    @Fetch(FetchMode.SUBSELECT)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Map<String, String> attributes;
 
-    @OneToMany(mappedBy = "product", orphanRemoval = true)
-    @BatchSize(size = 32)
+    @OneToMany(mappedBy = "product", orphanRemoval = true, fetch = FetchType.LAZY)
     @Cascade({ CascadeType.ALL })
-    @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<ProductContent> productContent;
 
-    /*
-     * hibernate persists empty set as null, and tries to fetch
-     * dependentProductIds upon a fetch when we lazy load. to fix this, we eager
-     * fetch.
-     */
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "cp_product_dependent_products", joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "product_id")
-    @BatchSize(size = 32)
-    @LazyCollection(LazyCollectionOption.FALSE)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<String> dependentProductIds;
 
-    @OneToMany(mappedBy = "product", orphanRemoval = true)
+    @OneToMany(mappedBy = "product", orphanRemoval = true, fetch = FetchType.LAZY)
     @Cascade({ CascadeType.ALL })
-    @BatchSize(size = 1000)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Branding> branding;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "cp_product_provided_products",
-        joinColumns = {@JoinColumn(name = "product_uuid", insertable = false, updatable = false)},
+        joinColumns = @JoinColumn(name = "product_uuid"),
         inverseJoinColumns = {@JoinColumn(name = "provided_product_uuid")})
-    @BatchSize(size = 1000)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Product> providedProducts;
 
     @ManyToOne
@@ -691,13 +681,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     /**
-     * Retrieves a collection of branding for this product. If the brandings have not
-     * yet been defined, this method returns an empty collection.
+     * Retrieves the set of branding for this product. If the brandings have not yet been defined, this
+     * method returns an empty set.
      *
      * @return
      *  the brandings of this product
      */
-    public Collection<Branding> getBranding() {
+    public Set<Branding> getBranding() {
         return new SetView<>(branding);
     }
 
@@ -735,13 +725,17 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return
      *  true if the branding was added successfully; false otherwise
      */
-    public boolean addBranding(Branding branding) {
+    public Product addBranding(Branding branding) {
         if (branding == null) {
             throw new IllegalArgumentException("branding is null");
         }
 
-        branding.setProduct(this);
-        return this.branding.add(branding);
+        Branding brand = new Branding(this, branding.getProductId(), branding.getName(), branding.getType());
+
+        this.branding.remove(brand);
+        this.branding.add(brand);
+
+        return this;
     }
 
     /**
@@ -762,23 +756,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             throw new IllegalArgumentException("branding is null");
         }
 
-        if (branding.getId() == null) {
-            throw new IllegalArgumentException("branding id is null");
-        }
-
-        boolean changed = false;
-
-        for (Iterator<Branding> biterator = this.branding.iterator(); biterator.hasNext();) {
-            Branding existing = biterator.next();
-            if (existing.equals(branding)) {
-                existing.setProduct(null);
-                biterator.remove();
-
-                changed = true;
-            }
-        }
-
-        return changed;
+        return this.branding.remove(branding);
     }
 
     public List<String> getSkuEnabledContentIds() {

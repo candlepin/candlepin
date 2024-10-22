@@ -207,7 +207,7 @@ public class ContentResource implements ContentApi {
 
     @Override
     public ContentDTO getContentByUuid(String contentUuid) {
-        Content content = this.contentCurator.getByUuid(contentUuid);
+        Content content = this.contentCurator.get(contentUuid);
 
         if (content == null) {
             throw new NotFoundException(
