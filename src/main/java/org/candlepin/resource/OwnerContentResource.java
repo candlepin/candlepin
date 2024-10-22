@@ -34,8 +34,6 @@ import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.model.ContentInfo;
-import org.candlepin.util.BatchSpliterator;
-import org.candlepin.util.Util;
 
 import com.google.inject.persist.Transactional;
 
@@ -43,14 +41,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 import javax.persistence.LockModeType;
@@ -230,83 +224,6 @@ public class OwnerContentResource implements OwnerContentApi {
         return this.contentManager.createContent(owner, cinfo);
     }
 
-    /**
-     * Translates the collection of content elements to content DTOs, fetching lazily loaded fields in
-     * bulk.
-     *
-     * @param source
-     *  the source collection of content objects to translate
-     *
-     * @return
-     *  a list of translated content DTOs, or null if the given collection was null
-     */
-    private List<ContentDTO> translate(Collection<Content> source) {
-        // Impl note:
-        // This behavior should eventually be moved to the translators, and the translator framework updated
-        // to support bulk translations and generally stuff added after Java 8. However, doing so is a
-        // much larger task than fixing this particular translation has far more concerns in terms of
-        // both scope and design.
-
-        if (source == null) {
-            return null;
-        }
-
-        List<String> cuuids = source.stream()
-            .filter(Objects::nonNull)
-            .map(Content::getUuid)
-            .filter(Objects::nonNull)
-            .toList();
-
-        Map<String, Set<String>> requiredProductsMap = this.contentCurator.getRequiredProductIds(cuuids);
-
-        Function<Content, ContentDTO> translator = content -> new ContentDTO()
-            .uuid(content.getUuid())
-            .id(content.getId())
-            .type(content.getType())
-            .label(content.getLabel())
-            .name(content.getName())
-            .created(Util.toDateTime(content.getCreated()))
-            .updated(Util.toDateTime(content.getUpdated()))
-            .vendor(content.getVendor())
-            .contentUrl(content.getContentUrl())
-            .requiredTags(content.getRequiredTags())
-            .releaseVer(content.getReleaseVersion())
-            .gpgUrl(content.getGpgUrl())
-            .metadataExpire(content.getMetadataExpiration())
-            .modifiedProductIds(requiredProductsMap.getOrDefault(content.getUuid(), Set.of()))
-            .arches(content.getArches());
-
-        return source.stream()
-            .filter(Objects::nonNull)
-            .map(translator)
-            .toList();
-    }
-
-    /**
-     * Translates the stream of content elements to content DTOs, fetching lazily loaded fields in
-     * bulk.
-     *
-     * @param source
-     *  the source stream of content objects to translate
-     *
-     * @return
-     *  a stream of translated content DTOs, or null if the given stream was null
-     */
-    private Stream<ContentDTO> translate(Stream<Content> source) {
-        if (source == null) {
-            return null;
-        }
-
-        // TODO: If this behavior doesn't make it into the Java API, add it ourselves with a custom Stream
-        // implementation somehow
-        int batchSize = this.contentCurator.getInBlockSize();
-        BatchSpliterator<Content> spliterator = new BatchSpliterator<>(source.spliterator(), batchSize);
-
-        return StreamSupport.stream(spliterator, source.isParallel())
-            .map(this::translate)
-            .flatMap(Collection::stream);
-    }
-
     @Override
     @Transactional
     public Stream<ContentDTO> createContentBatch(String ownerKey, List<ContentDTO> contents) {
@@ -372,10 +289,9 @@ public class OwnerContentResource implements OwnerContentApi {
             .setActive(activeInc)
             .setCustom(customInc);
 
-        Stream<Content> content = this.pagingUtilFactory.forClass(Content.class)
-            .applyPaging(queryBuilder);
-
-        return this.translate(content);
+        return this.pagingUtilFactory.forClass(Content.class)
+            .applyPaging(queryBuilder)
+            .map(this.translator.getStreamMapper(Content.class, ContentDTO.class));
     }
 
     @Override
