@@ -1212,6 +1212,46 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return existingUuids;
     }
 
+    /**
+     * Determines if any of the provided {@link Consumer} UUIDs do not exist or do not belong to the provided
+     * {@link Owner}.
+     *
+     * @param consumerUuids
+     *  the consumer UUIDs to check
+     *
+     * @param ownerKey
+     *  the key of the owner that should own the consumers
+     *
+     * @return all of the provided consumer UUIDs that do not exist or do not belong to the provided owner
+     */
+    public Set<String> getNonExistentConsumerUuids(Collection<String> consumerUuids, String ownerKey) {
+        if (consumerUuids == null || consumerUuids.isEmpty() || ownerKey == null || ownerKey.isBlank()) {
+            return new HashSet<>();
+        }
+
+        String jpql = "SELECT c.uuid " +
+            "FROM Consumer c " +
+            "JOIN Owner o on o.id = c.ownerId " +
+            "WHERE c.uuid IN (:uuids) and o.key = :ownerKey";
+
+        Query query = getEntityManager()
+            .createQuery(jpql, String.class)
+            .setParameter("ownerKey", ownerKey);
+
+        Set<String> uniqueConsumerUuids = new HashSet<>(consumerUuids);
+        Set<String> existingUuids = new HashSet<>();
+        for (List<String> block : partition(uniqueConsumerUuids)) {
+            List<String> result = query.setParameter("uuids", block)
+                .getResultList();
+
+            existingUuids.addAll(result);
+        }
+
+        uniqueConsumerUuids.removeAll(existingUuids);
+
+        return uniqueConsumerUuids;
+    }
+
     public Consumer verifyAndLookupConsumer(String consumerUuid) {
         Consumer consumer = this.findByUuid(consumerUuid);
 

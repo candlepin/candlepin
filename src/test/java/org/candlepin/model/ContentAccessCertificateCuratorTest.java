@@ -22,6 +22,8 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.util.List;
 
@@ -292,6 +294,59 @@ public class ContentAccessCertificateCuratorTest extends DatabaseTestFixture {
             .extractingResultOf("serial")
             .containsExactlyInAnyOrder(cert1.getSerial().getSerial().longValue(),
                 cert2.getSerial().getSerial().longValue());
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void testGetIdsForConsumersWithNullOrEmptyConsumerUuids(List<String> consumerUuids) {
+        List<String> actual = caCertCurator.getIdsForConsumers(consumerUuids);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetIdsForConsumers() {
+        Owner owner1 = createOwner();
+        Owner owner2 = createOwner();
+        Owner owner3 = createOwner();
+
+        Consumer consumer1 = createConsumer(owner1);
+        Consumer consumer2 = createConsumer(owner1);
+        Consumer consumer3 = createConsumer(owner2);
+        Consumer consumer4 = createConsumer(owner3);
+
+        SCACertificate cert1 = createSCACertAndSerial(consumer1);
+        SCACertificate cert2 = createSCACertAndSerial(consumer2);
+        SCACertificate cert3 = createSCACertAndSerial(consumer3);
+        SCACertificate cert4 = createSCACertAndSerial(consumer4);
+
+        consumer1.setContentAccessCert(cert1);
+        consumer2.setContentAccessCert(cert2);
+        consumer3.setContentAccessCert(cert3);
+        consumer4.setContentAccessCert(cert4);
+
+        List<String> actual = caCertCurator
+            .getIdsForConsumers(List.of(consumer1.getUuid(), consumer3.getUuid()));
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyElementsOf(List.of(cert1.getId(), cert3.getId()));
+    }
+
+    private SCACertificate createSCACertAndSerial(Consumer consumer) {
+        CertificateSerial serial = new CertificateSerial();
+        serial.setExpiration(TestUtil.createDateOffset(0, 0, 7));
+        certSerialCurator.save(serial);
+
+        SCACertificate cert = new SCACertificate();
+        cert.setConsumer(consumer);
+        cert.setKey(TestUtil.randomString());
+        cert.setCert(TestUtil.randomString());
+        cert.setSerial(serial);
+
+        return caCertCurator.create(cert);
     }
 
     private List<SCACertificate> getSCACertificatesFromDB() {

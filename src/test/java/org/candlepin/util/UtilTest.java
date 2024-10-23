@@ -39,6 +39,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 
@@ -658,4 +659,33 @@ public class UtilTest {
         }
     }
 
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void testContainsDuplicateOrNullWithNullOrEmptyCollection(List<String> collection) {
+        assertFalse(Util.containsDuplicateOrNull(collection));
+    }
+
+    @Test
+    public void testContainsDuplicateOrNullWithNullValue() {
+        List<String> collection = new ArrayList<>();
+        collection.add("a");
+        collection.add("b");
+        collection.add(null);
+
+        assertTrue(Util.containsDuplicateOrNull(collection));
+    }
+
+    @Test
+    public void testContainsDuplicateOrNullWithDuplicate() {
+        List<String> collection = List.of("a", "b", "a", "c");
+
+        assertTrue(Util.containsDuplicateOrNull(collection));
+    }
+
+    @Test
+    public void testContainsDuplicateOrNullWithNoDuplicateOrNull() {
+        List<String> collection = List.of("a", "b", "c", "d");
+
+        assertFalse(Util.containsDuplicateOrNull(collection));
+    }
 }
