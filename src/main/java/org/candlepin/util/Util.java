@@ -702,4 +702,33 @@ public class Util {
         return value == null || Boolean.FALSE.equals(value);
     }
 
+    /**
+     * Checks the provided collection for any duplicate object or null values. Object comparisons are done
+     * using the object's <code>equals</code> implementation.
+     *
+     * @param <T>
+     *  the type of objects to check
+     *
+     * @param collection
+     *  the items to check for duplicates or null values
+     *
+     * @return true if there is a duplicate in the provided collection or a null value, false otherwise
+     */
+    public static <T> boolean containsDuplicateOrNull(Collection<T> collection) {
+        if (collection == null || collection.isEmpty()) {
+            return false;
+        }
+
+        Set<T> objects = new HashSet<>();
+        for (T obj : collection) {
+            if (obj == null || objects.contains(obj)) {
+                return true;
+            }
+
+            objects.add(obj);
+        }
+
+        return false;
+    }
+
 }

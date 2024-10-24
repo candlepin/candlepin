@@ -24,6 +24,8 @@ import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.controller.ConsumerManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.MethodLocator;
@@ -41,6 +43,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.xnap.commons.i18n.I18n;
 
 import java.lang.reflect.Method;
 import java.util.Date;
@@ -62,6 +65,12 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
     private EventAdapter mockEventAdapter;
     @Mock
     private ObjectMapper objectMapper;
+    @Mock
+    private ContentAccessCertificateCurator caCertCurator;
+    @Mock
+    private EnvironmentCurator envCurator;
+    @Mock
+    private I18n i18n;
 
     private ConsumerCheckInFilter interceptor;
     private MockHttpRequest mockReq;
@@ -92,8 +101,9 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
         MethodLocator methodLocator = new MethodLocator(injector);
         methodLocator.init();
         AnnotationLocator annotationLocator = new AnnotationLocator(methodLocator);
+
         ConsumerManager consumerManager = new ConsumerManager(
-            consumerCurator, mockEventAdapter, objectMapper);
+            consumerCurator, caCertCurator, envCurator, mockEventAdapter, objectMapper, i18n);
         interceptor = new ConsumerCheckInFilter(annotationLocator, consumerManager);
     }
 

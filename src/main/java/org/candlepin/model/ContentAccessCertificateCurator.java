@@ -219,4 +219,28 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<SC
         return serials;
     }
 
+    /**
+     * Retrieves all of the content access certificate IDs for all of the provided {@link Consumer}s.
+     *
+     * @param consumerUuids
+     *  the UUIDs of the consumers to retrieve the certificate IDs for
+     *
+     * @return the content access certificate IDs for all of the provided consumers
+     */
+    public List<String> getIdsForConsumers(Collection<String> consumerUuids) {
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String jpql = "SELECT c.contentAccessCert.id FROM Consumer c WHERE c.uuid IN (:uuids)";
+        Query query = entityManager.get().createQuery(jpql, String.class);
+
+        List<String> uuids = new ArrayList<>(consumerUuids.size());
+        for (Collection<String> uuidBlock : this.partition(consumerUuids)) {
+            uuids.addAll(query.setParameter("uuids", uuidBlock).getResultList());
+        }
+
+        return uuids;
+    }
+
 }
