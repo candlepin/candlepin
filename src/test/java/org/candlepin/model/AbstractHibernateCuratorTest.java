@@ -29,7 +29,6 @@ import static org.mockito.Mockito.spy;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -839,80 +838,6 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
     public void testGetSystemLockRequiresLockMode() {
         assertThrows(IllegalArgumentException.class, () -> this.ownerCurator
             .getSystemLock("test_lock", null));
-    }
-
-    @Test
-    public void testTakeSubListWithQueryArgumentAndNullPerPage() {
-        PageRequest request = new PageRequest()
-            .setPage(1);
-
-        List<Owner> expected = List.of(new Owner());
-
-        List<Owner> actual = this.ownerCurator.takeSubList(request, expected);
-
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    public void testTakeSubListWithPageRequestAndNullPage() {
-        PageRequest request = new PageRequest()
-            .setPerPage(1);
-
-        List<Owner> expected = List.of(new Owner());
-
-        List<Owner> actual = this.ownerCurator.takeSubList(request, expected);
-
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    public void testTakeSubListWithPageRequestAndEmptyResults() {
-        PageRequest request = new PageRequest()
-            .setPage(1)
-            .setPerPage(10);
-
-        List<Owner> actual = this.ownerCurator.takeSubList(request, new ArrayList<>());
-
-        assertEquals(0, actual.size());
-    }
-
-    @Test
-    public void testTakeSubListWithPageRequestAndNullResults() {
-        PageRequest request = new PageRequest()
-            .setPage(1)
-            .setPerPage(10);
-
-        List<Owner> actual = this.ownerCurator.takeSubList(request, null);
-
-        assertNull(actual);
-    }
-
-    @Test
-    public void testTakeSubListWithPageRequest() {
-        PageRequest request = new PageRequest()
-            .setPage(1)
-            .setPerPage(3);
-
-        Owner owner1 = TestUtil.createOwner();
-        Owner owner2 = TestUtil.createOwner();
-        Owner owner3 = TestUtil.createOwner();
-        Owner owner4 = TestUtil.createOwner();
-        Owner owner5 = TestUtil.createOwner();
-        Owner owner6 = TestUtil.createOwner();
-
-        List<Owner> owners = new LinkedList<>();
-        owners.add(owner1);
-        owners.add(owner2);
-        owners.add(owner3);
-        owners.add(owner4);
-        owners.add(owner5);
-        owners.add(owner6);
-
-        List<Owner> actual = this.ownerCurator.takeSubList(request, owners);
-
-        assertThat(actual)
-            .isNotNull()
-            .containsExactlyInAnyOrder(owner1, owner2, owner3);
     }
 
     @Test

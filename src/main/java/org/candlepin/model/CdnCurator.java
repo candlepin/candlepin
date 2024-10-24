@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.persist.Transactional;
 
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
@@ -64,7 +63,6 @@ public class CdnCurator extends AbstractHibernateCurator<Cdn> {
         save(cdn);
     }
 
-    @Transactional
     public void delete(Cdn toDelete) {
         getEntityManager().remove(toDelete);
     }

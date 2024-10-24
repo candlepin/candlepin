@@ -97,6 +97,7 @@ public class HypervisorResource implements HypervisorsApi {
     }
 
     @Override
+    @Transactional
     @UpdateConsumerCheckIn
     @SuppressWarnings("checkstyle:indentation")
     public AsyncJobStatusDTO hypervisorUpdateAsync(
@@ -181,8 +182,12 @@ public class HypervisorResource implements HypervisorsApi {
         withIds.setGuestIds(guestIds);
 
         GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(withIds, consumer);
+
+        // TODO: FIXME: Stop calling into consumer resource to do this work. Move common work to some
+        // consumer service/controller or something.
         boolean guestIdsUpdated = consumerResource.performConsumerUpdates(
             this.translator.translate(withIds, ConsumerDTO.class), consumer, guestMigration);
+
         if (guestIdsUpdated) {
             if (guestMigration.isMigrationPending()) {
                 guestMigration.migrate();
@@ -191,6 +196,7 @@ public class HypervisorResource implements HypervisorsApi {
                 consumerCurator.update(consumer);
             }
         }
+
         return guestIdsUpdated;
     }
 

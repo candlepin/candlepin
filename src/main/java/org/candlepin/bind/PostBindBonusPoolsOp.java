@@ -117,8 +117,7 @@ public class PostBindBonusPoolsOp implements BindOperation {
 
     @Override
     public boolean execute(BindContext context) {
-
-        poolCurator.mergeAll(subPoolsForStackIds, false);
+        this.poolCurator.updateAll(subPoolsForStackIds, false, false);
         this.poolOpProcessor.process(poolOperations);
 
         return true;

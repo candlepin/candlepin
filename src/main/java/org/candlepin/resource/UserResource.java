@@ -32,6 +32,8 @@ import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
 
+import com.google.inject.persist.Transactional;
+
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
@@ -94,6 +96,7 @@ public class UserResource implements UsersApi {
     }
 
     @Override
+    @Transactional
     public Stream<UserDTO> listUsers() {
         Collection<? extends UserInfo> users = userService.listUsers();
 
@@ -103,6 +106,7 @@ public class UserResource implements UsersApi {
     }
 
     @Override
+    @Transactional
     public UserDTO getUserInfo(@Verify(User.class) String username) {
         return this.modelTranslator.translate(this.fetchUserByUsername(username), UserDTO.class);
     }
@@ -112,6 +116,7 @@ public class UserResource implements UsersApi {
      * full view of a role, use /roles/ instead.
      */
     @Override
+    @Transactional
     public Stream<RoleDTO> getUserRoles(@Verify(User.class) String username) {
         UserInfo user = this.fetchUserByUsername(username);
 
@@ -131,6 +136,7 @@ public class UserResource implements UsersApi {
     }
 
     @Override
+    @Transactional
     public UserDTO createUser(UserDTO dto) {
         if (dto == null) {
             throw new BadRequestException(this.i18n.tr("user data is null or empty"));
@@ -151,6 +157,7 @@ public class UserResource implements UsersApi {
     }
 
     @Override
+    @Transactional
     public UserDTO updateUser(@Verify(User.class) String username, UserDTO dto) {
 
         // We don't actually need the user, but we do this for quick verification and better error
@@ -163,6 +170,7 @@ public class UserResource implements UsersApi {
     }
 
     @Override
+    @Transactional
     public void deleteUser(String username) {
         UserInfo user = this.fetchUserByUsername(username);
         userService.deleteUser(username);
@@ -178,6 +186,7 @@ public class UserResource implements UsersApi {
      */
     // TODO: should probably accept access level and sub-resource query params someday
     @Override
+    @Transactional
     public Stream<OwnerDTO> listUserOwners(@Verify(User.class) String username) {
 
         // Fetch the user for a simple existence check. We don't actually need it.

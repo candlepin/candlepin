@@ -183,6 +183,7 @@ public class EnvironmentResource implements EnvironmentApi {
     }
 
     @Override
+    @Transactional
     public EnvironmentDTO getEnvironment(@Verify(Environment.class) String envId) {
         Environment environment = this.lookupEnvironment(envId);
 
@@ -461,8 +462,8 @@ public class EnvironmentResource implements EnvironmentApi {
     }
 
     @Override
-    @SecurityHole(activationKey = true)
     @Transactional
+    @SecurityHole(activationKey = true)
     public ConsumerDTO createConsumerInEnvironment(String envId, ConsumerDTO consumer,
         String userName, String activationKeys) throws BadRequestException {
 
@@ -494,6 +495,7 @@ public class EnvironmentResource implements EnvironmentApi {
     }
 
     @Override
+    @Transactional
     public Stream<ContentOverrideDTO> getEnvironmentContentOverrides(
         @Verify(Environment.class) String environmentId) {
 
@@ -505,6 +507,7 @@ public class EnvironmentResource implements EnvironmentApi {
     }
 
     @Override
+    @Transactional
     public Stream<ContentOverrideDTO> putEnvironmentContentOverrides(
         @Verify(Environment.class) String environmentId,
         List<ContentOverrideDTO> contentOverrideDTOs) {
@@ -565,6 +568,7 @@ public class EnvironmentResource implements EnvironmentApi {
     }
 
     @Override
+    @Transactional
     public Stream<ContentOverrideDTO> deleteEnvironmentContentOverrides(
         @Verify(Environment.class) String environmentId,
         List<ContentOverrideDTO> contentOverrideDTOs) {

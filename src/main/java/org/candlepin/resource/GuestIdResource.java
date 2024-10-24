@@ -39,6 +39,8 @@ import org.candlepin.paging.PagingUtilFactory;
 import org.candlepin.resource.server.v1.GuestIdsApi;
 import org.candlepin.resource.util.GuestMigration;
 
+import com.google.inject.persist.Transactional;
+
 import org.xnap.commons.i18n.I18n;
 
 import java.util.HashSet;
@@ -49,6 +51,8 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+
+
 
 public class GuestIdResource implements GuestIdsApi {
 
@@ -92,6 +96,7 @@ public class GuestIdResource implements GuestIdsApi {
     }
 
     @Override
+    @Transactional
     public void updateGuest(
         @Verify(Consumer.class) String consumerUuid, String guestId, GuestIdDTO updatedDTO) {
 
@@ -130,6 +135,7 @@ public class GuestIdResource implements GuestIdsApi {
     }
 
     @Override
+    @Transactional
     public void deleteGuest(@Verify(Consumer.class) String consumerUuid, String guestId, Boolean unregister) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         GuestId toDelete = validateGuestId(guestIdCurator.findByConsumerAndId(consumer, guestId), guestId);
@@ -144,6 +150,7 @@ public class GuestIdResource implements GuestIdsApi {
     }
 
     @Override
+    @Transactional
     @RootResource.LinkedResource
     public Stream<GuestIdDTOArrayElement> getGuestIds(@Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
@@ -158,6 +165,7 @@ public class GuestIdResource implements GuestIdsApi {
     }
 
     @Override
+    @Transactional
     public GuestIdDTO getGuestId(@Verify(Consumer.class) String consumerUuid, String guestId) {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
         GuestId result = validateGuestId(
@@ -166,6 +174,7 @@ public class GuestIdResource implements GuestIdsApi {
     }
 
     @Override
+    @Transactional
     public void updateGuests(@Verify(Consumer.class) String consumerUuid, List<GuestIdDTO> guestIdDTOs) {
         Consumer toUpdate = consumerCurator.findByUuid(consumerUuid);
 
@@ -181,8 +190,10 @@ public class GuestIdResource implements GuestIdsApi {
             toUpdate.getOwnerId(), allGuestIds);
 
         GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(consumer, toUpdate);
-        if (consumerResource.performConsumerUpdates(consumer, toUpdate, guestMigration)) {
 
+        // TODO: FIXME: Stop calling into consumer resource to do this work. Move common work to some
+        // consumer service/controller or something.
+        if (consumerResource.performConsumerUpdates(consumer, toUpdate, guestMigration)) {
             if (guestMigration.isMigrationPending()) {
                 guestMigration.migrate();
             }
@@ -228,7 +239,7 @@ public class GuestIdResource implements GuestIdsApi {
      * @throws IllegalArgumentException
      *  if either entity or dto are null
      */
-    protected void populateEntity(GuestId guestId, GuestIdDTO dto) {
+    private void populateEntity(GuestId guestId, GuestIdDTO dto) {
         if (guestId == null) {
             throw new IllegalArgumentException("the guestId model entity is null");
         }

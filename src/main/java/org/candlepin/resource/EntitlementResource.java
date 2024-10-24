@@ -117,6 +117,7 @@ public class EntitlementResource implements EntitlementsApi {
     }
 
     @Override
+    @Transactional
     public EntitlementDTO hasEntitlement(String consumerUuid, String productId) {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
         verifyExistence(consumer, consumerUuid);
@@ -142,6 +143,7 @@ public class EntitlementResource implements EntitlementsApi {
     }
 
     @Override
+    @Transactional
     public List<EntitlementDTO> listAllForConsumer(
         String consumerUuid,
         String matches,
@@ -180,6 +182,7 @@ public class EntitlementResource implements EntitlementsApi {
     }
 
     @Override
+    @Transactional
     public EntitlementDTO getEntitlement(@Verify(Entitlement.class) String entitlementId) {
         Entitlement entitlement = entitlementCurator.get(entitlementId);
 
@@ -197,6 +200,7 @@ public class EntitlementResource implements EntitlementsApi {
     }
 
     @Override
+    @Transactional
     public void updateEntitlement(@Verify(Entitlement.class) String id, EntitlementDTO update) {
         // Verify entitlement exists:
         Entitlement entitlement = entitlementCurator.get(id);
@@ -226,6 +230,7 @@ public class EntitlementResource implements EntitlementsApi {
      * Will also @Produces(MediaType.APPLICATION_JSON)", value = "getUpstreamCert"
      */
     @Override
+    @Transactional
     public String getUpstreamCert(String entitlementId) {
         Entitlement ent = entitlementCurator.get(entitlementId);
         if (ent == null) {
@@ -259,6 +264,7 @@ public class EntitlementResource implements EntitlementsApi {
     }
 
     @Override
+    @Transactional
     public void unbind(String dbid) {
         Entitlement toDelete = entitlementCurator.get(dbid);
         if (toDelete != null) {
@@ -270,6 +276,7 @@ public class EntitlementResource implements EntitlementsApi {
     }
 
     @Override
+    @Transactional
     public AsyncJobStatusDTO regenerateEntitlementCertificatesForProduct(
         String productId, Boolean lazyRegen) {
 
@@ -287,8 +294,8 @@ public class EntitlementResource implements EntitlementsApi {
         return this.translator.translate(status, AsyncJobStatusDTO.class);
     }
 
-    @Transactional
     @Override
+    @Transactional
     public Response migrateEntitlement(@Verify(Entitlement.class) String id,
         @Verify(Consumer.class) String uuid, Integer quantity) {
         // confirm entitlement

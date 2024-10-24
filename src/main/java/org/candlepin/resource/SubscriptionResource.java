@@ -33,6 +33,8 @@ import org.candlepin.model.Pool;
 import org.candlepin.resource.server.v1.SubscriptionApi;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
+import com.google.inject.persist.Transactional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -79,6 +81,7 @@ public class SubscriptionResource implements SubscriptionApi {
     }
 
     @Override
+    @Transactional
     public Stream<SubscriptionDTO> getSubscriptions() {
         return this.poolManager.getPrimaryPools()
             .stream()
@@ -86,6 +89,7 @@ public class SubscriptionResource implements SubscriptionApi {
     }
 
     @Override
+    @Transactional
     public Response activateSubscription(@Verify(Consumer.class) String consumerUuid, String email,
         String emailLocale) {
 
@@ -119,6 +123,7 @@ public class SubscriptionResource implements SubscriptionApi {
     }
 
     @Override
+    @Transactional
     public void deleteSubscription(String subscriptionId) {
 
         Set<Owner> owners = new HashSet<>();

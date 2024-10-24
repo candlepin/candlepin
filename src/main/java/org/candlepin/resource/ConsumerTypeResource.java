@@ -22,6 +22,8 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.resource.server.v1.ConsumerTypeApi;
 
+import com.google.inject.persist.Transactional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -62,7 +64,7 @@ public class ConsumerTypeResource implements ConsumerTypeApi {
      * @throws IllegalArgumentException
      *  if either entity or dto are null
      */
-    protected void populateEntity(ConsumerType entity, ConsumerTypeDTO dto) {
+    private void populateEntity(ConsumerType entity, ConsumerTypeDTO dto) {
         if (entity == null) {
             throw new IllegalArgumentException("entity is null");
         }
@@ -84,6 +86,7 @@ public class ConsumerTypeResource implements ConsumerTypeApi {
      * {@InheritDoc}
      */
     @Override
+    @Transactional
     public Stream<ConsumerTypeDTO> getConsumerTypes() {
         return this.consumerTypeCurator.listAll()
             .stream()
@@ -94,6 +97,7 @@ public class ConsumerTypeResource implements ConsumerTypeApi {
      * {@InheritDoc}
      */
     @Override
+    @Transactional
     public ConsumerTypeDTO getConsumerType(String id) {
         ConsumerType type = consumerTypeCurator.get(id);
 
@@ -108,6 +112,7 @@ public class ConsumerTypeResource implements ConsumerTypeApi {
      * {@InheritDoc}
      */
     @Override
+    @Transactional
     public ConsumerTypeDTO createConsumerType(ConsumerTypeDTO dto) {
         try {
             ConsumerType type = new ConsumerType();
@@ -126,6 +131,7 @@ public class ConsumerTypeResource implements ConsumerTypeApi {
      * {@InheritDoc}
      */
     @Override
+    @Transactional
     public ConsumerTypeDTO updateConsumerType(String id, ConsumerTypeDTO dto) {
         ConsumerType type = consumerTypeCurator.get(id);
 
@@ -142,6 +148,7 @@ public class ConsumerTypeResource implements ConsumerTypeApi {
      * {@InheritDoc}
      */
     @Override
+    @Transactional
     public void deleteConsumerType(String id) {
         ConsumerType type = consumerTypeCurator.get(id);
 

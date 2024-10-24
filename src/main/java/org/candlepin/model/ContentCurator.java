@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.persist.Transactional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -511,8 +509,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
 
     // Needs an override due to the use of UUID as db identifier.
     @Override
-    @Transactional
-    public void delete(Content entity) {
+        public void delete(Content entity) {
         Content toDelete = this.get(entity.getUuid());
         this.getEntityManager().remove(toDelete);
     }
@@ -528,7 +525,6 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
      *  the Content instance for the content with the specified UUID or null if no matching content
      *  was found.
      */
-    @Transactional
     public Content getByUuid(String uuid) {
         String jpql = "SELECT c FROM Content c WHERE c.uuid = :uuid";
 

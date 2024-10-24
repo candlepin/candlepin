@@ -104,6 +104,7 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
     }
 
     @Override
+    @Transactional
     @SecurityHole(noAuth = true)
     public Response cloudAuthorize(CloudRegistrationDTO cloudRegistrationDTO, Integer version) {
         if (cloudRegistrationDTO == null) {
@@ -176,8 +177,8 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
      * @param cloudAccountId
      */
     @Override
+    @Transactional
     public List<String> cancelCloudAccountJobs(String cloudAccountId) {
-
         if (cloudAccountId == null || cloudAccountId.isBlank()) {
             throw new BadRequestException(this.i18n.tr("Cloud account ID is null or empty"));
         }

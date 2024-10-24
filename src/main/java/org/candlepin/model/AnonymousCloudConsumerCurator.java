@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.persist.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -177,7 +176,6 @@ public class AnonymousCloudConsumerCurator extends AbstractHibernateCurator<Anon
      *     certificate ids to be unlinked
      * @return the number of unlinked anonymous consumers
      */
-    @Transactional
     public int unlinkAnonymousCertificates(Collection<String> certIds) {
         if (certIds == null || certIds.isEmpty()) {
             return 0;

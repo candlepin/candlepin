@@ -158,7 +158,10 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
 
     @Transactional
     public void resetToRpmRules() {
-        this.getEntityManager().createQuery("DELETE FROM Rules").executeUpdate();
+        this.getEntityManager()
+            .createQuery("DELETE FROM Rules")
+            .executeUpdate();
+
         this.create(rulesFromFile(DEFAULT_RULES_FILE));
     }
 
