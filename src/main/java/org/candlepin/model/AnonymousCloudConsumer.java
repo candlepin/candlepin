@@ -55,7 +55,7 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     /** Max length for a value in the cloud instance ID field */
     public static final int CLOUD_INSTANCE_ID_MAX_LENGTH = 170;
     /** Max length for a value in the cloud offering ID field */
-    public static final int CLOUD_OFFERING_ID_MAX_LENGTH = 170;
+    public static final int CLOUD_OFFERING_ID_MAX_LENGTH = 255;
     /** Max length for a value in the cloud provider shortname field */
     public static final int CLOUD_PROVIDER_MAX_LENGTH = 15;
 
@@ -181,17 +181,45 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     }
 
     /**
-     * @return the cloud offering ID for this anonymous cloud consumer
+     * Retrieves the cloud offering ID for this anonymous cloud consumer.
+     *
+     * For 3P (third-party) offering IDs, this will always return a single offering ID.
+     * For 1P (first-party) offering IDs, this can return either a single offering ID
+     * or a comma-separated list of multiple offering IDs, depending on the cloud provider.
+     *
+     * @return the cloud offering ID or a comma-separated list of IDs for this anonymous cloud consumer
      */
     public String getCloudOfferingId() {
         return this.cloudOfferingId;
     }
 
     /**
-     * @param cloudOfferingId
-     *  the cloud offering ID to set
+     * Sets the cloud offering ID for this anonymous cloud consumer.
+     *
+     * For 3P (third-party) offering IDs, only a single offering ID should be provided.
+     * For 1P (first-party) offering IDs, either a single offering ID or a comma-separated
+     * list of offering IDs can be provided.
+     * The cloudOfferingId cannot exceed {@value #CLOUD_OFFERING_ID_MAX_LENGTH} characters.
+     *
+     * Example usage:
+     * <pre>
+     *     // Setting a single 3P offering ID
+     *     anonymousCloudConsumer.setCloudOfferingId("3P-offering-123");
+     *
+     *     // Setting a single 1P offering ID
+     *     anonymousCloudConsumer.setCloudOfferingId("1P-offering-456");
+     *
+     *     // Setting multiple 1P offering IDs (comma-separated)
+     *     anonymousCloudConsumer.setCloudOfferingId("1P-offering-789,1P-offering-101,1P-offering-112");
+     * </pre>
+     *
+     * @param cloudOfferingId the cloud offering ID or comma-separated list of IDs to set.
+     *                        It must be non-null and within the maximum length of
+     *                        {@value #CLOUD_OFFERING_ID_MAX_LENGTH} characters.
      *
      * @return a reference to this AnonymousCloudConsumer instance
+     *
+     * @throws IllegalArgumentException if the provided cloudOfferingId is null or exceeds the maximum length.
      */
     public AnonymousCloudConsumer setCloudOfferingId(String cloudOfferingId) {
         if (cloudOfferingId == null) {
