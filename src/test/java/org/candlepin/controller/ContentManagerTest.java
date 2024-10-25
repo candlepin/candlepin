@@ -14,6 +14,7 @@
  */
 package org.candlepin.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -231,41 +232,31 @@ public class ContentManagerTest extends DatabaseTestFixture {
     @Test
     public void testUpdateContentThatDoesntExist() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Content content = TestUtil.createContent("c1", "content-1");
+        Content content = TestUtil.createContent("c1", "content-1")
+            .setNamespace(owner.getKey());
         Content update = TestUtil.createContent("c1", "new_name");
 
-        assertThrows(IllegalStateException.class,
+        Throwable throwable = assertThrows(IllegalStateException.class,
             () -> this.contentManager.updateContent(owner, content, update, false));
+
+        assertThat(throwable.getMessage())
+            .isNotNull()
+            .isEqualTo("content is not a managed entity");
     }
 
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(strings = {"false", "true"})
-    public void testRemoveContent(boolean regenCerts) {
+    @Test
+    public void testRemoveContent() {
         Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
         Content content = TestUtil.createContent("c1", "content-1")
             .setNamespace(owner.getKey());
         content = this.createContent(content);
 
-        Product product = new Product("p1", "product-1");
-        product.addContent(content, true);
-        this.createProduct(product);
-
         assertNotNull(content.getUuid());
         assertNotNull(this.contentCurator.get(content.getUuid()));
 
-        this.contentManager.removeContent(owner, content, regenCerts);
+        this.contentManager.removeContent(owner, content);
 
         assertNull(this.contentCurator.get(content.getUuid()));
-
-        if (regenCerts) {
-            verify(this.mockEntCertService, times(1)).regenerateCertificatesOf(
-                argThat(new CollectionContentMatcher<Owner>(owner)),
-                argThat(new CollectionContentMatcher<Product>(product)),
-                eq(true));
-        }
-        else {
-            verifyNoInteractions(this.mockEntCertService);
-        }
     }
 
     @Test
@@ -273,8 +264,58 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Content content = TestUtil.createContent("c1", "content-1");
 
-        assertThrows(IllegalStateException.class,
-            () -> this.contentManager.removeContent(owner, content, true));
+        Throwable throwable = assertThrows(IllegalStateException.class,
+            () -> this.contentManager.removeContent(owner, content));
+
+        assertThat(throwable.getMessage())
+            .isNotNull()
+            .isEqualTo("content is not a managed entity");
+    }
+
+    @Test
+    public void testRemoveContentWontRemoveContentHavingASingleParentProducts() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Content content = TestUtil.createContent("c1", "content-1")
+            .setNamespace(owner.getKey());
+        this.contentCurator.create(content);
+
+        Product parent = this.createProduct().addContent(content, true);
+        this.productCurator.merge(parent);
+
+        Throwable throwable = assertThrows(IllegalStateException.class,
+            () -> this.contentManager.removeContent(owner, content));
+
+        assertThat(throwable.getMessage())
+            .isNotNull()
+            .contains("Content is referenced by one or more parent products");
+
+        // Verify the content was not removed
+        assertNotNull(this.contentCurator.get(content.getUuid()));
+    }
+
+    @Test
+    public void testRemoveContentWontRemoveContentHavingMultipleParentProducts() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Content content = TestUtil.createContent("c1", "content-1")
+            .setNamespace(owner.getKey());
+        this.contentCurator.create(content);
+
+        Product parent1 = this.createProduct().addContent(content, true);
+        this.productCurator.merge(parent1);
+        Product parent2 = this.createProduct().addContent(content, false);
+        this.productCurator.merge(parent2);
+        Product parent3 = this.createProduct().addContent(content, true);
+        this.productCurator.merge(parent3);
+
+        Throwable throwable = assertThrows(IllegalStateException.class,
+            () -> this.contentManager.removeContent(owner, content));
+
+        assertThat(throwable.getMessage())
+            .isNotNull()
+            .contains("Content is referenced by one or more parent products");
+
+        // Verify the content was not removed
+        assertNotNull(this.contentCurator.get(content.getUuid()));
     }
 
     protected static Stream<Arguments> equalityTestParameterProvider() {

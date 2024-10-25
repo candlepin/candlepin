@@ -966,7 +966,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         this.productCurator.create(product);
         this.poolCurator.create(pool);
 
-        assertTrue(productCurator.productHasSubscriptions(owner, product));
+        assertTrue(this.productCurator.productHasParentSubscriptions(product));
     }
 
     @Test
@@ -999,9 +999,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         this.poolCurator.create(pool);
 
-        assertFalse(productCurator.productHasSubscriptions(owner, providedProduct));
-        assertFalse(productCurator.productHasSubscriptions(owner, derivedProduct));
-        assertFalse(productCurator.productHasSubscriptions(owner, derivedProvidedProduct));
+        assertFalse(this.productCurator.productHasParentSubscriptions(providedProduct));
+        assertFalse(this.productCurator.productHasParentSubscriptions(derivedProduct));
+        assertFalse(this.productCurator.productHasParentSubscriptions(derivedProvidedProduct));
     }
 
     @Test
@@ -1009,7 +1009,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Owner owner = this.createOwner();
 
         Product noSub = this.createProduct("p1", "p1");
-        assertFalse(productCurator.productHasSubscriptions(owner, noSub));
+        assertFalse(this.productCurator.productHasParentSubscriptions(noSub));
     }
 
     @Test
@@ -1364,6 +1364,70 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         assertNotNull(refreshed);
         assertEquals(attributes, refreshed.getAttributes());
+    }
+
+    @Test
+    public void testProductHasParentProductsWithoutParentProduct() {
+        Product product = this.createProduct();
+
+        assertFalse(this.productCurator.productHasParentProducts(product));
+    }
+
+    @Test
+    public void testProductHasParentProductsAsDerivedProduct() {
+        Product product = this.createProduct();
+
+        Product parent = this.createProduct().setDerivedProduct(product);
+        this.productCurator.merge(parent);
+
+        assertTrue(this.productCurator.productHasParentProducts(product));
+    }
+
+    @Test
+    public void testProductHasParentProductsAsProvidedProduct() {
+        Product product = this.createProduct();
+
+        Product parent = this.createProduct();
+        parent.addProvidedProduct(product);
+        this.productCurator.merge(parent);
+
+        assertTrue(this.productCurator.productHasParentProducts(product));
+    }
+
+    @Test
+    public void testProductHasParentProductsWithMixedLinkage() {
+        Product product = this.createProduct();
+
+        Product parent1 = this.createProduct();
+        parent1.addProvidedProduct(product);
+        this.productCurator.merge(parent1);
+
+        Product parent2 = this.createProduct();
+        parent2.addProvidedProduct(product);
+        this.productCurator.merge(parent2);
+
+        Product parent3 = this.createProduct().setDerivedProduct(product);
+        this.productCurator.merge(parent3);
+        Product parent4 = this.createProduct().setDerivedProduct(product);
+        this.productCurator.merge(parent4);
+
+        assertTrue(this.productCurator.productHasParentProducts(product));
+    }
+
+    @Test
+    public void testProductHasParentProductsWithNullContent() {
+        assertFalse(this.productCurator.productHasParentProducts(null));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { "test_uuid" })
+    public void testProductHasParentProductsWithUnmanagedProduct(String uuid) {
+        Product product = new Product()
+            .setUuid(uuid);
+
+        // This should not throw an exception or otherwise fail
+        assertFalse(this.productCurator.productHasParentProducts(product));
     }
 
 }

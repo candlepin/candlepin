@@ -149,6 +149,9 @@ public class ContentManager {
      * @throws IllegalArgumentException
      *  if the owner, target content, or content data is null
      *
+     * @throws IllegalStateException
+     *  if the given content instance is not an existing, managed entity
+     *
      * @return
      *  the updated content instance
      */
@@ -159,6 +162,10 @@ public class ContentManager {
 
         if (cinfo == null) {
             throw new IllegalArgumentException("cinfo is null");
+        }
+
+        if (!this.contentCurator.getEntityManager().contains(content)) {
+            throw new IllegalStateException("content is not a managed entity");
         }
 
         String namespace = content.getNamespace();
@@ -194,8 +201,8 @@ public class ContentManager {
     }
 
     /**
-     * Removes the specified content from its namespace, optionally regenerating certificates of
-     * entitlements for any products affected by the removal of the content.
+     * Removes the specified unreferenced content from its namespace. If the content is still in use by
+     * one or more products, this method throws an exception.
      *
      * @param owner
      *  the organization removing the content
@@ -203,22 +210,32 @@ public class ContentManager {
      * @param content
      *  the content to remove
      *
-     * @param regenCerts
-     *  whether or not to regenerate certificates of entitlements for any products affected by the
-     *  removal of the content
-     *
      * @throws IllegalArgumentException
      *  if the owner, or the target content is null
      *
      * @throws IllegalStateException
-     *  if the content is not in the namespace of the given organization
+     *  if the given content instance is not an existing, managed entity, is not in the namespace of the
+     *  given organization, or the content is still in use by one or more products
      *
      * @return
      *  the removed content entity
      */
-    public Content removeContent(Owner owner, Content content, boolean regenCerts) {
+    public Content removeContent(Owner owner, Content content) {
         if (owner == null) {
             throw new IllegalArgumentException("owner is null");
+        }
+
+        if (content == null) {
+            throw new IllegalArgumentException("content is null");
+        }
+
+        if (!this.contentCurator.getEntityManager().contains(content)) {
+            throw new IllegalStateException("content is not a managed entity");
+        }
+
+        if (this.contentCurator.contentHasParentProducts(content)) {
+            throw new IllegalStateException("Content is referenced by one or more parent products: " +
+                content);
         }
 
         String namespace = content.getNamespace();
@@ -227,11 +244,6 @@ public class ContentManager {
         if (namespace == null || !namespace.equals(owner.getKey())) {
             throw new IllegalStateException("content namespace does not match org's namespace");
         }
-
-        // Grab our list of affected products *before* we go modifying the links
-        List<Product> affectedProducts = regenCerts ?
-            this.productCurator.getProductsReferencingContent(content.getUuid()) :
-            List.of();
 
         // Future fun time: What happens if namespaces are no longer 1:1 with org? Answer: We'll get
         // indeterministic behavior with this removal.
@@ -244,14 +256,6 @@ public class ContentManager {
 
         log.debug("Synchronizing last content update for org: {}", owner);
         this.contentAccessManager.syncOwnerLastContentUpdate(owner);
-
-        if (!affectedProducts.isEmpty()) {
-            log.debug("Flagging entitlement certificates of {} affected product(s) for regeneration",
-                affectedProducts.size());
-
-            this.entitlementCertificateService
-                .regenerateCertificatesOf(List.of(owner), affectedProducts, true);
-        }
 
         return content;
     }

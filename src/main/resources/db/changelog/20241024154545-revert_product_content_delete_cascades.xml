@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <!--
+        Removes the delete cascades and delete nulls added as QoL to allow deleting children without having
+        to manually unlink them from parents first. While this worked fine for what it did, it directly
+        interferes with Hibernate's ability to keep L2 cache in sync, and Hibernate does not provide tools
+        to manually resync the cache without also violating transaction isolation.
+    -->
+
+    <changeSet id="20241024154545-1" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyTableName="cp_products" foreignKeyName="cp_products_fk1" />
+        </preConditions>
+
+        <dropForeignKeyConstraint baseTableName="cp_products" constraintName="cp_products_fk1"/>
+    </changeSet>
+
+    <changeSet id="20241024154545-2" author="crog">
+        <addForeignKeyConstraint baseTableName="cp_products"
+            baseColumnNames="derived_product_uuid"
+            constraintName="cp_products_fk1"
+            referencedTableName="cp_products"
+            referencedColumnNames="uuid"/>
+    </changeSet>
+
+    <changeSet id="20241024154545-3" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyTableName="cp_product_provided_products"
+                foreignKeyName="cp_product_provided_products_fk2" />
+        </preConditions>
+
+        <dropForeignKeyConstraint baseTableName="cp_product_provided_products"
+            constraintName="cp_product_provided_products_fk2"/>
+    </changeSet>
+
+    <changeSet id="20241024154545-4" author="crog">
+        <addForeignKeyConstraint baseTableName="cp_product_provided_products"
+            baseColumnNames="provided_product_uuid"
+            constraintName="cp_product_provided_products_fk2"
+            referencedTableName="cp_products"
+            referencedColumnNames="uuid"/>
+    </changeSet>
+
+    <changeSet id="20241024154545-5" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyTableName="cp_product_contents"
+                foreignKeyName="cp_product_contents_fk2" />
+        </preConditions>
+
+        <dropForeignKeyConstraint baseTableName="cp_product_contents"
+            constraintName="cp_product_contents_fk2"/>
+    </changeSet>
+
+    <changeSet id="20241024154545-6" author="crog">
+        <addForeignKeyConstraint baseTableName="cp_product_contents"
+            baseColumnNames="content_uuid"
+            constraintName="cp_product_contents_fk2"
+            referencedTableName="cp_contents"
+            referencedColumnNames="uuid"/>
+    </changeSet>
+
+</databaseChangeLog>

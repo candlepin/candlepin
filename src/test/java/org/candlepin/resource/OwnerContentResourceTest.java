@@ -253,6 +253,14 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testUpdateContentThrowsExceptionWhenOwnerDoesNotExist() {
+        ContentDTO cdto = TestUtil.createContentDTO("test_content");
+
+        assertThrows(NotFoundException.class, () -> this.buildResource()
+            .updateContent("fake_owner_key", cdto.getId(), cdto));
+    }
+
+    @Test
     public void testRemoveContent() {
         Owner owner = this.createOwner("test_owner");
         Content content = TestUtil.createContent("test_content", "test_content")
@@ -266,6 +274,30 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
 
         assertNull(this.contentCurator.getContentById(owner.getKey(), content.getId()));
         assertNull(this.contentCurator.get(content.getUuid()));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    public void testRemoveContentCannotRemoveContentWithParentProducts(boolean enabled) {
+        Owner owner = this.createOwner("test_org");
+
+        Content content = TestUtil.createContent("c1", "content1")
+            .setNamespace(owner.getKey());
+
+        Product parent = TestUtil.createProduct("parent", "parent")
+            .addContent(content, enabled);
+
+        this.contentCurator.create(content);
+        this.productCurator.create(parent);
+
+        Throwable throwable = assertThrows(BadRequestException.class,
+            () -> this.buildResource().removeContent(owner.getKey(), content.getId()));
+
+        assertThat(throwable.getMessage())
+            .isNotNull()
+            .contains("referenced by one or more products");
+
+        assertNotNull(this.contentCurator.getContentById(owner.getKey(), content.getId()));
     }
 
     @Test
@@ -294,19 +326,11 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void deleteContentWithNonExistentContent() {
+    public void testRemoveContentWithNonExistentContent() {
         Owner owner = this.createOwner("test_owner");
 
         assertThrows(NotFoundException.class, () -> this.buildResource()
             .removeContent(owner.getKey(), "test_content"));
-    }
-
-    @Test
-    public void testUpdateContentThrowsExceptionWhenOwnerDoesNotExist() {
-        ContentDTO cdto = TestUtil.createContentDTO("test_content");
-
-        assertThrows(NotFoundException.class, () -> this.buildResource()
-            .updateContent("fake_owner_key", cdto.getId(), cdto));
     }
 
     /**

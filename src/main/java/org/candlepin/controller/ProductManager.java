@@ -17,11 +17,7 @@ package org.candlepin.controller;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
-import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
-import org.candlepin.model.PoolQualifier;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
@@ -36,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -64,20 +59,17 @@ public class ProductManager {
 
     private final ContentAccessManager contentAccessManager;
     private final EntitlementCertificateService entitlementCertService;
-    private final PoolCurator poolCurator;
     private final ProductCurator productCurator;
     private final ContentCurator contentCurator;
     private final ActivationKeyCurator activationKeyCurator;
 
     @Inject
     public ProductManager(ContentAccessManager contentAccessManager,
-        EntitlementCertificateService entitlementCertService, PoolCurator poolCurator,
-        ProductCurator productCurator, ContentCurator contentCurator,
-        ActivationKeyCurator activationKeyCurator) {
+        EntitlementCertificateService entitlementCertService, ProductCurator productCurator,
+        ContentCurator contentCurator, ActivationKeyCurator activationKeyCurator) {
 
         this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
         this.entitlementCertService = Objects.requireNonNull(entitlementCertService);
-        this.poolCurator = Objects.requireNonNull(poolCurator);
         this.productCurator = Objects.requireNonNull(productCurator);
         this.contentCurator = Objects.requireNonNull(contentCurator);
         this.activationKeyCurator = Objects.requireNonNull(activationKeyCurator);
@@ -284,6 +276,9 @@ public class ProductManager {
      * @throws IllegalArgumentException
      *  if the owner, target product, or product data is null
      *
+     * @throws IllegalStateException
+     *  if the given product instance is not an existing, managed entity
+     *
      * @return
      *  the updated product instance
      */
@@ -294,6 +289,10 @@ public class ProductManager {
 
         if (pinfo == null) {
             throw new IllegalArgumentException("pinfo is null");
+        }
+
+        if (!this.productCurator.getEntityManager().contains(product)) {
+            throw new IllegalStateException("product is not a managed entity");
         }
 
         String namespace = product.getNamespace();
@@ -334,26 +333,37 @@ public class ProductManager {
      * @param product
      *  the product to remove
      *
-     * @param regenCerts
-     *  whether or not to flag entitlement certificates of affected pools for regeneration
-     *
      * @throws IllegalArgumentException
      *  if the owner, or the target product is null
      *
      * @throws IllegalStateException
-     *  if the product is still referenced by one or more subscriptions or parent products
+     *  if the given product instance is not an existing, managed entity, is not in the namespace of the
+     *  given organization, or the product is still in use by one or more parent products or subscriptions
      *
      * @return
      *  the removed product entity
      */
-    public Product removeProduct(Owner owner, Product product, boolean regenCerts) {
+    public Product removeProduct(Owner owner, Product product) {
         if (owner == null) {
             throw new IllegalArgumentException("owner is null");
         }
 
+        if (product == null) {
+            throw new IllegalArgumentException("product is null");
+        }
+
+        if (!this.productCurator.getEntityManager().contains(product)) {
+            throw new IllegalStateException("product is not a managed entity");
+        }
+
         // Make sure the product isn't referenced by a pool or other product
-        if (this.productCurator.productHasSubscriptions(owner, product)) {
+        if (this.productCurator.productHasParentSubscriptions(product)) {
             throw new IllegalStateException("Product is referenced by one or more subscriptions: " + product);
+        }
+
+        if (this.productCurator.productHasParentProducts(product)) {
+            throw new IllegalStateException("Product is referenced by one or more parent products: " +
+                product);
         }
 
         String namespace = product.getNamespace();
@@ -362,21 +372,6 @@ public class ProductManager {
         if (namespace == null || !namespace.equals(owner.getKey())) {
             throw new IllegalStateException("product namespace does not match org's namespace");
         }
-
-        // Fetch the affected entitlements if we're going to regenerate certs
-        PoolQualifier qualifer = new PoolQualifier()
-            .setOwnerId(owner.getOwnerId())
-            .addProductId(product.getId())
-            .setActiveOn(new Date());
-
-        List<Pool> affectedPools = regenCerts ?
-            this.poolCurator.listAvailableEntitlementPools(qualifer).getPageData() :
-            List.of();
-
-        Set<Entitlement> entitlements = affectedPools.stream()
-            .map(Pool::getEntitlements)
-            .flatMap(Collection::stream)
-            .collect(Collectors.toSet());
 
         // Future fun time: What happens if namespaces are no longer 1:1 with org? Answer: We'll get
         // indeterministic behavior with this removal.
@@ -389,11 +384,6 @@ public class ProductManager {
 
         log.debug("Synchronizing last content update for org: {}", owner);
         this.contentAccessManager.syncOwnerLastContentUpdate(owner);
-
-        if (!entitlements.isEmpty()) {
-            log.debug("Flagging {} affected entitlement certificates for regeneration", entitlements.size());
-            this.entitlementCertService.regenerateCertificatesOf(entitlements, true);
-        }
 
         return product;
     }

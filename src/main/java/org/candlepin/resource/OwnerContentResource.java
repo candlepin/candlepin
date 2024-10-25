@@ -401,7 +401,13 @@ public class OwnerContentResource implements OwnerContentApi {
 
         this.validateContentNamespace(owner, content);
 
-        this.contentManager.removeContent(owner, content, true);
+        if (this.contentCurator.contentHasParentProducts(content)) {
+            throw new BadRequestException(i18n.tr(
+                "Content \"{0}\" cannot be deleted while referenced by one or more products",
+                contentId));
+        }
+
+        this.contentManager.removeContent(owner, content);
     }
 
     /**

@@ -639,12 +639,9 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * Checks if the specified product is referenced by any subscriptions as its marketing product.
-     * Indirect references to products, such as provided products and derived products, are not
-     * considered by this method.
-     *
-     * @param owner
-     *  The owner to use for finding pools/subscriptions
+     * Checks if the specified product is referenced by any subscriptions as its marketing product (SKU).
+     * Indirect references to products, such as provided products and derived products, are not considered
+     * by this method.
      *
      * @param product
      *  The product to check for subscriptions
@@ -652,17 +649,69 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @return
      *  true if the product is referenced by one or more pools; false otherwise
      */
-    public boolean productHasSubscriptions(Owner owner, Product product) {
-        String jpql = "SELECT count(pool) FROM Pool pool " +
-            "WHERE pool.owner.id = :owner_id " +
-            "  AND pool.product.uuid = :product_uuid";
+    public boolean productHasParentSubscriptions(Product product) {
+        if (product == null) {
+            return false;
+        }
 
-        TypedQuery<Long> query = this.getEntityManager()
-            .createQuery(jpql, Long.class)
-            .setParameter("owner_id", owner.getId())
-            .setParameter("product_uuid", product.getUuid());
+        // Impl note: JPA doesn't support EXISTS yet/still, so we'll do the next best thing: select minimal
+        // data and limit the query to a single row. If we get any rows, then we have a parent subscription,
+        // otherwise if we get an exception (ugh...), then no such subscription exist.
+        String jpql = "SELECT 1 FROM Pool pool " +
+            "WHERE pool.product.uuid = :product_uuid";
 
-        return query.getSingleResult() != 0;
+        try {
+            this.getEntityManager()
+                .createQuery(jpql)
+                .setParameter("product_uuid", product.getUuid())
+                .setMaxResults(1)
+                .getSingleResult();
+
+            return true;
+        }
+        catch (NoResultException e) {
+            // intentionally left empty
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks if the specified product is referenced by any other products as a derived or provided
+     * product.
+     *
+     * @param product
+     *  the product to check for parent products
+     *
+     * @return
+     *  true if the product is referenced by one or more other products; false otherwise
+     */
+    public boolean productHasParentProducts(Product product) {
+        if (product == null) {
+            return false;
+        }
+
+        // Impl note: JPA doesn't support EXISTS yet/still, so we'll do the next best thing: select minimal
+        // data and limit the query to a single row. If we get any rows, then we have a parent product,
+        // otherwise if we get an exception (ugh...), then no such products exist.
+        String jpql = "SELECT 1 FROM Product prod " +
+            "LEFT JOIN prod.providedProducts pp " +
+            "WHERE prod.derivedProduct.uuid = :product_uuid OR pp.uuid = :product_uuid";
+
+        try {
+            this.getEntityManager()
+                .createQuery(jpql)
+                .setParameter("product_uuid", product.getUuid())
+                .setMaxResults(1)
+                .getSingleResult();
+
+            return true;
+        }
+        catch (NoResultException e) {
+            // intentionally left empty
+        }
+
+        return false;
     }
 
     /**
