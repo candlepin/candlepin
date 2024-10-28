@@ -695,13 +695,19 @@ public class OwnerProductResource implements OwnerProductApi {
 
         this.validateProductNamespace(owner, product);
 
-        if (this.productCurator.productHasSubscriptions(owner, product)) {
+        if (this.productCurator.productHasParentSubscriptions(product)) {
             throw new BadRequestException(i18n.tr(
                 "Product \"{0}\" cannot be deleted while referenced by one or more subscriptions",
                 productId));
         }
 
-        this.productManager.removeProduct(owner, product, true);
+        if (this.productCurator.productHasParentProducts(product)) {
+            throw new BadRequestException(i18n.tr(
+                "Product \"{0}\" cannot be deleted while referenced by one or more products",
+                productId));
+        }
+
+        this.productManager.removeProduct(owner, product);
     }
 
     @Override

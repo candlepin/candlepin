@@ -569,6 +569,44 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
     }
 
     /**
+     * Checks if the specified content is referenced by one or more parent products
+     *
+     * @param content
+     *  the content to check for parent products
+     *
+     * @return
+     *  true if the content is referenced by one or more products; false otherwise
+     */
+    public boolean contentHasParentProducts(Content content) {
+        if (content == null) {
+            return false;
+        }
+
+        // Impl note: JPA doesn't support EXISTS yet/still, so we'll do the next best thing: select minimal
+        // data and limit the query to a single row. If we get any rows, then we have a parent product,
+        // otherwise if we get an exception (ugh...), then no such products exist.
+        String jpql = "SELECT 1 FROM Product prod " +
+            "JOIN prod.productContent pc " +
+            "JOIN pc.content cont " +
+            "WHERE cont.uuid = :content_uuid";
+
+        try {
+            this.getEntityManager()
+                .createQuery(jpql)
+                .setParameter("content_uuid", content.getUuid())
+                .setMaxResults(1)
+                .getSingleResult();
+
+            return true;
+        }
+        catch (NoResultException e) {
+            // intentionally left empty
+        }
+
+        return false;
+    }
+
+    /**
      * Returns a mapping of content UUIDs to collections of products referencing them. That is, for
      * a given entry in the returned map, the key will be one of the input content UUIDs, and the
      * value will be the set of product UUIDs which reference it. If no products reference any of

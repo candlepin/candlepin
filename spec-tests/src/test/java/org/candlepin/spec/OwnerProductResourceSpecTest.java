@@ -15,9 +15,7 @@
 package org.candlepin.spec;
 
 import static java.lang.Thread.sleep;
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
@@ -25,7 +23,6 @@ import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.asser
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -350,42 +347,37 @@ public class OwnerProductResourceSpecTest {
     }
 
     @Test
-    public void shouldReturnBadRequestOnAttemptToDeleteProductAttachedToSub() {
+    public void shouldReturnBadRequestOnAttemptToDeleteProductAttachedToPool() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ProductDTO product = createProductWithProvidedAndDerivedProduct(owner.getKey());
+
+        ProductDTO product = this.ownerProductApi.createProduct(owner.getKey(), Products.random());
+        PoolDTO pool = this.ownerApi.createPool(owner.getKey(), Pools.random(product));
+
         assertBadRequest(() -> ownerProductApi.removeProduct(owner.getKey(), product.getId()));
     }
 
     @Test
-    public void shouldUpdateParentProductWhenDerivedProductIsDeleted() {
+    public void shouldReturnBadRequestOnAttemptToDeleteProvidedProductAttachedToProduct() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ProductDTO product = createProductWithProvidedAndDerivedProduct(owner.getKey());
-        ProductDTO derivedProduct = product.getDerivedProduct();
 
-        ownerProductApi.removeProduct(owner.getKey(), derivedProduct.getId());
+        ProductDTO provided = this.ownerProductApi.createProduct(owner.getKey(), Products.random());
 
-        assertNotFound(() -> productsApi.getProductByUuid(derivedProduct.getUuid()));
+        ProductDTO product = this.ownerProductApi.createProduct(owner.getKey(), Products.random()
+            .addProvidedProductsItem(provided));
 
-        ProductDTO updated = productsApi.getProductByUuid(product.getUuid());
-        assertNotNull(updated);
-        assertNull(updated.getDerivedProduct());
+        assertBadRequest(() -> ownerProductApi.removeProduct(owner.getKey(), provided.getId()));
     }
 
     @Test
-    public void shouldUpdateParentProductWhenProvidedProductIsDeleted() {
+    public void shouldReturnBadRequestOnAttemptToDeleteDerivedProductAttachedToProduct() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ProductDTO product = createProductWithProvidedAndDerivedProduct(owner.getKey());
-        ProductDTO providedProduct = Iterables.getOnlyElement(product.getProvidedProducts());
 
-        ownerProductApi.removeProduct(owner.getKey(), providedProduct.getId());
+        ProductDTO derived = this.ownerProductApi.createProduct(owner.getKey(), Products.random());
 
-        assertNotFound(() -> productsApi.getProductByUuid(providedProduct.getUuid()));
+        ProductDTO product = this.ownerProductApi.createProduct(owner.getKey(), Products.random()
+            .derivedProduct(derived));
 
-        assertThat(productsApi.getProductByUuid(product.getUuid()))
-            .isNotNull()
-            .extracting(ProductDTO::getProvidedProducts, as(collection(ProductDTO.class)))
-            .isNotNull()
-            .hasSize(0);
+        assertBadRequest(() -> ownerProductApi.removeProduct(owner.getKey(), derived.getId()));
     }
 
     @Test
@@ -447,7 +439,7 @@ public class OwnerProductResourceSpecTest {
         ProductDTO product1 = ownerProductApi.createProduct(ownerKey, Products.random());
         ownerProductApi.createProduct(ownerKey, Products.random());
 
-        ProductDTO product = createProductWithProvidedAndDerivedProduct(ownerKey);
+        ProductDTO product = createProductWithProvidedAndDerivedProductAndPool(ownerKey);
         product.setProvidedProducts(Set.of(product1));
         product = ownerProductApi.updateProduct(ownerKey, product.getId(), product);
 
@@ -609,7 +601,7 @@ public class OwnerProductResourceSpecTest {
         return derivedProduct;
     }
 
-    private ProductDTO createProductWithProvidedAndDerivedProduct(String ownerKey) {
+    private ProductDTO createProductWithProvidedAndDerivedProductAndPool(String ownerKey) {
         ProductDTO derivedProduct = createProductWithProvidedProduct(ownerKey);
         ProductDTO provProduct = ownerProductApi.createProduct(ownerKey, Products.random());
         ProductDTO product = Products.random();

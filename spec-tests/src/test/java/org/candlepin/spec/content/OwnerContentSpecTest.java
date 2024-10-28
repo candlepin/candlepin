@@ -629,20 +629,13 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    public void shouldUpdateProductsWhenAttachedContentIsRemoved() throws Exception {
+    public void shouldNotAllowRemovingContentAttachedToAProduct() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
         ContentDTO content = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
-        assertNotNull(content);
-
-        ProductDTO product = adminClient.ownerProducts()
-            .createProduct(owner.getKey(), Products.random());
-        assertNotNull(product);
-
-        product = adminClient.ownerProducts()
-            .addContentToProduct(owner.getKey(), product.getId(), content.getId(), true);
-        assertNotNull(product);
+        ProductDTO product = adminClient.ownerProducts().createProduct(owner.getKey(), Products.random()
+            .addProductContentItem(Contents.toProductContent(content, true)));
 
         assertThat(product.getProductContent())
             .isNotNull()
@@ -650,18 +643,25 @@ class OwnerContentSpecTest {
             .map(ProductContentDTO::getContent)
             .contains(content);
 
-        adminClient.ownerContent().removeContent(owner.getKey(), content.getId());
-        assertNotFound(() -> adminClient.ownerContent().getContentById(owner.getKey(), content.getId()));
+        assertBadRequest(() -> adminClient.ownerContent().removeContent(owner.getKey(), content.getId()));
 
+        // Verify the content still exists
+        ContentDTO updatedContent = adminClient.ownerContent()
+            .getContentById(owner.getKey(), content.getId());
+
+        assertThat(updatedContent)
+            .isNotNull()
+            .isEqualTo(content);
+
+        // Verify that we still haven't touched the product
         ProductDTO updatedProduct = adminClient.ownerProducts()
             .getProductById(owner.getKey(), product.getId());
 
-        assertNotNull(updatedProduct);
-        assertNotEquals(product, updatedProduct);
-
         assertThat(updatedProduct.getProductContent())
             .isNotNull()
-            .hasSize(0);
+            .hasSize(1)
+            .map(ProductContentDTO::getContent)
+            .contains(content);
     }
 
     @Test

@@ -14,6 +14,7 @@
  */
 package org.candlepin.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -67,7 +68,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         this.mockContentAccessManager = mock(ContentAccessManager.class);
 
         this.productManager = new ProductManager(this.mockContentAccessManager, this.mockEntCertService,
-            this.poolCurator, this.productCurator, this.contentCurator, this.activationKeyCurator);
+            this.productCurator, this.contentCurator, this.activationKeyCurator);
     }
 
     @Test
@@ -149,208 +150,9 @@ public class ProductManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @Test
-    public void testUpdateProductThatDoesntExist() {
-        Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = TestUtil.createProduct("p1", "new_name");
-        ProductInfo updateInfo = TestUtil.createProductInfo("p1", "new_name");
-
-        assertThrows(IllegalStateException.class,
-            () -> this.productManager.updateProduct(owner, product, updateInfo, false));
-    }
-
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = {"false", "true"})
-    public void testRemoveProduct(boolean regenCerts) {
-        Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
-        Product product = TestUtil.createProduct("p1", "prod1")
-            .setNamespace(owner.getKey());
-        this.productCurator.create(product);
-
-        assertNotNull(product.getUuid());
-
-        this.productManager.removeProduct(owner, product, regenCerts);
-
-        assertNull(this.productCurator.get(product.getUuid()));
-
-        verifyNoInteractions(this.mockEntCertService);
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(strings = {"false", "true"})
-    public void testRemoveProductDoesntAffectUnrelatedProductEntitlements(boolean regenCerts) {
-        Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
-        Consumer consumer = this.createConsumer(owner);
-
-        Product product = TestUtil.createProduct("p1", "prod1")
-            .setNamespace(owner.getKey());
-        this.productCurator.create(product);
-
-        Product product2 = TestUtil.createProduct("p2", "prod2")
-            .setNamespace(owner.getKey());
-        this.productCurator.create(product2);
-
-        long now = System.currentTimeMillis();
-        Pool pool = this.createPool(owner, product2, 1L, new Date(now - 86400), new Date(now + 86400));
-        Entitlement entitlement = this.createEntitlement(owner, consumer, pool);
-
-        assertNotNull(product.getUuid());
-
-        this.productManager.removeProduct(owner, product, regenCerts);
-
-        assertNull(this.productCurator.get(product.getUuid()));
-        assertNotNull(this.productCurator.get(product2.getUuid()));
-
-        verifyNoInteractions(this.mockEntCertService);
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(strings = {"false", "true"})
-    public void testRemoveDerivedProductDoesNotTriggerEntitlementCertRegeneration(boolean regenCerts) {
-        Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
-        Consumer consumer = this.createConsumer(owner);
-
-        Product childProduct = TestUtil.createProduct("cp1", "child1")
-            .setNamespace(owner.getKey());
-
-        Product product = TestUtil.createProduct("p1", "prod1")
-            .setNamespace(owner.getKey())
-            .setDerivedProduct(childProduct);
-
-        childProduct = this.productCurator.create(childProduct);
-        product = this.productCurator.create(product);
-
-        long now = System.currentTimeMillis();
-        Pool pool = this.createPool(owner, product, 1L, new Date(now - 86400), new Date(now + 86400));
-        Entitlement entitlement = this.createEntitlement(owner, consumer, pool);
-
-        Product output = this.productManager.removeProduct(owner, childProduct, regenCerts);
-        assertEquals(childProduct, output);
-
-        // Impl note:
-        // Derived products themselves don't directly impact content visibility for a given pool or
-        // consumer. Instead, typically a derived product will have a derived/bonus pool associated
-        // with it which will straight up prevent a derived product from being deleted (since it
-        // will have an associated pool). However, in the odd case where it *doesn't* have a derived
-        // pool and it's simply linked to another product, we would not expect that removal and
-        // unlinking to trigger any entitlement regeneration hits.
-
-        verifyNoInteractions(this.mockEntCertService);
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(strings = {"false", "true"})
-    public void testRemoveProvidedProductTriggersEntitlementCertRegeneration(boolean regenCerts) {
-        Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
-        Consumer consumer = this.createConsumer(owner);
-
-        Product childProduct = TestUtil.createProduct("cp1", "child1")
-            .setNamespace(owner.getKey());
-
-        Product product = TestUtil.createProduct("p1", "prod1")
-            .setNamespace(owner.getKey());
-        product.addProvidedProduct(childProduct);
-
-        childProduct = this.productCurator.create(childProduct);
-        product = this.productCurator.create(product);
-
-        long now = System.currentTimeMillis();
-        Pool pool = this.createPool(owner, product, 1L, new Date(now - 86400), new Date(now + 86400));
-        Entitlement entitlement = this.createEntitlement(owner, consumer, pool);
-
-        Product output = this.productManager.removeProduct(owner, childProduct, regenCerts);
-        assertEquals(childProduct, output);
-
-        if (regenCerts) {
-            // TODO: Is there a better way to do this? We won't know the exact product instance,
-            // we just know that a product should be refreshed as a result of this operation.
-            verify(this.mockEntCertService, times(1))
-                .regenerateCertificatesOf(eq(Set.of(entitlement)), eq(true));
-        }
-        else {
-            verifyNoInteractions(this.mockEntCertService);
-        }
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(strings = {"false", "true"})
-    public void testRemoveProductThatDoesntExist(boolean regenCerts) {
-        Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = TestUtil.createProduct("p1", "prod1");
-
-        assertThrows(IllegalStateException.class,
-            () -> this.productManager.removeProduct(owner, product, regenCerts));
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(strings = {"false", "true"})
-    public void testRemoveProductWithSubscriptions(boolean regenCerts) {
-        long now = System.currentTimeMillis();
-
-        Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = this.createProduct("p1", "prod1");
-        Pool pool = this.createPool(owner, product, 1L, new Date(now - 86400), new Date(now + 86400));
-
-        assertThrows(IllegalStateException.class,
-            () -> this.productManager.removeProduct(owner, product, regenCerts));
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(strings = {"false", "true"})
-    public void testRemoveProductContent(boolean regenCerts) {
-        Owner owner = this.createOwner("test-owner", "Test Owner");
-        Content content = TestUtil.createContent("c1");
-        Product product = TestUtil.createProduct("p1", "prod1")
-            .setNamespace(owner.getKey());
-        product.addContent(content, true);
-        this.contentCurator.create(content);
-        this.productCurator.create(product);
-
-        Product clone = (Product) product.clone();
-        clone.setUuid(null);
-        clone.removeContent(content.getId());
-
-        Product output = this.productManager.updateProduct(owner, product, clone, regenCerts);
-        assertFalse(output.hasContent(content.getId()));
-
-        if (regenCerts) {
-            verify(this.mockEntCertService, times(1))
-                .regenerateCertificatesOf(eq(owner), eq(product.getId()), eq(true));
-        }
-        else {
-            verifyNoInteractions(this.mockEntCertService);
-        }
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(strings = {"false", "true"})
-    public void testRemoveProductRemovesActivationKeyReferences(boolean regenCerts) {
-        Owner owner = this.createOwner("test-owner", "Test Owner");
-
-        Product product = TestUtil.createProduct("p1", "prod1")
-            .setNamespace(owner.getKey());
-
-        product = this.productCurator.create(product);
-
-        ActivationKey actkey = new ActivationKey()
-            .setOwner(owner)
-            .setName("A Test Key")
-            .addProduct(product);
-
-        actkey = this.activationKeyCurator.create(actkey);
-
-        assertEquals(Set.of(product.getId()), actkey.getProductIds());
-
-        this.productManager.removeProduct(owner, product, regenCerts);
-
-        this.activationKeyCurator.refresh(actkey);
-
-        assertEquals(Set.of(), actkey.getProductIds());
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(strings = {"false", "true"})
-    public void testAddContentToProduct(boolean regenCerts) {
+    public void testAddContentToProductViaUpdate(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
         Product product = TestUtil.createProduct("p1", "prod1")
             .setNamespace(owner.getKey());
@@ -378,6 +180,268 @@ public class ProductManagerTest extends DatabaseTestFixture {
         else {
             verifyNoInteractions(this.mockEntCertService);
         }
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = {"false", "true"})
+    public void testRemoveContentFromProductViaUpdate(boolean regenCerts) {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Content content = TestUtil.createContent("c1");
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
+        product.addContent(content, true);
+        this.contentCurator.create(content);
+        this.productCurator.create(product);
+
+        Product clone = (Product) product.clone();
+        clone.setUuid(null);
+        clone.removeContent(content.getId());
+
+        Product output = this.productManager.updateProduct(owner, product, clone, regenCerts);
+        assertFalse(output.hasContent(content.getId()));
+
+        if (regenCerts) {
+            verify(this.mockEntCertService, times(1))
+                .regenerateCertificatesOf(eq(owner), eq(product.getId()), eq(true));
+        }
+        else {
+            verifyNoInteractions(this.mockEntCertService);
+        }
+    }
+
+    @Test
+    public void testUpdateProductThatDoesntExist() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Product product = TestUtil.createProduct("p1", "new_name")
+            .setNamespace(owner.getKey());
+        ProductInfo updateInfo = TestUtil.createProductInfo("p1", "new_name");
+
+        Throwable throwable = assertThrows(IllegalStateException.class,
+            () -> this.productManager.updateProduct(owner, product, updateInfo, false));
+
+        assertThat(throwable.getMessage())
+            .isNotNull()
+            .isEqualTo("product is not a managed entity");
+    }
+
+    @Test
+    public void testRemoveProduct() {
+        Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
+        this.productCurator.create(product);
+
+        assertNotNull(product.getUuid());
+
+        this.productManager.removeProduct(owner, product);
+
+        assertNull(this.productCurator.get(product.getUuid()));
+    }
+
+    @Test
+    public void testRemoveProductWontRemoveDerivedProductWithSingleParent() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
+        this.productCurator.create(product);
+
+        Product parent = this.createProduct().setDerivedProduct(product);
+        this.productCurator.merge(parent);
+
+        Throwable throwable = assertThrows(IllegalStateException.class,
+            () -> this.productManager.removeProduct(owner, product));
+
+        assertThat(throwable.getMessage())
+            .isNotNull()
+            .contains("Product is referenced by one or more parent products");
+
+        // Verify the content was not removed
+        assertNotNull(this.productCurator.get(product.getUuid()));
+    }
+
+    @Test
+    public void testRemoveProductWontRemoveDerivedProductWithMultipleParents() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
+        this.productCurator.create(product);
+
+        Product parent1 = this.createProduct().setDerivedProduct(product);
+        this.productCurator.merge(parent1);
+        Product parent2 = this.createProduct().setDerivedProduct(product);
+        this.productCurator.merge(parent2);
+
+        Throwable throwable = assertThrows(IllegalStateException.class,
+            () -> this.productManager.removeProduct(owner, product));
+
+        assertThat(throwable.getMessage())
+            .isNotNull()
+            .contains("Product is referenced by one or more parent products");
+
+        // Verify the content was not removed
+        assertNotNull(this.productCurator.get(product.getUuid()));
+    }
+
+    @Test
+    public void testRemoveProductWontRemoveProvidedProductWithSingleParent() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
+        this.productCurator.create(product);
+
+        Product parent = this.createProduct();
+        parent.addProvidedProduct(product);
+        this.productCurator.merge(parent);
+
+        Throwable throwable = assertThrows(IllegalStateException.class,
+            () -> this.productManager.removeProduct(owner, product));
+
+        assertThat(throwable.getMessage())
+            .isNotNull()
+            .contains("Product is referenced by one or more parent products");
+
+        // Verify the content was not removed
+        assertNotNull(this.productCurator.get(product.getUuid()));
+    }
+
+    @Test
+    public void testRemoveProductWontRemoveProvidedProductWithMultipleParents() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
+        this.productCurator.create(product);
+
+        Product parent1 = this.createProduct();
+        parent1.addProvidedProduct(product);
+        this.productCurator.merge(parent1);
+
+        Product parent2 = this.createProduct();
+        parent2.addProvidedProduct(product);
+        this.productCurator.merge(parent2);
+
+        Throwable throwable = assertThrows(IllegalStateException.class,
+            () -> this.productManager.removeProduct(owner, product));
+
+        assertThat(throwable.getMessage())
+            .isNotNull()
+            .contains("Product is referenced by one or more parent products");
+
+        // Verify the content was not removed
+        assertNotNull(this.productCurator.get(product.getUuid()));
+    }
+
+    @Test
+    public void testRemoveProductWontRemoveProductWithMultipleParents() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
+        this.productCurator.create(product);
+
+        Product parent1 = this.createProduct().setDerivedProduct(product);
+        this.productCurator.merge(parent1);
+        Product parent2 = this.createProduct().setDerivedProduct(product);
+        this.productCurator.merge(parent2);
+
+        Product parent3 = this.createProduct();
+        parent3.addProvidedProduct(product);
+        this.productCurator.merge(parent3);
+
+        Product parent4 = this.createProduct();
+        parent4.addProvidedProduct(product);
+        this.productCurator.merge(parent4);
+
+        Throwable throwable = assertThrows(IllegalStateException.class,
+            () -> this.productManager.removeProduct(owner, product));
+
+        assertThat(throwable.getMessage())
+            .isNotNull()
+            .contains("Product is referenced by one or more parent products");
+
+        // Verify the content was not removed
+        assertNotNull(this.productCurator.get(product.getUuid()));
+    }
+
+    @Test
+    public void testRemoveProductDoesntAffectUnrelatedProductEntitlements() {
+        Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
+        Consumer consumer = this.createConsumer(owner);
+
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
+        this.productCurator.create(product);
+
+        Product product2 = TestUtil.createProduct("p2", "prod2")
+            .setNamespace(owner.getKey());
+        this.productCurator.create(product2);
+
+        long now = System.currentTimeMillis();
+        Pool pool = this.createPool(owner, product2, 1L, new Date(now - 86400), new Date(now + 86400));
+        Entitlement entitlement = this.createEntitlement(owner, consumer, pool);
+
+        assertNotNull(product.getUuid());
+
+        this.productManager.removeProduct(owner, product);
+
+        assertNull(this.productCurator.get(product.getUuid()));
+        assertNotNull(this.productCurator.get(product2.getUuid()));
+    }
+
+    @Test
+    public void testRemoveProductThatDoesntExist() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
+
+        Throwable throwable = assertThrows(IllegalStateException.class,
+            () -> this.productManager.removeProduct(owner, product));
+
+        assertThat(throwable.getMessage())
+            .isNotNull()
+            .isEqualTo("product is not a managed entity");
+    }
+
+    @Test
+    public void testRemoveProductWithSubscriptions() {
+        long now = System.currentTimeMillis();
+
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Product product = this.createProduct("p1", "prod1");
+        Pool pool = this.createPool(owner, product, 1L, new Date(now - 86400), new Date(now + 86400));
+
+        Throwable throwable = assertThrows(IllegalStateException.class,
+            () -> this.productManager.removeProduct(owner, product));
+
+        assertThat(throwable.getMessage())
+            .isNotNull()
+            .contains("Product is referenced by one or more subscriptions");
+
+        // Verify the product was not removed
+        assertNotNull(this.productCurator.get(product.getUuid()));
+    }
+
+    @Test
+    public void testRemoveProductRemovesActivationKeyReferences() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+
+        Product product = TestUtil.createProduct("p1", "prod1")
+            .setNamespace(owner.getKey());
+
+        product = this.productCurator.create(product);
+
+        ActivationKey actkey = new ActivationKey()
+            .setOwner(owner)
+            .setName("A Test Key")
+            .addProduct(product);
+
+        actkey = this.activationKeyCurator.create(actkey);
+
+        assertEquals(Set.of(product.getId()), actkey.getProductIds());
+
+        this.productManager.removeProduct(owner, product);
+
+        this.activationKeyCurator.refresh(actkey);
+
+        assertEquals(Set.of(), actkey.getProductIds());
     }
 
     @Test

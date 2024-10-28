@@ -751,14 +751,66 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testRemoveProductWithSubscriptions() {
+    public void testRemoveProductCannitRemoveProductsWithSubscriptions() {
         Owner owner = this.createOwner("test_org");
         Product product = this.productCurator.create(TestUtil.createProduct("p1", "product1")
             .setNamespace(owner.getKey()));
         Pool pool = this.createPool(owner, product);
 
-        assertThrows(BadRequestException.class,
+        Throwable throwable = assertThrows(BadRequestException.class,
             () -> this.ownerProductResource.removeProduct(owner.getKey(), product.getId()));
+
+        assertThat(throwable.getMessage())
+            .isNotNull()
+            .contains("referenced by one or more subscriptions");
+
+        assertNotNull(this.productCurator.getProductById(owner.getKey(), product.getId()));
+    }
+
+    @Test
+    public void testRemoveProductCannotRemoveDerivedProducts() {
+        Owner owner = this.createOwner("test_org");
+
+        Product product = TestUtil.createProduct("p1", "product1")
+            .setNamespace(owner.getKey());
+
+        Product parent = TestUtil.createProduct("parent", "parent")
+            .setDerivedProduct(product);
+
+        this.productCurator.create(product);
+        this.productCurator.create(parent);
+
+        Throwable throwable = assertThrows(BadRequestException.class,
+            () -> this.ownerProductResource.removeProduct(owner.getKey(), product.getId()));
+
+        assertThat(throwable.getMessage())
+            .isNotNull()
+            .contains("referenced by one or more products");
+
+        assertNotNull(this.productCurator.getProductById(owner.getKey(), product.getId()));
+    }
+
+    @Test
+    public void testRemoveProductCannotRemoveProvidedProducts() {
+        Owner owner = this.createOwner("test_org");
+
+        Product product = TestUtil.createProduct("p1", "product1")
+            .setNamespace(owner.getKey());
+
+        Product parent = TestUtil.createProduct("parent", "parent")
+            .setProvidedProducts(List.of(product));
+
+        this.productCurator.create(product);
+        this.productCurator.create(parent);
+
+        Throwable throwable = assertThrows(BadRequestException.class,
+            () -> this.ownerProductResource.removeProduct(owner.getKey(), product.getId()));
+
+        assertThat(throwable.getMessage())
+            .isNotNull()
+            .contains("referenced by one or more products");
+
+        assertNotNull(this.productCurator.getProductById(owner.getKey(), product.getId()));
     }
 
     @Test

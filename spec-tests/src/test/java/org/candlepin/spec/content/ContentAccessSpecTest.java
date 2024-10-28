@@ -1411,7 +1411,7 @@ public class ContentAccessSpecTest {
         assertThat(certs).singleElement();
         String initialCert = certs.get(0).getCert();
 
-        adminClient.ownerContent().removeContent(ownerKey, content.getId());
+        adminClient.ownerProducts().removeContentFromProduct(ownerKey, prod.getId(), content.getId());
 
         certs = consumerClient.consumers().fetchCertificates(consumer.getUuid());
         assertThat(certs).singleElement();

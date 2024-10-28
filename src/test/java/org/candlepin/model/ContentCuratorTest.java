@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -989,5 +990,70 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         assertThat(output)
             .isNotNull()
             .isEmpty();
+    }
+
+    @Test
+    public void testContentHasParentProductsWithoutParentProduct() {
+        Content content = this.createContent();
+
+        assertFalse(this.contentCurator.contentHasParentProducts(content));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    public void testContentHasParentProductsWithSingleParentProduct(boolean enabled) {
+        Content content = this.createContent();
+
+        Product product = this.createProduct().addContent(content, enabled);
+        this.productCurator.merge(product);
+
+        assertTrue(this.contentCurator.contentHasParentProducts(content));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    public void testContentHasParentProductsWithMultipleParentProducts(boolean enabled) {
+        Content content = this.createContent();
+
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+        Product product3 = this.createProduct();
+
+        for (Product product : List.of(product1, product2, product3)) {
+            product.addContent(content, enabled);
+            this.productCurator.merge(product);
+        }
+
+        assertTrue(this.contentCurator.contentHasParentProducts(content));
+    }
+
+    @Test
+    public void testContentHasParentProductsWithMultipleParentProductsMixedEnablement() {
+        Content content = this.createContent();
+
+        Product product1 = this.createProduct().addContent(content, true);
+        this.productCurator.merge(product1);
+        Product product2 = this.createProduct().addContent(content, false);
+        this.productCurator.merge(product2);
+        Product product3 = this.createProduct().addContent(content, true);
+        this.productCurator.merge(product3);
+
+        assertTrue(this.contentCurator.contentHasParentProducts(content));
+    }
+
+    @Test
+    public void testContentHasParentProductsWithNullContent() {
+        assertFalse(this.contentCurator.contentHasParentProducts(null));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { "test_uuid" })
+    public void testContentHasParentProductsWithUnmanagedContent(String uuid) {
+        Content content = new Content()
+            .setUuid(uuid);
+
+        // This should not throw an exception or otherwise fail
+        assertFalse(this.contentCurator.contentHasParentProducts(content));
     }
 }
