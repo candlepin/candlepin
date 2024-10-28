@@ -14,6 +14,9 @@
  */
 package org.candlepin.controller;
 
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.RevokeEntitlementsJob.RevokeEntitlementsJobConfig;
 import org.candlepin.audit.EventSink;
 import org.candlepin.cache.AnonymousCertContent;
 import org.candlepin.cache.AnonymousCertContentCache;
@@ -24,6 +27,7 @@ import org.candlepin.controller.util.ContentPrefix;
 import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.controller.util.ScaContainerContentPrefix;
 import org.candlepin.controller.util.ScaContentPrefix;
+import org.candlepin.exceptions.IseException;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificate;
@@ -65,6 +69,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -227,6 +232,8 @@ public class ContentAccessManager {
     private final AnonymousContentAccessCertificateCurator anonContentAccessCertCurator;
     private final ProductServiceAdapter prodAdapter;
     private final AnonymousCertContentCache contentCache;
+    private final JobManager jobManager;
+    private final I18n i18n;
 
     private final boolean standalone;
 
@@ -247,7 +254,9 @@ public class ContentAccessManager {
         AnonymousCloudConsumerCurator anonCloudConsumerCurator,
         AnonymousContentAccessCertificateCurator anonContentAccessCertCurator,
         ProductServiceAdapter prodAdapter,
-        AnonymousCertContentCache contentCache) {
+        AnonymousCertContentCache contentCache,
+        JobManager jobManager,
+        I18n i18n) {
 
         this.config = Objects.requireNonNull(config);
         this.pki = Objects.requireNonNull(pki);
@@ -265,6 +274,8 @@ public class ContentAccessManager {
         this.anonContentAccessCertCurator = Objects.requireNonNull(anonContentAccessCertCurator);
         this.prodAdapter = Objects.requireNonNull(prodAdapter);
         this.contentCache = Objects.requireNonNull(contentCache);
+        this.jobManager = Objects.requireNonNull(jobManager);
+        this.i18n = Objects.requireNonNull(i18n);
         this.standalone = this.config.getBoolean(ConfigProperties.STANDALONE);
     }
 
@@ -764,6 +775,18 @@ public class ContentAccessManager {
             // Delete the SCA cert if we're leaving SCA mode
             if (this.isTransitioningFrom(currentMode, updatedMode, ContentAccessMode.ORG_ENVIRONMENT)) {
                 this.contentAccessCertCurator.deleteForOwner(owner);
+            }
+
+            // Revoke entitlements and remove activation key pools if moving from entitlement mode to SCA mode
+            if (this.isTransitioningFrom(currentMode, updatedMode, ContentAccessMode.ENTITLEMENT)) {
+                try {
+                    RevokeEntitlementsJobConfig jobConfig = new RevokeEntitlementsJobConfig();
+                    jobConfig.setOwner(owner);
+                    jobManager.queueJob(jobConfig);
+                }
+                catch (JobException e) {
+                    throw new IseException(i18n.tr("Unable to create revoke entitlements job"), e);
+                }
             }
 
             // Update sync times & report

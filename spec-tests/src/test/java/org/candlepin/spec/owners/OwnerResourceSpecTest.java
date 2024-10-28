@@ -22,6 +22,7 @@ import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.asser
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.candlepin.dto.api.client.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.AttributeDTO;
 import org.candlepin.dto.api.client.v1.CertificateDTO;
@@ -47,6 +48,7 @@ import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.client.api.Paging;
+import org.candlepin.spec.bootstrap.data.builder.ActivationKeys;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
@@ -857,6 +859,97 @@ public class OwnerResourceSpecTest {
         assertThat(newScaCerts)
             .hasSize(3)
             .doesNotContainAnyElementsOf(oldScaCerts);
+    }
+
+    @Test
+    public void shouldRevokeEntitlementsAndRemoveActivationKeyPoolsWithChangeToSCA()
+        throws InterruptedException {
+        ApiClient admin = ApiClients.admin();
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        ProductDTO prod = admin.ownerProducts().createProductByOwner(owner.getKey(), Products.random());
+        PoolDTO pool1 = admin.owners().createPool(owner.getKey(), Pools.random(prod));
+        PoolDTO pool2 = admin.owners().createPool(owner.getKey(), Pools.random(prod));
+
+        ConsumerDTO consumer1 = admin.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer2 = admin.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer3 = admin.consumers().createConsumer(Consumers.random(owner));
+        admin.consumers().bindPool(consumer1.getUuid(), pool1.getId(), 1);
+        admin.consumers().bindPool(consumer2.getUuid(), pool2.getId(), 1);
+        admin.consumers().bindPool(consumer3.getUuid(), pool2.getId(), 1);
+
+        ActivationKeyDTO key1 = admin.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+        ActivationKeyDTO key2 = admin.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        key1 = admin.activationKeys().addPoolToKey(key1.getId(), pool1.getId(), 1L);
+        key2 = admin.activationKeys().addPoolToKey(key2.getId(), pool2.getId(), 1L);
+
+        assertThat(admin.entitlements().listAllForConsumer(consumer1.getUuid()))
+            .isNotNull()
+            .singleElement();
+
+        assertThat(admin.entitlements().listAllForConsumer(consumer2.getUuid()))
+            .isNotNull()
+            .singleElement();
+
+        assertThat(admin.entitlements().listAllForConsumer(consumer3.getUuid()))
+            .isNotNull()
+            .singleElement();
+
+        assertThat(admin.activationKeys().getActivationKeyPools(key1.getId()))
+            .isNotNull()
+            .singleElement()
+            .returns(pool1.getId(), PoolDTO::getId);
+
+        assertThat(admin.activationKeys().getActivationKeyPools(key2.getId()))
+            .isNotNull()
+            .singleElement()
+            .returns(pool2.getId(), PoolDTO::getId);
+
+        OffsetDateTime timeBeforeUpdate = OffsetDateTime.now();
+        // Because MySQL/Mariadb versions before 5.6.4 truncate milliseconds, lets remove a couple seconds
+        // to ensure we will not miss the job we need in the job query results later on.
+        timeBeforeUpdate = timeBeforeUpdate.minusSeconds(2);
+
+        // Update owner to SCA mode
+        owner.contentAccessMode(Owners.SCA_ACCESS_MODE);
+        owner = admin.owners().updateOwner(owner.getKey(), owner);
+
+        // Wait for the entitlement revoke job to finish
+        List<AsyncJobStatusDTO> jobs = admin.jobs().listJobStatuses(null,
+            Set.of("EntitlementRevokingJob"), null, Set.of(owner.getKey()), null, null, null,
+            timeBeforeUpdate, null, null, null, null, null);
+        jobs.forEach(job -> {
+            job = admin.jobs().waitForJob(job);
+            assertThatJob(job)
+                .isFinished()
+                // Number of revoked entitlements
+                .contains("3")
+                // Number of removed activation key pools
+                .contains("2");
+        });
+
+        assertThat(admin.entitlements().listAllForConsumer(consumer1.getUuid()))
+            .isNotNull()
+            .isEmpty();
+
+        assertThat(admin.entitlements().listAllForConsumer(consumer2.getUuid()))
+            .isNotNull()
+            .isEmpty();
+
+        assertThat(admin.entitlements().listAllForConsumer(consumer3.getUuid()))
+            .isNotNull()
+            .isEmpty();
+
+        assertThat(admin.activationKeys().getActivationKeyPools(key1.getId()))
+            .isNotNull()
+            .isEmpty();
+
+        assertThat(admin.activationKeys().getActivationKeyPools(key2.getId()))
+            .isNotNull()
+            .isEmpty();
     }
 
     private List<ConsumerDTO> fetchConsumers(List<ConsumerDTO> consumers, ApiClient client) {

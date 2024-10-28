@@ -38,6 +38,7 @@ import org.candlepin.async.tasks.RefreshPoolsForProductJob;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.async.tasks.RegenEnvEntitlementCertsJob;
 import org.candlepin.async.tasks.RegenProductEntitlementCertsJob;
+import org.candlepin.async.tasks.RevokeEntitlementsJob;
 import org.candlepin.async.tasks.UndoImportsJob;
 import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
 import org.candlepin.audit.ArtemisMessageSource;
@@ -462,6 +463,7 @@ public class CandlepinModule extends AbstractModule {
         JobManager.registerJob(InactiveConsumerCleanerJob.JOB_KEY, InactiveConsumerCleanerJob.class);
         JobManager.registerJob(CloudAccountOrgSetupJob.JOB_KEY, CloudAccountOrgSetupJob.class);
         JobManager.registerJob(ConsumerMigrationJob.JOB_KEY, ConsumerMigrationJob.class);
+        JobManager.registerJob(RevokeEntitlementsJob.JOB_KEY, RevokeEntitlementsJob.class);
     }
 
     private void configureExporter() {

@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
+import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventSink;
 import org.candlepin.cache.AnonymousCertContentCache;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
@@ -47,6 +48,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.xnap.commons.i18n.I18n;
 
 
 
@@ -68,6 +70,10 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
 
     @Mock
     private ProductServiceAdapter mockProdAdapter;
+    @Mock
+    private JobManager jobManager;
+    @Mock
+    private I18n i18n;
 
     @BeforeEach
     public void setup() throws Exception {
@@ -89,7 +95,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
             this.caCertCurator, this.certSerialCurator, this.ownerCurator, this.ownerContentCurator,
             this.consumerCurator, this.consumerTypeCurator, this.environmentCurator, this.caCertCurator,
             this.mockEventSink, this.anonymousCloudConsumerCurator, this.anonymousContentAccessCertCurator,
-            this.mockProdAdapter, this.cache);
+            this.mockProdAdapter, this.cache, this.jobManager, this.i18n);
     }
 
     private Owner createSCAOwner() {
