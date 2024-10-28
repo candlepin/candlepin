@@ -146,23 +146,24 @@ public class X509V3ExtensionUtil extends X509Util {
      * the pool in question.
      */
     private Branding getBranding(Pool pool, String productId) {
-        Branding resultBranding = null;
-        for (Branding b : pool.getProduct().getBranding()) {
-            if (b.getProductId().equals(productId)) {
-                if (resultBranding == null) {
-                    resultBranding = b;
-                }
-                else {
-                    // Warn, but use the first brand name we encountered:
-                    log.warn("Found multiple brand names: product={}, contract={}, " +
-                            "owner={}", productId, pool.getContractNumber(),
-                        pool.getOwner().getKey());
-                }
-            }
-        }
+        List<Branding> branding = pool.getProduct()
+            .getBranding()
+            .stream()
+            .filter(elem -> productId.equals(elem.getProductId()))
+            .toList();
+
         // If none exist, use null strings
-        return resultBranding != null ? resultBranding :
-            (new Branding(null, productId, null, null));
+        if (branding.isEmpty()) {
+            return new Branding(productId, "", "");
+        }
+
+        // If multiple matching brands found, warn and then use the first
+        if (branding.size() > 1) {
+            log.warn("Found multiple brand names: product={}, contract={}, owner={}",
+                productId, pool.getContractNumber(), pool.getOwner().getKey());
+        }
+
+        return branding.get(0);
     }
 
     /*

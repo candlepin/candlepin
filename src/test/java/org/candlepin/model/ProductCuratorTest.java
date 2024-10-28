@@ -1039,45 +1039,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCannotCreateProductWithBrandingWithNullId() {
-        Product marketingProduct = createTestProduct();
-        marketingProduct.addBranding(
-            new Branding(marketingProduct, null, "Brand No 1", "OS"));
-
-        IllegalStateException ise = assertThrows(IllegalStateException.class,
-            () -> productCurator.create(marketingProduct));
-        assertEquals(ise.getMessage(),
-            "Product contains a Branding with a null product id, name or type.",
-            "The exception should have a different message.");
-    }
-
-    @Test
-    public void testCannotCreateProductWithBrandingWithNullType() {
-        Product marketingProduct = createTestProduct();
-        marketingProduct.addBranding(
-            new Branding(marketingProduct, "eng_prod_id_1", "Brand No 1", null));
-
-        IllegalStateException ise = assertThrows(IllegalStateException.class,
-            () -> productCurator.create(marketingProduct));
-        assertEquals(ise.getMessage(),
-            "Product contains a Branding with a null product id, name or type.",
-            "The exception should have a different message.");
-    }
-
-    @Test
-    public void testCannotCreateProductWithBrandingWithNullName() {
-        Product marketingProduct = createTestProduct();
-        marketingProduct.addBranding(
-            new Branding(marketingProduct, "eng_prod_id_1", null, "OS"));
-
-        IllegalStateException ise = assertThrows(IllegalStateException.class,
-            () -> productCurator.create(marketingProduct));
-        assertEquals(ise.getMessage(),
-            "Product contains a Branding with a null product id, name or type.",
-            "The exception should have a different message.");
-    }
-
-    @Test
     public void testGetPoolsReferencingProducts() {
         Owner owner1 = this.createOwner();
         Owner owner2 = this.createOwner();

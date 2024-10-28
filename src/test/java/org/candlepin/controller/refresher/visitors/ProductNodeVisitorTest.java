@@ -100,13 +100,7 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
 
         List<Branding> branding = new ArrayList<>();
         for (int i = 1; i <= 3; ++i) {
-            Branding elem = new Branding()
-                .setId("branding-" + i)
-                .setName("branding " + i)
-                .setProductId("branded_pid-" + i)
-                .setType("btype");
-
-            branding.add(elem);
+            branding.add(new Branding("branded_pid-" + i, "branding " + i, "btype"));
         }
 
         return Stream.of(

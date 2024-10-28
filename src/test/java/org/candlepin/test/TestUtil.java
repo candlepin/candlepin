@@ -502,11 +502,7 @@ public class TestUtil {
     }
 
     public static Branding createBranding(String productId, String brandName) {
-        Branding branding = new Branding();
-        branding.setProductId(productId);
-        branding.setName(brandName);
-        branding.setType("OS");
-        return branding;
+        return new Branding(productId, brandName, "OS");
     }
 
     public static Subscription createSubscription() {
@@ -683,17 +679,6 @@ public class TestUtil {
             .attributes(Collections.<String, String>emptyMap());
 
         return dto;
-    }
-
-    public static Branding createProductBranding(Product product) {
-        Branding productBranding = new Branding();
-        String suffix = randomString();
-        productBranding.setId("test-id-" + suffix);
-        productBranding.setProduct(product);
-        productBranding.setName("test-name-" + suffix);
-        productBranding.setType("test-type-" + suffix);
-        productBranding.setProductId("test-product-id-" + suffix);
-        return productBranding;
     }
 
     public void addPermissionToUser(User u, Access role, Owner o) {

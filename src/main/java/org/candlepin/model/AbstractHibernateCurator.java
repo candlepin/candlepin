@@ -434,8 +434,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @Transactional
     public void bulkDelete(Collection<E> entities) {
-        for (E entity : entities) {
-            delete(entity);
+        if (entities != null) {
+            entities.forEach(this::delete);
         }
     }
 

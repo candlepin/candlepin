@@ -884,12 +884,7 @@ public class HostedTestDataStore {
                         throw new IllegalArgumentException("Branding lacks a product ID: " + binfo);
                     }
 
-                    Branding bdata = new Branding();
-
-                    bdata.setProductId(binfo.getProductId());
-                    bdata.setType(binfo.getType());
-                    bdata.setName(binfo.getName());
-
+                    Branding bdata = new Branding(binfo.getProductId(), binfo.getName(), binfo.getType());
                     brandMap.put(bdata.getProductId(), bdata);
                 }
             }

@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -561,19 +562,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             this.attributeValidator.validate(entry.getKey(), entry.getValue());
         }
 
-        if (entity.getBranding() != null) {
-            for (Branding brand : entity.getBranding()) {
-                if (brand.getProductId() == null ||
-                    brand.getName() == null ||
-                    brand.getType() == null) {
-                    throw new IllegalStateException(
-                        "Product contains a Branding with a null product id, name or type.");
-                }
-
-                brand.setProduct(entity);
-            }
-        }
-
         // TODO: Add more reference checks here.
 
         return entity;
@@ -605,16 +593,35 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         return super.merge(entity);
     }
 
-    // Needs an override due to the use of UUID as db identifier.
+    /**
+     * Deletes the specified product entity. If the given product is null, lacks a UUID, or does not
+     * represent a valid product, this method silently returns.
+     *
+     * Note that this method first re-fetches the entity, which may trigger some pending updates buffered
+     * by the ORM layer.
+     *
+     * @param entity
+     *  a product instance representing the entity to delete
+     */
     @Override
     @Transactional
     public void delete(Product entity) {
-        Product toDelete = this.get(entity.getUuid());
-        this.getEntityManager().remove(toDelete);
+        Product target = Optional.ofNullable(entity)
+            .map(Product::getUuid)
+            .map(this::get)
+            .orElse(null);
+
+        // If our original entity was null, had no UUID, or doesn't map to a known product, silently return
+        if (target == null) {
+            return;
+        }
+
+        this.getEntityManager()
+            .remove(target);
     }
 
     /**
-     * Performs a bulk deletion of products specified by the given collection of product UUIDs.
+     * Performs a bulk deletion of products specified by the given collection of product UUIDs
      *
      * @param productUuids
      *  the UUIDs of the products to delete

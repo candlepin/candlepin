@@ -41,13 +41,7 @@ public class BrandingTranslatorTest extends
 
     @Override
     protected Branding initSourceObject() {
-        Branding source = new Branding();
-
-        source.setProductId("test-product-id");
-        source.setName("test-name");
-        source.setType("test-type");
-
-        return source;
+        return new Branding("test-product-id", "test-name", "test-type");
     }
 
     @Override

@@ -45,15 +45,11 @@ public class BrandingTranslatorTest extends
 
     @Override
     public Branding initSourceObject() {
-        Branding source = new Branding();
+        Date now = new Date();
 
-        source.setProductId("test-product-id");
-        source.setName("test-name");
-        source.setType("test-type");
-        source.setCreated(new Date());
-        source.setUpdated(new Date());
-
-        return source;
+        return new Branding("test-product-id", "test-name", "test-type")
+            .setCreated(now)
+            .setUpdated(now);
     }
 
     @Override

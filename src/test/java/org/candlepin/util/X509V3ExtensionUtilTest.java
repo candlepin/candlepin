@@ -70,7 +70,7 @@ public class X509V3ExtensionUtilTest {
         p.setAttribute(Product.Attributes.BRANDING_TYPE, "OS");
         Set<Product> prods = Set.of(p);
         Product mktProd = new Product("mkt", "MKT SKU");
-        mktProd.addBranding(new Branding(null, engProdId, brandedName, "OS"));
+        mktProd.addBranding(new Branding(engProdId, brandedName, "OS"));
         Pool pool = TestUtil.createPool(mktProd);
         Consumer consumer = new Consumer();
         consumer.setOwner(owner);
@@ -161,11 +161,13 @@ public class X509V3ExtensionUtilTest {
 
     private void addContent(Product product, String arches) {
         int size = product.getProductContent().size() + 1;
-        Content c = new Content();
-        c.setUuid("content_" + size);
-        c.setId("content_" + size);
-        c.setArches(arches);
-        product.addContent(c, true);
+
+        Content content = new Content()
+            .setUuid("content_" + size)
+            .setId("content_" + size)
+            .setArches(arches);
+
+        product.addContent(content, true);
     }
 
     @Test
@@ -179,15 +181,20 @@ public class X509V3ExtensionUtilTest {
         Product p = new Product(engProdId, "Eng Product 1000");
         p.setAttribute(Product.Attributes.BRANDING_TYPE, "OS");
         Set<Product> prods = Set.of(p);
-        Product mktProd = new Product("mkt", "MKT SKU");
-        mktProd.addBranding(new Branding(null, engProdId, brandedName, "OS"));
-        mktProd.addBranding(new Branding(null, engProdId, "another brand name", "OS"));
-        mktProd.addBranding(new Branding(null, engProdId, "number 3", "OS"));
+        Product mktProd = new Product("mkt", "MKT SKU")
+            .addBranding(new Branding(engProdId, brandedName, "OS"))
+            .addBranding(new Branding(engProdId, "another brand name", "OS"))
+            .addBranding(new Branding(engProdId, "number 3", "OS"));
+
+        List<String> possibleBrandNames = mktProd.getBranding()
+            .stream()
+            .map(Branding::getName)
+            .toList();
+
         Pool pool = TestUtil.createPool(mktProd);
-        Set<String> possibleBrandNames = new HashSet<>();
-        for (Branding b : mktProd.getBranding()) {
-            possibleBrandNames.add(b.getName());
-        }
+
+
+
         Consumer consumer = new Consumer();
         consumer.setOwner(owner);
 

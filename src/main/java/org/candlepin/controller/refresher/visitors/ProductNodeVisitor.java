@@ -30,10 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
+import java.util.function.Function;
 
 
 
@@ -180,24 +179,17 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
             // Impl note: Oddly enough, branding isn't important enough to keep around, so we just
             // recreate the collection every time.
             if (importedEntity.getBranding() != null) {
-                if (importedEntity.getBranding().isEmpty()) {
-                    entity.setBranding(Collections.emptySet());
-                }
-                else {
-                    Set<Branding> branding = new HashSet<>();
-                    for (BrandingInfo binfo : importedEntity.getBranding()) {
-                        if (binfo != null) {
-                            branding.add(new Branding(
-                                entity,
-                                binfo.getProductId(),
-                                binfo.getName(),
-                                binfo.getType()
-                            ));
-                        }
-                    }
+                Function<BrandingInfo, Branding> converter = (binfo) -> {
+                    return new Branding(entity, binfo.getProductId(), binfo.getName(), binfo.getType());
+                };
 
-                    entity.setBranding(branding);
-                }
+                List<Branding> branding = importedEntity.getBranding()
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .map(converter)
+                    .toList();
+
+                entity.setBranding(branding);
             }
 
             // Perform resolution of children entity references

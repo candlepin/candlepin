@@ -15,7 +15,9 @@
 package org.candlepin.spec;
 
 import static java.lang.Thread.sleep;
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
@@ -354,30 +356,52 @@ public class OwnerProductResourceSpecTest {
         PoolDTO pool = this.ownerApi.createPool(owner.getKey(), Pools.random(product));
 
         assertBadRequest(() -> ownerProductApi.removeProduct(owner.getKey(), product.getId()));
+
+        assertThat(this.productsApi.getProductByUuid(product.getUuid()))
+            .isNotNull();
     }
 
     @Test
     public void shouldReturnBadRequestOnAttemptToDeleteProvidedProductAttachedToProduct() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
 
-        ProductDTO provided = this.ownerProductApi.createProduct(owner.getKey(), Products.random());
+        ProductDTO product = this.ownerProductApi.createProduct(owner.getKey(), Products.random());
 
-        ProductDTO product = this.ownerProductApi.createProduct(owner.getKey(), Products.random()
-            .addProvidedProductsItem(provided));
+        ProductDTO parent = this.ownerProductApi.createProduct(owner.getKey(), Products.random()
+            .addProvidedProductsItem(product));
 
-        assertBadRequest(() -> ownerProductApi.removeProduct(owner.getKey(), provided.getId()));
+        assertBadRequest(() -> this.ownerProductApi.removeProduct(owner.getKey(), product.getId()));
+
+        assertThat(this.productsApi.getProductByUuid(product.getUuid()))
+            .isNotNull();
+
+        assertThat(this.productsApi.getProductByUuid(parent.getUuid()))
+            .isNotNull()
+            .extracting(ProductDTO::getProvidedProducts, as(collection(ProductDTO.class)))
+            .isNotNull()
+            .hasSize(1)
+            .contains(product);
     }
 
     @Test
     public void shouldReturnBadRequestOnAttemptToDeleteDerivedProductAttachedToProduct() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
 
-        ProductDTO derived = this.ownerProductApi.createProduct(owner.getKey(), Products.random());
+        ProductDTO product = this.ownerProductApi.createProduct(owner.getKey(), Products.random());
 
-        ProductDTO product = this.ownerProductApi.createProduct(owner.getKey(), Products.random()
-            .derivedProduct(derived));
+        ProductDTO parent = this.ownerProductApi.createProduct(owner.getKey(), Products.random()
+            .derivedProduct(product));
 
-        assertBadRequest(() -> ownerProductApi.removeProduct(owner.getKey(), derived.getId()));
+        assertBadRequest(() -> this.ownerProductApi.removeProduct(owner.getKey(), product.getId()));
+
+        assertThat(this.productsApi.getProductByUuid(product.getUuid()))
+            .isNotNull();
+
+        assertThat(this.productsApi.getProductByUuid(parent.getUuid()))
+            .isNotNull()
+            .extracting(ProductDTO::getDerivedProduct)
+            .isNotNull()
+            .isEqualTo(product);
     }
 
     @Test

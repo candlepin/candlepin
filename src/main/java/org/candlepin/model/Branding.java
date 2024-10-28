@@ -23,6 +23,8 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Immutable;
 
+import java.util.Objects;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -43,14 +45,12 @@ import javax.validation.constraints.Size;
  * action to take with the brand name.
  *
  * NOTE: Presently only type "OS" is supported client side.
- *
  */
 @Entity
 @Immutable
 @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 @Table(name = Branding.DB_TABLE)
-public class Branding extends AbstractHibernateObject<Branding> implements BrandingInfo,
-    Cloneable {
+public class Branding extends AbstractHibernateObject<Branding> implements BrandingInfo, Cloneable {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_product_branding";
@@ -81,24 +81,31 @@ public class Branding extends AbstractHibernateObject<Branding> implements Brand
     @JoinColumn(name = "product_uuid")
     private Product product;
 
-    public Branding() {
+    /**
+     * Zero-arg constructor for Hibernate. Do not use.
+     */
+    Branding() {
         // Intentionally left empty
     }
 
+    public Branding(String productId, String name, String type) {
+        this.product = null;
+
+        this.productId = Objects.requireNonNull(productId);
+        this.name = Objects.requireNonNull(name);
+        this.type = Objects.requireNonNull(type);
+    }
+
     public Branding(Product parent, String productId, String name, String type) {
-        this.productId = productId;
-        this.type = type;
-        this.name = name;
-        this.product = parent;
+        this.product = Objects.requireNonNull(parent);
+
+        this.productId = Objects.requireNonNull(productId);
+        this.name = Objects.requireNonNull(name);
+        this.type = Objects.requireNonNull(type);
     }
 
     public String getId() {
         return id;
-    }
-
-    public Branding setId(String id) {
-        this.id = id;
-        return this;
     }
 
     /**
@@ -113,22 +120,12 @@ public class Branding extends AbstractHibernateObject<Branding> implements Brand
         return productId;
     }
 
-    public Branding setProductId(String productId) {
-        this.productId = productId;
-        return this;
-    }
-
     /**
      * @return The brand name to be applied.
      */
     @Override
     public String getName() {
         return name;
-    }
-
-    public Branding setName(String name) {
-        this.name = name;
-        return this;
     }
 
     /**
@@ -141,11 +138,6 @@ public class Branding extends AbstractHibernateObject<Branding> implements Brand
         return type;
     }
 
-    public Branding setType(String type) {
-        this.type = type;
-        return this;
-    }
-
     /**
      * Returns the parent marketing product that this branding belongs to.
      *
@@ -153,17 +145,6 @@ public class Branding extends AbstractHibernateObject<Branding> implements Brand
      */
     public Product getProduct() {
         return product;
-    }
-
-    /**
-     * Sets the parent marketing product that this branding belongs to.
-     *
-     * @return
-     *  a reference to this Branding instance
-     */
-    public Branding setProduct(Product product) {
-        this.product = product;
-        return this;
     }
 
     @Override
@@ -192,20 +173,6 @@ public class Branding extends AbstractHibernateObject<Branding> implements Brand
             .append(this.productId)
             .append(this.type)
             .toHashCode();
-    }
-
-    @Override
-    public Branding clone() {
-        Branding copy;
-
-        try {
-            copy = (Branding) super.clone();
-        }
-        catch (CloneNotSupportedException e) {
-            // This should never happen.
-            throw new RuntimeException("Clone not supported", e);
-        }
-        return copy;
     }
 
     @Override

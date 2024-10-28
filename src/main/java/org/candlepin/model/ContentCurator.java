@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -509,38 +510,31 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         return this.resolveContentsByNamespace(namespace, null);
     }
 
-    // Needs an override due to the use of UUID as db identifier.
+    /**
+     * Deletes the specified content entity. If the given content is null, lacks a UUID, or does not
+     * represent a valid content, this method silently returns.
+     *
+     * Note that this method first re-fetches the entity, which may trigger some pending updates buffered
+     * by the ORM layer.
+     *
+     * @param entity
+     *  a content instance representing the entity to delete
+     */
     @Override
     @Transactional
     public void delete(Content entity) {
-        Content toDelete = this.get(entity.getUuid());
-        this.getEntityManager().remove(toDelete);
-    }
+        Content target = Optional.ofNullable(entity)
+            .map(Content::getUuid)
+            .map(this::get)
+            .orElse(null);
 
-    /**
-     * Retrieves a Content instance for the specified content UUID. If no matching content could be
-     * be found, this method returns null.
-     *
-     * @param uuid
-     *  The UUID of the content to retrieve
-     *
-     * @return
-     *  the Content instance for the content with the specified UUID or null if no matching content
-     *  was found.
-     */
-    @Transactional
-    public Content getByUuid(String uuid) {
-        String jpql = "SELECT c FROM Content c WHERE c.uuid = :uuid";
+        // If our original entity was null, had no UUID, or doesn't map to a known product, silently return
+        if (target == null) {
+            return;
+        }
 
-        try {
-            return this.getEntityManager().createQuery(jpql, Content.class)
-                .setParameter("uuid", uuid)
-                .setHint("org.hibernate.cacheable", true)
-                .getSingleResult();
-        }
-        catch (NoResultException e) {
-            return null;
-        }
+        this.getEntityManager()
+            .remove(target);
     }
 
     /**
