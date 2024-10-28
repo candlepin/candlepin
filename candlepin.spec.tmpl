@@ -23,7 +23,7 @@
 
 Name: candlepin
 Version: 4.4.1
-Release: 8%{?dist}
+Release: 9%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -240,6 +240,10 @@ fi
 
 #raw
 %changelog
+* Mon Oct 28 2024 candlepin-bot 4.4.1-9
+- CANDLEPIN-832: Revoke all entitlements when owner changes to SCA mode
+  (joshmalbrecht@gmail.com)
+
 * Tue Aug 06 2024 Nikos Moumoulidis <nmoumoul@redhat.com> 4.4.1-8
 - CANDLEPIN-907: Updated cp_anonymous_certificate cert column to longblob
   (joshmalbrecht@gmail.com)
