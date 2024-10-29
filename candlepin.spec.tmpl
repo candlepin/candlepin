@@ -23,7 +23,7 @@
 
 Name: candlepin
 Version: 4.4.1
-Release: 9%{?dist}
+Release: 10%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -240,6 +240,9 @@ fi
 
 #raw
 %changelog
+* Tue Oct 29 2024 candlepin-bot 4.4.1-10
+- CANDLEPIN-946: Update apiJar dependency list (joshmalbrecht@gmail.com)
+
 * Mon Oct 28 2024 candlepin-bot 4.4.1-9
 - CANDLEPIN-832: Revoke all entitlements when owner changes to SCA mode
   (joshmalbrecht@gmail.com)
