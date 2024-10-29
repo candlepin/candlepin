@@ -391,12 +391,14 @@ tasks.register('apiJar', Jar) {
     archiveBaseName = 'candlepin-api'
     from sourceSets.main.output
     includes = [
+            'async',
             'auth',
             'config',
             'controller',
             'exceptions',
             'jackson',
             'model',
+            'paging',
             'pki',
             'resteasy',
             'service',
