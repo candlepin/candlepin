@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="20241029000000-1" author="sbakaj">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyTableName="cp2_owner_products"
+                foreignKeyName="cp2_owner_products_fk1" />
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="cp2_owner_products" constraintName="cp2_owner_products_fk1" />
+    </changeSet>
+
+    <changeSet id="20241029000000-2" author="sbakaj">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyTableName="cp2_owner_content"
+                foreignKeyName="cp2_owner_content_fk1" />
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="cp2_owner_content" constraintName="cp2_owner_content_fk1" />
+    </changeSet>
+</databaseChangeLog>

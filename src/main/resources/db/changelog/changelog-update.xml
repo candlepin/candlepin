@@ -202,4 +202,5 @@
     <include file="db/changelog/202408010000000-create-consumer-cloud-data.xml"/>
     <include file="db/changelog/20240920000000-update-cloud-offering-id-column-size.xml"/>
     <include file="db/changelog/20241024154545-revert_product_content_delete_cascades.xml"/>
+    <include file="db/changelog/20241029000000-drop-fk-cp-owner.xml"/>
 </databaseChangeLog>
