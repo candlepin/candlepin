@@ -388,6 +388,51 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
+     * Retrieves a {@link Consumer} that has the provided UUID using the provided {@link LockModeType}. If a
+     * null lock type is provided, then no lock will be used.
+     *
+     * @param consumerUuid
+     *  the UUID to retrieve a consumer for
+     *
+     * @param lockType
+     *  the type of lock to use when retrieving the consumer
+     *
+     * @return the consumer that has the provided UUID.
+     */
+    public Consumer getWithLock(String consumerUuid, LockModeType lockType) {
+        if (consumerUuid == null || consumerUuid.isBlank()) {
+            return null;
+        }
+
+        EntityManager entityManager = this.getEntityManager();
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+
+        CriteriaQuery<Consumer> cq = builder.createQuery(Consumer.class);
+        Root<Consumer> root = cq.from(Consumer.class);
+
+        Predicate uuidPredicate = builder.equal(root.get(Consumer_.uuid), consumerUuid);
+        Predicate securityPredicate = this.getSecurityPredicate(Consumer.class, builder, root);
+        if (securityPredicate != null) {
+            cq.where(builder.and(uuidPredicate, securityPredicate));
+        }
+        else {
+            cq.where(uuidPredicate);
+        }
+
+        TypedQuery<Consumer> query = entityManager.createQuery(cq);
+        if (lockType != null) {
+            query.setLockMode(lockType);
+        }
+
+        try {
+            return query.getSingleResult();
+        }
+        catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    /**
      * Lookup the Consumer by its UUID.
      *
      * @param uuid

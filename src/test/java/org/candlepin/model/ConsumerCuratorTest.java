@@ -65,6 +65,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 
 public class ConsumerCuratorTest extends DatabaseTestFixture {
 
@@ -2323,6 +2324,74 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             owner.getId(), UUID.randomUUID().toString());
 
         assertNull(foundConsumer);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void testGetWithLockWithNullOfBlankConsumerUuid(String consumerUuid) {
+        Consumer actual = consumerCurator.getWithLock(consumerUuid, LockModeType.PESSIMISTIC_READ);
+
+        assertNull(actual);
+    }
+
+    @Test
+    public void testGetWithLockWithNullLockType() {
+        Consumer consumer = createConsumer(owner);
+        createConsumer(owner);
+
+        Consumer actual = consumerCurator.getWithLock(consumer.getUuid(), null);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEqualTo(consumer);
+    }
+
+    @Test
+    public void testGetWithUnknownConsumer() {
+        createConsumer(owner);
+
+        Consumer actual = consumerCurator.getWithLock("unknown", LockModeType.PESSIMISTIC_READ);
+
+        assertNull(actual);
+    }
+
+    @Test
+    public void testGetWithLockWithConsumerFromDifferentOwner() {
+        User user = new User(TestUtil.randomString(), TestUtil.randomString());
+        Set<Permission> perms = new HashSet<>();
+        perms.add(new OwnerPermission(owner, Access.ALL));
+        UserPrincipal principal = new UserPrincipal(user.getUsername(), perms, false);
+        this.setupPrincipal(principal);
+
+        createConsumer(owner);
+
+        Owner owner2 = this.createOwner();
+        Consumer consumer = createConsumer(owner2);
+
+        Consumer actual = consumerCurator.getWithLock(consumer.getUuid(), LockModeType.PESSIMISTIC_READ);
+
+        assertNull(actual);
+    }
+
+    @Test
+    public void testGetWithLock() {
+        User user = new User(TestUtil.randomString(), TestUtil.randomString());
+        Set<Permission> perms = new HashSet<>();
+        perms.add(new OwnerPermission(owner, Access.ALL));
+        UserPrincipal principal = new UserPrincipal(user.getUsername(), perms, false);
+        this.setupPrincipal(principal);
+
+        Consumer consumer = createConsumer(owner);
+        createConsumer(owner);
+
+        Owner owner2 = this.createOwner();
+        createConsumer(owner2);
+
+        Consumer actual = consumerCurator.getWithLock(consumer.getUuid(), LockModeType.PESSIMISTIC_READ);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEqualTo(consumer);
     }
 
     private IdentityCertificate createIdCert() {

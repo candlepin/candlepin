@@ -35,6 +35,8 @@ import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 
+import com.google.inject.persist.Transactional;
+
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
@@ -47,6 +49,7 @@ import java.util.Objects;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+import javax.persistence.LockModeType;
 
 
 
@@ -164,16 +167,19 @@ public class StoreFactory {
         }
 
         @Override
+        @Transactional
         public Consumer lookup(final String consumerUuid) {
-            final Consumer byUuid = consumerCurator.findByUuid(consumerUuid);
-            if (byUuid != null) {
-                return byUuid;
+            Consumer consumer = consumerCurator.getWithLock(consumerUuid, LockModeType.PESSIMISTIC_READ);
+            if (consumer == null) {
+                if (wasDeleted(consumerUuid)) {
+                    throw new GoneException(i18nProvider.get()
+                        .tr("Unit {0} has been deleted", consumerUuid), consumerUuid);
+                }
+
+                return null;
             }
-            if (wasDeleted(consumerUuid)) {
-                throw new GoneException(i18nProvider.get()
-                    .tr("Unit {0} has been deleted", consumerUuid), consumerUuid);
-            }
-            return null;
+
+            return consumer;
         }
 
         private boolean wasDeleted(final String consumerUuid) {
