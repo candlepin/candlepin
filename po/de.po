@@ -1,21 +1,21 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
-# Ettore Atalan <atalanttore@googlemail.com>, 2021.
+# Ettore Atalan <atalanttore@googlemail.com>, 2021, 2024.
 # Joachim Philipp <joachim.philipp@gmail.com>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-01-25 07:07+0000\n"
-"PO-Revision-Date: 2022-05-06 12:18+0000\n"
-"Last-Translator: Joachim Philipp <joachim.philipp@gmail.com>\n"
+"PO-Revision-Date: 2024-11-01 21:38+0000\n"
+"Last-Translator: Ettore Atalan <atalanttore@googlemail.com>\n"
 "Language-Team: German <https://translate.fedoraproject.org/projects/"
-"candlepin/master/de/>\n"
+"candlepin/candlepin-4-3-hotfix/de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.12.1\n"
+"X-Generator: Weblate 5.7.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -23,16 +23,16 @@ msgstr "Reparaturversuch wegen fehlendem org Schlüssel \"{}\""
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:92
 #: src/main/java/org/candlepin/controller/Entitler.java:229
-#, fuzzy, java-format
-#| msgid "Auto-attach is disabled for owner {0}{1}."
+#, java-format
 msgid "Auto-attach is disabled for owner {0}"
-msgstr "Automatischer Anhang ausgeschaltet für Eigentümer {0}{1}."
+msgstr "Automatisches Anhängen ist für Eigentümer {0} deaktiviert"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:97
-#, fuzzy, java-format
-#| msgid "Auto-attach is disabled for owner {0}{1}."
+#, java-format
 msgid "Auto-attach is disabled for owner {0} while using simple content access"
-msgstr "Automatischer Anhang ausgeschaltet für Eigentümer {0}{1}."
+msgstr ""
+"Automatisches Anhängen ist für Eigentümer {0} bei Verwendung des einfachen "
+"Inhaltszugriffs deaktiviert"
 
 #: src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:140
 #, java-format
@@ -312,10 +312,8 @@ msgstr "Fehler beim Beziehen des OAuth-Einheits-Schlüssels"
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/auth/SSLAuth.java:99
-#, fuzzy
-#| msgid "Invalid Credentials"
 msgid "Invalid Certificate Type"
-msgstr "Ungültige Berechtigungsnachweise"
+msgstr "Ungültiger Zertifikatstyp"
 
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1315
@@ -354,10 +352,10 @@ msgstr ""
 "zu erstellen."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:237
-#, fuzzy, java-format
-#| msgid "Auto-attach is disabled for owner {0}{1}."
+#, java-format
 msgid "Auto-attach is disabled for hypervisors of owner {0}"
-msgstr "Automatischer Anhang ausgeschaltet für Eigentümer {0}{1}."
+msgstr ""
+"Automatisches Anhängen ist für Hypervisoren des Eigentümers {0} deaktiviert."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:303
 #: src/main/java/org/candlepin/controller/Entitler.java:504
