@@ -47,6 +47,7 @@ import java.util.Objects;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+import javax.persistence.EntityNotFoundException;
 
 
 
@@ -165,15 +166,24 @@ public class StoreFactory {
 
         @Override
         public Consumer lookup(final String consumerUuid) {
-            final Consumer byUuid = consumerCurator.findByUuid(consumerUuid);
-            if (byUuid != null) {
-                return byUuid;
+            Consumer consumer = null;
+            try {
+                consumer = consumerCurator.findByUuid(consumerUuid);
             }
+            catch (EntityNotFoundException e) {
+                // Intentionally ignoring exception
+            }
+
+            if (consumer != null) {
+                return consumer;
+            }
+
             if (wasDeleted(consumerUuid)) {
                 throw new GoneException(i18nProvider.get()
                     .tr("Unit {0} has been deleted", consumerUuid), consumerUuid);
             }
-            return null;
+
+            return consumer;
         }
 
         private boolean wasDeleted(final String consumerUuid) {
