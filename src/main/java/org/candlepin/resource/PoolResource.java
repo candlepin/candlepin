@@ -45,6 +45,8 @@ import org.candlepin.resource.server.v1.PoolsApi;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.util.Util;
 
+import com.google.inject.persist.Transactional;
+
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.slf4j.Logger;
@@ -94,6 +96,7 @@ public class PoolResource implements PoolsApi {
     }
 
     @Override
+    @Transactional
     @Deprecated
     @SecurityHole
     public List<PoolDTO> listPools(
@@ -187,6 +190,7 @@ public class PoolResource implements PoolsApi {
     }
 
     @Override
+    @Transactional
     public PoolDTO getPool(@Verify(Pool.class) String id, String consumerUuid, OffsetDateTime activeOn) {
 
         Principal principal = this.principalProvider.get();
@@ -223,6 +227,7 @@ public class PoolResource implements PoolsApi {
     }
 
     @Override
+    @Transactional
     public void deletePool(String id) {
         Pool pool = this.poolService.get(id);
         if (pool == null) {
@@ -242,6 +247,7 @@ public class PoolResource implements PoolsApi {
     }
 
     @Override
+    @Transactional
     public CdnDTO getPoolCdn(@Verify(Pool.class) String id) {
         Pool pool = this.poolService.get(id);
 
@@ -253,11 +259,13 @@ public class PoolResource implements PoolsApi {
     }
 
     @Override
+    @Transactional
     public List<String> listEntitledConsumerUuids(String id) {
         return poolManager.listEntitledConsumerUuids(id);
     }
 
     @Override
+    @Transactional
     public List<EntitlementDTO> getPoolEntitlements(
         @Verify(value = Pool.class, subResource = SubResource.ENTITLEMENTS) String id) {
 
@@ -288,7 +296,7 @@ public class PoolResource implements PoolsApi {
      * @return
      *  the certificate associated with the specified pool
      */
-    protected SubscriptionsCertificate getPoolCertificate(String poolId) {
+    private SubscriptionsCertificate getPoolCertificate(String poolId) {
         Pool pool = this.poolService.get(poolId);
 
         if (pool == null) {
@@ -305,6 +313,7 @@ public class PoolResource implements PoolsApi {
     }
 
     @Override
+    @Transactional
     public Object getSubCert(String poolId) {
 
         HttpRequest httpRequest = ResteasyContext.getContextData(HttpRequest.class);

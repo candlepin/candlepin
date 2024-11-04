@@ -134,25 +134,10 @@ public class JobResource implements JobsApi {
         return this.getSchedulerStatus();
     }
 
-    @Override
-    @Transactional
-    public Stream<AsyncJobStatusDTO> listJobStatuses(
-        Set<String> ids,
-        Set<String> keys,
-        Set<String> states,
-        Set<String> ownerKeys,
-        Set<String> principals,
-        Set<String> origins,
-        Set<String> executors,
-        OffsetDateTime after,
-        OffsetDateTime before,
-        Integer page,
-        Integer perPage,
-        String order,
-        String sortBy) {
-        return listJobStatuses(ids, keys, states, ownerKeys, principals, origins, executors, after, before);
-    }
-
+    // TODO: FIXME: This is only public because it used to be our entry point until someone was too lazy
+    // to add paging support properly and just slapped a new entry point in front of this one, but didn't
+    // update any of the tests, or any other things that target it, so now both must be public even though
+    // this is now an implementation detail. :/
     @Transactional
     public Stream<AsyncJobStatusDTO> listJobStatuses(
         Set<String> ids,
@@ -227,10 +212,31 @@ public class JobResource implements JobsApi {
         }
     }
 
+    // TODO: FIXME: Can we not do stuff like this? This indirection isn't even tested, yet it's our entry
+    // point, and it silently throws away the paging parameters anyway. This is such a lazy hack that
+    // should have *at least* been documented.
+    @Override
+    public Stream<AsyncJobStatusDTO> listJobStatuses(
+        Set<String> ids,
+        Set<String> keys,
+        Set<String> states,
+        Set<String> ownerKeys,
+        Set<String> principals,
+        Set<String> origins,
+        Set<String> executors,
+        OffsetDateTime after,
+        OffsetDateTime before,
+        Integer page,
+        Integer perPage,
+        String order,
+        String sortBy) {
+
+        return listJobStatuses(ids, keys, states, ownerKeys, principals, origins, executors, after, before);
+    }
+
     @Override
     @Transactional
     public AsyncJobStatusDTO getJobStatus(@Verify(AsyncJobStatus.class) String id) {
-
         if (id == null || id.isEmpty()) {
             String errmsg = this.i18n.tr("Job ID is null or empty");
             throw new BadRequestException(errmsg);
@@ -248,7 +254,6 @@ public class JobResource implements JobsApi {
     @Override
     @Transactional
     public AsyncJobStatusDTO cancelJob(@Verify(AsyncJobStatus.class) String id) {
-
         if (id == null || id.isEmpty()) {
             String errmsg = this.i18n.tr("Job ID is null or empty");
             throw new BadRequestException(errmsg);
@@ -326,7 +331,6 @@ public class JobResource implements JobsApi {
     @Override
     @Transactional
     public AsyncJobStatusDTO scheduleJob(String jobKey) {
-
         if (jobKey == null || jobKey.isEmpty()) {
             String errmsg = this.i18n.tr("Job key is null or empty");
             throw new BadRequestException(errmsg);

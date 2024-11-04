@@ -378,6 +378,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     @SecurityHole
     @RootResource.LinkedResource
     public Stream<ContentOverrideDTO> listConsumerContentOverrides(String consumerUuid) {
@@ -436,6 +437,9 @@ public class ConsumerResource implements ConsumerApi {
             throw e;
         }
 
+        parent.setUpdated(new Date());
+        this.ccoCurator.flush();
+
         // Hibernate typically persists automatically before executing a query against a table with
         // pending changes, but if it doesn't, we can add a flush here to make sure this outputs the
         // correct values
@@ -474,6 +478,9 @@ public class ConsumerResource implements ConsumerApi {
             }
         }
 
+        parent.setUpdated(new Date());
+        this.ccoCurator.flush();
+
         return this.ccoCurator.getList(parent)
             .stream()
             .map(this.translator.getStreamMapper(ConsumerContentOverride.class, ContentOverrideDTO.class));
@@ -502,7 +509,7 @@ public class ConsumerResource implements ConsumerApi {
      * @param consumerDTO
      *  The consumer DTO to populate with sanitized facts
      */
-    public void sanitizeConsumerFacts(ConsumerDTO consumerDTO) {
+    private void sanitizeConsumerFacts(ConsumerDTO consumerDTO) {
         if (consumerDTO != null) {
             Map<String, String> facts = consumerDTO.getFacts();
 
@@ -521,6 +528,9 @@ public class ConsumerResource implements ConsumerApi {
      * @param consumer
      *  The entity to populate with sanitized facts
      */
+    // TODO: FIXME: This should not be public, nor should this logic be shared with other resources. If
+    // we have common functionality needed by several resources, that is a very clear sign we need to
+    // move the logic to a shared controller rather than coupling our resources together in a clunky way.
     public void sanitizeConsumerFacts(Consumer consumer) {
         if (consumer != null) {
             Map<String, String> facts = consumer.getFacts();
@@ -599,6 +609,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     @Wrapped(element = "consumers")
     @SuppressWarnings("checkstyle:indentation")
     public Stream<ConsumerDTOArrayElement> searchConsumers(
@@ -685,6 +696,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     public void consumerExists(@Verify(Consumer.class) String uuid) {
         if (!consumerCurator.doesConsumerExist(uuid)) {
             throw new NotFoundException(i18n.tr("Consumer with id {0} could not be found.", uuid));
@@ -692,6 +704,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     public Response consumerExistsBulk(Set<String> consumerUuids) {
         if (consumerUuids != null && !consumerUuids.isEmpty()) {
             Set<String> existingUuids = consumerCurator.getExistingConsumerUuids(consumerUuids);
@@ -711,6 +724,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     public ConsumerDTO getConsumer(@Verify(Consumer.class) String uuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
 
@@ -755,6 +769,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     public ContentAccessDTO getContentAccessForConsumer(@Verify(Consumer.class) String uuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
 
@@ -793,7 +808,7 @@ public class ConsumerResource implements ConsumerApi {
      *  if either entity or dto are null
      */
     @SuppressWarnings("checkstyle:methodlength")
-    protected void populateEntity(Consumer entity, ConsumerDTO dto) {
+    private void populateEntity(Consumer entity, ConsumerDTO dto) {
         if (entity == null) {
             throw new IllegalArgumentException("the consumer model entity is null");
         }
@@ -1038,6 +1053,9 @@ public class ConsumerResource implements ConsumerApi {
         return null;
     }
 
+    // TODO: FIXME: This method is only public due to it being called directly by tests. Refactor the
+    // tests to not be invoking individual methods like this and stick to the testing the public interface
+    // directly. Implementation details leaking into tests makes for very brittle and unreliable tests.
     public Consumer createConsumerFromDTO(ConsumerDTO consumer, ConsumerType type, Principal principal,
         String userName, Owner owner, String activationKeys, boolean identityCertCreation) {
 
@@ -1457,7 +1475,10 @@ public class ConsumerResource implements ConsumerApi {
      * Throws exception if the owner does not exist, or the user has more or less than 1 owner, or
      * if the user does not have permission to register on this owner.
      */
-    protected Owner setupOwner(Principal principal, String ownerKey) {
+    // TODO: FIXME: This method is only public due to it being called directly by tests. Refactor the
+    // tests to not be invoking individual methods like this and stick to the testing the public interface
+    // directly. Implementation details leaking into tests makes for very brittle and unreliable tests.
+    public Owner setupOwner(Principal principal, String ownerKey) {
         // If no owner was specified, for UserPrincipals, try to assume based on which owners it has admin
         // rights for. If more than one, we have to error out. In case of autoregistration principals, they
         // have the owner key set from the token itself.
@@ -1648,14 +1669,16 @@ public class ConsumerResource implements ConsumerApi {
         }
     }
 
+    // TODO: FIXME: This should not be public, nor should this logic be shared with other resources. If
+    // we have common functionality needed by several resources, that is a very clear sign we need to
+    // move the logic to a shared controller rather than coupling our resources together in a clunky way.
     public boolean performConsumerUpdates(ConsumerDTO updated, Consumer toUpdate,
         GuestMigration guestMigration) {
 
         return performConsumerUpdates(updated, toUpdate, guestMigration, true);
     }
 
-    @Transactional
-    public boolean performConsumerUpdates(ConsumerDTO updated, Consumer toUpdate,
+    private boolean performConsumerUpdates(ConsumerDTO updated, Consumer toUpdate,
         GuestMigration guestMigration, boolean isIdCert) {
 
         log.debug("Updating consumer: {}", toUpdate.getUuid());
@@ -2015,7 +2038,7 @@ public class ConsumerResource implements ConsumerApi {
      * @param incoming incoming consumer
      * @return a boolean
      */
-    public boolean checkForFactsUpdate(Consumer existing, Consumer incoming) {
+    private boolean checkForFactsUpdate(Consumer existing, Consumer incoming) {
         return this.checkForFactsUpdate(existing, incoming.getFacts());
     }
 
@@ -2069,7 +2092,10 @@ public class ConsumerResource implements ConsumerApi {
      * db. If autobind has been disabled for the guest's owner, the host_restricted entitlements
      * from the old host are still removed, but no auto-bind occurs.
      */
-    protected void revokeOnGuestMigration(Consumer guest) {
+    // TODO: FIXME: This method is only public due to it being called directly by tests. Refactor the
+    // tests to not be invoking individual methods like this and stick to the testing the public interface
+    // directly. Implementation details leaking into tests makes for very brittle and unreliable tests.
+    public void revokeOnGuestMigration(Consumer guest) {
         if (guest == null || !guest.isGuest() || !guest.hasFact(Consumer.Facts.VIRT_UUID)) {
             // No consumer provided, it's not a guest or it doesn't have a virt UUID
             return;
@@ -2207,6 +2233,9 @@ public class ConsumerResource implements ConsumerApi {
      * @return
      *  List of DTOs representing certificates
      */
+    // TODO: FIXME: This method is only public due to it being called directly by tests. Refactor the
+    // tests to not be invoking individual methods like this and stick to the testing the public interface
+    // directly. Implementation details leaking into tests makes for very brittle and unreliable tests.
     public List<CertificateDTO> getEntitlementCertificates(
         @Verify({AnonymousCloudConsumer.class, Consumer.class}) String consumerUuid,
         String serials) {
@@ -2336,6 +2365,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     public Response getContentAccessBody(@Verify(Consumer.class) String consumerUuid, String sinceDate) {
         log.debug("Getting content access certificate for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
@@ -2380,6 +2410,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     public Object exportCertificates(
         @Verify({AnonymousCloudConsumer.class, Consumer.class}) String consumerUuid,
         String serials) {
@@ -2439,6 +2470,8 @@ public class ConsumerResource implements ConsumerApi {
         return keys;
     }
 
+    @Override
+    @Transactional
     @Wrapped(element = "serials")
     @UpdateConsumerCheckIn
     public List<CertificateSerialDTO> getEntitlementCertificateSerials(
@@ -2448,6 +2481,7 @@ public class ConsumerResource implements ConsumerApi {
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
         revokeOnGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
+        this.entitlementCurator.flush();
 
         List<CertificateSerialDTO> allCerts = new LinkedList<>();
         for (Long id : entCertAdapter.listEntitlementSerialIds(consumer)) {
@@ -2490,6 +2524,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     @SuppressWarnings({ "checkstyle:indentation", "checkstyle:methodlength" })
     public Response bind(
         @Verify(Consumer.class) String consumerUuid,
@@ -2649,6 +2684,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     public List<PoolQuantityDTO> dryBind(@Verify(Consumer.class) String consumerUuid, String serviceLevel) {
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
@@ -2700,6 +2736,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     public List<EntitlementDTO> listEntitlements(
         @Verify(Consumer.class) String consumerUuid,
         String productId,
@@ -2726,6 +2763,7 @@ public class ConsumerResource implements ConsumerApi {
 
         if (regen) {
             poolManager.regenerateDirtyEntitlements(entitlementsPage.getPageData());
+            this.entitlementCurator.flush();
         }
         else {
             log.debug("Skipping certificate regeneration.");
@@ -2748,6 +2786,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     public OwnerDTO getOwnerByConsumerUuid(@Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
@@ -2755,6 +2794,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     public DeleteResult unbindAll(@Verify(Consumer.class) String consumerUuid) {
 
         // FIXME: just a stub, needs CertifcateService (and/or a
@@ -2775,6 +2815,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     public void unbindByEntitlementId(@Verify(Consumer.class) String consumerUuid,
         @Verify(Entitlement.class) String dbid) {
         Principal principal = this.principalProvider.get();
@@ -2790,6 +2831,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     public void unbindBySerial(@Verify(Consumer.class) String consumerUuid, Long serial) {
         consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Entitlement toDelete = entitlementCurator
@@ -2805,6 +2847,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     public void unbindByPool(@Verify(Consumer.class) String consumerUuid, String poolId) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         List<Entitlement> entitlementsToDelete = entitlementCurator
@@ -2831,6 +2874,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     @UpdateConsumerCheckIn
     public void regenerateEntitlementCertificates(@Verify(Consumer.class) String consumerUuid,
         String entitlementId, Boolean lazyRegen, Boolean cleanupEntitlements) {
@@ -2875,6 +2919,7 @@ public class ConsumerResource implements ConsumerApi {
      */
     @Deprecated
     @Override
+    @Transactional
     public File exportData(@Verify(Consumer.class) String consumerUuid, String cdnLabel, String webAppPrefix,
         String apiUrl) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
@@ -2902,6 +2947,7 @@ public class ConsumerResource implements ConsumerApi {
      * @return the details of the async export job that is to be started.
      */
     @Override
+    @Transactional
     public AsyncJobStatusDTO exportDataAsync(@Verify(Consumer.class) String consumerUuid,
         String cdnLabel, String webAppPrefix, String apiUrl) {
         HttpServletResponse response = ResteasyContext.getContextData(HttpServletResponse.class);
@@ -2936,13 +2982,14 @@ public class ConsumerResource implements ConsumerApi {
      * @param exportId the id of the stored export.
      */
     @Override
+    @Transactional
     public File downloadExistingExport(@Verify(Consumer.class) String consumerUuid, String exportId) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
         HttpServletResponse response = ResteasyContext.getContextData(HttpServletResponse.class);
         // *******************************************************************************
         // NOTE: If changing the path or parameters of this end point, be sure to update
-        // the HREF generation in ConsumerResource.buildAsyncDownloadManifestHref.
+        // the HREF generation in ExportResult.buildAsyncDownloadManifestHref.
         // *******************************************************************************
 
         // The response for this request is formulated a little different for this
@@ -2961,19 +3008,8 @@ public class ConsumerResource implements ConsumerApi {
         // downloaded once and must then be regenerated.
         manifestManager.deleteStoredManifest(exportId);
 
-        // Done intentionally due to OpenAPI constrains on return type.
+        // Done intentionally due to OpenAPI constraints on return type.
         return null;
-    }
-
-    /**
-     * Builds an HREF to a stored manifest file.
-     *
-     * @param consumerUuid the target consumer UUID.
-     * @param manifestId the target manifest ID.
-     * @return the HREF string for the specified manifest
-     */
-    public static String buildAsyncDownloadManifestHref(String consumerUuid, String manifestId) {
-        return String.format("/consumers/%s/export/%s", consumerUuid, manifestId);
     }
 
     /**
@@ -2986,6 +3022,7 @@ public class ConsumerResource implements ConsumerApi {
      * @httpcode 200
      */
     @Override
+    @Transactional
     public ConsumerDTO regenerateIdentityCertificates(@Verify(Consumer.class) String uuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
@@ -3049,6 +3086,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     public List<ConsumerDTOArrayElement> getGuests(@Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         List<Consumer> consumers = consumerCurator.getGuests(consumer);
@@ -3069,6 +3107,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     public ConsumerDTO getHost(@Verify(Consumer.class) String consumerUuid) {
         Principal principal = this.principalProvider.get();
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
@@ -3086,6 +3125,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
+    @Transactional
     public ReleaseVerDTO getRelease(@Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ReleaseVerDTO release = new ReleaseVerDTO();
@@ -3147,6 +3187,7 @@ public class ConsumerResource implements ConsumerApi {
         return results;
     }
 
+    @Override
     @Transactional
     public void removeDeletionRecord(String uuid) {
         DeletedConsumer dc = deletedConsumerCurator.findByConsumerUuid(uuid);

@@ -252,6 +252,7 @@ public class OwnerContentResource implements OwnerContentApi {
     }
 
     @Override
+    @Transactional
     public ContentDTO createContent(String ownerKey, ContentDTO content) {
         return this.createContentBatch(ownerKey, List.of(content))
             .findAny()
@@ -342,7 +343,7 @@ public class OwnerContentResource implements OwnerContentApi {
      * @httpcode 200
      * @httpcode 404
      */
-    protected Owner getOwnerByKey(String key) {
+    private Owner getOwnerByKey(String key) {
         Owner owner = this.ownerCurator.getByKey(key);
         if (owner == null) {
             throw new NotFoundException(i18n.tr("Owner with key \"{0}\" was not found.", key));

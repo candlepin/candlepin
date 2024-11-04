@@ -30,6 +30,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 
 import com.google.common.collect.Iterables;
+import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +73,7 @@ public class RevokeEntitlementsJob implements AsyncJob {
      * {@inheritDoc}
      */
     @Override
+    @Transactional
     public void execute(JobExecutionContext context) throws JobExecutionException {
         JobArguments jobArguments = context.getJobArguments();
         String ownerKey = jobArguments.getAsString(OWNER_KEY);

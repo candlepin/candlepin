@@ -129,11 +129,7 @@ public class SCACertificateGenerator {
         }
 
         try {
-            SCACertificate result = this.consumerCurator.<SCACertificate>transactional()
-                .allowExistingTransactions()
-                .onRollback(status -> log.error("Rolling back SCA cert (re)generation transaction"))
-                .execute(args -> this.generateFor(consumer, owner));
-
+            SCACertificate result = this.generateFor(consumer, owner);
             return this.wrap(result);
         }
         catch (Exception e) {
@@ -167,11 +163,16 @@ public class SCACertificateGenerator {
     private SCACertificate generateFor(Consumer consumer, Owner owner) {
         SCACertificate existing = consumer.getContentAccessCert();
 
-        if (existing == null) {
-            return this.createCertificate(consumer, owner);
-        }
+        SCACertificate certificate = existing != null ?
+            this.updateCertificate(consumer, owner, existing) :
+            this.createCertificate(consumer, owner);
 
-        return this.updateCertificate(consumer, owner, existing);
+        // Due to the shenanigans we do to wrap and juggle the data in this cert, it's critical we invoke
+        // Hibernate's persist and update hooks by flushing the creation/update operations above so the
+        // dates are correct in the output cert object.
+        this.contentAccessCertificateCurator.flush();
+
+        return certificate;
     }
 
     private SCACertificate createCertificate(Consumer consumer, Owner owner) {

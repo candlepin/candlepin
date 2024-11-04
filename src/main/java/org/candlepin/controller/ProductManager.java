@@ -309,7 +309,7 @@ public class ProductManager {
             product = applyProductChanges(product, pinfo, productMap, contentMap);
 
             log.debug("Persisting updated product in namespace {}: {}", namespace, product);
-            product = this.productCurator.merge(product);
+            product = this.productCurator.create(product);
 
             log.debug("Synchronizing last content update for org: {}", owner);
             this.contentAccessManager.syncOwnerLastContentUpdate(owner);

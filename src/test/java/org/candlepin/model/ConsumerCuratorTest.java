@@ -852,8 +852,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         List<Consumer> guests1 = consumerCurator.getGuests(hConsumer1);
         List<Consumer> guests2 = consumerCurator.getGuests(hConsumer2);
 
-        assertTrue(hGuest1.getUpdated().before(hGuest2.getUpdated()),
-            "Expected " + hGuest1.getUpdated() + " to be before " + hGuest2.getUpdated());
+        assertThat(hGuest1.getUpdated())
+            .isNotNull()
+            .isBefore(hGuest2.getUpdated());
+
         assertEquals(0, guests1.size());
         assertEquals(1, guests2.size());
         assertEquals("guestConsumer2", guests2.get(0).getName());
@@ -982,7 +984,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         Consumer guestHost = consumerCurator.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner.getId());
 
-        assertTrue(host1Guest.getUpdated().before(host2Guest.getUpdated()));
+        assertThat(host1Guest.getUpdated())
+            .isNotNull()
+            .isBefore(host2Guest.getUpdated());
+
         assertEquals(host2.getUuid(), guestHost.getUuid());
     }
 
@@ -1028,7 +1033,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.update(host1);
 
         Consumer guestHost = consumerCurator.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner.getId());
-        assertTrue(host1Guest.getUpdated().after(host2Guest.getUpdated()));
+
+        assertThat(host1Guest.getUpdated())
+            .isNotNull()
+            .isAfter(host2Guest.getUpdated());
+
         assertEquals(host1.getUuid(), guestHost.getUuid());
     }
 

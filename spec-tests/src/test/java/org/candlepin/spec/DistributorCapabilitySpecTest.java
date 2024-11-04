@@ -42,8 +42,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Set;
+
+
 
 @SpecTest
 public class DistributorCapabilitySpecTest {
@@ -70,15 +74,37 @@ public class DistributorCapabilitySpecTest {
             .addCapabilitiesItem(new DistributorVersionCapabilityDTO().name("midas touch"))
             .addCapabilitiesItem(new DistributorVersionCapabilityDTO().name("telepathy"))
             .addCapabilitiesItem(new DistributorVersionCapabilityDTO().name("lightning speed"));
-        distVersion = client.distributorVersions().create(distVersion);
-        assertThat(distVersion.getId()).isNotNull();
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        DistributorVersionDTO output = client.distributorVersions().create(distVersion);
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getId())
+            .isNotNull()
+            .isNotBlank();
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isAfterOrEqualTo(output.getCreated())
+            .isBeforeOrEqualTo(post);
+
         assertThat(client.distributorVersions().getVersions("test-creation", null))
             .hasSize(count + 1);
-        assertThat(distVersion.getCapabilities()).hasSize(3);
+        assertThat(output.getCapabilities()).hasSize(3);
     }
 
     @Test
-    public void shouldAllowDistributorVersionUpdate() {
+    public void shouldAllowDistributorVersionUpdate() throws Exception {
         int count = client.distributorVersions().getVersions("test-update", null).size();
         DistributorVersionDTO distVersion = new DistributorVersionDTO()
             .name(StringUtil.random("test-update"))
@@ -89,19 +115,40 @@ public class DistributorCapabilitySpecTest {
         distVersion = client.distributorVersions().create(distVersion);
         String distVersionId = distVersion.getId();
 
+        Thread.sleep(1100);
+
         DistributorVersionDTO updateDistVersion = new DistributorVersionDTO()
             .name(distVersion.getName())
             .displayName(distVersion.getDisplayName())
             .addCapabilitiesItem(new DistributorVersionCapabilityDTO().name("midas touch"))
             .addCapabilitiesItem(new DistributorVersionCapabilityDTO().name("lightning speed"));
-        distVersion = client.distributorVersions().update(distVersionId, updateDistVersion);
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        DistributorVersionDTO output = client.distributorVersions().update(distVersionId, updateDistVersion);
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
 
         assertThat(client.distributorVersions().getVersions("test-update", null))
             .hasSize(count + 1);
-        assertThat(distVersion)
-            .returns(distVersionId, x -> x.getId())
+
+        assertThat(output)
+            .returns(distVersionId, DistributorVersionDTO::getId)
             .extracting(DistributorVersionDTO::getCapabilities)
             .returns(2, Set::size);
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isEqualTo(distVersion.getCreated())
+            .isBeforeOrEqualTo(init);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfter(output.getCreated())
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
     }
 
     @Test

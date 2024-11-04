@@ -54,6 +54,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +64,7 @@ import java.util.Set;
 
 
 @SpecTest
-class PoolSpecTest {
+class PoolResourceSpecTest {
 
     private OwnerDTO createOwner(ApiClient client) {
         return client.owners().createOwner(Owners.random());
@@ -134,6 +135,34 @@ class PoolSpecTest {
         return ApiClients.ssl(consumer.getIdCert());
     }
 
+    @Test
+    public void shouldPopulateGeneratedFieldsWhenCreatingPools() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = this.createOwner(adminClient);
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        PoolDTO output = this.createPool(adminClient, owner);
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getId())
+            .isNotNull()
+            .isNotBlank();
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isAfterOrEqualTo(output.getCreated())
+            .isBeforeOrEqualTo(post);
+    }
 
     @Test
     public void shouldLetConsumersViewTheirOwnPools() {

@@ -855,7 +855,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .executeUpdate();
     }
 
-    @Transactional
     private Page<List<Entitlement>> listByProduct(
         AbstractHibernateObject object, String objectType, String productId, PageRequest pageRequest) {
         CriteriaBuilder builder = this.entityManager.get().getCriteriaBuilder();
@@ -1007,7 +1006,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         entityManager.remove(entity);
     }
 
-    @Transactional
     public Entitlement findByCertificateSerial(Long serial) {
         String jpql = "SELECT e FROM Entitlement e " +
             "JOIN EntitlementCertificate ec on ec.entitlement.id = e.id " +

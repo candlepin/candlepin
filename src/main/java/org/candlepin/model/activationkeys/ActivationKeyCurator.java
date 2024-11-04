@@ -17,8 +17,6 @@ package org.candlepin.model.activationkeys;
 import org.candlepin.model.AbstractHibernateCurator;
 import org.candlepin.model.Owner;
 
-import com.google.inject.persist.Transactional;
-
 import org.apache.commons.collections4.CollectionUtils;
 import org.hibernate.annotations.QueryHints;
 import org.slf4j.Logger;
@@ -70,16 +68,6 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
         return this.listByOwner(owner, null);
     }
 
-    @Transactional
-    public ActivationKey update(ActivationKey key) {
-        // Why is a method named "update" calling into "save" which is a synonym for "create" rather than
-        // our update verb "merge" ????
-
-        save(key);
-        return key;
-    }
-
-    @Transactional
     public ActivationKey getByKeyName(Owner owner, String name) {
         // Impl note:
         // The usage of "getSingleResult" here is valid as long as we maintain the unique index on the
@@ -181,7 +169,6 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
      *
      * @return the number of deleted {@link ActivationKeyPool}s
      */
-    @Transactional
     public int removeActivationKeyPools(String ownerKey) {
         if (ownerKey == null || ownerKey.isBlank()) {
             throw new IllegalArgumentException("owner key is null or blank");

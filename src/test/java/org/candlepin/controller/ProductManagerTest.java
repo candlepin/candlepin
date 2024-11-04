@@ -430,8 +430,8 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         ActivationKey actkey = new ActivationKey()
             .setOwner(owner)
-            .setName("A Test Key")
-            .addProduct(product);
+            .setName("A Test Key");
+        actkey.addProduct(product);
 
         actkey = this.activationKeyCurator.create(actkey);
 

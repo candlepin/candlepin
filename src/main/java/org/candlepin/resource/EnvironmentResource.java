@@ -66,6 +66,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -183,6 +184,7 @@ public class EnvironmentResource implements EnvironmentApi {
     }
 
     @Override
+    @Transactional
     public EnvironmentDTO getEnvironment(@Verify(Environment.class) String envId) {
         Environment environment = this.lookupEnvironment(envId);
 
@@ -261,9 +263,8 @@ public class EnvironmentResource implements EnvironmentApi {
             environment.setContentPrefix(!contentPrefix.isBlank() ? contentPrefix : null);
         }
 
-        // This isn't actually necessary, but maybe some day we'll get away from the magic and this
-        // will be required
         environment = this.envCurator.merge(environment);
+        this.envCurator.flush();
 
         return translator.translate(environment, EnvironmentDTO.class);
     }
@@ -402,8 +403,7 @@ public class EnvironmentResource implements EnvironmentApi {
         }
         catch (PersistenceException pe) {
             if (rdbmsExceptionTranslator.isConstraintViolationDuplicateEntry(pe)) {
-                log.info("Concurrent content promotion will cause this request to fail.",
-                    pe);
+                log.info("Concurrent content promotion will cause this request to fail.", pe);
 
                 throw new ConflictException(i18n.tr(
                     "Some of the content is already associated with Environment: {0}",
@@ -461,8 +461,8 @@ public class EnvironmentResource implements EnvironmentApi {
     }
 
     @Override
-    @SecurityHole(activationKey = true)
     @Transactional
+    @SecurityHole(activationKey = true)
     public ConsumerDTO createConsumerInEnvironment(String envId, ConsumerDTO consumer,
         String userName, String activationKeys) throws BadRequestException {
 
@@ -477,8 +477,8 @@ public class EnvironmentResource implements EnvironmentApi {
         // Check if all envs belongs to same org
         BinaryOperator<String> unify = (prev, next) -> {
             if (prev != null && !prev.equals(next)) {
-                throw new BadRequestException(i18n.tr("Two or more environments " +
-                    "belong to different organizations"));
+                throw new BadRequestException(
+                    this.i18n.tr("Two or more environments belong to different organizations"));
             }
 
             return next;
@@ -489,11 +489,11 @@ public class EnvironmentResource implements EnvironmentApi {
             .reduce(null, unify);
 
         consumer.setEnvironments(environmentDTOs);
-        return this.consumerResource.createConsumer(consumer, userName,
-            ownerKey, activationKeys, true);
+        return this.consumerResource.createConsumer(consumer, userName, ownerKey, activationKeys, true);
     }
 
     @Override
+    @Transactional
     public Stream<ContentOverrideDTO> getEnvironmentContentOverrides(
         @Verify(Environment.class) String environmentId) {
 
@@ -505,6 +505,7 @@ public class EnvironmentResource implements EnvironmentApi {
     }
 
     @Override
+    @Transactional
     public Stream<ContentOverrideDTO> putEnvironmentContentOverrides(
         @Verify(Environment.class) String environmentId,
         List<ContentOverrideDTO> contentOverrideDTOs) {
@@ -554,6 +555,9 @@ public class EnvironmentResource implements EnvironmentApi {
             throw e;
         }
 
+        environment.setUpdated(new Date());
+        this.envContentOverrideCurator.flush();
+
         // Hibernate typically persists automatically before executing a query against a table with
         // pending changes, but if it doesn't, we can add a flush here to make sure this outputs the
         // correct values
@@ -565,6 +569,7 @@ public class EnvironmentResource implements EnvironmentApi {
     }
 
     @Override
+    @Transactional
     public Stream<ContentOverrideDTO> deleteEnvironmentContentOverrides(
         @Verify(Environment.class) String environmentId,
         List<ContentOverrideDTO> contentOverrideDTOs) {
@@ -597,6 +602,9 @@ public class EnvironmentResource implements EnvironmentApi {
                 }
             }
         }
+
+        environment.setUpdated(new Date());
+        this.envContentOverrideCurator.flush();
 
         return this.envContentOverrideCurator.getList(environment)
             .stream()

@@ -98,7 +98,7 @@ import java.util.stream.Stream;
 
 
 @SpecTest
-class OwnerContentSpecTest {
+class OwnerContentResourceSpecTest {
 
     private OwnerDTO createOwner(ApiClient client) {
         return client.owners().createOwner(Owners.random());
@@ -136,6 +136,64 @@ class OwnerContentSpecTest {
             .modifiedProductIds(modifiedProductIds)
             .arches("content arches " + cid)
             .metadataExpire(Long.parseLong(cid));
+    }
+
+    @Test
+    public void shouldPopulateGeneratedFieldsWhenCreatingContents() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = this.createOwner(adminClient);
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        ContentDTO output = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getId())
+            .isNotNull()
+            .isNotBlank();
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isAfterOrEqualTo(output.getCreated())
+            .isBeforeOrEqualTo(post);
+    }
+
+    @Test
+    public void shouldUpdateGeneratedFieldsWhenUpdatingOwnerContents() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = this.createOwner(adminClient);
+        ContentDTO entity = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
+
+        Thread.sleep(1100);
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        entity.setName(entity.getName() + "-update");
+        ContentDTO output = adminClient.ownerContent().updateContent(owner.getKey(), entity.getId(), entity);
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isEqualTo(entity.getCreated())
+            .isBeforeOrEqualTo(init);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfter(output.getCreated())
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
     }
 
     @Test
@@ -198,7 +256,7 @@ class OwnerContentSpecTest {
         throws Exception {
 
         ApiClient adminClient = ApiClients.admin();
-        OwnerDTO owner = OwnerContentSpecTest.this.createOwner(adminClient);
+        OwnerDTO owner = OwnerContentResourceSpecTest.this.createOwner(adminClient);
 
         ContentDTO content = this.getFullyPopulatedContent();
 
@@ -232,7 +290,7 @@ class OwnerContentSpecTest {
         throws Exception {
 
         ApiClient adminClient = ApiClients.admin();
-        OwnerDTO owner = OwnerContentSpecTest.this.createOwner(adminClient);
+        OwnerDTO owner = OwnerContentResourceSpecTest.this.createOwner(adminClient);
 
         ContentDTO content = this.getFullyPopulatedContent();
 
@@ -265,7 +323,7 @@ class OwnerContentSpecTest {
         "gpgUrl", "arches"})
     public void shouldValidateMaxLengthOfFieldsOnCreate(String fieldName) throws Exception {
         ApiClient adminClient = ApiClients.admin();
-        OwnerDTO owner = OwnerContentSpecTest.this.createOwner(adminClient);
+        OwnerDTO owner = OwnerContentResourceSpecTest.this.createOwner(adminClient);
         ContentDTO content = this.getFullyPopulatedContent();
 
         // Convert the content to a JsonNode so we can set the field
@@ -293,7 +351,7 @@ class OwnerContentSpecTest {
         "gpgUrl", "arches"})
     public void shouldValidateMaxLengthOfFieldsOnBatchCreate(String fieldName) throws Exception {
         ApiClient adminClient = ApiClients.admin();
-        OwnerDTO owner = OwnerContentSpecTest.this.createOwner(adminClient);
+        OwnerDTO owner = OwnerContentResourceSpecTest.this.createOwner(adminClient);
         ContentDTO content = this.getFullyPopulatedContent();
 
         // Convert the content to a JsonNode so we can set the field

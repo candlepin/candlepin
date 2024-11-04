@@ -147,7 +147,28 @@ public class ConsumerResourceEntitlementSpecTest {
     }
 
     @Test
+    public void shouldPopulateGeneratedFieldsWhenFetchingConsumerEntitlements() {
+        ProductDTO prod = adminClient.ownerProducts()
+            .createProduct(owner.getKey(), Products.random());
+        adminClient.owners().createPool(owner.getKey(), Pools.random(prod));
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        adminClient.consumers().bindProduct(consumer.getUuid(), prod.getId());
+
+        List<EntitlementDTO> ents = consumerClient.consumers().listEntitlements(consumer.getUuid());
+        assertThat(ents)
+            .isNotNull()
+            .hasSize(1);
+
+        EntitlementDTO result = ents.get(0);
+        assertNotNull(result.getCreated());
+        assertNotNull(result.getUpdated());
+    }
+
+    @Test
     public void shouldNotRecalculateQuantityAttributesWhenFetchingEntitlements() {
+        // TODO: FIXME: What is this test testing?
+
         ProductDTO prod = adminClient.ownerProducts()
             .createProduct(owner.getKey(), Products.random());
         adminClient.owners().createPool(owner.getKey(), Pools.random(prod));

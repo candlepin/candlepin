@@ -56,8 +56,6 @@ import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.dto.api.server.v1.OwnerInfo;
 import org.candlepin.dto.api.server.v1.PoolDTO;
-import org.candlepin.dto.api.server.v1.ProductContentDTO;
-import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.dto.api.server.v1.SubscriptionDTO;
 import org.candlepin.dto.api.server.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.server.v1.UeberCertificateDTO;
@@ -152,7 +150,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -499,7 +496,7 @@ public class OwnerResource implements OwnerApi {
      * @throws IllegalArgumentException
      *  if either entity or dto are null
      */
-    protected void populateEntity(Owner entity, OwnerDTO dto) {
+    private void populateEntity(Owner entity, OwnerDTO dto) {
         if (entity == null) {
             throw new IllegalArgumentException("the owner model entity is null");
         }
@@ -579,7 +576,7 @@ public class OwnerResource implements OwnerApi {
      * @throws IllegalArgumentException
      *  if either entity or dto are null
      */
-    protected void populateEntity(ActivationKey entity, ActivationKeyDTO dto) {
+    private void populateEntity(ActivationKey entity, ActivationKeyDTO dto) {
         if (entity == null) {
             throw new IllegalArgumentException("the activation key model entity is null");
         }
@@ -703,8 +700,7 @@ public class OwnerResource implements OwnerApi {
      * @throws IllegalArgumentException
      *  if either entity or dto are null, or if the dto's environment content is not empty
      */
-    protected void populateEntity(Environment entity, EnvironmentDTO dto) {
-
+    private void populateEntity(Environment entity, EnvironmentDTO dto) {
         if (entity == null) {
             throw new IllegalArgumentException("the environment model entity is null");
         }
@@ -738,7 +734,7 @@ public class OwnerResource implements OwnerApi {
      *  if either entity or dto are null
      */
     @SuppressWarnings("checkstyle:methodlength")
-    protected void populateEntity(Pool entity, PoolDTO dto) {
+    private void populateEntity(Pool entity, PoolDTO dto) {
         if (entity == null) {
             throw new IllegalArgumentException("entity is null");
         }
@@ -772,9 +768,11 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     @Wrapped(element = "owners")
-    public Stream<OwnerDTO> listOwners(String keyFilter,
-                                       Integer page, Integer perPage, String order, String sortBy) {
+    public Stream<OwnerDTO> listOwners(String keyFilter, Integer page, Integer perPage, String order,
+        String sortBy) {
+
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
 
         OwnerQueryArguments queryArgs = new OwnerQueryArguments()
@@ -820,12 +818,14 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public OwnerDTO getOwner(@Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
         return this.translator.translate(owner, OwnerDTO.class);
     }
 
     @Override
+    @Transactional
     public ContentAccessDTO getOwnerContentAccess(@Verify(Owner.class) String ownerKey) {
         try {
             OwnerContentAccess owner = this.ownerCurator.getOwnerContentAccess(ownerKey);
@@ -845,6 +845,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public OwnerInfo getOwnerInfo(
         @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
@@ -852,6 +853,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public OwnerDTO createOwner(OwnerDTO dto) {
         return this.translator.translate(createOwnerFromDTO(dto), OwnerDTO.class);
     }
@@ -974,6 +976,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public void deleteOwner(String ownerKey,
         Boolean revoke, Boolean force) {
 
@@ -996,6 +999,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public List<EntitlementDTO> ownerEntitlements(
         @Verify(Owner.class) String ownerKey,
         String productId,
@@ -1024,14 +1028,18 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public AsyncJobStatusDTO healEntire(@Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
-        JobConfig config = HealEntireOrgJob.createJobConfig().setOwner(owner).setEntitleDate(new Date());
+        JobConfig config = HealEntireOrgJob.createJobConfig()
+            .setOwner(owner)
+            .setEntitleDate(new Date());
 
         return queueJob(config);
     }
 
     @Override
+    @Transactional
     public Set<String> ownerServiceLevels(
         @Verify(value = Owner.class, subResource = SubResource.SERVICE_LEVELS) String ownerKey,
         String exempt) {
@@ -1042,6 +1050,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public Stream<ActivationKeyDTO> ownerActivationKeys(
         @Verify(value = Owner.class, subResource = SubResource.ACTIVATION_KEYS) String ownerKey,
         String keyName) {
@@ -1054,6 +1063,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public ActivationKeyDTO createActivationKey(
         @Verify(value = Owner.class, subResource = SubResource.ACTIVATION_KEYS) String ownerKey,
         ActivationKeyDTO dto) {
@@ -1098,6 +1108,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public EnvironmentDTO createEnvironment(@Verify(Owner.class) String ownerKey, EnvironmentDTO envDTO) {
         Environment env = new Environment();
         NestedOwnerDTO ownerDTO = new NestedOwnerDTO().key(ownerKey);
@@ -1109,6 +1120,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     @RootResource.LinkedResource
     public Stream<EnvironmentDTO> listEnvironments(
         @Verify(Owner.class) String ownerKey, String envName, List<String> type, Boolean listAll) {
@@ -1127,6 +1139,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public OwnerDTO setLogLevel(String ownerKey, String level) {
         Owner owner = findOwnerByKey(ownerKey);
 
@@ -1137,11 +1150,13 @@ public class OwnerResource implements OwnerApi {
 
         owner.setLogLevel(logLevel.toString());
         owner = ownerCurator.merge(owner);
+        this.ownerCurator.flush();
 
         return this.translator.translate(owner, OwnerDTO.class);
     }
 
     @Override
+    @Transactional
     public void deleteLogLevel(String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
         owner.setLogLevel((String) null);
@@ -1149,6 +1164,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public Stream<ConsumerDTOArrayElement> listConsumers(
         @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey,
         String username,
@@ -1214,6 +1230,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public Integer countConsumers(
         @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey,
         String username,
@@ -1234,8 +1251,8 @@ public class OwnerResource implements OwnerApi {
         return (int) this.consumerCurator.getConsumerCount(queryArgs);
     }
 
-    @Transactional
     @Override
+    @Transactional
     public Stream<PoolDTO> listOwnerPools(
         @Verify(value = Owner.class, subResource = SubResource.POOLS) String ownerKey,
         String consumerUuid, String activationKeyName,
@@ -1341,6 +1358,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public List<SubscriptionDTO> getOwnerSubscriptions(String ownerKey) {
         Owner owner = this.findOwnerByKey(ownerKey);
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
@@ -1357,6 +1375,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public AsyncJobStatusDTO refreshPools(String ownerKey, Boolean autoCreateOwner) {
         Owner owner = ownerCurator.getByKey(ownerKey);
         if (owner == null) {
@@ -1381,6 +1400,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public PoolDTO createPool(@Verify(Owner.class) String ownerKey, PoolDTO inputPoolDTO) {
         log.info("Creating custom pool for owner {}: {}", ownerKey, inputPoolDTO);
 
@@ -1432,6 +1452,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public void updatePool(@Verify(Owner.class) String ownerKey,
         PoolDTO newPoolDTO) {
 
@@ -1509,6 +1530,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public AsyncJobStatusDTO undoImports(@Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
 
@@ -1554,6 +1576,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public AsyncJobStatusDTO importManifestAsync(
         @Verify(Owner.class) String ownerKey, List<String> force, MultipartInput input) {
 
@@ -1589,6 +1612,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public Stream<ImportRecordDTO> getImports(
         @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
@@ -1599,6 +1623,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public SystemPurposeAttributesDTO getSyspurpose(@Verify(value = Owner.class,
         subResource = SubResource.POOLS, require = Access.READ_ONLY) String ownerKey) {
 
@@ -1612,6 +1637,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public SystemPurposeAttributesDTO getConsumersSyspurpose(
         @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
@@ -1642,8 +1668,8 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public UeberCertificateDTO createUeberCertificate(
-        @Verify(Owner.class) String ownerKey) {
+    @Transactional
+    public UeberCertificateDTO createUeberCertificate(@Verify(Owner.class) String ownerKey) {
         Principal principal = this.principalProvider.get();
         UeberCertificate ueberCert = ueberCertGenerator.generate(ownerKey, principal.getUsername());
 
@@ -1651,6 +1677,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public UeberCertificateDTO getUeberCertificate(@Verify(Owner.class) String ownerKey) {
         Owner owner = this.findOwnerByKey(ownerKey);
         UeberCertificate ueberCert = ueberCertCurator.findForOwner(owner);
@@ -1663,8 +1690,8 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
+    @Transactional
     public List<UpstreamConsumerDTOArrayElement> getUpstreamConsumers(@Verify(Owner.class) String ownerKey) {
-
         Owner owner = this.findOwnerByKey(ownerKey);
         UpstreamConsumer consumer = owner.getUpstreamConsumer();
         UpstreamConsumerDTOArrayElement dto = this.translator.translate(consumer,
@@ -1677,12 +1704,13 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public Stream<ConsumerDTOArrayElement> getHypervisors(
-        @Verify(Owner.class) String ownerKey, List<String> hypervisorIds,
-        Integer page, Integer perPage, String order, String sortBy) {
+    @Transactional
+    public Stream<ConsumerDTOArrayElement> getHypervisors(@Verify(Owner.class) String ownerKey,
+        List<String> hypervisorIds, Integer page, Integer perPage, String order, String sortBy) {
 
         Owner owner = ownerCurator.getByKey(ownerKey);
         List<Consumer> hypervisors;
+
         if (hypervisorIds == null || hypervisorIds.isEmpty()) {
             hypervisors = listHypervisorsByOwner(owner);
         }
@@ -1744,10 +1772,12 @@ public class OwnerResource implements OwnerApi {
         if (claimantOwner == null || StringUtils.isBlank(claimantOwner.getClaimantOwnerKey())) {
             throw new BadRequestException(this.i18n.tr("Claimant owner has to be present!"));
         }
+
         Owner originOwner = findOwnerByKey(anonymousOwnerKey);
         if (Util.isFalse(originOwner.getAnonymous())) {
             throw new BadRequestException(this.i18n.tr("Origin owner has to be anonymous!"));
         }
+
         Owner destinationOwner = this.ownerCurator.getByKey(claimantOwner.getClaimantOwnerKey());
         if (destinationOwner == null) {
             // If the owner does not exist in CP, check if they exist upstream.
@@ -1800,23 +1830,6 @@ public class OwnerResource implements OwnerApi {
                 jobConfig.getJobKey());
             throw new IseException(errmsg, e);
         }
-    }
-
-    public boolean removeContent(ProductDTO product, Set<String> contentIds) {
-        if (contentIds == null) {
-            throw new IllegalArgumentException("contentId is null");
-        }
-        if (contentIds.isEmpty()) {
-            return false;
-        }
-        int originalSize = product.getProductContent().size();
-        Set<ProductContentDTO> updatedContents = product.getProductContent().stream()
-            .filter(content -> !contentIds.contains(content.getContent().getId()))
-            .collect(Collectors.toSet());
-
-        product.setProductContent(updatedContents);
-
-        return originalSize != updatedContents.size();
     }
 
     private Owner createOwnerFromDTO(OwnerDTO ownerDTO) {

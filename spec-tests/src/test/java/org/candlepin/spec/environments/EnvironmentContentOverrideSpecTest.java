@@ -34,6 +34,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 
@@ -59,7 +61,37 @@ public class EnvironmentContentOverrideSpecTest {
     }
 
     @Test
-    public void shouldAllowCreatingEnvironmentContentOverrides() {
+    public void shouldPopulateGeneratedFieldsWhenCreatingConsumerContentOverrides() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        EnvironmentDTO environment = this.createEnvironment(adminClient);
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        List<ContentOverrideDTO> overrides = adminClient.environments()
+            .putEnvironmentContentOverrides(environment.getId(), List.of(ContentOverrides.random()));
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(overrides)
+            .hasSize(1);
+
+        ContentOverrideDTO output = overrides.get(0);
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(output.getUpdated());
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfterOrEqualTo(output.getCreated())
+            .isBeforeOrEqualTo(post);
+    }
+
+    @Test
+    public void shouldAllowCreatingEnvironmentContentOverrides() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         EnvironmentDTO environment = this.createEnvironment(adminClient);
 
@@ -80,6 +112,8 @@ public class EnvironmentContentOverrideSpecTest {
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
             .containsExactlyInAnyOrderElementsOf(List.of(co1, co2));
 
+        Thread.sleep(1100);
+
         // Add a third element to ensure the result is the union of all overrides submitted thus far
         List<ContentOverrideDTO> overrides2 = adminClient.environments()
             .putEnvironmentContentOverrides(environment.getId(), List.of(co3));
@@ -93,6 +127,17 @@ public class EnvironmentContentOverrideSpecTest {
             .hasSize(3)
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
             .containsExactlyInAnyOrderElementsOf(List.of(co1, co2, co3));
+
+        // Verify that the last update time has changed as a result
+        EnvironmentDTO updated = adminClient.environments().getEnvironment(environment.getId());
+
+        assertThat(updated.getCreated())
+            .isEqualTo(environment.getCreated())
+            .isBefore(updated.getUpdated());
+
+        assertThat(updated.getUpdated())
+            .isAfter(environment.getUpdated())
+            .isBeforeOrEqualTo(OffsetDateTime.now());
     }
 
     @ParameterizedTest
@@ -161,7 +206,7 @@ public class EnvironmentContentOverrideSpecTest {
     }
 
     @Test
-    public void shouldAllowUpdatingEnvironmentContentOverrides() {
+    public void shouldAllowUpdatingEnvironmentContentOverrides() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         EnvironmentDTO environment = this.createEnvironment(adminClient);
 
@@ -175,6 +220,8 @@ public class EnvironmentContentOverrideSpecTest {
             .hasSize(2)
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
             .containsExactlyInAnyOrderElementsOf(List.of(co1, co2));
+
+        Thread.sleep(1100);
 
         // Update the value on one of our content overrides and submit it
         ContentOverrideDTO co3 = new ContentOverrideDTO()
@@ -196,6 +243,17 @@ public class EnvironmentContentOverrideSpecTest {
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
             .containsExactlyInAnyOrderElementsOf(List.of(co1, co3))
             .doesNotContain(co2);
+
+        // Verify that the last update time has changed as a result
+        EnvironmentDTO updated = adminClient.environments().getEnvironment(environment.getId());
+
+        assertThat(updated.getCreated())
+            .isEqualTo(environment.getCreated())
+            .isBefore(updated.getUpdated());
+
+        assertThat(updated.getUpdated())
+            .isAfter(environment.getUpdated())
+            .isBeforeOrEqualTo(OffsetDateTime.now());
     }
 
     @Test
@@ -376,7 +434,7 @@ public class EnvironmentContentOverrideSpecTest {
     @ParameterizedTest
     @NullAndEmptySource
     public void shouldAllowDeletingAllEnvironmentContentOverridesWithNullOrEmptyList(
-        List<ContentOverrideDTO> input) {
+        List<ContentOverrideDTO> input) throws Exception {
 
         ApiClient adminClient = ApiClients.admin();
         EnvironmentDTO environment = this.createEnvironment(adminClient);
@@ -393,6 +451,8 @@ public class EnvironmentContentOverrideSpecTest {
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
             .containsExactlyInAnyOrderElementsOf(List.of(co1, co2, co3));
 
+        Thread.sleep(1100);
+
         List<ContentOverrideDTO> overrides2 = adminClient.environments()
             .deleteEnvironmentContentOverrides(environment.getId(), input);
 
@@ -403,6 +463,17 @@ public class EnvironmentContentOverrideSpecTest {
         assertEnvironmentContentOverrides(adminClient, environment)
             .isNotNull()
             .isEmpty();
+
+        // Verify that the last update time has changed as a result
+        EnvironmentDTO updated = adminClient.environments().getEnvironment(environment.getId());
+
+        assertThat(updated.getCreated())
+            .isEqualTo(environment.getCreated())
+            .isBefore(updated.getUpdated());
+
+        assertThat(updated.getUpdated())
+            .isAfter(environment.getUpdated())
+            .isBeforeOrEqualTo(OffsetDateTime.now());
     }
 
     @ParameterizedTest

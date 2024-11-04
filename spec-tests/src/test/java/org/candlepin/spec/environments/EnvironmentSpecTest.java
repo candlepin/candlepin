@@ -65,6 +65,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.lang.reflect.InvocationTargetException;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -90,6 +91,61 @@ public class EnvironmentSpecTest {
     void setUp() {
         this.owner = admin.owners().createOwner(Owners.random());
         this.ownerClient = ApiClients.basic(UserUtil.createAdminUser(admin, this.owner));
+    }
+
+    @Test
+    public void shouldPopulateGeneratedFieldsWhenCreatingEnvironments() {
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        EnvironmentDTO output = this.ownerClient.owners()
+            .createEnvironment(this.owner.getKey(), Environments.random());
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getId())
+            .isNotNull()
+            .isNotBlank();
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isAfterOrEqualTo(output.getCreated())
+            .isBeforeOrEqualTo(post);
+    }
+
+    @Test
+    public void shouldPopulateGeneratedFieldsWhenUpdatingEnvironments() throws Exception {
+        EnvironmentDTO entity = this.ownerClient.owners()
+            .createEnvironment(this.owner.getKey(), Environments.random());
+
+        Thread.sleep(1100);
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        entity.setName(entity.getName() + "-update");
+        EnvironmentDTO output = this.ownerClient.environments().updateEnvironment(entity.getId(), entity);
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output.getCreated())
+            .isNotNull()
+            .isEqualTo(entity.getCreated())
+            .isBeforeOrEqualTo(init);
+
+        assertThat(output.getUpdated())
+            .isNotNull()
+            .isAfter(output.getCreated())
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
     }
 
     @Test

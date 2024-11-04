@@ -20,8 +20,6 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.PoolCurator;
 
-import com.google.inject.persist.Transactional;
-
 import java.util.Arrays;
 
 import javax.inject.Inject;
@@ -49,7 +47,6 @@ public class CdnManager {
      * @param cdn the Cdn to create and persist.
      * @return the managed Cdn object.
      */
-    @Transactional
     public Cdn createCdn(Cdn cdn) {
         // Need to persist the certificate serial since by default
         // we do not cascade persist.
@@ -57,7 +54,8 @@ public class CdnManager {
         if (cert != null && cert.getSerial() != null) {
             certSerialCurator.create(cert.getSerial());
         }
-        return cdnCurator.create(cdn);
+
+        return this.cdnCurator.create(cdn, true);
     }
 
     /**
@@ -65,14 +63,15 @@ public class CdnManager {
      *
      * @param cdn the {@link Cdn} to update.
      */
-    @Transactional
     public void updateCdn(Cdn cdn) {
         CdnCertificate cert = cdn.getCertificate();
         if (cert != null && cert.getSerial() != null) {
             // No need to flush here since updating the Cdn will.
             certSerialCurator.saveOrUpdateAll(Arrays.asList(cert.getSerial()), false, false);
         }
-        cdnCurator.update(cdn);
+
+        this.cdnCurator.merge(cdn);
+        this.cdnCurator.flush();
     }
 
     /**
@@ -80,7 +79,6 @@ public class CdnManager {
      *
      * @param cdn the cdn to delete.
      */
-    @Transactional
     public void deleteCdn(Cdn cdn) {
         poolCurator.removeCdn(cdn);
         cdnCurator.delete(cdn);

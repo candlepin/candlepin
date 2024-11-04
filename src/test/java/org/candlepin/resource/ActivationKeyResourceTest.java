@@ -18,8 +18,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -36,6 +38,8 @@ import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.model.AbstractHibernateCurator;
+import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -98,6 +102,13 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
             this.serviceLevelValidator, this.activationKeyRules, this.productCurator, this.modelTranslator,
             this.dtoValidator, this.akcoCurator, this.coValidator);
     }
+
+    private void mockCuratorPassthroughMethods(AbstractHibernateCurator mock) {
+        doAnswer(returnsFirstArg()).when(mock).merge(any(AbstractHibernateObject.class));
+
+        // Add more mocks here as necessary (or update the tests to not use mocks)
+    }
+
 
     @Test
     public void testCreateReadDelete() {
@@ -230,6 +241,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKey ak = genActivationKey();
         Pool p = genPool();
         p.getProduct().setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, "candlepin");
+
+        this.mockCuratorPassthroughMethods(this.mockActivationKeyCurator);
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
         doReturn(p).when(this.poolService).get("testPool");
