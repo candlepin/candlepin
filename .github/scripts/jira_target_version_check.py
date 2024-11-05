@@ -21,9 +21,9 @@ pr_number = os.environ.get('PR_NUMBER')
 if not github_token:
     raise EnvironmentError('PR_NUMBER not specified')
 
-jira_token = os.environ.get('JIRA_TOKEN')
+jira_token = os.environ.get('CANDLEPIN_JIRA_TOKEN')
 if not jira_token:
-    raise EnvironmentError('JIRA_TOKEN not provided')
+    raise EnvironmentError('CANDLEPIN_JIRA_TOKEN not provided')
 
 pr = requests.get('https://api.github.com/repos/candlepin/candlepin/pulls/{pr}'.format(pr=pr_number),
                   headers={'Authorization': 'token {}'.format(github_token)}).json()
