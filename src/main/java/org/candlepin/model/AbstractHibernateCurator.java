@@ -30,7 +30,7 @@ import com.google.inject.persist.Transactional;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import org.hibernate.annotations.QueryHints;
+import org.hibernate.query.NativeQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -960,8 +960,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
         this.getEntityManager()
             .createNativeQuery(String.format(query, (Object[]) pieces))
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(SystemLock.class)
             .setParameter("lock_name", lockName)
-            .setHint(QueryHints.NATIVE_SPACES, SystemLock.class.getName())
             .executeUpdate();
     }
 

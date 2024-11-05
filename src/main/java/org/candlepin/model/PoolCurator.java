@@ -22,6 +22,7 @@ import org.candlepin.util.Util;
 import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.query.NativeQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1392,7 +1393,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 "  AND ss2.subscription_sub_key != 'master' " +
                 "  AND ss1.pool_id IN (:pool_ids)";
 
-            Query query = this.getEntityManager().createNativeQuery(sql);
+            Query query = this.getEntityManager()
+                .createNativeQuery(sql)
+                .unwrap(NativeQuery.class)
+                .addSynchronizedEntityClass(SourceSubscription.class);
 
             for (List<String> block : this.partition(poolIds)) {
                 query.setParameter("pool_ids", block);
@@ -1735,7 +1739,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         if (poolIds != null && !poolIds.isEmpty()) {
             Query query = this.getEntityManager()
-                .createNativeQuery(sql);
+                .createNativeQuery(sql)
+                .unwrap(NativeQuery.class)
+                .addSynchronizedEntityClass(Pool.class)
+                .addSynchronizedEntityClass(Product.class)
+                .addSynchronizedQuerySpace("cp_product_provided_products");
 
             for (List<String> block : this.partition(poolIds)) {
                 query.setParameter("pool_ids", block);
@@ -1797,7 +1805,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         if (poolIds != null && !poolIds.isEmpty()) {
             Query query = this.getEntityManager()
-                .createNativeQuery(sql);
+                .createNativeQuery(sql)
+                .unwrap(NativeQuery.class)
+                .addSynchronizedEntityClass(Pool.class)
+                .addSynchronizedEntityClass(Product.class)
+                .addSynchronizedQuerySpace("cp_product_provided_products");
 
             for (List<String> block : this.partition(poolIds)) {
                 query.setParameter("pool_ids", block);
@@ -1963,7 +1975,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
             Query query = this.getEntityManager()
                 .createNativeQuery(sql)
-                .setParameter("stackid_attrib_name", Product.Attributes.STACKING_ID);
+                .setParameter("stackid_attrib_name", Product.Attributes.STACKING_ID)
+                .unwrap(NativeQuery.class)
+                .addSynchronizedEntityClass(SourceStack.class)
+                .addSynchronizedEntityClass(Entitlement.class)
+                .addSynchronizedEntityClass(Pool.class)
+                .addSynchronizedEntityClass(Product.class)
+                .addSynchronizedQuerySpace("cp_product_attributes");
 
             int blockSize = Math.min(this.getQueryParameterLimit() - 1, this.getInBlockSize());
             for (List<String> block : Iterables.partition(entitlementIds, blockSize)) {
@@ -1977,7 +1995,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
             Query query = this.getEntityManager()
                 .createNativeQuery(sql)
-                .setParameter("stackid_attrib_name", Product.Attributes.STACKING_ID);
+                .setParameter("stackid_attrib_name", Product.Attributes.STACKING_ID)
+                .unwrap(NativeQuery.class)
+                .addSynchronizedEntityClass(SourceStack.class)
+                .addSynchronizedEntityClass(Entitlement.class)
+                .addSynchronizedEntityClass(Pool.class)
+                .addSynchronizedEntityClass(Product.class)
+                .addSynchronizedQuerySpace("cp_product_attributes");
 
             output.addAll(query.getResultList());
         }
@@ -2035,6 +2059,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         ((List<Object[]>) this.getEntityManager()
             .createNativeQuery(sql)
             .setParameter("owner_id", ownerId)
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(Pool.class)
+            .addSynchronizedEntityClass(Product.class)
+            .addSynchronizedQuerySpace("cp_product_attributes")
             .getResultList())
             .forEach(pair -> output.get((String) pair[0]).addAll(Util.toList((String) pair[1])));
 

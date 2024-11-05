@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.hibernate.query.NativeQuery;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -122,6 +124,10 @@ public class ConsumerContentOverrideCurator extends
 
         this.getEntityManager()
             .createNativeQuery(sql)
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(Consumer.class)
+            .addSynchronizedEntityClass(ConsumerContentOverride.class)
+            .addSynchronizedQuerySpace("cp_consumer_environments")
             .setParameter("consumer_id", consumerId)
             .getResultList()
             .forEach(rowProcessor);

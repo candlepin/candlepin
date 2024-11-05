@@ -31,7 +31,7 @@ import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.util.Util;
 
-import org.hibernate.annotations.QueryHints;
+import org.hibernate.query.NativeQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -320,9 +320,10 @@ public class EntityMapper {
 
             int count = this.poolCurator.getEntityManager()
                 .createNativeQuery("UPDATE cp_pool SET id = :new_id WHERE id = :old_id")
-                .setHint(QueryHints.NATIVE_SPACES, Pool.class.getName())
                 .setParameter("old_id", pool.getId())
                 .setParameter("new_id", pid)
+                .unwrap(NativeQuery.class)
+                .addSynchronizedEntityClass(Pool.class)
                 .executeUpdate();
 
             pool = this.poolCurator.get(pid);

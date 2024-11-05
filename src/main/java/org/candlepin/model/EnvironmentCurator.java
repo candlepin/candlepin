@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.QueryHints;
+import org.hibernate.query.NativeQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -288,11 +288,10 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
             Iterable<List<String>> eidBlocks = this.partition(envIds, blockSize);
             Iterable<List<String>> cidBlocks = this.partition(contentIds, blockSize);
 
-            List<String> nativeSpaces = List.of(
-                Environment.class.getName(), EnvironmentContent.class.getName());
-
             Query query = entityManager.createNativeQuery(sql)
-                .setHint(QueryHints.NATIVE_SPACES, nativeSpaces);
+                .unwrap(NativeQuery.class)
+                .addSynchronizedEntityClass(Environment.class)
+                .addSynchronizedEntityClass(EnvironmentContent.class);
 
             for (List<String> eidBlock : eidBlocks) {
                 query.setParameter("env_ids", eidBlock);

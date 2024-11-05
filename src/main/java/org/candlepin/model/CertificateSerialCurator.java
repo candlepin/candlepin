@@ -16,7 +16,7 @@ package org.candlepin.model;
 
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.annotations.QueryHints;
+import org.hibernate.query.NativeQuery;
 
 import java.util.Calendar;
 import java.util.Collection;
@@ -70,14 +70,6 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
         // Also, there doesn't seem to be a way to do this kind of query with JQPL, so we're using native
         // SQL, and MariaDB does not like table aliases in delete statements, so we have to do this
         // in 2 queries (select, then delete).
-        List<String> nativeSpaces = List.of(CertificateSerial.class.getName(),
-            SubscriptionsCertificate.class.getName(),
-            EntitlementCertificate.class.getName(),
-            CdnCertificate.class.getName(),
-            IdentityCertificate.class.getName(),
-            SCACertificate.class.getName(),
-            AnonymousContentAccessCertificate.class.getName(),
-            UeberCertificate.class.getName());
         String fetchSQL = "SELECT cs.id FROM cp_cert_serial cs " +
             "LEFT JOIN cp_certificate subc ON cs.id = subc.serial_id " +
             "LEFT JOIN cp_ent_certificate entc ON cs.id = entc.serial_id " +
@@ -87,7 +79,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
             "LEFT JOIN cp_anonymous_certificates anonc ON cs.id = anonc.serial_id " +
             "LEFT JOIN cp_ueber_cert uebc ON cs.id = uebc.serial_id " +
             "WHERE cs.revoked = true " +
-            "AND cs.expiration < ? " +
+            "AND cs.expiration < :expiration " +
             "AND subc.serial_id IS NULL " +
             "AND entc.serial_id IS NULL " +
             "AND cdnc.serial_id IS NULL " +
@@ -95,20 +87,32 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
             "AND scac.serial_id IS NULL " +
             "AND anonc.serial_id IS NULL " +
             "AND uebc.serial_id IS NULL;";
+
         List<Long> serials = entityManager.createNativeQuery(fetchSQL)
-            .setHint(QueryHints.NATIVE_SPACES, nativeSpaces)
-            .setParameter(1, getExpiryRestriction())
+            .setParameter("expiration", getExpiryRestriction())
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(CertificateSerial.class)
+            .addSynchronizedEntityClass(SubscriptionsCertificate.class)
+            .addSynchronizedEntityClass(EntitlementCertificate.class)
+            .addSynchronizedEntityClass(CdnCertificate.class)
+            .addSynchronizedEntityClass(IdentityCertificate.class)
+            .addSynchronizedEntityClass(SCACertificate.class)
+            .addSynchronizedEntityClass(AnonymousContentAccessCertificate.class)
+            .addSynchronizedEntityClass(UeberCertificate.class)
             .getResultList();
 
         String deleteSQL = "DELETE FROM cp_cert_serial WHERE id IN (:serials_to_delete)";
-        nativeSpaces = List.of(CertificateSerial.class.getName());
         int deleted = 0;
+
+        Query deleteQuery = entityManager.createNativeQuery(deleteSQL)
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(CertificateSerial.class);
+
         for (List<Long> serialsToDeleteBlock : this.partition(serials)) {
-            deleted += entityManager.createNativeQuery(deleteSQL)
-                .setHint(QueryHints.NATIVE_SPACES, nativeSpaces)
-                .setParameter("serials_to_delete", serialsToDeleteBlock)
+            deleted += deleteQuery.setParameter("serials_to_delete", serialsToDeleteBlock)
                 .executeUpdate();
         }
+
         return deleted;
     }
 
