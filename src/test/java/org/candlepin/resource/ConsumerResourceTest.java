@@ -431,10 +431,22 @@ public class ConsumerResourceTest {
         return owner;
     }
 
+    /**
+     * Creates SCA (Simple Content Access) owner with generated key.
+     *
+     * @return a newly created and mocked {@code Owner} instance
+     */
     protected Owner createOwner() {
         return createOwner(null);
     }
 
+    /**
+     * Creates SCA (Simple Content Access) owner with the specified key or a generated key
+     * if none is provided.
+     *
+     * @param key the key for the owner; if {@code null}, a random key will be generated
+     * @return a newly created and mocked {@code Owner} instance
+     */
     protected Owner createOwner(String key) {
         int rand = TestUtil.randomInt();
         if (key == null) {
@@ -445,6 +457,39 @@ public class ConsumerResourceTest {
             .setId("test-owner-" + rand)
             .setKey(key)
             .setDisplayName("Test Owner " + rand);
+
+        this.mockOwner(owner);
+
+        return owner;
+    }
+
+    /**
+     * Creates a non-SCA (Simple Content Access) owner with generated key.
+     *
+     * @return a newly created and mocked {@code Owner} instance
+     */
+    protected Owner createNonSCAOwner() {
+        return createNonSCAOwner(null);
+    }
+
+    /**
+     * Creates a non-SCA (Simple Content Access) owner with the specified key or
+     * a generated key if none is provided.
+     *
+     * @param key the key for the owner; if {@code null}, a random key will be generated
+     * @return a newly created and mocked {@code Owner} instance
+     */
+    protected Owner createNonSCAOwner(String key) {
+        int rand = TestUtil.randomInt();
+        if (key == null) {
+            key = "test-owner-key-" + rand;
+        }
+
+        Owner owner = new Owner()
+            .setId("test-owner-" + rand)
+            .setKey(key)
+            .setDisplayName("Test Owner " + rand)
+            .setContentAccessMode(ContentAccessMode.ENTITLEMENT.toDatabaseValue());
 
         this.mockOwner(owner);
 
@@ -815,7 +860,7 @@ public class ConsumerResourceTest {
 
     @Test
     public void testUnacceptedSubscriptionTerms() throws Exception {
-        Owner o = createOwner();
+        Owner o = createNonSCAOwner();
         Consumer c = createConsumer(o);
         String[] prodIds = {"notthere"};
 
@@ -833,7 +878,7 @@ public class ConsumerResourceTest {
 
     @Test
     public void testUnknownSubscriptionTerms() throws Exception {
-        Owner o = createOwner();
+        Owner o = createNonSCAOwner();
         Consumer c = createConsumer(o);
         String[] prodIds = {"notthere"};
 
@@ -851,7 +896,7 @@ public class ConsumerResourceTest {
 
     @Test
     public void testUnknownProductRetrieval() throws Exception {
-        Owner o = createOwner();
+        Owner o = createNonSCAOwner();
         Consumer c = createConsumer(o);
         String[] prodIds = {"notthere"};
 
@@ -868,7 +913,7 @@ public class ConsumerResourceTest {
 
     @Test
     public void testAutobindHypervisorDisabled() throws Exception {
-        Owner o = createOwner();
+        Owner o = createNonSCAOwner();
         Consumer c = createConsumer(o);
         String[] prodIds = {"notthere"};
 
@@ -897,11 +942,10 @@ public class ConsumerResourceTest {
             .thenThrow(AutobindDisabledForOwnerException.class);
         when(ownerCurator.findOwnerById(o.getId())).thenReturn(o);
 
-        o.setContentAccessMode("org_environment");
-        assertEquals(Response.Status.OK.getStatusCode(), consumerResource.bind("fakeConsumer", null,
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), consumerResource.bind("fakeConsumer", null,
             Arrays.asList(prodIds), null, null, null, false, null, null).getStatus());
 
-        o.setContentAccessMode("entitlement");
+        o.setContentAccessMode(ContentAccessMode.ENTITLEMENT.toDatabaseValue());
         assertEquals(i18n.tr("Ignoring request to auto-attach. " +
                 "It is disabled for org \"{0}\".", o.getKey()),
             assertThrows(BadRequestException.class, () -> consumerResource.bind("fakeConsumer", null,
@@ -910,7 +954,7 @@ public class ConsumerResourceTest {
 
     @Test
     public void testProductNoPool() throws Exception {
-        Owner o = createOwner();
+        Owner o = createNonSCAOwner();
         Consumer c = createConsumer(o);
         String[] prodIds = {"notthere"};
 
@@ -926,7 +970,7 @@ public class ConsumerResourceTest {
 
     @Test
     public void futureHealing() throws Exception {
-        Owner owner = createOwner();
+        Owner owner = createNonSCAOwner();
         Consumer consumer = createConsumer(owner);
         ConsumerCurator cc = mock(ConsumerCurator.class);
         ConsumerInstalledProduct cip = mock(ConsumerInstalledProduct.class);
@@ -974,7 +1018,7 @@ public class ConsumerResourceTest {
 
     @Test
     public void testBindMultipleParams() {
-        Consumer c = createConsumer(createOwner());
+        Consumer c = createConsumer(createNonSCAOwner());
         when(consumerCurator.verifyAndLookupConsumerWithEntitlements(c.getUuid())).thenReturn(c);
         assertThrows(BadRequestException.class, () -> consumerResource.bind(c.getUuid(), "fake pool uuid",
             Arrays.asList("12232"), 1, null, null, false, null, null));

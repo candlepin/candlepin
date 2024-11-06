@@ -15,6 +15,7 @@
 package org.candlepin.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -169,7 +170,61 @@ class ExportSpecTest {
     @Test
     public void shouldImportContentAccessCertsForAConsumerBelongingToOwnerInSCAMode() throws Exception {
         ApiClient adminClient = ApiClients.admin();
-        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        ProductDTO modifiedProd = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ContentDTO cont = adminClient.ownerContent().createContent(ownerKey, Contents.random()
+            .modifiedProductIds(Set.of(modifiedProd.getId())));
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), cont.getId(), true);
+        PoolDTO pool = adminClient.owners().createPool(ownerKey, Pools.random(prod));
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
+
+        // Switching to SCA to verify that only the SCA certificate is present and not the entitlement
+        // certificate. We need to wait here for a while to allow the EntitlementRevokingJob to complete.
+        owner.setContentAccessMode("org_environment");
+        adminClient.owners().updateOwner(ownerKey, owner);
+
+        AsyncJobStatusDTO entJob = adminClient.jobs()
+            .listMatchingJobStatusForOrg(ownerKey, null, null)
+            .stream()
+            .filter(job -> job.getKey().equals("EntitlementRevokingJob"))
+            .findFirst()
+            .get();
+
+        assertThatJob(entJob)
+            .isNotNull()
+            .terminates(adminClient)
+            .isFinished();
+
+
+        File manifest = createCertExport(consumerClient, consumer.getUuid());
+        ZipFile export = ExportUtil.getExportArchive(manifest);
+
+        // Check if content access certs are present in exported zip file.
+        List<ZipEntry> caCerts = export.stream()
+            .filter(entry -> entry.getName().startsWith(CONTENT_ACCESS_CERTS_PATH))
+            .filter(entry -> entry.getName().lastIndexOf('/') == CONTENT_ACCESS_CERTS_PATH.length() - 1)
+            .collect(Collectors.toList());
+
+        assertThat(caCerts).singleElement();
+
+        // Should not contain entitlement certificate in SCA mode
+        List<ZipEntry> entitlementCerts = export.stream()
+            .filter(entry -> entry.getName().startsWith(ENTITILEMENT_CERTIFICATES_PATH))
+            .filter(entry -> entry.getName().lastIndexOf('/') == ENTITILEMENT_CERTIFICATES_PATH.length() - 1)
+            .collect(Collectors.toList());
+
+        assertThat(entitlementCerts).isEmpty();
+    }
+
+    @Test
+    public void shouldImportEntitlementCertsForAConsumerBelongingToOwnerInEntitlementMode() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
 
         ProductDTO modifiedProd = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
@@ -185,18 +240,18 @@ class ExportSpecTest {
         File manifest = createCertExport(consumerClient, consumer.getUuid());
         ZipFile export = ExportUtil.getExportArchive(manifest);
 
-        // Check if content access certs are present in exported zip file.
+        // Should not contain content access certs in exported zip file in Entitlement mode.
         List<ZipEntry> caCerts = export.stream()
-            .filter(entry -> entry.getName().startsWith(CONTENT_ACCESS_CERTS_PATH))
-            .filter(entry -> entry.getName().lastIndexOf('/') == CONTENT_ACCESS_CERTS_PATH.length() - 1)
+            .filter(e -> e.getName().startsWith(CONTENT_ACCESS_CERTS_PATH))
+            .filter(e -> e.getName().lastIndexOf('/') == CONTENT_ACCESS_CERTS_PATH.length() - 1)
             .collect(Collectors.toList());
 
-        assertThat(caCerts).singleElement();
+        assertThat(caCerts).isEmpty();
 
-        // Check if entitlement certs are present in exported zip file.
+        // Should contain entitlement certificate in Entitlement mode
         List<ZipEntry> entitlementCerts = export.stream()
-            .filter(entry -> entry.getName().startsWith(ENTITILEMENT_CERTIFICATES_PATH))
-            .filter(entry -> entry.getName().lastIndexOf('/') == ENTITILEMENT_CERTIFICATES_PATH.length() - 1)
+            .filter(e -> e.getName().startsWith(ENTITILEMENT_CERTIFICATES_PATH))
+            .filter(e -> e.getName().lastIndexOf('/') == ENTITILEMENT_CERTIFICATES_PATH.length() - 1)
             .collect(Collectors.toList());
 
         assertThat(entitlementCerts).singleElement();
