@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.hibernate.query.NativeQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -720,8 +721,12 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
                 JOIN active_products ap ON ap.uuid = pc.product_uuid
             """;
 
-        Map<String, Boolean> enablementMap =
-            (Map<String, Boolean>) entityManager.createNativeQuery(sql)
+        Map<String, Boolean> enablementMap = (Map<String, Boolean>) entityManager.createNativeQuery(sql)
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(Pool.class)
+            .addSynchronizedEntityClass(Product.class)
+            .addSynchronizedEntityClass(ProductContent.class)
+            .addSynchronizedQuerySpace("cp_product_provided_products")
             .setParameter("owner_id", ownerId)
             .getResultList()
             .stream()

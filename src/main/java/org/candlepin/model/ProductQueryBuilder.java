@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.hibernate.query.NativeQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -247,11 +248,14 @@ public class ProductQueryBuilder extends QueryBuilder<ProductQueryBuilder, Produ
      * @param criteriaChunks
      *  the list of criteria chunks to receive the predicates for filtering on active products
      *
-     * @param parameters
+     * @param queryArgs
      *  the map of parameters to receive the specific query arguments provided to the builder
+     *
+     * @param querySpaces
+     *  a set to receive any additional tables or "spaces" hit by the components built by this method
      */
     private void buildActiveProductsComponents(List<String> queryChunks, List<String> criteriaChunks,
-        Map<String, Object> queryArgs) {
+        Map<String, Object> queryArgs, Set<String> querySpaces) {
 
         // The "active" flag has a massive impact on how this query is constructed. If it's any value
         // other than "include", we start with the CTE. Otherwise we're a boring ol' select and we do
@@ -328,6 +332,10 @@ public class ProductQueryBuilder extends QueryBuilder<ProductQueryBuilder, Produ
         // This *must* go at the beginning of the query or we break
         queryChunks.add(0, ctes);
 
+        // Add the tables/spaces we're querying against
+        querySpaces.add("cp_pool");
+        querySpaces.add("cp_product_provided_products");
+
         if (this.active == Inclusion.EXCLUSIVE) {
             queryChunks.add("JOIN active_products active ON active.uuid = prod.uuid");
         }
@@ -346,11 +354,14 @@ public class ProductQueryBuilder extends QueryBuilder<ProductQueryBuilder, Produ
      * @param criteriaChunks
      *  the list of criteria chunks to receive the predicates for filtering on custom products
      *
-     * @param parameters
+     * @param queryArgs
      *  the map of parameters to receive the specific query arguments provided to the builder
+     *
+     * @param querySpaces
+     *  a set to receive any additional tables or "spaces" hit by the components built by this method
      */
     private void buildCustomProductsComponents(List<String> queryChunks, List<String> criteriaChunks,
-        Map<String, Object> queryArgs) {
+        Map<String, Object> queryArgs, Set<String> querySpaces) {
 
         List<String> namespaces = this.owners.values()
             .stream()
@@ -390,11 +401,14 @@ public class ProductQueryBuilder extends QueryBuilder<ProductQueryBuilder, Produ
      * @param criteriaChunks
      *  the list of criteria chunks to receive the predicates for filtering on product IDs
      *
-     * @param parameters
+     * @param queryArgs
      *  the map of parameters to receive the specific query arguments provided to the builder
+     *
+     * @param querySpaces
+     *  a set to receive any additional tables or "spaces" hit by the components built by this method
      */
     private void buildProductIdFilterComponents(List<String> queryChunks, List<String> criteriaChunks,
-        Map<String, Object> queryArgs) {
+        Map<String, Object> queryArgs, Set<String> querySpaces) {
 
         if (!this.productIds.isEmpty()) {
             criteriaChunks.add("prod.product_id IN (:product_ids)");
@@ -411,11 +425,14 @@ public class ProductQueryBuilder extends QueryBuilder<ProductQueryBuilder, Produ
      * @param criteriaChunks
      *  the list of criteria chunks to receive the predicates for filtering on product names
      *
-     * @param parameters
+     * @param queryArgs
      *  the map of parameters to receive the specific query arguments provided to the builder
+     *
+     * @param querySpaces
+     *  a set to receive any additional tables or "spaces" hit by the components built by this method
      */
     private void buildProductNameFilterComponents(List<String> queryChunks, List<String> criteriaChunks,
-        Map<String, Object> queryArgs) {
+        Map<String, Object> queryArgs, Set<String> querySpaces) {
 
         if (!this.productNames.isEmpty()) {
             // Impl note: This may end up being slow without an index to go along with it
@@ -552,15 +569,16 @@ public class ProductQueryBuilder extends QueryBuilder<ProductQueryBuilder, Produ
         List<String> queryChunks = new ArrayList<>();
         List<String> criteriaChunks = new ArrayList<>();
         Map<String, Object> queryArgs = new HashMap<>();
+        Set<String> querySpaces = new HashSet<>();
 
         // Prime the query with our basic select...
         queryChunks.add("SELECT COUNT(*) FROM cp_products prod");
 
         // Add the various components...
-        this.buildActiveProductsComponents(queryChunks, criteriaChunks, queryArgs);
-        this.buildCustomProductsComponents(queryChunks, criteriaChunks, queryArgs);
-        this.buildProductIdFilterComponents(queryChunks, criteriaChunks, queryArgs);
-        this.buildProductNameFilterComponents(queryChunks, criteriaChunks, queryArgs);
+        this.buildActiveProductsComponents(queryChunks, criteriaChunks, queryArgs, querySpaces);
+        this.buildCustomProductsComponents(queryChunks, criteriaChunks, queryArgs, querySpaces);
+        this.buildProductIdFilterComponents(queryChunks, criteriaChunks, queryArgs, querySpaces);
+        this.buildProductNameFilterComponents(queryChunks, criteriaChunks, queryArgs, querySpaces);
 
         // Assemble the where clause
         this.assembleWhereClause(queryChunks, criteriaChunks);
@@ -568,8 +586,14 @@ public class ProductQueryBuilder extends QueryBuilder<ProductQueryBuilder, Produ
 
         log.trace("BUILT QUERY: {}", sql);
         log.trace("USING QUERY ARGUMENTS: {}", queryArgs);
+        log.trace("DECLARING QUERY SPACES: {}", querySpaces);
 
-        Query query = entityManager.createNativeQuery(sql);
+        NativeQuery query = entityManager.createNativeQuery(sql)
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(Product.class);
+
+        querySpaces.forEach(query::addSynchronizedQuerySpace);
+
         queryArgs.forEach(query::setParameter);
 
         return query;
@@ -589,6 +613,7 @@ public class ProductQueryBuilder extends QueryBuilder<ProductQueryBuilder, Produ
         List<String> queryChunks = new ArrayList<>();
         List<String> criteriaChunks = new ArrayList<>();
         Map<String, Object> queryArgs = new HashMap<>();
+        Set<String> querySpaces = new HashSet<>();
 
         // Impl note:
         // According to Hibernate docs, native queries can be turned into entities using the native mapper
@@ -599,10 +624,10 @@ public class ProductQueryBuilder extends QueryBuilder<ProductQueryBuilder, Produ
         queryChunks.add("SELECT prod.* FROM cp_products prod");
 
         // Add the various components...
-        this.buildActiveProductsComponents(queryChunks, criteriaChunks, queryArgs);
-        this.buildCustomProductsComponents(queryChunks, criteriaChunks, queryArgs);
-        this.buildProductIdFilterComponents(queryChunks, criteriaChunks, queryArgs);
-        this.buildProductNameFilterComponents(queryChunks, criteriaChunks, queryArgs);
+        this.buildActiveProductsComponents(queryChunks, criteriaChunks, queryArgs, querySpaces);
+        this.buildCustomProductsComponents(queryChunks, criteriaChunks, queryArgs, querySpaces);
+        this.buildProductIdFilterComponents(queryChunks, criteriaChunks, queryArgs, querySpaces);
+        this.buildProductNameFilterComponents(queryChunks, criteriaChunks, queryArgs, querySpaces);
 
         // Assemble the where clause and order statements
         this.assembleWhereClause(queryChunks, criteriaChunks);
@@ -612,8 +637,14 @@ public class ProductQueryBuilder extends QueryBuilder<ProductQueryBuilder, Produ
 
         log.trace("BUILT QUERY: {}", sql);
         log.trace("USING QUERY ARGUMENTS: {}", queryArgs);
+        log.trace("DECLARING QUERY SPACES: {}", querySpaces);
 
-        Query query = entityManager.createNativeQuery(sql, Product.class);
+        NativeQuery<Product> query = entityManager.createNativeQuery(sql, Product.class)
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(Product.class);
+
+        querySpaces.forEach(query::addSynchronizedQuerySpace);
+
         queryArgs.forEach(query::setParameter);
 
         return query;

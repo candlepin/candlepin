@@ -18,7 +18,7 @@ import org.candlepin.model.AbstractHibernateCurator;
 import org.candlepin.model.Owner;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.hibernate.annotations.QueryHints;
+import org.hibernate.query.NativeQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,7 +138,9 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
                 "WHERE key_id IN (:key_ids) AND product_id IN (:product_ids)";
 
             Query query = entityManager.createNativeQuery(sql)
-                .setHint(QueryHints.NATIVE_SPACES, ActivationKey.class.getName());
+                .unwrap(NativeQuery.class)
+                .addSynchronizedEntityClass(ActivationKey.class)
+                .addSynchronizedQuerySpace("cp_activation_key_products");
 
             int blockSize = Math.min(this.getQueryParameterLimit() / 2, this.getInBlockSize() / 2);
             Iterable<List<String>> kidBlocks = this.partition(keyIds, blockSize);

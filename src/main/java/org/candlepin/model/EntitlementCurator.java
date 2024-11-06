@@ -21,6 +21,7 @@ import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Hibernate;
+import org.hibernate.query.NativeQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -583,6 +584,9 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      */
     public List<String> listEntitlementIdByEnvironmentAndContent(String environmentId,
         Collection<String> contentIds) {
+
+        // TODO: FIXME: Fix these queries? At worst this should be a union, not two individual queries.
+
         String sql =
             "select a.id from cp_entitlement a " +
             "    join cp_consumer b on a.consumer_id=b.id " +
@@ -592,10 +596,19 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             "    join cp_contents g on f.content_uuid=g.uuid " +
             "where c.environment_id=:environmentId"  +
             "    and g.content_id in (:contentIds) ";
+
         List<String> results = this.getEntityManager()
             .createNativeQuery(sql)
             .setParameter("environmentId", environmentId)
             .setParameter("contentIds", contentIds)
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(Entitlement.class)
+            .addSynchronizedEntityClass(Consumer.class)
+            .addSynchronizedEntityClass(Pool.class)
+            .addSynchronizedEntityClass(Product.class)
+            .addSynchronizedEntityClass(Content.class)
+            .addSynchronizedEntityClass(ProductContent.class)
+            .addSynchronizedQuerySpace("cp_consumer_environments")
             .getResultList();
 
         sql =
@@ -608,11 +621,22 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             "    join cp_contents h on g.content_uuid=h.uuid " +
             "where c.environment_id=:environmentId " +
             "    and h.content_id in (:contentIds) ";
+
         results.addAll(this.getEntityManager()
             .createNativeQuery(sql)
             .setParameter("environmentId", environmentId)
             .setParameter("contentIds", contentIds)
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(Entitlement.class)
+            .addSynchronizedEntityClass(Consumer.class)
+            .addSynchronizedEntityClass(Pool.class)
+            .addSynchronizedEntityClass(Product.class)
+            .addSynchronizedEntityClass(Content.class)
+            .addSynchronizedEntityClass(ProductContent.class)
+            .addSynchronizedQuerySpace("cp_consumer_environments")
+            .addSynchronizedQuerySpace("cp_product_provided_products")
             .getResultList());
+
         return results;
     }
 
@@ -1195,7 +1219,16 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             "  AND e1.id IN (:entitlement_ids)" +
             "  AND e2.id NOT IN (:entitlement_ids)";
 
-        Query query = getEntityManager().createNativeQuery(queryStr);
+        Query query = this.getEntityManager()
+            .createNativeQuery(queryStr)
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(Entitlement.class)
+            .addSynchronizedEntityClass(Pool.class)
+            .addSynchronizedEntityClass(Product.class)
+            .addSynchronizedEntityClass(Content.class)
+            .addSynchronizedEntityClass(ProductContent.class)
+            .addSynchronizedQuerySpace("cp_product_provided_products")
+            .addSynchronizedQuerySpace("cp_content_required_products");
 
         Set<String> result = new HashSet<>();
         if (entitlementIds == null || !entitlementIds.iterator().hasNext()) {
@@ -1242,7 +1275,17 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             "  AND e2.dirty = false " +
             "  AND e1.id IN (:entitlement_ids)" +
             "  AND e2.id NOT IN (:entitlement_ids)";
-        Query query = getEntityManager().createNativeQuery(queryStr);
+
+        Query query = this.getEntityManager()
+            .createNativeQuery(queryStr)
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(Entitlement.class)
+            .addSynchronizedEntityClass(Pool.class)
+            .addSynchronizedEntityClass(Product.class)
+            .addSynchronizedEntityClass(Content.class)
+            .addSynchronizedEntityClass(ProductContent.class)
+            .addSynchronizedQuerySpace("cp_product_provided_products")
+            .addSynchronizedQuerySpace("cp_content_required_products");
 
         Set<String> result = new HashSet<>();
         if (entitlementIds == null || !entitlementIds.iterator().hasNext()) {
@@ -1302,11 +1345,19 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 "WHERE e.consumer_id = :consumer_id " +
                 "  AND pl1.id IN (:pool_ids) ";
 
+            Query query = this.getEntityManager()
+                .createNativeQuery(querySql)
+                .setParameter("consumer_id", consumer.getId())
+                .unwrap(NativeQuery.class)
+                .addSynchronizedEntityClass(Entitlement.class)
+                .addSynchronizedEntityClass(Pool.class)
+                .addSynchronizedEntityClass(Product.class)
+                .addSynchronizedEntityClass(Content.class)
+                .addSynchronizedEntityClass(ProductContent.class)
+                .addSynchronizedQuerySpace("cp_product_provided_products")
+                .addSynchronizedQuerySpace("cp_content_required_products");
 
             int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() - 1);
-            Query query = getEntityManager().createNativeQuery(querySql)
-                .setParameter("consumer_id", consumer.getId());
-
             for (List<String> block : Iterables.partition(poolIds, blockSize)) {
                 query.setParameter("pool_ids", block);
                 entitlementIds.addAll(query.getResultList());
@@ -1338,8 +1389,17 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                     "WHERE e.consumer_id = :consumer_id " +
                     "  AND pl1.id IN (:pool_ids) ";
 
-                query = getEntityManager().createNativeQuery(querySql)
-                    .setParameter("consumer_id", consumer.getId());
+                query = getEntityManager()
+                    .createNativeQuery(querySql)
+                    .setParameter("consumer_id", consumer.getId())
+                    .unwrap(NativeQuery.class)
+                    .addSynchronizedEntityClass(Entitlement.class)
+                    .addSynchronizedEntityClass(Pool.class)
+                    .addSynchronizedEntityClass(Product.class)
+                    .addSynchronizedEntityClass(Content.class)
+                    .addSynchronizedEntityClass(ProductContent.class)
+                    .addSynchronizedQuerySpace("cp_product_provided_products")
+                    .addSynchronizedQuerySpace("cp_content_required_products");
 
                 for (List<String> block : Iterables.partition(poolIds, blockSize)) {
                     query.setParameter("pool_ids", block);
@@ -1426,13 +1486,19 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 "    JOIN cp_contents content ON content.uuid = pc.content_uuid " +
                 "    WHERE ent.id IN (:ent_ids_2) ";
 
+            Query query = this.getEntityManager()
+                .createNativeQuery(sql)
+                .unwrap(NativeQuery.class)
+                .addSynchronizedEntityClass(Entitlement.class)
+                .addSynchronizedEntityClass(Pool.class)
+                .addSynchronizedEntityClass(Product.class)
+                .addSynchronizedEntityClass(Content.class)
+                .addSynchronizedEntityClass(ProductContent.class)
+                .addSynchronizedQuerySpace("cp_product_provided_products");
+
             // Since we're using a union and slaping down the ID block twice, we have to halve our
             // block size to not risk running over the parameter limit
             int blockSize = this.getInBlockSize() / 2;
-
-            Query query = this.getEntityManager()
-                .createNativeQuery(sql);
-
             for (List<String> block : this.partition(entitlementIds, blockSize)) {
                 List<Object[]> rows = query.setParameter("ent_ids_1", block)
                     .setParameter("ent_ids_2", block)

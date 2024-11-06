@@ -18,6 +18,7 @@ import org.candlepin.util.AttributeValidator;
 
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.query.NativeQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -787,7 +788,10 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             int blockSize = Math.min(this.getQueryParameterLimit() / 2, this.getInBlockSize());
 
             Query query = this.getEntityManager()
-                .createNativeQuery(sql);
+                .createNativeQuery(sql)
+                .unwrap(NativeQuery.class)
+                .addSynchronizedEntityClass(Product.class)
+                .addSynchronizedQuerySpace("cp_product_provided_products");
 
             for (List<String> block : this.partition(productUuids, blockSize)) {
                 List<Object[]> rows = query.setParameter("product_uuids", block)

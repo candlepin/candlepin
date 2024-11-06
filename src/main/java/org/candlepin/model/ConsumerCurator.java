@@ -28,7 +28,7 @@ import com.google.inject.persist.Transactional;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.QueryHints;
+import org.hibernate.query.NativeQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -680,11 +680,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 "The HypervisorHearbeatUpdate cannot execute as the database dialect is not recognized.");
         }
 
-        getEntityManager().createNativeQuery(query)
+        this.getEntityManager()
+            .createNativeQuery(query)
             .setParameter("checkin", checkIn)
             .setParameter("reporter", reporterId)
             .setParameter("ownerKey", ownerKey)
-            .setHint(QueryHints.NATIVE_SPACES, Consumer.class.getName())
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(Consumer.class)
+            .addSynchronizedEntityClass(HypervisorId.class)
+            .addSynchronizedEntityClass(Owner.class)
             .executeUpdate();
     }
 

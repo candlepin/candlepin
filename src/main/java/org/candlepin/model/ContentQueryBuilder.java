@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.hibernate.query.NativeQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -248,11 +249,14 @@ public class ContentQueryBuilder extends QueryBuilder<ContentQueryBuilder, Conte
      * @param criteriaChunks
      *  the list of criteria chunks to receive the predicates for filtering on active contents
      *
-     * @param parameters
+     * @param queryArgs
      *  the map of parameters to receive the specific query arguments provided to the builder
+     *
+     * @param querySpaces
+     *  a set to receive any additional tables or "spaces" hit by the components built by this method
      */
     private void buildActiveContentsComponents(List<String> queryChunks, List<String> criteriaChunks,
-        Map<String, Object> queryArgs) {
+        Map<String, Object> queryArgs, Set<String> querySpaces) {
 
         // The "active" flag has a massive impact on how this query is constructed. If it's any value
         // other than "include", we start with the CTE. Otherwise we're a boring ol' select and we do
@@ -330,6 +334,12 @@ public class ContentQueryBuilder extends QueryBuilder<ContentQueryBuilder, Conte
         queryChunks.add(0, ctes);
         queryChunks.add("JOIN cp_product_contents pc ON pc.content_uuid = content.uuid");
 
+        // Add the tables/spaces we're querying against
+        querySpaces.add("cp_pool");
+        querySpaces.add("cp_products");
+        querySpaces.add("cp_product_provided_products");
+        querySpaces.add("cp_product_contents");
+
         if (this.active == Inclusion.EXCLUSIVE) {
             queryChunks.add("JOIN active_products active ON active.uuid = pc.product_uuid");
         }
@@ -348,11 +358,14 @@ public class ContentQueryBuilder extends QueryBuilder<ContentQueryBuilder, Conte
      * @param criteriaChunks
      *  the list of criteria chunks to receive the predicates for filtering on custom contents
      *
-     * @param parameters
+     * @param queryArgs
      *  the map of parameters to receive the specific query arguments provided to the builder
+     *
+     * @param querySpaces
+     *  a set to receive any additional tables or "spaces" hit by the components built by this method
      */
     private void buildCustomContentsComponents(List<String> queryChunks, List<String> criteriaChunks,
-        Map<String, Object> queryArgs) {
+        Map<String, Object> queryArgs, Set<String> querySpaces) {
 
         List<String> namespaces = this.owners.values()
             .stream()
@@ -392,11 +405,14 @@ public class ContentQueryBuilder extends QueryBuilder<ContentQueryBuilder, Conte
      * @param criteriaChunks
      *  the list of criteria chunks to receive the predicates for filtering on content IDs
      *
-     * @param parameters
+     * @param queryArgs
      *  the map of parameters to receive the specific query arguments provided to the builder
+     *
+     * @param querySpaces
+     *  a set to receive any additional tables or "spaces" hit by the components built by this method
      */
     private void buildContentIdFilterComponents(List<String> queryChunks, List<String> criteriaChunks,
-        Map<String, Object> queryArgs) {
+        Map<String, Object> queryArgs, Set<String> querySpaces) {
 
         if (!this.contentIds.isEmpty()) {
             criteriaChunks.add("content.content_id IN (:content_ids)");
@@ -413,11 +429,14 @@ public class ContentQueryBuilder extends QueryBuilder<ContentQueryBuilder, Conte
      * @param criteriaChunks
      *  the list of criteria chunks to receive the predicates for filtering on content labels
      *
-     * @param parameters
+     * @param queryArgs
      *  the map of parameters to receive the specific query arguments provided to the builder
+     *
+     * @param querySpaces
+     *  a set to receive any additional tables or "spaces" hit by the components built by this method
      */
     private void buildContentLabelFilterComponents(List<String> queryChunks, List<String> criteriaChunks,
-        Map<String, Object> queryArgs) {
+        Map<String, Object> queryArgs, Set<String> querySpaces) {
 
         if (!this.contentLabels.isEmpty()) {
             // Impl note: This may end up being slow without an index to go along with it
@@ -556,15 +575,16 @@ public class ContentQueryBuilder extends QueryBuilder<ContentQueryBuilder, Conte
         List<String> queryChunks = new ArrayList<>();
         List<String> criteriaChunks = new ArrayList<>();
         Map<String, Object> queryArgs = new HashMap<>();
+        Set<String> querySpaces = new HashSet<>();
 
         // Prime the query with our basic select...
         queryChunks.add("SELECT COUNT(*) FROM cp_contents content");
 
         // Add the various components...
-        this.buildActiveContentsComponents(queryChunks, criteriaChunks, queryArgs);
-        this.buildCustomContentsComponents(queryChunks, criteriaChunks, queryArgs);
-        this.buildContentIdFilterComponents(queryChunks, criteriaChunks, queryArgs);
-        this.buildContentLabelFilterComponents(queryChunks, criteriaChunks, queryArgs);
+        this.buildActiveContentsComponents(queryChunks, criteriaChunks, queryArgs, querySpaces);
+        this.buildCustomContentsComponents(queryChunks, criteriaChunks, queryArgs, querySpaces);
+        this.buildContentIdFilterComponents(queryChunks, criteriaChunks, queryArgs, querySpaces);
+        this.buildContentLabelFilterComponents(queryChunks, criteriaChunks, queryArgs, querySpaces);
 
         // Assemble the where clause
         this.assembleWhereClause(queryChunks, criteriaChunks);
@@ -572,9 +592,15 @@ public class ContentQueryBuilder extends QueryBuilder<ContentQueryBuilder, Conte
 
         log.trace("BUILT QUERY: {}", sql);
         log.trace("USING QUERY ARGUMENTS: {}", queryArgs);
+        log.trace("DECLARING QUERY SPACES: {}", querySpaces);
 
-        Query query = entityManager.createNativeQuery(sql);
-        queryArgs.forEach((key, value) -> query.setParameter(key, value));
+        NativeQuery query = entityManager.createNativeQuery(sql)
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(Content.class);
+
+        querySpaces.forEach(query::addSynchronizedQuerySpace);
+
+        queryArgs.forEach(query::setParameter);
 
         return query;
     }
@@ -596,6 +622,7 @@ public class ContentQueryBuilder extends QueryBuilder<ContentQueryBuilder, Conte
         List<String> queryChunks = new ArrayList<>();
         List<String> criteriaChunks = new ArrayList<>();
         Map<String, Object> queryArgs = new HashMap<>();
+        Set<String> querySpaces = new HashSet<>();
 
         // Impl note:
         // According to Hibernate docs, native queries can be turned into entities using the native mapper
@@ -606,10 +633,10 @@ public class ContentQueryBuilder extends QueryBuilder<ContentQueryBuilder, Conte
         queryChunks.add("SELECT content.* FROM cp_contents content");
 
         // Add the various components...
-        this.buildActiveContentsComponents(queryChunks, criteriaChunks, queryArgs);
-        this.buildCustomContentsComponents(queryChunks, criteriaChunks, queryArgs);
-        this.buildContentIdFilterComponents(queryChunks, criteriaChunks, queryArgs);
-        this.buildContentLabelFilterComponents(queryChunks, criteriaChunks, queryArgs);
+        this.buildActiveContentsComponents(queryChunks, criteriaChunks, queryArgs, querySpaces);
+        this.buildCustomContentsComponents(queryChunks, criteriaChunks, queryArgs, querySpaces);
+        this.buildContentIdFilterComponents(queryChunks, criteriaChunks, queryArgs, querySpaces);
+        this.buildContentLabelFilterComponents(queryChunks, criteriaChunks, queryArgs, querySpaces);
 
         // Assemble the where clause and order statements
         this.assembleWhereClause(queryChunks, criteriaChunks);
@@ -619,8 +646,14 @@ public class ContentQueryBuilder extends QueryBuilder<ContentQueryBuilder, Conte
 
         log.trace("BUILT QUERY: {}", sql);
         log.trace("USING QUERY ARGUMENTS: {}", queryArgs);
+        log.trace("DECLARING QUERY SPACES: {}", querySpaces);
 
-        Query query = entityManager.createNativeQuery(sql, Content.class);
+        NativeQuery<Content> query = entityManager.createNativeQuery(sql, Content.class)
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(Content.class);
+
+        querySpaces.forEach(query::addSynchronizedQuerySpace);
+
         queryArgs.forEach((key, value) -> query.setParameter(key, value));
 
         return query;
