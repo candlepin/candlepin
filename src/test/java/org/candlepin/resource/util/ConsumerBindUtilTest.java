@@ -375,33 +375,7 @@ public class ConsumerBindUtilTest {
 
         consumerBindUtil.handleActivationKeys(consumer, Arrays.asList(key1), false);
 
-        verify(this.entitler, times(1)).bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(1));
-    }
-
-    @Test
-    public void handleActivationKeysWithoutAutoAttachUsingSCAWhenBindFails() throws Exception {
-        this.owner.setContentAccessModeList(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
-        this.owner.setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
-
-        Pool pool1 = this.createTestPool(this.owner, 1);
-
-        ActivationKey key1 = new ActivationKey("test_key-1", this.owner);
-        key1.setAutoAttach(false);
-        key1.addPool(pool1, 5L);
-
-        Consumer consumer = new Consumer()
-            .setName("sys.example.com")
-            .setType(this.systemConsumerType);
-
-        ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
-
-        doThrow(new ForbiddenException("exception")).when(this.entitler)
-            .bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(5));
-
-        // This should not throw an exception even though the bind fails
-        consumerBindUtil.handleActivationKeys(consumer, Arrays.asList(key1), false);
-
-        verify(this.entitler, times(1)).bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(5));
+        verify(this.entitler, times(0)).bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(1));
     }
 
     @Test
