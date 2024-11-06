@@ -2496,8 +2496,6 @@ public class ConsumerResource implements ConsumerApi {
 
         short parameters = 0;
 
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
         if (poolIdString != null) {
             parameters++;
         }
@@ -2543,6 +2541,17 @@ public class ConsumerResource implements ConsumerApi {
         Consumer consumer = consumerCurator.verifyAndLookupConsumerWithEntitlements(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
         log.debug("Consumer (post verify): {}", consumer);
+
+        // Not allow to attach ent to consumer in SCA mode(Only manifest consumers are allowed)
+        boolean scaEnabled = consumer.getOwner().isUsingSimpleContentAccess();
+        if (scaEnabled && !ctype.isManifest()) {
+            ExceptionMessage message = new ExceptionMessage(
+                i18n.tr("Attach operations are ignored in organizations using simple content access"));
+
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity(message)
+                .build();
+        }
 
         // Check that only one query param was set, and some other validations
         validateBindArguments(poolId, quantity, productIds, fromPools,

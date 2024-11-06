@@ -30,6 +30,7 @@ import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
+import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
@@ -633,21 +634,80 @@ public class DatabaseTestFixture {
         return environment;
     }
 
+    /**
+     * Creates an owner with a randomly generated name in SCA (Simple Content Access) mode.
+     *
+     * <p>This method generates a random integer, appends it to the name "Test Owner",
+     * and uses it to create a new owner instance. The owner is created in SCA mode
+     * (default for owners) and is persisted in the database.</p>
+     *
+     * @return a newly created and persisted {@code Owner} instance in SCA mode
+     */
     protected Owner createOwner() {
         return this.createOwner("Test Owner " + TestUtil.randomInt());
     }
 
+    /**
+     * Creates an owner with the specified key and a matching name in SCA (Simple Content Access) mode.
+     *
+     * <p>This method creates a new {@code Owner} instance where both the key and name
+     * are set to the provided {@code key} value. The owner is created in SCA mode
+     * (default for owners) and is persisted in the database.</p>
+     *
+     * @param key the key to use for the owner; it will also be used as the owner's name
+     * @return a newly created and persisted {@code Owner} instance in SCA mode
+     */
     protected Owner createOwner(String key) {
         return this.createOwner(key, key);
     }
 
+    /**
+     * Creates an owner with the specified key and name in SCA (Simple Content Access) mode.
+     *
+     * <p>This method initializes an {@code Owner} instance using the provided key and name,
+     * and persists the owner in the database. The owner is created in SCA mode (default for owners).</p>
+     *
+     * @param key the key to assign to the owner
+     * @param name the display name of the owner
+     * @return a newly created and persisted {@code Owner} instance in SCA mode
+     */
     protected Owner createOwner(String key, String name) {
-        Owner owner = TestUtil.createOwner(key, name);
-        owner.setId(null);
+        Owner owner = TestUtil.createOwner(key, name)
+            .setId(null);
 
-        this.ownerCurator.create(owner);
+        return this.ownerCurator.create(owner);
+    }
 
-        return owner;
+    /**
+     * Creates a non-SCA (Simple Content Access) owner with the specified key.
+     *
+     * <p>This method creates a new {@code Owner} instance in entitlement mode, where
+     * both the key and name are set to the provided {@code key} value. The owner is persisted
+     * in the database.</p>
+     *
+     * @param key the key to use for the owner; it will also be used as the owner's name
+     * @return a newly created and persisted {@code Owner} instance in entitlement mode
+     */
+    protected Owner createNonSCAOwner(String key) {
+        return this.createNonSCAOwner(key, key);
+    }
+
+    /**
+     * Creates a non-SCA (Simple Content Access) owner with the specified key and name.
+     *
+     * <p>This method initializes an {@code Owner} instance with the provided key and name,
+     * sets the content access mode to entitlement mode, and persists the owner in the database.</p>
+     *
+     * @param key the key to assign to the owner
+     * @param name the display name of the owner
+     * @return a newly created and persisted {@code Owner} instance in entitlement mode
+     */
+    protected Owner createNonSCAOwner(String key, String name) {
+        Owner owner = TestUtil.createOwner(key, name)
+            .setId(null)
+            .setContentAccessMode(ContentAccessMode.ENTITLEMENT.toDatabaseValue());
+
+        return this.ownerCurator.create(owner);
     }
 
     /**
