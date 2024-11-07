@@ -654,4 +654,28 @@ public class ConsumerResourceActivationKeySpecTest {
             .returns(2, Set::size)
             .returns(true, x -> x.containsAll(Set.of(caKey1, caKey2)));
     }
+
+    @Test
+    public void shouldAllowConsumerToRegisterWithActivationKeyAuthWithoutConsumedSubscriptionInSCA() {
+        OwnerDTO owner = ownerClient.createOwner(Owners.randomSca());
+        ProductDTO prod1 = Products.random()
+            .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"));
+        prod1 = ownerProductApi.createProduct(owner.getKey(), prod1);
+        ownerClient.createPool(owner.getKey(), Pools.random(prod1));
+        PoolDTO pool1 = ownerClient.listOwnerPools(owner.getKey()).get(0);
+
+        ActivationKeyDTO key1 = ownerClient.createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+        key1 = activationKeyApi.addPoolToKey(key1.getId(), pool1.getId(), 3L);
+        ActivationKeyDTO key2 = ownerClient.createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        ApiClient noAuth = ApiClients.noAuth();
+        ConsumerDTO consumer = noAuth.consumers().createConsumer(Consumers.random(owner), null,
+            owner.getKey(), key1.getName() + "," + key2.getName(), true);
+
+        assertThat(consumer.getUuid()).isNotNull();
+        List<EntitlementDTO> entitlementDTOS = client.entitlements().listAllForConsumer(consumer.getUuid());
+
+        assertThat(entitlementDTOS)
+            .isEmpty();
+    }
 }

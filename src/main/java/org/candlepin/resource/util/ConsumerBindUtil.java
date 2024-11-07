@@ -140,12 +140,15 @@ public class ConsumerBindUtil {
                 }
             }
             else {
-                // Activation key does not specify auto-attach; attach designated pools
-
-                // Impl note: while this doesn't make a great deal of sense in SCA mode, compared to
-                // the check above for auto-attach, this is still intended behavior, as attaching
-                // specific pools is still an desired feature in SCA mode.
-                keySuccess &= handleActivationKeyPools(consumer, key);
+                // In SCA mode, attaching specific pools is no longer supported for smoother transition.
+                // Instead, log an informational message and skip pool attachment.
+                if (scaEnabled) {
+                    log.warn("Owner is using simple content access; skipping attaching pools for consumer " +
+                        "with activation key: {}, {}", consumer.getUuid(), key.getName());
+                }
+                else {
+                    keySuccess &= handleActivationKeyPools(consumer, key);
+                }
             }
 
             listSuccess |= keySuccess;
