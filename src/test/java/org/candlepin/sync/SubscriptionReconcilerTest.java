@@ -65,26 +65,22 @@ public class SubscriptionReconcilerTest {
     }
 
     public Content convertFromDTO(ContentDTO dto) {
-        Content content = null;
-
-        if (dto != null) {
-            content = new Content();
-
-            content.setId(dto.getId());
-            content.setName(dto.getName());
-            content.setType(dto.getType());
-            content.setLabel(dto.getLabel());
-            content.setVendor(dto.getVendor());
-            content.setContentUrl(dto.getContentUrl());
-            content.setRequiredTags(dto.getRequiredTags());
-            content.setReleaseVersion(dto.getReleaseVersion());
-            content.setGpgUrl(dto.getGpgUrl());
-            content.setMetadataExpiration(dto.getMetadataExpiration());
-            content.setModifiedProductIds(dto.getRequiredProductIds());
-            content.setArches(dto.getArches());
+        if (dto == null) {
+            return null;
         }
 
-        return content;
+        return new Content(dto.getId())
+            .setName(dto.getName())
+            .setType(dto.getType())
+            .setLabel(dto.getLabel())
+            .setVendor(dto.getVendor())
+            .setContentUrl(dto.getContentUrl())
+            .setRequiredTags(dto.getRequiredTags())
+            .setReleaseVersion(dto.getReleaseVersion())
+            .setGpgUrl(dto.getGpgUrl())
+            .setMetadataExpiration(dto.getMetadataExpiration())
+            .setModifiedProductIds(dto.getRequiredProductIds())
+            .setArches(dto.getArches());
     }
 
     public Product convertFromDTO(ProductDTO dto) {

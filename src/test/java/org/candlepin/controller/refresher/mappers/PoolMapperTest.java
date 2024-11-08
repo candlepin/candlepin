@@ -14,12 +14,23 @@
  */
 package org.candlepin.controller.refresher.mappers;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.service.model.SubscriptionInfo;
+import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 
 
@@ -58,6 +69,35 @@ public class PoolMapperTest extends AbstractEntityMapperTest<Pool, SubscriptionI
             .setId(entityId)
             .setOwner(owner)
             .setQuantity(10000L + ++generatedEntityCount);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testAddExistingEntityWithNullOrEmptyEntityId(String entityId) {
+        Owner owner = TestUtil.createOwner();
+        Pool entity = this.buildLocalEntity(owner, entityId);
+
+        EntityMapper<Pool, SubscriptionInfo> mapper = this.buildEntityMapper();
+        assertThrows(IllegalArgumentException.class, () -> mapper.addExistingEntity(entity));
+
+        Map<String, Pool> map = mapper.getExistingEntities();
+        assertNotNull(map);
+        assertTrue(map.isEmpty());
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testAddExistingEntitiesFailsWithNullOrEmptyEntityIds(String entityId) {
+        Owner owner = TestUtil.createOwner();
+        Pool entity1 = this.buildLocalEntity(owner, "test_id-1");
+        Pool entity2 = this.buildLocalEntity(owner, "test_id-2");
+        Pool entity3 = this.buildLocalEntity(owner, "test_id-3");
+        Pool badEntity = this.buildLocalEntity(owner, entityId);
+
+        EntityMapper<Pool, SubscriptionInfo> mapper = this.buildEntityMapper();
+        Collection<Pool> input = List.of(entity1, badEntity, entity2, badEntity, entity3);
+
+        assertThrows(IllegalArgumentException.class, () -> mapper.addExistingEntities(input));
     }
 
 }

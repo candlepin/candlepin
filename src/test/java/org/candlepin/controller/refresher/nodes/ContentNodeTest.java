@@ -43,14 +43,12 @@ public class ContentNodeTest extends AbstractNodeTest<Content, ContentInfo> {
 
     @Override
     protected Content buildLocalEntity(Owner owner, String entityId) {
-        return new Content()
-            .setId(entityId);
+        return new Content(entityId);
     }
 
     @Override
     protected ContentInfo buildImportedEntity(Owner owner, String entityId) {
-        return new Content()
-            .setId(entityId);
+        return new Content(entityId);
     }
 
     @Test

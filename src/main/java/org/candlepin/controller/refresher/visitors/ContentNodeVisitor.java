@@ -54,8 +54,6 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
      *
      */
     private Content applyContentChanges(Content existingEntity, ContentInfo importedEntity) {
-        existingEntity.setId(importedEntity.getId());
-
         if (importedEntity != null) {
             if (importedEntity.getType() != null) {
                 existingEntity.setType(importedEntity.getType());
@@ -160,7 +158,7 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
 
         switch (node.getNodeState()) {
             case CREATED:
-                updatedEntity = this.applyContentChanges(new Content(), importedEntity);
+                updatedEntity = this.applyContentChanges(new Content(importedEntity.getId()), importedEntity);
                 updatedEntity = this.contentCurator.create(updatedEntity, false);
 
                 node.setExistingEntity(updatedEntity);

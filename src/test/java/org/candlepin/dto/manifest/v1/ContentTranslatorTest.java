@@ -21,7 +21,7 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Content;
 
-import java.util.Arrays;
+import java.util.List;
 
 
 
@@ -45,23 +45,19 @@ public class ContentTranslatorTest extends
 
     @Override
     protected Content initSourceObject() {
-        Content source = new Content();
-
-        source.setUuid("test_value");
-        source.setMetadataExpiration(3L);
-        source.setId("test_value");
-        source.setType("test_value");
-        source.setLabel("test_value");
-        source.setName("test_value");
-        source.setVendor("test_value");
-        source.setContentUrl("test_value");
-        source.setRequiredTags("test_value");
-        source.setReleaseVersion("test_value");
-        source.setGpgUrl("test_value");
-        source.setModifiedProductIds(Arrays.asList("1", "2", "3"));
-        source.setArches("test_value");
-
-        return source;
+        return new Content("test_value")
+            .setUuid("test_value")
+            .setMetadataExpiration(3L)
+            .setType("test_value")
+            .setLabel("test_value")
+            .setName("test_value")
+            .setVendor("test_value")
+            .setContentUrl("test_value")
+            .setRequiredTags("test_value")
+            .setReleaseVersion("test_value")
+            .setGpgUrl("test_value")
+            .setModifiedProductIds(List.of("1", "2", "3"))
+            .setArches("test_value");
     }
 
     @Override

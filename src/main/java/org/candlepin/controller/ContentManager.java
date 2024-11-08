@@ -110,9 +110,8 @@ public class ContentManager {
 
         log.debug("Creating new content in namespace {}: {}", namespace, cinfo);
 
-        Content entity = new Content()
-            .setNamespace(namespace)
-            .setId(cinfo.getId());
+        Content entity = new Content(cinfo.getId())
+            .setNamespace(namespace);
 
         entity = applyContentChanges(entity, cinfo);
 

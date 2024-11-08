@@ -14,6 +14,9 @@
  */
 package org.candlepin.controller.refresher.mappers;
 
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.service.model.ContentInfo;
@@ -52,16 +55,18 @@ public class ContentMapperTest extends AbstractEntityMapperTest<Content, Content
 
     @Override
     protected Content buildLocalEntity(Owner owner, String entityId) {
-        return new Content()
-            .setId(entityId)
+        return new Content(entityId)
             .setName(String.format("%s-%d", entityId, ++generatedEntityCount));
     }
 
     @Override
     protected ContentInfo buildImportedEntity(Owner owner, String entityId) {
-        return new Content()
-            .setId(entityId)
-            .setName(String.format("%s-%d", entityId, ++generatedEntityCount));
+        ContentInfo mockContentInfo = mock(ContentInfo.class);
+
+        doReturn(entityId).when(mockContentInfo).getId();
+        doReturn(String.format("%s-%d", entityId, ++generatedEntityCount)).when(mockContentInfo).getName();
+
+        return mockContentInfo;
     }
 
 }

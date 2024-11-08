@@ -212,15 +212,14 @@ public class EntitlementPayloadGeneratorTest {
 
     private Content createContent() {
         String id = "" + TestUtil.randomInt(10_000);
-        Content content = TestUtil.createContent(id, TestUtil.randomString());
-        content.setId(id);
-        content.setUuid(id + "_uuid");
-        content.setLabel("label");
-        content.setType("yum");
-        content.setVendor("vendor");
-        content.setArches("x86_64");
-        content.setRequiredTags("tag1");
-        content.setMetadataExpiration(3200L);
+        Content content = TestUtil.createContent(id, TestUtil.randomString())
+            .setUuid(id + "_uuid")
+            .setLabel("label")
+            .setType("yum")
+            .setVendor("vendor")
+            .setArches("x86_64")
+            .setRequiredTags("tag1")
+            .setMetadataExpiration(3200L);
 
         return content;
     }

@@ -1061,18 +1061,16 @@ public class EntitlementCertificateGeneratorTest {
         String url, String gpgUrl, String arches) {
 
         TestUtil.createOwner("Example-Corporation");
-        Content content = TestUtil.createContent(id, name);
-
-        content.setId(id + TestUtil.randomInt(10_000));
-        content.setUuid(id + "_uuid");
-        content.setLabel(label);
-        content.setType(type);
-        content.setVendor(vendor);
-        content.setContentUrl(url);
-        content.setGpgUrl(gpgUrl);
-        content.setArches(arches);
-        content.setRequiredTags(REQUIRED_TAGS);
-        content.setMetadataExpiration(CONTENT_METADATA_EXPIRE);
+        Content content = TestUtil.createContent(id + TestUtil.randomInt(10_000), name)
+            .setUuid(id + "_uuid")
+            .setLabel(label)
+            .setType(type)
+            .setVendor(vendor)
+            .setContentUrl(url)
+            .setGpgUrl(gpgUrl)
+            .setArches(arches)
+            .setRequiredTags(REQUIRED_TAGS)
+            .setMetadataExpiration(CONTENT_METADATA_EXPIRE);
 
         return content;
     }

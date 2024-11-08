@@ -17,8 +17,6 @@ package org.candlepin.model;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.service.model.ProductContentInfo;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
@@ -127,7 +125,7 @@ public class ProductContent extends AbstractHibernateObject<ProductContent> impl
     }
 
     public String getContentId() {
-        return this.content != null ? this.content.getId() : null;
+        return this.content.getId();
     }
 
     /**
@@ -155,24 +153,15 @@ public class ProductContent extends AbstractHibernateObject<ProductContent> impl
             return true;
         }
 
-        if (obj instanceof ProductContent) {
-            ProductContent that = (ProductContent) obj;
-
-            return new EqualsBuilder()
-                .append(this.getProductId(), that.getProductId())
-                .append(this.getContentId(), that.getContentId())
-                .isEquals();
-        }
-
-        return false;
+        return obj instanceof ProductContent that ?
+            this.getContentId().equals(that.getContentId()) :
+            false;
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(3, 23)
-            .append(this.getProductId())
-            .append(this.getContentId())
-            .toHashCode();
+        return this.getContentId()
+            .hashCode();
     }
 
     /**

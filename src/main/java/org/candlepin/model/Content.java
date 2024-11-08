@@ -139,79 +139,27 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     private String arches;
 
     /**
-     * Default constructor
+     * Zero-arg constructor for Hibernate. Do not use.
      */
-    public Content() {
+    Content() {
         this.modifiedProductIds = new HashSet<>();
     }
 
     /**
-     * ID-based constructor so API users can specify an ID in place of a full object.
+     * Creates a new Content instance with the given content ID. Note that the content ID specified here
+     * is the upstream content ID, not the Candlepin-internal content UUID.
      *
      * @param id
-     *  The ID for this content
+     *  The upstream content ID for the new content instance; cannot be null or empty
      */
     public Content(String id) {
         this();
 
-        this.setId(id);
-    }
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("content ID is null or empty");
+        }
 
-    public Content(String id, String name, String type, String label, String vendor) {
-        this(id);
-
-        this.setName(name);
-        this.setType(type);
-        this.setLabel(label);
-        this.setVendor(vendor);
-    }
-
-    /**
-     * Creates a shallow copy of the specified source content. Attributes and content are not
-     * duplicated, but the joining objects are (ContentAttribute, ContentContent, etc.).
-     * <p></p>
-     * Unlike the merge method, all properties from the source content are copied, including the
-     * state of any null collections and any identifier fields.
-     *
-     * @param source
-     *  The Content instance to copy
-     */
-    protected Content(Content source) {
-        this.setUuid(source.getUuid());
-        this.setId(source.getId());
-
-        this.setCreated(source.getCreated() != null ? (Date) source.getCreated().clone() : null);
-
-        this.merge(source);
-    }
-
-    /**
-     * Copies several properties from the given content on to this content instance. Properties that
-     * are not copied over include any identifiying fields (UUID, ID), the creation date and locking
-     * states. Values on the source content which are null will be ignored.
-     *
-     * @param source
-     *  The source content instance from which to pull content information
-     *
-     * @return
-     *  this content instance
-     */
-    public Content merge(Content source) {
-        this.setUpdated(source.getUpdated() != null ? (Date) source.getUpdated().clone() : null);
-
-        this.setType(source.getType());
-        this.setLabel(source.getLabel());
-        this.setName(source.getName());
-        this.setVendor(source.getVendor());
-        this.setContentUrl(source.getContentUrl());
-        this.setRequiredTags(source.getRequiredTags());
-        this.setReleaseVersion(source.getReleaseVersion());
-        this.setGpgUrl(source.getGpgUrl());
-        this.setMetadataExpiration(source.getMetadataExpiration());
-        this.setArches(source.getArches());
-        this.setModifiedProductIds(source.getModifiedProductIds());
-
-        return this;
+        this.id = id;
     }
 
     @Override
@@ -327,21 +275,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @Override
     public String getId() {
         return this.id;
-    }
-
-    /**
-     * Sets the content ID for this content. The content ID is the Red Hat content ID and should not
-     * be confused with the object ID.
-     *
-     * @param id
-     *  The new content ID for this content
-     *
-     * @return
-     *  a reference to this content instance
-     */
-    public Content setId(String id) {
-        this.id = id;
-        return this;
     }
 
     @Override

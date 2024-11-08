@@ -207,18 +207,17 @@ public class ContentAccessManagerTest {
     }
 
     private Content mockContent(Owner owner) {
-        Content content = new Content();
-        content.setUuid("test_content-uuid");
-        content.setId("1234");
-        content.setName("test_content");
-        content.setLabel("test_content-label");
-        content.setType("yum");
-        content.setVendor("vendor");
-        content.setContentUrl("/content/dist/rhel/$releasever/$basearch/os");
-        content.setGpgUrl("gpgUrl");
-        content.setArches("x86_64");
-        content.setMetadataExpiration(3200L);
-        content.setRequiredTags("TAG1,TAG2");
+        Content content = new Content("1234")
+            .setUuid("test_content-uuid")
+            .setName("test_content")
+            .setLabel("test_content-label")
+            .setType("yum")
+            .setVendor("vendor")
+            .setContentUrl("/content/dist/rhel/$releasever/$basearch/os")
+            .setGpgUrl("gpgUrl")
+            .setArches("x86_64")
+            .setMetadataExpiration(3200L)
+            .setRequiredTags("TAG1,TAG2");
 
         return content;
     }

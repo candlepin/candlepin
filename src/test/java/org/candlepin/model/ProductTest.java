@@ -46,6 +46,14 @@ import java.util.stream.Stream;
  */
 public class ProductTest {
 
+    protected static Content buildContent(String id, String name, String type, String label, String vendor) {
+        return new Content(id)
+            .setName(name)
+            .setType(type)
+            .setLabel(label)
+            .setVendor(vendor);
+    }
+
     protected static Stream<Object[]> getValuesForEqualityAndReplication() {
         Map<String, String> attributes1 = new HashMap<>();
         attributes1.put("a1", "v1");
@@ -58,12 +66,12 @@ public class ProductTest {
         attributes2.put("a6", "v6");
 
         Content[] content = new Content[] {
-            new Content("c1", "content-1", "test_type", "test_label-1", "test_vendor-1"),
-            new Content("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
-            new Content("c3", "content-3", "test_type", "test_label-3", "test_vendor-3"),
-            new Content("c4", "content-4", "test_type", "test_label-4", "test_vendor-4"),
-            new Content("c5", "content-5", "test_type", "test_label-5", "test_vendor-5"),
-            new Content("c6", "content-6", "test_type", "test_label-6", "test_vendor-6")
+            buildContent("c1", "content-1", "test_type", "test_label-1", "test_vendor-1"),
+            buildContent("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
+            buildContent("c3", "content-3", "test_type", "test_label-3", "test_vendor-3"),
+            buildContent("c4", "content-4", "test_type", "test_label-4", "test_vendor-4"),
+            buildContent("c5", "content-5", "test_type", "test_label-5", "test_vendor-5"),
+            buildContent("c6", "content-6", "test_type", "test_label-6", "test_vendor-6")
         };
 
         for (Content cobj : content) {

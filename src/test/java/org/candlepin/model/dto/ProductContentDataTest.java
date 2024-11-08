@@ -199,7 +199,12 @@ public class ProductContentDataTest {
 
     @Test
     public void testPopulateWithEntityContent() {
-        Content contentEntity = new Content("id1", "name1", "type1", "label1", "vendor1");
+        Content contentEntity = new Content("id1")
+            .setName("name1")
+            .setType("type1")
+            .setLabel("label1")
+            .setVendor("vendor1");
+
         ContentData contentData = contentEntity.toDTO();
 
         ProductContentData base = new ProductContentData();

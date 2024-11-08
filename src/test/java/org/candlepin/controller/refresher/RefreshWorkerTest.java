@@ -1084,14 +1084,11 @@ public class RefreshWorkerTest {
         ContentInfo cinfo1 = this.mockContentInfo("cid-1", "content-1");
         ContentInfo cinfo2 = this.mockContentInfo("cid-2", "content-2");
         ContentInfo cinfo3 = this.mockContentInfo("cid-3a", "imported_content");
-        Content content1 = new Content()
-            .setId("cid-1")
+        Content content1 = new Content("cid-1")
             .setName("content-1");
-        Content content2 = new Content()
-            .setId("cid-2")
+        Content content2 = new Content("cid-2")
             .setName("content-2");
-        Content content3 = new Content()
-            .setId("cid-3b")
+        Content content3 = new Content("cid-3b")
             .setName("existing_content");
 
         ProductInfo pinfo1 = this.mockProductInfo("pid-1", "product-1");

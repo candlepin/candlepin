@@ -115,8 +115,7 @@ public class EntityMapper {
 
             Content fetched = this.contentCurator.getContentById(this.owner.getKey(), cid);
             if (fetched == null) {
-                fetched = new Content()
-                    .setId(cid)
+                fetched = new Content(cid)
                     .setNamespace(this.owner.getKey());
             }
 

@@ -387,9 +387,8 @@ class SCACertificateGeneratorTest {
     private Content createContent() {
         String id = TestUtil.randomString(6, TestUtil.CHARSET_NUMERIC);
 
-        return new Content()
+        return new Content(id)
             .setUuid("test_content-" + id)
-            .setId(id)
             .setName("test_content-" + id)
             .setLabel("label")
             .setType("yum")

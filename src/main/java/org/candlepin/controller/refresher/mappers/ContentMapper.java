@@ -69,7 +69,11 @@ public class ContentMapper extends AbstractEntityMapper<Content, ContentInfo> {
      */
     @Override
     protected String getEntityId(Content entity) {
-        return this.getEntityId((ContentInfo) entity);
+        if (entity == null) {
+            throw new IllegalArgumentException("entity is null");
+        }
+
+        return entity.getId();
     }
 
 }

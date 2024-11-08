@@ -265,8 +265,7 @@ public class UeberCertificateGenerator {
         }
 
         private Content createUeberContent(UniqueIdGenerator idGenerator, Owner owner, Product product) {
-            return new Content()
-                .setId(idGenerator.generateId())
+            return new Content(idGenerator.generateId())
                 .setName(UEBER_CONTENT_NAME)
                 .setType("yum")
                 .setLabel(product.getId() + "_" + UEBER_CONTENT_NAME)

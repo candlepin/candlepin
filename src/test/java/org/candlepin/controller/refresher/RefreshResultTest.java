@@ -66,8 +66,7 @@ public class RefreshResultTest {
         Product product = new Product();
         product.setId("test_product");
 
-        Content content = new Content();
-        content.setId("test_content");
+        Content content = new Content("test_content");
 
         Pool pool = new Pool();
         pool.setId("test_pool");
@@ -181,11 +180,10 @@ public class RefreshResultTest {
     public void testGetEntityDoesNotFetchWrongClass() {
         String entityId = "test_id";
 
-        Product product = new Product();
-        product.setId(entityId);
+        Product product = new Product()
+            .setId(entityId);
 
-        Content content = new Content();
-        content.setId(entityId);
+        Content content = new Content(entityId);
 
         RefreshResult refreshResult = new RefreshResult()
             .addEntity(Product.class, product, EntityState.CREATED)
@@ -247,10 +245,7 @@ public class RefreshResultTest {
             }
 
             public Content generate(String suffix) {
-                Content entity = new Content();
-                entity.setId("test_content-" + suffix);
-
-                return entity;
+                return new Content("test_content-" + suffix);
             }
         });
 
@@ -354,14 +349,9 @@ public class RefreshResultTest {
         Product product3 = new Product();
         product3.setId("test_product-3");
 
-        Content content1 = new Content();
-        content1.setId("test_content-1");
-
-        Content content2 = new Content();
-        content2.setId("test_content-2");
-
-        Content content3 = new Content();
-        content3.setId("test_content-3");
+        Content content1 = new Content("test_content-1");
+        Content content2 = new Content("test_content-2");
+        Content content3 = new Content("test_content-3");
 
         RefreshResult refreshResult = new RefreshResult()
             .addEntity(Product.class, product1, EntityState.CREATED)

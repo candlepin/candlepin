@@ -484,7 +484,6 @@ public class ContentDataTest {
     protected static Stream<Object[]> getValuesPopulationByEntity() {
         return Stream.of(
             new Object[] { "Uuid", "test_value", null },
-            new Object[] { "Id", "test_value", null },
             new Object[] { "Type", "test_value", null },
             new Object[] { "Label", "test_value", null },
             new Object[] { "Name", "test_value", null },
@@ -528,7 +527,7 @@ public class ContentDataTest {
         }
 
         ContentData base = new ContentData();
-        Content source = new Content();
+        Content source = new Content("test_content");
 
         mutator.invoke(source, input);
         base.populate(source);
