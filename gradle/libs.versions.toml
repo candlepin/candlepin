@@ -25,7 +25,7 @@ artemis-server = { module = "org.apache.activemq:artemis-server", version.ref = 
 artemis-stomp = { module = "org.apache.activemq:artemis-stomp-protocol", version.ref = "artemis" }
 assertj = { module = "org.assertj:assertj-core", version = "3.26.3" }
 bouncycastle-prov = { module = "org.bouncycastle:bcprov-jdk18on", version = "1.78.1"}
-bouncycastle-pkix = { module = "org.bouncycastle:bcpkix-jdk18on", version = "1.78.1"}
+bouncycastle-pkix = { module = "org.bouncycastle:bcpkix-jdk18on", version = "1.79"}
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.1.8" }
 checkstyle = { module = "com.puppycrawl.tools:checkstyle", version = "10.20.0" }
 checkstyle-sevntu = { module = "com.github.sevntu-checkstyle:sevntu-checks", version = "1.44.1" }
