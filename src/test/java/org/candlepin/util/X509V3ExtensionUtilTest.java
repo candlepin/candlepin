@@ -162,9 +162,8 @@ public class X509V3ExtensionUtilTest {
     private void addContent(Product product, String arches) {
         int size = product.getProductContent().size() + 1;
 
-        Content content = new Content()
+        Content content = new Content("content_" + size)
             .setUuid("content_" + size)
-            .setId("content_" + size)
             .setArches(arches);
 
         product.addContent(content, true);
@@ -216,12 +215,10 @@ public class X509V3ExtensionUtilTest {
             .setId("test-id")
             .setKey("Test Corporation")
             .setDisplayName("Test Corporation");
-        Content content1 = new Content()
-            .setId("cont_id1")
+        Content content1 = new Content("cont_id1")
             .setArches("x86_64")
             .setContentUrl("/cont_id1");
-        Content content2 = new Content()
-            .setId("cont_id2")
+        Content content2 = new Content("cont_id2")
             .setArches("ppc64")
             .setContentUrl("/cont_id2");
         Product engProd = new Product()

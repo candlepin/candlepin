@@ -353,8 +353,7 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
             List<Content> contents = new ArrayList<>();
 
             for (int c = 0; c < 2; ++c) {
-                Content content = new Content()
-                    .setId(String.format("g-content-%d%s", i, (char) ('a' + c)))
+                Content content = new Content(String.format("g-content-%d%s", i, (char) ('a' + c)))
                     .setName(String.format("global_content_%d%s", i, (char) ('a' + c)))
                     .setLabel(String.format("global content %d%s", i, (char) ('a' + c)))
                     .setType("test")
@@ -382,15 +381,14 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
                 List<Content> contents = new ArrayList<>();
 
                 for (int c = 0; c < 2; ++c) {
-                    Content content = new Content()
-                        .setId(String.format("o%d-content-%d%s", oidx, i, (char) ('a' + c)))
+                    Content cont = new Content(String.format("o%d-content-%d%s", oidx, i, (char) ('a' + c)))
                         .setName(String.format("%s_content_%d%s", owner.getKey(), i, (char) ('a' + c)))
                         .setLabel(String.format("%s content %d%s", owner.getKey(), i, (char) ('a' + c)))
                         .setType("test")
                         .setVendor("vendor")
                         .setNamespace(owner.getKey());
 
-                    contents.add(this.contentCurator.create(content));
+                    contents.add(this.contentCurator.create(cont));
                 }
 
                 Product cprod = new Product()

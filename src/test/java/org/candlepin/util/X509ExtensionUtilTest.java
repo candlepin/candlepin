@@ -50,8 +50,13 @@ public class X509ExtensionUtilTest {
     public void shouldWorkWithValidContentId() {
         X509ExtensionUtil util = new X509ExtensionUtil(config);
 
-        Content content = new Content("123456", "testcontent", "yum", "testlabel", "testvendor")
+        Content content = new Content("123456")
+            .setName("testcontent")
+            .setType("yum")
+            .setLabel("testlabel")
+            .setVendor("testvendor")
             .setContentUrl("/content_path");
+
         List<ProductContent> contents = List.of(new ProductContent(new Product(), content, true));
         PromotedContent promotedContent = new PromotedContent(contentPathBuilder());
         Set<X509Extension> extensions = util
@@ -68,7 +73,12 @@ public class X509ExtensionUtilTest {
     @MethodSource("invalidContentIds")
     public void failsForInvalidContentIds(String contentId) {
         X509ExtensionUtil util = new X509ExtensionUtil(config);
-        Content content = new Content(contentId, "testcontent", "yum", "testlabel", "testvendor");
+        Content content = new Content(contentId)
+            .setName("testcontent")
+            .setType("yum")
+            .setLabel("testlabel")
+            .setVendor("testvendor");
+
         Product skuProduct = new Product();
         List<ProductContent> contents = List.of(new ProductContent(skuProduct, content, true));
         PromotedContent promotedContent = new PromotedContent(contentPathBuilder());
@@ -82,7 +92,6 @@ public class X509ExtensionUtilTest {
             Arguments.of("123-456"),
             Arguments.of("-"),
             Arguments.of(" ,"),
-            Arguments.of(""),
             Arguments.of("test"),
             Arguments.of("123asd")
         );

@@ -157,20 +157,6 @@ public abstract class AbstractEntityMapperTest<E extends AbstractHibernateObject
         assertTrue(map.isEmpty());
     }
 
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @NullAndEmptySource
-    public void testAddExistingEntityWithNullOrEmptyEntityId(String entityId) {
-        Owner owner = TestUtil.createOwner();
-        E entity = this.buildLocalEntity(owner, entityId);
-
-        EntityMapper<E, I> mapper = this.buildEntityMapper();
-        assertThrows(IllegalArgumentException.class, () -> mapper.addExistingEntity(entity));
-
-        Map<String, E> map = mapper.getExistingEntities();
-        assertNotNull(map);
-        assertTrue(map.isEmpty());
-    }
-
     @Test
     public void testAddExistingEntities() {
         Owner owner = TestUtil.createOwner();
@@ -240,21 +226,6 @@ public abstract class AbstractEntityMapperTest<E extends AbstractHibernateObject
         assertThat(map, hasEntry(this.getEntityId(entity3), entity3));
     }
 
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @NullAndEmptySource
-    public void testAddExistingEntitiesFailsWithNullOrEmptyEntityIds(String entityId) {
-        Owner owner = TestUtil.createOwner();
-        E entity1 = this.buildLocalEntity(owner, "test_id-1");
-        E entity2 = this.buildLocalEntity(owner, "test_id-2");
-        E entity3 = this.buildLocalEntity(owner, "test_id-3");
-        E badEntity = this.buildLocalEntity(owner, entityId);
-
-        EntityMapper<E, I> mapper = this.buildEntityMapper();
-        Collection<E> input = Arrays.asList(entity1, badEntity, entity2, badEntity, entity3);
-
-        assertThrows(IllegalArgumentException.class, () -> mapper.addExistingEntities(input));
-    }
-
     @Test
     public void testGetExistingEntity() {
         Owner owner = TestUtil.createOwner();
@@ -319,9 +290,6 @@ public abstract class AbstractEntityMapperTest<E extends AbstractHibernateObject
             mapped.forEach(expected -> assertThat(output, hasEntry(this.getEntityId(expected), expected)));
         }
     }
-
-
-
 
     @Test
     public void testAddImportedEntity() {

@@ -380,8 +380,7 @@ public class AnonymousCertificateGenerator {
     private ProductContent translateProductContentInfo(ProductContentInfo pcinfo) {
         ContentInfo cinfo = pcinfo.getContent();
 
-        org.candlepin.model.Content converted = new org.candlepin.model.Content()
-            .setId(cinfo.getId())
+        org.candlepin.model.Content converted = new org.candlepin.model.Content(cinfo.getId())
             .setName(cinfo.getName())
             .setType(cinfo.getType())
             .setLabel(cinfo.getLabel())

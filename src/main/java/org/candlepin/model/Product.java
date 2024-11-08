@@ -867,10 +867,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         }
 
         Content content = productContent.getContent();
-        String cid = content.getId();
+        ProductContent pcontent = new ProductContent(this, content, productContent.isEnabled());
 
-        this.productContent.removeIf(elem -> cid.equals(elem.getContentId()));
-        this.productContent.add(new ProductContent(this, content, productContent.isEnabled()));
+        this.productContent.remove(pcontent);
+        this.productContent.add(pcontent);
 
         return this;
     }

@@ -68,8 +68,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testCannotPersistIdenticalProducts() {
-        Content c1 = new Content()
-            .setId("test-content")
+        Content c1 = new Content("test-content")
             .setName("test-content")
             .setType("content-type")
             .setLabel("content-label")
@@ -78,8 +77,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         this.contentCurator.create(c1, true);
         this.contentCurator.clear();
 
-        Content c2 = new Content()
-            .setId("test-content")
+        Content c2 = new Content("test-content")
             .setName("test-content")
             .setType("content-type")
             .setLabel("content-label")
@@ -102,8 +100,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
      *  the newly created content
      */
     private Content createNamespacedContent(String contentId, String namespace) {
-        Content content = new Content()
-            .setId(contentId)
+        Content content = new Content(contentId)
             .setName(contentId)
             .setLabel(contentId + "-label")
             .setType(contentId + "-type")
@@ -116,8 +113,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
     private Content createContentWithRequiredProductIds(String contentId,
         Collection<String> requiredProductIds) {
 
-        Content content = new Content()
-            .setId(contentId)
+        Content content = new Content(contentId)
             .setName(contentId)
             .setLabel(contentId + "-label")
             .setType(contentId + "-type")
@@ -636,16 +632,14 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         // Impl note: aside from the required fields, we *must* set some modified/required product IDs
         // to populate the child collection table for this test.
 
-        Content content1 = new Content()
-            .setId("test_content-1")
+        Content content1 = new Content("test_content-1")
             .setName("test content 1")
             .setLabel("test_content-1")
             .setType("content-type")
             .setVendor("test vendor")
             .setModifiedProductIds(Set.of("pid1", "pid2", "pid3"));
 
-        Content content2 = new Content()
-            .setId("test_content-2")
+        Content content2 = new Content("test_content-2")
             .setName("test content 2")
             .setLabel("test_content-2")
             .setType("content-type")

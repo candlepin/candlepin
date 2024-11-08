@@ -78,6 +78,14 @@ public class ProductDataTest {
         return Stream.of(null, "");
     }
 
+    private Content buildContent(String id, String name, String type, String label, String vendor) {
+        return new Content(id)
+            .setName(name)
+            .setType(type)
+            .setLabel(label)
+            .setVendor(vendor);
+    }
+
     @Test
     public void testGetSetUuid() {
         ProductData dto = new ProductData();
@@ -449,8 +457,8 @@ public class ProductDataTest {
     public void testAddProductContentByEntity() {
         ProductData dto = new ProductData();
         Content[] contentEntities = new Content[] {
-            new Content("c1", "content-1", "test_type", "test_label-1", "test_vendor-1"),
-            new Content("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
+            buildContent("c1", "content-1", "test_type", "test_label-1", "test_vendor-1"),
+            buildContent("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
         };
 
         ProductContent pcentity1 = new ProductContent(contentEntities[0], true);
@@ -528,8 +536,8 @@ public class ProductDataTest {
     public void testAddContentByEntity() {
         ProductData dto = new ProductData();
         Content[] contentEntities = new Content[] {
-            new Content("c1", "content-1", "test_type", "test_label-1", "test_vendor-1"),
-            new Content("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
+            buildContent("c1", "content-1", "test_type", "test_label-1", "test_vendor-1"),
+            buildContent("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
         };
 
         ProductContent pcentity1 = new ProductContent(contentEntities[0], true);
@@ -651,9 +659,9 @@ public class ProductDataTest {
         ProductContentData pcdata2 = new ProductContentData(content[1], false);
 
         Content[] contentEntities = new Content[] {
-            new Content("c1", "content-1", "test_type", "test_label-1", "test_vendor-1"),
-            new Content("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
-            new Content("c2", "content-3", "test_type", "test_label-3", "test_vendor-3"),
+            buildContent("c1", "content-1", "test_type", "test_label-1", "test_vendor-1"),
+            buildContent("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
+            buildContent("c2", "content-3", "test_type", "test_label-3", "test_vendor-3"),
         };
 
         assertNull(dto.getProductContent());
@@ -731,9 +739,9 @@ public class ProductDataTest {
         ProductContentData pcdata2 = new ProductContentData(content[1], false);
 
         Content[] contentEntities = new Content[] {
-            new Content("c1", "content-1", "test_type", "test_label-1", "test_vendor-1"),
-            new Content("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
-            new Content("c2", "content-3", "test_type", "test_label-3", "test_vendor-3"),
+            buildContent("c1", "content-1", "test_type", "test_label-1", "test_vendor-1"),
+            buildContent("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
+            buildContent("c2", "content-3", "test_type", "test_label-3", "test_vendor-3"),
         };
 
         ProductContent pcentity1 = new ProductContent(contentEntities[0], true);
@@ -1358,9 +1366,9 @@ public class ProductDataTest {
         Product source = new Product();
 
         Content[] contentEntities = new Content[] {
-            new Content("c1", "content-1", "test_type", "test_label-1", "test_vendor-1"),
-            new Content("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
-            new Content("c3", "content-3", "test_type", "test_label-3", "test_vendor-3"),
+            buildContent("c1", "content-1", "test_type", "test_label-1", "test_vendor-1"),
+            buildContent("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
+            buildContent("c3", "content-3", "test_type", "test_label-3", "test_vendor-3"),
         };
         ProductContent pcentity1 = new ProductContent(contentEntities[0], true);
         ProductContent pcentity2 = new ProductContent(contentEntities[1], false);

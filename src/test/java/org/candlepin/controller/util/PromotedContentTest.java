@@ -210,18 +210,17 @@ class PromotedContentTest {
     }
 
     private Content mockContent(String name) {
-        Content content = new Content();
-        content.setUuid("test_content-uuid");
-        content.setId("1234");
-        content.setName(name);
-        content.setLabel("test_content-label");
-        content.setType("yum");
-        content.setVendor("vendor");
-        content.setContentUrl("/content/dist/rhel/$releasever/$basearch/os");
-        content.setGpgUrl("gpgUrl");
-        content.setArches("x86_64");
-        content.setMetadataExpiration(3200L);
-        content.setRequiredTags("TAG1,TAG2");
+        Content content = new Content("1234")
+            .setUuid("test_content-uuid")
+            .setName(name)
+            .setLabel("test_content-label")
+            .setType("yum")
+            .setVendor("vendor")
+            .setContentUrl("/content/dist/rhel/$releasever/$basearch/os")
+            .setGpgUrl("gpgUrl")
+            .setArches("x86_64")
+            .setMetadataExpiration(3200L)
+            .setRequiredTags("TAG1,TAG2");
 
         return content;
     }
@@ -260,8 +259,7 @@ class PromotedContentTest {
     }
 
     private ProductContent createContent(String contentUrl) {
-        Content content = new Content()
-            .setId(CONTENT_ID)
+        Content content = new Content(CONTENT_ID)
             .setContentUrl(contentUrl);
 
         return new ProductContent(content, false);
@@ -278,7 +276,7 @@ class PromotedContentTest {
 
         EnvironmentContent envcontent = new EnvironmentContent()
             .setEnvironment(environment)
-            .setContent(new Content().setId(CONTENT_ID))
+            .setContent(new Content(CONTENT_ID))
             .setEnabled(true);
 
         environment.addEnvironmentContent(envcontent);

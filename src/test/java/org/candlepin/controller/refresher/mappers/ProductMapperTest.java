@@ -14,14 +14,25 @@
  */
 package org.candlepin.controller.refresher.mappers;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.service.model.ProductInfo;
+import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 
 
@@ -62,6 +73,35 @@ public class ProductMapperTest extends AbstractEntityMapperTest<Product, Product
         return new Product()
             .setId(entityId)
             .setName(String.format("%s-%d", entityId, ++generatedEntityCount));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testAddExistingEntityWithNullOrEmptyEntityId(String entityId) {
+        Owner owner = TestUtil.createOwner();
+        Product entity = this.buildLocalEntity(owner, entityId);
+
+        EntityMapper<Product, ProductInfo> mapper = this.buildEntityMapper();
+        assertThrows(IllegalArgumentException.class, () -> mapper.addExistingEntity(entity));
+
+        Map<String, Product> map = mapper.getExistingEntities();
+        assertNotNull(map);
+        assertTrue(map.isEmpty());
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testAddExistingEntitiesFailsWithNullOrEmptyEntityIds(String entityId) {
+        Owner owner = TestUtil.createOwner();
+        Product entity1 = this.buildLocalEntity(owner, "test_id-1");
+        Product entity2 = this.buildLocalEntity(owner, "test_id-2");
+        Product entity3 = this.buildLocalEntity(owner, "test_id-3");
+        Product badEntity = this.buildLocalEntity(owner, entityId);
+
+        EntityMapper<Product, ProductInfo> mapper = this.buildEntityMapper();
+        Collection<Product> input = List.of(entity1, badEntity, entity2, badEntity, entity3);
+
+        assertThrows(IllegalArgumentException.class, () -> mapper.addExistingEntities(input));
     }
 
 }

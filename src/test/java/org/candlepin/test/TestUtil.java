@@ -319,8 +319,7 @@ public class TestUtil {
     }
 
     public static Content createContent(String id, String name) {
-        return new Content()
-            .setId(id)
+        return new Content(id)
             .setName(name)
             .setType("test-type")
             .setLabel("test-label")

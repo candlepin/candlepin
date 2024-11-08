@@ -185,8 +185,7 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
     @Test
     public void testProcessNodeFlagsCreatedNodeCorrectly() {
         Owner owner = this.createOwner();
-        ContentInfo importedEntity = new Content()
-            .setId("test_content-1")
+        ContentInfo importedEntity = new Content("test_content-1")
             .setName("Test Content");
 
         EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, importedEntity.getId())
@@ -224,8 +223,7 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
         String id = "test_content-1";
 
         Owner owner = this.createOwner();
-        Content existingEntity = new Content()
-            .setId(id);
+        Content existingEntity = new Content(id);
 
         this.updateContentField(existingEntity, field, value);
 
@@ -244,8 +242,7 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
     @Test
     public void testApplyChangesCreatesNewInstances() {
         Owner owner = this.createOwner();
-        ContentInfo importedEntity = new Content()
-            .setId("test_content")
+        ContentInfo importedEntity = new Content("test_content")
             .setName("test content")
             .setLabel("test content")
             .setVendor("test vendor")
@@ -289,8 +286,7 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
     public void testFullCyclePersistsNewEntity() {
         Owner owner = this.createOwner();
 
-        Content content = new Content()
-            .setId("test_content")
+        Content content = new Content("test_content")
             .setName("test content")
             .setLabel("test content")
             .setVendor("test vendor")
@@ -324,8 +320,7 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
 
         Content existing = this.createContent("test_content", "content name");
 
-        Content imported = new Content()
-            .setId(existing.getId())
+        Content imported = new Content(existing.getId())
             .setName("updated content");
 
         EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, imported.getId())

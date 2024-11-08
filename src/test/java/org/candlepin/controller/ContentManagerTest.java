@@ -371,7 +371,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Method[] methods = getAccessorAndMutator(Content.class, propertyName, initialValue.getClass());
         Method mutator = methods[1];
 
-        Content entity = new Content();
+        Content entity = new Content("test_content");
         ContentInfo update = this.mockContentInfo();
 
         mutator.invoke(entity, initialValue);
@@ -389,7 +389,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Method[] methods = getAccessorAndMutator(Content.class, propertyName, initialValue.getClass());
         Method mutator = methods[1];
 
-        Content entity = new Content();
+        Content entity = new Content("test_content");
         ContentInfo update = this.mockContentInfo();
 
         mutator.invoke(entity, initialValue);
@@ -407,7 +407,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Method[] methods = getAccessorAndMutator(Content.class, propertyName, initialValue.getClass());
         Method mutator = methods[1];
 
-        Content entity = new Content();
+        Content entity = new Content("test_content");
         ContentInfo update = this.mockContentInfo();
 
         mutator.invoke(entity, initialValue);
@@ -431,7 +431,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Method[] methods = getAccessorAndMutator(Content.class, propertyName, String.class);
         Method mutator = methods[1];
 
-        Content entity = new Content();
+        Content entity = new Content("test_content");
         mutator.invoke(entity, new Object[] { null });
 
         ContentInfo update = this.mockAccessor(this.mockContentInfo(), propertyName, "");
@@ -456,7 +456,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Method[] methods = getAccessorAndMutator(Content.class, propertyName, String.class);
         Method mutator = methods[1];
 
-        Content entity = new Content();
+        Content entity = new Content("test_content");
         mutator.invoke(entity, new Object[] { null });
 
         ContentInfo update = this.mockAccessor(this.mockContentInfo(), propertyName, "");
@@ -469,7 +469,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
     // the content object on that field (never return null).
     @Test
     public void testIsChangedByDetectsChangesInRequiredProducts() {
-        Content entity = new Content();
+        Content entity = new Content("test_content");
         ContentInfo update = this.mockContentInfo();
 
         entity.setModifiedProductIds(List.of("a", "b", "c"));
@@ -481,7 +481,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
     @Test
     public void testIsChangedByDetectsChangesInRequiredProductsWithEmptyList() {
-        Content entity = new Content();
+        Content entity = new Content("test_content");
         ContentInfo update = this.mockContentInfo();
 
         entity.setModifiedProductIds(List.of("a", "b", "c"));
@@ -493,7 +493,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
     @Test
     public void testIsChangedByIgnoresUnchangedRequiredProductsField() {
-        Content entity = new Content();
+        Content entity = new Content("test_content");
         ContentInfo update = this.mockContentInfo();
 
         entity.setModifiedProductIds(List.of("a", "b", "c"));
@@ -505,7 +505,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
     @Test
     public void testIsChangedByIgnoresNullRequiredProductsField() {
-        Content entity = new Content();
+        Content entity = new Content("test_content");
         ContentInfo update = this.mockContentInfo();
 
         entity.setModifiedProductIds(List.of("a", "b", "c"));

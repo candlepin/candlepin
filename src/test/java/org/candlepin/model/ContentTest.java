@@ -79,7 +79,6 @@ public class ContentTest extends DatabaseTestFixture {
 
     protected static Stream<Arguments> getValuesForEqualityAndReplication() {
         return Stream.of(
-            Arguments.of("Id", "test_value", "alt_value"),
             Arguments.of("Type", "test_value", "alt_value"),
             Arguments.of("Label", "test_value", "alt_value"),
             Arguments.of("Name", "test_value", "alt_value"),
