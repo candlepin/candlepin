@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 
 /**
@@ -41,18 +42,19 @@ import javax.inject.Inject;
  *
  * This file can be exported from a Keycloak Admin console client configuration.
  */
+@Singleton
 public class KeycloakConfiguration {
+    private static final Logger log = LoggerFactory.getLogger(KeycloakConfiguration.class);
 
-    private AdapterConfig adapterConfig;
-    private static Logger log = LoggerFactory.getLogger(KeycloakConfiguration.class);
-    private KeycloakDeployment keycloakDeployment;
+    private final AdapterConfig adapterConfig;
+    private final KeycloakDeployment keycloakDeployment;
 
     @Inject
     public KeycloakConfiguration(Configuration configuration) throws Exception {
         if (configuration.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION)) {
             String configFile = configuration.getString(ConfigProperties.KEYCLOAK_FILEPATH);
             try (InputStream cfgStream = new FileInputStream(configFile)) {
-                adapterConfig = KeycloakDeploymentBuilder.loadAdapterConfig(cfgStream);
+                this.adapterConfig = KeycloakDeploymentBuilder.loadAdapterConfig(cfgStream);
                 this.keycloakDeployment = KeycloakDeploymentBuilder.build(adapterConfig);
             }
             catch (IOException e) {
@@ -70,6 +72,10 @@ public class KeycloakConfiguration {
                 throw e;
             }
         }
+        else {
+            this.adapterConfig = null;
+            this.keycloakDeployment = null;
+        }
     }
 
     /**
@@ -78,7 +84,7 @@ public class KeycloakConfiguration {
      * @return the {@link KeycloakDeployment} singleton
      */
     public KeycloakDeployment getKeycloakDeployment() {
-        return keycloakDeployment;
+        return this.keycloakDeployment;
     }
 
     /**
@@ -87,7 +93,7 @@ public class KeycloakConfiguration {
      * @return the loaded {@link AdapterConfig}
      */
     public AdapterConfig getAdapterConfig() {
-        return adapterConfig;
+        return this.adapterConfig;
     }
 
     /**
