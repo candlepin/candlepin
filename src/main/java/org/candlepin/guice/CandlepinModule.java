@@ -277,7 +277,7 @@ public class CandlepinModule extends AbstractModule {
         bind(JsRunner.class).toProvider(JsRunnerProvider.class);
         bind(SyncUtils.class).asEagerSingleton();
         bind(ObjectMapperFactory.class).asEagerSingleton();
-        bind(ObjectMapper.class).toProvider(ObjectMapperFactory.class);
+        bind(ObjectMapper.class).toProvider(ObjectMapperFactory.class).asEagerSingleton();
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
         bind(AttributeValidator.class);
         bind(FactValidator.class);
@@ -526,7 +526,7 @@ public class CandlepinModule extends AbstractModule {
 
     @Provides
     @Singleton
-    @Named("ExportObjectMapper")
+    @Named("RulesObjectMapper")
     private RulesObjectMapper configureRulesObjectMapper() {
         return ObjectMapperFactory.getRulesObjectMapper();
     }
