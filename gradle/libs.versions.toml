@@ -47,7 +47,7 @@ hibernate-jcache = { module = "org.hibernate:hibernate-jcache", version.ref = "h
 hibernate-jpamodelgen = { module = "org.hibernate:hibernate-jpamodelgen", version.ref = "hibernate" }
 hibernate-validator = { module = "org.hibernate.validator:hibernate-validator", version.ref = "hibernate-validator" }
 hibernate-validator-processor = { module = "org.hibernate.validator:hibernate-validator-annotation-processor", version.ref = "hibernate-validator" }
-hsqldb = { module = "org.hsqldb:hsqldb", version = "2.7.3" }
+hsqldb = { module = "org.hsqldb:hsqldb", version = "2.7.4" }
 javax-el = { module = "org.glassfish:javax.el", version = "3.0.0" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jackson-hibernate = { module = "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5", version.ref = "jackson" }
