@@ -343,8 +343,7 @@ public class TestingModules {
             bind(CPMSessionFactory.class).to(NoopSessionFactory.class).in(Singleton.class);
             bind(CPMContextListener.class).to(NoopContextListener.class).in(Singleton.class);
             bind(ObjectMapperFactory.class).asEagerSingleton();
-            bind(ObjectMapper.class).toProvider(ObjectMapperFactory.class);
-            bind(RulesObjectMapper.class);
+            bind(ObjectMapper.class).toProvider(ObjectMapperFactory.class).asEagerSingleton();
         }
 
         @Provides
@@ -373,6 +372,13 @@ public class TestingModules {
         @Named("ExportObjectMapper")
         private ObjectMapper configureExportObjectMapper() {
             return ObjectMapperFactory.getSyncObjectMapper(TestConfig.defaults());
+        }
+
+        @Provides
+        @Singleton
+        @Named("RulesObjectMapper")
+        private RulesObjectMapper configureRulesObjectMapper() {
+            return ObjectMapperFactory.getRulesObjectMapper();
         }
     }
 }
