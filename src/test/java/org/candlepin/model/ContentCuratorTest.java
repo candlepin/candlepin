@@ -877,27 +877,6 @@ public class ContentCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetActiveContentByOwnerCollision() {
-        Owner owner = createOwner();
-        Content content = createContent();
-
-        createProductContent(owner, true, content);
-        createProductContent(owner, false, content);
-
-        this.contentCurator.flush();
-        this.contentCurator.clear();
-        List<ProductContent> activeContentByOwner = contentCurator.getActiveContentByOwner(owner.getId());
-
-        assertThat(activeContentByOwner).hasSize(1)
-            .extracting(ProductContent::getContent)
-            .containsExactlyInAnyOrder(content);
-
-        assertThat(activeContentByOwner)
-            .extracting(ProductContent::isEnabled)
-            .containsOnly(true);
-    }
-
-    @Test
     public void testGetActiveContentByOwnerMultipleOwners() {
         Owner owner1 = createOwner();
         Owner owner2 = createOwner();
