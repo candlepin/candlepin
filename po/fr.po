@@ -5,13 +5,14 @@
 # Pino Toscano <ptoscano@redhat.com>, 2022.
 # Transtats <suanand@redhat.com>, 2022.
 # grimst <grimaitres@gmail.com>, 2023.
+# Léane GRASSER <leane.grasser@proton.me>, 2024.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-10-31 07:09+0000\n"
-"PO-Revision-Date: 2023-03-24 19:47+0000\n"
-"Last-Translator: grimst <grimaitres@gmail.com>\n"
+"PO-Revision-Date: 2024-11-13 12:38+0000\n"
+"Last-Translator: Léane GRASSER <leane.grasser@proton.me>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
 "candlepin/master/fr/>\n"
 "Language: fr\n"
@@ -19,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.15.2\n"
+"X-Generator: Weblate 5.8.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -33,10 +34,11 @@ msgid "Auto-attach is disabled for owner {0}"
 msgstr "Auto-attach désactivé pour le propriétaire \"{0}\"."
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:97
-#, fuzzy, java-format
-#| msgid "Auto-attach is disabled for owner \"{0}\"."
+#, java-format
 msgid "Auto-attach is disabled for owner {0} while using simple content access"
-msgstr "Auto-attach désactivé pour le propriétaire \"{0}\"."
+msgstr ""
+"Auto-attach est désactivé pour le propriétaire {0} lors de l'utilisation de "
+"Simple Content Access"
 
 #: src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:141
 #, java-format
