@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.18
+Version: 4.4.19
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,57 @@ fi
 
 #raw
 %changelog
+* Wed Nov 13 2024 candlepin-bot 4.4.19-1
+- Add new translations using Weblate (noreply@weblate.org)
+- Bump org.quartz-scheduler:quartz from 2.3.2 to 2.5.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-938: Refactored ContentCurator.getActiveContentByOwner
+  (crog@redhat.com)
+- Bump io.smallrye.config:smallrye-config from 3.10.0 to 3.10.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-938: Added caching to the Consumer entity (crog@redhat.com)
+- CANDLEPIN-938: Updated several utility classes to be singletons
+  (crog@redhat.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 11.0.0 to 11.0.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.hsqldb:hsqldb from 2.7.3 to 2.7.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.bouncycastle:bcprov-jdk18on from 1.78.1 to 1.79
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Update Gradle Wrapper from 8.10.2 to 8.11 (gradle-update-robot@regolo.cc)
+- CANDLEPIN-938: Updated KeycloakConfiguration to be a singleton
+  (crog@redhat.com)
+- CANDLEPIN-938: Registered ObjectMapper as an eager singleton
+  (crog@redhat.com)
+- CANDLEPIN-938: Updated product content mapping logic (crog@redhat.com)
+- Bump nebula.lint from 20.1.0 to 20.2.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.20.0 to 10.20.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.bouncycastle:bcpkix-jdk18on from 1.78.1 to 1.79
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson from 2.18.0 to 2.18.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Update supported hotfix branch list in i18n job (nmoumoul@redhat.com)
+- 2018469: Disabled subscription attachment by Activation Key in SCA
+  (sbakaj@redhat.com)
+- CANDLEPIN-938: Updated query space declarations for native SQL queries
+  (crog@redhat.com)
+- CANDLEPIN-945: Handle EntityNotFoundException in ConsumerStore.lookup
+  (joshmalbrecht@gmail.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.18.2 to 10.20.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.owasp.dependencycheck from 10.0.4 to 11.1.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.11 to 1.5.12
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump artemis from 2.36.0 to 2.38.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mariadb.jdbc:mariadb-java-client from 3.4.1 to 3.5.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+
 * Tue Nov 05 2024 candlepin-bot 4.4.18-1
 - Add new translations using Weblate (noreply@weblate.org)
 - CANDLEPIN-938: Redefined transactional boundaries for http requests
