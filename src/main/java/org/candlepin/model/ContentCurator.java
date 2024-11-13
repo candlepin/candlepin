@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.hibernate.query.NativeQuery;
+import org.hibernate.transform.ResultTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +30,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -665,17 +665,23 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
     }
 
     /**
-     * Returns a list of active product content for a given owner
+     * Returns a list of active content for the given owner, where "active" is defined as a content which
+     * is used by one or more products which themselves are in use by one or more parent products or
+     * subscriptions. If the owner does not exist or does not have any active content, this method returns
+     * an empty list.
      *
-     * Note - If same content (say C1) is being enabled/disabled by two or more products, with at least
-     * one of the product enabling the content C1 then, content (C1) with enabled (true)
-     * state will have precedence.
+     * The output of this method is a list of detached ProductContent instances, containing the active
+     * content and a boolean flag indicating whether or not it is enabled. The output ProductContent will
+     * not contain the owning product. Depending on the data for the organization, it is possible for
+     * this method to return the same content multiple times if it is mapped to multiple products. Callers
+     * expecting uniqueness should deduplicate and merge the resultant enabled flag(s) as appropriate
+     * for their needs.
      *
      * @param ownerId
-     *  Id of an owner
+     *  The ID of the owner for which to fetch active content
      *
      * @return
-     *  Returns list of active product content
+     *  a list of active content and their respective enabled state for the given owner
      */
     public List<ProductContent> getActiveContentByOwner(String ownerId) {
         EntityManager entityManager = this.getEntityManager();
@@ -716,39 +722,38 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
                     FROM active_products ap
                     JOIN parent_child_map pcmap ON pcmap.product_uuid = ap.uuid
             )
-            SELECT DISTINCT pc.content_uuid, pc.enabled
+            SELECT content.*, pc.enabled
                 FROM cp_product_contents pc
                 JOIN active_products ap ON ap.uuid = pc.product_uuid
+                JOIN cp_contents content ON content.uuid = pc.content_uuid
             """;
 
-        Map<String, Boolean> enablementMap = (Map<String, Boolean>) entityManager.createNativeQuery(sql)
+        // TODO: Convert this to a TupleTransformer when we jump to Hibernate 6
+        ResultTransformer transformer = new ResultTransformer() {
+            @Override
+            public Object transformTuple(Object[] tuple, String[] aliases) {
+                return new ProductContent((Content) tuple[0], (boolean) tuple[1]);
+            }
+
+            @Override
+            public List transformList(List collection) {
+                return collection;
+            }
+        };
+
+        return this.getEntityManager()
+            .createNativeQuery(sql)
+            .setParameter("owner_id", ownerId)
             .unwrap(NativeQuery.class)
             .addSynchronizedEntityClass(Pool.class)
             .addSynchronizedEntityClass(Product.class)
             .addSynchronizedEntityClass(ProductContent.class)
+            .addSynchronizedEntityClass(Content.class)
             .addSynchronizedQuerySpace("cp_product_provided_products")
-            .setParameter("owner_id", ownerId)
-            .getResultList()
-            .stream()
-            .collect(Collectors.toMap(
-                row -> (String) ((Object[]) row)[0],  // UUID of the content
-                row -> (Boolean) ((Object[]) row)[1], // Enabled state
-                (enabled1, enabled2) -> enabled1 || enabled2 // Collision resolution: logical OR
-            ));
-
-        List<ProductContent> output = new ArrayList<>();
-
-        String jpql = "SELECT content FROM Content content WHERE content.uuid IN (:content_uuids)";
-        TypedQuery<Content> query = entityManager.createQuery(jpql, Content.class);
-
-        // This step is necessary to handle large sets of UUIDs and avoid query parameter limits
-        for (List<String> block : this.partition(enablementMap.keySet())) {
-            query.setParameter("content_uuids", block)
-                .getResultList()
-                .forEach(elem -> output.add(new ProductContent(elem, enablementMap.get(elem.getUuid()))));
-        }
-
-        return output;
+            .addEntity(Content.class)
+            .addScalar("enabled")
+            .setResultTransformer(transformer)
+            .getResultList();
     }
 
 }
