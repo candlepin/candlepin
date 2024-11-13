@@ -30,6 +30,7 @@ import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
+import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
@@ -644,6 +645,20 @@ public class DatabaseTestFixture {
     protected Owner createOwner(String key, String name) {
         Owner owner = TestUtil.createOwner(key, name);
         owner.setId(null);
+
+        this.ownerCurator.create(owner);
+
+        return owner;
+    }
+
+    protected Owner createOwnerEnt(String key) {
+        return this.createOwnerEnt(key, key);
+    }
+
+    protected Owner createOwnerEnt(String key, String name) {
+        Owner owner = TestUtil.createOwner(key, name);
+        owner.setId(null);
+        owner.setContentAccessMode(ContentAccessMode.ENTITLEMENT.toDatabaseValue());
 
         this.ownerCurator.create(owner);
 

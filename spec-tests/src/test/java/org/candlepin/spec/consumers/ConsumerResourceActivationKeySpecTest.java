@@ -657,7 +657,7 @@ public class ConsumerResourceActivationKeySpecTest {
 
     @Test
     public void shouldAllowConsumerToRegisterWithActivationKeyAuthWithoutConsumedSubscriptionInSCA() {
-        OwnerDTO owner = ownerClient.createOwner(Owners.randomSca());
+        OwnerDTO owner = ownerClient.createOwner(Owners.random());
         ProductDTO prod1 = Products.random()
             .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"));
         prod1 = ownerProductApi.createProduct(owner.getKey(), prod1);
@@ -667,6 +667,9 @@ public class ConsumerResourceActivationKeySpecTest {
         ActivationKeyDTO key1 = ownerClient.createActivationKey(owner.getKey(), ActivationKeys.random(owner));
         key1 = activationKeyApi.addPoolToKey(key1.getId(), pool1.getId(), 3L);
         ActivationKeyDTO key2 = ownerClient.createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        owner.setContentAccessMode("org_environment");
+        ownerClient.updateOwner(owner.getKey(), owner);
 
         ApiClient noAuth = ApiClients.noAuth();
         ConsumerDTO consumer = noAuth.consumers().createConsumer(Consumers.random(owner), null,
