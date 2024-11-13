@@ -14,8 +14,8 @@
  */
 package org.candlepin.model;
 
-
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
@@ -23,6 +23,7 @@ import javax.persistence.TypedQuery;
 /**
  * Subscription manager.
  */
+@Singleton
 public class CdnCurator extends AbstractHibernateCurator<Cdn> {
 
     @Inject

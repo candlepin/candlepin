@@ -58,11 +58,13 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 
 /**
  * This generator is responsible for generation of ueber certificates.
  */
+@Singleton
 public class UeberCertificateGenerator {
     private static final String UEBER_CERT_CONSUMER_TYPE = "uebercert";
     private static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";

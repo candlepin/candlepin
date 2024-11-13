@@ -61,11 +61,13 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 
 /**
  * Handles creation of the content access certificates.
  */
+@Singleton
 public class SCACertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(SCACertificateGenerator.class);
     private static final String SCA_ENTITLEMENT_TYPE = "OrgLevel";

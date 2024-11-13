@@ -75,11 +75,13 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 
 /**
  * This generator is responsible for generation of entitlement certificates.
  */
+@Singleton
 public class EntitlementCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(EntitlementCertificateGenerator.class);
 

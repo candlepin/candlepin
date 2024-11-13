@@ -37,10 +37,12 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * X509ExtensionUtil for V1 Certificates
  */
+@Singleton
 public class X509ExtensionUtil extends X509Util {
 
     private static final Logger log = LoggerFactory.getLogger(X509ExtensionUtil.class);

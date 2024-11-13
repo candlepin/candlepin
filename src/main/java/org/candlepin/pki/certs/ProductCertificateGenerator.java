@@ -37,11 +37,13 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 
 /**
  * This generator is responsible for generation and caching of product certificates.
  */
+@Singleton
 public class ProductCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(ProductCertificateGenerator.class);
 

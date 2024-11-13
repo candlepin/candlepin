@@ -70,11 +70,13 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 
 /**
  * The class responsible for creation of anonymous content access certificates.
  */
+@Singleton
 public class AnonymousCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(AnonymousCertificateGenerator.class);
     private static final String BASIC_ENTITLEMENT_TYPE = "basic";
