@@ -20,6 +20,8 @@ import org.candlepin.service.model.ConsumerInfo;
 import org.candlepin.util.Util;
 
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -76,6 +78,7 @@ import javax.validation.constraints.Size;
  */
 @Entity
 @Table(name = Consumer.DB_TABLE)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Consumer extends AbstractHibernateObject<Consumer> implements Linkable, Owned, Named,
     ConsumerProperty, Eventful, ConsumerInfo {
 
@@ -184,6 +187,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @ElementCollection
     @CollectionTable(name = "cp_sp_add_on", joinColumns = @JoinColumn(name = "consumer_id"))
     @Column(name = "add_on")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<String> addOns;
 
     @Column(name = "sp_status", length = 32)
@@ -234,6 +238,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     private Long entitlementCount;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Entitlement> entitlements;
 
     // TODO: FIXME:
@@ -247,6 +252,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     //FIXME A cascade shouldn't be necessary here as ElementCollections cascade by default
     //See http://stackoverflow.com/a/7696147
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Map<String, String> facts;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -263,9 +269,11 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
 
     @BatchSize(size = 32)
     @OneToMany(mappedBy = "consumer", orphanRemoval = true, cascade = { CascadeType.ALL })
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private List<GuestId> guestIds;
 
     @OneToMany(mappedBy = "consumer", orphanRemoval = true, cascade = { CascadeType.ALL })
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<ConsumerCapability> capabilities;
 
     @OneToOne(mappedBy = "consumer",
@@ -276,6 +284,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @ElementCollection
     @CollectionTable(name = "cp_consumer_content_tags", joinColumns = @JoinColumn(name = "consumer_id"))
     @Column(name = "content_tag")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<String> contentTags;
 
     // An instruction for the client to initiate an autoheal request.
@@ -302,6 +311,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
 
     @Basic(fetch = FetchType.LAZY)
     @OneToMany(mappedBy = "consumer", orphanRemoval = true, cascade = { CascadeType.ALL })
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<ConsumerActivationKey> activationKeys;
 
     @Column(name = "sp_service_type")
@@ -316,6 +326,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @Column(name = "environment_id")
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
     @Fetch(FetchMode.SELECT)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Map<String, String> environmentIds;
 
     @Enumerated(EnumType.STRING)
