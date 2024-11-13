@@ -39,8 +39,10 @@ import java.util.zip.DeflaterOutputStream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 
+@Singleton
 public class EntitlementPayloadGenerator extends X509Util {
     private static final Logger log = LoggerFactory.getLogger(EntitlementPayloadGenerator.class);
 

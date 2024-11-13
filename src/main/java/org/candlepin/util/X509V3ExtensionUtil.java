@@ -45,8 +45,10 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 
+@Singleton
 public class X509V3ExtensionUtil extends X509Util {
     private static final Logger log = LoggerFactory.getLogger(X509V3ExtensionUtil.class);
     public static final String CERT_VERSION = "3.4";

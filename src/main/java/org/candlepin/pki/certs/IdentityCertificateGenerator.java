@@ -38,11 +38,13 @@ import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 
 /**
  * This generator is responsible for generation of consumer identity certificates.
  */
+@Singleton
 public class IdentityCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(IdentityCertificateGenerator.class);
     private final KeyPairGenerator keyPairGenerator;
