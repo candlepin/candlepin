@@ -15,9 +15,7 @@
 package org.candlepin.resource;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -30,6 +28,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.PoolService;
 import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.server.v1.ActivationKeyPoolDTO;
@@ -72,14 +71,14 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     private static int poolid = 0;
 
     private DTOValidator dtoValidator;
-    private ServiceLevelValidator serviceLevelValidator;
+    private ServiceLevelValidator mockServiceLevelValidator;
     private ActivationKeyResource activationKeyResource;
     private ActivationKeyRules activationKeyRules;
 
     private ActivationKeyCurator mockActivationKeyCurator;
-    private PoolService poolService;
-    private ActivationKeyContentOverrideCurator akcoCurator;
-    private ContentOverrideValidator coValidator;
+    private PoolService mockPoolService;
+    private ActivationKeyContentOverrideCurator mockAkcoCurator;
+    private ContentOverrideValidator mockCoValidator;
     private Owner owner;
 
     @BeforeEach
@@ -89,18 +88,18 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         this.dtoValidator = new DTOValidator(this.i18n);
         this.mockActivationKeyCurator = mock(ActivationKeyCurator.class);
-        this.serviceLevelValidator = mock(ServiceLevelValidator.class);
-        this.poolService = mock(PoolService.class);
-        this.akcoCurator = mock(ActivationKeyContentOverrideCurator.class);
-        this.coValidator = mock(ContentOverrideValidator.class);
+        this.mockServiceLevelValidator = mock(ServiceLevelValidator.class);
+        this.mockPoolService = mock(PoolService.class);
+        this.mockAkcoCurator = mock(ActivationKeyContentOverrideCurator.class);
+        this.mockCoValidator = mock(ContentOverrideValidator.class);
 
         this.owner = createOwner();
     }
 
     private ActivationKeyResource buildActivationKeyResource() {
-        return new ActivationKeyResource(this.mockActivationKeyCurator, this.i18n, this.poolService,
-            this.serviceLevelValidator, this.activationKeyRules, this.productCurator, this.modelTranslator,
-            this.dtoValidator, this.akcoCurator, this.coValidator);
+        return new ActivationKeyResource(this.mockActivationKeyCurator, this.i18n, this.mockPoolService,
+            this.mockServiceLevelValidator, this.activationKeyRules, this.productCurator,
+            this.modelTranslator, this.dtoValidator, this.mockAkcoCurator, this.mockCoValidator);
     }
 
     private void mockCuratorPassthroughMethods(AbstractHibernateCurator mock) {
@@ -135,10 +134,11 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testAddingRemovingPools() {
+        Owner nonSCAOwner = createNonSCAOwner("test_owner");
         ActivationKey key = new ActivationKey();
         Product product = this.createProduct();
-        Pool pool = createPool(owner, product, 10L, new Date(), new Date());
-        key.setOwner(owner);
+        Pool pool = createPool(nonSCAOwner, product, 10L, new Date(), new Date());
+        key.setOwner(nonSCAOwner);
         key.setName("dd");
         key = activationKeyCurator.create(key);
         assertNotNull(key.getId());
@@ -149,12 +149,13 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testReaddingPools() {
+    public void testReadingPools() {
+        Owner nonSCAOwner = createNonSCAOwner("test_owner");
         ActivationKey key = new ActivationKey();
         Product product = this.createProduct();
-        Pool pool = createPool(owner, product, 10L, new Date(), new Date());
+        Pool pool = createPool(nonSCAOwner, product, 10L, new Date(), new Date());
 
-        key.setOwner(owner);
+        key.setOwner(nonSCAOwner);
         key.setName("dd");
         key = activationKeyCurator.create(key);
 
@@ -175,7 +176,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "no");
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p).when(this.poolService).get("testPool");
+        doReturn(p).when(this.mockPoolService).get("testPool");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
         assertThrows(BadRequestException.class, () -> akr.addPoolToKey("testKey", "testPool", 2L));
@@ -188,7 +189,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p.setQuantity(10L);
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p).when(this.poolService).get("testPool");
+        doReturn(p).when(this.mockPoolService).get("testPool");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
         assertThrows(BadRequestException.class, () -> akr.addPoolToKey("testKey", "testPool", -3L));
@@ -202,7 +203,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p.setQuantity(10L);
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p).when(this.poolService).get("testPool");
+        doReturn(p).when(this.mockPoolService).get("testPool");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
         akr.addPoolToKey("testKey", "testPool", 15L);
@@ -216,7 +217,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p.setQuantity(-1L);
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p).when(this.poolService).get("testPool");
+        doReturn(p).when(this.mockPoolService).get("testPool");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
         akr.addPoolToKey("testKey", "testPool", 15L);
@@ -230,7 +231,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p.setQuantity(1L);
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p).when(this.poolService).get("testPool");
+        doReturn(p).when(this.mockPoolService).get("testPool");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
         assertThrows(BadRequestException.class, () -> akr.addPoolToKey("testKey", "testPool", 1L));
@@ -245,7 +246,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         this.mockCuratorPassthroughMethods(this.mockActivationKeyCurator);
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p).when(this.poolService).get("testPool");
+        doReturn(p).when(this.mockPoolService).get("testPool");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
         assertNotNull(akr.addPoolToKey("testKey", "testPool", 1L));
@@ -260,8 +261,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p2.setAttribute(Pool.Attributes.REQUIRES_HOST, "host1");
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p1).when(this.poolService).get("testPool1");
-        doReturn(p2).when(this.poolService).get("testPool2");
+        doReturn(p1).when(this.mockPoolService).get("testPool1");
+        doReturn(p2).when(this.mockPoolService).get("testPool2");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
 
@@ -282,7 +283,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ak.addPool(p2, 1L);
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p1).when(this.poolService).get("testPool1");
+        doReturn(p1).when(this.mockPoolService).get("testPool1");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
         akr.addPoolToKey("testKey", "testPool1", 1L);
@@ -297,8 +298,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p2.setAttribute(Pool.Attributes.REQUIRES_HOST, "");
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p1).when(this.poolService).get("testPool1");
-        doReturn(p2).when(this.poolService).get("testPool2");
+        doReturn(p1).when(this.mockPoolService).get("testPool1");
+        doReturn(p2).when(this.mockPoolService).get("testPool2");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
 
@@ -315,7 +316,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         Pool p = genPool();
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p).when(this.poolService).get("testPool");
+        doReturn(p).when(this.mockPoolService).get("testPool");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
         akr.addPoolToKey("testKey", "testPool", null);
@@ -437,7 +438,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKey toUpdate = spy(createActivationKey(owner));
         when(this.mockActivationKeyCurator.secureGet(toUpdate.getId())).thenReturn(toUpdate);
         String ownerId = owner.getId();
-        doNothing().when(serviceLevelValidator).validate(eq(ownerId), any(String.class));
+        doNothing().when(mockServiceLevelValidator).validate(eq(ownerId), any(String.class));
 
         ActivationKeyDTO update = new ActivationKeyDTO()
             .id(toUpdate.getId())
@@ -514,6 +515,30 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
             .isNotNull()
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
             .containsExactlyInAnyOrderElementsOf(overridesToAdd);
+    }
+
+    @Test
+    public void testAddPoolToKeyFailsInSCAMode() {
+        Owner owner = new Owner()
+            .setId("test-id")
+            .setKey("test-org")
+            .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+
+        ActivationKey key = new ActivationKey("test-key", owner);
+        key.setId("test-key");
+
+        Pool pool = new Pool();
+        pool.setId("test-pool");
+
+        doReturn(pool).when(this.mockPoolService).get(pool.getId());
+        doReturn(key).when(this.mockActivationKeyCurator).secureGet(key.getId());
+
+        ActivationKeyResource resource = this.buildActivationKeyResource();
+
+        BadRequestException exception = assertThrows(BadRequestException.class,
+            () -> resource.addPoolToKey(key.getId(), pool.getId(), 1L));
+
+        assertTrue(exception.getMessage().contains("simple content access"));
     }
 
     private Pool genPool() {

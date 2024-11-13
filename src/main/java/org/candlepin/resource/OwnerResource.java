@@ -1095,6 +1095,16 @@ public class OwnerResource implements OwnerApi {
                     dto.getName(), ownerKey));
         }
 
+        // If we're running in SCA mode, don't allow creating keys with pools,
+        // because owner should see all the pools anyway
+        if (owner.isUsingSimpleContentAccess()) {
+            Set<ActivationKeyPoolDTO> pools = dto.getPools();
+            if (pools != null && !pools.isEmpty()) {
+                throw new BadRequestException(i18n.tr("Activation keys cannot be created with pools while" +
+                    " the org is operating in simple content access mode"));
+            }
+        }
+
         serviceLevelValidator.validate(owner.getId(), dto.getServiceLevel());
 
         ActivationKey key = new ActivationKey();
