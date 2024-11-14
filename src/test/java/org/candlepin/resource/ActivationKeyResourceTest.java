@@ -31,6 +31,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.controller.PoolService;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.server.v1.ActivationKeyPoolDTO;
 import org.candlepin.dto.api.server.v1.ActivationKeyProductDTO;
@@ -57,6 +58,7 @@ import org.candlepin.util.ServiceLevelValidator;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -65,42 +67,73 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-
+import javax.inject.Provider;
 
 public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
     private static int poolid = 0;
 
-    private DTOValidator dtoValidator;
-    private ServiceLevelValidator serviceLevelValidator;
+    private DTOValidator mockDtoValidator;
+    private ServiceLevelValidator mockServiceLevelValidator;
     private ActivationKeyResource activationKeyResource;
     private ActivationKeyRules activationKeyRules;
 
     private ActivationKeyCurator mockActivationKeyCurator;
-    private PoolService poolService;
-    private ActivationKeyContentOverrideCurator akcoCurator;
-    private ContentOverrideValidator coValidator;
+    private PoolService mockPoolService;
+    private ActivationKeyContentOverrideCurator mockAkcoCurator;
+    private ContentOverrideValidator mockCoValidator;
     private Owner owner;
+
+    // Add providers for non-singleton dependencies
+    private Provider<PoolService> poolServiceProvider;
+    private Provider<I18n> i18nProvider;
+    private Provider<ServiceLevelValidator> serviceLevelValidatorProvider;
+    private Provider<ActivationKeyRules> activationKeyRulesProvider;
+    private Provider<ModelTranslator> translatorProvider;
+    private Provider<DTOValidator> dtoValidatorProvider;
+    private Provider<ContentOverrideValidator> coValidatorProvider;
+
 
     @BeforeEach
     public void setUp() {
         activationKeyResource = injector.getInstance(ActivationKeyResource.class);
         activationKeyRules = injector.getInstance(ActivationKeyRules.class);
 
-        this.dtoValidator = new DTOValidator(this.i18n);
+        this.mockDtoValidator = mock(DTOValidator.class);
         this.mockActivationKeyCurator = mock(ActivationKeyCurator.class);
-        this.serviceLevelValidator = mock(ServiceLevelValidator.class);
-        this.poolService = mock(PoolService.class);
-        this.akcoCurator = mock(ActivationKeyContentOverrideCurator.class);
-        this.coValidator = mock(ContentOverrideValidator.class);
+        this.mockServiceLevelValidator = mock(ServiceLevelValidator.class);
+        this.mockPoolService = mock(PoolService.class);
+        this.mockAkcoCurator = mock(ActivationKeyContentOverrideCurator.class);
+        this.mockCoValidator = mock(ContentOverrideValidator.class);
 
         this.owner = createOwner();
+
+        // Initialize providers
+        this.poolServiceProvider = () -> mockPoolService;
+        this.i18nProvider = () -> i18n;
+        this.serviceLevelValidatorProvider = () -> mockServiceLevelValidator;
+        this.activationKeyRulesProvider = () -> activationKeyRules;
+        this.translatorProvider = () -> modelTranslator;
+        this.dtoValidatorProvider = () -> mockDtoValidator;
+        this.coValidatorProvider = () -> mockCoValidator;
     }
 
     private ActivationKeyResource buildActivationKeyResource() {
-        return new ActivationKeyResource(this.mockActivationKeyCurator, this.i18n, this.poolService,
-            this.serviceLevelValidator, this.activationKeyRules, this.productCurator, this.modelTranslator,
-            this.dtoValidator, this.akcoCurator, this.coValidator);
+        return new ActivationKeyResource(
+                // Singleton dependencies
+                this.mockActivationKeyCurator,
+                this.mockAkcoCurator,
+                this.productCurator,
+
+                // Providers for non-singleton dependencies
+                this.poolServiceProvider,
+                this.i18nProvider,
+                this.serviceLevelValidatorProvider,
+                this.activationKeyRulesProvider,
+                this.translatorProvider,
+                this.dtoValidatorProvider,
+                this.coValidatorProvider
+        );
     }
 
     private void mockCuratorPassthroughMethods(AbstractHibernateCurator mock) {
@@ -175,7 +208,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "no");
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p).when(this.poolService).get("testPool");
+        doReturn(p).when(this.mockPoolService).get("testPool");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
         assertThrows(BadRequestException.class, () -> akr.addPoolToKey("testKey", "testPool", 2L));
@@ -188,7 +221,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p.setQuantity(10L);
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p).when(this.poolService).get("testPool");
+        doReturn(p).when(this.mockPoolService).get("testPool");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
         assertThrows(BadRequestException.class, () -> akr.addPoolToKey("testKey", "testPool", -3L));
@@ -202,7 +235,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p.setQuantity(10L);
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p).when(this.poolService).get("testPool");
+        doReturn(p).when(this.mockPoolService).get("testPool");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
         akr.addPoolToKey("testKey", "testPool", 15L);
@@ -216,7 +249,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p.setQuantity(-1L);
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p).when(this.poolService).get("testPool");
+        doReturn(p).when(this.mockPoolService).get("testPool");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
         akr.addPoolToKey("testKey", "testPool", 15L);
@@ -230,7 +263,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p.setQuantity(1L);
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p).when(this.poolService).get("testPool");
+        doReturn(p).when(this.mockPoolService).get("testPool");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
         assertThrows(BadRequestException.class, () -> akr.addPoolToKey("testKey", "testPool", 1L));
@@ -245,7 +278,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         this.mockCuratorPassthroughMethods(this.mockActivationKeyCurator);
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p).when(this.poolService).get("testPool");
+        doReturn(p).when(this.mockPoolService).get("testPool");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
         assertNotNull(akr.addPoolToKey("testKey", "testPool", 1L));
@@ -260,8 +293,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p2.setAttribute(Pool.Attributes.REQUIRES_HOST, "host1");
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p1).when(this.poolService).get("testPool1");
-        doReturn(p2).when(this.poolService).get("testPool2");
+        doReturn(p1).when(this.mockPoolService).get("testPool1");
+        doReturn(p2).when(this.mockPoolService).get("testPool2");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
 
@@ -282,7 +315,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ak.addPool(p2, 1L);
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p1).when(this.poolService).get("testPool1");
+        doReturn(p1).when(this.mockPoolService).get("testPool1");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
         akr.addPoolToKey("testKey", "testPool1", 1L);
@@ -297,8 +330,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p2.setAttribute(Pool.Attributes.REQUIRES_HOST, "");
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p1).when(this.poolService).get("testPool1");
-        doReturn(p2).when(this.poolService).get("testPool2");
+        doReturn(p1).when(this.mockPoolService).get("testPool1");
+        doReturn(p2).when(this.mockPoolService).get("testPool2");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
 
@@ -315,7 +348,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         Pool p = genPool();
 
         doReturn(ak).when(this.mockActivationKeyCurator).secureGet("testKey");
-        doReturn(p).when(this.poolService).get("testPool");
+        doReturn(p).when(this.mockPoolService).get("testPool");
 
         ActivationKeyResource akr = this.buildActivationKeyResource();
         akr.addPoolToKey("testKey", "testPool", null);
@@ -437,7 +470,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKey toUpdate = spy(createActivationKey(owner));
         when(this.mockActivationKeyCurator.secureGet(toUpdate.getId())).thenReturn(toUpdate);
         String ownerId = owner.getId();
-        doNothing().when(serviceLevelValidator).validate(eq(ownerId), any(String.class));
+        doNothing().when(mockServiceLevelValidator).validate(eq(ownerId), any(String.class));
 
         ActivationKeyDTO update = new ActivationKeyDTO()
             .id(toUpdate.getId())

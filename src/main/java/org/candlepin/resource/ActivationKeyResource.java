@@ -57,41 +57,58 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 
 
-
+@Singleton
 public class ActivationKeyResource implements ActivationKeyApi {
     private static final Logger log = LoggerFactory.getLogger(ActivationKeyResource.class);
     private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
 
+    // Singleton dependencies
     private final ActivationKeyCurator activationKeyCurator;
     private final ActivationKeyContentOverrideCurator contentOverrideCurator;
     private final ProductCurator productCurator;
-    private final PoolService poolService;
-    private final I18n i18n;
-    private final ServiceLevelValidator serviceLevelValidator;
-    private final ActivationKeyRules activationKeyRules;
-    private final ModelTranslator translator;
-    private final DTOValidator dtoValidator;
-    private final ContentOverrideValidator coValidator;
+
+    // Non-singleton dependencies, injected via Provider<T>
+    private final Provider<PoolService> poolServiceProvider;
+    private final Provider<I18n> i18nProvider;
+    private final Provider<ServiceLevelValidator> serviceLevelValidatorProvider;
+    private final Provider<ActivationKeyRules> activationKeyRulesProvider;
+    private final Provider<ModelTranslator> translatorProvider;
+    private final Provider<DTOValidator> dtoValidatorProvider;
+    private final Provider<ContentOverrideValidator> coValidatorProvider;
 
     @Inject
-    public ActivationKeyResource(ActivationKeyCurator activationKeyCurator, I18n i18n,
-        PoolService poolService, ServiceLevelValidator serviceLevelValidator,
-        ActivationKeyRules activationKeyRules, ProductCurator productCurator,
-        ModelTranslator translator, DTOValidator dtoValidator,
-        ActivationKeyContentOverrideCurator contentOverrideCurator, ContentOverrideValidator coValidator) {
+    public ActivationKeyResource(
+            // Inject singleton dependencies directly
+            ActivationKeyCurator activationKeyCurator,
+            ActivationKeyContentOverrideCurator contentOverrideCurator,
+            ProductCurator productCurator,
 
+            // Inject non-singleton dependencies via Provider<T>
+            Provider<PoolService> poolServiceProvider,
+            Provider<I18n> i18nProvider,
+            Provider<ServiceLevelValidator> serviceLevelValidatorProvider,
+            Provider<ActivationKeyRules> activationKeyRulesProvider,
+            Provider<ModelTranslator> translatorProvider,
+            Provider<DTOValidator> dtoValidatorProvider,
+            Provider<ContentOverrideValidator> coValidatorProvider
+    ) {
+        // Initialize singleton dependencies
         this.activationKeyCurator = Objects.requireNonNull(activationKeyCurator);
-        this.i18n = Objects.requireNonNull(i18n);
-        this.poolService = Objects.requireNonNull(poolService);
-        this.serviceLevelValidator = Objects.requireNonNull(serviceLevelValidator);
-        this.activationKeyRules = Objects.requireNonNull(activationKeyRules);
-        this.productCurator = Objects.requireNonNull(productCurator);
-        this.translator = Objects.requireNonNull(translator);
-        this.dtoValidator = Objects.requireNonNull(dtoValidator);
         this.contentOverrideCurator = Objects.requireNonNull(contentOverrideCurator);
-        this.coValidator = Objects.requireNonNull(coValidator);
+        this.productCurator = Objects.requireNonNull(productCurator);
+
+        // Initialize providers for non-singleton dependencies
+        this.poolServiceProvider = Objects.requireNonNull(poolServiceProvider);
+        this.i18nProvider = Objects.requireNonNull(i18nProvider);
+        this.serviceLevelValidatorProvider = Objects.requireNonNull(serviceLevelValidatorProvider);
+        this.activationKeyRulesProvider = Objects.requireNonNull(activationKeyRulesProvider);
+        this.translatorProvider = Objects.requireNonNull(translatorProvider);
+        this.dtoValidatorProvider = Objects.requireNonNull(dtoValidatorProvider);
+        this.coValidatorProvider = Objects.requireNonNull(coValidatorProvider);
     }
 
     /**
@@ -108,6 +125,8 @@ public class ActivationKeyResource implements ActivationKeyApi {
      *  an ActivationKey with the specified ID
      */
     private ActivationKey fetchActivationKey(String keyId) {
+        I18n i18n = i18nProvider.get();
+
         if (keyId == null || keyId.isEmpty()) {
             throw new BadRequestException(i18n.tr("Activation key ID is null or empty"));
         }
@@ -125,13 +144,17 @@ public class ActivationKeyResource implements ActivationKeyApi {
     @Override
     @Transactional
     public ActivationKeyDTO getActivationKey(@Verify(ActivationKey.class) String activationKeyId) {
+        ModelTranslator translator = translatorProvider.get();
+
         ActivationKey key = this.fetchActivationKey(activationKeyId);
-        return this.translator.translate(key, ActivationKeyDTO.class);
+        return translator.translate(key, ActivationKeyDTO.class);
     }
 
     @Override
     @Transactional
     public Iterable<PoolDTO> getActivationKeyPools(@Verify(ActivationKey.class) String activationKeyId) {
+        ModelTranslator translator = translatorProvider.get();
+
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         return () -> new TransformedIterator<>(key.getPools().iterator(),
             akp -> translator.translate(akp.getPool(), PoolDTO.class));
@@ -142,6 +165,10 @@ public class ActivationKeyResource implements ActivationKeyApi {
     public ActivationKeyDTO updateActivationKey(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         ActivationKeyDTO update) {
+        DTOValidator dtoValidator = dtoValidatorProvider.get();
+        I18n i18n = i18nProvider.get();
+        ServiceLevelValidator serviceLevelValidator = serviceLevelValidatorProvider.get();
+        ModelTranslator translator = translatorProvider.get();
 
         dtoValidator.validateCollectionElementsNotNull(update::getProducts, update::getPools,
             update::getContentOverrides);
@@ -194,7 +221,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
         toUpdate = activationKeyCurator.merge(toUpdate);
         this.activationKeyCurator.flush();
 
-        return this.translator.translate(toUpdate, ActivationKeyDTO.class);
+        return translator.translate(toUpdate, ActivationKeyDTO.class);
     }
 
     @Override
@@ -203,6 +230,9 @@ public class ActivationKeyResource implements ActivationKeyApi {
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         @Verify(value = Pool.class, require = Access.READ_ONLY) String poolId,
         Long quantity) {
+        ActivationKeyRules activationKeyRules = activationKeyRulesProvider.get();
+        I18n i18n = i18nProvider.get();
+        ModelTranslator translator = translatorProvider.get();
 
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         Pool pool = findPool(poolId);
@@ -226,7 +256,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
         key = this.activationKeyCurator.merge(key);
         this.activationKeyCurator.flush();
 
-        return this.translator.translate(key, ActivationKeyDTO.class);
+        return translator.translate(key, ActivationKeyDTO.class);
     }
 
     @Override
@@ -234,6 +264,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     public ActivationKeyDTO removePoolFromKey(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         @Verify(value = Pool.class, require = Access.READ_ONLY) String poolId) {
+        ModelTranslator translator = translatorProvider.get();
 
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         Pool pool = findPool(poolId);
@@ -247,7 +278,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
             this.activationKeyCurator.flush();
         }
 
-        return this.translator.translate(key, ActivationKeyDTO.class);
+        return translator.translate(key, ActivationKeyDTO.class);
     }
 
     @Override
@@ -255,6 +286,8 @@ public class ActivationKeyResource implements ActivationKeyApi {
     public ActivationKeyDTO addProductIdToKey(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         String productId) {
+        I18n i18n = i18nProvider.get();
+        ModelTranslator translator = translatorProvider.get();
 
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         Product product = confirmProduct(key.getOwner(), productId);
@@ -275,7 +308,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
             this.activationKeyCurator.flush();
         }
 
-        return this.translator.translate(key, ActivationKeyDTO.class);
+        return translator.translate(key, ActivationKeyDTO.class);
     }
 
     @Override
@@ -283,6 +316,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     public ActivationKeyDTO removeProductIdFromKey(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         String productId) {
+        ModelTranslator translator = translatorProvider.get();
 
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         Product product = confirmProduct(key.getOwner(), productId);
@@ -296,15 +330,17 @@ public class ActivationKeyResource implements ActivationKeyApi {
             this.activationKeyCurator.flush();
         }
 
-        return this.translator.translate(key, ActivationKeyDTO.class);
+        return translator.translate(key, ActivationKeyDTO.class);
     }
 
     @Override
     @Transactional
     public Stream<ActivationKeyDTO> findActivationKey() {
+        ModelTranslator translator = translatorProvider.get();
+
         return this.activationKeyCurator.listAll()
             .stream()
-            .map(this.translator.getStreamMapper(ActivationKey.class, ActivationKeyDTO.class));
+            .map(translator.getStreamMapper(ActivationKey.class, ActivationKeyDTO.class));
     }
 
     @Override
@@ -319,12 +355,13 @@ public class ActivationKeyResource implements ActivationKeyApi {
     @Transactional
     public Stream<ContentOverrideDTO> listActivationKeyContentOverrides(
         @Verify(value = ActivationKey.class, require = Access.READ_ONLY) String activationKeyId) {
+        ModelTranslator translator = translatorProvider.get();
 
         ActivationKey key = this.fetchActivationKey(activationKeyId);
 
         return this.contentOverrideCurator.getList(key)
             .stream()
-            .map(this.translator.getStreamMapper(ContentOverride.class, ContentOverrideDTO.class));
+            .map(translator.getStreamMapper(ContentOverride.class, ContentOverrideDTO.class));
     }
 
     @Override
@@ -332,8 +369,10 @@ public class ActivationKeyResource implements ActivationKeyApi {
     public Stream<ContentOverrideDTO> addActivationKeyContentOverrides(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         List<ContentOverrideDTO> entries) {
+        ContentOverrideValidator coValidator = coValidatorProvider.get();
+        ModelTranslator translator = translatorProvider.get();
 
-        this.coValidator.validate(entries);
+        coValidator.validate(entries);
         ActivationKey key = this.fetchActivationKey(activationKeyId);
 
         List<ActivationKeyContentOverride> overrides = entries.stream()
@@ -376,7 +415,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
 
         return this.contentOverrideCurator.getList(key)
             .stream()
-            .map(this.translator.getStreamMapper(ContentOverride.class,
+            .map(translator.getStreamMapper(ContentOverride.class,
                 ContentOverrideDTO.class));
     }
 
@@ -385,6 +424,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
     public Stream<ContentOverrideDTO> deleteActivationKeyContentOverrides(
         @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         List<ContentOverrideDTO> entries) {
+        ModelTranslator translator = translatorProvider.get();
 
         ActivationKey key = this.fetchActivationKey(activationKeyId);
 
@@ -414,13 +454,16 @@ public class ActivationKeyResource implements ActivationKeyApi {
 
         return this.contentOverrideCurator.getList(key)
             .stream()
-            .map(this.translator.getStreamMapper(ContentOverride.class, ContentOverrideDTO.class));
+            .map(translator.getStreamMapper(ContentOverride.class, ContentOverrideDTO.class));
     }
 
     private Pool findPool(String poolId) {
-        Pool pool = this.poolService.get(poolId);
+        PoolService poolService = this.poolServiceProvider.get();
+
+        Pool pool = poolService.get(poolId);
 
         if (pool == null) {
+            I18n i18n = i18nProvider.get();
             throw new BadRequestException(i18n.tr("Pool with id {0} could not be found.", poolId));
         }
 
@@ -431,6 +474,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
         Product prod = this.productCurator.resolveProductId(owner.getKey(), prodId);
 
         if (prod == null) {
+            I18n i18n = i18nProvider.get();
             throw new BadRequestException(i18n.tr("Product with id {0} could not be found.", prodId));
         }
 
