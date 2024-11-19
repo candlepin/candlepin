@@ -57,6 +57,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.OffsetDateTime;
@@ -67,6 +69,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @SpecTest
 public class ConsumerResourceSpecTest {
@@ -105,6 +108,60 @@ public class ConsumerResourceSpecTest {
             .isAfterOrEqualTo(init)
             .isAfterOrEqualTo(output.getCreated())
             .isBeforeOrEqualTo(post);
+    }
+
+    public static Stream<Arguments> cloudFactsSource() {
+        List<String> awsFacts = List.of("aws_instance_id", "aws_account_id", "aws_billing_products",
+            "aws_marketplace_product_codes");
+
+        List<String> azureFacts = List.of("azure_instance_id", "azure_subscription_id", "azure_offer");
+
+        List<String> gcpFacts = List.of("gcp_instance_id", "gcp_project_id", "gcp_license_codes");
+
+        return Stream.of(
+            Arguments.of(awsFacts),
+            Arguments.of(azureFacts),
+            Arguments.of(gcpFacts));
+    }
+
+    @ParameterizedTest
+    @MethodSource("cloudFactsSource")
+    public void shouldAllowRegistrationWithNullDataInCloudFacts(List<String> facts) throws Exception {
+        OwnerDTO owner = this.adminClient.owners().createOwner(Owners.random());
+
+        ConsumerDTO consumer = Consumers.random(owner);
+        facts.forEach(fact -> consumer.putFactsItem(fact, null));
+
+        // Impl note: We have to manually serialize this and create our own request to avoid an issue with
+        // the GSON serializer being helpful and throwing out null values on our behalf against our wishes.
+        Response response = Request.from(this.adminClient)
+            .setPath("/consumers")
+            .setMethod("POST")
+            .addQueryParam("owner", owner.getKey())
+            .setBody(ApiClient.MAPPER.writeValueAsString(consumer))
+            .execute();
+
+        assertEquals(200, response.getCode());
+    }
+
+    @ParameterizedTest
+    @MethodSource("cloudFactsSource")
+    public void shouldAllowRegistrationWithEmptyDataInCloudFacts(List<String> facts) throws Exception {
+        OwnerDTO owner = this.adminClient.owners().createOwner(Owners.random());
+
+        ConsumerDTO consumer = Consumers.random(owner);
+        facts.forEach(fact -> consumer.putFactsItem(fact, ""));
+
+        // Impl note: We have to manually serialize this and create our own request to avoid an issue with
+        // the GSON serializer being helpful and throwing out null values on our behalf against our wishes.
+        Response response = Request.from(this.adminClient)
+            .setPath("/consumers")
+            .setMethod("POST")
+            .addQueryParam("owner", owner.getKey())
+            .setBody(ApiClient.MAPPER.writeValueAsString(consumer))
+            .execute();
+
+        assertEquals(200, response.getCode());
     }
 
     @Test

@@ -45,6 +45,8 @@ import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.CloudRegistrationClient;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
+import org.candlepin.spec.bootstrap.client.request.Request;
+import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
@@ -462,6 +464,106 @@ class CloudRegistrationSpecTest {
 
         assertNotImplemented(() ->  ApiClients.noAuth().cloudAuthorization()
             .cloudAuthorizeV2("account-id", "cloud-instance-id", offerId, "test-type", ""));
+    }
+
+    public static Stream<Arguments> cloudFactsSource() {
+        List<String> awsFacts = List.of("aws_instance_id", "aws_account_id", "aws_billing_products",
+            "aws_marketplace_product_codes");
+
+        List<String> azureFacts = List.of("azure_instance_id", "azure_subscription_id", "azure_offer");
+
+        List<String> gcpFacts = List.of("gcp_instance_id", "gcp_project_id", "gcp_license_codes");
+
+        return Stream.of(
+            Arguments.of(awsFacts),
+            Arguments.of(azureFacts),
+            Arguments.of(gcpFacts));
+    }
+
+    @ParameterizedTest
+    @MethodSource("cloudFactsSource")
+    public void shouldAllowRegistrationWithNullDataInCloudFacts(List<String> facts) throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(owner.getKey(), Products.random());
+        adminClient.owners().createPool(owner.getKey(), Pools.random(prod));
+
+        adminClient.hosted().createOwner(owner);
+        adminClient.hosted().createProduct(prod);
+        adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
+        adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
+        adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(prod.getId()));
+
+        CloudAuthenticationResultDTO cloudAuthDTO = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+
+        assertTokenType(ApiClient.MAPPER, cloudAuthDTO.getToken(), STANDARD_TOKEN_TYPE);
+        assertThat(cloudAuthDTO)
+            .isNotNull()
+            .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
+            .returns(null, CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
+            .returns(STANDARD_TOKEN_TYPE, CloudAuthenticationResultDTO::getTokenType);
+
+        ConsumerDTO consumer = Consumers.randomNoOwner();
+        facts.forEach(fact -> consumer.putFactsItem(fact, null));
+
+        // Impl note: We have to manually serialize this and create our own request to avoid an issue with
+        // the GSON serializer being helpful and throwing out null values on our behalf against our wishes.
+        Response response = Request.from(ApiClients.bearerToken(cloudAuthDTO.getToken()))
+            .setPath("/consumers")
+            .setMethod("POST")
+            .setBody(ApiClient.MAPPER.writeValueAsString(consumer))
+            .execute();
+
+        assertEquals(200, response.getCode());
+    }
+
+    @ParameterizedTest
+    @MethodSource("cloudFactsSource")
+    public void shouldAllowRegistrationWithEmptyDataInCloudFacts(List<String> facts) throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        ProductDTO prod = adminClient.ownerProducts().createProduct(owner.getKey(), Products.random());
+        adminClient.owners().createPool(owner.getKey(), Pools.random(prod));
+
+        adminClient.hosted().createOwner(owner);
+        adminClient.hosted().createProduct(prod);
+        adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
+        adminClient.hosted().associateOwnerToCloudAccount(accountId, owner.getKey());
+        adminClient.hosted().associateProductIdsToCloudOffer(offerId, List.of(prod.getId()));
+
+        CloudAuthenticationResultDTO cloudAuthDTO = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+
+        assertTokenType(ApiClient.MAPPER, cloudAuthDTO.getToken(), STANDARD_TOKEN_TYPE);
+        assertThat(cloudAuthDTO)
+            .isNotNull()
+            .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
+            .returns(null, CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
+            .returns(STANDARD_TOKEN_TYPE, CloudAuthenticationResultDTO::getTokenType);
+
+        ConsumerDTO consumer = Consumers.randomNoOwner();
+        facts.forEach(fact -> consumer.putFactsItem(fact, ""));
+
+        // Impl note: We have to manually serialize this and create our own request to avoid an issue with
+        // the GSON serializer being helpful and throwing out null values on our behalf against our wishes.
+        Response response = Request.from(ApiClients.bearerToken(cloudAuthDTO.getToken()))
+            .setPath("/consumers")
+            .setMethod("POST")
+            .setBody(ApiClient.MAPPER.writeValueAsString(consumer))
+            .execute();
+
+        assertEquals(200, response.getCode());
     }
 
     @Test

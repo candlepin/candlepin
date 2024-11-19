@@ -12,18 +12,18 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.model;
 
 import org.candlepin.util.Util;
 
 import org.hibernate.annotations.GenericGenerator;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -34,6 +34,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+
+
 
 @Entity
 @Table(name = ConsumerCloudData.DB_TABLE)
@@ -86,25 +88,6 @@ public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData
     }
 
     /**
-     * @param id
-     *  the database ID
-     *
-     * @return a reference to this ConsumerCloudData instance
-     */
-    public ConsumerCloudData setId(String id) {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("ID is null or blank");
-        }
-
-        if (id.length() > ID_MAX_LENGTH) {
-            throw new IllegalArgumentException("ID exceeds the max length");
-        }
-
-        this.id = id;
-        return this;
-    }
-
-    /**
      * @return the cloud provider short name for this cloud consumer
      */
     public String getCloudProviderShortName() {
@@ -118,8 +101,8 @@ public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData
      * @return a reference to this ConsumerCloudData instance
      */
     public ConsumerCloudData setCloudProviderShortName(String cloudProviderShortName) {
-        if (cloudProviderShortName == null) {
-            throw new IllegalArgumentException("cloudProviderShortName is null");
+        if (cloudProviderShortName == null || cloudProviderShortName.isBlank()) {
+            throw new IllegalArgumentException("cloudProviderShortName is null or empty");
         }
 
         if (cloudProviderShortName.length() > CLOUD_PROVIDER_MAX_LENGTH) {
@@ -192,9 +175,7 @@ public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData
      * @return a list of cloud offering IDs; never {@code null}, possibly empty
      */
     public List<String> getCloudOfferingIds() {
-        if (this.cloudOfferingIds == null) {
-            return new ArrayList<>();
-        }
+        // Convert our internal comma-delimited string of offering IDs to a (likely) immutable list.
         return Util.toList(this.cloudOfferingIds);
     }
 
@@ -206,22 +187,16 @@ public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData
      * The IDs are stored internally as a comma-separated string.</p>
      *
      * @param cloudOfferingIds
-     *         the cloud offering IDs to be added; must not be {@code null} or contain {@code null} elements;
-     *         if there is empty list the attribute remains unchanged
-     *
-     * @return a reference to this {@code ConsumerCloudData} instance
+     *  the cloud offering IDs to be added; must not be {@code null}; if there is empty list the attribute
+     *  remains unchanged
      *
      * @throws IllegalArgumentException
-     *         if {@code cloudOfferingIds} is {@code null} or contains {@code null} elements,
-     *         or if the combined cloud offering IDs exceed the maximum allowed length of 255 characters
+     *  if the combined cloud offering IDs exceeds the maximum allowed length of 255 characters
+     *
+     * @return a reference to this {@code ConsumerCloudData} instance
      */
     public ConsumerCloudData addCloudOfferingIds(String... cloudOfferingIds) {
-        if (cloudOfferingIds == null) {
-            throw new IllegalArgumentException("cloudOfferingIds is null");
-        }
-
-        this.addCloudOfferingIds(Arrays.asList(cloudOfferingIds));
-        return this;
+        return this.addCloudOfferingIds(cloudOfferingIds != null ? Arrays.asList(cloudOfferingIds) : null);
     }
 
     /**
@@ -232,46 +207,33 @@ public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData
      * The IDs are stored internally as a comma-separated string.</p>
      *
      * @param cloudOfferingIds
-     *         the cloud offering IDs to be added; must not be {@code null},
-     *         or contain {@code null} elements; if there is empty list the attribute remains unchanged
+     *  the cloud offering IDs to be added; must not be {@code null}; if there is empty list the attribute
+     *  remains unchanged
      *
      * @return a reference to this {@code ConsumerCloudData} instance
      *
      * @throws IllegalArgumentException
-     *         if {@code cloudOfferingIds} is {@code null}, contains {@code null} elements,
-     *         or if the combined cloud offering IDs exceed the maximum allowed length of 255 characters
+     *  if the combined cloud offering IDs exceeds the maximum allowed length of 255 characters
      */
     public ConsumerCloudData addCloudOfferingIds(Collection<String> cloudOfferingIds) {
-        if (cloudOfferingIds == null) {
-            throw new IllegalArgumentException("cloudOfferingIds is null or empty");
-        }
-
-        if (cloudOfferingIds.isEmpty()) {
+        if (cloudOfferingIds == null || cloudOfferingIds.isEmpty()) {
             return this;
         }
 
-        for (String cloudOfferingId : cloudOfferingIds) {
-            if (cloudOfferingId == null) {
-                throw new IllegalArgumentException("cloudOfferingIds contains null element");
-            }
-        }
+        Stream<String> stream = Stream.concat(
+            Stream.ofNullable(this.cloudOfferingIds),
+            cloudOfferingIds.stream());
 
-        String joinedCloudOfferingIds = String.join(",", cloudOfferingIds);
+        String joinedCloudOfferingIds = stream.filter(Objects::nonNull)
+            .filter(elem -> !elem.isBlank())
+            .collect(Collectors.joining(","));
 
-        String combinedCloudOfferingIds;
-        if (this.cloudOfferingIds == null || this.cloudOfferingIds.isEmpty()) {
-            combinedCloudOfferingIds = joinedCloudOfferingIds;
-        }
-        else {
-            combinedCloudOfferingIds = this.cloudOfferingIds + "," + joinedCloudOfferingIds;
-        }
-
-        if (combinedCloudOfferingIds.length() > CLOUD_OFFERING_ID_MAX_LENGTH) {
+        if (joinedCloudOfferingIds.length() > CLOUD_OFFERING_ID_MAX_LENGTH) {
             throw new IllegalArgumentException(
                 "Combined cloudOfferingIds exceed the max length of 255 characters");
         }
 
-        this.cloudOfferingIds = combinedCloudOfferingIds;
+        this.cloudOfferingIds = !joinedCloudOfferingIds.isEmpty() ? joinedCloudOfferingIds : null;
         return this;
     }
 
@@ -282,22 +244,16 @@ public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData
      * The IDs are stored internally as a comma-separated string.</p>
      *
      * @param cloudOfferingIds
-     *         the cloud offering IDs to be set; must not be {@code null} or contain {@code null} elements;
-     *         if there is empty list it will store {@code null}
-     *
-     * @return a reference to this {@code ConsumerCloudData} instance
+     *  the cloud offering IDs to be set; must not be {@code null}; if there is empty list it will store
+     *  {@code null}
      *
      * @throws IllegalArgumentException
-     *         if {@code cloudOfferingIds} is {@code null} or contains {@code null} elements,
-     *         or if the combined cloud offering IDs exceed the maximum allowed length of 255 characters
+     *  if the combined cloud offering IDs exceeds the maximum allowed length of 255 characters
+     *
+     * @return a reference to this {@code ConsumerCloudData} instance
      */
     public ConsumerCloudData setCloudOfferingIds(String... cloudOfferingIds) {
-        if (cloudOfferingIds == null) {
-            throw new IllegalArgumentException("cloudOfferingIds is null");
-        }
-
-        this.setCloudOfferingIds(Arrays.asList(cloudOfferingIds));
-        return this;
+        return this.setCloudOfferingIds(cloudOfferingIds != null ? Arrays.asList(cloudOfferingIds) : null);
     }
 
     /**
@@ -307,39 +263,31 @@ public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData
      * The IDs are stored internally as a comma-separated string.</p>
      *
      * @param cloudOfferingIds
-     *         the cloud offering IDs to be set; must not be {@code null},
-     *         or contain {@code null} elements; if there is empty list it will store {@code null}
-     *
-     * @return a reference to this {@code ConsumerCloudData} instance
+     *  the cloud offering IDs to be set; must not be {@code null}; if there is empty list it will store
+     *  {@code null}
      *
      * @throws IllegalArgumentException
-     *         if {@code cloudOfferingIds} is {@code null}, contains {@code null} elements,
-     *         or if the combined cloud offering IDs exceed the maximum allowed length of 255 characters
+     *  if the combined cloud offering IDs exceeds the maximum allowed length of 255 characters
+     *
+     * @return a reference to this {@code ConsumerCloudData} instance
      */
     public ConsumerCloudData setCloudOfferingIds(Collection<String> cloudOfferingIds) {
-        if (cloudOfferingIds == null) {
-            throw new IllegalArgumentException("cloudOfferingIds is null");
-        }
-
-        if (cloudOfferingIds.isEmpty()) {
+        if (cloudOfferingIds == null || cloudOfferingIds.isEmpty()) {
             this.cloudOfferingIds = null;
             return this;
         }
 
-        for (String cloudOfferingId : cloudOfferingIds) {
-            if (cloudOfferingId == null) {
-                throw new IllegalArgumentException("cloudOfferingIds contains null element");
-            }
-        }
-
-        String joinedCloudOfferingIds = String.join(",", cloudOfferingIds);
+        String joinedCloudOfferingIds = cloudOfferingIds.stream()
+            .filter(Objects::nonNull)
+            .filter(elem -> !elem.isBlank())
+            .collect(Collectors.joining(","));
 
         if (joinedCloudOfferingIds.length() > CLOUD_OFFERING_ID_MAX_LENGTH) {
             throw new IllegalArgumentException(
                 "Combined cloudOfferingIds exceed the max length of 255 characters");
         }
 
-        this.cloudOfferingIds = joinedCloudOfferingIds;
+        this.cloudOfferingIds = !joinedCloudOfferingIds.isEmpty() ? joinedCloudOfferingIds : null;
         return this;
     }
 
@@ -361,29 +309,15 @@ public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
-        return String.format(
-            "Consumer Cloud Data [id: %s, cloudAccountId: %s, cloudProviderShortName: %s]",
+        // Why is short name after the account ID? Why do we show the object ID (which is worthless to us)
+        // when we could be showing the consumer?
+        return String.format("ConsumerCloudData [id: %s, cloudAccountId: %s, cloudProviderShortName: %s]",
             this.getId(), this.getCloudAccountId(), this.getCloudProviderShortName());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof ConsumerCloudData)) {
-            return false;
-        }
-
-        return Objects.equals(this.getId(), ((ConsumerCloudData) obj).getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return this.getId() != null ? this.getId().hashCode() : 0;
     }
 
 }
