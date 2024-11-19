@@ -66,7 +66,7 @@ public class Request {
      * @throws IllegalArgumentException
      *  if the provided client is null
      */
-    public Request(org.candlepin.invoker.client.ApiClient client) {
+    private Request(org.candlepin.invoker.client.ApiClient client) {
         if (client == null) {
             throw new IllegalArgumentException("client is null");
         }
@@ -201,7 +201,7 @@ public class Request {
             throw new IllegalArgumentException("value is null or empty");
         }
 
-        this.pathParams.put(key, value);
+        this.pathParams.put(key, value != null ? value : "");
         return this;
     }
 
@@ -226,7 +226,7 @@ public class Request {
             throw new IllegalArgumentException("header is null or empty");
         }
 
-        this.headers.put(header, value);
+        this.headers.put(header, value != null ? value : "");
         return this;
     }
 
@@ -254,7 +254,7 @@ public class Request {
         }
 
         this.queryParams.computeIfAbsent(key, (k) -> new ArrayList<>())
-            .add(value);
+            .add(value != null ? value : "");
 
         return this;
     }
@@ -290,8 +290,10 @@ public class Request {
             return this;
         }
 
-        this.queryParams.computeIfAbsent(key, (k) -> new ArrayList<>())
-            .addAll(values);
+        List<String> queryParams = this.queryParams.computeIfAbsent(key, (k) -> new ArrayList<>());
+        for (String value : values) {
+            queryParams.add(value != null ? value : "");
+        }
 
         return this;
     }
@@ -336,7 +338,7 @@ public class Request {
 
         // Translate the bits we need to translate...
         String path = PATH_PARAM_REGEX.matcher(this.endpoint)
-            .replaceAll((match) -> this.pathParams.get(match.group(1)));
+            .replaceAll((match) -> this.pathParams.getOrDefault(match.group(1), ""));
 
         String method = this.method != null ? this.method : "GET";
 

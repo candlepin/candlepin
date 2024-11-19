@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +45,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -300,14 +298,28 @@ public class Util {
         return sb.toString();
     }
 
+    // TODO: FIXME: This is bad bad bad bad bad. There's no documentation defining intentions or expectations,
+    // there were no input nor state validations in here at all, and if anything goes wrong we're crashing
+    // all the way out. Fixing it correctly is outside the scope of the PR in which this comment is written,
+    // but it should eventually be addressed properly. Yeesh...
     public static String transformUuid(String uuid) {
-        String[] partitions = uuid.split("-");
-        List<String> newPartitions = new LinkedList<>();
-        // We only want to revese the first three partitions
-        for (int i = 0; i < partitions.length; i++) {
-            newPartitions.add(i < 3 ? reverseEndian(partitions[i]) : partitions[i]);
+        if (uuid == null) {
+            return null;
         }
-        return StringUtils.join(newPartitions, '-');
+
+        // If we end up more or fewer partitions than five, it likely wasn't a valid UUID, so just return
+        // what the caller sent in and hope for the best.
+        String[] partitions = uuid.split("-");
+        if (partitions.length != 5) {
+            return uuid;
+        }
+
+        // We only want to revese the first three partitions
+        partitions[0] = reverseEndian(partitions[0]);
+        partitions[1] = reverseEndian(partitions[1]);
+        partitions[2] = reverseEndian(partitions[2]);
+
+        return String.join("-", partitions);
     }
 
     /*
@@ -599,17 +611,23 @@ public class Util {
     }
 
     /**
-     * Splits a given string by comma and returns it as a List.
+     * Splits a given string by comma and returns it as a List. The returned list should not be expected
+     * to be mutable. If the input string is null or empty, this method returns an empty list.
+     * <p></p>
+     * The given input string is split on commas and will throw out any whitespace surrounding each
+     * comma-delimited value using the regular expression: "\\s*,[\\s,]*"
      *
-     * Handles redundant whitespace and repeated commas.
+     * @param list
+     *  the string to split and convert into a list of values
      *
-     * @param list a string to be split
-     * @return a list of values
+     * @return
+     *  a list containing the split values from the string, if any
      */
     public static List<String> toList(String list) {
-        if (StringUtils.isBlank(list)) {
-            return Collections.emptyList();
+        if (list == null || list.isBlank()) {
+            return List.of();
         }
+
         return Arrays.asList(list.trim().split("\\s*,[\\s,]*"));
     }
 

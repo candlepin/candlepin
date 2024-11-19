@@ -110,7 +110,6 @@ public class CloudCheckInEventTest {
     @NullAndEmptySource
     public void testConstructorWithInvalidCloudProviderShortName(String shortName) {
         ConsumerCloudData cloudData = new ConsumerCloudData()
-            .setId(TestUtil.randomString())
             .setCloudAccountId(TestUtil.randomString())
             .setCloudInstanceId(TestUtil.randomString())
             .setCloudOfferingIds(List.of(TestUtil.randomString(), TestUtil.randomString()))
@@ -202,7 +201,6 @@ public class CloudCheckInEventTest {
             .setLastCheckin(new Date());
 
         ConsumerCloudData cloudData = new ConsumerCloudData()
-            .setId(TestUtil.randomString())
             .setCloudAccountId(TestUtil.randomString())
             .setCloudInstanceId(TestUtil.randomString())
             .setCloudOfferingIds(List.of(TestUtil.randomString(), TestUtil.randomString()))
@@ -227,7 +225,6 @@ public class CloudCheckInEventTest {
             .setLastCheckin(new Date());
 
         ConsumerCloudData cloudData = new ConsumerCloudData()
-            .setId(TestUtil.randomString())
             .setCloudAccountId(TestUtil.randomString())
             .setCloudInstanceId(TestUtil.randomString())
             .setCloudOfferingIds(List.of(TestUtil.randomString(), TestUtil.randomString()))
@@ -285,7 +282,6 @@ public class CloudCheckInEventTest {
             .setLastCheckin(new Date());
 
         ConsumerCloudData cloudData = new ConsumerCloudData()
-            .setId(TestUtil.randomString())
             .setCloudAccountId(TestUtil.randomString())
             .setCloudInstanceId(TestUtil.randomString())
             .setCloudOfferingIds(List.of(TestUtil.randomString(), TestUtil.randomString()))
@@ -310,7 +306,6 @@ public class CloudCheckInEventTest {
             .setLastCheckin(new Date());
 
         ConsumerCloudData cloudData = new ConsumerCloudData()
-            .setId(TestUtil.randomString())
             .setCloudAccountId(TestUtil.randomString())
             .setCloudInstanceId(TestUtil.randomString())
             .setCloudOfferingIds(List.of(TestUtil.randomString(), TestUtil.randomString()))
@@ -369,7 +364,6 @@ public class CloudCheckInEventTest {
 
     private ConsumerCloudData createCloudData() {
         return new ConsumerCloudData()
-            .setId(TestUtil.randomString())
             .setCloudAccountId(TestUtil.randomString())
             .setCloudInstanceId(TestUtil.randomString())
             .setCloudOfferingIds(List.of(TestUtil.randomString(), TestUtil.randomString()))

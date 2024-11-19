@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -695,12 +696,11 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testSetConsumerCloudData() {
         Consumer consumer = new Consumer();
-        ConsumerCloudData consumerCloudData = new ConsumerCloudData()
-            .setId("id-123");
+        ConsumerCloudData consumerCloudData = new ConsumerCloudData();
 
         consumer.setConsumerCloudData(consumerCloudData);
 
-        assertEquals(consumerCloudData.getId(), consumer.getConsumerCloudData().getId());
+        assertSame(consumerCloudData, consumer.getConsumerCloudData());
     }
 
     private Consumer createConsumerWithIdCert(Owner owner) {

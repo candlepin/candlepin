@@ -12,47 +12,27 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
+
+
 public class ConsumerCloudDataTest {
-
-    @Test
-    public void testSetId() {
-        ConsumerCloudData consumerCloudData = new ConsumerCloudData();
-        String validId = "12345";
-        consumerCloudData.setId(validId);
-        assertEquals(validId, consumerCloudData.getId());
-
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            consumerCloudData.setId(null);
-        });
-        assertEquals("ID is null or blank", exception.getMessage());
-
-        exception = assertThrows(IllegalArgumentException.class, () -> {
-            consumerCloudData.setId("");
-        });
-        assertEquals("ID is null or blank", exception.getMessage());
-
-        exception = assertThrows(IllegalArgumentException.class, () -> {
-            consumerCloudData.setId("123456789012345678901234567890123");
-        });
-        assertEquals("ID exceeds the max length", exception.getMessage());
-    }
 
     @Test
     public void testSetCloudProviderShortName() {
@@ -60,15 +40,31 @@ public class ConsumerCloudDataTest {
         String validName = "aws";
         consumerCloudData.setCloudProviderShortName(validName);
         assertEquals(validName, consumerCloudData.getCloudProviderShortName());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { " ", "   ", "\t" })
+    public void testSetCloudProviderShortNameWithNullAndEmptyInputs(String value) {
+        ConsumerCloudData ccdata = new ConsumerCloudData();
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            consumerCloudData.setCloudProviderShortName(null);
+            ccdata.setCloudProviderShortName(value);
         });
-        assertEquals("cloudProviderShortName is null", exception.getMessage());
 
-        exception = assertThrows(IllegalArgumentException.class, () -> {
-            consumerCloudData.setCloudProviderShortName("1234567890123456");
+        assertEquals("cloudProviderShortName is null or empty", exception.getMessage());
+    }
+
+    @Test
+    public void testSetCloudProviderShortNameWithLongValue() {
+        ConsumerCloudData ccdata = new ConsumerCloudData();
+
+        String value = "a".repeat(ConsumerCloudData.CLOUD_PROVIDER_MAX_LENGTH + 1);
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            ccdata.setCloudProviderShortName(value);
         });
+
         assertEquals("cloudProviderShortName exceeds the max length", exception.getMessage());
     }
 
@@ -118,14 +114,47 @@ public class ConsumerCloudDataTest {
         assertEquals(List.of(validId1, validId2), consumerCloudData.getCloudOfferingIds());
     }
 
-    @Test
-    public void testAddCloudOfferingIdsNullArrayInput() {
-        ConsumerCloudData consumerCloudData = new ConsumerCloudData();
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { " ", "   ", "\t" })
+    public void testAddCloudOfferingIdsArrayWithNullAndBlankElements(String value) {
+        ConsumerCloudData ccdata = new ConsumerCloudData();
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            consumerCloudData.addCloudOfferingIds((String[]) null);
-        });
-        assertEquals("cloudOfferingIds is null", exception.getMessage());
+        ConsumerCloudData output1 = ccdata.addCloudOfferingIds(value, value, value);
+        assertSame(ccdata, output1);
+
+        ConsumerCloudData output2 = ccdata.addCloudOfferingIds(value, value, value);
+        assertSame(ccdata, output2);
+
+        assertEquals(List.of(), ccdata.getCloudOfferingIds());
+    }
+
+    @Test
+    public void testAddCloudOfferingIdsArrayWithNullAndBlankMixedElements() {
+        ConsumerCloudData ccdata = new ConsumerCloudData();
+
+        ConsumerCloudData output1 = ccdata.addCloudOfferingIds("", null, " ", "   ", "\t");
+        assertSame(ccdata, output1);
+
+        ConsumerCloudData output2 = ccdata.addCloudOfferingIds("", null, " ", "   ", "\t");
+        assertSame(ccdata, output2);
+
+        assertEquals(List.of(), ccdata.getCloudOfferingIds());
+    }
+
+    @Test
+    public void testAddCloudOfferingIdsArrayWithNullAndBlankAndValidMixedElements() {
+        ConsumerCloudData ccdata = new ConsumerCloudData();
+        String offeringId1 = "test_offering-1";
+        String offeringId2 = "test_offering-2";
+
+        ConsumerCloudData output1 = ccdata.addCloudOfferingIds("", null, offeringId1, " ", "   ", "\t");
+        assertSame(ccdata, output1);
+
+        ConsumerCloudData output2 = ccdata.addCloudOfferingIds("", null, offeringId2, " ", "   ", "\t");
+        assertSame(ccdata, output2);
+
+        assertEquals(List.of(offeringId1, offeringId2), ccdata.getCloudOfferingIds());
     }
 
     @Test
@@ -133,10 +162,9 @@ public class ConsumerCloudDataTest {
         ConsumerCloudData consumerCloudData = new ConsumerCloudData();
         String validId = TestUtil.randomString("offering");
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            consumerCloudData.addCloudOfferingIds(validId, null);
-        });
-        assertEquals("cloudOfferingIds contains null element", exception.getMessage());
+        consumerCloudData.addCloudOfferingIds(validId, null);
+
+        assertEquals(List.of(validId), consumerCloudData.getCloudOfferingIds());
     }
 
     @Test
@@ -159,7 +187,7 @@ public class ConsumerCloudDataTest {
     public void testAddCloudOfferingIdsSingleIdCollectionInput() {
         ConsumerCloudData consumerCloudData = new ConsumerCloudData();
         String validId = TestUtil.randomString("offering");
-        consumerCloudData.addCloudOfferingIds(Collections.singletonList(validId));
+        consumerCloudData.addCloudOfferingIds(List.of(validId));
 
         assertEquals(List.of(validId), consumerCloudData.getCloudOfferingIds());
     }
@@ -174,14 +202,49 @@ public class ConsumerCloudDataTest {
         assertEquals(List.of(validId1, validId2), consumerCloudData.getCloudOfferingIds());
     }
 
-    @Test
-    public void testAddCloudOfferingIdsNullCollectionInput() {
-        ConsumerCloudData consumerCloudData = new ConsumerCloudData();
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { " ", "   ", "\t" })
+    public void testAddCloudOfferingIdsCollectionWithNullAndBlankElements(String value) {
+        ConsumerCloudData ccdata = new ConsumerCloudData();
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            consumerCloudData.addCloudOfferingIds((Collection<String>) null);
-        });
-        assertEquals("cloudOfferingIds is null or empty", exception.getMessage());
+        ConsumerCloudData output1 = ccdata.addCloudOfferingIds(Arrays.asList(value, value, value));
+        assertSame(ccdata, output1);
+
+        ConsumerCloudData output2 = ccdata.addCloudOfferingIds(Arrays.asList(value, value, value));
+        assertSame(ccdata, output2);
+
+        assertEquals(List.of(), ccdata.getCloudOfferingIds());
+    }
+
+    @Test
+    public void testAddCloudOfferingIdsCollectionWithNullAndBlankMixedElements() {
+        ConsumerCloudData ccdata = new ConsumerCloudData();
+
+        ConsumerCloudData output1 = ccdata.addCloudOfferingIds(Arrays.asList("", null, " ", "   ", "\t"));
+        assertSame(ccdata, output1);
+
+        ConsumerCloudData output2 = ccdata.addCloudOfferingIds(Arrays.asList("", null, " ", "   ", "\t"));
+        assertSame(ccdata, output2);
+
+        assertEquals(List.of(), ccdata.getCloudOfferingIds());
+    }
+
+    @Test
+    public void testAddCloudOfferingIdsCollectionWithNullAndBlankAndValidMixedElements() {
+        ConsumerCloudData ccdata = new ConsumerCloudData();
+        String offeringId1 = "test_offering-1";
+        String offeringId2 = "test_offering-2";
+
+        ConsumerCloudData output1 = ccdata.addCloudOfferingIds(
+            Arrays.asList("", null, offeringId1, " ", "   ", "\t"));
+        assertSame(ccdata, output1);
+
+        ConsumerCloudData output2 = ccdata.addCloudOfferingIds(
+            Arrays.asList("", null, offeringId2, " ", "   ", "\t"));
+        assertSame(ccdata, output2);
+
+        assertEquals(List.of(offeringId1, offeringId2), ccdata.getCloudOfferingIds());
     }
 
     @Test
@@ -190,7 +253,7 @@ public class ConsumerCloudDataTest {
         String validId1 = TestUtil.randomString("offering");
 
         consumerCloudData.addCloudOfferingIds(validId1);
-        consumerCloudData.addCloudOfferingIds(Collections.emptyList());
+        consumerCloudData.addCloudOfferingIds(List.of());
 
         assertThat(consumerCloudData.getCloudOfferingIds())
             .containsExactly(validId1);
@@ -201,10 +264,9 @@ public class ConsumerCloudDataTest {
         ConsumerCloudData consumerCloudData = new ConsumerCloudData();
         String validId = TestUtil.randomString("offering");
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            consumerCloudData.addCloudOfferingIds(Arrays.asList(validId, null));
-        });
-        assertEquals("cloudOfferingIds contains null element", exception.getMessage());
+        consumerCloudData.addCloudOfferingIds(Arrays.asList(validId, null));
+
+        assertEquals(List.of(validId), consumerCloudData.getCloudOfferingIds());
     }
 
     @Test
@@ -246,31 +308,53 @@ public class ConsumerCloudDataTest {
     public void testSetCloudOfferingIdsNullArrayInput() {
         ConsumerCloudData consumerCloudData = new ConsumerCloudData();
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            consumerCloudData.setCloudOfferingIds((String[]) null);
-        });
-        assertEquals("cloudOfferingIds is null", exception.getMessage());
-    }
-
-    @Test
-    public void testSetCloudOfferingIdsEmptyArrayInput() {
-        ConsumerCloudData consumerCloudData = new ConsumerCloudData();
-
-        consumerCloudData.setCloudOfferingIds();
+        consumerCloudData.setCloudOfferingIds((String[]) null);
 
         assertThat(consumerCloudData.getCloudOfferingIds())
             .isEmpty();
     }
 
     @Test
-    public void testSetCloudOfferingIdsArrayWithNullElement() {
+    public void testSetCloudOfferingIdsEmptyArrayInput() {
         ConsumerCloudData consumerCloudData = new ConsumerCloudData();
-        String validId = TestUtil.randomString("offering");
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            consumerCloudData.setCloudOfferingIds(validId, null);
-        });
-        assertEquals("cloudOfferingIds contains null element", exception.getMessage());
+        consumerCloudData.setCloudOfferingIds(new String[] {});
+
+        assertThat(consumerCloudData.getCloudOfferingIds())
+            .isEmpty();
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { " ", "   ", "\t" })
+    public void testSetCloudOfferingIdsArrayWithNullAndBlankElements(String value) {
+        ConsumerCloudData ccdata = new ConsumerCloudData();
+
+        ConsumerCloudData output = ccdata.setCloudOfferingIds(value, value, value);
+        assertSame(ccdata, output);
+
+        assertEquals(List.of(), ccdata.getCloudOfferingIds());
+    }
+
+    @Test
+    public void testSetCloudOfferingIdsArrayWithNullAndBlankMixedElements() {
+        ConsumerCloudData ccdata = new ConsumerCloudData();
+
+        ConsumerCloudData output = ccdata.setCloudOfferingIds("", null, " ", "   ", "\t");
+        assertSame(ccdata, output);
+
+        assertEquals(List.of(), ccdata.getCloudOfferingIds());
+    }
+
+    @Test
+    public void testSetCloudOfferingIdsArrayWithNullAndBlankAndValidMixedElements() {
+        ConsumerCloudData ccdata = new ConsumerCloudData();
+        String offeringId = "test_offering";
+
+        ConsumerCloudData output = ccdata.setCloudOfferingIds("", null, offeringId, " ", "   ", "\t");
+        assertSame(ccdata, output);
+
+        assertEquals(List.of(offeringId), ccdata.getCloudOfferingIds());
     }
 
     @Test
@@ -291,7 +375,7 @@ public class ConsumerCloudDataTest {
     public void testSetCloudOfferingIdsSingleIdCollectionInput() {
         ConsumerCloudData consumerCloudData = new ConsumerCloudData();
         String validId = TestUtil.randomString("offering");
-        consumerCloudData.setCloudOfferingIds(Collections.singletonList(validId));
+        consumerCloudData.setCloudOfferingIds(List.of(validId));
 
         assertEquals(List.of(validId), consumerCloudData.getCloudOfferingIds());
     }
@@ -310,31 +394,54 @@ public class ConsumerCloudDataTest {
     public void testSetCloudOfferingIdsNullCollectionInput() {
         ConsumerCloudData consumerCloudData = new ConsumerCloudData();
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            consumerCloudData.setCloudOfferingIds((Collection<String>) null);
-        });
-        assertEquals("cloudOfferingIds is null", exception.getMessage());
-    }
-
-    @Test
-    public void testSetCloudOfferingIdsEmptyCollectionInput() {
-        ConsumerCloudData consumerCloudData = new ConsumerCloudData();
-
-        consumerCloudData.setCloudOfferingIds(Collections.emptyList());
+        consumerCloudData.setCloudOfferingIds((Collection<String>) null);
 
         assertThat(consumerCloudData.getCloudOfferingIds())
             .isEmpty();
     }
 
     @Test
-    public void testSetCloudOfferingIdsCollectionWithNullElement() {
+    public void testSetCloudOfferingIdsEmptyCollectionInput() {
         ConsumerCloudData consumerCloudData = new ConsumerCloudData();
-        String validId = TestUtil.randomString("offering");
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            consumerCloudData.setCloudOfferingIds(Arrays.asList(validId, null));
-        });
-        assertEquals("cloudOfferingIds contains null element", exception.getMessage());
+        consumerCloudData.setCloudOfferingIds(List.of());
+
+        assertThat(consumerCloudData.getCloudOfferingIds())
+            .isEmpty();
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { " ", "   ", "\t" })
+    public void testSetCloudOfferingIdsCollectionWithNullAndBlankElements(String value) {
+        ConsumerCloudData ccdata = new ConsumerCloudData();
+
+        ConsumerCloudData output = ccdata.setCloudOfferingIds(Arrays.asList(value, value, value));
+        assertSame(ccdata, output);
+
+        assertEquals(List.of(), ccdata.getCloudOfferingIds());
+    }
+
+    @Test
+    public void testSetCloudOfferingIdsCollectionWithNullAndBlankMixedElements() {
+        ConsumerCloudData ccdata = new ConsumerCloudData();
+
+        ConsumerCloudData output = ccdata.setCloudOfferingIds(Arrays.asList("", null, " ", "   ", "\t"));
+        assertSame(ccdata, output);
+
+        assertEquals(List.of(), ccdata.getCloudOfferingIds());
+    }
+
+    @Test
+    public void testSetCloudOfferingIdsCollectionWithNullAndBlankAndValidMixedElements() {
+        ConsumerCloudData ccdata = new ConsumerCloudData();
+        String offeringId = "test_offering";
+
+        ConsumerCloudData output = ccdata.setCloudOfferingIds(
+            Arrays.asList("", null, offeringId, " ", "   ", "\t"));
+        assertSame(ccdata, output);
+
+        assertEquals(List.of(offeringId), ccdata.getCloudOfferingIds());
     }
 
     @Test
@@ -345,10 +452,10 @@ public class ConsumerCloudDataTest {
         String longId = TestUtil.randomString(256, "a");
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            consumerCloudData.setCloudOfferingIds(Collections.singletonList(longId));
+            consumerCloudData.setCloudOfferingIds(List.of(longId));
         });
-        assertEquals(
-            "Combined cloudOfferingIds exceed the max length of 255 characters", exception.getMessage());
+        assertEquals("Combined cloudOfferingIds exceed the max length of 255 characters",
+            exception.getMessage());
     }
 
     @Test
@@ -362,31 +469,14 @@ public class ConsumerCloudDataTest {
     @Test
     public void testToString() {
         ConsumerCloudData consumerCloudData = new ConsumerCloudData()
-            .setId("id123")
             .setCloudAccountId("account123")
             .setCloudProviderShortName("aws");
 
-        String expected = "Consumer Cloud Data [id: id123," +
-            " cloudAccountId: account123, cloudProviderShortName: aws]";
+        String expected = String.format("ConsumerCloudData [id: %s, cloudAccountId: %s, " +
+            "cloudProviderShortName: %s]", consumerCloudData.getId(), consumerCloudData.getCloudAccountId(),
+            consumerCloudData.getCloudProviderShortName());
+
         assertEquals(expected, consumerCloudData.toString());
     }
 
-    @Test
-    public void testEqualsAndHashCode() {
-        ConsumerCloudData consumerCloudData = new ConsumerCloudData()
-            .setId("id123");
-
-        ConsumerCloudData anotherConsumerCloudData = new ConsumerCloudData()
-            .setId("id123");
-
-        assertEquals(consumerCloudData, anotherConsumerCloudData);
-        assertEquals(consumerCloudData.hashCode(), anotherConsumerCloudData.hashCode());
-
-        anotherConsumerCloudData.setId("id456");
-        assertNotEquals(consumerCloudData, anotherConsumerCloudData);
-        assertNotEquals(consumerCloudData.hashCode(), anotherConsumerCloudData.hashCode());
-
-        assertEquals(consumerCloudData, consumerCloudData);
-        assertNotEquals(consumerCloudData, new Object());
-    }
 }
