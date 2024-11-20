@@ -12,12 +12,29 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.model;
+
+import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+
+
+// TODO: FIXME: This class is an amalgamation of three separate abstractions that have been collapsed
+// into one. Really if we're going to generalize this functionality, we should spend the time to do it
+// properly with some kind of factory or provider (yeah, yeah, I know...) for kicking out a ConsumerCloudData
+// instance populated for a given cloud provider, and fail if we are able to generate multiple.
+//
+// As it stands, we have this abstraction which pretends to be both a generic service (though lacking the
+// input and state validation that should come along with that), but still requires manual invocation
+// of the fact parsing, while still conflating everything. I.e. if we don't extract the short name first
+// as a gate around the multi-provider error state, it's possible that our individual values for any given
+// field could come from any of the provider facts, not strictly all from the same provider -- especially
+// since we weren't careful to keep the same parsing order in every method or otherwise ensure no possible
+// crossover.
+
 
 public enum CloudIdentifierFacts {
 
@@ -134,23 +151,33 @@ public enum CloudIdentifierFacts {
             facts.containsKey(AWS_INSTANCE_ID.getValue()) ||
             facts.containsKey(AWS_MARKETPLACE_PRODUCT_CODES.getValue()) ||
             facts.containsKey(AWS_BILLING_PRODUCTS.getValue());
+
         boolean hasAzure = facts.containsKey(AZURE_SUBSCRIPTION_ID.getValue()) ||
-            facts.containsKey(AZURE_INSTANCE_ID.getValue()) || facts.containsKey(AZURE_OFFER.getValue());
+            facts.containsKey(AZURE_INSTANCE_ID.getValue()) ||
+            facts.containsKey(AZURE_OFFER.getValue());
+
         boolean hasGCP = facts.containsKey(GCP_PROJECT_ID.getValue()) ||
-            facts.containsKey(GCP_INSTANCE_ID.getValue()) || facts.containsKey(GCP_LICENSE_CODES.getValue());
+            facts.containsKey(GCP_INSTANCE_ID.getValue()) ||
+            facts.containsKey(GCP_LICENSE_CODES.getValue());
 
         if ((hasAWS && hasAzure) || (hasAWS && hasGCP) || (hasAzure && hasGCP)) {
-            throw new IllegalArgumentException("Facts from multiple different cloud providers were found.");
+            // TODO: FIXME: leaky internal error message that's passed to user-facing exceptions
+            throw new IllegalArgumentException(
+                I18n.marktr("Facts from multiple different cloud providers were found."));
         }
+
         if (hasAWS) {
             return AWS_SHORT_NAME;
         }
+
         if (hasAzure) {
             return AZURE_SHORT_NAME;
         }
+
         if (hasGCP) {
             return GCP_SHORT_NAME;
         }
+
         return null;
     }
 }
