@@ -72,7 +72,7 @@ junit-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref 
 keycloak = { module = "org.keycloak:keycloak-servlet-filter-adapter", version = "25.0.3" }
 # Do not upgrade liquibase beyond 4.29 until Liquibase has stopped using RandomStringUtils.random(...)
 liquibase = { module = "org.liquibase:liquibase-core", version = { strictly = "4.29.0" } }
-liquibase-slf4j = { module = "com.mattbertolini:liquibase-slf4j", version = "5.0.0" }
+liquibase-slf4j = { module = "com.mattbertolini:liquibase-slf4j", version = "5.1.0" }
 logback = { module = "ch.qos.logback:logback-classic", version = "1.5.12" }
 logstash = { module = "net.logstash.logback:logstash-logback-encoder", version = "8.0" }
 mariadb = { module = "org.mariadb.jdbc:mariadb-java-client", version = "3.5.0" }
