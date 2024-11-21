@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.5.0
+Version: 4.5.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,12 @@ fi
 
 #raw
 %changelog
+* Thu Nov 21 2024 candlepin-bot 4.5.1-1
+- CANDLEPIN-974: Restored page size header when fetching owner pools
+  (crog@redhat.com)
+- Revert "CANDLEPIN-938: Reverted explicit content bulk translation"
+  (crog@redhat.com)
+
 * Thu Nov 21 2024 candlepin-bot 4.5.0-1
 - Add new translations using Weblate (noreply@weblate.org)
 - updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
