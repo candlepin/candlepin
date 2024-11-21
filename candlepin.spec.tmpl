@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.19
+Version: 4.5.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,20 @@ fi
 
 #raw
 %changelog
+* Thu Nov 21 2024 candlepin-bot 4.5.0-1
+- Add new translations using Weblate (noreply@weblate.org)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- CANDLEPIN-954: Relaxed constraint on null values in ConsumerCloudData
+  (crog@redhat.com)
+- Bump commons-io:commons-io from 2.17.0 to 2.18.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.mattbertolini:liquibase-slf4j from 5.0.0 to 5.1.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump openapi-generator from 7.9.0 to 7.10.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.sonarqube from 5.1.0.4882 to 6.0.0.5145
+  (49699333+dependabot[bot]@users.noreply.github.com)
+
 * Wed Nov 13 2024 candlepin-bot 4.4.19-1
 - Add new translations using Weblate (noreply@weblate.org)
 - Bump org.quartz-scheduler:quartz from 2.3.2 to 2.5.0
