@@ -912,6 +912,60 @@ public class ContentCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testGetRequiredProductIds() {
+        Owner owner = this.createOwner();
+
+        Content content1 = this.createContentWithRequiredProductIds("test_content-1",
+            Set.of("p1", "p2", "p3"));
+
+        Content content2 = this.createContentWithRequiredProductIds("test_content-2",
+            Set.of("p2", "p3", "p4"));
+
+        Content content3 = this.createContentWithRequiredProductIds("test_content-3",
+            Set.of("pA", "pB", "pC"));
+
+        Map<String, Set<String>> expected = Map.of(
+            content1.getUuid(), content1.getRequiredProductIds(),
+            content2.getUuid(), content2.getRequiredProductIds(),
+            content3.getUuid(), content3.getRequiredProductIds());
+
+        Map<String, Set<String>> output = this.contentCurator.getRequiredProductIds(expected.keySet());
+
+        assertThat(output)
+            .isNotNull()
+            .hasSize(expected.size())
+            .containsExactlyInAnyOrderEntriesOf(expected);
+    }
+
+    @Test
+    public void testGetRequiredProductIdsExcludesInvalidConsumerUuids() {
+        Content content1 = this.createContentWithRequiredProductIds("test_content-1",
+            Set.of("p1", "p2", "p3"));
+
+        Map<String, Set<String>> expected = Map.of(
+            content1.getUuid(), content1.getRequiredProductIds());
+
+        List<String> cuuids = Arrays.asList(content1.getUuid(), null, "", "invalid uuid");
+
+        Map<String, Set<String>> output = this.contentCurator.getRequiredProductIds(cuuids);
+
+        assertThat(output)
+            .isNotNull()
+            .hasSize(expected.size())
+            .containsExactlyInAnyOrderEntriesOf(expected);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testGetRequiredProductIdsWithNoInputReturnsEmptyMap(Collection<String> cuuids) {
+        Map<String, Set<String>> output = this.contentCurator.getRequiredProductIds(cuuids);
+
+        assertThat(output)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
     public void testContentHasParentProductsWithoutParentProduct() {
         Content content = this.createContent();
 
@@ -975,5 +1029,4 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         // This should not throw an exception or otherwise fail
         assertFalse(this.contentCurator.contentHasParentProducts(content));
     }
-
 }
