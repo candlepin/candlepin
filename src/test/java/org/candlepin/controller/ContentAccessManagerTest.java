@@ -56,6 +56,8 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
+import com.google.inject.Provider;
+
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
@@ -63,6 +65,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -75,6 +79,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.KeyPair;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -107,6 +112,8 @@ public class ContentAccessManagerTest {
     @Mock
     private I18n i18n;
 
+    private Provider<EventSink> eventSinkProvider;
+
     private final String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
     private final String orgEnvironmentMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
@@ -129,6 +136,8 @@ public class ContentAccessManagerTest {
     public void setup() throws Exception {
         // FIXME: This mess of mocks is why we should not be using mocks in this way. We should be
         // using a test database framework and our actual curators and objects.
+
+        eventSinkProvider = () -> mockEventSink;
 
         doAnswer(new PersistSimulator<>()).when(this.mockOwnerCurator).merge(any(Owner.class));
         doAnswer(new PersistSimulator<>()).when(this.mockConsumerCurator).merge(any(Consumer.class));
@@ -172,7 +181,7 @@ public class ContentAccessManagerTest {
 
     private ContentAccessManager createManager() {
         return new ContentAccessManager(this.mockContentAccessCertCurator, this.mockOwnerCurator,
-            this.mockConsumerCurator, this.mockEventSink, this.jobManager, this.i18n);
+            this.mockConsumerCurator, this.eventSinkProvider, this.jobManager, this.i18n);
     }
 
     private Owner mockOwner() {
@@ -699,4 +708,33 @@ public class ContentAccessManagerTest {
 
         assertThrows(IllegalArgumentException.class, () -> manager.syncOwnerLastContentUpdate(null));
     }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testDeleteContentAccessCertificatesWithNullOrEmptyConsumerUuids(List<String> consumerUuids) {
+        ContentAccessManager manager = this.createManager();
+
+        int actual = manager.deleteContentAccessCertificates(consumerUuids);
+
+        assertEquals(0, actual);
+    }
+
+    @Test
+    public void testDeleteContentAccessCertificates() {
+        ContentAccessManager manager = this.createManager();
+
+        List<String> consumerUuids = List.of("uuid-1", "uuid-2");
+
+        List<String> caIds = List.of("id-1", "id-2");
+        doReturn(caIds).when(mockContentAccessCertCurator).getIdsForConsumers(consumerUuids);
+        doReturn(caIds.size()).when(mockConsumerCurator).unlinkCaCertificates(caIds);
+        doReturn(caIds.size()).when(mockContentAccessCertCurator).deleteByIds(caIds);
+
+        int actual = manager.deleteContentAccessCertificates(consumerUuids);
+
+        assertEquals(2, actual);
+        verify(mockConsumerCurator).unlinkCaCertificates(caIds);
+        verify(mockContentAccessCertCurator).deleteByIds(caIds);
+    }
+
 }

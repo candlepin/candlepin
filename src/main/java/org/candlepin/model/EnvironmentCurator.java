@@ -21,15 +21,16 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-
 
 @Singleton
 public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
@@ -306,6 +307,49 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
 
         log.debug("{} environment content reference(s) removed", count);
         return count;
+    }
+
+    /**
+     * Determines if any of the provided {@link Environment} IDs does not exist or does not belong to the
+     * provided {@link Owner}.
+     *
+     * @param owner
+     *  the owner of the environment IDs
+     *
+     * @param envIds
+     *  the environment IDs to check
+     *
+     * @return all of the environment IDs from the provided list that do not exist or do not belong to the
+     *  provided owner
+     */
+    public Set<String> getNonExistentEnvironmentIds(Owner owner, Collection<String> envIds) {
+        if (owner == null || envIds == null || envIds.isEmpty()) {
+            return new HashSet<>();
+        }
+
+        String jpql = "SELECT DISTINCT env.id FROM Environment env " +
+            "WHERE env.id IN (:envIds) AND env.ownerId = :ownerId";
+
+        Set<String> distinctEnvIds = new HashSet<>(envIds);
+
+        Query query = this.getEntityManager()
+            .createQuery(jpql, String.class)
+            .setParameter("ownerId", owner.getId());
+
+        int blockSize = Math.min(this.getQueryParameterLimit() - 1, this.getInBlockSize());
+
+        Set<String> actualEnvIds = new HashSet<>();
+        for (List<String> block : partition(distinctEnvIds, blockSize)) {
+            List<String> result = query.setParameter("envIds", block)
+                .getResultList();
+
+            actualEnvIds.addAll(result);
+        }
+
+        // Remove all of the existing environment IDs to determine the environments that are unknown
+        distinctEnvIds.removeAll(actualEnvIds);
+
+        return distinctEnvIds;
     }
 
 }
