@@ -1274,6 +1274,10 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
 
     public Consumer setConsumerCloudData(ConsumerCloudData consumerCloudData) {
         this.consumerCloudData = consumerCloudData;
+        if (this.consumerCloudData != null) {
+            this.consumerCloudData.setConsumer(this);
+        }
+
         return this;
     }
 

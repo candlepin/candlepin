@@ -14,11 +14,6 @@
  */
 package org.candlepin.resource;
 
-import static org.candlepin.model.CloudIdentifierFacts.extractCloudAccountId;
-import static org.candlepin.model.CloudIdentifierFacts.extractCloudInstanceId;
-import static org.candlepin.model.CloudIdentifierFacts.extractCloudOfferingIds;
-import static org.candlepin.model.CloudIdentifierFacts.extractCloudProviderShortName;
-
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
@@ -88,6 +83,7 @@ import org.candlepin.model.AnonymousContentAccessCertificate;
 import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Certificate;
+import org.candlepin.model.CloudIdentifierFacts;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerActivationKey;
 import org.candlepin.model.ConsumerCapability;
@@ -1010,13 +1006,6 @@ public class ConsumerResource implements ConsumerApi {
         Consumer created = createConsumerFromDTO(dto, ctype, principal, userName, owner, activationKeys,
             identityCertCreation);
 
-        ConsumerCloudData consumerCloudData = createConsumerCloudData(created);
-
-        if (consumerCloudData != null) {
-            created.setConsumerCloudData(consumerCloudData);
-            this.consumerCurator.update(created);
-        }
-
         if (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal) {
             AnonymousCloudConsumer anonCloudConsumer = anonymPrincipal.getAnonymousCloudConsumer();
             anonymousCertCurator.delete(anonCloudConsumer.getContentAccessCert());
@@ -1031,16 +1020,16 @@ public class ConsumerResource implements ConsumerApi {
 
         String cloudProviderShortName;
         try {
-            cloudProviderShortName = extractCloudProviderShortName(facts);
+            cloudProviderShortName = CloudIdentifierFacts.extractCloudProviderShortName(facts);
         }
         catch (IllegalArgumentException e) {
             throw new BadRequestException(i18n.tr(e.getMessage()));
         }
 
         if (cloudProviderShortName != null) {
-            String cloudAccountId = extractCloudAccountId(facts);
-            String cloudInstanceId = extractCloudInstanceId(facts);
-            List<String> cloudOfferingIds = extractCloudOfferingIds(facts);
+            String cloudAccountId = CloudIdentifierFacts.extractCloudAccountId(facts);
+            String cloudInstanceId = CloudIdentifierFacts.extractCloudInstanceId(facts);
+            List<String> cloudOfferingIds = CloudIdentifierFacts.extractCloudOfferingIds(facts);
 
             return new ConsumerCloudData()
                 .setConsumer(consumer)
@@ -1085,10 +1074,15 @@ public class ConsumerResource implements ConsumerApi {
                 null :
                 principal.getAuthenticationMethod().getDescription());
 
-        populateEntity(consumerToCreate, consumer);
+        this.populateEntity(consumerToCreate, consumer);
         consumerToCreate.setType(type);
 
         consumerToCreate.setCanActivate(subAdapter.canActivateSubscription(consumerToCreate));
+
+        // Do consumer cloud fact processing
+        // Impl note: this must occur *after* the facts are assigned on the object.
+        ConsumerCloudData consumerCloudData = this.createConsumerCloudData(consumerToCreate);
+        consumerToCreate.setConsumerCloudData(consumerCloudData);
 
         HypervisorId hvsrId = consumerToCreate.getHypervisorId();
         if (hvsrId != null && hvsrId.getHypervisorId() != null && !hvsrId.getHypervisorId().isEmpty()) {
