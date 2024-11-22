@@ -5,13 +5,14 @@
 # Pino Toscano <ptoscano@redhat.com>, 2022.
 # Transtats <suanand@redhat.com>, 2022, 2023.
 # grimst <grimaitres@gmail.com>, 2023.
+# Léane GRASSER <leane.grasser@proton.me>, 2024.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-07-30 07:05+0000\n"
-"PO-Revision-Date: 2023-03-25 19:20+0000\n"
-"Last-Translator: grimst <grimaitres@gmail.com>\n"
+"PO-Revision-Date: 2024-11-15 17:38+0000\n"
+"Last-Translator: Léane GRASSER <leane.grasser@proton.me>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-2-hotfix/fr/>\n"
 "Language: fr\n"
@@ -19,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.15.2\n"
+"X-Generator: Weblate 5.8.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -936,7 +937,7 @@ msgstr "L’utilisateur {0} est déjà enregistré comme consommateur personnel"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1340
 msgid "Client is not authorized to register with any organization"
 msgstr ""
-"Le client n’est pas autorisé à s’inscrire auprès d’une quelconque "
+"Le client n’est pas autorisé à s’enregistrer auprès d’une quelconque "
 "organisation"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1352
