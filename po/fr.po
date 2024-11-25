@@ -11,7 +11,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-07-30 07:05+0000\n"
-"PO-Revision-Date: 2024-11-15 17:38+0000\n"
+"PO-Revision-Date: 2024-11-25 14:38+0000\n"
 "Last-Translator: Léane GRASSER <leane.grasser@proton.me>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-2-hotfix/fr/>\n"
@@ -1055,7 +1055,9 @@ msgstr "Exception inattendue lors de la programmation de la tâche \"{0}\""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2399
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
-msgstr "Requête auto-attach ignorée. L’organisation \"{0}\" est désactivée."
+msgstr ""
+"Requête d’attachement automatique ignorée. La fonctionnalité est désactivée "
+"pour l’organisation \"{0}\"."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2405
 #, java-format
@@ -1063,13 +1065,14 @@ msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
 "the hypervisor autobind setting."
 msgstr ""
-"Requête auto-attach ignorée. L’organisation \"{0}\" a déjà la fonction auto-"
-"attach désactivée à cause de la configuration autobind de l’hyperviseur."
+"Requête d’attachement automatique ignorée. La fonctionnalité est désactivée "
+"pour l’organisation \"{0}\" en raison du paramètre d’association automatique "
+"d’hyperviseur."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2446
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
-msgstr "Organization \"{0}\" - auto-attach désactivé."
+msgstr "Attachement automatique désactivé pour l’organisation « {0} »."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2487
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2579
@@ -1849,7 +1852,7 @@ msgstr ""
 #: src/main/java/org/candlepin/service/impl/ImportSubscriptionServiceAdapter.java:110
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""
-"L’application autonome Candlepin ne prend pas en charge l’échange "
+"L’application Candlepin indépendante ne prend pas en charge l’activation "
 "d’abonnements."
 
 #: src/main/java/org/candlepin/servlet/filter/CandlepinContentTypeFilter.java:63
