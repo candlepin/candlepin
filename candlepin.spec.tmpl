@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.19
+Version: 4.4.20
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -234,6 +234,12 @@ fi
 
 #raw
 %changelog
+* Mon Nov 25 2024 candlepin-bot 4.4.20-1
+- Add new translations using Weblate (noreply@weblate.org)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- CANDLEPIN-954: Relaxed constraint on null values in ConsumerCloudData
+  (crog@redhat.com)
+
 * Wed Nov 13 2024 candlepin-bot 4.4.19-1
 - Add new translations using Weblate (noreply@weblate.org)
 - Bump org.quartz-scheduler:quartz from 2.3.2 to 2.5.0
