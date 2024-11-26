@@ -5,21 +5,22 @@
 # Pino Toscano <ptoscano@redhat.com>, 2022.
 # Transtats <suanand@redhat.com>, 2022.
 # grimst <grimaitres@gmail.com>, 2023.
+# Léane GRASSER <leane.grasser@proton.me>, 2024.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-01-25 07:07+0000\n"
-"PO-Revision-Date: 2023-03-24 19:47+0000\n"
-"Last-Translator: grimst <grimaitres@gmail.com>\n"
+"PO-Revision-Date: 2024-11-26 12:38+0000\n"
+"Last-Translator: Léane GRASSER <leane.grasser@proton.me>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
-"candlepin/master/fr/>\n"
+"candlepin/candlepin-4-3-hotfix/fr/>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.15.2\n"
+"X-Generator: Weblate 5.8.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -27,16 +28,16 @@ msgstr "Tentative de réparation de la clé org \"{}\" non existante"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:92
 #: src/main/java/org/candlepin/controller/Entitler.java:229
-#, fuzzy, java-format
-#| msgid "Auto-attach is disabled for owner \"{0}\"."
+#, java-format
 msgid "Auto-attach is disabled for owner {0}"
-msgstr "Auto-attach désactivé pour le propriétaire \"{0}\"."
+msgstr "L’attachement automatique est désactivé pour le propriétaire {0}"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:97
-#, fuzzy, java-format
-#| msgid "Auto-attach is disabled for owner \"{0}\"."
+#, java-format
 msgid "Auto-attach is disabled for owner {0} while using simple content access"
-msgstr "Auto-attach désactivé pour le propriétaire \"{0}\"."
+msgstr ""
+"L’attachement automatique est désactivé pour le propriétaire {0} lors de l’"
+"utilisation de Simple Content Access"
 
 #: src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:140
 #, java-format
@@ -356,10 +357,11 @@ msgstr ""
 "invité."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:237
-#, fuzzy, java-format
-#| msgid "Auto-attach is disabled for owner \"{0}\"."
+#, java-format
 msgid "Auto-attach is disabled for hypervisors of owner {0}"
-msgstr "Auto-attach désactivé pour le propriétaire \"{0}\"."
+msgstr ""
+"L’attachement automatique est désactivé pour les hyperviseurs du "
+"propriétaire {0}"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:303
 #: src/main/java/org/candlepin/controller/Entitler.java:504
@@ -467,27 +469,27 @@ msgstr "Le produit avec l’ID {0} est introuvable."
 
 #: src/main/java/org/candlepin/model/Pool.java:168
 msgid "Other"
-msgstr ""
+msgstr "Autre"
 
 #: src/main/java/org/candlepin/model/Pool.java:169
 msgid "Standard"
-msgstr ""
+msgstr "Standard"
 
 #: src/main/java/org/candlepin/model/Pool.java:170
 msgid "Instance Based"
-msgstr ""
+msgstr "Par instance"
 
 #: src/main/java/org/candlepin/model/Pool.java:171
 msgid "Stackable"
-msgstr ""
+msgstr "Superposable"
 
 #: src/main/java/org/candlepin/model/Pool.java:172
 msgid "Stackable only with other subscriptions"
-msgstr ""
+msgstr "Superposable uniquement avec d’autres abonnements"
 
 #: src/main/java/org/candlepin/model/Pool.java:173
 msgid "Multi-Entitleable"
-msgstr ""
+msgstr "Multidroits"
 
 #: src/main/java/org/candlepin/model/RulesCurator.java:111
 msgid "No rules file found in the database"
@@ -884,7 +886,7 @@ msgid ""
 "This endpoint does not support returning more than {0} results at a time, "
 "please use paging."
 msgstr ""
-"Ce point de terminaison ne permet pas de renvoyer plus de résultats que {0} "
+"Ce point d’extrémité n’est pas en mesure de retourner plus de {0} résultats "
 "à la fois, veuillez utiliser la pagination."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:639
@@ -959,7 +961,7 @@ msgstr "L’utilisateur {0} est déjà enregistré comme consommateur personnel"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1355
 msgid "Client is not authorized to register with any organization"
 msgstr ""
-"Le client n’est pas autorisé à s’inscrire auprès d’une quelconque "
+"Le client n’est pas autorisé à s’enregistrer auprès d’une quelconque "
 "organisation"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1367
@@ -1077,7 +1079,9 @@ msgstr "Exception inattendue lors de la programmation de la tâche \"{0}\""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2403
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
-msgstr "Requête auto-attach ignorée. L’organisation \"{0}\" est désactivée."
+msgstr ""
+"Requête d’attachement automatique ignorée. La fonctionnalité est désactivée "
+"pour l’organisation \"{0}\"."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2409
 #, java-format
@@ -1085,13 +1089,14 @@ msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
 "the hypervisor autobind setting."
 msgstr ""
-"Requête auto-attach ignorée. L’organisation \"{0}\" a déjà la fonction auto-"
-"attach désactivée à cause de la configuration autobind de l’hyperviseur."
+"Requête d’attachement automatique ignorée. La fonctionnalité est désactivée "
+"pour l’organisation \"{0}\" en raison du paramètre d’association automatique "
+"d’hyperviseur."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2450
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
-msgstr "Organization \"{0}\" - auto-attach désactivé."
+msgstr "Attachement automatique désactivé pour l’organisation « {0} »."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2573
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2611
@@ -1730,7 +1735,7 @@ msgstr "impossible de lire le fichier des règles"
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:89
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""
-"L’application autonome Candlepin ne prend pas en charge l’échange "
+"L’application Candlepin indépendante ne prend pas en charge l’activation "
 "d’abonnements."
 
 # translation auto-copied from project Candlepin, version master, document
@@ -1767,7 +1772,7 @@ msgstr "L’utilisateur existe déjà : {0}"
 #: src/main/java/org/candlepin/resource/util/CalculatedAttributesUtil.java:55
 #, java-format
 msgid "{0} (Temporary)"
-msgstr ""
+msgstr "{0} (temporaire)"
 
 #: src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:136
 msgid ""
