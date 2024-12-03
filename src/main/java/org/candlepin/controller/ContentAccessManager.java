@@ -27,6 +27,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.SCACertificate;
 import org.candlepin.util.Util;
 
+import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -35,7 +36,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -51,7 +54,7 @@ public class ContentAccessManager {
     private final OwnerCurator ownerCurator;
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
     private final ConsumerCurator consumerCurator;
-    private final EventSink eventSink;
+    private final Provider<EventSink> eventSink;
     private final JobManager jobManager;
     private final I18n i18n;
 
@@ -60,7 +63,7 @@ public class ContentAccessManager {
         ContentAccessCertificateCurator contentAccessCertificateCurator,
         OwnerCurator ownerCurator,
         ConsumerCurator consumerCurator,
-        EventSink eventSink,
+        Provider<EventSink> eventSink,
         JobManager jobManager,
         I18n i18n) {
 
@@ -272,7 +275,7 @@ public class ContentAccessManager {
 
             // Update sync times & report
             this.syncOwnerLastContentUpdate(owner);
-            this.eventSink.emitOwnerContentAccessModeChanged(owner);
+            this.eventSink.get().emitOwnerContentAccessModeChanged(owner);
 
             log.info("Content access mode changed from {} to {} for owner {}", currentMode,
                 updatedMode, owner.getKey());
@@ -372,6 +375,30 @@ public class ContentAccessManager {
 
         owner.syncLastContentUpdate();
         return this.ownerCurator.merge(owner);
+    }
+
+    /**
+     * Unlinks all content access certificates from the provided {@link Consumer}s and deletes the
+     * content access certificates.
+     *
+     * @param consumerUuids
+     *  the UUIDs for the consumers that should have their content access certificates deleted
+     *
+     * @return the number of deleted content access certificates
+     */
+    public int deleteContentAccessCertificates(Collection<String> consumerUuids) {
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            return 0;
+        }
+
+        List<String> ids = contentAccessCertificateCurator.getIdsForConsumers(consumerUuids);
+        int unlinked = consumerCurator.unlinkCaCertificates(ids);
+        log.info("{} content access certs unlinked", unlinked);
+
+        int certsRemoved = contentAccessCertificateCurator.deleteByIds(ids);
+        log.info("{} content access certificates removed", certsRemoved);
+
+        return certsRemoved;
     }
 
 }
