@@ -28,6 +28,7 @@
     contype: local
     databases: all
     users: all
+    address: ''
     method: trust
     create: true
     state: present
