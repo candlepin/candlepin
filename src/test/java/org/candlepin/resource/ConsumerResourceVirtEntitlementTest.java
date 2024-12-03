@@ -17,11 +17,11 @@ package org.candlepin.resource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.candlepin.async.JobException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
+import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.PoolService;
 import org.candlepin.controller.RefresherFactory;
@@ -97,7 +97,8 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
 
         this.owner = this.ownerCurator.create(new Owner()
             .setKey("test-owner")
-            .setDisplayName("test-owner"));
+            .setDisplayName("test-owner")
+            .setContentAccessMode(ContentAccessMode.ENTITLEMENT.toDatabaseValue()));
 
         manifestConsumer = TestUtil.createConsumer(manifestType, owner);
         consumerCurator.create(manifestConsumer);
@@ -146,7 +147,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
      * Checking behavior when the physical pool has a numeric virt_limit
      */
     @Test
-    public void testLimitedPool() throws JobException {
+    public void testLimitedPool() {
         List<Pool> subscribedTo = new ArrayList<>();
         Consumer guestConsumer = TestUtil.createConsumer(systemType, owner);
         guestConsumer.setFact("virt.is_guest", "true");
@@ -203,7 +204,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testUnlimitedPool() throws JobException {
+    public void testUnlimitedPool() {
         List<Pool> subscribedTo = new ArrayList<>();
         Consumer guestConsumer = TestUtil.createConsumer(systemType, owner);
         guestConsumer.setFact("virt.is_guest", "true");
