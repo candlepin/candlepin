@@ -3996,6 +3996,38 @@ paths:
           $ref: '#/components/responses/default'
 
   /hypervisors/{owner}:
+    get:
+      tags:
+        - hypervisors
+      description: TODO
+      operationId: getHypervisorsAndGuests
+      security: []
+      requestBody:
+        description: TODO
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      parameters:
+        - name: owner
+          in: path
+          description: Owner key
+          required: true
+          schema:
+            type: string
+      # TODO: Finish
+      responses:
+        200:
+          description: A successful operation
+        400:
+          description: Host to guest mapping was not provided for hypervisor update.
+        404:
+          description: Owner with provided key was not found.
+        default:
+          $ref: '#/components/responses/default'
     post:
       tags:
         - hypervisors
@@ -9502,6 +9534,17 @@ components:
           uniqueItems: true
           items:
             type: string
+
+    HypervisorConsumerWithGuestDTO:
+      properties:
+        hypervisorConsumerUuid:
+          type: string
+        hypervisorConsumerName:
+          type: string
+        guestUuid:
+          type: string
+        guestId:
+          type: string
 
     ImportRecordDTO:
       description: Represents a import record details

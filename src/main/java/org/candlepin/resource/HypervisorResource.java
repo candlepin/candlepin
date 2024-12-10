@@ -60,6 +60,8 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 
 
@@ -229,5 +231,11 @@ public class HypervisorResource implements HypervisorsApi {
         failedSet.add(failed);
 
         return failedSet;
+    }
+
+    @Override
+    public void getHypervisorsAndGuests(String ownerKey, @Valid @NotNull List<String> consumerUuids) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getHypervisorsAndGuests'");
     }
 }
