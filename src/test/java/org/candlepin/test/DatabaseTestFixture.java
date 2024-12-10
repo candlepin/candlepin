@@ -710,6 +710,20 @@ public class DatabaseTestFixture {
         return this.ownerCurator.create(owner);
     }
 
+    protected Owner createOwnerEnt(String key) {
+        return this.createOwnerEnt(key, key);
+    }
+
+    protected Owner createOwnerEnt(String key, String name) {
+        Owner owner = TestUtil.createOwner(key, name);
+        owner.setId(null);
+        owner.setContentAccessMode(ContentAccessMode.ENTITLEMENT.toDatabaseValue());
+
+        this.ownerCurator.create(owner);
+
+        return owner;
+    }
+
     /**
      * Create an entitlement pool.
      *
