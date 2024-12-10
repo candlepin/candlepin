@@ -1233,7 +1233,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
             .collect(Collectors.toUnmodifiableList());
     }
 
-    public Consumer setEnvironmentIds(List<String> environmentIds) {
+    public Consumer setEnvironmentIds(Collection<String> environmentIds) {
         // Impl note:
         // We always create a new map instance instead of clearing the existing one in this case, as
         // it changes the order in which Hibernate will delete the existing entries in the DB. For
