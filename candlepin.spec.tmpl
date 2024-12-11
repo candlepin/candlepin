@@ -23,7 +23,7 @@
 
 Name: candlepin
 Version: 4.5.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -234,6 +234,10 @@ fi
 
 #raw
 %changelog
+* Wed Dec 11 2024 candlepin-bot 4.5.1-2
+- CANDLEPIN-978: Removed extranous null check during consumer check in
+  (crog@redhat.com)
+
 * Thu Nov 21 2024 candlepin-bot 4.5.1-1
 - CANDLEPIN-974: Restored page size header when fetching owner pools
   (crog@redhat.com)
