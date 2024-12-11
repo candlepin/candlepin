@@ -123,13 +123,13 @@ public class CloudCheckInEventTest {
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @NullAndEmptySource
-    public void testConstructorWithInvalidCloudAccountId(String accountId) {
+    public void testConstructorWithNullOrEmptyCloudAccountId(String accountId) {
         ConsumerCloudData cloudData = createCloudData()
             .setCloudAccountId(accountId);
 
-        assertThrows(IllegalStateException.class, () -> {
-            new CloudCheckInEvent(cloudData, mapper);
-        });
+        CloudCheckInEvent event = new CloudCheckInEvent(cloudData, mapper);
+
+        // No exception is expected to be thrown
     }
 
     @Test
