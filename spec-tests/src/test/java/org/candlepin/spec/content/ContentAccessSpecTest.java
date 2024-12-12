@@ -34,7 +34,6 @@ import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
 import org.candlepin.dto.api.client.v1.ContentToPromoteDTO;
-import org.candlepin.dto.api.client.v1.EntitlementDTO;
 import org.candlepin.dto.api.client.v1.EnvironmentContentDTO;
 import org.candlepin.dto.api.client.v1.EnvironmentDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
@@ -1105,10 +1104,8 @@ public class ContentAccessSpecTest {
         consumer.installedProducts(Set.of(Products.toInstalled(prod2)));
         consumerClient.consumers().updateConsumer(consumer.getUuid(), consumer);
 
-        consumerClient.consumers()
-            .bind(consumer.getUuid(), null, List.of(), null, null, null, false, null, List.of());
-        List<EntitlementDTO> ents = consumerClient.consumers().listEntitlements(consumer.getUuid());
-        assertThat(ents).isEmpty();
+        assertBadRequest(() -> consumerClient.consumers()
+            .bind(consumer.getUuid(), null, List.of(), null, null, null, false, null, List.of()));
 
         // confirm that there is a content access cert
         // and only a content access cert

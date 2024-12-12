@@ -16,7 +16,6 @@ package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.candlepin.async.JobException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -52,7 +51,7 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
     public void setUp() {
         consumerResource = injector.getInstance(ConsumerResource.class);
         standardSystemType = consumerTypeCurator.create(new ConsumerType("system"));
-        this.owner = this.createOwner("test-owner");
+        this.owner = this.createNonSCAOwner("test-owner");
 
         consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
@@ -65,7 +64,7 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testMaxMembership() throws JobException {
+    public void testMaxMembership() {
         // 10 entitlements available, lets try to entitle 11 consumers.
         for (int i = 0; i < pool.getQuantity(); i++) {
             Consumer c = TestUtil.createConsumer(standardSystemType, owner);

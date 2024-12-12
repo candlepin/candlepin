@@ -65,10 +65,7 @@ public class AutobindDisabledForOwnerSpecTest {
         ProductDTO product = adminClient.ownerProducts()
             .createProduct(owner.getKey(), Products.random());
 
-        consumerClient.consumers().bindProduct(consumer.getUuid(), product);
-
-        assertThat(consumerClient.consumers().listEntitlements(consumer.getUuid()))
-            .isEmpty();
+        assertBadRequest(() -> consumerClient.consumers().bindProduct(consumer.getUuid(), product));
     }
 
     @Test
