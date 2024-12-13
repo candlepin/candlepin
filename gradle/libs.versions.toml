@@ -27,7 +27,7 @@ assertj = { module = "org.assertj:assertj-core", version = "3.26.3" }
 bouncycastle-prov = { module = "org.bouncycastle:bcprov-jdk18on", version = "1.79"}
 bouncycastle-pkix = { module = "org.bouncycastle:bcpkix-jdk18on", version = "1.79"}
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.1.8" }
-checkstyle = { module = "com.puppycrawl.tools:checkstyle", version = "10.20.2" }
+checkstyle = { module = "com.puppycrawl.tools:checkstyle", version = "10.21.0" }
 checkstyle-sevntu = { module = "com.github.sevntu-checkstyle:sevntu-checks", version = "1.44.1" }
 commons-codec = { module = "commons-codec:commons-codec", version = "1.17.1" }
 commons-collections = { module = "org.apache.commons:commons-collections4", version = "4.4" }
