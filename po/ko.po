@@ -1,9 +1,7 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021.
-# simmon <simmon@nplob.com>, 2021, 2022.
 # Sundeep Anand <suanand@redhat.com>, 2021.
-# Kim InSoo <simmon@nplob.com>, 2022.
-# 김인수 <simmon@nplob.com>, 2022, 2023, 2024.
+# 김인수 <simmon@nplob.com>, 2021, 2022, 2023, 2024.
 # Pino Toscano <ptoscano@redhat.com>, 2022.
 # Jiri Hnidek <jiri.hnidek@gmail.com>, 2022.
 # John Sefler <jsefler@redhat.com>, 2022.
