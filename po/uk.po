@@ -6,18 +6,18 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-24 07:08+0000\n"
-"PO-Revision-Date: 2024-11-01 07:38+0000\n"
+"POT-Creation-Date: 2024-12-15 07:09+0000\n"
+"PO-Revision-Date: 2024-12-16 10:38+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://translate.fedoraproject.org/projects/"
-"candlepin/master/uk/>\n"
+"candlepin/candlepin-4-4-hotfix/uk/>\n"
 "Language: uk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 5.7.2\n"
+"X-Generator: Weblate 5.8.4\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -455,7 +455,7 @@ msgstr ""
 
 #: src/main/java/org/candlepin/model/CloudIdentifierFacts.java:166
 msgid "Facts from multiple different cloud providers were found."
-msgstr ""
+msgstr "Виявлено факти від декількох різних надавачів хмарних послуг."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:802
 #, java-format
@@ -923,8 +923,8 @@ msgid "Cloud account ID is null or empty"
 msgstr "Ідентифікатор облікового запису «хмари» є нульовим або порожнім"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:258
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2610
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2962
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2619
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2971
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:661
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:127
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:157
@@ -1153,29 +1153,36 @@ msgstr "Не вдалося створити експорт для анонім�
 msgid "Unable to create entitlement certificate archive"
 msgstr "Не вдалося створити архів сертифікатів надання ролей"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2511
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2509
 msgid "Cannot bind by multiple parameters."
 msgstr "Привʼязування за декількома параметрами неможливе."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2515
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2513
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "Не можна вказувати кількість при автопривʼязці."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2560
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2549
+msgid ""
+"Attach operations are ignored in organizations using simple content access"
+msgstr ""
+"Дії з долучення буде проігноровано в організаціях, де використано простий "
+"доступ до даних"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2569
 #, java-format
 msgid "You must first accept Red Hat''s Terms and conditions. Please visit {0}"
 msgstr ""
 "Спочатку вам слід прийняти умови надання послуг Hat. Будь ласка, відвідайте "
 "{0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2649
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2658
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 "Ігноруємо запит щодо автоматичного долучення. Його вимкнено для організації "
 "«{0}»."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2654
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2663
 #, java-format
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
@@ -1184,13 +1191,13 @@ msgstr ""
 "Ігноруємо запит щодо автоматичного долучення. Його вимкнено для організації "
 "«{0}» через параметр автоматичної привʼязки гіпервізора."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2696
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2705
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr "Для організації «{0}» вимкнено автоматичне долучення."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2824
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2863
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2833
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2872
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:191
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:209
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:239
@@ -1200,35 +1207,35 @@ msgstr "Для організації «{0}» вимкнено автомати�
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr "Не вдалося знайти реєстраційні дані із ідентифікатором «{0}»."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2839
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2848
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 "Не вдалося знайти сертифікат реєстраційних даних із серійним номером «{0}»."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2856
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2865
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
 "Немає реєстраційних даних для споживача «{0}» із ідентифікатором буфера «{1}»"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2928
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2937
 msgid "Unable to create export archive"
 msgstr "Не вдалося створити архів експортування"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3070
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3075
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3079
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3084
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr ""
 "Проблема із повторним створенням сертифіката ідентифікатора для модуля {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3111
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3120
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "Система з UUID {0} не є віртуальною гостьовою системою."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3190
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3199
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "Не виявлено запису вилучення для гіпервізора «{0}»."
