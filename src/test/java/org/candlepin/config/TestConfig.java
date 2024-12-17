@@ -22,6 +22,9 @@ import java.util.Map;
 
 public final class TestConfig {
 
+    public static final int BULK_SET_CONSUMER_ENV_MAX_CONSUMER_LIMIT = 100;
+    public static final int BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT = 10;
+
     private TestConfig() {
         throw new UnsupportedOperationException();
     }
@@ -62,6 +65,10 @@ public final class TestConfig {
         defaults.put(ConfigProperties.CACHE_ANON_CERT_CONTENT_MAX_ENTRIES, "10000");
         defaults.put(ConfigProperties.PAGING_DEFAULT_PAGE_SIZE, "100");
         defaults.put(ConfigProperties.PAGING_MAX_PAGE_SIZE, "10000");
+        defaults.put(ConfigProperties.BULK_SET_CONSUMER_ENV_MAX_CONSUMER_LIMIT,
+            String.valueOf(BULK_SET_CONSUMER_ENV_MAX_CONSUMER_LIMIT));
+        defaults.put(ConfigProperties.BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT,
+            String.valueOf(BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT));
 
         return defaults;
     }
