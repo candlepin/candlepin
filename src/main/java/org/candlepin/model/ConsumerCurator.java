@@ -29,6 +29,8 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.Hibernate;
 import org.hibernate.query.NativeQuery;
+import org.hibernate.transform.ResultTransformer;
+import org.hibernate.type.StringType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -788,6 +790,100 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
+     * Retrieves a mapping of a {@link GuestId} database record ID to its' host {@link Consumer} based on the
+     * provided guest database record IDs.
+     *
+     * @param guestIds
+     *  the database record ID for a {@link GuestId} entity
+     *
+     * @param ownerId
+     *  the ID of the owner that owns the provided {@link GuestId}s
+     *
+     * @return a mappint of a {@link GuestId} database record ID to its' host {@link Consumer}
+     */
+    private Map<String, Consumer> getHosts(Collection<String> guestIds, String ownerId) {
+        if (guestIds == null || guestIds.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        if (ownerId == null || ownerId.isBlank()) {
+            return new HashMap<>();
+        }
+
+        String idToConsumerIdQuery = """
+            SELECT guest.id AS id, guest.consumer_id as consumerId
+            FROM cp_consumer_guests guest
+            JOIN cp_consumer consumer ON consumer.id = guest.consumer_id
+            WHERE guest.id IN (:ids) AND consumer.owner_id = :ownerId
+            """;
+
+        Map<String, List<String>> hostIdToGuestIds = new HashMap<>();
+        ResultTransformer transformer = new ResultTransformer() {
+            @Override
+            public Object transformTuple(Object[] tuple, String[] aliases) {
+                String guestId = (String) tuple[0];
+                String consumerId = (String) tuple[1];
+
+                List<String> existing = hostIdToGuestIds.get(consumerId);
+                if (existing == null) {
+                    existing = new ArrayList<>();
+                }
+
+                existing.add(guestId);
+                hostIdToGuestIds.put(consumerId, existing);
+
+                return guestId;
+            }
+
+            @Override
+            public List transformList(List collection) {
+                return collection;
+            }
+        };
+
+        Query query = getEntityManager().createNativeQuery(idToConsumerIdQuery)
+            .setParameter("ids", guestIds)
+            .setParameter("ownerId", ownerId);
+
+        query.unwrap(NativeQuery.class)
+            .addScalar("id", StringType.INSTANCE)
+            .addScalar("consumerId", StringType.INSTANCE)
+            .setResultTransformer(transformer)
+            .getResultList();
+
+        if (hostIdToGuestIds.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        String jpql = """
+            SELECT g.consumer
+            FROM GuestId g
+            WHERE g.consumer.owner.id = :ownerId
+                AND g.id IN :ids
+            ORDER BY g.updated DESC
+            """;
+
+        List<Consumer> hosts = getEntityManager().createQuery(jpql, Consumer.class)
+            .setParameter("ownerId", ownerId)
+            .setParameter("ids", guestIds)
+            .getResultList();
+
+        Map<String, Consumer> result = new HashMap<>();
+        for (Consumer host : hosts) {
+            List<String> hostGuestIds = hostIdToGuestIds.get(host.getId());
+            if (hostGuestIds == null) {
+                continue;
+            }
+
+            for (String guestId : hostGuestIds) {
+                result.put(guestId, host);
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Get guest consumers for a host consumer.
      *
      * @param consumer
@@ -852,6 +948,123 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         catch (NoResultException e) {
             return null;
         }
+    }
+
+    /**
+     * Retrieves host information for the provided guest consumer UUIDs. If a provided guest consumer UUID
+     * maps to multiple hosts, then the most recent hypervisor host will be returned. This method accounts for
+     * case and endianness differences in the virt UUID provided by various hypervisors.
+     *
+     * @param guestUuids
+     *  the guest consumer UUIDs to retrieve host information for
+     *
+     * @param ownerId
+     *  the ID of the {@link Owner} that the guests belong to
+     *
+     * @return a list of hypervisor host information with the corresponding guest consumer UUID and virt UUID
+     */
+    public List<HypervisorConsumerWithGuest> getHypervisorConsumersWithGuests(
+        Collection<String> guestUuids, String ownerId) {
+
+        if (ownerId == null || ownerId.isEmpty() || guestUuids == null || guestUuids.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String guestVirtUuidQuery = """
+            SELECT f.element as virtUuid, c.uuid AS consumerUuid
+            FROM cp_consumer c
+            JOIN cp_consumer_facts f on f.cp_consumer_id = c.id
+            WHERE f.mapKey = 'virt.uuid'
+                AND c.owner_id = :ownerId
+                AND c.uuid IN (:consumerUuids)
+            """;
+
+        // Since we want to return the virt UUID of the guest in the original case and endianness, we can use
+        // this map to retrieve the original virt UUID from the lowercase and reverse endianness version.
+        Map<String, String> possibleVirtUuidToUnmodifiedGuestVirtUuid = new HashMap<>();
+        Map<String, String> possibleVirtUuidToProvidedConsumerUuid = new HashMap<>();
+        ResultTransformer transformer = new ResultTransformer() {
+            @Override
+            public Object transformTuple(Object[] tuple, String[] aliases) {
+                String guestVirtUuid = (String) tuple[0];
+                String consumerUuid = (String) tuple[1];
+                String lowerCaseGuestVirtUuid = guestVirtUuid.toLowerCase();
+
+                // We need to consider the hypervisors providing guest IDs of different endianness. So, here
+                // we are generating the different variations to see if they map to any GuestIds.
+                List<String> allPossibleVirtUuids = Util.getPossibleUuids(lowerCaseGuestVirtUuid);
+                for (String possibleVirtUuid : allPossibleVirtUuids) {
+                    possibleVirtUuidToProvidedConsumerUuid.put(possibleVirtUuid, consumerUuid);
+                    possibleVirtUuidToUnmodifiedGuestVirtUuid.put(possibleVirtUuid, guestVirtUuid);
+                }
+
+                return guestVirtUuid;
+            }
+
+            @Override
+            public List transformList(List collection) {
+                return collection;
+            }
+        };
+
+        Query query = getEntityManager().createNativeQuery(guestVirtUuidQuery)
+            .setParameter("consumerUuids", guestUuids)
+            .setParameter("ownerId", ownerId);
+
+        query.unwrap(NativeQuery.class)
+            .addScalar("virtUuid", StringType.INSTANCE)
+            .addScalar("consumerUuid", StringType.INSTANCE)
+            .setResultTransformer(transformer)
+            .getResultList();
+
+        if (possibleVirtUuidToUnmodifiedGuestVirtUuid.isEmpty() ||
+            possibleVirtUuidToProvidedConsumerUuid.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String guestIdsJpql = """
+            SELECT g
+            FROM GuestId g
+            WHERE guest_id_lower IN (:guestVirtUuids)
+            """;
+
+        List<GuestId> allGuestIds = getEntityManager()
+            .createQuery(guestIdsJpql, GuestId.class)
+            .setParameter("guestVirtUuids", possibleVirtUuidToProvidedConsumerUuid.keySet())
+            .getResultList();
+
+        // There can be multiple GuestIds for a particular virt UUID, so we need to only consider the most
+        // recent GuestId
+        Map<String, GuestId> latestGuestIds = new HashMap<>();
+        List<String> guestDatabaseIds = new ArrayList<>();
+        for (GuestId guest : allGuestIds) {
+            GuestId latestGuestId = latestGuestIds.get(guest.getGuestId().toLowerCase());
+            if (latestGuestId == null || guest.getUpdated().after(latestGuestId.getUpdated())) {
+                latestGuestIds.put(guest.getGuestId(), guest);
+                guestDatabaseIds.add(guest.getId());
+            }
+        }
+
+        Map<String, Consumer> guestIdToHost = getHosts(guestDatabaseIds, ownerId);
+
+        List<HypervisorConsumerWithGuest> results = new ArrayList<>();
+        for (GuestId guest : latestGuestIds.values()) {
+            Consumer host = guestIdToHost.get(guest.getId());
+            if (host == null) {
+                continue;
+            }
+
+            // We want to return the unmodified guest virt UUID and the guest consumer UUID
+            String guestId = possibleVirtUuidToUnmodifiedGuestVirtUuid
+                .get(guest.getGuestId().toLowerCase());
+            String guestConsumerUuid = possibleVirtUuidToProvidedConsumerUuid
+                .get(guest.getGuestId().toLowerCase());
+
+            results.add(new HypervisorConsumerWithGuest(host.getUuid(), host.getName(), guestConsumerUuid,
+                guestId));
+        }
+
+        return results;
     }
 
     public Consumer getConsumerBySystemUuid(String ownerId, String systemUuid) {
