@@ -16,6 +16,7 @@
 package org.candlepin.controller;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCloudData;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.service.EventAdapter;
 import org.candlepin.service.model.CloudCheckInEvent;
@@ -63,9 +64,9 @@ public class ConsumerManager {
         consumer.setLastCheckin(new Date());
         consumer = consumerCurator.merge(consumer);
 
-        if (consumer.getConsumerCloudData() != null) {
-            CloudCheckInEvent cloudCheckInEvent =
-                new CloudCheckInEvent(consumer.getConsumerCloudData(), objectMapper);
+        ConsumerCloudData cloudData = consumer.getConsumerCloudData();
+        if (cloudData != null) {
+            CloudCheckInEvent cloudCheckInEvent = new CloudCheckInEvent(cloudData, objectMapper);
             eventAdapter.publish(cloudCheckInEvent);
         }
     }

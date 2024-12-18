@@ -124,13 +124,11 @@ public class ConsumerResourceSpecTest {
             Arguments.of(gcpFacts));
     }
 
-    @ParameterizedTest
-    @MethodSource("cloudFactsSource")
-    public void shouldAllowRegistrationWithNullDataInCloudFacts(List<String> facts) throws Exception {
+    private void registerWithCloudFacts(List<String> facts, String factValue) throws Exception {
         OwnerDTO owner = this.adminClient.owners().createOwner(Owners.random());
 
         ConsumerDTO consumer = Consumers.random(owner);
-        facts.forEach(fact -> consumer.putFactsItem(fact, null));
+        facts.forEach(fact -> consumer.putFactsItem(fact, factValue));
 
         // Impl note: We have to manually serialize this and create our own request to avoid an issue with
         // the GSON serializer being helpful and throwing out null values on our behalf against our wishes.
@@ -146,11 +144,27 @@ public class ConsumerResourceSpecTest {
 
     @ParameterizedTest
     @MethodSource("cloudFactsSource")
+    public void shouldAllowRegistrationWithValidDataInCloudFacts(List<String> facts) throws Exception {
+        this.registerWithCloudFacts(facts, "value");
+    }
+
+    @ParameterizedTest
+    @MethodSource("cloudFactsSource")
+    public void shouldAllowRegistrationWithNullDataInCloudFacts(List<String> facts) throws Exception {
+        this.registerWithCloudFacts(facts, null);
+    }
+
+    @ParameterizedTest
+    @MethodSource("cloudFactsSource")
     public void shouldAllowRegistrationWithEmptyDataInCloudFacts(List<String> facts) throws Exception {
+        this.registerWithCloudFacts(facts, "");
+    }
+
+    private void registerAndCheckinWithCloudFacts(List<String> facts, String factValue) throws Exception {
         OwnerDTO owner = this.adminClient.owners().createOwner(Owners.random());
 
         ConsumerDTO consumer = Consumers.random(owner);
-        facts.forEach(fact -> consumer.putFactsItem(fact, ""));
+        facts.forEach(fact -> consumer.putFactsItem(fact, factValue));
 
         // Impl note: We have to manually serialize this and create our own request to avoid an issue with
         // the GSON serializer being helpful and throwing out null values on our behalf against our wishes.
@@ -162,6 +176,39 @@ public class ConsumerResourceSpecTest {
             .execute();
 
         assertEquals(200, response.getCode());
+
+        ConsumerDTO registeredConsumer = response.deserialize(ConsumerDTO.class);
+        ApiClient consumerClient = ApiClients.ssl(registeredConsumer);
+
+        // Impl note:
+        // we're not interested in the output so much as ensuring we can do this without triggering an
+        // exception. The exact operation here isn't even important, we just need to hit something annotated
+        // with @UpdateConsumerCheckIn so the filter is invoked
+        consumerClient.consumers().updateConsumer(registeredConsumer.getUuid(), registeredConsumer);
+    }
+
+    @ParameterizedTest
+    @MethodSource("cloudFactsSource")
+    public void shouldAllowCheckinOpsAfterRegistrationWithValidDataInCloudFacts(List<String> facts)
+        throws Exception {
+
+        this.registerAndCheckinWithCloudFacts(facts, "value");
+    }
+
+    @ParameterizedTest
+    @MethodSource("cloudFactsSource")
+    public void shouldAllowCheckinOpsAfterRegistrationWithNullDataInCloudFacts(List<String> facts)
+        throws Exception {
+
+        this.registerAndCheckinWithCloudFacts(facts, null);
+    }
+
+    @ParameterizedTest
+    @MethodSource("cloudFactsSource")
+    public void shouldAllowCheckinOpsAfterRegistrationWithEmptyDataInCloudFacts(List<String> facts)
+        throws Exception {
+
+        this.registerAndCheckinWithCloudFacts(facts, "");
     }
 
     @Test

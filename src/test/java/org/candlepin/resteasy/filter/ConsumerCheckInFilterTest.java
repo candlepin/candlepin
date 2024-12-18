@@ -16,6 +16,10 @@ package org.candlepin.resteasy.filter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.ConsumerPrincipal;
@@ -23,14 +27,16 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.controller.ConsumerManager;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCloudData;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.service.EventAdapter;
+import org.candlepin.service.model.CloudCheckInEvent;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
@@ -44,6 +50,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.lang.reflect.Method;
 import java.util.Date;
+import java.util.List;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -60,8 +67,6 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
     private ResourceInfo mockInfo;
     @Mock
     private EventAdapter mockEventAdapter;
-    @Mock
-    private ObjectMapper objectMapper;
 
     private ConsumerCheckInFilter interceptor;
     private MockHttpRequest mockReq;
@@ -92,8 +97,8 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
         MethodLocator methodLocator = new MethodLocator(injector);
         methodLocator.init();
         AnnotationLocator annotationLocator = new AnnotationLocator(methodLocator);
-        ConsumerManager consumerManager = new ConsumerManager(
-            consumerCurator, mockEventAdapter, objectMapper);
+        ConsumerManager consumerManager = new ConsumerManager(this.consumerCurator, this.mockEventAdapter,
+            ObjectMapperFactory.getObjectMapper());
         interceptor = new ConsumerCheckInFilter(annotationLocator, consumerManager);
     }
 
@@ -105,17 +110,7 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
         return new PostMatchContainerRequestContext(mockReq, null);
     }
 
-    @Test
-    public void testUpdatesCheckinWithAnnotation() throws Exception {
-        testUpdatesCheckinWithAnnotationForResource(FakeResource.class);
-    }
-
-    @Test
-    void testUpdatesCheckinWithAnnotationSpecFirst() throws Exception {
-        testUpdatesCheckinWithAnnotationForResource(FakeApi.class);
-    }
-
-    void testUpdatesCheckinWithAnnotationForResource(Class<?> resourceClass) throws Exception {
+    private void testUpdatesCheckinWithAnnotationForResource(Class<?> resourceClass) throws Exception {
         Date lastCheckin = this.consumer.getLastCheckin();
         Thread.sleep(1000);
 
@@ -128,19 +123,22 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
 
         Date updatedLastCheckin = p.getConsumer().getLastCheckin();
         assertNotEquals(lastCheckin, updatedLastCheckin);
+
+        // Verify that we did not get a cloud checkin event for this consumer
+        verifyNoInteractions(this.mockEventAdapter);
     }
 
     @Test
-    public void testNoCheckinWithoutAnnotation() throws Exception {
-        testNoCheckinWithoutAnnotationForResource(FakeResource.class);
+    public void testUpdatesCheckinWithAnnotation() throws Exception {
+        testUpdatesCheckinWithAnnotationForResource(FakeResource.class);
     }
 
     @Test
-    void testNoCheckinWithoutAnnotationSpecFirst() throws Exception {
-        testNoCheckinWithoutAnnotationForResource(FakeApi.class);
+    public void testUpdatesCheckinWithAnnotationSpecFirst() throws Exception {
+        testUpdatesCheckinWithAnnotationForResource(FakeApi.class);
     }
 
-    void testNoCheckinWithoutAnnotationForResource(Class<?> resourceClass) throws Exception {
+    private void testNoCheckinWithoutAnnotationForResource(Class<?> resourceClass) throws Exception {
         Date lastCheckin = this.consumer.getLastCheckin();
         Thread.sleep(1000);
 
@@ -153,6 +151,85 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
 
         Date updatedLastCheckin = p.getConsumer().getLastCheckin();
         assertEquals(lastCheckin, updatedLastCheckin);
+
+        // Verify that we did not get a cloud checkin event for this consumer
+        verifyNoInteractions(this.mockEventAdapter);
+    }
+
+    @Test
+    public void testNoCheckinWithoutAnnotation() throws Exception {
+        testNoCheckinWithoutAnnotationForResource(FakeResource.class);
+    }
+
+    @Test
+    public void testNoCheckinWithoutAnnotationSpecFirst() throws Exception {
+        testNoCheckinWithoutAnnotationForResource(FakeApi.class);
+    }
+
+    private void checkinWithCloudData(Class<?> resourceClass, ConsumerCloudData cloudData)
+        throws Exception {
+
+        Method method = resourceClass.getMethod("checkinMethod", String.class);
+        mockResourceMethod(method);
+
+        Date lastCheckin = new Date();
+
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner)
+            .setConsumerCloudData(cloudData)
+            .setLastCheckin(lastCheckin);
+
+        Thread.sleep(250);
+
+        Principal principal = new ConsumerPrincipal(consumer, owner);
+        ResteasyContext.pushContext(Principal.class, principal);
+
+        interceptor.filter(this.getContext());
+
+        assertNotEquals(lastCheckin, consumer.getLastCheckin());
+
+        // We should receive an checkin event on the adapter
+        verify(this.mockEventAdapter, times(1)).publish(any(CloudCheckInEvent.class));
+    }
+
+    @Test
+    public void testCheckInWithCloudDataOnDirectAnnotation() throws Exception {
+        ConsumerCloudData cloudData = new ConsumerCloudData()
+            .setCloudProviderShortName("fake_cloud")
+            .setCloudAccountId("account_id")
+            .addCloudOfferingIds("offering_1");
+
+        this.checkinWithCloudData(FakeResource.class, cloudData);
+    }
+
+    @Test
+    public void testCheckInWithCloudDataOnInheritedAnnotation() throws Exception {
+        ConsumerCloudData cloudData = new ConsumerCloudData()
+            .setCloudProviderShortName("fake_cloud")
+            .setCloudAccountId("account_id")
+            .addCloudOfferingIds("offering_1");
+
+        this.checkinWithCloudData(FakeApi.class, cloudData);
+    }
+
+    @Test
+    public void testCheckinWithMinimalCloudDataOnDirectAnnotation() throws Exception {
+        ConsumerCloudData cloudData = new ConsumerCloudData()
+            .setCloudProviderShortName("fake_cloud")
+            .setCloudAccountId(null)
+            .setCloudOfferingIds(List.of());
+
+        this.checkinWithCloudData(FakeResource.class, cloudData);
+    }
+
+    @Test
+    public void testCheckinWithMinimalCloudDataOnInheritedAnnotation() throws Exception {
+        ConsumerCloudData cloudData = new ConsumerCloudData()
+            .setCloudProviderShortName("fake_cloud")
+            .setCloudAccountId(null)
+            .setCloudOfferingIds(List.of());
+
+        this.checkinWithCloudData(FakeApi.class, cloudData);
     }
 
     /**

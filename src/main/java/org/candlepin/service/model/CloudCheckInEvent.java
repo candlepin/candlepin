@@ -95,15 +95,10 @@ public class CloudCheckInEvent implements AdapterEvent {
             throw new IllegalStateException("cloud provider shortname is null or blank");
         }
 
-        String cloudAccountId = cloudData.getCloudAccountId();
-        if (cloudAccountId == null || cloudAccountId.isBlank()) {
-            throw new IllegalStateException("cloud account ID is null or blank");
-        }
-
         this.consumerUuid = consumerUuid;
         this.checkIn = checkIn;
         this.cloudProviderId = cloudProviderId;
-        this.cloudAccountId = cloudAccountId;
+        this.cloudAccountId = cloudData.getCloudAccountId();
         this.cloudOfferingIds = cloudData.getCloudOfferingIds();
 
         try {
