@@ -1,12 +1,8 @@
-FROM quay.io/centos/centos:stream8 as builder
+FROM quay.io/centos/centos:stream9 as builder
 
 ARG WAR_FILE
 
 USER root
-
-# Modify all yum repository configurations to use vault.centos.org
-RUN for i in $(ls /etc/yum.repos.d); do sed -i -e "s/mirrorlist.*//g" /etc/yum.repos.d/$i && sed -i -e  \
-    "s/#baseurl=http:\/\/mirror.centos.org/baseurl=http:\/\/vault.centos.org/g" /etc/yum.repos.d/$i; done
 
 # Update and install dependencies
 RUN dnf -y --setopt install_weak_deps=False update && \
@@ -31,14 +27,10 @@ COPY ./bin/deployment/gen_certs.sh .
 RUN ./gen_certs.sh --cert_out ./candlepin-ca.crt --key_out ./candlepin-ca.key --hostname candlepin; \
     rm gen_certs.sh;
 
-FROM quay.io/centos/centos:stream8
+FROM quay.io/centos/centos:stream9
 LABEL author="Josh Albrecht <jalbrech@redhat.com>"
 
 USER root
-
-# Modify all yum repository configurations to use vault.centos.org
-RUN for i in $(ls /etc/yum.repos.d); do sed -i -e "s/mirrorlist.*//g" /etc/yum.repos.d/$i && sed -i -e  \
-    "s/#baseurl=http:\/\/mirror.centos.org/baseurl=http:\/\/vault.centos.org/g" /etc/yum.repos.d/$i; done
 
 # Update and install dependencies
 RUN dnf -y update && \
