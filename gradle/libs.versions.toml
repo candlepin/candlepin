@@ -23,7 +23,7 @@ test-logger = { id = "com.adarshr.test-logger", version.ref = "test-logger" }
 [libraries]
 artemis-server = { module = "org.apache.activemq:artemis-server", version.ref = "artemis" }
 artemis-stomp = { module = "org.apache.activemq:artemis-stomp-protocol", version.ref = "artemis" }
-assertj = { module = "org.assertj:assertj-core", version = "3.27.0" }
+assertj = { module = "org.assertj:assertj-core", version = "3.27.1" }
 bouncycastle-prov = { module = "org.bouncycastle:bcprov-jdk18on", version = "1.79"}
 bouncycastle-pkix = { module = "org.bouncycastle:bcpkix-jdk18on", version = "1.79"}
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.1.8" }
