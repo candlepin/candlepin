@@ -26,6 +26,7 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.controller.ConsumerManager;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
@@ -75,6 +76,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     private ConsumerTypeValidator consumerTypeValdator;
     private DTOValidator dtoValidator;
     private PagingUtilFactory pagingUtilFactory;
+    private ConsumerManager consumerManager;
 
     private PrincipalProvider principalProvider;
     private JobManager jobManager;
@@ -103,6 +105,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         consumerTypeValdator = this.injector.getInstance(ConsumerTypeValidator.class);
         dtoValidator = this.injector.getInstance(DTOValidator.class);
         pagingUtilFactory = this.injector.getInstance(PagingUtilFactory.class);
+        consumerManager = this.injector.getInstance(ConsumerManager.class);
 
         owner = ownerCurator.create(new Owner()
             .setKey(OWNER_NAME)
@@ -121,7 +124,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         this.principalProvider = mock(PrincipalProvider.class);
 
         or = new OwnerResource(
-            ownerCurator, activationKeyCurator, consumerCurator, i18n, sink, eventFactory,
+            ownerCurator, activationKeyCurator, consumerCurator, consumerManager, i18n, sink, eventFactory,
             contentAccessManager, manifestManager, poolManager, poolService, poolCurator, ownerManager,
             exportCurator, ownerInfoCurator, importRecordCurator, entitlementCurator, ueberCertCurator,
             ueberCertGenerator, environmentCurator, calculatedAttributesUtil, contentOverrideValidator,
