@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 public class EnvironmentCuratorTest extends DatabaseTestFixture {
@@ -246,6 +249,61 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
         assertEquals(environment3.getId(), output.get(consumer2.getId()).get(0));
         assertEquals(environment2.getId(), output.get(consumer2.getId()).get(1));
         assertEquals(environment1.getId(), output.get(consumer2.getId()).get(2));
+    }
+
+    @Test
+    public void testGetNonExistentEnvironmentIdsWithNullOwner() {
+        Set<String> actual = environmentCurator.getNonExistentEnvironmentIds(null, List.of("env-id"));
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void testGetNonExistentEnvironmentIdsWithNullOrEmptyEnvIds(List<String> envIds) {
+        Owner owner = this.createOwner(TestUtil.randomString());
+
+        Set<String> actual = environmentCurator.getNonExistentEnvironmentIds(owner, envIds);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetNonExistentEnvironmentIds() {
+        Owner owner1 = this.createOwner(TestUtil.randomString());
+        Content content1 = this.createContent("c1", "c1");
+        Content content2 = this.createContent("c2", "c2");
+        Content content3 = this.createContent("c3", "c3");
+
+        Environment env1 = this.createEnvironment(
+            owner1, "test_env-1", "test_env-1", null, null, List.of(content1));
+        Environment env2 = this.createEnvironment(
+            owner1, "test_env-2", "test_env-2", null, null, List.of(content2));
+        this.createEnvironment(
+            owner1, "test_env-3", "test_env-3", null, null, List.of(content3));
+
+        Owner owner2 = this.createOwner(TestUtil.randomString());
+        Content content4 = this.createContent("c4", "c4");
+        Content content5 = this.createContent("c5", "c5");
+
+        Environment env4 = this.createEnvironment(
+            owner2, "test_env-4", "test_env-4", null, null, List.of(content4));
+        this.createEnvironment(
+            owner2, "test_env-5", "test_env-5", null, null, List.of(content5));
+
+        String unknown1 = TestUtil.randomString("unknown-");
+        String unknown2 = TestUtil.randomString("unknown-");
+        List<String> envIds = List.of(env1.getId(), unknown1, env2.getId(), unknown2, env4.getId());
+
+        Set<String> actual = environmentCurator.getNonExistentEnvironmentIds(owner1, envIds);
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(unknown1, unknown2, env4.getId());
     }
 
 }
