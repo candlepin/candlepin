@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-21 07:09+0000\n"
+"POT-Creation-Date: 2024-12-12 07:10+0000\n"
 "PO-Revision-Date: 2023-12-21 18:37+0000\n"
 "Last-Translator: Charles Lee <lchopn@gmail.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
@@ -931,14 +931,14 @@ msgid "Cloud account ID is null or empty"
 msgstr "作业 ID 为 null 或是空"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:258
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2610
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2962
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2619
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2971
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:661
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:127
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:157
 #: src/main/java/org/candlepin/resource/JobResource.java:365
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:732
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1829
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1830
 #, java-format
 msgid "An unexpected exception occurred while scheduling job \"{0}\""
 msgstr "在调度作业 “{0}” 时发生意外的异常"
@@ -991,7 +991,7 @@ msgstr "必须指定至少一个搜索标准。"
 #: src/main/java/org/candlepin/resource/JobResource.java:200
 #: src/main/java/org/candlepin/resource/OwnerResource.java:809
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1217
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1763
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1764
 #, java-format
 msgid ""
 "This endpoint does not support returning more than {0} results at a time, "
@@ -1077,7 +1077,7 @@ msgstr "{0} 没有授权可以使用机构 {1} 注册"
 # keys
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1539
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:171
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1386
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1387
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "无法找到密钥 {0} 的所有者。"
@@ -1162,27 +1162,35 @@ msgstr "无法创建授权证书归档"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2511
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2509
 msgid "Cannot bind by multiple parameters."
 msgstr "无法绑定多个参数。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2515
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2513
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "在自动绑定时无法指定数量。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2560
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2549
+#, fuzzy
+#| msgid ""
+#| "Auto-attach is disabled for owner {0} while using simple content access"
+msgid ""
+"Attach operations are ignored in organizations using simple content access"
+msgstr "使用简单内容访问时，所有者 {0} 的自动附加功能被禁用"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2569
 #, java-format
 msgid "You must first accept Red Hat''s Terms and conditions. Please visit {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2649
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2658
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr "忽略自动附加请求。对于org \"{0}\" 它是禁用的。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2654
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2663
 #, java-format
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
@@ -1191,13 +1199,13 @@ msgstr ""
 "忽略自动附加的请求。 因为 hypervisor 自动绑定的设置 ，组织“ {0}”禁用了这个功"
 "能。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2696
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2705
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr "机构 \"{0}\" 已禁用了自动附件功能。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2824
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2863
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2833
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2872
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:191
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:209
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:239
@@ -1207,34 +1215,34 @@ msgstr "机构 \"{0}\" 已禁用了自动附件功能。"
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr "无法找到 ID 为 ''{0}'' 的权利。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2839
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2848
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr "无法找到序列号为 ''{0}'' 的权利证书。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2856
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2865
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr "客户 ''{0}'' 的池 id ''{1}'' 中没有权利"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2928
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2937
 msgid "Unable to create export archive"
 msgstr "无法创建导出归档"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3070
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3075
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3079
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3084
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "为单元 {0} 重新生成 id 证书时的问题"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3111
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3120
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "UUID 为 {0} 的系统不是虚拟客户端。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3190
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3199
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "未找到 hypervisor ''{0}'' 的删除记录。"
@@ -1729,79 +1737,79 @@ msgid ""
 "The flags add_future and only_future cannot be used with the parameter after."
 msgstr "add_future 标识和 only_future 标识不能和参数 after 一起使用。"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1427
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1428
 msgid "Pool product ID not specified"
 msgstr "没有指定池产品 ID"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1435
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1436
 msgid ""
 "Cannot create pools using products defined outside of the organization's "
 "namespace"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1465
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1466
 #, java-format
 msgid "Unable to find a pool with the ID \"{0}\""
 msgstr "无法找到 ID 为 \"{0}\" 的池"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1473
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1474
 #, java-format
 msgid "Pool \"{0}\" does not belong to the specified owner \"{1}\""
 msgstr "池 \"{0}\" 不属于指定的所有者 \"{1}\""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1480
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1481
 msgid "Cannot update bonus pools, as they are auto generated"
 msgstr "无法更新加分池，因为加分池是自动生成的"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1574
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1575
 msgid "Unknown conflict to force"
 msgstr "未知冲突的强制"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1602
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1603
 msgid "Error reading export archive"
 msgstr "读取导出归档出错"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1606
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1607
 msgid "Error storing uploaded archive for asynchronous processing"
 msgstr "为异步处理保存上传的归档错误"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1686
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1687
 #, java-format
 msgid "uber certificate for owner {0} was not found. Please generate one."
 msgstr "没有找到为所有者 {0} 的 uber 证书，请生成一个。"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1773
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1774
 msgid "Claimant owner has to be present!"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1778
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1779
 msgid "Origin owner has to be anonymous!"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1796
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1797
 msgid "Claimant owner does not exist in Candlepin or upstream!"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1801
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1802
 msgid "Claimant owner cannot be anonymous!"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1808
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1809
 msgid "Claimant owners don't match!"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1838
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1839
 msgid "Owners must be created with a valid key"
 msgstr "所有者必需使用一个有效的码创建"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1847
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1848
 msgid "The default service level cannot be specified during owner creation"
 msgstr "在所有者创建时不能指定默认服务级别"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1887
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1899
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1888
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1900
 #, java-format
 msgid "Could not create the Owner: {0}"
 msgstr "无法创建所有者：{0}"
