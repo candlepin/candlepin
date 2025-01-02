@@ -2334,6 +2334,304 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertNull(foundConsumer);
     }
 
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testGetHypervisorConsumersWithGuestsWithNullOrEmptyConsumerUuids(Collection<String> uuids) {
+        List<HypervisorConsumerWithGuest> actual = consumerCurator
+            .getHypervisorConsumersWithGuests(uuids, "owner-id");
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testGetHypervisorConsumersWithGuestsWithNullOrEmptyOwnerId(String ownerId) {
+        List<HypervisorConsumerWithGuest> actual = consumerCurator
+            .getHypervisorConsumersWithGuests(List.of("uuid"), ownerId);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetHypervisorConsumersWithNonExistentGuestConsumerUuid() {
+        List<HypervisorConsumerWithGuest> actual = consumerCurator
+            .getHypervisorConsumersWithGuests(List.of("uuid"), owner.getOwnerId());
+
+        assertThat(actual)
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetHypervisorConsumersWithDifferentOwner() {
+        String virtId = "virt-uuid";
+        Consumer guest = new Consumer()
+            .setName("guest")
+            .setUsername("guest-username")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, virtId);
+        guest = consumerCurator.create(guest);
+
+        Consumer host = new Consumer()
+            .setName("host")
+            .setUsername("host-username")
+            .setOwner(owner)
+            .setType(ct);
+        host = consumerCurator.create(host);
+        host.addGuestId(new GuestId(virtId));
+        host = consumerCurator.update(host);
+
+        Owner owner2 = this.createOwner();
+
+        List<HypervisorConsumerWithGuest> actual = consumerCurator
+            .getHypervisorConsumersWithGuests(List.of(guest.getUuid()), owner2.getId());
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetHypervisorConsumersWithMultipleHosts() {
+        String virtId = "virt-uuid";
+        Consumer guest = new Consumer()
+            .setName("guest")
+            .setUsername("guest-username")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, virtId);
+        guest = consumerCurator.create(guest);
+
+        Consumer oldHost = new Consumer()
+            .setName("host-1")
+            .setUsername("host-1-username")
+            .setOwner(owner)
+            .setType(ct);
+        oldHost = consumerCurator.create(oldHost);
+        oldHost.addGuestId(new GuestId(virtId));
+        oldHost = consumerCurator.update(oldHost);
+
+        Consumer latestHost = new Consumer()
+            .setName("host-2")
+            .setUsername("host-2-username")
+            .setOwner(owner)
+            .setType(ct);
+        latestHost = consumerCurator.create(latestHost);
+        latestHost.addGuestId(new GuestId(virtId));
+        latestHost = consumerCurator.update(latestHost);
+
+        HypervisorConsumerWithGuest expected =
+            new HypervisorConsumerWithGuest(latestHost.getUuid(), latestHost.getName(), guest.getUuid(),
+                virtId);
+
+        List<HypervisorConsumerWithGuest> actual = consumerCurator
+            .getHypervisorConsumersWithGuests(List.of(guest.getUuid()), owner.getId());
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(expected);
+    }
+
+    @Test
+    public void testGetHypervisorConsumersWithGuestsWithVirtUuidCasingDifferences() {
+        String virtId1 = "virt-uuid-1";
+        Consumer guest1 = new Consumer()
+            .setName("guest-1")
+            .setUsername("guest-1-username")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, virtId1);
+        guest1 = consumerCurator.create(guest1);
+
+        String virtId2 = "ViRt-UuId-2";
+        Consumer guest2 = new Consumer()
+            .setName("guest-2")
+            .setUsername("guest-2-username")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, virtId2);
+        guest2 = consumerCurator.create(guest2);
+
+        Consumer host1 = new Consumer()
+            .setName("host-1")
+            .setUsername("host-1-username")
+            .setOwner(owner)
+            .setType(ct);
+        host1 = consumerCurator.create(host1);
+        host1.addGuestId(new GuestId(virtId1.toUpperCase()));
+        host1 = consumerCurator.update(host1);
+
+        Consumer host2 = new Consumer()
+            .setName("host-2")
+            .setUsername("host-2-username")
+            .setOwner(owner)
+            .setType(ct);
+        host2 = consumerCurator.create(host2);
+        host2.addGuestId(new GuestId(virtId2.toLowerCase()));
+        host2 = consumerCurator.update(host2);
+
+        HypervisorConsumerWithGuest expected1 =
+            new HypervisorConsumerWithGuest(host1.getUuid(), host1.getName(), guest1.getUuid(), virtId1);
+        HypervisorConsumerWithGuest expected2 =
+            new HypervisorConsumerWithGuest(host2.getUuid(), host2.getName(), guest2.getUuid(), virtId2);
+
+        List<HypervisorConsumerWithGuest> actual = consumerCurator
+            .getHypervisorConsumersWithGuests(List.of(guest1.getUuid(), guest2.getUuid()), owner.getId());
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(expected1, expected2);
+    }
+
+    @Test
+    public void testGetHypervisorConsumersWithGuestsWithMultipleGuestsPerHost() {
+        String virtId1 = "virt-uuid-1";
+        Consumer guest1 = new Consumer()
+            .setName("guest-1")
+            .setUsername("guest-1-username")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, virtId1);
+        guest1 = consumerCurator.create(guest1);
+
+        String virtId2 = "virt-uuid-2";
+        Consumer guest2 = new Consumer()
+            .setName("guest-2")
+            .setUsername("guest-2-username")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, virtId2);
+        guest2 = consumerCurator.create(guest2);
+
+        Consumer host = new Consumer()
+            .setName("host-1")
+            .setUsername("host-1-username")
+            .setOwner(owner)
+            .setType(ct);
+        host = consumerCurator.create(host);
+
+        host.addGuestId(new GuestId(virtId1));
+        host.addGuestId(new GuestId(virtId2));
+        host = consumerCurator.update(host);
+
+        HypervisorConsumerWithGuest expected1 =
+            new HypervisorConsumerWithGuest(host.getUuid(), host.getName(), guest1.getUuid(), virtId1);
+        HypervisorConsumerWithGuest expected2 =
+            new HypervisorConsumerWithGuest(host.getUuid(), host.getName(), guest2.getUuid(), virtId2);
+
+        List<HypervisorConsumerWithGuest> actual = consumerCurator
+            .getHypervisorConsumersWithGuests(List.of(guest1.getUuid(), guest2.getUuid()), owner.getId());
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(expected1, expected2);
+    }
+
+    @Test
+    public void testGetHypervisorConsumersWithGuestsWithReversedEndianVirtUuid() {
+        String virtId = "f8efe763-5b6d-464a-8508-a85091e2d917";
+        Consumer guest = new Consumer()
+            .setName("guest-1")
+            .setUsername("guest-1-username")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, virtId);
+        guest = consumerCurator.create(guest);
+
+        Consumer host = new Consumer()
+            .setName("host-1")
+            .setUsername("host-1-username")
+            .setOwner(owner)
+            .setType(ct);
+        host = consumerCurator.create(host);
+
+        // Change the endianess of the virt ID
+        host.addGuestId(new GuestId(Util.transformUuid(virtId)));
+        host = consumerCurator.update(host);
+
+        // The endianness of the guest consumer should be used
+        HypervisorConsumerWithGuest expected =
+            new HypervisorConsumerWithGuest(host.getUuid(), host.getName(), guest.getUuid(), virtId);
+
+        List<HypervisorConsumerWithGuest> actual = consumerCurator
+            .getHypervisorConsumersWithGuests(List.of(guest.getUuid()), owner.getId());
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactly(expected);
+    }
+
+    @Test
+    public void testGetHypervisorConsumersWithGuests() {
+        Consumer nonGuestHost = createConsumer(owner);
+
+        String virtId1 = "f8efe763-5b6d-464a-8508-a85091e2d917";
+        Consumer guest1 = new Consumer()
+            .setName("guest-1")
+            .setUsername("guest-1-username")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, virtId1);
+        guest1 = consumerCurator.create(guest1);
+
+        String virtId2 = "866dAA23-ad4b-4a11-b267-e274a17bec25";
+        Consumer guest2 = new Consumer()
+            .setName("guest-2")
+            .setUsername("guest-2-username")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, virtId2);
+        guest2 = consumerCurator.create(guest2);
+
+        String virtId3 = "6d9a80f9-21f1-4b18-884f-fa8d7eb57dc7";
+        Consumer guest3 = new Consumer()
+            .setName("guest-3")
+            .setUsername("guest-3-username")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, virtId3);
+        guest3 = consumerCurator.create(guest3);
+
+        Consumer host1 = new Consumer()
+            .setName("host-1")
+            .setUsername("host-1-username")
+            .setOwner(owner)
+            .setType(ct);
+        host1 = consumerCurator.create(host1);
+
+        host1.addGuestId(new GuestId(virtId1));
+        host1 = consumerCurator.update(host1);
+
+        Consumer host2 = new Consumer()
+            .setName("host-2")
+            .setUsername("host-2-username")
+            .setOwner(owner)
+            .setType(ct);
+        host2 = consumerCurator.create(host2);
+
+        host2.addGuestId(new GuestId(virtId2));
+        host2 = consumerCurator.update(host2);
+
+        HypervisorConsumerWithGuest expected1 =
+            new HypervisorConsumerWithGuest(host1.getUuid(), host1.getName(), guest1.getUuid(), virtId1);
+        HypervisorConsumerWithGuest expected2 =
+            new HypervisorConsumerWithGuest(host2.getUuid(), host2.getName(), guest2.getUuid(), virtId2);
+
+        List<HypervisorConsumerWithGuest> actual = consumerCurator
+            .getHypervisorConsumersWithGuests(List.of(nonGuestHost.getUuid(), guest1.getUuid(),
+                guest2.getUuid()), owner.getId());
+
+        // Note that the provided non-guest host UUID should be ignored
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(expected1, expected2);
+    }
+
     private IdentityCertificate createIdCert() {
         IdentityCertificate idCert = TestUtil.createIdCert(TestUtil.createDateOffset(2, 0, 0));
         return saveCert(idCert);

@@ -25,9 +25,12 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.auth.Verify;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
+import org.candlepin.dto.api.server.v1.HypervisorConsumerWithGuestDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
@@ -39,6 +42,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.GuestId;
+import org.candlepin.model.HypervisorConsumerWithGuest;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.resource.server.v1.HypervisorsApi;
@@ -56,6 +60,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -76,13 +81,14 @@ public class HypervisorResource implements HypervisorsApi {
     private final JobManager jobManager;
     private final ObjectMapper mapper;
     private final PrincipalProvider principalProvider;
+    private final Configuration config;
 
     @Inject
     public HypervisorResource(ConsumerResource consumerResource, ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator, I18n i18n, OwnerCurator ownerCurator,
         Provider<GuestMigration> migrationProvider, ModelTranslator translator, JobManager jobManager,
         PrincipalProvider principalProvider,
-        @Named("HypervisorUpdateJobObjectMapper") final ObjectMapper mapper) {
+        @Named("HypervisorUpdateJobObjectMapper") final ObjectMapper mapper, Configuration config) {
         this.consumerResource = Objects.requireNonNull(consumerResource);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.i18n = Objects.requireNonNull(i18n);
@@ -92,6 +98,7 @@ public class HypervisorResource implements HypervisorsApi {
         this.jobManager = Objects.requireNonNull(jobManager);
         this.mapper = Objects.requireNonNull(mapper);
         this.principalProvider = Objects.requireNonNull(principalProvider);
+        this.config = Objects.requireNonNull(config);
 
         this.hypervisorType = consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
     }
@@ -159,6 +166,32 @@ public class HypervisorResource implements HypervisorsApi {
             log.error(errmsg, e);
             throw new IseException(errmsg, e);
         }
+    }
+
+    // POST /hypervisors/{owner}/guests
+
+    @Override
+    @Transactional
+    public Stream<HypervisorConsumerWithGuestDTO> getHypervisorsAndGuests(String ownerKey,
+        List<String> consumerUuids) {
+
+        if (ownerKey == null || ownerKey.isBlank()) {
+            throw new BadRequestException("owner key is missing or blank");
+        }
+
+        int consumerUuidLimit = config.getInt(ConfigProperties.HYPERVISORS_AND_GUEST_RETRIEVAL_LIMIT);
+        if (consumerUuids.size() > consumerUuidLimit) {
+            throw new BadRequestException("consumer UUIDs exceeds the limit of " + consumerUuidLimit);
+        }
+
+        Owner owner = this.getOwner(ownerKey);
+
+        List<HypervisorConsumerWithGuest> consumersWithGuest = consumerCurator
+            .getHypervisorConsumersWithGuests(consumerUuids, owner.getId());
+
+        return consumersWithGuest.stream()
+            .map(this.translator.getStreamMapper(HypervisorConsumerWithGuest.class,
+                HypervisorConsumerWithGuestDTO.class));
     }
 
     /*
