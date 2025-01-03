@@ -91,7 +91,7 @@ resteasy-atom = { module = "org.jboss.resteasy:resteasy-atom-provider", version.
 resteasy-guice = { module = "org.jboss.resteasy:resteasy-guice", version.ref = "resteasy" }
 resteasy-multipart = { module = "org.jboss.resteasy:resteasy-multipart-provider", version.ref = "resteasy" }
 resteasy-validator = { module = "org.jboss.resteasy:resteasy-validator-provider", version.ref = "resteasy" }
-rhino = { module = "org.mozilla:rhino", version = "1.7.15" }
+rhino = { module = "org.mozilla:rhino", version = "1.8.0" }
 slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-jcl = { module = "org.slf4j:jcl-over-slf4j", version.ref = "slf4j" }
 slf4j-log4j = { module = "org.slf4j:log4j-over-slf4j", version.ref = "slf4j" }
