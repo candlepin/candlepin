@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-01-25 07:07+0000\n"
-"PO-Revision-Date: 2024-06-17 02:36+0000\n"
+"PO-Revision-Date: 2024-11-22 20:38+0000\n"
 "Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-3-hotfix/ko/>\n"
@@ -21,7 +21,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.5.5\n"
+"X-Generator: Weblate 5.8.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -332,24 +332,23 @@ msgstr "서브스크립션 풀 {0}이 존재하지 않습니다."
 
 #: src/main/java/org/candlepin/controller/CandlepinPoolManager.java:331
 msgid "No owner specified, or owner lacks identifying information"
-msgstr "소유자가 지정되어 있지 않거나 소유자 ID 정보가 없습니다"
+msgstr "소유자가 지정되지 않았거나, 소유자 식별 정보가 부족합니다"
 
 #: src/main/java/org/candlepin/controller/CandlepinPoolManager.java:340
 #, java-format
 msgid "Unable to find an owner with the key \"{0}\""
-msgstr "키 \"{0}\"로/으로 소유자를 찾을 수 없습니다"
+msgstr "키 \"{0}\"로 소유자를 찾을 수 없습니다"
 
 #: src/main/java/org/candlepin/controller/CandlepinPoolManager.java:348
 #, java-format
 msgid "Unable to find an owner with the ID \"{0}\""
-msgstr "ID \"{0}\"로/으로 소유자를 찾을 수 없습니다"
+msgstr "ID \"{0}\"로 소유자를 찾을 수 없습니다"
 
 #: src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1924
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
-msgstr ""
-"호스트/게스트 매핑 설정없이 매핑되지 않은 게스트 인타이틀먼트가 만료되었습니"
-"다."
+msgstr "대응되지 않은 게스트 자격이 호스트/게스트 대응이 성립되지 않아 "
+"만료되었습니다."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:237
 #, java-format
@@ -373,36 +372,35 @@ msgstr "SKU 제품은 이 개발 장치에서 사용할 수 없습니다: ''{0}'
 #: src/main/java/org/candlepin/controller/ManifestManager.java:218
 #, java-format
 msgid "The requested manifest file was not found: {0}"
-msgstr "요청된 매니페스트 파일을 찾을 수 없습니다: {0}"
+msgstr "요청된 상세목록 파일을 찾을 수 없습니다: {0}"
 
 #: src/main/java/org/candlepin/controller/ManifestManager.java:274
 #, java-format
 msgid "Unable to find specified manifest by id: {0}"
-msgstr "다음 ID를 갖는 매니페스트를 찾을 수 없습니다: {0}"
+msgstr "id에 의한 상세목록을 찾을 수 없습니다: {0}"
 
 #: src/main/java/org/candlepin/controller/ManifestManager.java:280
 #, java-format
 msgid "Could not validate export against specifed consumer: {0}"
-msgstr "지정한 소비자에 대해 내보내기를 유효화 할 수 없습니다: {0}"
+msgstr "특정한 소비자에 대해 내보내기를 검증 할 수 없습니다: {0}"
 
 #: src/main/java/org/candlepin/controller/ManifestManager.java:305
 #, java-format
 msgid "Unable to download manifest: {0}"
-msgstr "명세서를 내려받기 할 수 없습니다: {0}"
+msgstr "상세목록을 내려받을 수 없습니다: {0}"
 
 #: src/main/java/org/candlepin/controller/ManifestManager.java:316
 #, java-format
 msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "\"{1}\"."
-msgstr ""
-"장치 {0}을(를) 내보내기할 수 없습니다. 장치 유형 ''{1}''에 대한 매니페스트를 "
-"만들 수 없습니다."
+msgstr "장치 {0}는 내보낼 수 없습니다. 장치 유형 ''{1}''에 대한 상세목록을 만들 수 "
+"없습니다."
 
 #: src/main/java/org/candlepin/controller/ManifestManager.java:322
 #, java-format
 msgid "A CDN with label {0} does not exist on this system."
-msgstr "레이블 {0}인 CDN은 이 시스템에 존재하지 않습니다."
+msgstr "식별자가 {0}인 CDN은 이 시스템에 존재하지 않습니다."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -415,12 +413,12 @@ msgstr "잘못된 요청"
 #: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:105
 #, java-format
 msgid "Runtime Error {0} at {1}.{2}:{3}"
-msgstr "{1}.{2}:{3}에서 런타임 오류 {0}"
+msgstr "{1}.{2}:{3}에서 실행중 오류 {0}"
 
 #: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:110
 #, java-format
 msgid "Runtime Error {0}"
-msgstr "런타임 오류 {0}"
+msgstr "실행중 오류 {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -431,7 +429,7 @@ msgstr "{0}은 {1}에 대해 잘못된 값입니다"
 
 #: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1074
 msgid "Request failed due to concurrent modification, please re-try."
-msgstr "동시에 변경하여 요청이 실패했습니다. 다시 시도하십시오."
+msgstr "요청은 동시 변경으로 인해 실패했으며, 다시 시도하세요."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:849
 #, java-format
@@ -1695,7 +1693,7 @@ msgstr "\"{0}\" 매개 변수 구문이 잘못되었습니다; 예상된 형식:
 
 #: src/main/java/org/candlepin/resteasy/converter/OffsetDateTimeParamConverterProvider.java:92
 msgid "Unable to parse date parameter"
-msgstr "데이터 매개 변수를 구문 분석할 수 없습니다"
+msgstr "자료 매개 변수를 구문 분석 할 수 없습니다"
 
 #: src/main/java/org/candlepin/resteasy/filter/AuthenticationFilter.java:170
 msgid "Please use SSL when accessing protected resources"
@@ -1705,9 +1703,8 @@ msgstr "보호된 자원을 접근 할 때에 SSL을 사용하세요"
 msgid ""
 "Candlepin is in Suspend mode, please check /status resource to get more "
 "details"
-msgstr ""
-"Candlepin이 일시 중지 모드입니다. 보다 자세한 내용은 /status 리소스를 확인하"
-"십시오"
+msgstr "Candlepin이 일시 중지 방식에 있으며, 더 자세한 내용은 /status 자원을 "
+"확인하세요"
 
 #: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:90
 msgid "offset and limit parameters must be positive integers"
@@ -1739,9 +1736,9 @@ msgid ""
 "to address this problem. See knowledge database https://access.redhat.com/"
 "knowledge/node/129003 for more information."
 msgstr ""
-"너무 많은 컨텐츠가 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 "
-"이 문제를 처리할 수 있습니다. 자세한 내용은 지식 데이터베이스(https://access."
-"redhat.com/knowledge/node/129003)를 참조하십시오."
+"너무 많은 내용이 인증서 {0}에 설정되어 있습니다. 신규 클라이언트는 아마도 이 "
+"문제를 처리 할 수도 있습니다. 자세한 정보는 지식 데이터베이스 https://access."
+"redhat.com/knowledge/node/129003를 참조하세요."
 
 #: src/main/java/org/candlepin/servlet/filter/CandlepinContentTypeFilter.java:63
 #, java-format
@@ -1756,32 +1753,29 @@ msgstr "업스트림 서브스크립션 관리 응용프로그램의 ID가 없�
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
-msgstr ""
-"이 서브스크립션 관리 응용프로그램은 다른 소유자에 의해 이미 가져오기 되었습니"
-"다."
+msgstr "이 서브스크립션 관리 응용프로그램은 이미 다른 소유자가 가져갔습니다."
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:89
 msgid ""
 "Owner has already imported from another subscription management application."
-msgstr ""
-"소유자가 이미 다른 서브스크립션 관리 응용프로그램에서 가져오기 되었습니다."
+msgstr "소유자가 이미 다른 서브스크립션 관리 응용프로그램에서 가져왔습니다."
 
 #: src/main/java/org/candlepin/sync/EntitlementImporter.java:88
 #: src/main/java/org/candlepin/sync/ProductImporter.java:308
 #, java-format
 msgid "Unable to find product with ID: {0}"
-msgstr "다음 ID를 갖는 제품을 찾을 수 없음: {0}"
+msgstr "ID를 갖는 제품을 찾을 수 없음: {0}"
 
 #: src/main/java/org/candlepin/sync/Importer.java:182
 msgid "Uploaded manifest file does not exist."
-msgstr "업로드된 매니페스트 파일이 존재하지 않습니다."
+msgstr "올려둔 상세목록 파일이 존재하지 않습니다."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
 #: src/main/java/org/candlepin/sync/Importer.java:241
 #, java-format
 msgid "{0} file imported successfully."
-msgstr "{0} 파일을 성공적으로 불러왔습니다."
+msgstr "{0} 파일을 성공적으로 가져왔습니다."
 
 #: src/main/java/org/candlepin/sync/Importer.java:243
 #, java-format
