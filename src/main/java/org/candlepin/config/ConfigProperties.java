@@ -308,6 +308,9 @@ public class ConfigProperties {
     /** The list of content fields which cannot be overridden, comma delimited; defaults to "baseurl" */
     public static final String CONTENT_OVERRIDE_BLOCKLIST = "candlepin.content.overrides.blocklist";
 
+    public static final String HYPERVISORS_AND_GUEST_RETRIEVAL_LIMIT
+        = "candlepin.hypervisors_and_guests.retrieval_limit";
+
     /**
      * Fetches a string representing the prefix for all per-job configuration for the specified job.
      * The job key or class name may be used, but the usage must be consistent.
@@ -562,6 +565,8 @@ public class ConfigProperties {
             this.put(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT, "32000");
 
             this.put(CONTENT_OVERRIDE_BLOCKLIST, "");
+
+            this.put(HYPERVISORS_AND_GUEST_RETRIEVAL_LIMIT, "1000");
         }
     };
 
@@ -584,6 +589,9 @@ public class ConfigProperties {
                 .min(1));
 
             this.add(new StringConfigurationValidator(DB_DRIVER_CLASS));
+
+            this.add(new IntegerConfigurationValidator(HYPERVISORS_AND_GUEST_RETRIEVAL_LIMIT)
+                .min(1));
         }
     };
 }
