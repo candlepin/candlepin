@@ -320,6 +320,8 @@ public class ConfigProperties {
     // Dictates the max amount of environments that a batch of consumers can be set to in one operation
     public static final String BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT = "candlepin.consumers" +
         ".bulk_set_consumer_env.max_environments";
+    public static final String HYPERVISORS_AND_GUEST_RETRIEVAL_LIMIT
+        = "candlepin.hypervisors_and_guests.retrieval_limit";
 
     /**
      * Fetches a string representing the prefix for all per-job configuration for the specified job.
@@ -579,6 +581,7 @@ public class ConfigProperties {
 
             this.put(BULK_SET_CONSUMER_ENV_MAX_CONSUMER_LIMIT, "1000");
             this.put(BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT, "10");
+            this.put(HYPERVISORS_AND_GUEST_RETRIEVAL_LIMIT, "1000");
         }
     };
 
@@ -610,6 +613,9 @@ public class ConfigProperties {
                 .min(1));
 
             this.add(new StringConfigurationValidator(DB_DRIVER_CLASS));
+
+            this.add(new IntegerConfigurationValidator(HYPERVISORS_AND_GUEST_RETRIEVAL_LIMIT)
+                .min(1));
         }
     };
 }

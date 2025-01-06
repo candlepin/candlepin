@@ -4081,6 +4081,57 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /hypervisors/{owner}/guests:
+    # Note that we had to use the POST verb instead of the GET verb here because we need to provide a list of
+    # consumer UUIDs in the body of the request, but OpenAPI 3.0 does not allow a body of a GET request.
+    post:
+      tags:
+        - hypervisors
+      description: |
+        Retrieves the latest hypervisor host information for the provided list of guest consumer UUIDs. If a
+        guest is mapped to multiple hypervisor host consumers, then the most recent host will be returned.
+        This endpoint accounts for case sensitivity and endianness differences in the guest virtual UUID that 
+        is returned by different hypervisors.
+      operationId: getHypervisorsAndGuests
+      parameters:
+        - name: owner
+          in: path
+          description: Owner key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: |
+          Contains the list of guest Consumer UUIDs to retrieve host information for. Any non-guest
+          Consumer UUIDs that are provided will be ignored.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      security: []
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HypervisorConsumerWithGuestDTO'
+        400:
+          description: |
+            Invalid owner key or the number of provided guest consumer UUIDs exceeds the configured limit.
+        404:
+          description: Owner with provided key was not found.
+        default:
+          $ref: '#/components/responses/default'
+
   /hypervisors/{owner}/heartbeat:
     put:
       tags:
@@ -9581,6 +9632,17 @@ components:
           uniqueItems: true
           items:
             type: string
+
+    HypervisorConsumerWithGuestDTO:
+      properties:
+        hypervisorConsumerUuid:
+          type: string
+        hypervisorConsumerName:
+          type: string
+        guestUuid:
+          type: string
+        guestId:
+          type: string
 
     ImportRecordDTO:
       description: Represents a import record details

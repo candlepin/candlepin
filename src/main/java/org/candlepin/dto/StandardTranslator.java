@@ -31,6 +31,7 @@ import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.dto.api.server.v1.GuestIdDTO;
 import org.candlepin.dto.api.server.v1.GuestIdDTOArrayElement;
 import org.candlepin.dto.api.server.v1.HypervisorConsumerDTO;
+import org.candlepin.dto.api.server.v1.HypervisorConsumerWithGuestDTO;
 import org.candlepin.dto.api.server.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.server.v1.ImportRecordDTO;
 import org.candlepin.dto.api.server.v1.ImportUpstreamConsumerDTO;
@@ -63,6 +64,7 @@ import org.candlepin.dto.api.v1.EnvironmentTranslator;
 import org.candlepin.dto.api.v1.GuestIdArrayElementTranslator;
 import org.candlepin.dto.api.v1.GuestIdTranslator;
 import org.candlepin.dto.api.v1.HypervisorConsumerTranslator;
+import org.candlepin.dto.api.v1.HypervisorConsumerWithGuestTranslator;
 import org.candlepin.dto.api.v1.HypervisorIdTranslator;
 import org.candlepin.dto.api.v1.ImportRecordTranslator;
 import org.candlepin.dto.api.v1.ImportUpstreamConsumerTranslator;
@@ -106,6 +108,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
+import org.candlepin.model.HypervisorConsumerWithGuest;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportUpstreamConsumer;
@@ -255,6 +258,8 @@ public class StandardTranslator extends SimpleModelTranslator {
             new UserTranslator(), User.class, UserDTO.class);
         this.registerTranslator(
             new UserInfoTranslator(), UserInfo.class, UserDTO.class);
+        this.registerTranslator(new HypervisorConsumerWithGuestTranslator(),
+            HypervisorConsumerWithGuest.class, HypervisorConsumerWithGuestDTO.class);
 
         // Manifest import/export translators
         /////////////////////////////////////////////
