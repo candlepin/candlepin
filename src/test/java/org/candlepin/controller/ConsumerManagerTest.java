@@ -15,20 +15,18 @@
 
 package org.candlepin.controller;
 
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCloudData;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.service.EventAdapter;
@@ -44,7 +42,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -62,7 +59,7 @@ public class ConsumerManagerTest {
     @Mock
     private ConsumerCurator consumerCurator;
     @Mock
-    private ContentAccessManager contentAccessManager;
+    private ContentAccessCertificateCurator contentAccessCertificateCurator;
     @Mock
     private EventAdapter eventAdapter;
     @Mock
@@ -193,7 +190,7 @@ public class ConsumerManagerTest {
         Set<String> actual = consumerManager.setConsumersEnvironments(owner, consumerUuids, envIdsHashSet);
 
         verify(consumerCurator, never()).merge(any(Consumer.class));
-        verify(contentAccessManager, never()).deleteContentAccessCertificates(any(Collection.class));
+        verify(contentAccessCertificateCurator, never()).deleteForConsumers(any(Collection.class));
 
         assertThat(actual)
             .isNotNull()
@@ -214,24 +211,13 @@ public class ConsumerManagerTest {
         Map<String, List<String>> consumerUuidToEnvs = new HashMap<>();
         consumerUuidToEnvs.put(consumerUuid, List.of("env-2", "env-1"));
 
-        Consumer consumer = createConsumer()
-            .setUuid(consumerUuid);
-
-        doReturn(List.of(consumer)).when(consumerCurator).findByUuids(any(Collection.class));
         doReturn(consumerUuidToEnvs).when(envCurator).findEnvironmentsOf(any(List.class));
 
         ConsumerManager consumerManager = buildConsumerManager();
         Set<String> actual = consumerManager.setConsumersEnvironments(owner, consumerUuids, envIds);
 
-        ArgumentCaptor<Consumer> consumersCaptor = ArgumentCaptor.forClass(Consumer.class);
-        verify(consumerCurator).merge(consumersCaptor.capture());
-        assertThat(consumersCaptor.getValue())
-            .isNotNull()
-            .returns(consumer.getUuid(), Consumer::getUuid)
-            .extracting(Consumer::getEnvironmentIds, as(collection(String.class)))
-            .containsExactly("env-1", "env-2");
-
-        verify(contentAccessManager).deleteContentAccessCertificates(consumerUuids);
+        verify(envCurator).setConsumersEnvironments(consumerUuids, envIds);
+        verify(contentAccessCertificateCurator).deleteForConsumers(consumerUuids);
 
         assertThat(actual)
             .isNotNull()
@@ -248,13 +234,6 @@ public class ConsumerManagerTest {
         List<String> consumerUuids = List.of(consumer1Uuid, consumer2Uuid);
         NonNullLinkedHashSet<String> envIds = new NonNullLinkedHashSet<>();
 
-        Consumer consumer1 = createConsumer()
-            .setUuid(consumer1Uuid);
-        Consumer consumer2 = createConsumer()
-            .setUuid(consumer2Uuid);
-
-        doReturn(List.of(consumer1, consumer2)).when(consumerCurator).findByUuids(any(Collection.class));
-
         ConsumerManager consumerManager = buildConsumerManager();
         Set<String> actual = consumerManager.setConsumersEnvironments(owner, consumerUuids, envIds);
 
@@ -262,12 +241,7 @@ public class ConsumerManagerTest {
             .isNotNull()
             .containsAll(consumerUuids);
 
-        ArgumentCaptor<Consumer> consumersCaptor = ArgumentCaptor.forClass(Consumer.class);
-        verify(consumerCurator, times(2)).merge(consumersCaptor.capture());
-        assertThat(consumersCaptor.getAllValues())
-            .isNotNull()
-            .hasSize(2)
-            .map(consumer -> consumer.getEnvironmentIds().equals(List.of()));
+        verify(envCurator).setConsumersEnvironments(consumerUuids, envIds);
     }
 
     @Test
@@ -285,25 +259,13 @@ public class ConsumerManagerTest {
         Map<String, List<String>> consumerUuidToEnvs = new HashMap<>();
         consumerUuidToEnvs.put(consumerUuids.get(0), List.of("env-1"));
 
-        Consumer consumer1 = createConsumer()
-            .setUuid(consumer1Uuid);
-        Consumer consumer2 = createConsumer()
-            .setUuid(consumer2Uuid);
-
-        doReturn(List.of(consumer1, consumer2)).when(consumerCurator).findByUuids(any(Collection.class));
         doReturn(consumerUuidToEnvs).when(envCurator).findEnvironmentsOf(any(List.class));
 
         ConsumerManager consumerManager = buildConsumerManager();
         Set<String> actual = consumerManager.setConsumersEnvironments(owner, consumerUuids, envIds);
 
-        ArgumentCaptor<Consumer> consumersCaptor = ArgumentCaptor.forClass(Consumer.class);
-        verify(consumerCurator, times(2)).merge(consumersCaptor.capture());
-        assertThat(consumersCaptor.getAllValues())
-            .isNotNull()
-            .hasSize(2)
-            .map(consumer -> consumer.getEnvironmentIds().equals(List.of("env-1", "env-2")));
-
-        verify(contentAccessManager).deleteContentAccessCertificates(consumerUuids);
+        verify(envCurator).setConsumersEnvironments(consumerUuids, envIds);
+        verify(contentAccessCertificateCurator).deleteForConsumers(consumerUuids);
 
         assertThat(actual)
             .isNotNull()
@@ -311,7 +273,7 @@ public class ConsumerManagerTest {
     }
 
     private ConsumerManager buildConsumerManager() {
-        return new ConsumerManager(consumerCurator, contentAccessManager, envCurator, eventAdapter,
+        return new ConsumerManager(consumerCurator, contentAccessCertificateCurator, envCurator, eventAdapter,
             objectMapper);
     }
 

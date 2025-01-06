@@ -26,10 +26,10 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.controller.ConsumerManager;
-import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCloudData;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.resteasy.AnnotationLocator;
@@ -70,7 +70,7 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
     @Mock
     private EventAdapter mockEventAdapter;
     @Mock
-    private ContentAccessManager caManager;
+    private ContentAccessCertificateCurator caCertificateCurator;
     @Mock
     private EnvironmentCurator envCurator;
 
@@ -104,8 +104,8 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
         methodLocator.init();
         AnnotationLocator annotationLocator = new AnnotationLocator(methodLocator);
 
-        ConsumerManager consumerManager = new ConsumerManager(
-            consumerCurator, caManager, envCurator, mockEventAdapter, ObjectMapperFactory.getObjectMapper());
+        ConsumerManager consumerManager = new ConsumerManager(consumerCurator, caCertificateCurator,
+            envCurator, mockEventAdapter, ObjectMapperFactory.getObjectMapper());
         interceptor = new ConsumerCheckInFilter(annotationLocator, consumerManager);
     }
 
