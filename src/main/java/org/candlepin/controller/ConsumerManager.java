@@ -18,6 +18,7 @@ package org.candlepin.controller;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCloudData;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
@@ -50,19 +51,19 @@ public class ConsumerManager {
     private static final Logger log = LoggerFactory.getLogger(ConsumerManager.class);
 
     private final ConsumerCurator consumerCurator;
-    private final ContentAccessManager caManager;
+    private final ContentAccessCertificateCurator caCertificateCurator;
     private final EnvironmentCurator envCurator;
     private final EventAdapter eventAdapter;
     private final ObjectMapper objectMapper;
 
     @Inject
     public ConsumerManager(ConsumerCurator consumerCurator,
-        ContentAccessManager caManager,
+        ContentAccessCertificateCurator caCertificateCurator,
         EnvironmentCurator envCurator,
         EventAdapter eventAdapter,
         ObjectMapper objectMapper) {
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
-        this.caManager = Objects.requireNonNull(caManager);
+        this.caCertificateCurator = Objects.requireNonNull(caCertificateCurator);
         this.envCurator = Objects.requireNonNull(envCurator);
         this.eventAdapter = Objects.requireNonNull(eventAdapter);
         this.objectMapper = Objects.requireNonNull(objectMapper);
@@ -113,7 +114,7 @@ public class ConsumerManager {
      * @return
      *  the UUIDs of the {@link Consumer}s that were updated and had their environments set
      */
-    public Set<String> setConsumersEnvironments(Owner owner, List<String> consumerUuids,
+    public Set<String> setConsumersEnvironments(Owner owner, Collection<String> consumerUuids,
         NonNullLinkedHashSet<String> targetEnvIds) {
 
         if (owner == null) {
@@ -130,13 +131,8 @@ public class ConsumerManager {
         // If there are no target environments, then all the consumers should be removed from all of their
         // current environments.
         if (targetEnvIds.isEmpty()) {
-            Collection<Consumer> consumers = consumerCurator.findByUuids(consumerUuids);
-            consumers.forEach(consumer -> {
-                consumer.setEnvironmentIds(targetEnvIds);
-                consumerCurator.merge(consumer);
-            });
-
-            log.info("{} consumers have been removed from all environments", consumers.size());
+            int updated = envCurator.setConsumersEnvironments(consumerUuids, targetEnvIds);
+            log.info("{} consumers removed from all environments", updated);
 
             return new HashSet<>(consumerUuids);
         }
@@ -157,15 +153,11 @@ public class ConsumerManager {
             return new HashSet<>();
         }
 
-        Collection<Consumer> consumers = consumerCurator.findByUuids(consumersToUpdate);
-        consumers.forEach(consumer -> {
-            consumer.setEnvironmentIds(targetEnvIds);
-            consumerCurator.merge(consumer);
-        });
+        int updated = envCurator.setConsumersEnvironments(consumerUuids, targetEnvIds);
+        log.info("{} consumers have been set to the target environments", updated);
 
-        log.info("{} consumers have been set to the target environments", consumers.size());
-
-        caManager.deleteContentAccessCertificates(consumerUuids);
+        int deletedCerts = caCertificateCurator.deleteForConsumers(consumerUuids);
+        log.info("{} content access certs unlinked and removed", deletedCerts);
 
         return consumersToUpdate;
     }

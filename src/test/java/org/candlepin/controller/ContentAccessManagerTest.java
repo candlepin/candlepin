@@ -65,8 +65,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -79,7 +77,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.KeyPair;
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -707,33 +704,4 @@ public class ContentAccessManagerTest {
 
         assertThrows(IllegalArgumentException.class, () -> manager.syncOwnerLastContentUpdate(null));
     }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @NullAndEmptySource
-    public void testDeleteContentAccessCertificatesWithNullOrEmptyConsumerUuids(List<String> consumerUuids) {
-        ContentAccessManager manager = this.createManager();
-
-        int actual = manager.deleteContentAccessCertificates(consumerUuids);
-
-        assertEquals(0, actual);
-    }
-
-    @Test
-    public void testDeleteContentAccessCertificates() {
-        ContentAccessManager manager = this.createManager();
-
-        List<String> consumerUuids = List.of("uuid-1", "uuid-2");
-
-        List<String> caIds = List.of("id-1", "id-2");
-        doReturn(caIds).when(mockContentAccessCertCurator).getIdsForConsumers(consumerUuids);
-        doReturn(caIds.size()).when(mockConsumerCurator).unlinkCaCertificates(caIds);
-        doReturn(caIds.size()).when(mockContentAccessCertCurator).deleteByIds(caIds);
-
-        int actual = manager.deleteContentAccessCertificates(consumerUuids);
-
-        assertEquals(2, actual);
-        verify(mockConsumerCurator).unlinkCaCertificates(caIds);
-        verify(mockContentAccessCertCurator).deleteByIds(caIds);
-    }
-
 }

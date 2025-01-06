@@ -298,55 +298,60 @@ public class ContentAccessCertificateCuratorTest extends DatabaseTestFixture {
 
     @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
     @NullAndEmptySource
-    public void testGetIdsForConsumersWithNullOrEmptyConsumerUuids(List<String> consumerUuids) {
-        List<String> actual = caCertCurator.getIdsForConsumers(consumerUuids);
+    public void testDeleteForConsumersWithNullOrEmptyConsumerUuids(List<String> consumerUuids) {
+        int actual = caCertCurator.deleteForConsumers(consumerUuids);
 
-        assertThat(actual)
-            .isNotNull()
-            .isEmpty();
+        assertEquals(0, actual);
     }
 
     @Test
-    public void testGetIdsForConsumers() {
-        Owner owner1 = createOwner();
-        Owner owner2 = createOwner();
-        Owner owner3 = createOwner();
+    public void testDeleteForConsumers() {
+        Owner owner = createOwner();
 
-        Consumer consumer1 = createConsumer(owner1);
-        Consumer consumer2 = createConsumer(owner1);
-        Consumer consumer3 = createConsumer(owner2);
-        Consumer consumer4 = createConsumer(owner3);
+        Consumer consumer1 = createConsumer(owner);
+        Consumer consumer2 = createConsumer(owner);
 
-        SCACertificate cert1 = createSCACertAndSerial(consumer1);
-        SCACertificate cert2 = createSCACertAndSerial(consumer2);
-        SCACertificate cert3 = createSCACertAndSerial(consumer3);
-        SCACertificate cert4 = createSCACertAndSerial(consumer4);
+        CertificateSerial serial1 = new CertificateSerial();
+        serial1.setExpiration(TestUtil.createDateOffset(0, 0, 7));
+        certSerialCurator.save(serial1);
+
+        CertificateSerial serial2 = new CertificateSerial();
+        serial2.setExpiration(TestUtil.createDateOffset(0, 0, 7));
+        certSerialCurator.save(serial2);
+
+        SCACertificate cert1 = new SCACertificate();
+        cert1.setConsumer(consumer1);
+        cert1.setKey(TestUtil.randomString());
+        cert1.setCert(TestUtil.randomString());
+        cert1.setSerial(serial1);
+
+        SCACertificate cert2 = new SCACertificate();
+        cert2.setConsumer(consumer2);
+        cert2.setKey(TestUtil.randomString());
+        cert2.setCert(TestUtil.randomString());
+        cert2.setSerial(serial2);
+
+        cert1 = caCertCurator.create(cert1);
+        cert2 = caCertCurator.create(cert2);
 
         consumer1.setContentAccessCert(cert1);
         consumer2.setContentAccessCert(cert2);
-        consumer3.setContentAccessCert(cert3);
-        consumer4.setContentAccessCert(cert4);
 
-        List<String> actual = caCertCurator
-            .getIdsForConsumers(List.of(consumer1.getUuid(), consumer3.getUuid()));
+        int actual = caCertCurator.deleteForConsumers(List.of(consumer1.getUuid(), consumer2.getUuid()));
 
-        assertThat(actual)
+        assertEquals(2, actual);
+        assertThat(getSCACertificatesFromDB())
+            .isEmpty();
+
+        caCertCurator.flush();
+        caCertCurator.clear();
+
+        List<CertificateSerial> serials = getCertificateSerialsFromDB();
+        assertThat(serials)
             .isNotNull()
-            .containsExactlyInAnyOrder(cert1.getId(), cert3.getId());
-    }
-
-    private SCACertificate createSCACertAndSerial(Consumer consumer) {
-        CertificateSerial serial = new CertificateSerial();
-        serial.setExpiration(TestUtil.createDateOffset(0, 0, 7));
-        certSerialCurator.save(serial);
-
-        SCACertificate cert = new SCACertificate();
-        cert.setConsumer(consumer);
-        cert.setKey(TestUtil.randomString());
-        cert.setCert(TestUtil.randomString());
-        cert.setSerial(serial);
-
-        return caCertCurator.create(cert);
+            .hasSize(2)
+            .extracting(CertificateSerial::isRevoked)
+            .containsOnly(true);
     }
 
     private List<SCACertificate> getSCACertificatesFromDB() {
@@ -354,6 +359,14 @@ public class ContentAccessCertificateCuratorTest extends DatabaseTestFixture {
 
         return getEntityManager()
             .createQuery(query, SCACertificate.class)
+            .getResultList();
+    }
+
+    private List<CertificateSerial> getCertificateSerialsFromDB() {
+        String query = "SELECT c FROM CertificateSerial c";
+
+        return getEntityManager()
+            .createQuery(query, CertificateSerial.class)
             .getResultList();
     }
 }

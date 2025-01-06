@@ -219,27 +219,34 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<SC
     }
 
     /**
-     * Retrieves all of the content access certificate IDs for all of the provided {@link Consumer}s.
+     * Deletes the content access certificates for the provided consumers and also revokes the certificate
+     * serials.
      *
      * @param consumerUuids
-     *  the UUIDs of the consumers to retrieve the certificate IDs for
+     *  the UUIDs of {@link Consumer}s to delete content access certificates for
      *
-     * @return the content access certificate IDs for all of the provided consumers
+     * @return the number of content access certificates that were deleted
      */
-    public List<String> getIdsForConsumers(Collection<String> consumerUuids) {
+    public int deleteForConsumers(Collection<String> consumerUuids) {
         if (consumerUuids == null || consumerUuids.isEmpty()) {
-            return new ArrayList<>();
+            return 0;
         }
 
-        String jpql = "SELECT c.contentAccessCert.id FROM Consumer c WHERE c.uuid IN (:uuids)";
-        Query query = this.getEntityManager().createQuery(jpql, String.class);
+        String hql = """
+            SELECT cac.id, s.id
+            FROM Consumer c
+                JOIN c.contentAccessCert cac
+                JOIN cac.serial s
+            WHERE c.uuid IN (:uuids)
+            """;
 
-        List<String> uuids = new ArrayList<>(consumerUuids.size());
-        for (Collection<String> uuidBlock : this.partition(consumerUuids)) {
-            uuids.addAll(query.setParameter("uuids", uuidBlock).getResultList());
-        }
+        Query query = this.getEntityManager()
+            .createQuery(hql);
 
-        return uuids;
+        List<Object[]> rows = query
+            .setParameter("uuids", consumerUuids)
+            .getResultList();
+
+        return deleteCerts(rows);
     }
-
 }
