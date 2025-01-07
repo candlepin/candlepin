@@ -199,6 +199,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private PoolManager mockPoolManager;
     private JobManager mockJobManager;
 
+    private PoolService mockPoolService;
+
     private OwnerServiceAdapter ownerServiceAdapter;
     private ServiceLevelValidator serviceLevelValidator;
     private ConsumerTypeValidator consumerTypeValidator;
@@ -248,6 +250,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.mockJobManager = mock(JobManager.class);
         this.principalProvider = mock(PrincipalProvider.class);
         this.pagingUtilFactory = mock(PagingUtilFactory.class);
+
+        this.mockPoolService = mock(PoolService.class);
 
         this.ownerServiceAdapter = new DefaultOwnerServiceAdapter();
         this.serviceLevelValidator = new ServiceLevelValidator(this.i18n, this.mockPoolManager,
@@ -2547,5 +2551,31 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     void refreshPoolsBadOwner() {
         assertThrows(NotFoundException.class,
             () -> ownerResource.refreshPools("This_key_does_not_exist", false));
+    }
+
+    @Test
+    public void testCreateActivationKeyWithPoolsFailsInSCAMode() {
+        Owner owner = new Owner()
+            .setId("test_id")
+            .setKey("test-org")
+            .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+
+        Pool pool = new Pool();
+        pool.setId("test-pool");
+
+        doReturn(owner).when(this.mockOwnerCurator).getByKey(owner.getKey());
+        doReturn(pool).when(this.mockPoolService).get(pool.getId());
+
+        OwnerResource resource = this.buildOwnerResource();
+
+        ActivationKey key = new ActivationKey("test-key", owner);
+        key.addPool(pool, 1L);
+
+        ActivationKeyDTO input = this.modelTranslator.translate(key, ActivationKeyDTO.class);
+
+        BadRequestException exception = assertThrows(BadRequestException.class,
+            () -> resource.createActivationKey(owner.getKey(), input));
+
+        assertTrue(exception.getMessage().contains("simple content access"));
     }
 }
