@@ -15,7 +15,7 @@ test-logger = "4.0.0"
 [plugins]
 dependency-check = { id = "org.owasp.dependencycheck", version = "11.1.1" }
 gradle-versions = { id = "com.github.ben-manes.versions", version = "0.51.0" }
-nebula-lint = { id = "nebula.lint", version = "20.3.1" }
+nebula-lint = { id = "nebula.lint", version = "20.5.1" }
 openapi-generator = { id = "org.openapi.generator", version.ref = "openapi-generator" }
 sonarqube = { id = "org.sonarqube", version = "6.0.1.5171" }
 test-logger = { id = "com.adarshr.test-logger", version.ref = "test-logger" }
