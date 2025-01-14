@@ -21,6 +21,7 @@ import org.candlepin.dto.manifest.v1.CertificateDTO;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
+import org.candlepin.model.Certificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -32,7 +33,6 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.SCACertificate;
 import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.pki.impl.Signer;
 import org.candlepin.policy.js.export.ExportRules;
@@ -397,7 +397,7 @@ public class Exporter {
      */
     private void exportContentAccessCerts(File baseDir, Consumer consumer,
         Set<Long> serials) throws IOException {
-        SCACertificate contentAccessCert = this.scaCertificateGenerator.generate(consumer);
+        Certificate contentAccessCert = this.scaCertificateGenerator.generate(consumer);
 
         if (contentAccessCert != null &&
             (serials == null || contentAccessCert.getSerial() == null ||

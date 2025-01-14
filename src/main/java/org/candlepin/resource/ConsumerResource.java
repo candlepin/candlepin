@@ -96,6 +96,7 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ContentAccessPayload;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
@@ -2376,28 +2377,33 @@ public class ConsumerResource implements ConsumerApi {
             since = Util.parseOffsetDateTime(formatter, sinceDate);
         }
 
+        // Fetch the SCA certificate components
+        SCACertificate scaContainer = this.scaCertificateGenerator.getSCAX509Certificate(consumer);
+        ContentAccessPayload scaPayload = this.scaCertificateGenerator.getSCAContentPayload(consumer);
+
+        if (scaContainer == null || scaPayload == null) {
+            throw new BadRequestException(i18n.tr("Cannot retrieve content access payload for consumer: {}",
+                consumer));
+        }
+
+        // Determine the most recent update time of the components
+        Date containerUpdated = Util.firstOf(scaContainer.getUpdated(), new Date());
+        Date payloadUpdated = scaPayload.getTimestamp();
+        Date lastUpdated = containerUpdated.after(payloadUpdated) ? containerUpdated : payloadUpdated;
+
+        // Check if either component has updated since the target date
         Date date = since != null ? Util.toDate(since) : new Date(0);
-        if (!this.contentAccessManager.hasCertChangedSince(consumer, date)) {
+        if (date.after(lastUpdated)) {
             return Response.status(Response.Status.NOT_MODIFIED)
                 .entity("Not modified since date supplied.")
                 .build();
         }
 
-        SCACertificate cac = this.scaCertificateGenerator.generate(consumer);
-        if (cac == null) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"));
-        }
-
-        String cert = cac.getCert();
-        String certificate = cert.substring(0, cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
-        String json = cert.substring(cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
-        List<String> pieces = new ArrayList<>();
-        pieces.add(certificate);
-        pieces.add(json);
+        List<String> pieces = List.of(scaContainer.getCert(), scaPayload.getPayload());
 
         ContentAccessListing result = new ContentAccessListing()
-            .setContentListing(cac.getSerial().getId(), pieces)
-            .setLastUpdate(cac.getUpdated());
+            .setContentListing(scaContainer.getSerial().getId(), pieces)
+            .setLastUpdate(lastUpdated);
 
         return Response.ok(result, MediaType.APPLICATION_JSON)
             .build();
@@ -2483,9 +2489,9 @@ public class ConsumerResource implements ConsumerApi {
         }
 
         // add content access cert if needed
-        SCACertificate cac = this.scaCertificateGenerator.generate(consumer);
-        if (cac != null) {
-            allCerts.add(new CertificateSerialDTO().serial(cac.getSerial().getId()));
+        Certificate contentAccessCert = this.scaCertificateGenerator.getSCAX509Certificate(consumer);
+        if (contentAccessCert != null) {
+            allCerts.add(new CertificateSerialDTO().serial(contentAccessCert.getSerial().getId()));
         }
 
         return allCerts;

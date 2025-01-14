@@ -562,10 +562,10 @@ public class Owner extends AbstractHibernateObject<Owner>
      * Sets the date of the last content update for this organization.
      *
      * @param date
-     *     The date to use for the last content update for this organization
+     *  The date to use for the last content update for this organization
      *
      * @throws IllegalArgumentException
-     *     if date is null
+     *  if date is null
      *
      * @return a reference to this Owner
      */

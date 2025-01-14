@@ -23,6 +23,7 @@ package org.candlepin.model;
  */
 public enum CloudProfileFacts {
 
+    ARCHITECTURE(Consumer.Facts.ARCHITECTURE),
     CPU_CORES_PER_SOCKET(Consumer.Facts.CPU_CORES_PER_SOCKET),
     CPU_SOCKETS(Consumer.Facts.CPU_SOCKETS),
     DMI_BIOS_VENDOR(Consumer.Facts.DMI_BIOS_VENDOR),
@@ -32,7 +33,6 @@ public enum CloudProfileFacts {
     DMI_SYSTEM_UUID(Consumer.Facts.DMI_SYSTEM_UUID),
     MEMORY_MEMTOTAL(Consumer.Facts.MEMORY_MEMTOTAL),
     OCM_UNITS(Consumer.Facts.OCM_UNITS),
-    UNAME_MACHINE(Consumer.Facts.UNAME_MACHINE),
     VIRT_IS_GUEST(Consumer.Facts.VIRT_IS_GUEST);
 
     private final String fact;

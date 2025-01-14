@@ -93,6 +93,9 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
      * Commonly used/recognized consumer facts
      */
     public static final class Facts {
+        /** Used for cert generation and content filtering */
+        public static final String ARCHITECTURE = "uname.machine";
+
         /** Used by the rules.js */
         public static final String BAND_STORAGE_USAGE = "band.storage.usage";
 
@@ -111,11 +114,12 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
         /** The amount of memory on a given consumer; also part of the cloud profile and rules.js */
         public static final String MEMORY_MEMTOTAL = "memory.memtotal";
 
+        /** Unordered, comma-delimited architectures supported by the consumer; used for cert generation and
+         * content filtering */
+        public static final String SUPPORTED_ARCHITECTURES = "supported_architectures";
+
         /** The version of the Candlepin certificate system to use for this consumer */
         public static final String SYSTEM_CERTIFICATE_VERSION = "system.certificate_version";
-
-        /** Used by the rules.js */
-        public static final String UNAME_MACHINE = "uname.machine";
 
         /** Whether or not the consumer is a virtual/guest system; also part of the cloud profile */
         public static final String VIRT_IS_GUEST = "virt.is_guest";
