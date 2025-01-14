@@ -14,7 +14,6 @@
  */
 package org.candlepin.util;
 
-import static org.candlepin.util.X509Util.ARCH_FACT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -97,7 +96,7 @@ public class X509V3ExtensionUtilTest {
         addContent(product, expectedArch);
         Consumer consumer = new Consumer();
         consumer.setOwner(owner);
-        consumer.setFact(ARCH_FACT, expectedArch);
+        consumer.setFact(Consumer.Facts.ARCHITECTURE, expectedArch);
 
         Set<ProductContent> filteredContent = util.filterContentByContentArch(
             new HashSet<>(product.getProductContent()), consumer, product);
@@ -123,7 +122,7 @@ public class X509V3ExtensionUtilTest {
         addContent(product);
         Consumer consumer = new Consumer();
         consumer.setOwner(owner);
-        consumer.setFact(ARCH_FACT, expectedArch);
+        consumer.setFact(Consumer.Facts.ARCHITECTURE, expectedArch);
 
         Set<ProductContent> filteredContent = util.filterContentByContentArch(
             new HashSet<>(product.getProductContent()), consumer, product);
@@ -142,7 +141,7 @@ public class X509V3ExtensionUtilTest {
         addContent(product); // add a content without arches specified
         Consumer consumer = new Consumer();
         consumer.setOwner(owner);
-        consumer.setFact(ARCH_FACT, expectedArch);
+        consumer.setFact(Consumer.Facts.ARCHITECTURE, expectedArch);
 
         Set<ProductContent> filteredContent = util.filterContentByContentArch(
             new HashSet<>(product.getProductContent()), consumer, product);

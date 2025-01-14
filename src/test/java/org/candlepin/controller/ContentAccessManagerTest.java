@@ -46,6 +46,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -96,6 +97,8 @@ public class ContentAccessManagerTest {
     private ConsumerTypeCurator mockConsumerTypeCurator;
     @Mock
     private ContentAccessCertificateCurator mockContentAccessCertCurator;
+    @Mock
+    private EnvironmentCurator mockEnvironmentCurator;
     @Mock
     private OwnerCurator mockOwnerCurator;
     @Mock
@@ -172,7 +175,8 @@ public class ContentAccessManagerTest {
 
     private ContentAccessManager createManager() {
         return new ContentAccessManager(this.mockContentAccessCertCurator, this.mockOwnerCurator,
-            this.mockConsumerCurator, this.mockEventSink, this.jobManager, this.i18n);
+            this.mockConsumerCurator, this.mockEnvironmentCurator, this.mockEventSink, this.jobManager,
+            this.i18n);
     }
 
     private Owner mockOwner() {

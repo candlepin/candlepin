@@ -2383,12 +2383,14 @@ public class ConsumerResource implements ConsumerApi {
                 .build();
         }
 
-        SCACertificate cac = this.scaCertificateGenerator.generate(consumer);
-        if (cac == null) {
+        Certificate contentAccessCert = this.scaCertificateGenerator.generate(consumer);
+        if (contentAccessCert == null) {
             throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"));
         }
 
-        String cert = cac.getCert();
+        // TODO: FIXME: Instead of string concatenation and parsing, why don't we just fetch the bloody
+        // cert directly and use the data we've already opted to store separately!?
+        String cert = contentAccessCert.getCert();
         String certificate = cert.substring(0, cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
         String json = cert.substring(cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
         List<String> pieces = new ArrayList<>();
@@ -2396,8 +2398,8 @@ public class ConsumerResource implements ConsumerApi {
         pieces.add(json);
 
         ContentAccessListing result = new ContentAccessListing()
-            .setContentListing(cac.getSerial().getId(), pieces)
-            .setLastUpdate(cac.getUpdated());
+            .setContentListing(contentAccessCert.getSerial().getId(), pieces)
+            .setLastUpdate(contentAccessCert.getUpdated());
 
         return Response.ok(result, MediaType.APPLICATION_JSON)
             .build();
@@ -2483,9 +2485,9 @@ public class ConsumerResource implements ConsumerApi {
         }
 
         // add content access cert if needed
-        SCACertificate cac = this.scaCertificateGenerator.generate(consumer);
-        if (cac != null) {
-            allCerts.add(new CertificateSerialDTO().serial(cac.getSerial().getId()));
+        Certificate contentAccessCert = this.scaCertificateGenerator.generate(consumer);
+        if (contentAccessCert != null) {
+            allCerts.add(new CertificateSerialDTO().serial(contentAccessCert.getSerial().getId()));
         }
 
         return allCerts;

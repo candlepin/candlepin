@@ -261,6 +261,10 @@ public class EnvironmentResource implements EnvironmentApi {
 
         if (contentPrefix != null) {
             environment.setContentPrefix(!contentPrefix.isBlank() ? contentPrefix : null);
+
+            // Since the content prefix is changing, we need to reroll the SCA content payloads for this
+            // env so they get the right paths
+            environment.setLastContentUpdate(new Date());
         }
 
         environment = this.envCurator.merge(environment);
@@ -399,7 +403,6 @@ public class EnvironmentResource implements EnvironmentApi {
         Set<String> contentIds;
         try {
             contentIds = this.batchCreate(contentToPromote, environment);
-            this.contentAccessManager.syncOwnerLastContentUpdate(environment.getOwner());
         }
         catch (PersistenceException pe) {
             if (rdbmsExceptionTranslator.isConstraintViolationDuplicateEntry(pe)) {
@@ -440,7 +443,6 @@ public class EnvironmentResource implements EnvironmentApi {
 
         try {
             this.envContentCurator.bulkDelete(demotedContent.values());
-            this.contentAccessManager.syncOwnerLastContentUpdate(environment.getOwner());
         }
         catch (RollbackException hibernateException) {
             if (rdbmsExceptionTranslator.isUpdateHadNoEffectException(hibernateException)) {
@@ -453,6 +455,10 @@ public class EnvironmentResource implements EnvironmentApi {
                 throw hibernateException;
             }
         }
+
+        // Set the environment's last content update time so we can regenerate SCA content payloads for
+        // consumers of this environment
+        environment.setLastContentUpdate(new Date());
 
         // Impl note: Unfortunately, we have to make an additional set here, as the keySet isn't
         // serializable. Attempting to use it causes exceptions.
@@ -692,6 +698,10 @@ public class EnvironmentResource implements EnvironmentApi {
         for (EnvironmentContent envcontent : resolved.values()) {
             env.addEnvironmentContent(envcontent);
         }
+
+        // Set the environment's last content update time so we can regenerate SCA content payloads for
+        // consumers of this environment
+        env.setLastContentUpdate(new Date());
 
         this.envCurator.merge(env);
 

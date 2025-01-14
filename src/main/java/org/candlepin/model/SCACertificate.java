@@ -44,7 +44,7 @@ public class SCACertificate extends RevocableCertificate<SCACertificate> {
     @OneToOne(mappedBy = "contentAccessCert", fetch = FetchType.LAZY)
     private Consumer consumer;
 
-    @Column
+    // @Column
     private String content;
 
     @Override
