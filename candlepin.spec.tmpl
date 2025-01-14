@@ -45,11 +45,7 @@ BuildRequires: selinux-policy-doc
 Requires: java-17 >= 1:17.0.0
 Requires: wget
 # TODO: remove the version restriction on Tomcat once CP supports the Java EE namespace changes
-%if 0%{?fedora} || 0%{?rhel} >= 9
 Requires: tomcat < 1:10.0.0
-%else
-Requires: pki-servlet-engine
-%endif
 Requires: jss
 Requires: javapackages-tools
 
