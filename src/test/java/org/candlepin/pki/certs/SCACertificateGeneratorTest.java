@@ -35,6 +35,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.ContentAccessPayloadCurator;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
@@ -86,6 +87,8 @@ class SCACertificateGeneratorTest {
     @Mock
     private ContentAccessCertificateCurator contentAccessCertificateCurator;
     @Mock
+    private ContentAccessPayloadCurator contentAccessPayloadCurator;
+    @Mock
     private ConsumerCurator consumerCurator;
     @Mock
     private EnvironmentCurator environmentCurator;
@@ -123,6 +126,7 @@ class SCACertificateGeneratorTest {
             this.v3CapabilityCheck,
             new EntitlementPayloadGenerator(new ObjectMapper()),
             this.contentAccessCertificateCurator,
+            this.contentAccessPayloadCurator,
             this.serialCurator,
             this.contentCurator,
             this.consumerCurator,

@@ -15,8 +15,10 @@
 package org.candlepin.model;
 
 import org.candlepin.util.SetView;
+import org.candlepin.util.Util;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -90,12 +92,16 @@ public class Environment extends AbstractHibernateObject<Environment> implements
     @Size(max = CONTENT_PREFIX_MAX_LENGTH)
     private String contentPrefix;
 
+    // TODO: Convert all of these to instants
+    @Column(name = "last_content_update", nullable = false)
+    private Date lastContentUpdate;
+
     @OneToMany(mappedBy = "environment", targetEntity = EnvironmentContent.class,
         cascade = CascadeType.ALL)
     private Set<EnvironmentContent> environmentContent = new HashSet<>();
 
     public Environment() {
-        // Intentionally left empty
+        this.lastContentUpdate = new Date();
     }
 
     public Environment(String id, String name, Owner owner) {
@@ -238,6 +244,21 @@ public class Environment extends AbstractHibernateObject<Environment> implements
 
     public Environment setContentPrefix(String contentPrefix) {
         this.contentPrefix = contentPrefix;
+        return this;
+    }
+
+    public Date getLastContentUpdate() {
+        // If we don't have a content update date yet, return this environments's creation date. Never
+        // actually return null.
+        return Util.firstOf(this.lastContentUpdate, this.getCreated(), new Date());
+    }
+
+    public Environment setLastContentUpdate(Date update) {
+        if (update == null) {
+            throw new IllegalArgumentException("update is null");
+        }
+
+        this.lastContentUpdate = update;
         return this;
     }
 

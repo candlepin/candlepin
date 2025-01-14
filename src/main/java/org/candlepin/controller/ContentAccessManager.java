@@ -22,6 +22,8 @@ import org.candlepin.exceptions.IseException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.SCACertificate;
@@ -36,7 +38,9 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -51,6 +55,7 @@ public class ContentAccessManager {
     private final OwnerCurator ownerCurator;
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
     private final ConsumerCurator consumerCurator;
+    private final EnvironmentCurator environmentCurator;
     private final EventSink eventSink;
     private final JobManager jobManager;
     private final I18n i18n;
@@ -60,6 +65,7 @@ public class ContentAccessManager {
         ContentAccessCertificateCurator contentAccessCertificateCurator,
         OwnerCurator ownerCurator,
         ConsumerCurator consumerCurator,
+        EnvironmentCurator environmentCurator,
         EventSink eventSink,
         JobManager jobManager,
         I18n i18n) {
@@ -67,6 +73,7 @@ public class ContentAccessManager {
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.environmentCurator = Objects.requireNonNull(environmentCurator);
         this.eventSink = Objects.requireNonNull(eventSink);
         this.jobManager = Objects.requireNonNull(jobManager);
         this.i18n = Objects.requireNonNull(i18n);
@@ -81,6 +88,8 @@ public class ContentAccessManager {
         return String.join(",", ContentAccessMode.ENTITLEMENT.toDatabaseValue(),
             ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
     }
+
+
 
     /**
      * Checks if the content view for the given consumer has changed since date provided. This will
@@ -118,40 +127,18 @@ public class ContentAccessManager {
         }
 
         Owner owner = consumer.getOwner();
-
-        // Impl note:
-        // This method is kinda... sketch, and prone to erroneous results. Since the cert, cert
-        // serial, and payload  have different created/updated timestamps, they can be updated
-        // individually. Depending on which date is used as input, this may or may not trigger an
-        // update when an update is not strictly necessary.
-        // We try to minimize this by providing the "best" creation/update date above, but that still
-        // doesn't prevent this method from being called with a datetime that lies between the
-        // persistence of the cert and the payload, triggering a false positive.
-        // When time permits to refactor all of this logic, we should examine everything surrounding
-        // this design and determine whether or not we need two separate objects, or if this question
-        // has any real value.
-
-        if (owner.isUsingSimpleContentAccess()) {
-            // Check if the owner's content view has changed since the date
-            if (!date.after(owner.getLastContentUpdate())) {
-                return true;
-            }
-
-            // Check cert properties
-            SCACertificate cert = consumer.getContentAccessCert();
-            if (cert == null) {
-                return true;
-            }
-
-            // The date provided by the client does not preserve milliseconds, so we need to round down
-            // the dates preserved on the server by removing milliseconds for a proper date comparison
-            Date certUpdatedDate = Util.roundDownToSeconds(cert.getUpdated());
-            Date certExpirationDate = Util.roundDownToSeconds(cert.getSerial().getExpiration());
-            return date.before(certUpdatedDate) ||
-                date.after(certExpirationDate);
+        if (!owner.isUsingSimpleContentAccess()) {
+            return false;
         }
 
-        return false;
+        List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
+
+        Stream<Date> ownerContentUpdate = Stream.of(owner.getLastContentUpdate());
+        Stream<Date> envContentUpdates = environments.stream()
+            .map(Environment::getLastContentUpdate);
+
+        return Stream.concat(ownerContentUpdate, envContentUpdates)
+            .anyMatch(contentUpdate -> contentUpdate.after(date));
     }
 
     @Transactional

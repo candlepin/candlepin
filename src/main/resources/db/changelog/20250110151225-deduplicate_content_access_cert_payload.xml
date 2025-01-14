@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20250110151225-1" author="crog">
+        <createTable tableName="cp_content_access_payload">
+            <!--
+                This SHOULD be unnecessary, but Hibernate/JPA exists to cause everyone pain and this is path
+                of least resistance to make that awful library happy. :/
+            -->
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- column size is overkill, but safe -->
+            <column name="payload_key" type="VARCHAR(256)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="timestamp" type="${timestamp.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payload" type="LONGTEXT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint tableName="cp_content_access_payload" constraintName="cp_content_access_payload_unq1"
+            columnNames="owner_id, payload_key"/>
+
+        <addForeignKeyConstraint baseTableName="cp_content_access_payload"
+            baseColumnNames="owner_id"
+            referencedTableName="cp_owner"
+            referencedColumnNames="id"
+            onDelete="CASCADE"
+            constraintName="cp_content_access_payload_fk1"/>
+    </changeSet>
+
+    <changeSet id="20250110151225-2" author="crog">
+        <createIndex indexName="cp_content_access_payload_idx1" tableName="cp_content_access_payload">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20250110151225-3" author="crog">
+        <addColumn tableName="cp_environment">
+            <column name="last_content_update" type="${timestamp.type}" value="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+
+</databaseChangeLog>

@@ -723,7 +723,7 @@ public class EntitlementCertificateGeneratorTest {
     @Test
     public void testPrepareV1ExtensionsNoCompatibleArch() {
         Consumer consumer = createConsumer(owner);
-        consumer.setFact(Consumer.Facts.UNAME_MACHINE, "x86_64");
+        consumer.setFact(Consumer.Facts.ARCHITECTURE, "x86_64");
         String wrongArches = "s390x,s390,ppc64,ia64";
         Content wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, wrongArches);
@@ -874,7 +874,7 @@ public class EntitlementCertificateGeneratorTest {
         owner.setContentPrefix("");
         Consumer consumer = createConsumer(owner);
         consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, "3.4");
-        consumer.setFact(Consumer.Facts.UNAME_MACHINE, "x86_64");
+        consumer.setFact(Consumer.Facts.ARCHITECTURE, "x86_64");
         Product product = createProduct();
         Content wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE, CONTENT_VENDOR, "/single", CONTENT_GPG_URL, "s390");
