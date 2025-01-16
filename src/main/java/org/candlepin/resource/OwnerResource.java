@@ -34,6 +34,7 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.auth.Verify;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.controller.ConsumerManager;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.ManifestManager;
@@ -56,6 +57,7 @@ import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.dto.api.server.v1.OwnerInfo;
 import org.candlepin.dto.api.server.v1.PoolDTO;
+import org.candlepin.dto.api.server.v1.SetConsumerEnvironmentsDTO;
 import org.candlepin.dto.api.server.v1.SubscriptionDTO;
 import org.candlepin.dto.api.server.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.server.v1.UeberCertificateDTO;
@@ -116,6 +118,7 @@ import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.file.ManifestFileServiceException;
 import org.candlepin.util.ContentOverrideValidator;
+import org.candlepin.util.NonNullLinkedHashSet;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
 
@@ -155,7 +158,6 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 
-
 /**
  * Owner Resource
  */
@@ -168,6 +170,7 @@ public class OwnerResource implements OwnerApi {
     private final ActivationKeyCurator activationKeyCurator;
     private final OwnerServiceAdapter ownerService;
     private final ConsumerCurator consumerCurator;
+    private final ConsumerManager consumerManager;
     private final I18n i18n;
     private final EventSink sink;
     private final EventFactory eventFactory;
@@ -201,6 +204,7 @@ public class OwnerResource implements OwnerApi {
     public OwnerResource(OwnerCurator ownerCurator,
         ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,
+        ConsumerManager consumerManager,
         I18n i18n,
         EventSink sink,
         EventFactory eventFactory,
@@ -234,6 +238,7 @@ public class OwnerResource implements OwnerApi {
         this.ownerInfoCurator = Objects.requireNonNull(ownerInfoCurator);
         this.activationKeyCurator = Objects.requireNonNull(activationKeyCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.consumerManager = Objects.requireNonNull(consumerManager);
         this.i18n = Objects.requireNonNull(i18n);
         this.sink = Objects.requireNonNull(sink);
         this.eventFactory = Objects.requireNonNull(eventFactory);
@@ -1914,4 +1919,69 @@ public class OwnerResource implements OwnerApi {
         sink.emitOwnerCreated(owner);
         return owner;
     }
+
+    // PUT /owners/{owner_key}/consumers/environments
+
+    @Override
+    @Transactional
+    public void setConsumersToEnvironments(@Verify(Owner.class) String ownerKey,
+        SetConsumerEnvironmentsDTO request) {
+
+        List<String> consumerUuids = request.getConsumerUuids();
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            throw new BadRequestException(i18n.tr("No consumer UUIDs provided"));
+        }
+
+        List<String> environmentIds = request.getEnvironmentIds();
+        if (environmentIds == null) {
+            throw new BadRequestException(i18n.tr("The provided environment ID list cannot be null"));
+        }
+
+        int consumerLimit = config.getInt(ConfigProperties.BULK_SET_CONSUMER_ENV_MAX_CONSUMER_LIMIT);
+        if (consumerUuids.size() > consumerLimit) {
+            throw new BadRequestException(i18n
+                .tr("Number of consumer UUIDs exceeds the max size of {0}", consumerLimit));
+        }
+
+        int envLimit = config.getInt(ConfigProperties.BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT);
+        if (environmentIds.size() > envLimit) {
+            throw new BadRequestException(i18n
+                .tr("Number of environment IDs exceeds the max size of {0}", envLimit));
+        }
+
+        Owner owner = findOwnerByKey(ownerKey);
+        if (!ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue().equals(owner.getContentAccessMode())) {
+            throw new BadRequestException(i18n.tr("Owner is not in SCA content access mode"));
+        }
+
+        Set<String> unknownConsumerUuids = consumerCurator
+            .getNonExistentConsumerUuids(owner.getKey(), consumerUuids);
+        if (!unknownConsumerUuids.isEmpty()) {
+            throw new BadRequestException(i18n
+                .tr("Unknown consumer UUIDs: {0}", unknownConsumerUuids));
+        }
+
+        NonNullLinkedHashSet<String> envSet = new NonNullLinkedHashSet<>();
+        if (!environmentIds.isEmpty()) {
+            try {
+                envSet.addAll(environmentIds);
+            }
+            catch (IllegalArgumentException e) {
+                throw new BadRequestException(this.i18n.tr("Environment IDs cannot be null"));
+            }
+
+            if (envSet.size() != environmentIds.size()) {
+                throw new BadRequestException(i18n.tr("Request contains duplicate environment IDs"));
+            }
+
+            Set<String> unknownEnvIds = envCurator.getNonExistentEnvironmentIds(owner, environmentIds);
+            if (!unknownEnvIds.isEmpty()) {
+                throw new BadRequestException(i18n.tr("Unknown environment IDs: {0}", unknownEnvIds));
+            }
+        }
+
+        consumerManager.setConsumersEnvironments(owner, consumerUuids, envSet);
+    }
+
 }
+

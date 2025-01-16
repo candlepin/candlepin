@@ -218,4 +218,35 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<SC
         return serials;
     }
 
+    /**
+     * Deletes the content access certificates for the provided consumers and also revokes the certificate
+     * serials.
+     *
+     * @param consumerUuids
+     *  the UUIDs of {@link Consumer}s to delete content access certificates for
+     *
+     * @return the number of content access certificates that were deleted
+     */
+    public int deleteForConsumers(Collection<String> consumerUuids) {
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            return 0;
+        }
+
+        String hql = """
+            SELECT cac.id, s.id
+            FROM Consumer c
+                JOIN c.contentAccessCert cac
+                JOIN cac.serial s
+            WHERE c.uuid IN (:uuids)
+            """;
+
+        Query query = this.getEntityManager()
+            .createQuery(hql);
+
+        List<Object[]> rows = query
+            .setParameter("uuids", consumerUuids)
+            .getResultList();
+
+        return deleteCerts(rows);
+    }
 }
