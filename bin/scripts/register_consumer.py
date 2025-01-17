@@ -195,22 +195,13 @@ class Candlepin:
 
     # Candlepin API functions
     def register(self, organization, consumer_data):
-        consumer = {
-            'type': consumer_data['type'],
-            'name': consumer_data['name'],
-            'facts': {},
-            'installedProducts': [],
-            'contentTags': [],
-            'environments': []
-        }
-
         qparams = {
             'owner': organization
         }
 
         headers = {}
 
-        return self.post('consumers', qparams, consumer, headers).json()
+        return self.post('consumers', qparams, consumer_data, headers).json()
 
     def create_owner(self, owner_data):
         owner = {
@@ -263,9 +254,15 @@ def parse_options():
     parser.add_argument('--cert_out', action='store', default=None,
         help='The file name to use for writing the consumer\'s identity certificate')
     parser.add_argument('--facts', action='store', default=None,
-        help='A JSON object representing additional system facts to include during registration')
+        help='A JSON object representing additional system facts to include during registration; may override default facts or facts defined by other arguments')
     parser.add_argument('--type', action='store', default='system',
         help='The type of consumer to create; defaults to \'system\'')
+    parser.add_argument('--arch', action='store', default='x86_64',
+        help='The architecture of consumer to create; defaults to \'x86_64\'')
+    parser.add_argument('--sarchs', action='store', default='',
+        help='The additional supported architectures for consumer to create; defaults to \'\'')
+    parser.add_argument('--no-arch', dest='no_arch', action='store_true',
+        help='whether or not the consumer should be created without any architecture information; overrides --arch and --sarchs')
 
     options = parser.parse_args()
 
@@ -295,12 +292,13 @@ def main():
             ],
 
             'facts': {
-                "uname.machine": "x86_64",
+                "uname.machine": options.arch,
                 "cpu.cpu_socket(s)": "1",
                 "cpu.cpu(s)": "1",
                 "system.certificate_version": "3.1",
                 "distributor_version": None,
-                "virt.is_guest": 'false'
+                "virt.is_guest": 'false',
+                "supported_architectures": options.sarchs
             },
 
             'type': {
@@ -315,6 +313,11 @@ def main():
             "autoheal": 'false',
             "guestIds": []
         }
+
+        # Clear the facts if we're running no-arch:
+        if options.no_arch:
+            del consumer_data['facts']['uname.machine']
+            del consumer_data['facts']['supported_architectures']
 
         # Add our CLI options
         if options.facts:
