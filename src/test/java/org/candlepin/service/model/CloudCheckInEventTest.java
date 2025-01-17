@@ -169,16 +169,6 @@ public class CloudCheckInEventTest {
     }
 
     @Test
-    public void testGetEventType() throws Exception {
-        ConsumerCloudData data = createCloudData();
-
-        CloudCheckInEvent actual = new CloudCheckInEvent(data, mapper);
-
-        assertThat(actual)
-            .returns(EventType.CLOUD_SYSTEM_CHECK_IN, CloudCheckInEvent::getEventType);
-    }
-
-    @Test
     public void testEqualsWithSameInstance() throws Exception {
         ConsumerCloudData data = createCloudData();
         CloudCheckInEvent event = new CloudCheckInEvent(data, mapper);

@@ -31,7 +31,7 @@ import java.util.List;
 /**
  * An event where a cloud consumer has updated their last check-in time stamp.
  */
-public class CloudCheckInEvent implements AdapterEvent {
+public final class CloudCheckInEvent implements AdapterEvent {
 
     private static final String SYSTEM_UUID_KEY = "systemUuid";
     private static final String CHECK_IN_KEY = "checkIn";
@@ -158,14 +158,6 @@ public class CloudCheckInEvent implements AdapterEvent {
     @Override
     public SerializationType getSerializationType() {
         return SerializationType.JSON;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EventType getEventType() {
-        return EventType.CLOUD_SYSTEM_CHECK_IN;
     }
 
     /**
