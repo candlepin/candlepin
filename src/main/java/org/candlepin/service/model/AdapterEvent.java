@@ -18,7 +18,7 @@ package org.candlepin.service.model;
  * The AdapterEvent interface represents a Candlepin event that should be published using the
  * {@link EventAdapter} and consumed by external components.
  */
-public interface AdapterEvent extends ServiceAdapterModel {
+public sealed interface AdapterEvent permits CloudCheckInEvent {
 
     /**
      * Serializes the event and returns the serialized event body text to be used when publishing the message.
@@ -36,14 +36,5 @@ public interface AdapterEvent extends ServiceAdapterModel {
      * @return the serialization type used to serialize the event body
      */
     SerializationType getSerializationType();
-
-    /**
-     * Returns an {@link EventType} used to determine how to publish the message. The event type is unique
-     * to the concrete {@link AdapterEvent} implementation and should not change. This method should not
-     * return a null value.
-     *
-     * @return the event's type
-     */
-    EventType getEventType();
 
 }
