@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.util.NonNullLinkedHashSet;
+
 import org.hibernate.query.NativeQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,15 +23,16 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-
 
 @Singleton
 public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
@@ -216,7 +219,7 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
             .getResultList();
     }
 
-    public Map<String, List<String>> findEnvironmentsOf(List<String> consumerIds) {
+    public Map<String, List<String>> findEnvironmentsOf(Collection<String> consumerIds) {
         if (consumerIds.isEmpty()) {
             throw new IllegalArgumentException("Consumers must not be empty!");
         }
@@ -305,6 +308,132 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
 
         log.debug("{} environment content reference(s) removed", count);
         return count;
+    }
+
+    /**
+     * Determines if any of the provided {@link Environment} IDs does not exist or does not belong to the
+     * provided {@link Owner}.
+     *
+     * @param owner
+     *  the owner of the environment IDs
+     *
+     * @param envIds
+     *  the environment IDs to check
+     *
+     * @return all of the environment IDs from the provided list that do not exist or do not belong to the
+     *  provided owner
+     */
+    public Set<String> getNonExistentEnvironmentIds(Owner owner, Collection<String> envIds) {
+        if (owner == null || envIds == null || envIds.isEmpty()) {
+            return new HashSet<>();
+        }
+
+        String jpql = "SELECT DISTINCT env.id FROM Environment env " +
+            "WHERE env.id IN (:envIds) AND env.ownerId = :ownerId";
+
+        Set<String> distinctEnvIds = new HashSet<>(envIds);
+
+        Query query = this.getEntityManager()
+            .createQuery(jpql, String.class)
+            .setParameter("ownerId", owner.getId());
+
+        int blockSize = Math.min(this.getQueryParameterLimit() - 1, this.getInBlockSize());
+
+        Set<String> actualEnvIds = new HashSet<>();
+        for (List<String> block : partition(distinctEnvIds, blockSize)) {
+            List<String> result = query.setParameter("envIds", block)
+                .getResultList();
+
+            actualEnvIds.addAll(result);
+        }
+
+        // Remove all of the existing environment IDs to determine the environments that are unknown
+        distinctEnvIds.removeAll(actualEnvIds);
+
+        return distinctEnvIds;
+    }
+
+    /**
+     * Removes the {@link Consumer}s from all of the environments they currently exist in.
+     *
+     * @param consumerUuids
+     *  the UUIDs for all the consumers that should be removed from their environments
+     *
+     * @return the number of consumers removed from all environments
+     */
+    private int removeConsumersFromAllEnvironments(Collection<String> consumerUuids) {
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            return 0;
+        }
+
+        String statement = "DELETE FROM cp_consumer_environments " +
+            "WHERE cp_consumer_id IN (SELECT id FROM cp_consumer WHERE uuid IN (:uuids))";
+
+        Query query = this.getEntityManager()
+            .createNativeQuery(statement);
+
+        int updated = 0;
+
+        for (List<String> block : partition(consumerUuids)) {
+            updated += query.setParameter("uuids", block)
+                .executeUpdate();
+        }
+
+        return updated;
+    }
+
+    /**
+     * Sets the {@Consumer}s in the provided {@link Environment}s. The consumers will first be cleared from
+     * existing environments and then set to the provided environments. If null or empty environment IDs are
+     * provided then the consumers will only be cleared from their existing environments. The ordering of the
+     * provided environment IDs dictates the priority. The first environment ID in the list being the top
+     * priority and the last environment ID in the list being the least priority.
+     *
+     * @param consumerUuids
+     *  the UUIDs of the consumers to set the environments for
+     *
+     * @param envIds
+     *  the IDs of the environments to set the consumers for
+     *
+     * @return the number of consumers updated
+     */
+    public int setConsumersEnvironments(Collection<String> consumerUuids,
+        NonNullLinkedHashSet<String> envIds) {
+
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            return 0;
+        }
+
+        // Remove duplicate consumer UUIDs to avoid contraint violations when inserting into the
+        // cp_consumer_environments table
+        Set<String> consumerUuidsSet = new HashSet<>(consumerUuids);
+
+        int removedFromEnvs = removeConsumersFromAllEnvironments(consumerUuidsSet);
+        if (envIds == null || envIds.isEmpty()) {
+            return removedFromEnvs;
+        }
+
+        String stmt = "INSERT INTO cp_consumer_environments (cp_consumer_id, environment_id, priority) " +
+            "SELECT id, :envId, :priority FROM cp_consumer WHERE uuid = :uuid";
+
+        for (String consumerUuid : consumerUuidsSet) {
+            int priority = 0;
+            for (String envId : envIds) {
+                this.getEntityManager()
+                    .createNativeQuery(stmt)
+                    .unwrap(NativeQuery.class)
+                    .addSynchronizedEntityClass(Consumer.class)
+                    .addSynchronizedEntityClass(Environment.class)
+                    .setParameter("uuid", consumerUuid)
+                    .setParameter("envId", envId)
+                    .setParameter("priority", priority)
+                    .executeUpdate();
+
+                priority++;
+            }
+        }
+
+        return consumerUuidsSet.size();
     }
 
 }

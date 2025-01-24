@@ -22,6 +22,8 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.util.List;
 
@@ -294,11 +296,77 @@ public class ContentAccessCertificateCuratorTest extends DatabaseTestFixture {
                 cert2.getSerial().getSerial().longValue());
     }
 
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void testDeleteForConsumersWithNullOrEmptyConsumerUuids(List<String> consumerUuids) {
+        int actual = caCertCurator.deleteForConsumers(consumerUuids);
+
+        assertEquals(0, actual);
+    }
+
+    @Test
+    public void testDeleteForConsumers() {
+        Owner owner = createOwner();
+
+        Consumer consumer1 = createConsumer(owner);
+        Consumer consumer2 = createConsumer(owner);
+
+        CertificateSerial serial1 = new CertificateSerial();
+        serial1.setExpiration(TestUtil.createDateOffset(0, 0, 7));
+        certSerialCurator.save(serial1);
+
+        CertificateSerial serial2 = new CertificateSerial();
+        serial2.setExpiration(TestUtil.createDateOffset(0, 0, 7));
+        certSerialCurator.save(serial2);
+
+        SCACertificate cert1 = new SCACertificate();
+        cert1.setConsumer(consumer1);
+        cert1.setKey(TestUtil.randomString());
+        cert1.setCert(TestUtil.randomString());
+        cert1.setSerial(serial1);
+
+        SCACertificate cert2 = new SCACertificate();
+        cert2.setConsumer(consumer2);
+        cert2.setKey(TestUtil.randomString());
+        cert2.setCert(TestUtil.randomString());
+        cert2.setSerial(serial2);
+
+        cert1 = caCertCurator.create(cert1);
+        cert2 = caCertCurator.create(cert2);
+
+        consumer1.setContentAccessCert(cert1);
+        consumer2.setContentAccessCert(cert2);
+
+        int actual = caCertCurator.deleteForConsumers(List.of(consumer1.getUuid(), consumer2.getUuid()));
+
+        assertEquals(2, actual);
+        assertThat(getSCACertificatesFromDB())
+            .isEmpty();
+
+        caCertCurator.flush();
+        caCertCurator.clear();
+
+        List<CertificateSerial> serials = getCertificateSerialsFromDB();
+        assertThat(serials)
+            .isNotNull()
+            .hasSize(2)
+            .extracting(CertificateSerial::isRevoked)
+            .containsOnly(true);
+    }
+
     private List<SCACertificate> getSCACertificatesFromDB() {
         String query = "SELECT c FROM SCACertificate c";
 
         return getEntityManager()
             .createQuery(query, SCACertificate.class)
+            .getResultList();
+    }
+
+    private List<CertificateSerial> getCertificateSerialsFromDB() {
+        String query = "SELECT c FROM CertificateSerial c";
+
+        return getEntityManager()
+            .createQuery(query, CertificateSerial.class)
             .getResultList();
     }
 }
