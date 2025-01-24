@@ -727,9 +727,13 @@ def create_activation_keys(cp, owners):
     activation_keys = []
 
     # Build a set of activation key data to use to generate our keys
-    for owner_key in owners:
+    for owner_key, owner in owners.items():
         activation_keys.append((owner_key, "default_key", None))
         activation_keys.append((owner_key, "awesome_os_pool", None))
+
+        # If owner(organization) is in Entitlement mode skip creating AK with pools
+        if owner["contentAccessMode"] != "entitlement":
+            continue
 
         pools = cp.list_pools(owner_key)
 
