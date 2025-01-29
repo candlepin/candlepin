@@ -13,7 +13,7 @@ slf4j = "2.0.16"
 test-logger = "4.0.0"
 
 [plugins]
-dependency-check = { id = "org.owasp.dependencycheck", version = "12.0.0" }
+dependency-check = { id = "org.owasp.dependencycheck", version = "12.0.1" }
 gradle-versions = { id = "com.github.ben-manes.versions", version = "0.51.0" }
 nebula-lint = { id = "nebula.lint", version = "20.5.5" }
 openapi-generator = { id = "org.openapi.generator", version.ref = "openapi-generator" }
