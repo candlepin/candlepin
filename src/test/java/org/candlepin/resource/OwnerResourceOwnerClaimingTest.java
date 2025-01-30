@@ -28,6 +28,7 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.TestConfig;
+import org.candlepin.controller.ConsumerManager;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
@@ -89,6 +90,8 @@ public class OwnerResourceOwnerClaimingTest {
     @Mock
     private ConsumerCurator consumerCurator;
     @Mock
+    private ConsumerManager consumerManager;
+    @Mock
     private EntitlementCurator entitlementCurator;
     @Mock
     private EnvironmentCurator environmentCurator;
@@ -142,7 +145,7 @@ public class OwnerResourceOwnerClaimingTest {
 
     private OwnerResource buildOwnerResource() {
         return new OwnerResource(this.ownerCurator, this.activationKeyCurator,
-            this.consumerCurator, this.i18n, this.eventSink, this.eventFactory,
+            this.consumerCurator, this.consumerManager, this.i18n, this.eventSink, this.eventFactory,
             this.contentAccessManager, this.manifestManager, this.poolManager, this.poolService,
             this.poolCurator, this.ownerManager, this.exportCurator, this.ownerInfoCurator,
             this.importRecordCurator, this.entitlementCurator, this.ueberCertCurator,

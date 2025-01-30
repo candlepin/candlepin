@@ -27,6 +27,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.SCACertificate;
 import org.candlepin.util.Util;
 
+import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -51,7 +52,7 @@ public class ContentAccessManager {
     private final OwnerCurator ownerCurator;
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
     private final ConsumerCurator consumerCurator;
-    private final EventSink eventSink;
+    private final Provider<EventSink> eventSink;
     private final JobManager jobManager;
     private final I18n i18n;
 
@@ -60,7 +61,7 @@ public class ContentAccessManager {
         ContentAccessCertificateCurator contentAccessCertificateCurator,
         OwnerCurator ownerCurator,
         ConsumerCurator consumerCurator,
-        EventSink eventSink,
+        Provider<EventSink> eventSink,
         JobManager jobManager,
         I18n i18n) {
 
@@ -272,7 +273,7 @@ public class ContentAccessManager {
 
             // Update sync times & report
             this.syncOwnerLastContentUpdate(owner);
-            this.eventSink.emitOwnerContentAccessModeChanged(owner);
+            this.eventSink.get().emitOwnerContentAccessModeChanged(owner);
 
             log.info("Content access mode changed from {} to {} for owner {}", currentMode,
                 updatedMode, owner.getKey());
@@ -373,5 +374,4 @@ public class ContentAccessManager {
         owner.syncLastContentUpdate();
         return this.ownerCurator.merge(owner);
     }
-
 }

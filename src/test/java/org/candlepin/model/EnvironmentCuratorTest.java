@@ -14,13 +14,18 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
+import org.candlepin.util.NonNullLinkedHashSet;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +35,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 public class EnvironmentCuratorTest extends DatabaseTestFixture {
@@ -246,6 +252,244 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
         assertEquals(environment3.getId(), output.get(consumer2.getId()).get(0));
         assertEquals(environment2.getId(), output.get(consumer2.getId()).get(1));
         assertEquals(environment1.getId(), output.get(consumer2.getId()).get(2));
+    }
+
+    @Test
+    public void testGetNonExistentEnvironmentIdsWithNullOwner() {
+        Set<String> actual = environmentCurator.getNonExistentEnvironmentIds(null, List.of("env-id"));
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void testGetNonExistentEnvironmentIdsWithNullOrEmptyEnvIds(List<String> envIds) {
+        Owner owner = this.createOwner(TestUtil.randomString());
+
+        Set<String> actual = environmentCurator.getNonExistentEnvironmentIds(owner, envIds);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetNonExistentEnvironmentIds() {
+        Owner owner1 = this.createOwner(TestUtil.randomString());
+        Content content1 = this.createContent("c1", "c1");
+        Content content2 = this.createContent("c2", "c2");
+        Content content3 = this.createContent("c3", "c3");
+
+        Environment env1 = this.createEnvironment(
+            owner1, "test_env-1", "test_env-1", null, null, List.of(content1));
+        Environment env2 = this.createEnvironment(
+            owner1, "test_env-2", "test_env-2", null, null, List.of(content2));
+        this.createEnvironment(
+            owner1, "test_env-3", "test_env-3", null, null, List.of(content3));
+
+        Owner owner2 = this.createOwner(TestUtil.randomString());
+        Content content4 = this.createContent("c4", "c4");
+        Content content5 = this.createContent("c5", "c5");
+
+        Environment env4 = this.createEnvironment(
+            owner2, "test_env-4", "test_env-4", null, null, List.of(content4));
+        this.createEnvironment(
+            owner2, "test_env-5", "test_env-5", null, null, List.of(content5));
+
+        String unknown1 = TestUtil.randomString("unknown-");
+        String unknown2 = TestUtil.randomString("unknown-");
+        List<String> envIds = List.of(env1.getId(), unknown1, env2.getId(), unknown2, env4.getId());
+
+        Set<String> actual = environmentCurator.getNonExistentEnvironmentIds(owner1, envIds);
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(unknown1, unknown2, env4.getId());
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void testSetConsumersEnvironmentsWithNullOrEmptyConsumerUuids(List<String> uuids) {
+        NonNullLinkedHashSet<String> envIds = new NonNullLinkedHashSet<>();
+        envIds.add("env-id");
+
+        int actual = environmentCurator.setConsumersEnvironments(uuids, envIds);
+
+        assertEquals(0, actual);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void testSetConsumersEnvironmentsWithNullOrEmptyEnvIds(NonNullLinkedHashSet<String> ids) {
+        int actual = environmentCurator.setConsumersEnvironments(List.of("uuid"), ids);
+
+        assertEquals(0, actual);
+    }
+
+    @Test
+    public void testSetConsumersEnvironmentsWithDuplicateConsumerUuids() {
+        Owner owner = this.createOwner(TestUtil.randomString());
+        Consumer consumer1 = this.createConsumer(owner);
+        Content content1 = this.createContent("c1", "c1");
+        Content content2 = this.createContent("c2", "c2");
+        Content content3 = this.createContent("c3", "c3");
+        Environment environment1 = this.createEnvironment(
+            owner, "test_env-1", "test_env-1", null, null, List.of(content1));
+        Environment environment2 = this.createEnvironment(
+            owner, "test_env-2", "test_env-2", null, null, List.of(content2));
+        Environment environment3 = this.createEnvironment(
+            owner, "test_env-3", "test_env-3", null, null, List.of(content3));
+        consumer1.addEnvironment(environment1);
+        consumer1.addEnvironment(environment2);
+
+        consumer1 = consumerCurator.saveOrUpdate(consumer1);
+
+        NonNullLinkedHashSet<String> expectedEnvIds = new NonNullLinkedHashSet<>();
+        expectedEnvIds.add(environment1.getId());
+        expectedEnvIds.add(environment3.getId());
+
+        int updated = environmentCurator.setConsumersEnvironments(List.of(consumer1.getUuid(),
+            consumer1.getUuid()), expectedEnvIds);
+
+        assertEquals(1, updated);
+        Map<String, List<String>> output = this.environmentCurator
+            .findEnvironmentsOf(List.of(consumer1.getId()));
+
+        assertEquals(1, output.size());
+        assertThat(output.get(consumer1.getId()))
+            .containsExactlyElementsOf(expectedEnvIds);
+    }
+
+    @Test
+    public void testSetConsumersEnvironments() {
+        Owner owner = this.createOwner(TestUtil.randomString());
+        Consumer consumer1 = this.createConsumer(owner);
+        Consumer consumer2 = this.createConsumer(owner);
+        Content content1 = this.createContent("c1", "c1");
+        Content content2 = this.createContent("c2", "c2");
+        Content content3 = this.createContent("c3", "c3");
+        Content content4 = this.createContent("c4", "c4");
+        Environment environment1 = this.createEnvironment(
+            owner, "test_env-1", "test_env-1", null, null, List.of(content1));
+        Environment environment2 = this.createEnvironment(
+            owner, "test_env-2", "test_env-2", null, null, List.of(content2));
+        Environment environment3 = this.createEnvironment(
+            owner, "test_env-3", "test_env-3", null, null, List.of(content3));
+        Environment environment4 = this.createEnvironment(
+            owner, "test_env-4", "test_env-4", null, null, List.of(content4));
+        consumer1.addEnvironment(environment1);
+        consumer1.addEnvironment(environment2);
+        consumer2.addEnvironment(environment2);
+        consumer2.addEnvironment(environment3);
+
+        consumer1 = consumerCurator.saveOrUpdate(consumer1);
+        consumer2 = consumerCurator.saveOrUpdate(consumer2);
+
+        NonNullLinkedHashSet<String> expectedEnvIds = new NonNullLinkedHashSet<>();
+        expectedEnvIds.add(environment1.getId());
+        expectedEnvIds.add(environment4.getId());
+
+        int updated = environmentCurator.setConsumersEnvironments(List.of(consumer1.getUuid(),
+            consumer2.getUuid()), expectedEnvIds);
+
+        assertEquals(2, updated);
+        Map<String, List<String>> output = this.environmentCurator
+            .findEnvironmentsOf(List.of(consumer1.getId(), consumer2.getId()));
+
+        assertEquals(2, output.size());
+        assertThat(output.get(consumer1.getId()))
+            .containsExactlyElementsOf(expectedEnvIds);
+
+        assertThat(output.get(consumer2.getId()))
+            .containsExactlyElementsOf(expectedEnvIds);
+    }
+
+    @Test
+    public void testSetConsumersEnvironmentsWithMultiplePartitions() {
+        this.config.setProperty(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE, "4");
+        this.config.setProperty(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT, "4");
+
+        Owner owner = this.createOwner(TestUtil.randomString());
+        Consumer consumer1 = this.createConsumer(owner);
+        Consumer consumer2 = this.createConsumer(owner);
+        Consumer consumer3 = this.createConsumer(owner);
+        Consumer consumer4 = this.createConsumer(owner);
+        Consumer consumer5 = this.createConsumer(owner);
+
+        Content content1 = this.createContent("c1", "c1");
+        Content content2 = this.createContent("c2", "c2");
+
+        Environment environment1 = this.createEnvironment(
+            owner, "test_env-1", "test_env-1", null, null, List.of(content1));
+        Environment environment2 = this.createEnvironment(
+            owner, "test_env-2", "test_env-2", null, null, List.of(content2));
+
+        consumer1.addEnvironment(environment1);
+        consumer2.addEnvironment(environment1);
+        consumer3.addEnvironment(environment1);
+        consumer4.addEnvironment(environment1);
+        consumer5.addEnvironment(environment1);
+
+        consumer1 = consumerCurator.saveOrUpdate(consumer1);
+        consumer2 = consumerCurator.saveOrUpdate(consumer2);
+        consumer3 = consumerCurator.saveOrUpdate(consumer3);
+        consumer4 = consumerCurator.saveOrUpdate(consumer4);
+        consumer5 = consumerCurator.saveOrUpdate(consumer5);
+
+        NonNullLinkedHashSet<String> expectedEnvIds = new NonNullLinkedHashSet<>();
+        expectedEnvIds.add(environment2.getId());
+
+        int updated = environmentCurator.setConsumersEnvironments(List.of(consumer1.getUuid(),
+            consumer2.getUuid(), consumer3.getUuid(), consumer4.getUuid(), consumer5.getUuid()),
+            expectedEnvIds);
+
+        assertEquals(5, updated);
+        Map<String, List<String>> output = this.environmentCurator
+            .findEnvironmentsOf(List.of(consumer1.getId(), consumer2.getId(), consumer3.getId(),
+                consumer4.getId(), consumer5.getId()));
+
+        assertEquals(5, output.size());
+        assertThat(output.get(consumer1.getId()))
+            .containsExactlyElementsOf(expectedEnvIds);
+
+        assertThat(output.get(consumer2.getId()))
+            .containsExactlyElementsOf(expectedEnvIds);
+
+        assertThat(output.get(consumer3.getId()))
+            .containsExactlyElementsOf(expectedEnvIds);
+
+        assertThat(output.get(consumer4.getId()))
+            .containsExactlyElementsOf(expectedEnvIds);
+
+        assertThat(output.get(consumer5.getId()))
+            .containsExactlyElementsOf(expectedEnvIds);
+    }
+
+    @Test
+    public void testSetConsumersEnvironmentsWithEnvQueryParametersExceedingLimit() {
+        this.config.setProperty(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE, "2");
+        this.config.setProperty(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT, "3");
+
+        NonNullLinkedHashSet<String> expectedEnvIds = new NonNullLinkedHashSet<>();
+        expectedEnvIds.add("env-1");
+        expectedEnvIds.add("env-2");
+
+        assertThrows(RuntimeException.class, () -> environmentCurator
+            .setConsumersEnvironments(List.of("c1"), expectedEnvIds));
+    }
+
+    @Test
+    public void testSetConsumersEnvironmentsWithEnvQueryParametersEqualsLimit() {
+        this.config.setProperty(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE, "2");
+        this.config.setProperty(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT, "3");
+
+        NonNullLinkedHashSet<String> expectedEnvIds = new NonNullLinkedHashSet<>();
+        expectedEnvIds.add("env-1");
+
+        assertThrows(RuntimeException.class, () -> environmentCurator
+            .setConsumersEnvironments(List.of("c1"), expectedEnvIds));
     }
 
 }
