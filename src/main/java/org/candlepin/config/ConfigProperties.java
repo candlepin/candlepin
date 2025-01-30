@@ -308,6 +308,13 @@ public class ConfigProperties {
     /** The list of content fields which cannot be overridden, comma delimited; defaults to "baseurl" */
     public static final String CONTENT_OVERRIDE_BLOCKLIST = "candlepin.content.overrides.blocklist";
 
+    // Dictates the max amount of consumers that can have their environments set in one operation
+    public static final String BULK_SET_CONSUMER_ENV_MAX_CONSUMER_LIMIT = "candlepin.consumers" +
+        ".bulk_set_consumer_env.max_consumers";
+    // Dictates the max amount of environments that a batch of consumers can be set to in one operation
+    public static final String BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT = "candlepin.consumers" +
+        ".bulk_set_consumer_env.max_environments";
+
     /**
      * Fetches a string representing the prefix for all per-job configuration for the specified job.
      * The job key or class name may be used, but the usage must be consistent.
@@ -562,6 +569,9 @@ public class ConfigProperties {
             this.put(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT, "32000");
 
             this.put(CONTENT_OVERRIDE_BLOCKLIST, "");
+
+            this.put(BULK_SET_CONSUMER_ENV_MAX_CONSUMER_LIMIT, "1000");
+            this.put(BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT, "10");
         }
     };
 
@@ -581,6 +591,12 @@ public class ConfigProperties {
                 .min(1));
 
             this.add(new IntegerConfigurationValidator(DB_MAX_CONNECTION_ATTEMPTS)
+                .min(1));
+
+            this.add(new IntegerConfigurationValidator(BULK_SET_CONSUMER_ENV_MAX_CONSUMER_LIMIT)
+                .min(1));
+
+            this.add(new IntegerConfigurationValidator(BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT)
                 .min(1));
 
             this.add(new StringConfigurationValidator(DB_DRIVER_CLASS));

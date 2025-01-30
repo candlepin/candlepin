@@ -56,6 +56,8 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
+import com.google.inject.Provider;
+
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
@@ -107,6 +109,8 @@ public class ContentAccessManagerTest {
     @Mock
     private I18n i18n;
 
+    private Provider<EventSink> eventSinkProvider;
+
     private final String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
     private final String orgEnvironmentMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
@@ -129,6 +133,8 @@ public class ContentAccessManagerTest {
     public void setup() throws Exception {
         // FIXME: This mess of mocks is why we should not be using mocks in this way. We should be
         // using a test database framework and our actual curators and objects.
+
+        eventSinkProvider = () -> mockEventSink;
 
         doAnswer(new PersistSimulator<>()).when(this.mockOwnerCurator).merge(any(Owner.class));
         doAnswer(new PersistSimulator<>()).when(this.mockConsumerCurator).merge(any(Consumer.class));
@@ -172,7 +178,7 @@ public class ContentAccessManagerTest {
 
     private ContentAccessManager createManager() {
         return new ContentAccessManager(this.mockContentAccessCertCurator, this.mockOwnerCurator,
-            this.mockConsumerCurator, this.mockEventSink, this.jobManager, this.i18n);
+            this.mockConsumerCurator, this.eventSinkProvider, this.jobManager, this.i18n);
     }
 
     private Owner mockOwner() {

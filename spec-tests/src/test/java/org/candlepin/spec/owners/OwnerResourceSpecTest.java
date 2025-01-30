@@ -15,8 +15,10 @@
 package org.candlepin.spec.owners;
 
 import static java.lang.Thread.sleep;
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
+import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
@@ -34,12 +36,16 @@ import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.client.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.client.v1.ContentAccessDTO;
+import org.candlepin.dto.api.client.v1.ContentDTO;
+import org.candlepin.dto.api.client.v1.ContentToPromoteDTO;
+import org.candlepin.dto.api.client.v1.EnvironmentDTO;
 import org.candlepin.dto.api.client.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.client.v1.RoleDTO;
+import org.candlepin.dto.api.client.v1.SetConsumerEnvironmentsDTO;
 import org.candlepin.dto.api.client.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
 import org.candlepin.invoker.client.ApiException;
@@ -53,6 +59,8 @@ import org.candlepin.spec.bootstrap.client.api.Paging;
 import org.candlepin.spec.bootstrap.data.builder.ActivationKeys;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
+import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.Environments;
 import org.candlepin.spec.bootstrap.data.builder.Facts;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Permissions;
@@ -60,9 +68,12 @@ import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
+import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 import org.candlepin.spec.bootstrap.data.util.DateUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
@@ -70,6 +81,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -79,7 +92,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
 
 @SpecTest
 public class OwnerResourceSpecTest {
@@ -1190,4 +1202,443 @@ public class OwnerResourceSpecTest {
                 .isNotPositive();
         }
     }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void shouldThrowBadRequestWhenBulkSetConsumerEnvsWithNullOrEmptyConsumerUuids(List<String> uuids) {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(uuids);
+        req.setEnvironmentIds(List.of(StringUtil.random("env-"), StringUtil.random("env-")));
+
+        assertBadRequest(() -> admin.owners().setConsumersToEnvironments(ownerKey, req));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void shouldThrowBadRequestWhenBulkSetConsumerEnvsWithNullAndEmptyEnvIds(List<String> envIds) {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(StringUtil.random("c-"), StringUtil.random("c-")));
+        req.setEnvironmentIds(envIds);
+
+        assertBadRequest(() -> admin.owners().setConsumersToEnvironments(ownerKey, req));
+    }
+
+    @Test
+    public void shouldThrowNotFoundWhenBulkSetConsumerEnvsWithUnknownOwnerKey() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+        EnvironmentDTO targetEnv = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("env-")));
+        ConsumerDTO consumer = Consumers.random(owner)
+            .environments(List.of(targetEnv));
+        consumer = admin.consumers().createConsumer(consumer);
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(consumer.getUuid(), StringUtil.random("unknown-")));
+        req.setEnvironmentIds(List.of(targetEnv.getId()));
+
+        assertNotFound(() -> admin.owners()
+            .setConsumersToEnvironments(StringUtil.random("unknown-"), req));
+    }
+
+    @Test
+    public void shouldThrowBadRequestWhenBulkSetConsumerEnvsWithOwnerInEntitlementMode() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+        EnvironmentDTO targetEnv = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("env-")));
+        ConsumerDTO consumer = Consumers.random(owner)
+            .environments(List.of(targetEnv));
+        consumer = admin.consumers().createConsumer(consumer);
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(consumer.getUuid(), StringUtil.random("unknown-")));
+        req.setEnvironmentIds(List.of(targetEnv.getId()));
+
+        assertBadRequest(() -> admin.owners().setConsumersToEnvironments(ownerKey, req));
+    }
+
+    @Test
+    public void shouldThrowBadRequestWhenBulkSetConsumerEnvsWithUnknownConsumerUuid() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+        EnvironmentDTO targetEnv = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("env-")));
+        ConsumerDTO consumer = Consumers.random(owner)
+            .environments(List.of(targetEnv));
+        consumer = admin.consumers().createConsumer(consumer);
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(consumer.getUuid(), StringUtil.random("unknown-")));
+        req.setEnvironmentIds(List.of(targetEnv.getId()));
+
+        assertBadRequest(() -> admin.owners().setConsumersToEnvironments(ownerKey, req));
+    }
+
+    @Test
+    public void shouldThrowBadRequestWhenBulkSetConsumerEnvsWithUnknownEnvironmentId() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+        EnvironmentDTO targetEnv = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("env-")));
+        ConsumerDTO consumer = Consumers.random(owner)
+            .environments(List.of(targetEnv));
+        consumer = admin.consumers().createConsumer(consumer);
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(consumer.getUuid()));
+        req.setEnvironmentIds(List.of(targetEnv.getId(), StringUtil.random("unknown-")));
+
+        assertBadRequest(() -> admin.owners().setConsumersToEnvironments(ownerKey, req));
+    }
+
+    @Test
+    public void shouldThrowBadRequestWhenBulkSetConsumerEnvsWithEnvironmentIdFromOtherOwner() {
+        OwnerDTO owner1 = admin.owners().createOwner(Owners.randomSca());
+        String owner1Key = owner1.getKey();
+        ConsumerDTO consumer = admin.consumers().createConsumer(Consumers.random(owner1));
+        EnvironmentDTO owner1Env = admin.owners().createEnvironment(owner1Key, Environments.random()
+            .id(StringUtil.random("env-")));
+
+        OwnerDTO owner2 = admin.owners().createOwner(Owners.randomSca());
+        EnvironmentDTO owner2Env = admin.owners().createEnvironment(owner2.getKey(), Environments.random()
+            .id(StringUtil.random("env-")));
+
+        SetConsumerEnvironmentsDTO request = new SetConsumerEnvironmentsDTO();
+        request.setConsumerUuids(List.of(consumer.getUuid()));
+        request.setEnvironmentIds(List.of(owner1Env.getId(), owner2Env.getId()));
+
+        assertBadRequest(() ->  admin.owners().setConsumersToEnvironments(owner1Key, request));
+    }
+
+    @Test
+    public void shouldSetConsumerEnvironmentsWithDuplicateConsumerUuids() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+        ConsumerDTO consumer = admin.consumers().createConsumer(Consumers.random(owner));
+        EnvironmentDTO targetEnv = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("env-")));
+
+        SetConsumerEnvironmentsDTO request = new SetConsumerEnvironmentsDTO();
+        request.setConsumerUuids(List.of(consumer.getUuid(), consumer.getUuid()));
+        request.setEnvironmentIds(List.of(targetEnv.getId()));
+
+        admin.owners().setConsumersToEnvironments(ownerKey, request);
+
+        ConsumerDTO actual = admin.consumers().getConsumer(consumer.getUuid());
+        assertThat(actual)
+            .isNotNull()
+            .extracting(ConsumerDTO::getEnvironments, as(collection(EnvironmentDTO.class)))
+            .containsOnly(targetEnv);
+    }
+
+    @Test
+    public void shouldThrowBadRequestWhenBulkSetConsumerEnvsWithDuplicateEnvironmentIds() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+        ConsumerDTO consumer = admin.consumers().createConsumer(Consumers.random(owner));
+        EnvironmentDTO targetEnv = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("env-")));
+
+        SetConsumerEnvironmentsDTO request = new SetConsumerEnvironmentsDTO();
+        request.setConsumerUuids(List.of(consumer.getUuid()));
+        request.setEnvironmentIds(List.of(targetEnv.getId(), targetEnv.getId()));
+
+        assertBadRequest(() -> admin.owners().setConsumersToEnvironments(ownerKey, request));
+    }
+
+    @Test
+    public void shouldThrowBadRequestWhenBulkSetConsumerEnvsWithConsumerFromOtherOwner() {
+        OwnerDTO owner1 = admin.owners().createOwner(Owners.randomSca());
+        String owner1Key = owner1.getKey();
+        EnvironmentDTO env1 = admin.owners().createEnvironment(owner1Key, Environments.random()
+            .id(StringUtil.random("env-1-")));
+
+        OwnerDTO owner2 = admin.owners().createOwner(Owners.randomSca());
+        String owner2Key = owner1.getKey();
+        EnvironmentDTO env2 = admin.owners().createEnvironment(owner2Key, Environments.random()
+            .id(StringUtil.random("env-2-")));
+
+        ConsumerDTO consumer = Consumers.random(owner2)
+            .environments(List.of(env2));
+        consumer = admin.consumers().createConsumer(consumer);
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(consumer.getUuid()));
+        req.setEnvironmentIds(List.of(env1.getId()));
+
+        assertBadRequest(() -> admin.owners().setConsumersToEnvironments(owner1Key, req));
+    }
+
+    @Test
+    public void shouldSetConsumerEnvironmentsWithConsumerWithDifferentEnvironment() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        EnvironmentDTO targetEnv1 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("target-1-")));
+        EnvironmentDTO targetEnv2 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("target-2-")));
+        EnvironmentDTO otherEnv = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("other-")));
+
+        ConsumerDTO consumer = Consumers.random(owner)
+            .environments(List.of(targetEnv1, targetEnv2, otherEnv));
+
+        consumer = admin.consumers().createConsumer(consumer);
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(consumer.getUuid()));
+        req.setEnvironmentIds(List.of(targetEnv1.getId(), targetEnv2.getId()));
+
+        admin.owners().setConsumersToEnvironments(ownerKey, req);
+
+        ConsumerDTO actual = admin.consumers().getConsumer(consumer.getUuid());
+        assertThat(actual)
+            .isNotNull()
+            .extracting(ConsumerDTO::getEnvironments, as(collection(EnvironmentDTO.class)))
+            .isNotNull()
+            .hasSize(2)
+            .containsExactly(targetEnv1, targetEnv2);
+    }
+
+    @Test
+    public void shouldSetConsumerEnvironmentsWithConsumerWithMissingEnvironment() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        EnvironmentDTO targetEnv1 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("target-1-")));
+        EnvironmentDTO targetEnv2 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("target-2-")));
+
+        ConsumerDTO consumer = Consumers.random(owner)
+            .environments(List.of(targetEnv1));
+        consumer = admin.consumers().createConsumer(consumer);
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(consumer.getUuid()));
+        req.setEnvironmentIds(List.of(targetEnv1.getId(), targetEnv2.getId()));
+
+        admin.owners().setConsumersToEnvironments(ownerKey, req);
+
+        ConsumerDTO actual = admin.consumers().getConsumer(consumer.getUuid());
+        assertThat(actual)
+            .isNotNull()
+            .extracting(ConsumerDTO::getEnvironments, as(collection(EnvironmentDTO.class)))
+            .isNotNull()
+            .hasSize(2)
+            .containsExactly(targetEnv1, targetEnv2);
+    }
+
+    @Test
+    public void shouldSetConsumerEnvironmentsWithConsumerWithWrongPriority() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        EnvironmentDTO targetEnv1 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("target-1-")));
+        EnvironmentDTO targetEnv2 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("target-2-")));
+
+        ConsumerDTO consumer = Consumers.random(owner)
+            .environments(List.of(targetEnv2, targetEnv1));
+        consumer = admin.consumers().createConsumer(consumer);
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(consumer.getUuid()));
+        req.setEnvironmentIds(List.of(targetEnv1.getId(), targetEnv2.getId()));
+
+        admin.owners().setConsumersToEnvironments(ownerKey, req);
+
+        ConsumerDTO actual = admin.consumers().getConsumer(consumer.getUuid());
+        assertThat(actual)
+            .isNotNull()
+            .extracting(ConsumerDTO::getEnvironments, as(collection(EnvironmentDTO.class)))
+            .isNotNull()
+            .hasSize(2)
+            .containsExactly(targetEnv1, targetEnv2);
+    }
+
+    @Test
+    public void shouldSetConsumerEnvironmentsWithConsumerAlreadyExactlyInEnvironments() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        EnvironmentDTO targetEnv1 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("target-1-")));
+        EnvironmentDTO targetEnv2 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("target-2-")));
+
+        ConsumerDTO consumer = Consumers.random(owner)
+            .environments(List.of(targetEnv1, targetEnv2));
+        consumer = admin.consumers().createConsumer(consumer);
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(consumer.getUuid()));
+        req.setEnvironmentIds(List.of(targetEnv1.getId(), targetEnv2.getId()));
+
+        admin.owners().setConsumersToEnvironments(ownerKey, req);
+
+        ConsumerDTO actual = admin.consumers().getConsumer(consumer.getUuid());
+        assertThat(actual)
+            .isNotNull()
+            .extracting(ConsumerDTO::getEnvironments, as(collection(EnvironmentDTO.class)))
+            .isNotNull()
+            .hasSize(2)
+            .containsExactly(targetEnv1, targetEnv2);
+    }
+
+    @Test
+    public void shouldRemoveConsumersFromAllEnvironmentsWithEmptyEnvList() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        EnvironmentDTO env1 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("env-1-")));
+        EnvironmentDTO env2 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("env-2-")));
+        EnvironmentDTO env3 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("env-3-")));
+
+        ConsumerDTO consumer1 = Consumers.random(owner)
+            .environments(List.of(env1));
+        consumer1 = admin.consumers().createConsumer(consumer1);
+        ConsumerDTO consumer2 = Consumers.random(owner)
+            .environments(List.of(env2));
+        consumer2 = admin.consumers().createConsumer(consumer2);
+        ConsumerDTO consumer3 = Consumers.random(owner)
+            .environments(List.of(env3));
+        consumer3 = admin.consumers().createConsumer(consumer3);
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(consumer1.getUuid(), consumer2.getUuid(), consumer3.getUuid()));
+        req.setEnvironmentIds(List.of());
+
+        admin.owners().setConsumersToEnvironments(ownerKey, req);
+
+        assertThat(admin.consumers().getConsumer(consumer1.getUuid()))
+            .isNotNull()
+            .returns(null, ConsumerDTO::getEnvironments);
+
+        assertThat(admin.consumers().getConsumer(consumer2.getUuid()))
+            .isNotNull()
+            .returns(null, ConsumerDTO::getEnvironments);
+
+        assertThat(admin.consumers().getConsumer(consumer3.getUuid()))
+            .isNotNull()
+            .returns(null, ConsumerDTO::getEnvironments);
+    }
+
+    @Test
+    public void shouldSetConsumerEnvironmentsWithMultipleConsumers() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        EnvironmentDTO targetEnv1 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("target-1-")));
+        EnvironmentDTO targetEnv2 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("target-2-")));
+        admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("env-3-")));
+
+        admin.consumers().createConsumer(Consumers.random(owner));
+
+        ConsumerDTO consumer1 = Consumers.random(owner)
+            .environments(List.of(targetEnv1));
+        consumer1 = admin.consumers().createConsumer(consumer1);
+
+        ConsumerDTO consumer2 = Consumers.random(owner)
+            .environments(List.of(targetEnv2));
+        consumer2 = admin.consumers().createConsumer(consumer2);
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(consumer1.getUuid(), consumer2.getUuid()));
+        req.setEnvironmentIds(List.of(targetEnv1.getId(), targetEnv2.getId()));
+
+        admin.owners().setConsumersToEnvironments(ownerKey, req);
+
+        ConsumerDTO actual = admin.consumers().getConsumer(consumer1.getUuid());
+        assertThat(actual)
+            .isNotNull()
+            .extracting(ConsumerDTO::getEnvironments, as(collection(EnvironmentDTO.class)))
+            .isNotNull()
+            .hasSize(2)
+            .containsExactly(targetEnv1, targetEnv2);
+
+        actual = admin.consumers().getConsumer(consumer2.getUuid());
+        assertThat(actual)
+            .isNotNull()
+            .extracting(ConsumerDTO::getEnvironments, as(collection(EnvironmentDTO.class)))
+            .isNotNull()
+            .hasSize(2)
+            .containsExactly(targetEnv1, targetEnv2);
+    }
+
+    @Test
+    public void shouldUpdateContentAccessCertificateWhenSettingConsumerEnvironments() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ContentDTO content1 = admin.ownerContent().createContent(ownerKey, Contents.random());
+        ProductDTO prod1 = admin.ownerProducts().createProduct(ownerKey, Products.random());
+        admin.ownerProducts().addContentToProduct(ownerKey, prod1.getId(), content1.getId(), true);
+        admin.owners().createPool(ownerKey, Pools.random(prod1));
+
+        ContentDTO content2 = admin.ownerContent().createContent(ownerKey, Contents.random());
+        ProductDTO prod2 = admin.ownerProducts().createProduct(ownerKey, Products.random());
+        admin.ownerProducts().addContentToProduct(ownerKey, prod2.getId(), content2.getId(), true);
+        admin.owners().createPool(ownerKey, Pools.random(prod2));
+
+        EnvironmentDTO env1 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("env-1-")));
+        EnvironmentDTO env2 = admin.owners().createEnvironment(ownerKey, Environments.random()
+            .id(StringUtil.random("env-2-")));
+
+        ContentToPromoteDTO promote = new ContentToPromoteDTO()
+            .environmentId(env1.getId())
+            .contentId(content1.getId())
+            .enabled(true);
+        admin.environments().promoteContent(env1.getId(), List.of(promote), true);
+        promote = new ContentToPromoteDTO()
+            .environmentId(env2.getId())
+            .contentId(content2.getId())
+            .enabled(true);
+        admin.environments().promoteContent(env2.getId(), List.of(promote), true);
+
+        ConsumerDTO consumer = Consumers.random(owner)
+            .environments(List.of(env1));
+        consumer = admin.consumers().createConsumer(consumer);
+
+        List<JsonNode> certs = admin.consumers().exportCertificates(consumer.getUuid(), null);
+        Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
+        assertThat(prodIdToContentIds)
+            .hasSize(1)
+            .extractingByKey("content_access", as(collection(String.class)))
+            .singleElement()
+            .isEqualTo(content1.getId());
+
+        SetConsumerEnvironmentsDTO req = new SetConsumerEnvironmentsDTO();
+        req.setConsumerUuids(List.of(consumer.getUuid(), consumer.getUuid()));
+        req.setEnvironmentIds(List.of(env2.getId()));
+
+        admin.owners().setConsumersToEnvironments(ownerKey, req);
+
+        // Verify that the certificate content was updated
+        certs = admin.consumers().exportCertificates(consumer.getUuid(), null);
+        assertThat(certs).singleElement();
+        prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
+        assertThat(prodIdToContentIds)
+            .hasSize(1)
+            .extractingByKey("content_access", as(collection(String.class)))
+            .singleElement()
+            .isEqualTo(content2.getId());
+    }
+
 }
