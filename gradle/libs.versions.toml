@@ -85,7 +85,7 @@ openapi = { module = "org.openapitools:openapi-generator", version.ref = "openap
 openapi-databind-nullable = { module = "org.openapitools:jackson-databind-nullable", version = "0.2.6" }
 otel-annotation = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations", version = "2.12.0" }
 picocli = { module = "info.picocli:picocli", version = "4.7.6" }
-postgresql = { module = "org.postgresql:postgresql", version = "42.7.4" }
+postgresql = { module = "org.postgresql:postgresql", version = "42.7.5" }
 quartz = { module = "org.quartz-scheduler:quartz", version = "2.5.0" }
 resteasy-atom = { module = "org.jboss.resteasy:resteasy-atom-provider", version.ref = "resteasy" }
 resteasy-guice = { module = "org.jboss.resteasy:resteasy-guice", version.ref = "resteasy" }
