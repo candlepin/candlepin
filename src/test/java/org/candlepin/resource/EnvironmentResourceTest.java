@@ -40,6 +40,7 @@ import org.candlepin.dto.SimpleModelTranslator;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
+import org.candlepin.dto.api.server.v1.ContentToPromoteDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentContentDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
@@ -663,6 +664,68 @@ class EnvironmentResourceTest {
         assertEquals("env1", dto.getEnvironments().get(0).getId());
         assertEquals("env3", dto.getEnvironments().get(1).getId());
         assertEquals("env2", dto.getEnvironments().get(2).getId());
+    }
+
+    @Test
+    public void shouldUpdateLastContentFieldOnContentPromote() {
+        Date beforePromote = minusTwoSeconds();
+        Environment env = this.createMockedEnvironment()
+            .setOwner(this.owner)
+            .setLastContentUpdate(beforePromote);
+        ContentToPromoteDTO dto = new ContentToPromoteDTO()
+            .contentId("con-1");
+        Content content = new Content("con-1");
+
+        when(contentCurator.resolveContentId(anyString(), anyString())).thenReturn(content);
+
+        this.environmentResource.promoteContent(env.getId(), List.of(dto), true);
+        Date afterPromote = env.getLastContentUpdate();
+
+        assertThat(beforePromote)
+            .isBefore(afterPromote);
+    }
+
+    @Test
+    public void shouldUpdateLastContentFieldOnContentDemote() {
+        Content content = new Content("con-1");
+        EnvironmentContent enContent = new EnvironmentContent()
+            .setContent(content);
+        Date beforeDemote = minusTwoSeconds();
+        Environment env = this.createMockedEnvironment()
+            .setOwner(this.owner)
+            .setEnvironmentContent(Set.of(enContent))
+            .setLastContentUpdate(beforeDemote);
+
+        when(envContentCurator.getByEnvironmentAndContent(any(), anyString())).thenReturn(enContent);
+
+        this.environmentResource.demoteContent(env.getId(), List.of(content.getId()), true);
+        Date afterDemote = env.getLastContentUpdate();
+
+        assertThat(beforeDemote)
+            .isBefore(afterDemote);
+    }
+
+    @Test
+    public void shouldUpdateLastContentFieldOnContentPrefixChange() {
+        Date beforeUpdate = minusTwoSeconds();
+        Environment env = this.createMockedEnvironment()
+            .setOwner(this.owner)
+            .setContentPrefix("contentPrefix")
+            .setLastContentUpdate(beforeUpdate);
+        EnvironmentDTO dto = new EnvironmentDTO()
+            .contentPrefix("newContentUrl");
+
+        this.environmentResource.updateEnvironment(env.getId(), dto);
+        Date afterUpdate = env.getLastContentUpdate();
+
+        assertThat(env.getContentPrefix())
+            .isEqualTo("newContentUrl");
+        assertThat(beforeUpdate)
+            .isBefore(afterUpdate);
+    }
+
+    private Date minusTwoSeconds() {
+        return new Date(System.currentTimeMillis() - 2000);
     }
 
     private Environment createEnvironment(Owner owner, String id) {
