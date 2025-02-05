@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.20
+Version: 4.4.21
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,16 @@ fi
 
 #raw
 %changelog
+* Wed Feb 05 2025 candlepin-bot 4.4.21-1
+- Add new translations using Weblate (noreply@weblate.org)
+- CANDLEPIN-995: Updated the entity layering migration's tiebreakers
+  (crog@redhat.com)
+- CANDLEPIN-981: Updated RHEL dependency from pki-servlet-engine to tomcat
+  (sbakaj@redhat.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- 2332067: Disallowed Manual Subscription Attachment in SCA Mode
+  (sbakaj@redhat.com)
+
 * Mon Nov 25 2024 candlepin-bot 4.4.20-1
 - Add new translations using Weblate (noreply@weblate.org)
 - updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
