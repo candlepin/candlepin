@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.3.14
+Version: 4.3.15
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -236,6 +236,14 @@ fi
 
 #raw
 %changelog
+* Thu Feb 06 2025 candlepin-bot 4.3.15-1
+- CANDLEPIN-982: Updated RHEL dependency from pki-servlet-engine to tomcat
+  (sbakaj@redhat.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- CANDLEPIN-871: Added CS8 container to CI (sbakaj@redhat.com)
+- CANDLEPIN-872: Backported jira_target_version_check GH action
+  (sbakaj@redhat.com)
+
 * Wed Jun 19 2024 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.14-1
 - Add new translations using Weblate (noreply@weblate.org)
 - 2282411: Remove XmlTransient tag from eventData (wpoteat@redhat.com)
