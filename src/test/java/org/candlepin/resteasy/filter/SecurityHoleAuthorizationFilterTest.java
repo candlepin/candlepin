@@ -205,7 +205,7 @@ public class SecurityHoleAuthorizationFilterTest {
     }
 
     private void assertRetryAfterHeader(int expectedTime, TooManyRequestsException exception) {
-        assertEquals(expectedTime, exception.getRetryAfterTime());
+        assertEquals(expectedTime, exception.getRetryAfter());
     }
 
     /**

@@ -29,6 +29,7 @@ import org.xnap.commons.i18n.I18n;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -111,15 +112,23 @@ public class CandlepinExceptionMapper {
             log.error(message, exception);
         }
 
+        CandlepinException cpException = (CandlepinException) exception;
+
         if (status == null) {
             status = Status.INTERNAL_SERVER_ERROR;
         }
 
         Map<String, String> map = VersionUtil.getVersionMap();
 
-        return Response.status(status)
+        ResponseBuilder builder = Response.status(status)
             .entity(new ExceptionMessage(message))
             .type(responseMediaType)
             .header(VersionUtil.VERSION_HEADER, map.get("version") + "-" + map.get("release"));
+
+        for (Entry<String, String> entry : cpException.headers().entrySet()) {
+            builder.header(entry.getKey(), entry.getValue());
+        }
+
+        return builder;
     }
 }

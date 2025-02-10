@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,11 +14,14 @@
  */
 package org.candlepin.exceptions.mappers;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.guice.I18nProvider;
 import org.candlepin.guice.TestingScope;
@@ -33,6 +36,8 @@ import org.junit.jupiter.api.Test;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
@@ -96,6 +101,24 @@ public class CandlepinExceptionMapperTest {
             r.getMetadata().get("Content-Type").get(0));
     }
 
+    @Test
+    public void testGetDefaultBuilderWithCandlepinExceptionHeaders() {
+        CandlepinExceptionTest exception = new CandlepinExceptionTest();
+        String headerKey = "key";
+        String headerValue = "value";
+        exception.addHeader(headerKey, headerValue);
+
+        ResponseBuilder builder = cem.getDefaultBuilder(exception, Status.TOO_MANY_REQUESTS);
+        assertNotNull(builder);
+
+        Response response = builder.build();
+        String actual = response.getHeaderString(headerKey);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEqualTo(headerValue);
+    }
+
     public static class MapperTestModule extends AbstractModule {
         @Override
         protected void configure() {
@@ -106,4 +129,22 @@ public class CandlepinExceptionMapperTest {
             bind(I18n.class).toProvider(I18nProvider.class);
         }
     }
+
+    private class CandlepinExceptionTest extends CandlepinException {
+        private Map<String, String> headers = new HashMap<>();
+
+        public CandlepinExceptionTest() {
+            super(Status.TOO_MANY_REQUESTS, "");
+        }
+
+        public void addHeader(String key, String value) {
+            headers.put(key, value);
+        }
+
+        @Override
+        public Map<String, String> headers() {
+            return headers;
+        }
+    }
+
 }
