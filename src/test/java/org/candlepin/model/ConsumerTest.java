@@ -14,6 +14,9 @@
  */
 package org.candlepin.model;
 
+import static org.candlepin.model.CloudIdentifierFacts.AWS_ACCOUNT_ID;
+import static org.candlepin.model.CloudIdentifierFacts.AWS_INSTANCE_ID;
+import static org.candlepin.model.CloudIdentifierFacts.AZURE_OFFER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -32,11 +35,15 @@ import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.validation.ConstraintViolationException;
 
@@ -47,8 +54,6 @@ public class ConsumerTest extends DatabaseTestFixture {
     private ConsumerResource consumerResource;
 
     private Owner owner;
-    private Product rhel;
-    private Product jboss;
     private Consumer consumer;
     private ConsumerType consumerType;
     private static final String CONSUMER_TYPE_NAME = "test-consumer-type";
@@ -58,8 +63,6 @@ public class ConsumerTest extends DatabaseTestFixture {
     @BeforeEach
     public void setUpTestObjects() {
         owner = this.createOwner("Example Corporation");
-        rhel = this.createProduct("rhel", "Red Hat Enterprise Linux");
-        jboss = this.createProduct("jboss", "JBoss");
 
         consumerType = new ConsumerType(CONSUMER_TYPE_NAME);
         consumerTypeCurator.create(consumerType);
@@ -701,6 +704,77 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumer.setConsumerCloudData(consumerCloudData);
 
         assertSame(consumerCloudData, consumer.getConsumerCloudData());
+    }
+
+    @ParameterizedTest(name = "Should return true for existing: {0} and incoming: {1}")
+    @MethodSource("trueCases")
+    void testCheckForCloudIdentifierFactsTrue(Map<String, String> existingFacts,
+        Map<String, String> incomingFacts) {
+        Consumer consumer = new Consumer();
+        consumer.setFacts(existingFacts);
+
+        assertTrue(consumer.checkForCloudIdentifierFacts(incomingFacts));
+    }
+
+    @ParameterizedTest(name = "Should return false for existing: {0} and incoming: {1}")
+    @MethodSource("falseCases")
+    void testCheckForCloudIdentifierFactsFalse(Map<String, String> existingFacts,
+        Map<String, String> incomingFacts) {
+        Consumer consumer = new Consumer();
+        consumer.setFacts(existingFacts);
+
+        assertFalse(consumer.checkForCloudIdentifierFacts(incomingFacts));
+    }
+
+    private static Stream<Arguments> trueCases() {
+        return Stream.of(
+            // Case 1: When existing facts are null and incoming contains a cloud identifier, return true.
+            Arguments.of(null, Map.of(AWS_ACCOUNT_ID.getValue(), "123")),
+
+            // Case 2: When the cloud identifier value differs (e.g., "123" vs "456"), return true.
+            Arguments.of(Map.of(AWS_ACCOUNT_ID.getValue(), "123"),
+                Map.of(AWS_ACCOUNT_ID.getValue(), "456")),
+
+            // Case 3: When there are multiple cloud keys and at least one value differs, return true.
+            Arguments.of(
+                Map.of(AWS_ACCOUNT_ID.getValue(), "123", AWS_INSTANCE_ID.getValue(), "inst1",
+                    AZURE_OFFER.getValue(), "offer1"),
+                new HashMap<String, String>() {{
+                        put(AWS_ACCOUNT_ID.getValue(), "123");
+                        put(AWS_INSTANCE_ID.getValue(), "inst2");
+                        put(AZURE_OFFER.getValue(), "offer1");
+                    }}
+            )
+        );
+    }
+
+    private static Stream<Arguments> falseCases() {
+        return Stream.of(
+            // Case 1: When incoming facts are null, return false.
+            Arguments.of(Map.of(AWS_ACCOUNT_ID.getValue(), "123"), null),
+
+            // Case 2: When incoming facts are identical to the existing facts, return false.
+            Arguments.of(
+                Map.of(AWS_ACCOUNT_ID.getValue(), "123", AWS_INSTANCE_ID.getValue(), "inst1"),
+                Map.of(AWS_ACCOUNT_ID.getValue(), "123", AWS_INSTANCE_ID.getValue(), "inst1")
+            ),
+
+            // Case 3: When incoming facts do not contain any cloud identifier key, return false.
+            Arguments.of(Map.of("non_cloud_key", "value1"), Map.of("non_cloud_key", "value2")),
+
+            // Case 4: When incoming contains an extra non-cloud key but cloud facts remain the same,
+            // return false.
+            Arguments.of(
+                Map.of(AWS_ACCOUNT_ID.getValue(), "123", AWS_INSTANCE_ID.getValue(), "inst1",
+                    AZURE_OFFER.getValue(), "offer1"),
+                new HashMap<String, String>() {{
+                        put(AWS_ACCOUNT_ID.getValue(), "123");
+                        put(AWS_INSTANCE_ID.getValue(), "inst1");
+                        put(AZURE_OFFER.getValue(), "offer1");
+                        put("non_cloud_key", "some_value");
+                    }}
+            )
+        );
     }
 
     private Consumer createConsumerWithIdCert(Owner owner) {

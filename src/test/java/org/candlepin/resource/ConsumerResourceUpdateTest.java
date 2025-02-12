@@ -29,15 +29,7 @@ import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.atMost;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.Event;
@@ -73,6 +65,7 @@ import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerCloudData;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -105,6 +98,7 @@ import org.candlepin.policy.js.consumer.ConsumerRules;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerBindUtil;
+import org.candlepin.resource.util.ConsumerCloudDataBuilder;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
@@ -144,6 +138,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 
@@ -238,6 +233,8 @@ public class ConsumerResourceUpdateTest {
     private SCACertificateGenerator scaCertificateGenerator;
     @Mock
     private AnonymousCertificateGenerator anonymousCertificateGenerator;
+    @Mock
+    private ConsumerCloudDataBuilder cloudDataBuilder;
 
     private ModelTranslator translator;
 
@@ -301,7 +298,8 @@ public class ConsumerResourceUpdateTest {
             this.anonymousCertCurator,
             this.ownerService,
             this.scaCertificateGenerator,
-            this.anonymousCertificateGenerator
+            this.anonymousCertificateGenerator,
+            this.cloudDataBuilder
         );
 
         when(this.complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),
@@ -1436,5 +1434,62 @@ public class ConsumerResourceUpdateTest {
         assertEquals(existing.getEnvironmentIds().get(2), env4.getId());
         assertEquals(existing.getEnvironmentIds().get(3), env11.getId());
         assertEquals(existing.getEnvironmentIds().get(4), env111.getId());
+    }
+
+    @Test
+    void testUpdateConsumerExistingCloudDataUpdateFromCalled() {
+        String uuid = "uuid-123";
+        ConsumerDTO dto = new ConsumerDTO();
+        dto.setFacts(Map.of("aws_account_id", "123"));
+        ConsumerCloudData existingCloudData = mock(ConsumerCloudData.class);
+        ConsumerCloudData changedCloudData = mock(ConsumerCloudData.class);
+        Consumer toUpdate = spy(new Consumer());
+
+        when(toUpdate.checkForCloudIdentifierFacts(dto.getFacts())).thenReturn(true);
+        when(toUpdate.getConsumerCloudData()).thenReturn(existingCloudData);
+        when(consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(toUpdate);
+        when(cloudDataBuilder.build(dto)).thenReturn(Optional.of(changedCloudData));
+
+        resource.updateConsumer(uuid, dto);
+
+        verify(existingCloudData).updateFrom(changedCloudData);
+        verify(toUpdate, never()).setConsumerCloudData(any());
+    }
+
+    @Test
+    void testUpdateConsumerNoExistingCloudDataSetConsumerCloudDataCalled() {
+        String uuid = "uuid-456";
+        ConsumerDTO dto = new ConsumerDTO();
+        dto.setFacts(Map.of("aws_account_id", "123"));
+        Consumer toUpdate = spy(new Consumer());
+        ConsumerCloudData newCloudData = mock(ConsumerCloudData.class);
+
+        when(toUpdate.checkForCloudIdentifierFacts(dto.getFacts())).thenReturn(true);
+        when(toUpdate.getConsumerCloudData()).thenReturn(null);
+        when(consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(toUpdate);
+        when(cloudDataBuilder.build(dto)).thenReturn(Optional.of(newCloudData));
+
+        resource.updateConsumer(uuid, dto);
+
+        verify(toUpdate).setConsumerCloudData(newCloudData);
+    }
+
+    @Test
+    void testUpdateConsumerEmptyChangedCloudData() {
+        String uuid = "uuid-789";
+        ConsumerDTO dto = new ConsumerDTO();
+        dto.setFacts(Map.of("aws_account_id", "123"));
+        Consumer toUpdate = spy(new Consumer());
+        ConsumerCloudData existingCloudData = mock(ConsumerCloudData.class);
+
+        when(toUpdate.checkForCloudIdentifierFacts(dto.getFacts())).thenReturn(true);
+        when(toUpdate.getConsumerCloudData()).thenReturn(existingCloudData);
+        when(consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(toUpdate);
+        when(cloudDataBuilder.build(dto)).thenReturn(Optional.empty());
+
+        resource.updateConsumer(uuid, dto);
+
+        verify(existingCloudData, never()).updateFrom(any());
+        verify(toUpdate, never()).setConsumerCloudData(any());
     }
 }

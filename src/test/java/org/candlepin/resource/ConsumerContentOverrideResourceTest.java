@@ -49,6 +49,7 @@ import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.consumer.ConsumerRules;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerBindUtil;
+import org.candlepin.resource.util.ConsumerCloudDataBuilder;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
@@ -137,6 +138,8 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     private SCACertificateGenerator scaCertificateGenerator;
     @Mock
     private AnonymousCertificateGenerator anonymousCertificateGenerator;
+    @Mock
+    private ConsumerCloudDataBuilder consumerCloudDataBuilder;
 
     private ConsumerResource resource;
 
@@ -191,7 +194,8 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             this.anonymousContentAccessCertCurator,
             this.ownerService,
             this.scaCertificateGenerator,
-            this.anonymousCertificateGenerator
+            this.anonymousCertificateGenerator,
+            this.consumerCloudDataBuilder
         );
     }
 
