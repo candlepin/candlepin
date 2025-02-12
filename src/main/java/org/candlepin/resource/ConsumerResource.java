@@ -84,7 +84,6 @@ import org.candlepin.model.AnonymousContentAccessCertificate;
 import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Certificate;
-import org.candlepin.model.CloudIdentifierFacts;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerActivationKey;
 import org.candlepin.model.ConsumerCapability;
@@ -139,6 +138,7 @@ import org.candlepin.resource.dto.ContentAccessListing;
 import org.candlepin.resource.server.v1.ConsumerApi;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerBindUtil;
+import org.candlepin.resource.util.ConsumerCloudDataBuilder;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.EntitlementEnvironmentFilter;
@@ -187,6 +187,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -216,6 +217,7 @@ public class ConsumerResource implements ConsumerApi {
 
     private final ConsumerCurator consumerCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
+    private final ConsumerCloudDataBuilder consumerCloudDataBuilder;
     private final SubscriptionServiceAdapter subAdapter;
     private final EntitlementCurator entitlementCurator;
     private final IdentityCertificateGenerator identityCertificateGenerator;
@@ -307,7 +309,8 @@ public class ConsumerResource implements ConsumerApi {
         AnonymousContentAccessCertificateCurator anonymousCertCurator,
         OwnerServiceAdapter ownerService,
         SCACertificateGenerator scaCertificateGenerator,
-        AnonymousCertificateGenerator anonymousCertGenerator) {
+        AnonymousCertificateGenerator anonymousCertGenerator,
+        ConsumerCloudDataBuilder consumerCloudDataBuilder) {
 
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
@@ -352,6 +355,7 @@ public class ConsumerResource implements ConsumerApi {
         this.ownerService = Objects.requireNonNull(ownerService);
         this.scaCertificateGenerator = Objects.requireNonNull(scaCertificateGenerator);
         this.anonymousCertGenerator = Objects.requireNonNull(anonymousCertGenerator);
+        this.consumerCloudDataBuilder = Objects.requireNonNull(consumerCloudDataBuilder);
 
         this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(
             entitlementCurator, environmentContentCurator);
@@ -1015,6 +1019,7 @@ public class ConsumerResource implements ConsumerApi {
 
         Consumer created = createConsumerFromDTO(dto, ctype, principal, userName, owner, activationKeys,
             identityCertCreation);
+        created.setConsumerCloudData(consumerCloudDataBuilder.build(created).orElse(null));
 
         if (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal) {
             AnonymousCloudConsumer anonCloudConsumer = anonymPrincipal.getAnonymousCloudConsumer();
@@ -1023,33 +1028,6 @@ public class ConsumerResource implements ConsumerApi {
         }
 
         return this.translator.translate(created, ConsumerDTO.class);
-    }
-
-    private ConsumerCloudData createConsumerCloudData(Consumer consumer) {
-        Map<String, String> facts = consumer.getFacts();
-
-        String cloudProviderShortName;
-        try {
-            cloudProviderShortName = CloudIdentifierFacts.extractCloudProviderShortName(facts);
-        }
-        catch (IllegalArgumentException e) {
-            throw new BadRequestException(i18n.tr(e.getMessage()));
-        }
-
-        if (cloudProviderShortName != null) {
-            String cloudAccountId = CloudIdentifierFacts.extractCloudAccountId(facts);
-            String cloudInstanceId = CloudIdentifierFacts.extractCloudInstanceId(facts);
-            List<String> cloudOfferingIds = CloudIdentifierFacts.extractCloudOfferingIds(facts);
-
-            return new ConsumerCloudData()
-                .setConsumer(consumer)
-                .setCloudProviderShortName(cloudProviderShortName)
-                .setCloudAccountId(cloudAccountId)
-                .setCloudInstanceId(cloudInstanceId)
-                .setCloudOfferingIds(cloudOfferingIds);
-        }
-
-        return null;
     }
 
     // TODO: FIXME: This method is only public due to it being called directly by tests. Refactor the
@@ -1088,11 +1066,6 @@ public class ConsumerResource implements ConsumerApi {
         consumerToCreate.setType(type);
 
         consumerToCreate.setCanActivate(subAdapter.canActivateSubscription(consumerToCreate));
-
-        // Do consumer cloud fact processing
-        // Impl note: this must occur *after* the facts are assigned on the object.
-        ConsumerCloudData consumerCloudData = this.createConsumerCloudData(consumerToCreate);
-        consumerToCreate.setConsumerCloudData(consumerCloudData);
 
         HypervisorId hvsrId = consumerToCreate.getHypervisorId();
         if (hvsrId != null && hvsrId.getHypervisorId() != null && !hvsrId.getHypervisorId().isEmpty()) {
@@ -1654,6 +1627,18 @@ public class ConsumerResource implements ConsumerApi {
         guestMigration.buildMigrationManifest(dto, toUpdate);
 
         if (performConsumerUpdates(dto, toUpdate, guestMigration)) {
+            if (toUpdate.checkForCloudIdentifierFacts(dto.getFacts())) {
+                log.warn("Detected change in cloud identifier fact for consumer: {}", toUpdate.getUuid());
+                Optional<ConsumerCloudData> changed = consumerCloudDataBuilder.build(dto);
+                ConsumerCloudData cloudData = toUpdate.getConsumerCloudData();
+                if (cloudData != null) {
+                    changed.ifPresent(cloudData::updateFrom);
+                }
+                else {
+                    changed.ifPresent(toUpdate::setConsumerCloudData);
+                }
+            }
+
             try {
                 if (guestMigration.isMigrationPending()) {
                     guestMigration.migrate();
