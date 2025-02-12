@@ -14,6 +14,7 @@
  */
 package org.candlepin.guice;
 
+import com.google.inject.multibindings.Multibinder;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.JobMessageDispatcher;
 import org.candlepin.async.JobMessageReceiver;
@@ -146,6 +147,10 @@ import org.candlepin.resource.RulesResource;
 import org.candlepin.resource.StatusResource;
 import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resource.UserResource;
+import org.candlepin.resource.util.AWSProviderFactParser;
+import org.candlepin.resource.util.AzureProviderFactParser;
+import org.candlepin.resource.util.CloudProviderFactParser;
+import org.candlepin.resource.util.GCPProviderFactParser;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.JsonProvider;
@@ -287,6 +292,12 @@ public class CandlepinModule extends AbstractModule {
         miscConfigurations();
 
         bind(CacheManager.class).toProvider(JCacheManagerProvider.class).in(Singleton.class);
+
+        Multibinder<CloudProviderFactParser> parserBinder =
+            Multibinder.newSetBinder(binder(), CloudProviderFactParser.class);
+        parserBinder.addBinding().to(AWSProviderFactParser.class);
+        parserBinder.addBinding().to(AzureProviderFactParser.class);
+        parserBinder.addBinding().to(GCPProviderFactParser.class);
 
         // Configure model translators
         this.configureModelTranslator();

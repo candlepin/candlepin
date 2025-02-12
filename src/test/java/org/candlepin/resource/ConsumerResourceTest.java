@@ -121,6 +121,7 @@ import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.dto.ContentAccessListing;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerBindUtil;
+import org.candlepin.resource.util.ConsumerCloudDataBuilder;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
@@ -283,6 +284,8 @@ public class ConsumerResourceTest {
     private AnonymousCertificateGenerator anonymousCertificateGenerator;
     @Mock
     private Principal principal;
+    @Mock
+    private ConsumerCloudDataBuilder consumerCloudDataBuilder;
 
     private ModelTranslator translator;
     private ConsumerResource consumerResource;
@@ -364,7 +367,8 @@ public class ConsumerResourceTest {
             this.anonymousCertCurator,
             this.ownerService,
             this.scaCertificateGenerator,
-            this.anonymousCertificateGenerator
+            this.anonymousCertificateGenerator,
+            this.consumerCloudDataBuilder
         );
     }
 
@@ -616,7 +620,8 @@ public class ConsumerResourceTest {
             this.anonymousCertCurator,
             this.ownerService,
             this.scaCertificateGenerator,
-            this.anonymousCertificateGenerator
+            this.anonymousCertificateGenerator,
+            this.consumerCloudDataBuilder
         );
 
         // Fixme throw custom exception from generator instead of generic RuntimeException
