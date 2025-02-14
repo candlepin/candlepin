@@ -1352,7 +1352,9 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testGetEntitlementCertificatesWithExistingSerialIdForSimpleContentAccessCert() {
+    public void testGetEntitlementCertificatesWithExistingSerialIdForSimpleContentAccessCert()
+        throws Exception {
+
         Consumer consumer = createConsumer();
         Owner owner = new Owner();
         ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
@@ -1478,7 +1480,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testGetEntitlementCertificatesWithUnknownSerialId() {
+    public void testGetEntitlementCertificatesWithUnknownSerialId() throws Exception {
         Consumer consumer = createConsumer();
         doReturn(consumer).when(consumerCurator).verifyAndLookupConsumer(consumer.getId());
         List<EntitlementCertificate> certificates = createEntitlementCertificates();
@@ -1579,7 +1581,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    void contentAccessGetModified() {
+    void contentAccessGetModified() throws Exception {
         String expectedMode = "owner-ca-mode-list";
         Owner owner = createOwner();
         when(ownerCurator.findOwnerById(owner.getOwnerId())).thenReturn(owner);
@@ -1603,7 +1605,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    void contentAccessIfModifiedSinceLocale() {
+    void contentAccessIfModifiedSinceLocale() throws Exception {
         Locale.setDefault(Locale.FRANCE);
         String expectedMode = "owner-ca-mode-list";
         Owner owner = createOwner();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,6 +14,8 @@
  */
 package org.candlepin.pki.certs;
 
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.controller.util.ContentPathBuilder;
 import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.model.CertificateSerial;
@@ -21,6 +23,8 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.ContentAccessPayload;
+import org.candlepin.model.ContentAccessPayloadCurator;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
@@ -40,6 +44,7 @@ import org.candlepin.pki.impl.Signer;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +52,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -58,6 +65,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -65,25 +73,29 @@ import javax.inject.Singleton;
 
 
 /**
- * Handles creation of the content access certificates.
+ * Responsible for creating {@link SCACertificate}s.
  */
 @Singleton
 public class SCACertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(SCACertificateGenerator.class);
+
     private static final String SCA_ENTITLEMENT_TYPE = "OrgLevel";
 
     private final V3CapabilityCheck v3CapabilityCheck;
     private final CertificateSerialCurator serialCurator;
     private final ContentCurator contentCurator;
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
+    private final ContentAccessPayloadCurator contentAccessPayloadCurator;
     private final X509V3ExtensionUtil v3extensionUtil;
     private final EntitlementPayloadGenerator payloadGenerator;
-    private final ConsumerCurator consumerCurator;
     private final EnvironmentCurator environmentCurator;
     private final PemEncoder pemEncoder;
     private final KeyPairGenerator keyPairGenerator;
     private final Signer signer;
     private final Provider<X509CertificateBuilder> certificateBuilder;
+    private final Configuration configuration;
+
+    private final int x509CertExpirationThreshold;
 
     @Inject
     public SCACertificateGenerator(
@@ -91,6 +103,7 @@ public class SCACertificateGenerator {
         V3CapabilityCheck v3CapabilityCheck,
         EntitlementPayloadGenerator payloadGenerator,
         ContentAccessCertificateCurator contentAccessCertificateCurator,
+        ContentAccessPayloadCurator contentAccessPayloadCurator,
         CertificateSerialCurator serialCurator,
         ContentCurator contentCurator,
         ConsumerCurator consumerCurator,
@@ -98,176 +111,285 @@ public class SCACertificateGenerator {
         PemEncoder pemEncoder,
         KeyPairGenerator keyPairGenerator,
         Signer signer,
-        Provider<X509CertificateBuilder> certificateBuilder) {
+        Provider<X509CertificateBuilder> certificateBuilder,
+        Configuration configuration) {
 
         this.v3CapabilityCheck = Objects.requireNonNull(v3CapabilityCheck);
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
+        this.contentAccessPayloadCurator = Objects.requireNonNull(contentAccessPayloadCurator);
         this.serialCurator = Objects.requireNonNull(serialCurator);
         this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
         this.payloadGenerator = Objects.requireNonNull(payloadGenerator);
         this.contentCurator = Objects.requireNonNull(contentCurator);
-        this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.environmentCurator = Objects.requireNonNull(environmentCurator);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
         this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
         this.signer = Objects.requireNonNull(signer);
         this.certificateBuilder = Objects.requireNonNull(certificateBuilder);
+        this.configuration = Objects.requireNonNull(configuration);
+
+        x509CertExpirationThreshold = this.configuration
+            .getInt(ConfigProperties.SCA_X509_CERT_EXPIRY_THRESHOLD);
     }
 
     /**
-     * Fetch and potentially regenerate a Simple Content Access certificate, used to grant access to
-     * some content. The certificate will be regenerated if it is missing, or new content has been made
-     * available. Otherwise, it will be simply fetched.
+     * Retrieves a {@link ContentAccessPayload} component of a {@link SCACertificate} for a provided
+     * v3 cert capable consumer that is part of an owner using simple content access. A payload will be
+     * generated if one does not exist or regenerated if there has been changes in the consumer's content.
+     * The consumer's content consists of content from the consumer's {@link Owner} and the consumer's
+     * {@link Environment}s.
      *
-     * @return Client entitlement certificates
+     * @param consumer
+     *  the consumer to retrieve a content access payload for
+     *
+     * @throws IllegalArgumentException
+     *  if the provided consumer is null
+     *
+     * @throws ConcurrentContentPayloadCreationException
+     *  if a concurrent request persists the content payload and causes a database constraint violation
+     *
+     * @return the content access payload for the consumer, or null if the owner is not in SCA mode or the
+     *  consumer is not v3 cert capable
      */
-    public SCACertificate generate(Consumer consumer) {
-        // Ensure the org is in SCA mode and the consumer is able to process the cert we'll be
-        // generating for them.
+    public ContentAccessPayload getContentPayload(Consumer consumer)
+        throws ConcurrentContentPayloadCreationException {
+
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
         Owner owner = consumer.getOwner();
-        if (owner == null || !owner.isUsingSimpleContentAccess() ||
-            !this.v3CapabilityCheck.isCertV3Capable(consumer)) {
+        if (owner == null || !owner.isUsingSimpleContentAccess()) {
+            log.debug("Consumer is not in SCA mode");
             return null;
         }
 
-        try {
-            SCACertificate result = this.generateFor(consumer, owner);
-            return this.wrap(result);
-        }
-        catch (Exception e) {
-            log.error("Unexpected exception occurred while fetching SCA certificate for consumer: {}",
-                consumer, e);
+        if (!v3CapabilityCheck.isCertV3Capable(consumer)) {
+            log.debug("Consumer is not v3 cert capable");
+            return null;
         }
 
-        return null;
-    }
+        // Impl note:
+        // These need to be ordered according to priority! At the time of writing, getConsumerEnvironments
+        // does this, but if that ever changes, we absolutely need that sorting here.
+        List<Environment> environments = environmentCurator.getConsumerEnvironments(consumer);
 
-    private SCACertificate wrap(SCACertificate cert) {
-        SCACertificate result = new SCACertificate();
-        result.setCert(cert.getCert() + cert.getContent());
-        result.setCreated(cert.getCreated());
-        result.setUpdated(cert.getUpdated());
-        result.setId(cert.getId());
-        result.setConsumer(cert.getConsumer());
-        result.setKey(cert.getKey());
-        result.setSerial(cert.getSerial());
-        return result;
+        return getContentAccessPayload(owner, consumer, environments);
     }
 
     /**
-     * Method create a new {@link SCACertificate}. If certificate
-     * already exists it is reused and updated.
+     * Retrieves the X509 certificate component of a {@link SCACertificate} for a provided v3 cert capable
+     * consumer that is part of an owner using simple content access. The X509 certificate will be generated
+     * for the consumer if one does not exist or if the existing certificate is expired. A certificate is
+     * considered expired if the {@link CertificateSerial}'s expiration date is after the configured X509
+     * certificate exiration threshold.
      *
-     * @param consumer A consumer for which to create a certificate
-     * @param owner An owner to be used for certificate creation
-     * @return Content access certificate
+     * @param consumer
+     *  the consumer to retrieve a X509 certificate for
+     *
+     * @throws IllegalArgumentException
+     *  if the provided consumer is null
+     *
+     * @return the X509 certificate for the consumer, or null if the owner is not in SCA mode or the
+     *  consumer is not v3 cert capable
      */
-    private SCACertificate generateFor(Consumer consumer, Owner owner) {
-        SCACertificate existing = consumer.getContentAccessCert();
+    public SCACertificate getX509Certificate(Consumer consumer) {
 
-        SCACertificate certificate = existing != null ?
-            this.updateCertificate(consumer, owner, existing) :
-            this.createCertificate(consumer, owner);
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
 
-        // Due to the shenanigans we do to wrap and juggle the data in this cert, it's critical we invoke
-        // Hibernate's persist and update hooks by flushing the creation/update operations above so the
-        // dates are correct in the output cert object.
-        this.contentAccessCertificateCurator.flush();
+        Owner owner = consumer.getOwner();
+        if (owner == null || !owner.isUsingSimpleContentAccess()) {
+            log.debug("Consumer is not in SCA mode");
+            return null;
+        }
 
-        return certificate;
+        if (!v3CapabilityCheck.isCertV3Capable(consumer)) {
+            log.debug("Consumer is not v3 cert capable");
+            return null;
+        }
+
+        List<Environment> environments = environmentCurator.getConsumerEnvironments(consumer);
+
+        return getCertificate(owner, consumer, environments);
     }
 
-    private SCACertificate createCertificate(Consumer consumer, Owner owner) {
-        log.info("Generating new SCA certificate for consumer: \"{}\"", consumer.getUuid());
-        OffsetDateTime start = OffsetDateTime.now().minusHours(1L);
-        OffsetDateTime end = start.plusYears(1L);
+    /**
+     * Retrieves a {@link SCACertificate} containing both the X509 certificate and
+     * {@link ContentAccessPayload} for a provided v3 cert capable consumer that is part of an owner using
+     * simple content access. The SCA certificate will be created if one does not exist or recreated if either
+     * the X509 certificate is expired or the content payload is out of date. To retrieve the individual
+     * components seperately, see {@link #getContentPayload} and {@link #getX509Certificate}.
+     *
+     * @param consumer
+     *  the consumer to retrieve a SCA certificate for
+     *
+     * @throws IllegalArgumentException
+     *  if the provided consumer is null
+     *
+     * @throws ConcurrentContentPayloadCreationException
+     *  if a concurrent request persists the content payload and causes a database constraint violation
+     *
+     * @return the SCA certificate for the consumer, or null if the owner is not in SCA mode or the
+     *  consumer is not v3 cert capable
+     */
+    public SCACertificate generate(Consumer consumer) throws ConcurrentContentPayloadCreationException {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
 
-        CertificateSerial serial = createSerial(end);
+        Owner owner = consumer.getOwner();
+        if (owner == null || !owner.isUsingSimpleContentAccess()) {
+            log.debug("Consumer is not in SCA mode");
+            return null;
+        }
 
-        KeyPair keyPair = this.keyPairGenerator.getKeyPair(consumer);
-        org.candlepin.model.dto.Product container = createSCAProdContainer(owner, consumer);
+        if (!v3CapabilityCheck.isCertV3Capable(consumer)) {
+            log.debug("Consumer is not v3 cert capable");
+            return null;
+        }
 
-        List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
+        // Impl note:
+        // These need to be ordered according to priority! At the time of writing, getConsumerEnvironments
+        // does this, but if that ever changes, we absolutely need that sorting here.
+        List<Environment> environments = environmentCurator.getConsumerEnvironments(consumer);
+
+        SCACertificate cert = getCertificate(owner, consumer, environments);
+        ContentAccessPayload payload = getContentAccessPayload(owner, consumer, environments);
+
+        Date certUpdated = cert.getUpdated();
+        Date payloadUpdated = payload.getTimestamp();
+
+        SCACertificate combined = new SCACertificate();
+        combined.setCert(cert.getCert() + payload.getPayload());
+        combined.setCreated(cert.getCreated());
+        combined.setUpdated(payloadUpdated.after(certUpdated) ? payloadUpdated : certUpdated);
+        combined.setId(cert.getId());
+        combined.setKey(cert.getKey());
+        combined.setSerial(cert.getSerial());
+
+        return combined;
+    }
+
+    private SCACertificate getCertificate(Owner owner, Consumer consumer, List<Environment> environments) {
+        SCACertificate scaCertificate = consumer.getContentAccessCert();
+        if (scaCertificate == null) {
+            log.info("Generating new SCA certificate key for consumer: \"{}\"", consumer.getUuid());
+
+            KeyPair keypair = keyPairGenerator.getKeyPair(consumer);
+
+            scaCertificate = new SCACertificate();
+            scaCertificate.setConsumer(consumer);
+            scaCertificate.setKeyAsBytes(pemEncoder.encodeAsBytes(keypair.getPrivate()));
+            scaCertificate.setCert(""); // we'll correct this later
+
+            scaCertificate = contentAccessCertificateCurator.create(scaCertificate);
+
+            consumer.setContentAccessCert(scaCertificate);
+        }
+
+        Date regenerationCutoff = Date.from(Instant.now()
+            .plus(Long.valueOf(x509CertExpirationThreshold), ChronoUnit.DAYS));
+
+        CertificateSerial serial = scaCertificate.getSerial();
+        if (serial == null ||
+            serial.getExpiration() == null ||
+            regenerationCutoff.after(serial.getExpiration())) {
+
+            log.info("Generating new SCA x509 certificate for consumer: \"{}\"", consumer.getUuid());
+            if (serial != null) {
+                serialCurator.revokeById(serial.getId());
+            }
+
+            OffsetDateTime start = OffsetDateTime.now().minusHours(1L);
+            OffsetDateTime end = start.plusYears(1L);
+
+            serial = createSerial(end);
+            KeyPair keypair = keyPairGenerator.getKeyPair(consumer);
+            org.candlepin.model.dto.Product container = createProductContainer(owner, environments);
+
+            X509Certificate x509Cert = createX509Cert(consumer.getUuid(), owner, serial, keypair,
+                container, start, end);
+
+            scaCertificate.setSerial(serial);
+            scaCertificate.setCert(pemEncoder.encodeAsString(x509Cert));
+        }
+
+        return scaCertificate;
+    }
+
+    private ContentAccessPayload getContentAccessPayload(Owner owner, Consumer consumer,
+        List<Environment> environments) throws ConcurrentContentPayloadCreationException {
+
+        String payloadKey = new ContentAccessPayloadKeyBuilder(consumer)
+            .setEnvironments(environments)
+            .build();
+
+        ContentAccessPayload payload = contentAccessPayloadCurator
+            .getContentAccessPayload(owner.getId(), payloadKey);
+
+        if (payload == null || isPayloadExpired(payload, owner, environments)) {
+            log.info("Building content access payload for: {}, {}", owner.getKey(), payloadKey);
+
+            Date timestamp = new Date();
+            String payloadData = buildContentAccessPayload(owner, consumer, environments);
+            if (payload == null) {
+                payload = new ContentAccessPayload()
+                    .setOwner(owner)
+                    .setPayloadKey(payloadKey)
+                    .setTimestamp(timestamp)
+                    .setPayload(payloadData);
+
+                try {
+                    contentAccessPayloadCurator.create(payload);
+                }
+                catch (ConstraintViolationException e) {
+                    throw new ConcurrentContentPayloadCreationException(e);
+                }
+            }
+            else {
+                payload.setTimestamp(timestamp)
+                    .setPayload(payloadData);
+            }
+        }
+
+        return payload;
+    }
+
+    private String buildContentAccessPayload(Owner owner, Consumer consumer, List<Environment> environments) {
         ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(owner, environments);
         PromotedContent promotedContent = new PromotedContent(contentPathBuilder).withAll(environments);
 
         Function<ProductContent, String> cidFetcher = pcinfo -> pcinfo.getContent().getId();
-
-        Map<String, ProductContent> ownerContent = this.contentCurator
+        Map<String, ProductContent> ownerContent = contentCurator
             .getActiveContentByOwner(owner.getId())
             .stream()
             .collect(Collectors.toMap(cidFetcher, Function.identity(),
                 (v1, v2) -> new ProductContent(v2.getContent(), v1.isEnabled() || v2.isEnabled())));
 
-
         byte[] payloadBytes = createContentAccessDataPayload(consumer, ownerContent, promotedContent);
 
-        X509Certificate x509Cert = createX509Cert(consumer.getUuid(), owner, serial,
-            keyPair, container, start, end);
-
-        SCACertificate existing = new SCACertificate();
-        existing.setSerial(serial);
-        existing.setConsumer(consumer);
-        existing.setKeyAsBytes(this.pemEncoder.encodeAsBytes(keyPair.getPrivate()));
-        existing.setCert(this.pemEncoder.encodeAsString(x509Cert));
-        existing.setContent(this.createPayloadAndSignature(payloadBytes));
-
-        SCACertificate savedCert = this.contentAccessCertificateCurator.create(existing);
-        consumer.setContentAccessCert(savedCert);
-        this.consumerCurator.merge(consumer);
-        return savedCert;
+        return createPayloadAndSignature(payloadBytes);
     }
 
-    private SCACertificate updateCertificate(Consumer consumer,
-        Owner owner, SCACertificate existing) {
-        Date now = new Date();
-        Date expiration = existing.getSerial().getExpiration();
-        boolean isX509CertExpired = expiration.before(now);
+    private boolean isPayloadExpired(ContentAccessPayload payload, Owner owner,
+        List<Environment> environments) {
 
-        if (isX509CertExpired) {
-            OffsetDateTime start = OffsetDateTime.now().minusHours(1L);
-            OffsetDateTime end = start.plusYears(1L);
+        Date payloadTimestamp = payload.getTimestamp();
 
-            KeyPair keyPair = this.keyPairGenerator.getKeyPair(consumer);
-            this.serialCurator.revokeById(existing.getSerial().getId());
-            CertificateSerial serial = createSerial(end);
-            org.candlepin.model.dto.Product container = createSCAProdContainer(owner, consumer);
-            X509Certificate x509Cert = createX509Cert(consumer.getUuid(), owner,
-                serial, keyPair, container, start, end);
+        Stream<Date> ownerContentUpdate = Stream.of(owner.getLastContentUpdate());
+        Stream<Date> envContentUpdates = environments.stream()
+            .map(Environment::getLastContentUpdate);
 
-            existing.setSerial(serial);
-            existing.setCert(this.pemEncoder.encodeAsString(x509Cert));
-            this.contentAccessCertificateCurator.saveOrUpdate(existing);
-        }
-
-        Date contentUpdate = owner.getLastContentUpdate();
-        boolean shouldUpdateContent = !contentUpdate.before(existing.getUpdated());
-        if (shouldUpdateContent || isX509CertExpired) {
-            List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
-            ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(owner, environments);
-            PromotedContent promotedContent = new PromotedContent(contentPathBuilder).withAll(environments);
-
-            Function<ProductContent, String> cidFetcher = pcinfo -> pcinfo.getContent().getId();
-
-            Map<String, ProductContent> ownerContent = this.contentCurator
-                .getActiveContentByOwner(owner.getId())
-                .stream()
-                .collect(Collectors.toMap(cidFetcher, Function.identity(),
-                    (v1, v2) -> new ProductContent(v2.getContent(), v1.isEnabled() || v2.isEnabled())));
-
-            byte[] payloadBytes = createContentAccessDataPayload(consumer, ownerContent, promotedContent);
-            existing.setContent(this.createPayloadAndSignature(payloadBytes));
-            this.contentAccessCertificateCurator.saveOrUpdate(existing);
-        }
-
-        return existing;
+        return Stream.concat(ownerContentUpdate, envContentUpdates)
+            .anyMatch(contentUpdate -> contentUpdate.after(payloadTimestamp));
     }
 
-    private org.candlepin.model.dto.Product createSCAProdContainer(Owner owner, Consumer consumer) {
-        org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
+    private org.candlepin.model.dto.Product createProductContainer(Owner owner,
+        List<Environment> environments) {
+
         List<Content> dtoContents = new ArrayList<>();
-        List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
-
         for (Environment environment : environments) {
             dtoContents.add(createContent(owner, environment));
         }
@@ -276,6 +398,7 @@ public class SCACertificateGenerator {
             dtoContents.add(createContent(owner, null));
         }
 
+        org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
         container.setContent(dtoContents);
 
         return container;
@@ -285,8 +408,7 @@ public class SCACertificateGenerator {
         CertificateSerial serial = new CertificateSerial(Date.from(end.toInstant()));
         // We need the sequence generated id before we create the Certificate,
         // otherwise we could have used cascading create
-        serialCurator.create(serial);
-        return serial;
+        return serialCurator.create(serial);
     }
 
     private X509Certificate createX509Cert(String consumerUuid, Owner owner, CertificateSerial serial,
