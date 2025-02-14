@@ -123,6 +123,7 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.pki.certs.AnonymousCertificateGenerator;
 import org.candlepin.pki.certs.CertificateCreationException;
+import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
@@ -2254,7 +2255,14 @@ public class ConsumerResource implements ConsumerApi {
             consumerCurator.updateLastCheckin(p.getConsumer());
         }
 
-        return getEntitlementCertificatesForConsumer(consumerUuid, serials);
+        try {
+            return getEntitlementCertificatesForConsumer(consumerUuid, serials);
+        }
+        catch (ConcurrentContentPayloadCreationException e) {
+            // TODO: Handle as part of CHAINSAW-377
+        }
+
+        return null;
     }
 
     /**
@@ -2266,9 +2274,14 @@ public class ConsumerResource implements ConsumerApi {
      * @param serials
      *  the serial IDs used to filter out entitlement certificates
      *
+     * @throws ConcurrentContentPayloadCreationException
+     *  if a concurrent request persists the content payload and causes a database constraint violation
+     *
      * @return a list of entitlement certificates for the consumer
      */
-    private List<CertificateDTO> getEntitlementCertificatesForConsumer(String consumerUuid, String serials) {
+    private List<CertificateDTO> getEntitlementCertificatesForConsumer(String consumerUuid, String serials)
+        throws ConcurrentContentPayloadCreationException {
+
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
         revokeOnGuestMigration(consumer);
@@ -2278,7 +2291,6 @@ public class ConsumerResource implements ConsumerApi {
         List<? extends Certificate> entitlementCerts = this.entCertAdapter.listForConsumer(consumer);
 
         Certificate caCert = this.scaCertificateGenerator.generate(consumer);
-
         Stream<? extends Certificate> certStream = this.buildCertificateStream(entitlementCerts, caCert);
 
         // Check if we should filter certs by the cert serial
@@ -2383,7 +2395,14 @@ public class ConsumerResource implements ConsumerApi {
                 .build();
         }
 
-        SCACertificate cac = this.scaCertificateGenerator.generate(consumer);
+        SCACertificate cac = null;
+        try {
+            cac = this.scaCertificateGenerator.generate(consumer);
+        }
+        catch (ConcurrentContentPayloadCreationException e) {
+            // TODO: Handle as part of CHAINSAW-359
+        }
+
         if (cac == null) {
             throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"));
         }
@@ -2441,6 +2460,11 @@ public class ConsumerResource implements ConsumerApi {
             throw new IseException(
                 i18n.tr("Unable to create entitlement certificate archive"), e);
         }
+        catch (ConcurrentContentPayloadCreationException e) {
+            // TODO: Handle as part of CHAINSAW-376
+        }
+
+        return null;
     }
 
     private Set<Long> extractSerials(String serials) {
@@ -2483,7 +2507,14 @@ public class ConsumerResource implements ConsumerApi {
         }
 
         // add content access cert if needed
-        SCACertificate cac = this.scaCertificateGenerator.generate(consumer);
+        SCACertificate cac = null;
+        try {
+            cac = this.scaCertificateGenerator.generate(consumer);
+        }
+        catch (ConcurrentContentPayloadCreationException e) {
+            // TODO: Handle as part of CHAINSAW-358
+        }
+
         if (cac != null) {
             allCerts.add(new CertificateSerialDTO().serial(cac.getSerial().getId()));
         }

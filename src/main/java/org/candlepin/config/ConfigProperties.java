@@ -258,6 +258,12 @@ public class ConfigProperties {
      */
     public static final String IDENTITY_CERT_EXPIRY_THRESHOLD = "candlepin.identityCert.expiry.threshold";
 
+    /**
+     * The number of days before a SCA X509's certificates expiration date where we should regenerate to avoid
+     * expiration.
+     */
+    public static final String SCA_X509_CERT_EXPIRY_THRESHOLD = "candlepin.cert.sca.expiry.threshold";
+
     public static final String SWAGGER_ENABLED = "candlepin.swagger.enabled";
 
     /** Enabled dev page used to interactively login to a Keycloak instance and generate offline token. */
@@ -439,6 +445,7 @@ public class ConfigProperties {
 
             this.put(IDENTITY_CERT_YEAR_ADDENDUM, "5");
             this.put(IDENTITY_CERT_EXPIRY_THRESHOLD, "90");
+            this.put(SCA_X509_CERT_EXPIRY_THRESHOLD, "10");
             this.put(SHARD_WEBAPP, "candlepin");
 
             // defaults
@@ -581,6 +588,9 @@ public class ConfigProperties {
                 .min(1));
 
             this.add(new IntegerConfigurationValidator(DB_MAX_CONNECTION_ATTEMPTS)
+                .min(1));
+
+            this.add(new IntegerConfigurationValidator(SCA_X509_CERT_EXPIRY_THRESHOLD)
                 .min(1));
 
             this.add(new StringConfigurationValidator(DB_DRIVER_CLASS));

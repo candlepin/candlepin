@@ -751,7 +751,6 @@ class EnvironmentResourceTest {
         certificate.setKey("crt_key");
         certificate.setSerial(new CertificateSerial());
         certificate.setCert("cert_1");
-        certificate.setContent("content_1");
         return certificate;
     }
 

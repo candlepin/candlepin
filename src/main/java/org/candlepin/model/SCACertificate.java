@@ -44,9 +44,6 @@ public class SCACertificate extends RevocableCertificate<SCACertificate> {
     @OneToOne(mappedBy = "contentAccessCert", fetch = FetchType.LAZY)
     private Consumer consumer;
 
-    @Column
-    private String content;
-
     @Override
     public String getId() {
         return id;
@@ -62,14 +59,6 @@ public class SCACertificate extends RevocableCertificate<SCACertificate> {
 
     public void setConsumer(Consumer consumer) {
         this.consumer = consumer;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
     }
 
     @Override

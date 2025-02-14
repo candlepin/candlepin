@@ -200,7 +200,6 @@ class CertificateCleanupJobTest extends DatabaseTestFixture {
         certificate.setKey("crt_key");
         certificate.setSerial(new CertificateSerial(expiration));
         certificate.setCert("cert_1");
-        certificate.setContent("content_1");
         return saveCert(certificate);
     }
 
