@@ -50,6 +50,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.ContentAccessPayloadCurator;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.DistributorVersionCurator;
@@ -155,6 +156,7 @@ public class DatabaseTestFixture {
     protected ConsumerTypeCurator consumerTypeCurator;
     protected ConsumerContentOverrideCurator consumerContentOverrideCurator;
     protected ContentAccessCertificateCurator caCertCurator;
+    protected ContentAccessPayloadCurator caPayloadCurator;
     protected ContentCurator contentCurator;
     protected DeletedConsumerCurator deletedConsumerCurator;
     protected DistributorVersionCurator distributorVersionCurator;
@@ -286,6 +288,7 @@ public class DatabaseTestFixture {
         consumerTypeCurator = this.injector.getInstance(ConsumerTypeCurator.class);
         consumerContentOverrideCurator = this.injector.getInstance(ConsumerContentOverrideCurator.class);
         caCertCurator = this.injector.getInstance(ContentAccessCertificateCurator.class);
+        caPayloadCurator = this.injector.getInstance(ContentAccessPayloadCurator.class);
         contentCurator = this.injector.getInstance(ContentCurator.class);
         deletedConsumerCurator = this.injector.getInstance(DeletedConsumerCurator.class);
         distributorVersionCurator = this.injector.getInstance(DistributorVersionCurator.class);
