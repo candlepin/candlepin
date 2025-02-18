@@ -86,6 +86,7 @@ import org.candlepin.model.Certificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerActivationKey;
 import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerCloudData;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
@@ -181,6 +182,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -1615,6 +1617,18 @@ public class ConsumerResource implements ConsumerApi {
         guestMigration.buildMigrationManifest(dto, toUpdate);
 
         if (performConsumerUpdates(dto, toUpdate, guestMigration)) {
+
+            if (toUpdate.checkForCloudIdentifierFacts(dto.getFacts())) {
+                log.warn("Cloud identifier fact change detected");
+                Optional<ConsumerCloudData> changed = consumerCloudDataBuilder.build(dto);
+                ConsumerCloudData cloudData = toUpdate.getConsumerCloudData();
+                if (cloudData != null) {
+                    changed.ifPresent(cloudData::updateFrom);
+                } else {
+                    changed.ifPresent(toUpdate::setConsumerCloudData);
+                }
+            }
+
             try {
                 if (guestMigration.isMigrationPending()) {
                     guestMigration.migrate();

@@ -15,6 +15,7 @@
 
 package org.candlepin.resource.util;
 
+import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCloudData;
@@ -35,7 +36,14 @@ public class ConsumerCloudDataBuilder {
     }
 
     public Optional<ConsumerCloudData> build(Consumer consumer) {
-        Map<String, String> facts = consumer.getFacts();
+        return buildConsumerCloudData(consumer.getFacts());
+    }
+
+    public Optional<ConsumerCloudData> build(ConsumerDTO consumer) {
+        return buildConsumerCloudData(consumer.getFacts());
+    }
+
+    private Optional<ConsumerCloudData> buildConsumerCloudData(Map<String, String> facts) {
         List<CloudProviderFactParser> supportedParsers = parsers.stream()
             .filter(parser -> parser.isSupported(facts))
             .toList();

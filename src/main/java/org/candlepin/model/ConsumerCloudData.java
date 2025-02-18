@@ -309,6 +309,32 @@ public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData
         return this;
     }
 
+    public void updateFrom(ConsumerCloudData other) {
+        if (other == null) {
+            return;
+        }
+
+        if (other.getCloudProviderShortName() != null &&
+            !other.getCloudProviderShortName().equals(this.getCloudProviderShortName())) {
+            this.setCloudProviderShortName(other.getCloudProviderShortName());
+        }
+
+        if (other.getCloudAccountId() != null &&
+            !other.getCloudAccountId().equals(this.getCloudAccountId())) {
+            this.setCloudAccountId(other.getCloudAccountId());
+        }
+
+        if (other.getCloudInstanceId() != null &&
+            !other.getCloudInstanceId().equals(this.getCloudInstanceId())) {
+            this.setCloudInstanceId(other.getCloudInstanceId());
+        }
+
+        if (other.getCloudOfferingIds() != null &&
+            !other.getCloudOfferingIds().equals(this.getCloudOfferingIds())) {
+            this.setCloudOfferingIds(other.getCloudOfferingIds());
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
