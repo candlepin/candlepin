@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,19 +14,73 @@
  */
 package org.candlepin.exceptions;
 
+import java.util.Map;
+
 import javax.ws.rs.core.Response.Status;
 
 
 /**
- * ServiceUnavailableException
- * Represents a Service Unavailable (HTTP 503) error.
+ * ServiceUnavailableException represents an exception that generates a 503 HTTP response status code.
  */
 public class ServiceUnavailableException extends CandlepinException {
+    private static final String RETRY_AFTER_HEADER_KEY = "Retry-After";
+
+    private Integer retryAfter;
+
+    /**
+     * Creates a new service unavailable exception with the provided message.
+     *
+     * @param message
+     *  the message used to create a new service unavailable exception
+     */
     public ServiceUnavailableException(String message) {
         super(Status.SERVICE_UNAVAILABLE, message);
     }
 
+    /**
+     * Creates a service unavailable exception with the provided message and provided throwable cause.
+     *
+     * @param message
+     *  the message used to create a new service unavailable exception
+     *
+     * @param cause
+     * the throwable cause used to create a new service unavailable exception
+     */
     public ServiceUnavailableException(String message, Throwable cause) {
         super(Status.SERVICE_UNAVAILABLE, message, cause);
     }
+
+    /**
+     * Sets the retry after time value used to populate the 'Retry-After' header. If a null value is provided,
+     * the 'Retry-After' header will not be populated in the response. Subsequent calls will overwrite the
+     * previously set value.
+     *
+     * @param retryAfter
+     *  the value to set for the 'Retry-After' header
+     *
+     * @return this too many requests exception instance
+     */
+    public ServiceUnavailableException setRetryAfterTime(Integer retryAfter) {
+        this.retryAfter = retryAfter;
+        return this;
+    }
+
+    /**
+     * @return the value that will be set for the 'Retry-After' header. A null value indicates that the header
+     *  will not be set
+     */
+    public Integer getRetryAfterTime() {
+        return this.retryAfter;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<String, String> headers() {
+        return this.retryAfter == null ?
+            Map.of() :
+            Map.of(RETRY_AFTER_HEADER_KEY, String.valueOf(this.retryAfter));
+    }
+
 }
