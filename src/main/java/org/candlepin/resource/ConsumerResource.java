@@ -83,9 +83,12 @@ import org.candlepin.model.AnonymousContentAccessCertificate;
 import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Certificate;
+import org.candlepin.model.CloudIdentifierFacts;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerActivationKey;
 import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerCloudData;
+import org.candlepin.model.ConsumerCloudDataCurator;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
@@ -169,6 +172,7 @@ import java.io.File;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -181,6 +185,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -247,6 +252,7 @@ public class ConsumerResource implements ConsumerApi {
     private final AnonymousCloudConsumerCurator anonymousConsumerCurator;
     private final AnonymousContentAccessCertificateCurator anonymousCertCurator;
     private final OwnerServiceAdapter ownerService;
+    private final ConsumerCloudDataCurator cloudDataCurator;
 
     private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
     private final Pattern consumerSystemNamePattern;
@@ -298,7 +304,8 @@ public class ConsumerResource implements ConsumerApi {
         OwnerServiceAdapter ownerService,
         SCACertificateGenerator scaCertificateGenerator,
         AnonymousCertificateGenerator anonymousCertGenerator,
-        ConsumerCloudDataBuilder consumerCloudDataBuilder) {
+        ConsumerCloudDataBuilder consumerCloudDataBuilder,
+        ConsumerCloudDataCurator cloudDataCurator) {
 
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
@@ -344,6 +351,7 @@ public class ConsumerResource implements ConsumerApi {
         this.scaCertificateGenerator = Objects.requireNonNull(scaCertificateGenerator);
         this.anonymousCertGenerator = Objects.requireNonNull(anonymousCertGenerator);
         this.consumerCloudDataBuilder = Objects.requireNonNull(consumerCloudDataBuilder);
+        this.cloudDataCurator = Objects.requireNonNull(cloudDataCurator);
 
         this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(
             entitlementCurator, environmentContentCurator);
@@ -1615,12 +1623,24 @@ public class ConsumerResource implements ConsumerApi {
         guestMigration.buildMigrationManifest(dto, toUpdate);
 
         if (performConsumerUpdates(dto, toUpdate, guestMigration)) {
+            // We need to generate consumer cloud data for the updated consumer because it must include both
+            // the new facts and the existing facts
+            Map<String, String> combinedFacts = toUpdate.getFacts();
+            if (combinedFacts != null && !combinedFacts.isEmpty() && containsCloudIdentifierFactsKey(combinedFacts)) {
+                Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
+
+                Optional.ofNullable(consumer.getConsumerCloudData())
+                    .ifPresent(cloudDataCurator::delete);
+
+                consumer.setConsumerCloudData(consumerCloudDataBuilder.build(consumer).orElse(null));
+            }
+
             try {
                 if (guestMigration.isMigrationPending()) {
                     guestMigration.migrate();
                 }
                 else {
-                    consumerCurator.update(toUpdate);
+                    consumerCurator.merge(toUpdate);
                 }
             }
             catch (CandlepinException ce) {
@@ -1632,6 +1652,12 @@ public class ConsumerResource implements ConsumerApi {
                 throw new BadRequestException(i18n.tr("Problem updating unit {0}", dto), e);
             }
         }
+    }
+
+    public static boolean containsCloudIdentifierFactsKey(Map<String, String> map) {
+        return Arrays.stream(CloudIdentifierFacts.values())
+            .map(CloudIdentifierFacts::getValue)
+            .anyMatch(map::containsKey);
     }
 
     // TODO: FIXME: This should not be public, nor should this logic be shared with other resources. If
