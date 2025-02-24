@@ -2496,30 +2496,21 @@ public class ConsumerResource implements ConsumerApi {
         @Verify(Consumer.class) String consumerUuid) {
         log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
         revokeOnGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
         this.entitlementCurator.flush();
 
-        List<CertificateSerialDTO> allCerts = new LinkedList<>();
+        List<CertificateSerialDTO> allCertsSerials = new ArrayList<>();
         for (Long id : entCertAdapter.listEntitlementSerialIds(consumer)) {
-            allCerts.add(new CertificateSerialDTO().serial(id));
+            allCertsSerials.add(new CertificateSerialDTO().serial(id));
         }
 
-        // add content access cert if needed
-        SCACertificate cac = null;
-        try {
-            cac = this.scaCertificateGenerator.generate(consumer);
-        }
-        catch (ConcurrentContentPayloadCreationException e) {
-            // TODO: Handle as part of CHAINSAW-358
+        SCACertificate x509Certificate = this.scaCertificateGenerator.getX509Certificate(consumer);
+        if (x509Certificate != null) {
+            allCertsSerials.add(new CertificateSerialDTO().serial(x509Certificate.getSerial().getId()));
         }
 
-        if (cac != null) {
-            allCerts.add(new CertificateSerialDTO().serial(cac.getSerial().getId()));
-        }
-
-        return allCerts;
+        return allCertsSerials;
     }
 
     private void validateBindArguments(String poolIdString, Integer quantity, Collection<String> productIds,

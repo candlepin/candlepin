@@ -971,7 +971,7 @@ public class ContentAccessSpecTest {
         adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
-        // We need to sleep here to ensure enough time has passes from the last content update to when
+        // We need to sleep here to ensure enough time has passed from the last content update to when
         // we fetch certificates.
         Thread.sleep(1000);
 
