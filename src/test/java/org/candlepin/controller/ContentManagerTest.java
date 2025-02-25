@@ -17,6 +17,7 @@ package org.candlepin.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -46,6 +47,7 @@ import org.mockito.ArgumentMatcher;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -130,6 +132,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
     @Test
     public void testCreateContent() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
+        Date initialLastContentUpdate = owner.getLastContentUpdate();
         Content content = TestUtil.createContent("c1", "content-1")
             .setNamespace(owner.getKey())
             .setLabel("test-label")
@@ -141,6 +144,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Content output = this.contentManager.createContent(owner, content);
 
         assertEquals(output, this.contentCurator.getContentById(owner.getKey(), content.getId()));
+        assertNotEquals(initialLastContentUpdate, owner.getLastContentUpdate());
     }
 
     @Test
@@ -203,6 +207,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
     @ValueSource(strings = {"false", "true"})
     public void testUpdateContent(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner", "Test Owner");
+        Date initialLastContentUpdate = owner.getLastContentUpdate();
         Content content = TestUtil.createContent("c1", "content-1")
             .setNamespace(owner.getKey());
         this.createContent(content);
@@ -215,8 +220,8 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Content output = this.contentManager.updateContent(owner, content, update, regenCerts);
 
         assertEquals(output.getName(), update.getName());
-
         assertNotNull(this.contentCurator.getContentById(owner.getKey(), content.getId()));
+        assertNotEquals(initialLastContentUpdate, owner.getLastContentUpdate());
 
         if (regenCerts) {
             verify(this.mockEntCertService, times(1)).regenerateCertificatesOf(
@@ -247,6 +252,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
     @Test
     public void testRemoveContent() {
         Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
+        Date initialLastContentUpdate = owner.getLastContentUpdate();
         Content content = TestUtil.createContent("c1", "content-1")
             .setNamespace(owner.getKey());
         content = this.createContent(content);
@@ -257,6 +263,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         this.contentManager.removeContent(owner, content);
 
         assertNull(this.contentCurator.get(content.getUuid()));
+        assertNotEquals(initialLastContentUpdate, owner.getLastContentUpdate());
     }
 
     @Test

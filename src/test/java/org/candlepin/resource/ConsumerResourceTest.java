@@ -166,6 +166,7 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -192,6 +193,8 @@ import javax.ws.rs.core.Response;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ConsumerResourceTest {
+
+    private static final String SINCE_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss z";
 
     private static Locale defaultLocale;
 
@@ -1529,7 +1532,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    void shouldThrowWhenConsumerNotFound() {
+    public void shouldThrowWhenConsumerNotFound() {
         when(consumerCurator.verifyAndLookupConsumer(anyString()))
             .thenThrow(NotFoundException.class);
 
@@ -1538,7 +1541,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    void usesDefaultWhenNoCAAvailable() {
+    public void usesDefaultWhenNoCAAvailable() {
         String expectedMode = ContentAccessMode.getDefault().toDatabaseValue();
         List<String> expectedModeList = Arrays.asList(
             ContentAccessMode.ENTITLEMENT.toDatabaseValue(),
@@ -1555,7 +1558,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    void usesConsumersCAModeWhenAvailable() {
+    public void usesConsumersCAModeWhenAvailable() {
         String expectedMode = "consumer-ca-mode";
         Consumer consumer = createConsumer(createOwner());
         consumer.setContentAccessMode(expectedMode);
@@ -1569,7 +1572,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    void usesOwnersCAModeWhenConsumersCAModeNotAvailable() {
+    public void usesOwnersCAModeWhenConsumersCAModeNotAvailable() {
         String expectedMode = "owner-ca-mode";
         Consumer consumer = createConsumer(createOwner());
         consumer.setContentAccessMode(null);
@@ -1584,7 +1587,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    void usesOwnersCAModeListWhenAvailable() {
+    public void usesOwnersCAModeListWhenAvailable() {
         String expectedMode = "owner-ca-mode-list";
         List<String> expectedModeList = Collections.singletonList(expectedMode);
         Consumer consumer = createConsumer(createOwner());
@@ -1599,23 +1602,41 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    void contentAccessNotModified() {
-        String expectedMode = "owner-ca-mode-list";
+    public void contentAccessNotModified() throws Exception {
         Owner owner = createOwner();
-        when(ownerCurator.findOwnerById(owner.getOwnerId())).thenReturn(owner);
+        doReturn(owner)
+            .when(ownerCurator)
+            .findOwnerById(owner.getOwnerId());
+
         Consumer consumer = createConsumer(owner);
-        consumer.getOwner().setContentAccessModeList(expectedMode);
-        when(consumerCurator.verifyAndLookupConsumer(anyString()))
-            .thenReturn(consumer);
+        consumer.getOwner()
+            .setContentAccessModeList("owner-ca-mode-list");
+
+        doReturn(consumer)
+            .when(consumerCurator)
+            .verifyAndLookupConsumer(anyString());
+
+        SCACertificate expectedCertificate = new SCACertificate()
+            .setUpdated(TestUtil.createDateOffset(0, 0, -5));
+        expectedCertificate.setCert("cert");
+        expectedCertificate.setKey("key");
+        expectedCertificate.setSerial(new CertificateSerial(1234567L));
+
+        doReturn(expectedCertificate)
+            .when(scaCertificateGenerator)
+            .generate(consumer);
+
+        String now = new SimpleDateFormat(SINCE_DATE_FORMAT)
+            .format(new Date());
 
         Response contentAccess = consumerResource
-            .getContentAccessBody("test-uuid", null);
+            .getContentAccessBody("test-uuid", now);
 
         assertEquals("Not modified since date supplied.", contentAccess.getEntity());
     }
 
     @Test
-    void contentAccessGetModified() throws Exception {
+    public void contentAccessGetModified() throws Exception {
         String expectedMode = "owner-ca-mode-list";
         Owner owner = createOwner();
         when(ownerCurator.findOwnerById(owner.getOwnerId())).thenReturn(owner);
@@ -1623,8 +1644,6 @@ public class ConsumerResourceTest {
         consumer.getOwner().setContentAccessModeList(expectedMode);
         when(consumerCurator.verifyAndLookupConsumer(anyString()))
             .thenReturn(consumer);
-        when(contentAccessManager.hasCertChangedSince(any(Consumer.class), any(Date.class)))
-            .thenReturn(true);
         SCACertificate expectedCertificate = createContentAccessCertificate(
             "expected-key", "expected-cert", 18084729L);
         when(this.scaCertificateGenerator.generate(any(Consumer.class)))
@@ -1639,7 +1658,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    void contentAccessIfModifiedSinceLocale() throws Exception {
+    public void contentAccessIfModifiedSinceLocale() throws Exception {
         Locale.setDefault(Locale.FRANCE);
         String expectedMode = "owner-ca-mode-list";
         Owner owner = createOwner();
@@ -1648,8 +1667,6 @@ public class ConsumerResourceTest {
         consumer.getOwner().setContentAccessModeList(expectedMode);
         when(consumerCurator.verifyAndLookupConsumer(anyString()))
             .thenReturn(consumer);
-        when(contentAccessManager.hasCertChangedSince(any(Consumer.class), any(Date.class)))
-            .thenReturn(true);
         SCACertificate expectedCertificate = createContentAccessCertificate(
             "expected-key", "expected-cert", 18084729L);
         when(this.scaCertificateGenerator.generate(any(Consumer.class)))

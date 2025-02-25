@@ -205,6 +205,9 @@ public class ConsumerResource implements ConsumerApi {
 
     private static final Logger log = LoggerFactory.getLogger(ConsumerResource.class);
 
+    private static final DateTimeFormatter SINCE_DATE_FORMATER = DateTimeFormatter
+        .ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+
     private final ConsumerCurator consumerCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
     private final SubscriptionServiceAdapter subAdapter;
@@ -2372,27 +2375,13 @@ public class ConsumerResource implements ConsumerApi {
 
     @Override
     @Transactional
-    public Response getContentAccessBody(@Verify(Consumer.class) String consumerUuid, String sinceDate) {
+    public Response getContentAccessBody(@Verify(Consumer.class) String consumerUuid, String since) {
         log.debug("Getting content access certificate for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        OffsetDateTime since = null;
 
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
         if (!owner.isUsingSimpleContentAccess()) {
             throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
-        }
-
-        if (sinceDate != null) {
-            DateTimeFormatter formatter = DateTimeFormatter
-                .ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
-            since = Util.parseOffsetDateTime(formatter, sinceDate);
-        }
-
-        Date date = since != null ? Util.toDate(since) : new Date(0);
-        if (!this.contentAccessManager.hasCertChangedSince(consumer, date)) {
-            return Response.status(Response.Status.NOT_MODIFIED)
-                .entity("Not modified since date supplied.")
-                .build();
         }
 
         SCACertificate cac = null;
@@ -2405,6 +2394,23 @@ public class ConsumerResource implements ConsumerApi {
 
         if (cac == null) {
             throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"));
+        }
+
+        // The date provided by the client does not preserve milliseconds, so we need to round down
+        // the dates preserved on the server by removing milliseconds for a proper date comparison
+        Date scaCertificateLastUpdated = cac.getUpdated() != null ?
+            Util.roundDownToSeconds(cac.getUpdated()) :
+            new Date();
+
+        OffsetDateTime sinceOffsetDateTime = since != null ?
+            Util.parseOffsetDateTime(SINCE_DATE_FORMATER, since) :
+            null;
+
+        Date sinceDate = sinceOffsetDateTime != null ? Util.toDate(sinceOffsetDateTime) : new Date(0);
+        if (sinceDate.after(scaCertificateLastUpdated) || sinceDate.equals(scaCertificateLastUpdated)) {
+            return Response.status(Response.Status.NOT_MODIFIED)
+                .entity("Not modified since date supplied.")
+                .build();
         }
 
         String cert = cac.getCert();

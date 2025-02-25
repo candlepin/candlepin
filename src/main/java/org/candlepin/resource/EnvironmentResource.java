@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -401,7 +401,7 @@ public class EnvironmentResource implements EnvironmentApi {
             contentIds = this.batchCreate(contentToPromote, environment);
             // TODO: Remove the line below once certificate generation based on the `lastContentUpdate` field
             // in environments is implemented.
-            this.contentAccessManager.syncOwnerLastContentUpdate(environment.getOwner());
+            environment.getOwner().syncLastContentUpdate();
         }
         catch (PersistenceException pe) {
             if (rdbmsExceptionTranslator.isConstraintViolationDuplicateEntry(pe)) {
@@ -444,7 +444,7 @@ public class EnvironmentResource implements EnvironmentApi {
             this.envContentCurator.bulkDelete(demotedContent.values());
             // TODO: Remove the line below once certificate generation based on the `lastContentUpdate` field
             // in environments is implemented.
-            this.contentAccessManager.syncOwnerLastContentUpdate(environment.getOwner());
+            environment.getOwner().syncLastContentUpdate();
         }
         catch (RollbackException hibernateException) {
             if (rdbmsExceptionTranslator.isUpdateHadNoEffectException(hibernateException)) {
