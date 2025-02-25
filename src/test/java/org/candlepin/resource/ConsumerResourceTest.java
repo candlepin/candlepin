@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -177,6 +177,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -539,19 +540,58 @@ public class ConsumerResourceTest {
     @Test
     public void testGetCertSerials() {
         Consumer consumer = createConsumer(createOwner());
-        List<EntitlementCertificate> certificates = createEntitlementCertificates();
-        List<Long> serialIds = new ArrayList<>();
-        for (EntitlementCertificate ec : certificates) {
-            serialIds.add(ec.getSerial().getId());
-        }
 
-        when(entitlementCertServiceAdapter.listEntitlementSerialIds(consumer)).thenReturn(serialIds);
-        when(entitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<>());
+        Random random = new Random();
+        List<Long> expectedEntSerials = List.of(
+            random.nextLong(),
+            random.nextLong(),
+            random.nextLong());
+
+        doReturn(expectedEntSerials).when(entitlementCertServiceAdapter).listEntitlementSerialIds(consumer);
+        doReturn(List.of()).when(entitlementCurator).listByConsumer(consumer);
+
+        long expectedSCASerialId = random.nextLong();
+        CertificateSerial serial = new CertificateSerial();
+        serial.setId(expectedSCASerialId);
+
+        SCACertificate x509Certificate = new SCACertificate();
+        x509Certificate.setSerial(serial);
+
+        doReturn(x509Certificate).when(scaCertificateGenerator).getX509Certificate(consumer);
 
         List<CertificateSerialDTO> serials = consumerResource
             .getEntitlementCertificateSerials(consumer.getUuid());
 
-        verifyCertificateSerialNumbers(serials);
+        assertThat(serials)
+            .isNotNull()
+            .hasSize(expectedEntSerials.size() + 1) // The +1 is the SCA certificate serial
+            .extracting(CertificateSerialDTO::getSerial)
+            .containsAll(expectedEntSerials)
+            .contains(expectedSCASerialId);
+    }
+
+    @Test
+    public void testGetCertSerialsWithNoSCACertSerial() {
+        Consumer consumer = createConsumer(createOwner());
+
+        Random random = new Random();
+        List<Long> expectedEntSerials = List.of(
+            random.nextLong(),
+            random.nextLong(),
+            random.nextLong());
+
+        doReturn(expectedEntSerials).when(entitlementCertServiceAdapter).listEntitlementSerialIds(consumer);
+        doReturn(List.of()).when(entitlementCurator).listByConsumer(consumer);
+        doReturn(null).when(scaCertificateGenerator).getX509Certificate(consumer);
+
+        List<CertificateSerialDTO> serials = consumerResource
+            .getEntitlementCertificateSerials(consumer.getUuid());
+
+        assertThat(serials)
+            .isNotNull()
+            .hasSize(expectedEntSerials.size())
+            .extracting(CertificateSerialDTO::getSerial)
+            .containsExactlyInAnyOrderElementsOf(expectedEntSerials);
     }
 
     @Test
@@ -622,12 +662,6 @@ public class ConsumerResourceTest {
         // Fixme throw custom exception from generator instead of generic RuntimeException
         assertThrows(RuntimeException.class, () -> consumerResource
             .regenerateEntitlementCertificates(consumer.getUuid(), "9999", false, false));
-    }
-
-    private void verifyCertificateSerialNumbers(
-        List<CertificateSerialDTO> serials) {
-        assertEquals(3, serials.size());
-        assertEquals(1L, serials.get(0).getSerial());
     }
 
     private List<EntitlementCertificate> createEntitlementCertificates() {
@@ -1035,7 +1069,7 @@ public class ConsumerResourceTest {
 
     protected EntitlementCertificate createEntitlementCertificate(String key, String cert) {
         EntitlementCertificate toReturn = new EntitlementCertificate();
-        CertificateSerial certSerial = new CertificateSerial(1L, new Date());
+        CertificateSerial certSerial = new CertificateSerial(new Random().nextLong(), new Date());
         toReturn.setKeyAsBytes(key.getBytes());
         toReturn.setCertAsBytes(cert.getBytes());
         toReturn.setSerial(certSerial);
