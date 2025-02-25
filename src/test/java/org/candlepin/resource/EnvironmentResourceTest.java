@@ -16,6 +16,7 @@ package org.candlepin.resource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -686,6 +687,32 @@ class EnvironmentResourceTest {
     }
 
     @Test
+    public void shouldUpdateOwnerLastContentUpdateOnPromotion() throws Exception {
+        Owner owner = new Owner()
+            .setId("id")
+            .setKey("key");
+
+        Date initialLastContentUpdate = owner.getLastContentUpdate();
+
+        Environment env = this.createMockedEnvironment()
+            .setOwner(owner);
+        ContentToPromoteDTO dto = new ContentToPromoteDTO()
+            .contentId("con-1");
+        Content content = new Content("con-1");
+
+        doReturn(content)
+            .when(contentCurator)
+            .resolveContentId(anyString(), anyString());
+
+        // Sleep to gaurantee the last content update dates will be different
+        Thread.sleep(5);
+
+        this.environmentResource.promoteContent(env.getId(), List.of(dto), true);
+
+        assertNotEquals(initialLastContentUpdate, owner.getLastContentUpdate());
+    }
+
+    @Test
     public void shouldUpdateLastContentFieldOnContentDemote() {
         Content content = new Content("con-1");
         EnvironmentContent enContent = new EnvironmentContent()
@@ -703,6 +730,33 @@ class EnvironmentResourceTest {
 
         assertThat(beforeDemote)
             .isBefore(afterDemote);
+    }
+
+    @Test
+    public void shouldUpdateOwnerLastContentUpdateOnDemotion() throws Exception {
+        Owner owner = new Owner()
+            .setId("id")
+            .setKey("key");
+
+        Date initialLastContentUpdate = owner.getLastContentUpdate();
+        Content content = new Content("con-1");
+        EnvironmentContent envContent = new EnvironmentContent()
+            .setContent(content);
+
+        // Sleep to gaurantee the last content update dates will be different
+        Thread.sleep(5);
+
+        Environment env = this.createMockedEnvironment()
+            .setOwner(owner)
+            .setEnvironmentContent(Set.of(envContent));
+
+        doReturn(envContent)
+            .when(envContentCurator)
+            .getByEnvironmentAndContent(any(), anyString());
+
+        this.environmentResource.demoteContent(env.getId(), List.of(content.getId()), true);
+
+        assertNotEquals(initialLastContentUpdate, owner.getLastContentUpdate());
     }
 
     @Test

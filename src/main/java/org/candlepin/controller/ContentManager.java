@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -119,7 +119,7 @@ public class ContentManager {
         entity = this.contentCurator.create(entity);
 
         log.debug("Synchronizing last content update for org: {}", owner);
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
+        owner.syncLastContentUpdate();
 
         return entity;
     }
@@ -181,7 +181,7 @@ public class ContentManager {
             content = this.contentCurator.merge(content);
 
             log.debug("Synchronizing last content update for org: {}", owner);
-            this.contentAccessManager.syncOwnerLastContentUpdate(owner);
+            owner.syncLastContentUpdate();
 
             List<Product> affectedProducts = regenCerts ?
                 this.productCurator.getProductsReferencingContent(content.getUuid()) :
@@ -254,7 +254,7 @@ public class ContentManager {
         this.contentCurator.delete(content);
 
         log.debug("Synchronizing last content update for org: {}", owner);
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
+        owner.syncLastContentUpdate();
 
         return content;
     }
