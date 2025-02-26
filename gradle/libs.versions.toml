@@ -9,7 +9,7 @@ junit = "5.12.0"
 okhttp3 = "4.12.0"
 openapi-generator = "7.11.0"
 resteasy = "4.7.9.Final"
-slf4j = "2.0.16"
+slf4j = "2.0.17"
 test-logger = "4.0.0"
 
 [plugins]
