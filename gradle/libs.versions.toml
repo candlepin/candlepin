@@ -5,7 +5,7 @@ hibernate = "5.6.15.Final"
 hibernate-validator = "6.2.5.Final"
 jackson = "2.18.2"
 jaxb = "4.0.5"
-junit = "5.11.4"
+junit = "5.12.0"
 okhttp3 = "4.12.0"
 openapi-generator = "7.11.0"
 resteasy = "4.7.9.Final"
@@ -65,10 +65,11 @@ javax-validation = { module = "javax.validation:validation-api", version = "2.0.
 jaxb = { module = "com.sun.xml.bind:jaxb-impl", version.ref = "jaxb" }
 jaxb-core = { module = "com.sun.xml.bind:jaxb-core", version.ref = "jaxb" }
 jimfs = { module = "com.google.jimfs:jimfs", version = "1.3.0" }
-junit = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
-junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
-junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
-junit-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
+junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit" }
+junit-jupiter-api    = { group = "org.junit.jupiter", name = "junit-jupiter-api" }
+junit-jupiter-params = { group = "org.junit.jupiter", name = "junit-jupiter-params" }
+junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine" }
+junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
 keycloak = { module = "org.keycloak:keycloak-servlet-filter-adapter", version = "25.0.3" }
 # Do not upgrade liquibase beyond 4.29 until Liquibase has stopped using RandomStringUtils.random(...)
 liquibase = { module = "org.liquibase:liquibase-core", version = { strictly = "4.29.0" } }
