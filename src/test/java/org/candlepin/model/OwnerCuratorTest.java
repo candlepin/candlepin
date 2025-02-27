@@ -345,7 +345,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
     @Test
     public void fetchesOwnerContentAccess() {
         String expectedContentAccessMode = "org_environment";
-        String expectedContentAccessModeList = "entitlement,org_environment";
+        String expectedContentAccessModeList = "org_environment";
         Owner owner = this.createOwner("test_key");
         this.ownerCurator.flush();
         this.ownerCurator.clear();
