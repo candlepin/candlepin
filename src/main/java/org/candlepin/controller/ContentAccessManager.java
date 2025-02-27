@@ -79,8 +79,7 @@ public class ContentAccessManager {
      * @return the default content access mode list database value as a string
      */
     public static String defaultContentAccessModeList() {
-        return String.join(",", ContentAccessMode.ENTITLEMENT.toDatabaseValue(),
-            ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+        return ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
     }
 
     /**

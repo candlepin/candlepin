@@ -140,7 +140,7 @@ public class ContentAccessSpecTest {
         adminClient.owners().updateOwner(ownerKey, owner);
         assertThat(adminClient.owners().getOwner(ownerKey))
             .returns(Owners.ENTITLEMENT_ACCESS_MODE, OwnerDTO::getContentAccessMode)
-            .returns(Owners.ACCESS_MODE_LIST, OwnerDTO::getContentAccessModeList);
+            .returns(Owners.ACCESS_MODE_LIST_ALL, OwnerDTO::getContentAccessModeList);
 
         owner.contentAccessModeList(Owners.ENTITLEMENT_ACCESS_MODE);
         adminClient.owners().updateOwner(ownerKey, owner);
@@ -161,7 +161,7 @@ public class ContentAccessSpecTest {
 
         assertThat(owner)
             .returns(Owners.SCA_ACCESS_MODE, OwnerDTO::getContentAccessMode)
-            .returns(Owners.ACCESS_MODE_LIST, OwnerDTO::getContentAccessModeList);
+            .returns(Owners.DEFAULT_ACCESS_MODE_LIST, OwnerDTO::getContentAccessModeList);
     }
 
     @Test
@@ -175,7 +175,7 @@ public class ContentAccessSpecTest {
 
         assertThat(owner)
             .returns(Owners.SCA_ACCESS_MODE, OwnerDTO::getContentAccessMode)
-            .returns(Owners.ACCESS_MODE_LIST, OwnerDTO::getContentAccessModeList);
+            .returns(Owners.DEFAULT_ACCESS_MODE_LIST, OwnerDTO::getContentAccessModeList);
     }
 
     @Test
@@ -224,7 +224,7 @@ public class ContentAccessSpecTest {
         OwnerDTO scaOwner = adminClient.owners().createOwner(Owners.randomSca());
         assertThat(scaOwner)
             .returns(Owners.SCA_ACCESS_MODE, OwnerDTO::getContentAccessMode)
-            .returns(Owners.ACCESS_MODE_LIST, OwnerDTO::getContentAccessModeList);
+            .returns(Owners.ACCESS_MODE_LIST_ALL, OwnerDTO::getContentAccessModeList);
 
         // If we remove SCA mode from the list, the mode should also be forced to the default (entitlement)
         scaOwner.contentAccessMode(null);
