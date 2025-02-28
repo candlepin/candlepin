@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -76,6 +76,7 @@ import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.exceptions.TooManyRequestsException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
@@ -96,6 +97,7 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ContentAccessPayload;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
@@ -169,7 +171,9 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -205,6 +209,8 @@ public class ConsumerResource implements ConsumerApi {
 
     private static final Logger log = LoggerFactory.getLogger(ConsumerResource.class);
 
+    /** Retry-after header value for when a ConcurrentContentPayloadCreationException occurs*/
+    private static final int CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME = 2;
     private static final DateTimeFormatter SINCE_DATE_FORMATER = DateTimeFormatter
         .ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
 
@@ -2384,48 +2390,51 @@ public class ConsumerResource implements ConsumerApi {
             throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
         }
 
-        SCACertificate cac = null;
         try {
-            cac = this.scaCertificateGenerator.generate(consumer);
-        }
-        catch (ConcurrentContentPayloadCreationException e) {
-            // TODO: Handle as part of CHAINSAW-359
-        }
+            SCACertificate scaCert = this.scaCertificateGenerator.getX509Certificate(consumer);
+            ContentAccessPayload scaPayload = this.scaCertificateGenerator.getContentPayload(consumer);
 
-        if (cac == null) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"));
-        }
+            if (scaCert == null || scaPayload == null) {
+                String msg = I18n.marktr("Cannot retrieve content access certificate for consumer: {0}");
+                throw new BadRequestException(i18n.tr(msg, consumerUuid));
+            }
 
-        // The date provided by the client does not preserve milliseconds, so we need to round down
-        // the dates preserved on the server by removing milliseconds for a proper date comparison
-        Date scaCertificateLastUpdated = cac.getUpdated() != null ?
-            Util.roundDownToSeconds(cac.getUpdated()) :
-            new Date();
+            Date certUpdated = Util.firstOf(scaCert.getUpdated(), new Date());
+            Date payloadUpdated = scaPayload.getTimestamp();
+            Date lastUpdated = certUpdated.after(payloadUpdated) ? certUpdated : payloadUpdated;
 
-        OffsetDateTime sinceOffsetDateTime = since != null ?
-            Util.parseOffsetDateTime(SINCE_DATE_FORMATER, since) :
-            null;
+            // Check if either component has updated since the target date
+            if (since != null) {
+                // We are truncating the certs lasts update date to seconds and returning the certificate
+                // if and only if the cert's last update date is after the provided 'isModifiedSince' date so
+                // that the cert's last updated date can be used as the 'isModifiedSince' value in other
+                // requests without returning the certificate repeatedly.
+                OffsetDateTime lastUpdatedODT = lastUpdated.toInstant()
+                    .atOffset(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.SECONDS);
+                OffsetDateTime sinceODT = Util.parseOffsetDateTime(SINCE_DATE_FORMATER, since);
 
-        Date sinceDate = sinceOffsetDateTime != null ? Util.toDate(sinceOffsetDateTime) : new Date(0);
-        if (sinceDate.after(scaCertificateLastUpdated) || sinceDate.equals(scaCertificateLastUpdated)) {
-            return Response.status(Response.Status.NOT_MODIFIED)
-                .entity("Not modified since date supplied.")
+                if (!lastUpdatedODT.isAfter(sinceODT)) {
+                    return Response.status(Response.Status.NOT_MODIFIED)
+                        .entity("Not modified since date supplied.")
+                        .build();
+                }
+            }
+
+            // No target date specified, or the components are newer than the target date
+            List<String> pieces = List.of(scaCert.getCert(), scaPayload.getPayload());
+
+            ContentAccessListing result = new ContentAccessListing()
+                .setContentListing(scaCert.getSerial().getId(), pieces)
+                .setLastUpdate(lastUpdated);
+
+            return Response.ok(result, MediaType.APPLICATION_JSON)
                 .build();
         }
-
-        String cert = cac.getCert();
-        String certificate = cert.substring(0, cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
-        String json = cert.substring(cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
-        List<String> pieces = new ArrayList<>();
-        pieces.add(certificate);
-        pieces.add(json);
-
-        ContentAccessListing result = new ContentAccessListing()
-            .setContentListing(cac.getSerial().getId(), pieces)
-            .setLastUpdate(cac.getUpdated());
-
-        return Response.ok(result, MediaType.APPLICATION_JSON)
-            .build();
+        catch (ConcurrentContentPayloadCreationException e) {
+            throw new TooManyRequestsException(i18n.tr("Unable to create content access payload"), e)
+                .setRetryAfterTime(CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME);
+        }
     }
 
     @Override

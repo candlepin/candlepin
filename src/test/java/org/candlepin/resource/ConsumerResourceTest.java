@@ -16,7 +16,6 @@ package org.candlepin.resource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -76,6 +75,7 @@ import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.exceptions.TooManyRequestsException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
@@ -93,6 +93,7 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ContentAccessPayload;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.DistributorVersionCurator;
@@ -111,6 +112,7 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.pki.certs.AnonymousCertificateGenerator;
+import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
@@ -194,6 +196,7 @@ import javax.ws.rs.core.Response;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ConsumerResourceTest {
 
+    private static final int CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME = 2;
     private static final String SINCE_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss z";
 
     private static Locale defaultLocale;
@@ -1602,7 +1605,52 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void contentAccessNotModified() throws Exception {
+    public void testGetContentAccessBodyWithEntitlementOwner() {
+        Owner owner = createOwner()
+            .setContentAccessMode(ContentAccessMode.ENTITLEMENT.name());
+        doReturn(owner)
+            .when(ownerCurator)
+            .findOwnerById(owner.getOwnerId());
+
+        Consumer consumer = createConsumer(owner);
+        doReturn(consumer)
+            .when(consumerCurator)
+            .verifyAndLookupConsumer(anyString());
+
+        String now = new SimpleDateFormat(SINCE_DATE_FORMAT)
+            .format(new Date());
+
+        assertThrows(BadRequestException.class, () -> {
+            consumerResource.getContentAccessBody("test-uuid", now);
+        });
+    }
+
+    @Test
+    public void testGetContentAccessBodyWithNullX509Cert() throws Exception {
+        Owner owner = createOwner();
+        doReturn(owner)
+            .when(ownerCurator)
+            .findOwnerById(owner.getOwnerId());
+
+        Consumer consumer = createConsumer(owner);
+        doReturn(consumer)
+            .when(consumerCurator)
+            .verifyAndLookupConsumer(anyString());
+
+        ContentAccessPayload payload = new ContentAccessPayload()
+            .setTimestamp(new Date());
+        doReturn(payload).when(scaCertificateGenerator).getContentPayload(consumer);
+
+        String now = new SimpleDateFormat(SINCE_DATE_FORMAT)
+            .format(new Date());
+
+        assertThrows(BadRequestException.class, () -> {
+            consumerResource.getContentAccessBody("test-uuid", now);
+        });
+    }
+
+    @Test
+    public void testGetContentAccessBodyWithNullContentAccessPayload() {
         Owner owner = createOwner();
         doReturn(owner)
             .when(ownerCurator)
@@ -1617,14 +1665,94 @@ public class ConsumerResourceTest {
             .verifyAndLookupConsumer(anyString());
 
         SCACertificate expectedCertificate = new SCACertificate()
-            .setUpdated(TestUtil.createDateOffset(0, 0, -5));
+            .setUpdated(new Date());
         expectedCertificate.setCert("cert");
         expectedCertificate.setKey("key");
         expectedCertificate.setSerial(new CertificateSerial(1234567L));
 
         doReturn(expectedCertificate)
             .when(scaCertificateGenerator)
-            .generate(consumer);
+            .getX509Certificate(consumer);
+
+        String now = new SimpleDateFormat(SINCE_DATE_FORMAT)
+            .format(new Date());
+
+        assertThrows(BadRequestException.class, () -> {
+            consumerResource.getContentAccessBody("test-uuid", now);
+        });
+    }
+
+    @Test
+    public void testGetContentAccessBodyWithConcurrentContentPayloadCreationException() throws Exception {
+        Owner owner = createOwner();
+        doReturn(owner)
+            .when(ownerCurator)
+            .findOwnerById(owner.getOwnerId());
+
+        Consumer consumer = createConsumer(owner);
+        consumer.getOwner()
+            .setContentAccessModeList("owner-ca-mode-list");
+
+        doReturn(consumer)
+            .when(consumerCurator)
+            .verifyAndLookupConsumer(anyString());
+
+        SCACertificate expectedCertificate = new SCACertificate()
+            .setUpdated(new Date());
+        expectedCertificate.setCert("cert");
+        expectedCertificate.setKey("key");
+        expectedCertificate.setSerial(new CertificateSerial(1234567L));
+
+        doReturn(expectedCertificate)
+            .when(scaCertificateGenerator)
+            .getX509Certificate(consumer);
+
+        doThrow(ConcurrentContentPayloadCreationException.class)
+            .when(scaCertificateGenerator)
+            .getContentPayload(consumer);
+
+        String now = new SimpleDateFormat(SINCE_DATE_FORMAT)
+            .format(new Date());
+
+        TooManyRequestsException exception = assertThrows(TooManyRequestsException.class,
+            () -> consumerResource.getContentAccessBody("test-uuid", now));
+
+        assertThat(exception)
+            .returns(CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME,
+                TooManyRequestsException::getRetryAfterTime);
+    }
+
+    @Test
+    public void contentAccessNotModified() throws Exception {
+        Owner owner = createOwner();
+        doReturn(owner)
+            .when(ownerCurator)
+            .findOwnerById(owner.getOwnerId());
+
+        Consumer consumer = createConsumer(owner);
+        consumer.getOwner()
+            .setContentAccessModeList("owner-ca-mode-list");
+
+        doReturn(consumer)
+            .when(consumerCurator)
+            .verifyAndLookupConsumer(anyString());
+
+        Date before = TestUtil.createDateOffset(0, 0, -5);
+        SCACertificate expectedCertificate = new SCACertificate()
+            .setUpdated(before);
+        expectedCertificate.setCert("cert");
+        expectedCertificate.setKey("key");
+        expectedCertificate.setSerial(new CertificateSerial(1234567L));
+
+        doReturn(expectedCertificate)
+            .when(scaCertificateGenerator)
+            .getX509Certificate(consumer);
+
+        ContentAccessPayload payload = new ContentAccessPayload()
+            .setTimestamp(before);
+        doReturn(payload)
+            .when(scaCertificateGenerator)
+            .getContentPayload(consumer);
 
         String now = new SimpleDateFormat(SINCE_DATE_FORMAT)
             .format(new Date());
@@ -1636,48 +1764,236 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void contentAccessGetModified() throws Exception {
-        String expectedMode = "owner-ca-mode-list";
+    public void testGetContentAccessBodyWithNullCertAndContentPayloadUpdatedDates() throws Exception {
         Owner owner = createOwner();
-        when(ownerCurator.findOwnerById(owner.getOwnerId())).thenReturn(owner);
+        doReturn(owner)
+            .when(ownerCurator)
+            .findOwnerById(owner.getOwnerId());
+
         Consumer consumer = createConsumer(owner);
-        consumer.getOwner().setContentAccessModeList(expectedMode);
-        when(consumerCurator.verifyAndLookupConsumer(anyString()))
-            .thenReturn(consumer);
-        SCACertificate expectedCertificate = createContentAccessCertificate(
-            "expected-key", "expected-cert", 18084729L);
-        when(this.scaCertificateGenerator.generate(any(Consumer.class)))
-            .thenReturn(expectedCertificate);
+        doReturn(consumer)
+            .when(consumerCurator)
+            .verifyAndLookupConsumer(anyString());
+
+        SCACertificate expectedCertificate = new SCACertificate();
+        expectedCertificate.setCert("cert");
+        expectedCertificate.setKey("key");
+        expectedCertificate.setSerial(new CertificateSerial(1234567L));
+
+        doReturn(expectedCertificate)
+            .when(scaCertificateGenerator)
+            .getX509Certificate(consumer);
+
+        ContentAccessPayload payload = new ContentAccessPayload();
+        doReturn(payload)
+            .when(scaCertificateGenerator)
+            .getContentPayload(consumer);
+
+        // If the X509 cert and content access payload have a null updated date, then the current time should
+        // be used as the updated date. Use a future 'since' date to verify this.
+        String since = new SimpleDateFormat(SINCE_DATE_FORMAT)
+            .format(TestUtil.createDateOffset(0, 0, 5));
 
         Response contentAccess = consumerResource
+            .getContentAccessBody("test-uuid", since);
+
+        assertEquals("Not modified since date supplied.", contentAccess.getEntity());
+    }
+
+    @Test
+    public void testGetContentAccessBodyWithCertLastContentUpdateEqualToSinceDate() throws Exception {
+        Owner owner = createOwner();
+        doReturn(owner)
+            .when(ownerCurator)
+            .findOwnerById(owner.getOwnerId());
+
+        Consumer consumer = createConsumer(owner);
+        doReturn(consumer)
+            .when(consumerCurator)
+            .verifyAndLookupConsumer(anyString());
+
+        SCACertificate expectedCertificate = createContentAccessCertificate(
+            "expected-key", "expected-cert", new Random().nextLong());
+
+        Date certLastUpdate = new Date();
+        expectedCertificate.setUpdated(certLastUpdate);
+        doReturn(expectedCertificate)
+            .when(scaCertificateGenerator)
+            .getX509Certificate(consumer);
+
+        ContentAccessPayload payload = new ContentAccessPayload()
+            .setTimestamp(certLastUpdate)
+            .setPayload(TestUtil.randomString("payload-"));
+        doReturn(payload).when(scaCertificateGenerator).getContentPayload(consumer);
+
+        Response actual = consumerResource
+            .getContentAccessBody("test-uuid", null);
+
+        ContentAccessListing listing = (ContentAccessListing) actual.getEntity();
+        assertThat(listing)
+            .isNotNull()
+            .returns(expectedCertificate.getUpdated(), ContentAccessListing::getLastUpdate);
+
+        String since = new SimpleDateFormat(SINCE_DATE_FORMAT)
+            .format(certLastUpdate);
+
+        Response contentAccess = consumerResource
+            .getContentAccessBody("test-uuid", since);
+
+        assertEquals("Not modified since date supplied.", contentAccess.getEntity());
+    }
+
+    @Test
+    public void testGetContentAccessBodyWithNullSinceDate() throws Exception {
+        Owner owner = createOwner();
+        doReturn(owner)
+            .when(ownerCurator)
+            .findOwnerById(owner.getOwnerId());
+
+        Consumer consumer = createConsumer(owner);
+        doReturn(consumer)
+            .when(consumerCurator)
+            .verifyAndLookupConsumer(anyString());
+
+        SCACertificate expectedCertificate = createContentAccessCertificate(
+            "expected-key", "expected-cert", new Random().nextLong());
+        doReturn(expectedCertificate)
+            .when(scaCertificateGenerator)
+            .getX509Certificate(consumer);
+
+        ContentAccessPayload payload = new ContentAccessPayload()
+            .setTimestamp(new Date())
+            .setPayload(TestUtil.randomString("payload-"));
+        doReturn(payload).when(scaCertificateGenerator).getContentPayload(consumer);
+
+        Response actual = consumerResource
+            .getContentAccessBody("test-uuid", null);
+
+        ContentAccessListing listing = (ContentAccessListing) actual.getEntity();
+        Map<Long, List<String>> contentListing = listing.getContentListing();
+        assertThat(contentListing)
+            .isNotNull()
+            .hasSize(1)
+            .containsEntry(expectedCertificate.getSerial().getId(),
+                List.of(expectedCertificate.getCert(), payload.getPayload()));
+    }
+
+    @Test
+    public void testGetContentAccessBodyWithDifferentUpdateDates() throws Exception {
+        Owner owner = createOwner();
+        doReturn(owner)
+            .when(ownerCurator)
+            .findOwnerById(owner.getOwnerId());
+
+        Consumer consumer = createConsumer(owner);
+        doReturn(consumer)
+            .when(consumerCurator)
+            .verifyAndLookupConsumer(anyString());
+
+        SCACertificate expectedCertificate = createContentAccessCertificate(
+            "expected-key", "expected-cert", new Random().nextLong());
+
+        // Make this updated date more recent than the content access payload timestamp.
+        // This is the date that should be included in the ContentAccessListing
+        expectedCertificate.setUpdated(TestUtil.createDateOffset(0, 0, -3));
+        doReturn(expectedCertificate)
+            .when(scaCertificateGenerator)
+            .getX509Certificate(consumer);
+
+        ContentAccessPayload payload = new ContentAccessPayload()
+            .setTimestamp(TestUtil.createDateOffset(0, 0, -5))
+            .setPayload(TestUtil.randomString("payload-"));
+        doReturn(payload).when(scaCertificateGenerator).getContentPayload(consumer);
+
+        Response actual = consumerResource
+            .getContentAccessBody("test-uuid", null);
+
+        ContentAccessListing listing = (ContentAccessListing) actual.getEntity();
+        assertThat(listing)
+            .isNotNull()
+            .returns(expectedCertificate.getUpdated(), ContentAccessListing::getLastUpdate);
+
+        Map<Long, List<String>> contentListing = listing.getContentListing();
+        assertThat(contentListing)
+            .isNotNull()
+            .hasSize(1)
+            .containsEntry(expectedCertificate.getSerial().getId(),
+                List.of(expectedCertificate.getCert(), payload.getPayload()));
+    }
+
+    @Test
+    public void contentAccessGetModified() throws Exception {
+        Owner owner = createOwner();
+        doReturn(owner)
+            .when(ownerCurator)
+            .findOwnerById(owner.getOwnerId());
+
+        Consumer consumer = createConsumer(owner);
+        doReturn(consumer)
+            .when(consumerCurator)
+            .verifyAndLookupConsumer(anyString());
+
+        SCACertificate expectedCertificate = createContentAccessCertificate(
+            "expected-key", "expected-cert", 18084729L);
+        doReturn(expectedCertificate)
+            .when(scaCertificateGenerator)
+            .getX509Certificate(consumer);
+
+        ContentAccessPayload payload = new ContentAccessPayload()
+            .setTimestamp(TestUtil.createDateOffset(0, 0, -1))
+            .setPayload(TestUtil.randomString("payload-"));
+        doReturn(payload)
+            .when(scaCertificateGenerator)
+            .getContentPayload(consumer);
+
+        Response actual = consumerResource
             .getContentAccessBody("test-uuid", "Fri, 06 Oct 2023 08:20:51 Z");
 
-        ContentAccessListing listing = (ContentAccessListing) contentAccess.getEntity();
+        ContentAccessListing listing = (ContentAccessListing) actual.getEntity();
         Map<Long, List<String>> contentListing = listing.getContentListing();
-        assertFalse(contentListing.isEmpty());
+        assertThat(contentListing)
+            .isNotNull()
+            .hasSize(1)
+            .containsEntry(expectedCertificate.getSerial().getId(),
+                List.of(expectedCertificate.getCert(), payload.getPayload()));
     }
 
     @Test
     public void contentAccessIfModifiedSinceLocale() throws Exception {
         Locale.setDefault(Locale.FRANCE);
-        String expectedMode = "owner-ca-mode-list";
         Owner owner = createOwner();
-        when(ownerCurator.findOwnerById(owner.getOwnerId())).thenReturn(owner);
+        doReturn(owner)
+            .when(ownerCurator)
+            .findOwnerById(owner.getOwnerId());
+
         Consumer consumer = createConsumer(owner);
-        consumer.getOwner().setContentAccessModeList(expectedMode);
-        when(consumerCurator.verifyAndLookupConsumer(anyString()))
-            .thenReturn(consumer);
+        doReturn(consumer)
+            .when(consumerCurator)
+            .verifyAndLookupConsumer(anyString());
+
         SCACertificate expectedCertificate = createContentAccessCertificate(
             "expected-key", "expected-cert", 18084729L);
-        when(this.scaCertificateGenerator.generate(any(Consumer.class)))
-            .thenReturn(expectedCertificate);
+        doReturn(expectedCertificate)
+            .when(scaCertificateGenerator)
+            .getX509Certificate(consumer);
+
+        ContentAccessPayload payload = new ContentAccessPayload()
+            .setTimestamp(new Date())
+            .setPayload(TestUtil.randomString("payload-"));
+        doReturn(payload)
+            .when(scaCertificateGenerator)
+            .getContentPayload(consumer);
 
         Response contentAccess = consumerResource
             .getContentAccessBody("test-uuid", "Fri, 06 Oct 2023 08:20:51 Z");
 
         ContentAccessListing listing = (ContentAccessListing) contentAccess.getEntity();
         Map<Long, List<String>> contentListing = listing.getContentListing();
-        assertFalse(contentListing.isEmpty());
+        assertThat(contentListing)
+            .isNotNull()
+            .hasSize(1)
+            .containsEntry(expectedCertificate.getSerial().getId(),
+                List.of(expectedCertificate.getCert(), payload.getPayload()));
     }
 
     @Test

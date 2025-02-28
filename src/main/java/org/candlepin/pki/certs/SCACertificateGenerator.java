@@ -44,7 +44,6 @@ import org.candlepin.pki.impl.Signer;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
-import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +69,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+import javax.persistence.PersistenceException;
 
 
 /**
@@ -344,7 +344,7 @@ public class SCACertificateGenerator {
                 try {
                     contentAccessPayloadCurator.create(payload);
                 }
-                catch (ConstraintViolationException e) {
+                catch (PersistenceException e) {
                     throw new ConcurrentContentPayloadCreationException(e);
                 }
             }
