@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.util.Util;
+
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Date;
@@ -213,7 +215,7 @@ public class ContentAccessPayload extends AbstractHibernateObject<ContentAccessP
      * @return the timestamp of this instance
      */
     public Date getTimestamp() {
-        return timestamp;
+        return Util.firstOf(this.timestamp, this.getCreated(), new Date());
     }
 
     /**
