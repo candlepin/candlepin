@@ -818,7 +818,7 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldReturnServiceUnavailableWithConcurrentPayloadCreation() throws Exception {
+    public void shouldReturnTooManyRequestsWithConcurrentPayloadCreation() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
@@ -842,7 +842,7 @@ public class ContentAccessSpecTest {
             for (int i = 0; i < maxNumberOfAttempts; i++) {
                 // Update the arch of all the consumers so that the content access payload key will be
                 // different than the key used to store the content access payload previously. This causes the
-                // regeneration of the content access payload which is what we need to cause the 503 response.
+                // regeneration of the content access payload which is what we need to cause the 429 response.
                 String newArch = StringUtil.random("arch-");
                 for (ConsumerDTO consumer : consumers) {
                     consumer.putFactsItem(Facts.Arch.key(), newArch);
@@ -876,7 +876,67 @@ public class ContentAccessSpecTest {
             .isTooMany()
             .hasHeaderWithValue(RETRY_AFTER_HEADER_KEY,
                 CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME);
+    }
 
+    @Test
+    public void shouldReturnTooManyRequestsWithConcurrentPayloadCreationWhenExportingCertificates() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer3 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer4 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer5 = adminClient.consumers().createConsumer(Consumers.random(owner));
+
+        List<ConsumerDTO> consumers = List.of(consumer1, consumer2, consumer3, consumer4, consumer5);
+
+        int maxNumberOfAttempts = 5;
+        ApiException exception = assertThrows(ApiException.class, () -> {
+            for (int i = 0; i < maxNumberOfAttempts; i++) {
+                // Update the arch of all the consumers so that the content access payload key will be
+                // different than the key used to store the content access payload previously. This causes the
+                // regeneration of the content access payload which is what we need to cause the 429 response.
+                String newArch = StringUtil.random("arch-");
+                for (ConsumerDTO consumer : consumers) {
+                    consumer.putFactsItem(Facts.Arch.key(), newArch);
+                    adminClient.consumers().updateConsumer(consumer.getUuid(), consumer);
+                }
+
+                List<Callable<List<JsonNode>>> tasks = List.of(
+                    () -> adminClient.consumers().exportCertificates(consumer1.getUuid(), ""),
+                    () -> adminClient.consumers().exportCertificates(consumer2.getUuid(), ""),
+                    () -> adminClient.consumers().exportCertificates(consumer3.getUuid(), ""),
+                    () -> adminClient.consumers().exportCertificates(consumer4.getUuid(), ""),
+                    () -> adminClient.consumers().exportCertificates(consumer5.getUuid(), ""));
+
+                ExecutorService execService = Executors.newFixedThreadPool(consumers.size());
+                List<Future<List<JsonNode>>> futures = execService.invokeAll(tasks);
+                execService.shutdown();
+                execService.awaitTermination(10L, TimeUnit.SECONDS);
+
+                for (Future<List<JsonNode>> future : futures) {
+                    try {
+                        future.get();
+                    }
+                    catch (ExecutionException e) {
+                        throw e.getCause();
+                    }
+                }
+            }
+        });
+
+        new CandlepinStatusAssert(exception)
+            .isTooMany()
+            .hasHeaderWithValue(RETRY_AFTER_HEADER_KEY,
+                CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME);
     }
 
     @Test
