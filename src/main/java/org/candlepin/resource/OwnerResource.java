@@ -1362,6 +1362,12 @@ public class OwnerResource implements OwnerApi {
         Page<List<Pool>> poolPage = poolManager.listAvailableEntitlementPools(qualifier)
             .setPageRequest(pageRequest);
 
+        if (qualifier.getOffset() != null && qualifier.getLimit() != null) {
+            List<Pool> resultingPools = poolPage.getPageData();
+            resultingPools = poolCurator.takeSubList(qualifier, resultingPools);
+            poolPage.setPageData(resultingPools);
+        }
+
         List<Pool> poolList = poolPage.getPageData();
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
         calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOnDate);

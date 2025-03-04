@@ -86,6 +86,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -378,22 +379,41 @@ public class OwnerResourceSpecTest {
         assertThat(ownerPools).hasSize(1);
     }
 
-    @Test
-    public void shouldListOwnersPoolsPaged() {
-        OwnerDTO owner = owners.createOwner(Owners.random());
-        ProductDTO product = createProduct(owner);
+    // TODO: Update this test
 
-        for (int i = 0; i < 4; i++) {
-            owners.createPool(owner.getKey(), Pools.random(product));
+    // We should be testing the following:
+    // - order
+    // - page size
+    // - all the pools are returned
+    // - ordered by column
+
+    @Test
+    public void shouldPageOwnersPools() {
+        OwnerDTO owner = owners.createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        List<String> expectedPoolsIds = new ArrayList<>();
+
+        int numberOfPools = 20;
+        int pageSize = 5;
+        for (int i = 0; i < numberOfPools; i++) {
+            ProductDTO product = createProduct(owner);
+            PoolDTO pool = owners.createPool(ownerKey, Pools.random(product));
+            expectedPoolsIds.add(pool.getId());
         }
 
-        Set<String> pagedPoolIds = ApiClients.admin().owners()
-            .listOwnerPools(owner.getKey(), Paging.withPage(1))
-            .stream()
-            .map(PoolDTO::getId)
-            .collect(Collectors.toSet());
+        List<String> actualPoolsIds = new ArrayList<>();
+        for (int pageIndex = 1; pageIndex * pageSize <= numberOfPools; pageIndex++) {
+            Paging paging = new Paging(pageIndex, pageSize, "id", "asc");
 
-        assertThat(pagedPoolIds).hasSize(2);
+            List<PoolDTO> pools = owners.listOwnerPools(ownerKey, paging);
+            for (int i =0; i < pools.size(); i++) {
+                actualPoolsIds.add(pools.get(i).getId());
+            }
+        }
+
+        assertThat(actualPoolsIds)
+            .containsExactlyElementsOf(expectedPoolsIds);
     }
 
     @Test
