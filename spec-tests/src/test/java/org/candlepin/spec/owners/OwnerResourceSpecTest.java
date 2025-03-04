@@ -56,6 +56,8 @@ import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.client.api.Paging;
+import org.candlepin.spec.bootstrap.client.request.Request;
+import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.ActivationKeys;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
@@ -73,21 +75,26 @@ import org.candlepin.spec.bootstrap.data.util.DateUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -379,7 +386,7 @@ public class OwnerResourceSpecTest {
         assertThat(ownerPools).hasSize(1);
     }
 
-    // TODO: Update this test
+    // TODO: Should we create a nested test suite for this?
 
     // We should be testing the following:
     // - order
@@ -387,33 +394,82 @@ public class OwnerResourceSpecTest {
     // - all the pools are returned
     // - ordered by column
 
-    @Test
-    public void shouldPageOwnersPools() {
-        OwnerDTO owner = owners.createOwner(Owners.randomSca());
-        String ownerKey = owner.getKey();
+    @Nested
+    @TestInstance(Lifecycle.PER_CLASS)
+    public class ListOwnerPoolsPagingTests {
+        private OwnerDTO owner;
+        private String ownerKey;
 
-        List<String> expectedPoolsIds = new ArrayList<>();
+        private List<PoolDTO> pools = new ArrayList<>();
+        private int numberOfPools = 20;
+        private int pageSize = 5;
 
-        int numberOfPools = 20;
-        int pageSize = 5;
-        for (int i = 0; i < numberOfPools; i++) {
-            ProductDTO product = createProduct(owner);
-            PoolDTO pool = owners.createPool(ownerKey, Pools.random(product));
-            expectedPoolsIds.add(pool.getId());
-        }
+        @BeforeAll
+        public void setup() {
+            owner = owners.createOwner(Owners.randomSca());
+            ownerKey = owner.getKey();
 
-        List<String> actualPoolsIds = new ArrayList<>();
-        for (int pageIndex = 1; pageIndex * pageSize <= numberOfPools; pageIndex++) {
-            Paging paging = new Paging(pageIndex, pageSize, "id", "asc");
-
-            List<PoolDTO> pools = owners.listOwnerPools(ownerKey, paging);
-            for (int i =0; i < pools.size(); i++) {
-                actualPoolsIds.add(pools.get(i).getId());
+            for (int i = 0; i < numberOfPools; i++) {
+                ProductDTO product = createProduct(owner);
+                PoolDTO pool = owners.createPool(ownerKey, Pools.random(product));
+                pools.add(pool);
             }
         }
 
-        assertThat(actualPoolsIds)
-            .containsExactlyElementsOf(expectedPoolsIds);
+        @Test
+        public void shouldPageOwnersPools() {
+            List<String> actualPoolsIds = new ArrayList<>();
+            for (int pageIndex = 1; pageIndex * pageSize <= numberOfPools; pageIndex++) {
+                Paging paging = new Paging(pageIndex, pageSize, "id", "asc");
+
+                List<String> poolIds = owners.listOwnerPools(ownerKey, paging).stream()
+                    .map(PoolDTO::getId)
+                    .collect(Collectors.toList());
+
+                actualPoolsIds.addAll(poolIds);
+            }
+
+            List<String> expectedPoolIds = pools.stream()
+                .map(PoolDTO::getId)
+                .toList();
+
+            assertThat(actualPoolsIds)
+                .containsExactlyElementsOf(expectedPoolIds);
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = { 0, -1, -100 })
+        public void shouldFailWithInvalidPage(int page) {
+
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = { 0, -1, -100 })
+        public void shouldFailWithInvalidPageSize(int pageSize) {
+
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = { "id", "name", "uuid" })
+        public void shouldAllowQueryingWithAscendingOrderedOutput(String field) {
+
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = { "id", "name", "uuid" })
+        public void shouldAllowQueryingWithDescendingOrderedOutput(String field) {
+
+        }
+
+        @Test
+        public void shouldFailWithInvalidOrderField() {
+
+        }
+
+        @Test
+        public void shouldFailWithInvalidOrderDirection() {
+
+        }
     }
 
     @Test
