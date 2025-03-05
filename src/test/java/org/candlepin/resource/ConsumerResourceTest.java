@@ -1589,6 +1589,30 @@ public class ConsumerResourceTest {
     }
 
     @Test
+    public void testExportCertificatesInZipFormatWithConcurrentContentPayloadCreationException()
+        throws Exception {
+
+        Consumer consumer = createConsumer();
+        long serial = 123456L;
+
+        doThrow(ConcurrentContentPayloadCreationException.class)
+            .when(manifestManager)
+            .generateEntitlementArchive(consumer, Set.of(serial));
+
+        MockHttpRequest mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/fake")
+            .header("accept", "application/zip");
+        ResteasyContext.pushContext(HttpRequest.class, mockReq);
+        ResteasyContext.pushContext(HttpServletResponse.class, mock(HttpServletResponse.class));
+
+        TooManyRequestsException exception = assertThrows(TooManyRequestsException.class,
+            () -> consumerResource.exportCertificates(consumer.getUuid(), Long.toString(serial)));
+
+        assertThat(exception)
+            .returns(CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME,
+                TooManyRequestsException::getRetryAfterTime);
+    }
+
+    @Test
     public void testExportCertificatesWithUnknownSerialId() throws Exception {
         Consumer consumer = createConsumer();
 

@@ -68,6 +68,7 @@ import com.google.gson.internal.LinkedTreeMap;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -815,6 +816,71 @@ public class ContentAccessSpecTest {
 
         assertNotModified(() -> adminClient.consumers()
             .getContentAccessBodyJson(consumer.getUuid(), formatted));
+    }
+
+    @Test
+    public void shouldReturnTooManyRequestsWithConcurrentPayloadCreationWhenExportingCertificatesInZip() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer3 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer4 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer5 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        List<ConsumerDTO> consumers = List.of(consumer1, consumer2, consumer3, consumer4, consumer5);
+
+        ApiException exception = assertThrows(ApiException.class, () -> {
+            int maxNumberOfAttempts = 5;
+            for (int i = 0; i < maxNumberOfAttempts; i++) {
+                // Update the arch of all the consumers so that the content access payload key will be
+                // different than the key used to store the content access payload previously. This causes the
+                // regeneration of the content access payload which is what we need to cause the 429 response.
+                String newArch = StringUtil.random("arch-");
+                for (ConsumerDTO consumer : consumers) {
+                    consumer.putFactsItem(Facts.Arch.key(), newArch);
+                    adminClient.consumers().updateConsumer(consumer.getUuid(), consumer);
+                }
+
+                List<Callable<File>> tasks = List.of(
+                        () -> ApiClients.ssl(consumer1).consumers()
+                                .exportCertificatesInZipFormat(consumer1.getUuid(), ""),
+                        () -> ApiClients.ssl(consumer2).consumers()
+                                .exportCertificatesInZipFormat(consumer2.getUuid(), ""),
+                        () -> ApiClients.ssl(consumer3).consumers()
+                                .exportCertificatesInZipFormat(consumer3.getUuid(), ""),
+                        () -> ApiClients.ssl(consumer4).consumers()
+                                .exportCertificatesInZipFormat(consumer4.getUuid(), ""),
+                        () -> ApiClients.ssl(consumer5).consumers()
+                                .exportCertificatesInZipFormat(consumer5.getUuid(), ""));
+
+                ExecutorService execService = Executors.newFixedThreadPool(consumers.size());
+                List<Future<File>> futures = execService.invokeAll(tasks);
+                execService.shutdown();
+                execService.awaitTermination(10L, TimeUnit.SECONDS);
+
+                for (Future<File> future : futures) {
+                    try {
+                        future.get();
+                    }
+                    catch (ExecutionException e) {
+                        throw e.getCause();
+                    }
+                }
+            }
+        });
+
+        new CandlepinStatusAssert(exception)
+            .isTooMany()
+            .hasHeaderWithValue(RETRY_AFTER_HEADER_KEY,
+                CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME);
     }
 
     @Test
