@@ -2451,10 +2451,9 @@ public class ConsumerResource implements ConsumerApi {
                 i18n.tr("Unable to create entitlement certificate archive"), e);
         }
         catch (ConcurrentContentPayloadCreationException e) {
-            // TODO: Handle as part of CHAINSAW-376
+            throw new TooManyRequestsException(i18n.tr("Unable to create content access payload"), e)
+                .setRetryAfterTime(CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME);
         }
-
-        return null;
     }
 
     private Set<Long> extractSerials(String serials) {
