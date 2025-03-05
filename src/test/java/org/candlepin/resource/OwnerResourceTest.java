@@ -2531,7 +2531,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void usesDefaultWhenOwnerCANotAvailable() {
         String expectedMode = ContentAccessMode.getDefault().toDatabaseValue();
-        List<String> expectedModeList = Arrays.asList(ContentAccessMode.ENTITLEMENT.toDatabaseValue(),
+        List<String> expectedModeList = List.of(
             ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
         when(mockOwnerCurator.getOwnerContentAccess(anyString()))
             .thenReturn(new OwnerContentAccess(null, null));

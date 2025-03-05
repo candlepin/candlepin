@@ -1504,8 +1504,7 @@ public class ConsumerResourceTest {
     @Test
     void usesDefaultWhenNoCAAvailable() {
         String expectedMode = ContentAccessMode.getDefault().toDatabaseValue();
-        List<String> expectedModeList = Arrays.asList(
-            ContentAccessMode.ENTITLEMENT.toDatabaseValue(),
+        List<String> expectedModeList = List.of(
             ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
         Consumer consumer = createConsumer(createOwner());
         when(consumerCurator.verifyAndLookupConsumer(anyString()))
