@@ -27,7 +27,8 @@ import org.candlepin.spec.bootstrap.data.util.StringUtil;
  */
 public final class Owners {
 
-    public static final String ACCESS_MODE_LIST = "entitlement,org_environment";
+    public static final String ACCESS_MODE_LIST_ALL = "entitlement,org_environment";
+    public static final String DEFAULT_ACCESS_MODE_LIST = "org_environment";
     public static final String ENTITLEMENT_ACCESS_MODE = "entitlement";
     public static final String SCA_ACCESS_MODE = "org_environment";
 
@@ -42,7 +43,7 @@ public final class Owners {
             .key("test_owner-" + suffix)
             .displayName("Test Owner " + suffix)
             .contentAccessMode(ENTITLEMENT_ACCESS_MODE)
-            .contentAccessModeList(ACCESS_MODE_LIST);
+            .contentAccessModeList(ACCESS_MODE_LIST_ALL);
     }
 
     public static OwnerDTO randomSca() {
