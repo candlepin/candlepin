@@ -15,12 +15,11 @@
 package org.candlepin.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -504,13 +503,18 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testUpdateOwnerContentAccessModeChangedFromEntModeToSCA() throws JobException {
-        Owner owner = new Owner();
-        owner.setKey(TestUtil.randomString());
-        owner.setContentAccessMode(entitlementMode);
+    public void testUpdateOwnerContentAccessModeChangedFromEntModeToSCA() throws Exception {
+        Owner owner = new Owner()
+            .setKey(TestUtil.randomString())
+            .setContentAccessMode(entitlementMode);
+
+        Date initialLastContentUpdate = owner.getLastContentUpdate();
 
         String contentAccessModeList = entitlementMode + "," + orgEnvironmentMode;
         String contentAccessMode = orgEnvironmentMode;
+
+        // Sleep to gaurantee the last content update dates will be different
+        Thread.sleep(5);
 
         ContentAccessManager manager = this.createManager();
         manager.updateOwnerContentAccess(owner, contentAccessModeList, contentAccessMode);
@@ -518,6 +522,7 @@ public class ContentAccessManagerTest {
         assertEquals(owner.getContentAccessModeList(), contentAccessModeList);
         assertEquals(owner.getContentAccessMode(), contentAccessMode);
         verify(jobManager).queueJob(any(RevokeEntitlementsJobConfig.class));
+        assertNotEquals(initialLastContentUpdate, owner.getLastContentUpdate());
     }
 
     @Test
@@ -560,148 +565,4 @@ public class ContentAccessManagerTest {
         assertNull(consumer.getContentAccessCert());
     }
 
-    @Test
-    public void testHasCertChangedSinceOnlyCheckSecondsOnCertUpdatedDate() {
-        Owner owner = this.mockOwner();
-        Consumer consumer = this.mockConsumer(owner);
-        ContentAccessManager manager = this.createManager();
-        SCACertificate cert = this.mockContentAccessCertificate(consumer);
-        consumer.setContentAccessCert(cert);
-
-        // Set Owner's last content update to be long ago
-        owner.setLastContentUpdate(TestUtil.createDateOffset(-1, 0, 0));
-
-        // Set SCA cert 'updated' date (but without any rounding)
-        long currentTimeMillis = System.currentTimeMillis();
-        Date currentTime = new Date(currentTimeMillis);
-        cert.setUpdated(currentTime);
-
-        // Set expiration long enough into the future
-        CertificateSerial serial = new CertificateSerial();
-        serial.setExpiration(TestUtil.createDateOffset(1, 0, 0));
-        cert.setSerial(serial);
-
-        // Simulate 'lastUpdate' date sent by subscription-manager to be the same as
-        // the SCA cert 'updated' date, but without the milliseconds
-        Date lastUpdateRoundedDown = Util.roundDownToSeconds(currentTime);
-        boolean changed = manager.hasCertChangedSince(consumer, lastUpdateRoundedDown);
-
-        assertFalse(changed);
-    }
-
-    @Test
-    public void testHasCertChangedSinceOnlyCheckSecondsOnCertExpirationDate() {
-        Owner owner = this.mockOwner();
-        Consumer consumer = this.mockConsumer(owner);
-        ContentAccessManager manager = this.createManager();
-        SCACertificate cert = this.mockContentAccessCertificate(consumer);
-        consumer.setContentAccessCert(cert);
-
-        // Set Owner's last content update to be long ago
-        owner.setLastContentUpdate(TestUtil.createDateOffset(-1, 0, 0));
-
-        // Set SCA cert 'updated' date (but without any rounding)
-        long currentTimeMillis = System.currentTimeMillis();
-        Date currentTime = new Date(currentTimeMillis);
-        cert.setUpdated(currentTime);
-
-        // Set expiration date to be the same as the 'updated' date, but without the rounding
-        CertificateSerial serial = new CertificateSerial();
-        serial.setExpiration(currentTime);
-        cert.setSerial(serial);
-
-        // Simulate 'lastUpdate' date sent by subscription-manager to be the same as
-        // the SCA cert 'updated' date, but without the milliseconds
-        Date lastUpdateRoundedDown = Util.roundDownToSeconds(currentTime);
-        boolean changed = manager.hasCertChangedSince(consumer, lastUpdateRoundedDown);
-
-        assertFalse(changed);
-    }
-
-    @Test
-    public void testHasCertChangedSinceOwnerContentUpdated() {
-        Owner owner = this.mockOwner();
-        Consumer consumer = this.mockConsumer(owner);
-        ContentAccessManager manager = this.createManager();
-        SCACertificate cert = this.mockContentAccessCertificate(consumer);
-        consumer.setContentAccessCert(cert);
-
-        // Set Owner's last content update to be now
-        owner.setLastContentUpdate(new Date());
-
-        // Set SCA cert 'updated' date to be in the past
-        Date lastUpdated = TestUtil.createDateOffset(-1, 0, 0);
-        cert.setUpdated(lastUpdated);
-
-        boolean changed = manager.hasCertChangedSince(consumer, lastUpdated);
-
-        assertTrue(changed);
-    }
-
-    @Test
-    public void testHasCertChangedSinceReturnAlwaysFalseWhenNotSimpleContentAccess() {
-        Owner owner = this.mockOwner();
-        owner.setContentAccessMode(ContentAccessMode.ENTITLEMENT.toDatabaseValue());
-        Consumer consumer = this.mockConsumer(owner);
-        ContentAccessManager manager = this.createManager();
-
-        // Set SCA cert 'updated' date to be in the past
-        Date lastUpdated = TestUtil.createDateOffset(-1, 0, 0);
-        boolean changed = manager.hasCertChangedSince(consumer, lastUpdated);
-        assertFalse(changed);
-
-        // Set SCA cert 'updated' date to be in the future
-        lastUpdated = TestUtil.createDateOffset(1, 0, 0);
-        changed = manager.hasCertChangedSince(consumer, lastUpdated);
-        assertFalse(changed);
-
-        // Set SCA cert 'updated' date to be now
-        changed = manager.hasCertChangedSince(consumer, new Date());
-        assertFalse(changed);
-    }
-
-    @Test
-    public void testHasCertChangedSinceReturnAlwaysTrueWhenSCACertIsNull() {
-        Owner owner = this.mockOwner();
-        Consumer consumer = this.mockConsumer(owner);
-        consumer.setContentAccessCert(null);
-        ContentAccessManager manager = this.createManager();
-
-        // Set SCA cert 'updated' date to be in the past
-        Date lastUpdated = TestUtil.createDateOffset(-1, 0, 0);
-        boolean changed = manager.hasCertChangedSince(consumer, lastUpdated);
-        assertTrue(changed);
-
-        // Set SCA cert 'updated' date to be in the future
-        lastUpdated = TestUtil.createDateOffset(1, 0, 0);
-        changed = manager.hasCertChangedSince(consumer, lastUpdated);
-        assertTrue(changed);
-
-        // Set SCA cert 'updated' date to be now
-        changed = manager.hasCertChangedSince(consumer, new Date());
-        assertTrue(changed);
-    }
-
-    @Test
-    public void testHasCertChangedSinceThrowsExceptionWhenConsumerIsNull() {
-        ContentAccessManager manager = this.createManager();
-
-        assertThrows(IllegalArgumentException.class, () -> manager.hasCertChangedSince(null, new Date()));
-    }
-
-    @Test
-    public void testHasCertChangedSinceThrowsExceptionWhenDateIsNull() {
-        Owner owner = this.mockOwner();
-        Consumer consumer = this.mockConsumer(owner);
-        ContentAccessManager manager = this.createManager();
-
-        assertThrows(IllegalArgumentException.class, () -> manager.hasCertChangedSince(consumer, null));
-    }
-
-    @Test
-    public void testSyncOwnerLastContentUpdateThrowsExceptionWhenOwnerIsNull() {
-        ContentAccessManager manager = this.createManager();
-
-        assertThrows(IllegalArgumentException.class, () -> manager.syncOwnerLastContentUpdate(null));
-    }
 }

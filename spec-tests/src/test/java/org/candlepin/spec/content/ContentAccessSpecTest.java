@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.CertificateDTO;
@@ -41,7 +42,9 @@ import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.client.v1.SystemPurposeComplianceStatusDTO;
+import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.ConsumerApi;
+import org.candlepin.spec.bootstrap.assertions.CandlepinStatusAssert;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -52,6 +55,7 @@ import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.Environments;
+import org.candlepin.spec.bootstrap.data.builder.Facts;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
@@ -64,6 +68,7 @@ import com.google.gson.internal.LinkedTreeMap;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -72,12 +77,20 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 @SpecTest
 @SuppressWarnings("indentation")
 public class ContentAccessSpecTest {
     private static final String CONTENT_ACCESS_OUTPUT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
     private static final String CONTENT_ACCESS_INPUT_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss z";
+    private static final int CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME = 2;
+    private static final String RETRY_AFTER_HEADER_KEY = "retry-after";
 
     @Test
     public void shouldFilterContentWithMismatchedArchitecture() {
@@ -446,7 +459,7 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldShowEnvironmentContentChangeInContentAccessCert() {
+    public void shouldShowEnvironmentContentChangeInContentAccessCert() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
@@ -468,6 +481,11 @@ public class ContentAccessSpecTest {
             .extractingByKey("content_access", as(collection(String.class)))
             .isEmpty();
 
+        // Need to wait a second because MySQL does not store millisecond precision and we need to gaurantee
+        // the comparison between the content access payload timestamp and the environment content last update
+        // is different
+        Thread.sleep(1000);
+
         promoteContentToEnvironment(adminClient, env.getId(), content, true);
 
         env = adminClient.environments().getEnvironment(env.getId());
@@ -483,6 +501,8 @@ public class ContentAccessSpecTest {
             .extractingByKey("content_access", as(collection(String.class)))
             .hasSize(1)
             .containsExactly(content.getId());
+
+        Thread.sleep(1000);
 
         demoteContentFromEnvironment(adminClient, env.getId(), List.of(content.getId()));
 
@@ -806,6 +826,193 @@ public class ContentAccessSpecTest {
     }
 
     @Test
+    public void shouldReturnTooManyRequestsWithConcurrentPayloadCreationWhenExportingCertificatesInZip() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer3 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer4 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer5 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        List<ConsumerDTO> consumers = List.of(consumer1, consumer2, consumer3, consumer4, consumer5);
+
+        ApiException exception = assertThrows(ApiException.class, () -> {
+            int maxNumberOfAttempts = 5;
+            for (int i = 0; i < maxNumberOfAttempts; i++) {
+                // Update the arch of all the consumers so that the content access payload key will be
+                // different than the key used to store the content access payload previously. This causes the
+                // regeneration of the content access payload which is what we need to cause the 429 response.
+                String newArch = StringUtil.random("arch-");
+                for (ConsumerDTO consumer : consumers) {
+                    consumer.putFactsItem(Facts.Arch.key(), newArch);
+                    adminClient.consumers().updateConsumer(consumer.getUuid(), consumer);
+                }
+
+                List<Callable<File>> tasks = List.of(
+                        () -> ApiClients.ssl(consumer1).consumers()
+                                .exportCertificatesInZipFormat(consumer1.getUuid(), ""),
+                        () -> ApiClients.ssl(consumer2).consumers()
+                                .exportCertificatesInZipFormat(consumer2.getUuid(), ""),
+                        () -> ApiClients.ssl(consumer3).consumers()
+                                .exportCertificatesInZipFormat(consumer3.getUuid(), ""),
+                        () -> ApiClients.ssl(consumer4).consumers()
+                                .exportCertificatesInZipFormat(consumer4.getUuid(), ""),
+                        () -> ApiClients.ssl(consumer5).consumers()
+                                .exportCertificatesInZipFormat(consumer5.getUuid(), ""));
+
+                ExecutorService execService = Executors.newFixedThreadPool(consumers.size());
+                List<Future<File>> futures = execService.invokeAll(tasks);
+                execService.shutdown();
+                execService.awaitTermination(10L, TimeUnit.SECONDS);
+
+                for (Future<File> future : futures) {
+                    try {
+                        future.get();
+                    }
+                    catch (ExecutionException e) {
+                        throw e.getCause();
+                    }
+                }
+            }
+        });
+
+        new CandlepinStatusAssert(exception)
+            .isTooMany()
+            .hasHeaderWithValue(RETRY_AFTER_HEADER_KEY,
+                CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME);
+    }
+
+    @Test
+    public void shouldReturnTooManyRequestsWithConcurrentPayloadCreation() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer3 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer4 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer5 = adminClient.consumers().createConsumer(Consumers.random(owner));
+
+        List<ConsumerDTO> consumers = List.of(consumer1, consumer2, consumer3, consumer4, consumer5);
+
+        int maxNumberOfAttempts = 5;
+        ApiException exception = assertThrows(ApiException.class, () -> {
+            for (int i = 0; i < maxNumberOfAttempts; i++) {
+                // Update the arch of all the consumers so that the content access payload key will be
+                // different than the key used to store the content access payload previously. This causes the
+                // regeneration of the content access payload which is what we need to cause the 429 response.
+                String newArch = StringUtil.random("arch-");
+                for (ConsumerDTO consumer : consumers) {
+                    consumer.putFactsItem(Facts.Arch.key(), newArch);
+                    adminClient.consumers().updateConsumer(consumer.getUuid(), consumer);
+                }
+
+                List<Callable<String>> tasks = List.of(
+                    () -> adminClient.consumers().getContentAccessBody(consumer1.getUuid(), null),
+                    () -> adminClient.consumers().getContentAccessBody(consumer2.getUuid(), null),
+                    () -> adminClient.consumers().getContentAccessBody(consumer3.getUuid(), null),
+                    () -> adminClient.consumers().getContentAccessBody(consumer4.getUuid(), null),
+                    () -> adminClient.consumers().getContentAccessBody(consumer5.getUuid(), null));
+
+                ExecutorService execService = Executors.newFixedThreadPool(consumers.size());
+                List<Future<String>> futures = execService.invokeAll(tasks);
+                execService.shutdown();
+                execService.awaitTermination(10L, TimeUnit.SECONDS);
+
+                for (Future<String> future : futures) {
+                    try {
+                        future.get();
+                    }
+                    catch (ExecutionException e) {
+                        throw e.getCause();
+                    }
+                }
+            }
+        });
+
+        new CandlepinStatusAssert(exception)
+            .isTooMany()
+            .hasHeaderWithValue(RETRY_AFTER_HEADER_KEY,
+                CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME);
+    }
+
+    @Test
+    public void shouldReturnTooManyRequestsWithConcurrentPayloadCreationWhenExportingCertificates() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        adminClient.ownerProducts()
+            .addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer3 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer4 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer5 = adminClient.consumers().createConsumer(Consumers.random(owner));
+
+        List<ConsumerDTO> consumers = List.of(consumer1, consumer2, consumer3, consumer4, consumer5);
+
+        int maxNumberOfAttempts = 5;
+        ApiException exception = assertThrows(ApiException.class, () -> {
+            for (int i = 0; i < maxNumberOfAttempts; i++) {
+                // Update the arch of all the consumers so that the content access payload key will be
+                // different than the key used to store the content access payload previously. This causes the
+                // regeneration of the content access payload which is what we need to cause the 429 response.
+                String newArch = StringUtil.random("arch-");
+                for (ConsumerDTO consumer : consumers) {
+                    consumer.putFactsItem(Facts.Arch.key(), newArch);
+                    adminClient.consumers().updateConsumer(consumer.getUuid(), consumer);
+                }
+
+                List<Callable<List<JsonNode>>> tasks = List.of(
+                    () -> adminClient.consumers().exportCertificates(consumer1.getUuid(), ""),
+                    () -> adminClient.consumers().exportCertificates(consumer2.getUuid(), ""),
+                    () -> adminClient.consumers().exportCertificates(consumer3.getUuid(), ""),
+                    () -> adminClient.consumers().exportCertificates(consumer4.getUuid(), ""),
+                    () -> adminClient.consumers().exportCertificates(consumer5.getUuid(), ""));
+
+                ExecutorService execService = Executors.newFixedThreadPool(consumers.size());
+                List<Future<List<JsonNode>>> futures = execService.invokeAll(tasks);
+                execService.shutdown();
+                execService.awaitTermination(10L, TimeUnit.SECONDS);
+
+                for (Future<List<JsonNode>> future : futures) {
+                    try {
+                        future.get();
+                    }
+                    catch (ExecutionException e) {
+                        throw e.getCause();
+                    }
+                }
+            }
+        });
+
+        new CandlepinStatusAssert(exception)
+            .isTooMany()
+            .hasHeaderWithValue(RETRY_AFTER_HEADER_KEY,
+                CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME);
+    }
+
+    @Test
     public void shouldUpdateExistingContentAccessCertContentWhenProductDataChanges() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
@@ -971,7 +1178,7 @@ public class ContentAccessSpecTest {
         adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
-        // We need to sleep here to ensure enough time has passes from the last content update to when
+        // We need to sleep here to ensure enough time has passed from the last content update to when
         // we fetch certificates.
         Thread.sleep(1000);
 

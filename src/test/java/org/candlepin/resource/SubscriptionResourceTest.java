@@ -17,6 +17,8 @@ package org.candlepin.resource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -32,6 +34,8 @@ import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.exceptions.ServiceUnavailableException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +47,7 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 import javax.ws.rs.core.Response;
@@ -76,6 +81,30 @@ public class SubscriptionResourceTest {
 
         this.subResource = new SubscriptionResource(this.config, this.subService, this.consumerCurator,
             this.poolManager, i18n, this.modelTranslator, this.contentAccessManager, this.poolService);
+    }
+
+    @Test
+    public void testDeleteSubscription() {
+        Owner owner = mock(Owner.class);
+
+        Pool pool1 = new Pool()
+            .setId("pool-1-id")
+            .setOwner(owner);
+
+        Pool pool2 = new Pool()
+            .setId("pool-2-id")
+            .setOwner(owner);
+
+        String subscriptionId = "sub-id";
+        doReturn(List.of(pool1, pool2))
+            .when(poolManager)
+            .getPoolsBySubscriptionId(subscriptionId);
+
+        subResource.deleteSubscription(subscriptionId);
+
+        verify(poolService).deletePool(pool1);
+        verify(poolService).deletePool(pool2);
+        verify(owner).syncLastContentUpdate();
     }
 
     @Test

@@ -203,4 +203,6 @@
     <include file="db/changelog/20240920000000-update-cloud-offering-id-column-size.xml"/>
     <include file="db/changelog/20241024154545-revert_product_content_delete_cascades.xml"/>
     <include file="db/changelog/20241029000000-drop-fk-cp-owner.xml"/>
+    <include file="/db/changelog/20250128162900-add-last-content-update-field.xml"/>
+    <include file="db/changelog/20250130000000-add-cp-content-access-payload-table.xml" />
 </databaseChangeLog>

@@ -69,6 +69,7 @@ public final class TestConfig {
             String.valueOf(BULK_SET_CONSUMER_ENV_MAX_CONSUMER_LIMIT));
         defaults.put(ConfigProperties.BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT,
             String.valueOf(BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT));
+        defaults.put(ConfigProperties.SCA_X509_CERT_EXPIRY_THRESHOLD, "5");
 
         return defaults;
     }

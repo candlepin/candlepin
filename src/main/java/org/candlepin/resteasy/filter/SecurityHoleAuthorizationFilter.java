@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -116,10 +116,12 @@ public class SecurityHoleAuthorizationFilter extends AbstractAuthorizationFilter
         AnonymousCloudConsumer anonymousCloudConsumer = principal.getAnonymousCloudConsumer();
         String ownerKey = checkCloudAccountOrganization(anonymousCloudConsumer);
         if (!ownerCurator.existsByKey(ownerKey)) {
-            throw new TooManyRequestsException(ORG_NOT_CREATED_IN_CANDLEPIN);
+            throw new TooManyRequestsException(i18nProvider.get().tr("Owner does not yet exist"))
+                .setRetryAfterTime(ORG_NOT_CREATED_IN_CANDLEPIN);
         }
         if (!poolCurator.hasPoolsForProducts(ownerKey, anonymousCloudConsumer.getProductIds())) {
-            throw new TooManyRequestsException(ORG_DOES_NOT_HAVE_POOLS);
+            throw new TooManyRequestsException(i18nProvider.get().tr("Owner is not yet entitled"))
+                .setRetryAfterTime(ORG_DOES_NOT_HAVE_POOLS);
         }
         anonymousCloudConsumer.setOwnerKey(ownerKey);
     }
@@ -132,10 +134,14 @@ public class SecurityHoleAuthorizationFilter extends AbstractAuthorizationFilter
                 anonymousCloudConsumer.getCloudOfferingId());
         }
         catch (OrgForCloudAccountNotCreatedYetException e) {
-            throw new TooManyRequestsException(ORG_DOES_NOT_EXIST_AT_ALL);
+            throw new TooManyRequestsException(i18nProvider.get()
+                .tr("Anonymous owner not yet created upstream of candlepin"))
+                .setRetryAfterTime(ORG_DOES_NOT_EXIST_AT_ALL);
         }
         catch (OrgForCloudAccountNotEntitledYetException e) {
-            throw new TooManyRequestsException(ORG_IS_NOT_ENTITLED);
+            throw new TooManyRequestsException(i18nProvider.get()
+                .tr("Anonymous owner not yet entitled upstream of candlepin"))
+                .setRetryAfterTime(ORG_IS_NOT_ENTITLED);
         }
     }
 }

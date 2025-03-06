@@ -17,6 +17,7 @@ package org.candlepin.controller;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.tasks.ExportJob;
 import org.candlepin.async.tasks.ImportJob;
+import org.candlepin.async.tasks.ManifestCleanerJob;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.exceptions.BadRequestException;
@@ -32,6 +33,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
+import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ExportCreationException;
 import org.candlepin.sync.ExportResult;
@@ -390,13 +392,22 @@ public class ManifestManager {
     /**
      * Generates an archive of the specified consumer's entitlements.
      *
-     * @param consumer the target consumer
-     * @param serials the entitlement serials to export.
+     * @param consumer
+     *  the target consumer
+     *
+     * @param serials
+     *  the entitlement serials to export
+     *
+     * @throws ExportCreationException
+     *  if the archive could not be created.
+     *
+     * @throws ConcurrentContentPayloadCreationException
+     *  if a concurrent request persists the content payload and causes a database constraint violation
+     *
      * @return an archive to the specified consumer's entitlements.
-     * @throws ExportCreationException if the archive could not be created.
      */
     public File generateEntitlementArchive(Consumer consumer, Set<Long> serials)
-        throws ExportCreationException {
+        throws ExportCreationException, ConcurrentContentPayloadCreationException {
 
         log.debug("Getting client certificate zip file for consumer: {}", consumer.getUuid());
         poolManager.regenerateDirtyEntitlements(consumer);
