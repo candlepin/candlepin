@@ -62,6 +62,7 @@ public final class TestConfig {
         defaults.put(ConfigProperties.CACHE_ANON_CERT_CONTENT_MAX_ENTRIES, "10000");
         defaults.put(ConfigProperties.PAGING_DEFAULT_PAGE_SIZE, "100");
         defaults.put(ConfigProperties.PAGING_MAX_PAGE_SIZE, "10000");
+        defaults.put(ConfigProperties.SCA_X509_CERT_EXPIRY_THRESHOLD, "5");
 
         return defaults;
     }

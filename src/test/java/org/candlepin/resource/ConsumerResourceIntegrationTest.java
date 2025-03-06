@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.test.TestUtil.createConsumerDTO;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -71,6 +72,8 @@ import com.google.inject.Module;
 
 import org.apache.commons.io.FileUtils;
 import org.jboss.resteasy.core.ResteasyContext;
+import org.jboss.resteasy.mock.MockHttpRequest;
+import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -201,31 +204,58 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetCerts() {
+    public void testGetCerts() throws Exception {
+        ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
+        ResteasyContext.pushContext(Principal.class, principal);
+        MockHttpRequest mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/fake")
+            .header("accept", "application/json");
+        ResteasyContext.pushContext(HttpRequest.class, mockReq);
+        ResteasyContext.pushContext(HttpServletResponse.class, mock(HttpServletResponse.class));
+
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
-        List<CertificateDTO> serials = consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
-        assertEquals(1, serials.size());
+        Object export = consumerResource.exportCertificates(consumer.getUuid(), null);
+        assertThat(export)
+            .isInstanceOf(List.class);
+
+        assertThat((List<CertificateDTO>) export)
+            .hasSize(1);
     }
 
     @Test
-    public void testGetSerialFiltering() {
+    public void testGetSerialFiltering() throws Exception {
         ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
         ResteasyContext.pushContext(Principal.class, principal);
+        MockHttpRequest mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/fake")
+            .header("accept", "application/json");
+        ResteasyContext.pushContext(HttpRequest.class, mockReq);
+        ResteasyContext.pushContext(HttpServletResponse.class, mock(HttpServletResponse.class));
+
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
-        List<CertificateDTO> certificates = consumerResource
-            .getEntitlementCertificates(consumer.getUuid(), null);
-        assertEquals(4, certificates.size());
+
+        Object export = consumerResource.exportCertificates(consumer.getUuid(), null);
+        assertThat(export)
+            .isInstanceOf(List.class);
+
+        List<CertificateDTO> certificates = (List<CertificateDTO>) export;
+        assertThat(certificates)
+            .hasSize(4);
 
         Long serial1 = certificates.get(0).getSerial().getId();
         Long serial2 = certificates.get(3).getSerial().getId();
 
         String serialsToFilter = serial1 + "," + serial2;
 
-        certificates = consumerResource.getEntitlementCertificates(consumer.getUuid(), serialsToFilter);
-        assertEquals(2, certificates.size());
+        export = consumerResource.exportCertificates(consumer.getUuid(), serialsToFilter);
+        assertThat(export)
+            .isInstanceOf(List.class);
+
+        certificates = (List<CertificateDTO>) export;
+        assertThat(certificates)
+            .hasSize(2);
+
         assertEquals(serial1, certificates.get(0).getSerial().getId());
         assertEquals(serial2, certificates.get(1).getSerial().getId());
     }
@@ -501,13 +531,22 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void unbindBySerialWithExistingCertificateShouldPass() {
+    public void unbindBySerialWithExistingCertificateShouldPass() throws Exception {
         ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
         ResteasyContext.pushContext(Principal.class, principal);
+        MockHttpRequest mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/fake")
+            .header("accept", "application/json");
+        ResteasyContext.pushContext(HttpRequest.class, mockReq);
+        ResteasyContext.pushContext(HttpServletResponse.class, mock(HttpServletResponse.class));
+
         consumerResource.bind(consumer.getUuid(), pool.getId(),
             null, 1, null, null, false, null, null);
-        List<CertificateDTO> serials = consumerResource
-            .getEntitlementCertificates(consumer.getUuid(), null);
+
+        Object export = consumerResource.exportCertificates(consumer.getUuid(), null);
+        assertThat(export)
+            .isInstanceOf(List.class);
+
+        List<CertificateDTO> serials = (List<CertificateDTO>) export;
         assertEquals(1, serials.size());
 
         consumerResource.unbindBySerial(consumer.getUuid(), Long.valueOf(serials.get(0).getSerial().getId()));
@@ -533,13 +572,18 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertThrows(NotFoundException.class,
-            () -> consumerResource.getEntitlementCertificates(consumer.getUuid(), null));
+            () -> consumerResource.exportCertificates(consumer.getUuid(), null));
     }
 
     @Test
-    public void testCanGetOwnedConsumersCerts() {
+    public void testCanGetOwnedConsumersCerts() throws Exception {
         ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
         ResteasyContext.pushContext(Principal.class, principal);
+        MockHttpRequest mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/fake")
+            .header("accept", "application/json");
+        ResteasyContext.pushContext(HttpRequest.class, mockReq);
+        ResteasyContext.pushContext(HttpServletResponse.class, mock(HttpServletResponse.class));
+
         consumerResource.bind(consumer.getUuid(), pool.getId(),
             null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(),
@@ -548,7 +592,12 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             null, 1, null, null, false, null, null);
         setupPrincipal(new ConsumerPrincipal(consumer, owner));
 
-        assertEquals(3, consumerResource.getEntitlementCertificates(consumer.getUuid(), null).size());
+        Object export = consumerResource.exportCertificates(consumer.getUuid(), null);
+        assertThat(export)
+            .isInstanceOf(List.class);
+
+        List<CertificateDTO> certificates = (List<CertificateDTO>) export;
+        assertEquals(3, certificates.size());
     }
 
     @Test
@@ -580,12 +629,23 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void getConsumersCerts() {
+    public void getConsumersCerts() throws Exception {
+        ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
+        ResteasyContext.pushContext(Principal.class, principal);
+        MockHttpRequest mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/fake")
+            .header("accept", "application/json");
+        ResteasyContext.pushContext(HttpRequest.class, mockReq);
+        ResteasyContext.pushContext(HttpServletResponse.class, mock(HttpServletResponse.class));
+
         setupAdminPrincipal("admin");
         securityInterceptor.enable();
 
-        assertEquals(0, consumerResource.getEntitlementCertificates(
-            consumer.getUuid(), null).size());
+        Object export = consumerResource.exportCertificates(consumer.getUuid(), null);
+        assertThat(export)
+            .isInstanceOf(List.class);
+
+        List<CertificateDTO> certificates = (List<CertificateDTO>) export;
+        assertEquals(0, certificates.size());
     }
 
     @Test
@@ -599,7 +659,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertThrows(NotFoundException.class,
-            () -> consumerResource.getEntitlementCertificates(consumer.getUuid(), null));
+            () -> consumerResource.exportCertificates(consumer.getUuid(), null));
     }
 
     @Test
@@ -761,9 +821,14 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testContentAccessExpireRegen() {
+    public void testContentAccessExpireRegen() throws Exception {
         ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
         ResteasyContext.pushContext(Principal.class, principal);
+        MockHttpRequest mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/fake")
+            .header("accept", "application/json");
+        ResteasyContext.pushContext(HttpRequest.class, mockReq);
+        ResteasyContext.pushContext(HttpServletResponse.class, mock(HttpServletResponse.class));
+
         owner.setContentAccessModeList(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
         owner.setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
         ownerCurator.merge(owner);
@@ -772,7 +837,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumer.setFact("system.certificate_version", "3.3");
         consumerCurator.create(consumer);
 
-        List<CertificateDTO> serials = consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
+        Object export = consumerResource.exportCertificates(consumer.getUuid(), null);
+        assertThat(export)
+            .isInstanceOf(List.class);
+
+        List<CertificateDTO> serials = (List<CertificateDTO>) export;
         assertEquals(1, serials.size());
 
         CertificateDTO original = serials.get(0);
@@ -788,7 +857,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         serial.setExpiration(cal.getTime());
         certSerialCurator.merge(serial);
 
-        serials = consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
+        export = consumerResource.exportCertificates(consumer.getUuid(), null);
+        assertThat(export)
+            .isInstanceOf(List.class);
+
+        serials = (List<CertificateDTO>) export;
         assertEquals(1, serials.size());
         CertificateDTO updated = serials.get(0);
         assertThat(updated, instanceOf(CertificateDTO.class));

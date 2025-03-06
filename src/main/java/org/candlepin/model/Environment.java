@@ -15,8 +15,10 @@
 package org.candlepin.model;
 
 import org.candlepin.util.SetView;
+import org.candlepin.util.Util;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -90,12 +92,15 @@ public class Environment extends AbstractHibernateObject<Environment> implements
     @Size(max = CONTENT_PREFIX_MAX_LENGTH)
     private String contentPrefix;
 
+    @Column(name = "last_content_update", nullable = false)
+    private Date lastContentUpdate;
+
     @OneToMany(mappedBy = "environment", targetEntity = EnvironmentContent.class,
         cascade = CascadeType.ALL)
     private Set<EnvironmentContent> environmentContent = new HashSet<>();
 
     public Environment() {
-        // Intentionally left empty
+        this.syncLastContentUpdate();
     }
 
     public Environment(String id, String name, Owner owner) {
@@ -105,6 +110,8 @@ public class Environment extends AbstractHibernateObject<Environment> implements
         if (owner != null) {
             this.setOwner(owner);
         }
+
+        this.syncLastContentUpdate();
     }
 
     /**
@@ -236,8 +243,62 @@ public class Environment extends AbstractHibernateObject<Environment> implements
         return contentPrefix;
     }
 
+    /**
+     * Sets the content prefix for this environment. Because changing the content prefix
+     * requires the SCA content payloads to be re-generated with the correct paths, this method
+     * also updates the environment's {@code lastContentUpdate} timestamp by calling
+     * {@link #syncLastContentUpdate()}.
+     *
+     * @param contentPrefix the new content prefix for this environment
+     * @return this {@code Environment} instance
+     * @throws IllegalArgumentException if {@code contentPrefix} exceeds {@value #CONTENT_PREFIX_MAX_LENGTH}
+     * characters
+     */
     public Environment setContentPrefix(String contentPrefix) {
+        if (contentPrefix != null && contentPrefix.length() > CONTENT_PREFIX_MAX_LENGTH) {
+            throw new IllegalArgumentException("contentPrefix is too long");
+        }
+
         this.contentPrefix = contentPrefix;
+        this.syncLastContentUpdate();
+        return this;
+    }
+
+    /**
+     * Returns the date of the last content update for this environment.
+     * If {@code lastContentUpdate} is not set, this method falls back to the environment's creation date,
+     * and if that's also not available, the current date is returned.
+     *
+     * @return the date of the last content update, never {@code null}
+     */
+    public Date getLastContentUpdate() {
+        return Util.firstOf(this.lastContentUpdate, this.getCreated(), new Date());
+    }
+
+    /**
+     * Sets the date of the last content update for this environment.
+     *
+     * @param update the new last content update date; must not be {@code null}
+     * @return this {@code Environment} instance
+     * @throws IllegalArgumentException if {@code update} is {@code null}
+     */
+    public Environment setLastContentUpdate(Date update) {
+        if (update == null) {
+            throw new IllegalArgumentException("update is null");
+        }
+
+        this.lastContentUpdate = update;
+        return this;
+    }
+
+    /**
+     * Updates the {@code lastContentUpdate} field to the current date and time,
+     * then returns this {@code Environment} instance.
+     *
+     * @return the updated {@code Environment} instance
+     */
+    public Environment syncLastContentUpdate() {
+        this.setLastContentUpdate(new Date());
         return this;
     }
 

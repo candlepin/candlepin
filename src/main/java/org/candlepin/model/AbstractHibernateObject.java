@@ -138,7 +138,7 @@ public abstract class AbstractHibernateObject<T extends AbstractHibernateObject>
 
     /**
      * Fetches the date this entity was last updated, generally indicating the time at which it was
-     * last persisted to the database. If the entity has not yet bene persisted or the last-update
+     * last persisted to the database. If the entity has not yet been persisted or the last-update
      * date has not yet been set, this method returns null.
      *
      * @return

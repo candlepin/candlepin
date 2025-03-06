@@ -55,6 +55,11 @@ public class CandlepinStatusAssert extends ThrowableAssert<ApiException> {
         return this;
     }
 
+    public CandlepinStatusAssert isUnavailable() {
+        this.hasFieldOrPropertyWithValue("code", 503);
+        return this;
+    }
+
     public CandlepinStatusAssert hasHeaderWithValue(String name, String value) {
         String time = this.actual.getResponseHeaders().get(name).get(0);
         assertEquals(value, time);

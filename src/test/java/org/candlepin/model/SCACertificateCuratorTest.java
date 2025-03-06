@@ -160,7 +160,6 @@ class SCACertificateCuratorTest extends DatabaseTestFixture {
         certificate.setSerial(serial);
         certificate.setConsumer(consumer);
         certificate.setCert(cert);
-        certificate.setContent("content_1");
         consumer.setContentAccessCert(certificate);
         return certificate;
     }
