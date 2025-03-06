@@ -386,8 +386,6 @@ public class OwnerResourceSpecTest {
         assertThat(ownerPools).hasSize(1);
     }
 
-    // TODO: Should we create a nested test suite for this?
-
     // We should be testing the following:
     // - order
     // - page size
@@ -400,9 +398,8 @@ public class OwnerResourceSpecTest {
         private OwnerDTO owner;
         private String ownerKey;
 
-        private List<PoolDTO> pools = new ArrayList<>();
         private int numberOfPools = 20;
-        private int pageSize = 5;
+        private List<PoolDTO> pools = new ArrayList<>();
 
         @BeforeAll
         public void setup() {
@@ -411,13 +408,19 @@ public class OwnerResourceSpecTest {
 
             for (int i = 0; i < numberOfPools; i++) {
                 ProductDTO product = createProduct(owner);
-                PoolDTO pool = owners.createPool(ownerKey, Pools.random(product));
+                PoolDTO pool = Pools.random(product)
+                    .quantity(Long.valueOf(i));
+
+                pool = owners.createPool(ownerKey, pool);
                 pools.add(pool);
+
+                System.out.println("Pool: " + pool.toJson());
             }
         }
 
         @Test
         public void shouldPageOwnersPools() {
+            int pageSize = 5;
             List<String> actualPoolsIds = new ArrayList<>();
             for (int pageIndex = 1; pageIndex * pageSize <= numberOfPools; pageIndex++) {
                 Paging paging = new Paging(pageIndex, pageSize, "id", "asc");
@@ -440,35 +443,75 @@ public class OwnerResourceSpecTest {
         @ParameterizedTest
         @ValueSource(ints = { 0, -1, -100 })
         public void shouldFailWithInvalidPage(int page) {
+            Paging paging = new Paging(page, 5, "id", "asc");
 
+            assertBadRequest(() -> owners.listOwnerPools(ownerKey, paging));
         }
 
         @ParameterizedTest
         @ValueSource(ints = { 0, -1, -100 })
         public void shouldFailWithInvalidPageSize(int pageSize) {
+            Paging paging = new Paging(1, pageSize, "id", "asc");
 
+            assertBadRequest(() -> owners.listOwnerPools(ownerKey, paging));
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { "id", "name", "uuid" })
-        public void shouldAllowQueryingWithAscendingOrderedOutput(String field) {
+        @ValueSource(strings = { "id", "quantity", "type" })
+        public void shouldOrderInAscendingOrder(String field) {
+            Map<String, Comparator<PoolDTO>> comparatorMap = Map.of(
+                "id", Comparator.comparing(PoolDTO::getId),
+                "quantity", Comparator.comparing(PoolDTO::getQuantity),
+                "type", Comparator.comparing(PoolDTO::getType));
 
+            List<String> expectedPoolIds = pools.stream()
+                .sorted(comparatorMap.get(field))
+                .map(PoolDTO::getId)
+                .toList();
+
+            Paging paging = new Paging(1, pools.size(), field, "asc");
+            List<PoolDTO> actual = owners.listOwnerPools(ownerKey, paging);
+
+            assertThat(actual)
+                .isNotNull()
+                .map(PoolDTO::getId)
+                .containsExactlyElementsOf(expectedPoolIds);
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { "id", "name", "uuid" })
-        public void shouldAllowQueryingWithDescendingOrderedOutput(String field) {
+        @ValueSource(strings = { "id", "quantity", "type" })
+        public void shouldOrderInDescendingOrder(String field) {
+            Map<String, Comparator<PoolDTO>> comparatorMap = Map.of(
+                "id", Comparator.comparing(PoolDTO::getId),
+                "quantity", Comparator.comparing(PoolDTO::getQuantity),
+                "type", Comparator.comparing(PoolDTO::getType));
 
+            List<String> expectedPoolIds = pools.stream()
+                .sorted(comparatorMap.get(field).reversed())
+                .map(PoolDTO::getId)
+                .toList();
+
+            Paging paging = new Paging(1, pools.size(), field, "desc");
+            List<PoolDTO> actual = owners.listOwnerPools(ownerKey, paging);
+
+            assertThat(actual)
+                .isNotNull()
+                .map(PoolDTO::getId)
+                .containsExactlyElementsOf(expectedPoolIds);
         }
 
         @Test
         public void shouldFailWithInvalidOrderField() {
+            Paging paging = new Paging(1, 5, StringUtil.random(""), "asc");
 
+            assertBadRequest(() -> owners.listOwnerPools(ownerKey, paging));
         }
 
         @Test
         public void shouldFailWithInvalidOrderDirection() {
+            Paging paging = new Paging(1, 5, "id", StringUtil.random(""));
 
+            assertBadRequest(() -> owners.listOwnerPools(ownerKey, paging));
         }
     }
 
