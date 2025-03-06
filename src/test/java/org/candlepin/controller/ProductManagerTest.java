@@ -17,6 +17,7 @@ package org.candlepin.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -74,6 +75,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testCreateProduct() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
+        Date initialLastContentUpdate = owner.getLastContentUpdate();
         ProductInfo productInfo = TestUtil.createProductInfo("p1", "prod1");
 
         assertNull(this.productCurator.getProductById(owner.getKey(), productInfo.getId()));
@@ -81,6 +83,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product output = this.productManager.createProduct(owner, productInfo);
 
         assertEquals(output, this.productCurator.getProductById(owner.getKey(), productInfo.getId()));
+        assertNotEquals(initialLastContentUpdate, owner.getLastContentUpdate());
     }
 
     @Test
@@ -131,6 +134,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @ValueSource(strings = {"false", "true"})
     public void testUpdateProduct(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner", "Test Owner");
+        Date initialLastContentUpdate = owner.getLastContentUpdate();
         Product product = TestUtil.createProduct("p1", "prod1")
             .setNamespace(owner.getKey());
         this.createProduct(product);
@@ -140,6 +144,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product output = this.productManager.updateProduct(owner, product, update, regenCerts);
 
         assertEquals(output.getName(), update.getName());
+        assertNotEquals(initialLastContentUpdate, owner.getLastContentUpdate());
 
         if (regenCerts) {
             verify(this.mockEntCertService, times(1))
@@ -227,6 +232,8 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testRemoveProduct() {
         Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
+        Date initialLastContentUpdate = owner.getLastContentUpdate();
+
         Product product = TestUtil.createProduct("p1", "prod1")
             .setNamespace(owner.getKey());
         this.productCurator.create(product);
@@ -236,6 +243,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         this.productManager.removeProduct(owner, product);
 
         assertNull(this.productCurator.get(product.getUuid()));
+        assertNotEquals(initialLastContentUpdate, owner.getLastContentUpdate());
     }
 
     @Test

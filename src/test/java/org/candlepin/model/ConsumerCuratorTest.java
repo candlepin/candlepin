@@ -2344,7 +2344,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         certificate.setKey("crt_key");
         certificate.setSerial(new CertificateSerial(Util.addDaysToDt(10)));
         certificate.setCert("cert_1");
-        certificate.setContent("content_1");
         return saveCert(certificate);
     }
 
@@ -2353,7 +2352,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         certificate.setKey("crt_key");
         certificate.setSerial(new CertificateSerial(Util.yesterday()));
         certificate.setCert("cert_1");
-        certificate.setContent("content_1");
         consumer.setContentAccessCert(certificate);
         return saveCert(certificate);
     }

@@ -14,8 +14,6 @@
  */
 package org.candlepin.spec.bootstrap.client.api;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
@@ -33,8 +31,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.assertj.core.util.Files;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,9 +70,35 @@ public class ConsumerClient extends ConsumerApi {
         }
 
         Response response = request.execute();
-        assertThat(response).returns(200, Response::getCode);
-
+        if (!response.wasSuccessful()) {
+            throw new ApiException(response.getMessage(), response.getCode(), response.getHeaders(),
+                response.getBodyAsString());
+        }
         return response.deserialize(new TypeReference<>() {});
+    }
+
+    public File exportCertificatesInZipFormat(String consumerUuid, String serials) throws IOException {
+        Request request = Request.from(new org.candlepin.spec.bootstrap.client.ApiClient(this.getApiClient()))
+            .setPath("/consumers/{consumer_uuid}/certificates")
+            .setPathParam("consumer_uuid", consumerUuid)
+            .addHeader("accept", "application/zip");
+
+        if (serials != null) {
+            request.addQueryParam("serials", serials);
+        }
+
+        Response response = request.execute();
+        if (!response.wasSuccessful()) {
+            throw new ApiException(response.getMessage(), response.getCode(), response.getHeaders(),
+                response.getBodyAsString());
+        }
+        File export = Files.newTemporaryFile();
+        export.deleteOnExit();
+        try (FileOutputStream os = new FileOutputStream(export)) {
+            os.write(response.getBody());
+        }
+
+        return export;
     }
 
     public ConsumerDTO createConsumer(ConsumerDTO consumer) {

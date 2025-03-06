@@ -510,7 +510,7 @@ public class ExporterTest {
     }
 
     @Test
-    public void testGetEntitlementExport() throws ExportCreationException {
+    public void testGetEntitlementExport() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
 
         // Setup consumer
@@ -569,7 +569,7 @@ public class ExporterTest {
     }
 
     @Test
-    public void testGetEntitlementExportWithUnknownSerialId() throws ExportCreationException {
+    public void testGetEntitlementExportWithUnknownSerialId() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
 
         // Setup consumer
@@ -630,7 +630,7 @@ public class ExporterTest {
     }
 
     @Test
-    public void testGetEntitlementExportWithValidEntitlementCertSerial() throws ExportCreationException {
+    public void testGetEntitlementExportWithValidEntitlementCertSerial() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
 
         // Setup consumer
@@ -691,7 +691,7 @@ public class ExporterTest {
     }
 
     @Test
-    public void testGetEntitlementExportWithValidContentAccessCertSerial() throws ExportCreationException {
+    public void testGetEntitlementExportWithValidContentAccessCertSerial() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
 
         // Setup consumer

@@ -38,6 +38,7 @@ public class Response {
     private final int code;
     private final byte[] body;
     private final Map<String, List<String>> headers;
+    private final String message;
 
     /**
      * Create a new Response from the given OkHttp Response object.
@@ -60,6 +61,7 @@ public class Response {
             this.code = response.code();
             this.headers = response.headers().toMultimap();
             this.body = body != null ? body.bytes() : new byte[] { };
+            this.message = response.message();
         }
         catch (IOException e) {
             throw new ResponseProcessingException(e);
@@ -126,6 +128,16 @@ public class Response {
         }
 
         return new String(this.body, charset);
+    }
+
+   /**
+     * Fetches the HTTP status message.
+     *
+     * @return
+     *  the HTTP status message for this response
+     */
+    public String getMessage() {
+        return this.message;
     }
 
     /**
@@ -195,5 +207,15 @@ public class Response {
         catch (IOException e) { // Impl note: JsonProcessingException *is* an IOException
             throw new JsonDeserializationException(e);
         }
+    }
+
+    /**
+     * Returns true if the response status code was equal or larger than 200 and lower than 300,
+     * and false otherwise.
+     *
+     * @return whether the request was successful or not
+     */
+    public boolean wasSuccessful() {
+        return this.code >= 200 && this.code < 300;
     }
 }

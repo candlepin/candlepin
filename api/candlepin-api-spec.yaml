@@ -1148,6 +1148,17 @@ paths:
               example:
                 displayMessage: Consumer with this UUID could not be found.
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        429:
+          description: |
+            Concurrent requests persisting the same content access data payload caused a database constraint
+            violation. If you receive this status code, retry the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Unable to create content access payload
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
 
@@ -1268,6 +1279,17 @@ paths:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
                 displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        429:
+          description: |
+            Concurrent requests persisting the same content access data payload caused a database constraint
+            violation. If you receive this status code, retry the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Unable to create content access payload
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
