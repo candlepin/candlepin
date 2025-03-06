@@ -60,17 +60,6 @@ public abstract class X509Util {
         }
     };
 
-    public static final String ARCH_FACT = "uname.machine";
-
-    /**
-     * The 'supported_architectures' fact is used to provide the information which
-     * architectures (like i386, amd64) a host supports. This is used e.g. on
-     * Debian / Ubuntu hosts to support multiple architectures. A common scenario is to
-     * use amd64 and i386 on Debian / Ubuntu. Therefore, the host needs to be able to install
-     * packages from amd64 and i386 repositories.
-     */
-    public static final String SUPPORTED_ARCH_FACT = "supported_architectures";
-
     /**
      * Scan the product content looking for any we should filter out.
      *
@@ -146,7 +135,7 @@ public abstract class X509Util {
         if (consumerArches.isEmpty()) {
             String consumerId = consumer == null ? "null" : consumer.getId();
             log.debug("consumer: {} has no {} / {} attribute",
-                consumerId, ARCH_FACT, SUPPORTED_ARCH_FACT);
+                consumerId, Consumer.Facts.ARCHITECTURE, Consumer.Facts.SUPPORTED_ARCHITECTURES);
             log.debug("Not filtering by arch");
             return pcSet;
         }
@@ -172,13 +161,13 @@ public abstract class X509Util {
             return consumerArches;
         }
 
-        String supportedArches = consumer.getFact(SUPPORTED_ARCH_FACT);
+        String supportedArches = consumer.getFact(Consumer.Facts.SUPPORTED_ARCHITECTURES);
 
         if (supportedArches != null) {
             consumerArches = Arch.parseArches(supportedArches);
         }
 
-        String archFact = consumer.getFact(ARCH_FACT);
+        String archFact = consumer.getFact(Consumer.Facts.ARCHITECTURE);
         if (archFact != null) {
             consumerArches.add(archFact);
         }

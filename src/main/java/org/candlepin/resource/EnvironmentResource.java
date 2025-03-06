@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -399,7 +399,6 @@ public class EnvironmentResource implements EnvironmentApi {
         Set<String> contentIds;
         try {
             contentIds = this.batchCreate(contentToPromote, environment);
-            this.contentAccessManager.syncOwnerLastContentUpdate(environment.getOwner());
         }
         catch (PersistenceException pe) {
             if (rdbmsExceptionTranslator.isConstraintViolationDuplicateEntry(pe)) {
@@ -440,7 +439,6 @@ public class EnvironmentResource implements EnvironmentApi {
 
         try {
             this.envContentCurator.bulkDelete(demotedContent.values());
-            this.contentAccessManager.syncOwnerLastContentUpdate(environment.getOwner());
         }
         catch (RollbackException hibernateException) {
             if (rdbmsExceptionTranslator.isUpdateHadNoEffectException(hibernateException)) {
@@ -453,6 +451,10 @@ public class EnvironmentResource implements EnvironmentApi {
                 throw hibernateException;
             }
         }
+
+        // Set the environment's last content update time so we can regenerate SCA content payloads for
+        // consumers of this environment
+        environment.syncLastContentUpdate();
 
         // Impl note: Unfortunately, we have to make an additional set here, as the keySet isn't
         // serializable. Attempting to use it causes exceptions.
@@ -692,6 +694,10 @@ public class EnvironmentResource implements EnvironmentApi {
         for (EnvironmentContent envcontent : resolved.values()) {
             env.addEnvironmentContent(envcontent);
         }
+
+        // Set the environment's last content update time so we can regenerate SCA content payloads for
+        // consumers of this environment
+        env.syncLastContentUpdate();
 
         this.envCurator.merge(env);
 

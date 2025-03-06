@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -76,6 +76,7 @@ import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.exceptions.TooManyRequestsException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
@@ -96,6 +97,7 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ContentAccessPayload;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
@@ -123,6 +125,7 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.pki.certs.AnonymousCertificateGenerator;
 import org.candlepin.pki.certs.CertificateCreationException;
+import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
@@ -168,7 +171,9 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -203,6 +208,11 @@ import javax.ws.rs.core.Response;
 public class ConsumerResource implements ConsumerApi {
 
     private static final Logger log = LoggerFactory.getLogger(ConsumerResource.class);
+
+    /** Retry-after header value for when a ConcurrentContentPayloadCreationException occurs*/
+    private static final int CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME = 2;
+    private static final DateTimeFormatter SINCE_DATE_FORMATER = DateTimeFormatter
+        .ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
 
     private final ConsumerCurator consumerCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
@@ -2215,49 +2225,6 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     /**
-     * Method to get entitlement certificates.
-     * NOTE: Here we explicitly update consumer Check-In.
-     *
-     * @param consumerUuid
-     *  Consumer UUID
-     *
-     * @param serials
-     *  Certificate serial
-     *
-     * @return
-     *  List of DTOs representing certificates
-     */
-    // TODO: FIXME: This method is only public due to it being called directly by tests. Refactor the
-    // tests to not be invoking individual methods like this and stick to the testing the public interface
-    // directly. Implementation details leaking into tests makes for very brittle and unreliable tests.
-    public List<CertificateDTO> getEntitlementCertificates(
-        @Verify({AnonymousCloudConsumer.class, Consumer.class}) String consumerUuid,
-        String serials) {
-
-        Principal principal = ResteasyContext.getContextData(Principal.class);
-        if (principal instanceof AnonymousCloudConsumerPrincipal anonPrincipal) {
-            log.debug("Getting client certificates for anonymous consumer: {}", consumerUuid);
-            AnonymousCloudConsumer consumer = anonPrincipal.getAnonymousCloudConsumer();
-            CertificateDTO cert = getCertForAnonCloudConsumer(consumer, serials);
-
-            return cert == null ? List.of() : List.of(cert);
-        }
-
-        // UpdateConsumerCheckIn
-        // Explicitly updating consumer check-in,
-        // as we merged getEntitlementCertificates & exportCertificates methods due to OpenAPI
-        // constraint which doesn't allow more than one HTTP method key under same URL pattern.
-
-        log.debug("Getting client certificates for consumer: {}", consumerUuid);
-        if (principal instanceof ConsumerPrincipal) {
-            ConsumerPrincipal p = (ConsumerPrincipal) principal;
-            consumerCurator.updateLastCheckin(p.getConsumer());
-        }
-
-        return getEntitlementCertificatesForConsumer(consumerUuid, serials);
-    }
-
-    /**
      * Retrieves entitlement certificates for a specific consumer
      *
      * @param consumerUuid
@@ -2265,6 +2232,9 @@ public class ConsumerResource implements ConsumerApi {
      *
      * @param serials
      *  the serial IDs used to filter out entitlement certificates
+     *
+     * @throws TooManyRequestsException
+     *  if a concurrent request persists the content payload and causes a database constraint violation
      *
      * @return a list of entitlement certificates for the consumer
      */
@@ -2277,7 +2247,14 @@ public class ConsumerResource implements ConsumerApi {
         Set<Long> serialSet = this.extractSerials(serials);
         List<? extends Certificate> entitlementCerts = this.entCertAdapter.listForConsumer(consumer);
 
-        Certificate caCert = this.scaCertificateGenerator.generate(consumer);
+        SCACertificate caCert = null;
+        try {
+            caCert = this.scaCertificateGenerator.generate(consumer);
+        }
+        catch (ConcurrentContentPayloadCreationException e) {
+            throw new TooManyRequestsException(i18n.tr("Unable to create content access payload"), e)
+                .setRetryAfterTime(CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME);
+        }
 
         Stream<? extends Certificate> certStream = this.buildCertificateStream(entitlementCerts, caCert);
 
@@ -2360,60 +2337,92 @@ public class ConsumerResource implements ConsumerApi {
 
     @Override
     @Transactional
-    public Response getContentAccessBody(@Verify(Consumer.class) String consumerUuid, String sinceDate) {
+    public Response getContentAccessBody(@Verify(Consumer.class) String consumerUuid, String since) {
         log.debug("Getting content access certificate for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        OffsetDateTime since = null;
 
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
         if (!owner.isUsingSimpleContentAccess()) {
             throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
         }
 
-        if (sinceDate != null) {
-            DateTimeFormatter formatter = DateTimeFormatter
-                .ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
-            since = Util.parseOffsetDateTime(formatter, sinceDate);
-        }
+        try {
+            SCACertificate scaCert = this.scaCertificateGenerator.getX509Certificate(consumer);
+            ContentAccessPayload scaPayload = this.scaCertificateGenerator.getContentPayload(consumer);
 
-        Date date = since != null ? Util.toDate(since) : new Date(0);
-        if (!this.contentAccessManager.hasCertChangedSince(consumer, date)) {
-            return Response.status(Response.Status.NOT_MODIFIED)
-                .entity("Not modified since date supplied.")
+            if (scaCert == null || scaPayload == null) {
+                String msg = I18n.marktr("Cannot retrieve content access certificate for consumer: {0}");
+                throw new BadRequestException(i18n.tr(msg, consumerUuid));
+            }
+
+            Date certUpdated = Util.firstOf(scaCert.getUpdated(), new Date());
+            Date payloadUpdated = scaPayload.getTimestamp();
+            Date lastUpdated = certUpdated.after(payloadUpdated) ? certUpdated : payloadUpdated;
+
+            // Check if either component has updated since the target date
+            if (since != null) {
+                // We are truncating the certs lasts update date to seconds and returning the certificate
+                // if and only if the cert's last update date is after the provided 'isModifiedSince' date so
+                // that the cert's last updated date can be used as the 'isModifiedSince' value in other
+                // requests without returning the certificate repeatedly.
+                OffsetDateTime lastUpdatedODT = lastUpdated.toInstant()
+                    .atOffset(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.SECONDS);
+                OffsetDateTime sinceODT = Util.parseOffsetDateTime(SINCE_DATE_FORMATER, since);
+
+                if (!lastUpdatedODT.isAfter(sinceODT)) {
+                    return Response.status(Response.Status.NOT_MODIFIED)
+                        .entity("Not modified since date supplied.")
+                        .build();
+                }
+            }
+
+            // No target date specified, or the components are newer than the target date
+            List<String> pieces = List.of(scaCert.getCert(), scaPayload.getPayload());
+
+            ContentAccessListing result = new ContentAccessListing()
+                .setContentListing(scaCert.getSerial().getId(), pieces)
+                .setLastUpdate(lastUpdated);
+
+            return Response.ok(result, MediaType.APPLICATION_JSON)
                 .build();
         }
-
-        SCACertificate cac = this.scaCertificateGenerator.generate(consumer);
-        if (cac == null) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"));
+        catch (ConcurrentContentPayloadCreationException e) {
+            throw new TooManyRequestsException(i18n.tr("Unable to create content access payload"), e)
+                .setRetryAfterTime(CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME);
         }
-
-        String cert = cac.getCert();
-        String certificate = cert.substring(0, cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
-        String json = cert.substring(cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
-        List<String> pieces = new ArrayList<>();
-        pieces.add(certificate);
-        pieces.add(json);
-
-        ContentAccessListing result = new ContentAccessListing()
-            .setContentListing(cac.getSerial().getId(), pieces)
-            .setLastUpdate(cac.getUpdated());
-
-        return Response.ok(result, MediaType.APPLICATION_JSON)
-            .build();
     }
 
     @Override
     @Transactional
     public Object exportCertificates(
-        @Verify({AnonymousCloudConsumer.class, Consumer.class}) String consumerUuid,
-        String serials) {
-        HttpRequest httpRequest = ResteasyContext.getContextData(HttpRequest.class);
-        if (httpRequest.getHttpHeaders().getRequestHeader("accept").contains("application/json")) {
-            return getEntitlementCertificates(consumerUuid, serials);
-        }
+        @Verify({AnonymousCloudConsumer.class, Consumer.class}) String consumerUuid, String serials) {
 
         Principal principal = ResteasyContext.getContextData(Principal.class);
+        HttpRequest httpRequest = ResteasyContext.getContextData(HttpRequest.class);
+        if (httpRequest.getHttpHeaders().getRequestHeader("accept").contains("application/json")) {
+            if (principal instanceof AnonymousCloudConsumerPrincipal anonPrincipal) {
+                log.debug("Getting client certificates for anonymous consumer: {}", consumerUuid);
+                AnonymousCloudConsumer consumer = anonPrincipal.getAnonymousCloudConsumer();
+                CertificateDTO cert = getCertForAnonCloudConsumer(consumer, serials);
+
+                return cert == null ? List.of() : List.of(cert);
+            }
+
+            // UpdateConsumerCheckIn
+            // Explicitly updating consumer check-in,
+            // as we merged getEntitlementCertificates & exportCertificates methods due to OpenAPI
+            // constraint which doesn't allow more than one HTTP method key under same URL pattern.
+
+            log.debug("Getting client certificates for consumer: {}", consumerUuid);
+            if (principal instanceof ConsumerPrincipal) {
+                ConsumerPrincipal p = (ConsumerPrincipal) principal;
+                consumerCurator.updateLastCheckin(p.getConsumer());
+            }
+
+            return getEntitlementCertificatesForConsumer(consumerUuid, serials);
+        }
+
         if (principal instanceof AnonymousCloudConsumerPrincipal) {
             throw new BadRequestException(i18n.tr("Cannot create export for anonymous cloud consumer"));
         }
@@ -2440,6 +2449,10 @@ public class ConsumerResource implements ConsumerApi {
         catch (ExportCreationException e) {
             throw new IseException(
                 i18n.tr("Unable to create entitlement certificate archive"), e);
+        }
+        catch (ConcurrentContentPayloadCreationException e) {
+            throw new TooManyRequestsException(i18n.tr("Unable to create content access payload"), e)
+                .setRetryAfterTime(CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME);
         }
     }
 
@@ -2472,23 +2485,21 @@ public class ConsumerResource implements ConsumerApi {
         @Verify(Consumer.class) String consumerUuid) {
         log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
         revokeOnGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
         this.entitlementCurator.flush();
 
-        List<CertificateSerialDTO> allCerts = new LinkedList<>();
+        List<CertificateSerialDTO> allCertsSerials = new ArrayList<>();
         for (Long id : entCertAdapter.listEntitlementSerialIds(consumer)) {
-            allCerts.add(new CertificateSerialDTO().serial(id));
+            allCertsSerials.add(new CertificateSerialDTO().serial(id));
         }
 
-        // add content access cert if needed
-        SCACertificate cac = this.scaCertificateGenerator.generate(consumer);
-        if (cac != null) {
-            allCerts.add(new CertificateSerialDTO().serial(cac.getSerial().getId()));
+        SCACertificate x509Certificate = this.scaCertificateGenerator.getX509Certificate(consumer);
+        if (x509Certificate != null) {
+            allCertsSerials.add(new CertificateSerialDTO().serial(x509Certificate.getSerial().getId()));
         }
 
-        return allCerts;
+        return allCertsSerials;
     }
 
     private void validateBindArguments(String poolIdString, Integer quantity, Collection<String> productIds,

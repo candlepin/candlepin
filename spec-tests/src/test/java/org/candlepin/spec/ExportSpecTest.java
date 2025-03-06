@@ -74,7 +74,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import org.apache.commons.codec.binary.Base64;
-import org.assertj.core.util.Files;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -82,7 +81,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
@@ -168,7 +166,7 @@ class ExportSpecTest {
     }
 
     @Test
-    public void shouldImportContentAccessCertsForAConsumerBelongingToOwnerInSCAMode() throws Exception {
+    public void shouldExportContentAccessCertsForAConsumerBelongingToOwnerInSCAMode() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
@@ -201,7 +199,7 @@ class ExportSpecTest {
             .isFinished();
 
 
-        File manifest = createCertExport(consumerClient, consumer.getUuid());
+        File manifest = consumerClient.consumers().exportCertificatesInZipFormat(consumer.getUuid(), null);
         ZipFile export = ExportUtil.getExportArchive(manifest);
 
         // Check if content access certs are present in exported zip file.
@@ -222,7 +220,7 @@ class ExportSpecTest {
     }
 
     @Test
-    public void shouldImportEntitlementCertsForAConsumerBelongingToOwnerInEntitlementMode() throws Exception {
+    public void shouldExportEntitlementCertsForAConsumerBelongingToOwnerInEntitlementMode() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
@@ -237,7 +235,7 @@ class ExportSpecTest {
         ApiClient consumerClient = ApiClients.ssl(consumer);
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
-        File manifest = createCertExport(consumerClient, consumer.getUuid());
+        File manifest = consumerClient.consumers().exportCertificatesInZipFormat(consumer.getUuid(), null);
         ZipFile export = ExportUtil.getExportArchive(manifest);
 
         // Should not contain content access certs in exported zip file in Entitlement mode.
@@ -720,23 +718,6 @@ class ExportSpecTest {
         String cdnUrl = cdn == null ? null : cdn.getUrl();
         File export = apiClient.consumers().exportData(consumerUuid, cdnLabel, cdnName, cdnUrl);
         export.deleteOnExit();
-
-        return export;
-    }
-
-    private File createCertExport(ApiClient client, String consumerUuid) throws IOException {
-        Response response = Request.from(client)
-            .setPath("/consumers/{consumer_uuid}/certificates")
-            .setPathParam("consumer_uuid", consumerUuid)
-            .addHeader("accept", "application/zip")
-            .execute();
-
-        assertThat(response).returns(200, Response::getCode);
-        File export = Files.newTemporaryFile();
-        export.deleteOnExit();
-        try (FileOutputStream os = new FileOutputStream(export)) {
-            os.write(response.getBody());
-        }
 
         return export;
     }
