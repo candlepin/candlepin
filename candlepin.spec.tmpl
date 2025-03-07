@@ -22,8 +22,8 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.5.1
-Release: 2%{?dist}
+Version: 4.5.2
+Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -234,6 +234,12 @@ fi
 
 #raw
 %changelog
+* Fri Mar 07 2025 candlepin-bot 4.5.2-1
+- CHAINSAW-341: Improved SCA payload regeneration performance
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-985: Switched default contentAccessModeList to SCA only
+  (sbakaj@redhat.com)
+
 * Wed Dec 11 2024 candlepin-bot 4.5.1-2
 - CANDLEPIN-978: Removed extranous null check during consumer check in
   (crog@redhat.com)
