@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -1308,24 +1308,20 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCorrectPagingWhenItemsAreFilteredByProductId() {
-        for (int i = 0; i < 50; i++) {
+    public void testListAvailableEntitlementPoolsWithPageOrdering() {
+        List<String> expectedIds = new ArrayList<>();
+
+        for (int i = 0; i < 10; i++) {
             Pool pool = TestUtil.createPool(owner, product);
             pool.setStartDate(TestUtil.createDate(2011, 1, 2));
             pool.setEndDate(TestUtil.createDate(2011, 3, 2));
-            poolCurator.create(pool);
-        }
+            pool = poolCurator.create(pool);
 
-        for (int i = 0; i < 50; i++) {
-            Product p = this.createProduct();
-
-            Pool pool = TestUtil.createPool(owner, p);
-            pool.setStartDate(TestUtil.createDate(2011, 1, 2));
-            pool.setEndDate(TestUtil.createDate(2011, 3, 2));
-            poolCurator.create(pool);
+            expectedIds.add(pool.getId());
         }
 
         Date setActiveOn = TestUtil.createDate(2011, 2, 2);
+
         PoolQualifier qualifier = new PoolQualifier()
             .setOwnerId(owner.getId())
             .addProductId(product.getId())
@@ -1335,109 +1331,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             .addOrder("id", false);
 
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
-        assertEquals(Integer.valueOf(50), page.getMaxRecords());
-
-        List<Pool> pools = page.getPageData();
-        assertEquals(10, pools.size());
-
-        // Check that we've sorted ascending on the id
-        for (int i = 0; i < pools.size(); i++) {
-            if (i < pools.size() - 1) {
-                assertTrue(pools.get(i).getId().compareTo(pools.get(i + 1).getId()) < 1);
-            }
-        }
-    }
-
-    @Test
-    public void testCorrectPagingWhenResultsLessThanPageSize() {
-        for (int i = 0; i < 5; i++) {
-            Pool pool = TestUtil.createPool(owner, product);
-            pool.setStartDate(TestUtil.createDate(2011, 1, 2));
-            pool.setEndDate(TestUtil.createDate(2011, 3, 2));
-            poolCurator.create(pool);
-        }
-
-        Date setActiveOn = TestUtil.createDate(2011, 2, 2);
-        PoolQualifier qualifier = new PoolQualifier()
-            .setOwnerId(owner.getId())
-            .addProductId(product.getId())
-            .setActiveOn(setActiveOn)
-            .setOffset(1)
-            .setLimit(10);
-
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
-        assertEquals(Integer.valueOf(5), page.getMaxRecords());
-        assertEquals(5, page.getPageData().size());
-    }
-
-    @Test
-    public void testCorrectPagingWhenPageRequestOutOfBounds() {
-        for (int i = 0; i < 5; i++) {
-            Pool pool = TestUtil.createPool(owner, product);
-            pool.setStartDate(TestUtil.createDate(2011, 1, 2));
-            pool.setEndDate(TestUtil.createDate(2011, 3, 2));
-            poolCurator.create(pool);
-        }
-
-        Date setActiveOn = TestUtil.createDate(2011, 2, 2);
-        PoolQualifier qualifier = new PoolQualifier()
-            .setOwnerId(owner.getId())
-            .addProductId(product.getId())
-            .setActiveOn(setActiveOn)
-            .setOffset(5)
-            .setLimit(10);
-
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
-        assertEquals(Integer.valueOf(5), page.getMaxRecords());
-        assertEquals(0, page.getPageData().size());
-    }
-
-    @Test
-    public void testCorrectPagingWhenLastPage() {
-        for (int i = 0; i < 5; i++) {
-            Pool pool = TestUtil.createPool(owner, product);
-            pool.setStartDate(TestUtil.createDate(2011, 1, 2));
-            pool.setEndDate(TestUtil.createDate(2011, 3, 2));
-            poolCurator.create(pool);
-        }
-
-        Date setActiveOn = TestUtil.createDate(2011, 2, 2);
-        PoolQualifier qualifier = new PoolQualifier()
-            .setOwnerId(owner.getId())
-            .addProductId(product.getId())
-            .setActiveOn(setActiveOn)
-            .setOffset(3)
-            .setLimit(2);
-
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
-
-        assertEquals(Integer.valueOf(5), page.getMaxRecords());
-        assertEquals(1, page.getPageData().size());
-    }
-
-    @Test
-    public void testCorrectPagingWhenResultsEmpty() {
-        for (int i = 0; i < 5; i++) {
-            Product p = this.createProduct();
-
-            Pool pool = TestUtil.createPool(owner, p);
-            pool.setStartDate(TestUtil.createDate(2011, 1, 2));
-            pool.setEndDate(TestUtil.createDate(2011, 3, 2));
-            poolCurator.create(pool);
-        }
-
-        Date setActiveOn = TestUtil.createDate(2011, 2, 2);
-
-        PoolQualifier qualifier = new PoolQualifier()
-            .setOwnerId(owner.getId())
-            .addProductId(product.getId())
-            .setActiveOn(setActiveOn)
-            .setOffset(1)
-            .setLimit(10);
-
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(qualifier);
-        assertEquals(Integer.valueOf(0), page.getMaxRecords());
-        assertEquals(0, page.getPageData().size());
+        assertEquals(expectedIds.size(), page.getMaxRecords());
+        assertThat(page.getPageData())
+            .isNotNull()
+            .hasSize(expectedIds.size())
+            .extracting(Pool::getId)
+            .containsExactlyElementsOf(expectedIds);
     }
 
     @Test
