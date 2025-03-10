@@ -399,16 +399,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .createQuery(query)
             .getResultList();
 
-        int maxSize = pools.size();
-
-        // Filter the Pools if paging is needed
-        if (qualifier.getOffset() != null && qualifier.getLimit() != null) {
-            pools = this.takeSubList(qualifier, pools);
-        }
-
         return new Page<List<Pool>>()
             .setPageData(pools)
-            .setMaxRecords(maxSize);
+            .setMaxRecords(pools.size());
     }
 
     private Optional<List<Predicate>> getQualifierPredicates(CriteriaQuery<?> query, Root<Pool> root,
