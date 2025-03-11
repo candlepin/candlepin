@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,11 +14,13 @@
  */
 package org.candlepin.resource;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.argThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -38,12 +40,18 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.paging.PageRequest;
+import org.candlepin.paging.PageRequest.Order;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
+import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -51,6 +59,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -89,6 +99,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
+        ResteasyContext.popContextData(PageRequest.class);
         poolManager = this.injector.getInstance(PoolManager.class);
         MockitoAnnotations.initMocks(this);
 
@@ -107,7 +118,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         // Run most of these tests as an owner admin:
         adminPrincipal = setupPrincipal(owner1, Access.ALL);
 
-        poolResource = new PoolResource(consumerCurator, ownerCurator, i18n,
+        poolResource = new PoolResource(consumerCurator, ownerCurator, poolCurator, i18n,
             poolManager, attrUtil, this.modelTranslator, principalProvider, poolService);
 
         // Consumer system with too many cpu cores:
@@ -264,6 +275,55 @@ public class PoolResourceTest extends DatabaseTestFixture {
         assertThrows(NotFoundException.class, () ->
             poolResource.listPools(owner1.getId(), null, null, false, null, null, null, null, null)
         );
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @ValueSource(strings = { "asc", "desc" })
+    public void testListPoolsWithPaging(String order) {
+        int numberOfPools = 9;
+        int pageSize = 3;
+
+        Owner owner = createOwner();
+
+        doReturn(setupPrincipal(new ConsumerPrincipal(passConsumer, owner)))
+            .when(principalProvider)
+            .get();
+
+        List<String> expectedPoolIds = new ArrayList<>();
+        for (int i = 0; i < numberOfPools; i++) {
+            Product product = this.createProduct();
+            Pool pool = poolCurator.create(TestUtil.createPool(owner, product));
+            expectedPoolIds.add(pool.getId());
+        }
+
+        Order pageOrder = null;
+        if ("asc".equals(order)) {
+            Collections.sort(expectedPoolIds);
+            pageOrder = Order.ASCENDING;
+        }
+        else {
+            Collections.reverse(expectedPoolIds);
+            pageOrder = Order.DESCENDING;
+        }
+
+        for (int page = 1; page <= numberOfPools / pageSize; page++) {
+            ResteasyContext.pushContext(PageRequest.class,
+                new PageRequest()
+                    .setPage(page)
+                    .setPerPage(pageSize)
+                    .setSortBy("id")
+                    .setOrder(pageOrder));
+
+            List<PoolDTO> actual = poolResource
+                .listPools(owner.getId(), null, null, false, null, page, pageSize, order, "id");
+
+            int pageIndex = (page - 1) * pageSize;
+
+            assertThat(actual)
+                .isNotNull()
+                .extracting(PoolDTO::getId)
+                .containsExactlyElementsOf(expectedPoolIds.subList(pageIndex, pageIndex + pageSize));
+        }
     }
 
     @Test

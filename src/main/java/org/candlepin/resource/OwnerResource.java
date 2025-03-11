@@ -1353,14 +1353,29 @@ public class OwnerResource implements OwnerApi {
         if (pageRequest != null) {
             qualifier.setOffset(pageRequest.getPage())
                 .setLimit(pageRequest.getPerPage());
+
+            boolean reverse = pageRequest.getOrder() == PageRequest.DEFAULT_ORDER;
+            qualifier.addOrder(pageRequest.getSortBy(), reverse);
         }
 
         if (key != null) {
             qualifier.setActivationKey(key);
         }
 
-        Page<List<Pool>> poolPage = poolManager.listAvailableEntitlementPools(qualifier)
-            .setPageRequest(pageRequest);
+        Page<List<Pool>> poolPage = null;
+        try {
+            poolPage = poolManager.listAvailableEntitlementPools(qualifier)
+                .setPageRequest(pageRequest);
+        }
+        catch (InvalidOrderKeyException e) {
+            throw new BadRequestException(e.getMessage(), e);
+        }
+
+        if (qualifier.getOffset() != null && qualifier.getLimit() != null) {
+            List<Pool> resultingPools = poolPage.getPageData();
+            resultingPools = poolCurator.takeSubList(qualifier, resultingPools);
+            poolPage.setPageData(resultingPools);
+        }
 
         List<Pool> poolList = poolPage.getPageData();
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
