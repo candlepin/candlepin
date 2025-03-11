@@ -15,12 +15,9 @@ RUN wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.76/bin/apache-tomc
     mv apache-tomcat-9.0.76/* /opt/tomcat/
 
 # Prepare Candlepin
-RUN mkdir -p /app/build/candlepin
+RUN mkdir -p /app/build
 WORKDIR /app/build
 COPY ${WAR_FILE} ./candlepin.war
-WORKDIR /app/build/candlepin
-RUN jar xvf /app/build/candlepin.war
-COPY ./containers/logback.xml /app/build/candlepin/WEB-INF/classes/logback.xml
 
 # Prepare development certs
 RUN mkdir -p /app/certs
@@ -77,6 +74,11 @@ RUN mkdir -p /etc/candlepin/certs; \
 COPY --from=builder /app/build /opt/tomcat/webapps
 
 WORKDIR /opt/tomcat/bin
+
+# Create a symbolic link to output the Candlepin logs to STDOUT
+RUN mkdir -p /var/log/candlepin; \
+    touch /var/log/candlepin/candlepin.log; \
+    ln -sf /proc/1/fd/1 /var/log/candlepin/candlepin.log;
 
 USER tomcat
 
