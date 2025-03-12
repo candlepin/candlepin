@@ -69,11 +69,10 @@ public class ManifestFileRecordCurator extends AbstractHibernateCurator<Manifest
     }
 
     private Blob createBlob(File fileToStore) throws IOException {
-        FileInputStream inputStream = new FileInputStream(fileToStore);
         byte[] fileBytes = new byte[(int) fileToStore.length()];
-        inputStream.read(fileBytes);
-        inputStream.close();
-
+        try (FileInputStream inputStream = new FileInputStream(fileToStore)) {
+            inputStream.read(fileBytes);
+        }
         try {
             return new SerialBlob(fileBytes);
         }
