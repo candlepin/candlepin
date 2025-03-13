@@ -26,12 +26,20 @@ public class DefaultProperties implements Supplier<Properties> {
 
     @Override
     public Properties get() {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        InputStream inputStream = loader.getResourceAsStream("settings.properties");
         Properties properties = new Properties();
-        loadProperties(inputStream, properties);
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        try (InputStream inputStream = loader.getResourceAsStream("settings.properties")) {
+            if (inputStream == null) {
+                throw new IllegalStateException("Could not find settings.properties");
+            }
+            loadProperties(inputStream, properties);
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Error loading properties", e);
+        }
         return properties;
     }
+
 
     private void loadProperties(InputStream inputStream, Properties properties) {
         try {
