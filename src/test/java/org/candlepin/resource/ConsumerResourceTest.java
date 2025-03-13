@@ -715,7 +715,7 @@ public class ConsumerResourceTest {
         ComplianceStatus status = new ComplianceStatus();
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), anyBoolean()))
             .thenReturn(status);
-        consumer.setIdCert(createIdCert(TestUtil.createDate(2025, 6, 9)));
+        consumer.setIdCert(createIdCert(TestUtil.createDateOffset(1, 0, 0)));
         long origSerial = consumer.getIdCert().getSerial().getSerial().longValue();
 
         ConsumerDTO c = consumerResource.getConsumer(consumer.getUuid());
