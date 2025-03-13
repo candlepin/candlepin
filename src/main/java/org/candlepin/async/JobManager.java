@@ -1103,14 +1103,8 @@ public class JobManager implements ModeChangeListener {
             }
         }
         catch (JobStateManagementException e) {
-            if (log.isDebugEnabled()) {
-                log.error("Unable to update state for job: {}; leaving job in its previous state for " +
-                    "state resync upon execution", status.getName(), e);
-            }
-            else {
-                log.error("Unable to update state for job: {}; leaving job in its previous state for " +
-                    "state resync upon execution", status.getName(), e);
-            }
+            log.error("Unable to update state for job: {}; leaving job in its previous state for " +
+                "state resync upon execution", status.getName(), e);
 
             // We were unable to update the state from CREATED->QUEUED, but we were able to send
             // the message to Artemis. We *should* be fine once the job executes and corrects
