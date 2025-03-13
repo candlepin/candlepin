@@ -16,6 +16,7 @@ package org.candlepin.spec.pools;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatObject;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,6 +40,7 @@ import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
+import org.candlepin.spec.bootstrap.client.api.PoolsClient;
 import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.data.builder.Branding;
 import org.candlepin.spec.bootstrap.data.builder.Cdns;
@@ -51,15 +53,25 @@ import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 
@@ -540,6 +552,125 @@ class PoolResourceSpecTest {
 
         CdnDTO fetched2 = adminClient.pools().getPoolCdn(derivedPool.getId());
         assertNull(fetched2);
+    }
+
+    @Nested
+    @TestInstance(Lifecycle.PER_CLASS)
+    public class ListPoolsPagingTests {
+        private ApiClient adminClient = ApiClients.admin();
+
+        private OwnerDTO owner;
+        private String ownerId;
+        private String ownerKey;
+
+        private int numberOfPools = 20;
+        private List<PoolDTO> pools = new ArrayList<>();
+
+        private Map<String, Comparator<PoolDTO>> comparatorMap = Map.of(
+            "id", Comparator.comparing(PoolDTO::getId),
+            "quantity", Comparator.comparing(PoolDTO::getQuantity));
+
+        @BeforeAll
+        public void setup() {
+            owner = adminClient.owners().createOwner(Owners.randomSca());
+            ownerId = owner.getId();
+            ownerKey = owner.getKey();
+
+            Random random = new Random();
+            for (int i = 0; i < numberOfPools; i++) {
+                ProductDTO product = adminClient.ownerProducts()
+                    .createProduct(ownerKey, Products.random());
+                PoolDTO pool = Pools.random(product)
+                    .quantity(random.nextLong(100L, 10000L));
+
+                pool = adminClient.owners().createPool(ownerKey, pool);
+                pools.add(pool);
+            }
+        }
+
+        @Test
+        public void shouldPagePools() {
+            int pageSize = 5;
+            List<String> actualPoolsIds = new ArrayList<>();
+            for (int pageIndex = 1; pageIndex * pageSize <= numberOfPools; pageIndex++) {
+                List<String> poolIds = adminClient.pools()
+                    .listPools(ownerId, null, null, null, null, pageIndex, pageSize, "asc", "id")
+                    .stream()
+                    .map(PoolDTO::getId)
+                    .collect(Collectors.toList());
+
+                actualPoolsIds.addAll(poolIds);
+            }
+
+            List<String> expectedPoolIds = pools.stream()
+                .map(PoolDTO::getId)
+                .toList();
+
+            assertThat(actualPoolsIds)
+                .containsExactlyElementsOf(expectedPoolIds);
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = { 0, -1, -100 })
+        public void shouldFailWithInvalidPage(int page) {
+            PoolsClient pools = adminClient.pools();
+
+            assertBadRequest(() -> pools
+                .listPools(ownerId, null, null, null, null, page, 5, "asc", "id"));
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = { 0, -1, -100 })
+        public void shouldFailWithInvalidPageSize(int pageSize) {
+            PoolsClient pools = adminClient.pools();
+
+            assertBadRequest(() -> pools
+                .listPools(ownerId, null, null, null, null, 1, pageSize, "asc", "id"));
+        }
+
+        @Test
+        public void shouldFailWithInvalidOrderDirection() {
+            PoolsClient pools = adminClient.pools();
+
+            assertBadRequest(() -> pools
+                .listPools(ownerId, null, null, null, null, 1, numberOfPools, StringUtil.random(""), "id"));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = { "id", "quantity" })
+        public void shouldOrderInAscendingOrder(String field) {
+            PoolsClient poolsClient = adminClient.pools();
+            List<String> expectedPoolIds = pools.stream()
+                .sorted(comparatorMap.get(field))
+                .map(PoolDTO::getId)
+                .toList();
+
+            List<PoolDTO> actual = poolsClient
+                .listPools(ownerId, null, null, null, null, 1, numberOfPools, "asc", field);
+
+            assertThat(actual)
+                .isNotNull()
+                .map(PoolDTO::getId)
+                .containsExactlyElementsOf(expectedPoolIds);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = { "id", "quantity" })
+        public void shouldOrderInDescendingOrder(String field) {
+            PoolsClient poolsClient = adminClient.pools();
+            List<String> expectedPoolIds = pools.stream()
+                .sorted(comparatorMap.get(field).reversed())
+                .map(PoolDTO::getId)
+                .toList();
+
+            List<PoolDTO> actual = poolsClient
+                .listPools(ownerId, null, null, null, null, 1, numberOfPools, "desc", field);
+
+            assertThat(actual)
+                .isNotNull()
+                .map(PoolDTO::getId)
+                .containsExactlyElementsOf(expectedPoolIds);
+        }
     }
 
     @Test

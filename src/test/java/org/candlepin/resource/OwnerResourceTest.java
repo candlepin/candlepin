@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.model.SourceSubscription.DERIVED_POOL_SUB_KEY;
 import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -115,6 +116,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
+import org.candlepin.paging.PageRequest.Order;
 import org.candlepin.paging.PagingUtilFactory;
 import org.candlepin.pki.certs.UeberCertificateGenerator;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
@@ -139,6 +141,9 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -368,6 +373,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerCanListPools() {
+        ResteasyContext.popContextData(PageRequest.class);
         Consumer c = createConsumer(owner);
         Principal principal = setupPrincipal(new ConsumerPrincipal(c, owner));
         when(this.principalProvider.get()).thenReturn(principal);
@@ -431,6 +437,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testOwnerAdminCanGetPools() {
+        ResteasyContext.popContextData(PageRequest.class);
         Principal principal = setupPrincipal(owner, Access.ALL);
 
         Product p = this.createProduct();
@@ -451,6 +458,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testCanFilterPoolsByAttribute() {
+        ResteasyContext.popContextData(PageRequest.class);
         Principal principal = setupPrincipal(owner, Access.ALL);
 
         Product p = this.createProduct();
@@ -1059,6 +1067,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void consumerListPoolsGetCalculatedAttributes() {
+        ResteasyContext.popContextData(PageRequest.class);
         Product p = this.createProduct();
         Pool pool1 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
@@ -1101,6 +1110,101 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertThrows(NotFoundException.class, () -> ownerResource.listOwnerPools(
             owner.getKey(), c.getUuid(), null, p.getUuid(), null, true, null, null,
             new ArrayList<>(), false, false, null, null, null, null, null, null));
+    }
+
+    static Stream<Order> testOrderSource() {
+        return Stream.of(Order.ASCENDING, Order.DESCENDING);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @MethodSource("testOrderSource")
+    public void testListOwnerPoolsWithPaging(Order order) {
+        int numberOfPools = 9;
+        int pageSize = 3;
+
+        List<String> expectedPoolIds = new ArrayList<>();
+        for (int i = 0; i < numberOfPools; i++) {
+            Product product = this.createProduct();
+            Pool pool = poolCurator.create(TestUtil.createPool(owner, product));
+            expectedPoolIds.add(pool.getId());
+        }
+
+        if (order == Order.ASCENDING) {
+            Collections.sort(expectedPoolIds);
+        }
+        else {
+            Collections.reverse(expectedPoolIds);
+        }
+
+        for (int page = 1; page <= numberOfPools / pageSize; page++) {
+            ResteasyContext.pushContext(PageRequest.class,
+                new PageRequest()
+                    .setPage(page)
+                    .setPerPage(pageSize)
+                    .setSortBy("id")
+                    .setOrder(order));
+
+            Stream<PoolDTO> actual = ownerResource.listOwnerPools(
+                owner.getKey(), null, null, null, null, true, null, null,
+                new ArrayList<>(), false, false, null, null, null, null, null, null);
+
+            int pageIndex = (page - 1) * pageSize;
+
+            assertThat(actual)
+                .isNotNull()
+                .extracting(PoolDTO::getId)
+                .containsExactlyElementsOf(expectedPoolIds.subList(pageIndex, pageIndex + pageSize));
+        }
+    }
+
+    @Test
+    public void testListOwnerPoolsWithInvalidOrderKeyException() {
+        ResteasyContext.pushContext(PageRequest.class,
+            new PageRequest()
+                .setPage(1)
+                .setPerPage(5)
+                .setSortBy(TestUtil.randomString())
+                .setOrder(Order.ASCENDING));
+
+        String ownerKey = owner.getKey();
+
+        assertThrows(BadRequestException.class, () -> {
+            ownerResource.listOwnerPools(ownerKey, null, null, null, null, true, null, null,
+                List.of(), false, false, null, null, null, null, null, null);
+        });
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @ValueSource(ints = { -1, 0 })
+    public void testListOwnerPoolsWithInvalidPageParameters(int value) {
+        Product product = this.createProduct();
+        poolCurator.create(TestUtil.createPool(owner, product));
+
+        ResteasyContext.pushContext(PageRequest.class,
+            new PageRequest()
+                .setPage(value)
+                .setPerPage(5)
+                .setSortBy(TestUtil.randomString())
+                .setOrder(Order.ASCENDING));
+
+        String ownerKey = owner.getKey();
+
+        assertThrows(BadRequestException.class, () -> {
+            ownerResource.listOwnerPools(ownerKey, null, null, null, null, true, null, null,
+                List.of(), false, false, null, null, null, null, null, null);
+        });
+
+        ResteasyContext.pushContext(PageRequest.class,
+            new PageRequest()
+                .setPage(1)
+                .setPerPage(value)
+                .setSortBy(TestUtil.randomString())
+                .setOrder(Order.ASCENDING));
+
+        assertThrows(BadRequestException.class, () -> {
+            ownerResource.listOwnerPools(ownerKey, null, null, null, null, true, null, null,
+                List.of(), false, false, null, null, null, null, null, null);
+        });
     }
 
     @Test

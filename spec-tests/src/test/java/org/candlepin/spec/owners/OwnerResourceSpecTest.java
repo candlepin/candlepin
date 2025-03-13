@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -78,17 +78,23 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -378,22 +384,157 @@ public class OwnerResourceSpecTest {
         assertThat(ownerPools).hasSize(1);
     }
 
-    @Test
-    public void shouldListOwnersPoolsPaged() {
-        OwnerDTO owner = owners.createOwner(Owners.random());
-        ProductDTO product = createProduct(owner);
+    @Nested
+    @TestInstance(Lifecycle.PER_CLASS)
+    public class ListOwnerPoolsPagingTests {
+        private OwnerDTO owner;
+        private String ownerKey;
 
-        for (int i = 0; i < 4; i++) {
-            owners.createPool(owner.getKey(), Pools.random(product));
+        private int numberOfPools = 20;
+        private List<PoolDTO> pools = new ArrayList<>();
+
+        private Map<String, Comparator<PoolDTO>> comparatorMap = Map.of(
+            "id", Comparator.comparing(PoolDTO::getId),
+            "quantity", Comparator.comparing(PoolDTO::getQuantity));
+
+        @BeforeAll
+        public void setup() {
+            owner = owners.createOwner(Owners.randomSca());
+            ownerKey = owner.getKey();
+
+            Random random = new Random();
+            for (int i = 0; i < numberOfPools; i++) {
+                ProductDTO product = createProduct(owner);
+                PoolDTO pool = Pools.random(product)
+                    .quantity(random.nextLong(100L, 10000L));
+
+                pool = owners.createPool(ownerKey, pool);
+                pools.add(pool);
+            }
         }
 
-        Set<String> pagedPoolIds = ApiClients.admin().owners()
-            .listOwnerPools(owner.getKey(), Paging.withPage(1))
-            .stream()
-            .map(PoolDTO::getId)
-            .collect(Collectors.toSet());
+        @Test
+        public void shouldPageOwnersPools() {
+            int pageSize = 5;
+            List<String> actualPoolsIds = new ArrayList<>();
+            for (int pageIndex = 1; pageIndex * pageSize <= numberOfPools; pageIndex++) {
+                Paging paging = new Paging(pageIndex, pageSize, "id", "asc");
 
-        assertThat(pagedPoolIds).hasSize(2);
+                List<String> poolIds = owners.listOwnerPools(ownerKey, paging).stream()
+                    .map(PoolDTO::getId)
+                    .collect(Collectors.toList());
+
+                actualPoolsIds.addAll(poolIds);
+            }
+
+            List<String> expectedPoolIds = pools.stream()
+                .map(PoolDTO::getId)
+                .toList();
+
+            assertThat(actualPoolsIds)
+                .containsExactlyElementsOf(expectedPoolIds);
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = { 0, -1, -100 })
+        public void shouldFailWithInvalidPage(int page) {
+            Paging paging = new Paging(page, 5, "id", "asc");
+
+            assertBadRequest(() -> owners.listOwnerPools(ownerKey, paging));
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = { 0, -1, -100 })
+        public void shouldFailWithInvalidPageSize(int pageSize) {
+            Paging paging = new Paging(1, pageSize, "id", "asc");
+
+            assertBadRequest(() -> owners.listOwnerPools(ownerKey, paging));
+        }
+
+        @Test
+        public void shouldFailWithInvalidOrderByField() {
+            Paging paging = new Paging(1, numberOfPools, StringUtil.random(""), "asc");
+
+            assertBadRequest(() -> owners.listOwnerPools(ownerKey, paging));
+        }
+
+        @Test
+        public void shouldFailWithInvalidOrderDirection() {
+            Paging paging = new Paging(1, numberOfPools, "id", StringUtil.random(""));
+
+            assertBadRequest(() -> owners.listOwnerPools(ownerKey, paging));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = { "id", "quantity" })
+        public void shouldOrderInAscendingOrder(String field) {
+            List<String> expectedPoolIds = pools.stream()
+                .sorted(comparatorMap.get(field))
+                .map(PoolDTO::getId)
+                .toList();
+
+            Paging paging = new Paging(1, numberOfPools, field, "asc");
+            List<PoolDTO> actual = owners.listOwnerPools(ownerKey, paging);
+
+            assertThat(actual)
+                .isNotNull()
+                .map(PoolDTO::getId)
+                .containsExactlyElementsOf(expectedPoolIds);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = { "id", "quantity" })
+        public void shouldOrderInDescendingOrder(String field) {
+            List<String> expectedPoolIds = pools.stream()
+                .sorted(comparatorMap.get(field).reversed())
+                .map(PoolDTO::getId)
+                .toList();
+
+            Paging paging = new Paging(1, numberOfPools, field, "desc");
+            List<PoolDTO> actual = owners.listOwnerPools(ownerKey, paging);
+
+            assertThat(actual)
+                .isNotNull()
+                .map(PoolDTO::getId)
+                .containsExactlyElementsOf(expectedPoolIds);
+        }
+
+        @Test
+        public void shouldLetOwnersListPoolsPagedForConsumer() {
+            UserDTO user = UserUtil.createUser(admin, owner);
+            ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
+            ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
+
+            List<String> expectedPoolIds = pools.stream()
+                .sorted(Comparator.comparing(PoolDTO::getId))
+                .map(PoolDTO::getId)
+                .toList();
+
+            Paging paging = new Paging(1, 10, "id", "asc");
+            List<String> actualPage1 = ApiClients.admin().owners()
+                .listOwnerPools(ownerKey, consumer.getUuid(), paging)
+                .stream()
+                .map(PoolDTO::getId)
+                .collect(Collectors.toList());
+
+            assertThat(actualPage1)
+                .isNotNull()
+                .hasSize(10)
+                .containsExactlyElementsOf(expectedPoolIds.subList(0, 10));
+
+            // Get page 2, per bz 1038273
+            paging = new Paging(2, 10, "id", "asc");
+            List<String> actualPage2 = ApiClients.admin().owners()
+                .listOwnerPools(ownerKey, consumer.getUuid(), paging)
+                .stream()
+                .map(PoolDTO::getId)
+                .collect(Collectors.toList());
+
+            assertThat(actualPage2)
+                .isNotNull()
+                .hasSize(10)
+                .containsExactlyElementsOf(expectedPoolIds.subList(10, 20));
+        }
     }
 
     @Test
@@ -409,32 +550,6 @@ public class OwnerResourceSpecTest {
 
         assertThat(updatedPool.getStartDate())
             .isCloseTo(pool.getStartDate(), within(1, ChronoUnit.SECONDS));
-    }
-
-    @Test
-    public void shouldLetOwnersListPoolsPagedForConsumer() {
-        OwnerDTO owner = owners.createOwner(Owners.random());
-        UserDTO user = UserUtil.createUser(admin, owner);
-        ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
-        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
-        ProductDTO product = createProduct(owner);
-
-        for (int i = 0; i < 4; i++) {
-            owners.createPool(owner.getKey(), Pools.random(product));
-        }
-
-        // Make sure there are 4 available pools
-        List<PoolDTO> existingPools = owners.listOwnerPools(owner.getKey(), consumer.getUuid());
-        assertThat(existingPools).hasSize(4);
-
-        // Get page 2, per bz 1038273
-        Set<String> pagedPoolIds = ApiClients.admin().owners()
-            .listOwnerPools(owner.getKey(), consumer.getUuid(), Paging.withPage(1))
-            .stream()
-            .map(PoolDTO::getId)
-            .collect(Collectors.toSet());
-
-        assertThat(pagedPoolIds).hasSize(2);
     }
 
     @Test

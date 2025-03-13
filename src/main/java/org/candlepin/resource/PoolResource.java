@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -37,6 +37,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQualifier;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.paging.Page;
@@ -73,6 +74,7 @@ public class PoolResource implements PoolsApi {
 
     private final ConsumerCurator consumerCurator;
     private final OwnerCurator ownerCurator;
+    private final PoolCurator poolCurator;
     private final I18n i18n;
     private final PoolManager poolManager;
     private final PoolService poolService;
@@ -81,12 +83,13 @@ public class PoolResource implements PoolsApi {
     private final PrincipalProvider principalProvider;
 
     @Inject
-    public PoolResource(ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
+    public PoolResource(ConsumerCurator consumerCurator, OwnerCurator ownerCurator, PoolCurator poolCurator,
         I18n i18n, PoolManager poolManager, CalculatedAttributesUtil calculatedAttributesUtil,
         ModelTranslator translator, PrincipalProvider principalProvider, PoolService poolService) {
 
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.poolCurator = Objects.requireNonNull(poolCurator);
         this.i18n = Objects.requireNonNull(i18n);
         this.poolManager = Objects.requireNonNull(poolManager);
         this.calculatedAttributesUtil = Objects.requireNonNull(calculatedAttributesUtil);
@@ -171,10 +174,18 @@ public class PoolResource implements PoolsApi {
         if (pageRequest != null) {
             qualifier.setOffset(pageRequest.getPage())
                 .setLimit(pageRequest.getPerPage());
+
+            boolean reverse = pageRequest.getOrder() == PageRequest.DEFAULT_ORDER;
+            qualifier.addOrder(pageRequest.getSortBy(), reverse);
         }
 
         Page<List<Pool>> pageResponse = poolManager.listAvailableEntitlementPools(qualifier);
+
         List<Pool> poolList = pageResponse.getPageData();
+        if (qualifier.getOffset() != null && qualifier.getLimit() != null) {
+            poolList = poolCurator.takeSubList(qualifier, poolList);
+            pageResponse.setPageData(poolList);
+        }
 
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
         calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOnDate);

@@ -1568,12 +1568,8 @@ public class PoolManager {
 
         // Set maxRecords once we are done filtering
         page.setMaxRecords(resultingPools.size());
-
-        if (qualifier.getOffset() != null && qualifier.getLimit() != null) {
-            resultingPools = poolCurator.takeSubList(qualifier, resultingPools);
-        }
-
         page.setPageData(resultingPools);
+
         return page;
     }
 
