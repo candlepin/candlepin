@@ -75,6 +75,11 @@ COPY --from=builder /app/build /opt/tomcat/webapps
 
 WORKDIR /opt/tomcat/bin
 
+# Create a symbolic link to output the Candlepin logs to STDOUT
+RUN mkdir -p /var/log/candlepin; \
+    touch /var/log/candlepin/candlepin.log; \
+    ln -sf /proc/1/fd/1 /var/log/candlepin/candlepin.log;
+
 USER tomcat
 
 # Expose ports for tomcat, candlepin, postgres and mariadb
@@ -89,7 +94,7 @@ FROM production as development
 LABEL org.opencontainers.image.title="Candlepin Development Image" \
     org.opencontainers.image.description="Candlepin is an open source subscription & entitlement engine \
 which is designed to manage software subscriptions from both vendor's & customer's perspectives. \
-    This is a development image not intended for production use."
+This is a development image and not intended for production use."
 
 USER root
 
@@ -109,6 +114,7 @@ RUN echo "jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQL92Dialect
 # Setup development certificate and key
 WORKDIR /etc/candlepin/certs
 COPY --from=builder /app/certs /etc/candlepin/certs
+
 # Add the certificate to the Java trust store
 RUN ln -s /etc/candlepin/certs/*.crt /etc/pki/ca-trust/source/anchors --force; \
     update-ca-trust;
