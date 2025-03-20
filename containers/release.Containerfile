@@ -15,9 +15,11 @@ RUN wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.76/bin/apache-tomc
     mv apache-tomcat-9.0.76/* /opt/tomcat/
 
 # Prepare Candlepin
-RUN mkdir -p /app/build
+RUN mkdir -p /app/build/candlepin
 WORKDIR /app/build
 COPY ${WAR_FILE} ./candlepin.war
+WORKDIR /app/build/candlepin
+RUN jar xvf /app/build/candlepin.war
 
 # Prepare development certs
 RUN mkdir -p /app/certs
@@ -89,7 +91,7 @@ FROM production as development
 LABEL org.opencontainers.image.title="Candlepin Development Image" \
     org.opencontainers.image.description="Candlepin is an open source subscription & entitlement engine \
 which is designed to manage software subscriptions from both vendor's & customer's perspectives. \
-    This is a development image not intended for production use."
+This is a development image and not intended for production use."
 
 USER root
 
@@ -109,11 +111,13 @@ RUN echo "jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQL92Dialect
 # Setup development certificate and key
 WORKDIR /etc/candlepin/certs
 COPY --from=builder /app/certs /etc/candlepin/certs
+
 # Add the certificate to the Java trust store
 RUN ln -s /etc/candlepin/certs/*.crt /etc/pki/ca-trust/source/anchors --force; \
     update-ca-trust;
 
 COPY ./containers/server.xml /opt/tomcat/conf
+COPY ./containers/logback.xml /opt/tomcat/webapps/candlepin/WEB-INF/classes/logback.xml
 
 WORKDIR /opt/tomcat/bin
 
