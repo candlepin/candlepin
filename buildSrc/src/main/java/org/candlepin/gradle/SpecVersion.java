@@ -32,10 +32,7 @@ public class SpecVersion implements Plugin<Project> {
         String absPath = project.getRootProject().getProjectDir().getAbsolutePath();
         Path specFilePath = Paths.get(absPath, "candlepin.spec.tmpl");
 
-        try {
-
-            FileReader fileReader = new FileReader(specFilePath.toFile());
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(specFilePath.toFile()))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 Matcher matcher = versionPattern.matcher(line);
@@ -50,7 +47,6 @@ public class SpecVersion implements Plugin<Project> {
                     break;
                 }
             }
-            fileReader.close();
         }
         catch (IOException e) {
             throw new GradleException("Error reading spec file", e);
