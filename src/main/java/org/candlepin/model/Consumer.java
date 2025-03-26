@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -336,7 +336,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
     @Fetch(FetchMode.SELECT)
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-    private Map<String, String> environmentIds;
+    private Map<Integer, String> environmentIds;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "reg_auth_method")
@@ -1237,7 +1237,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
         }
 
         return this.environmentIds.entrySet().stream()
-            .sorted(Comparator.comparingInt(entry -> Integer.parseInt(entry.getKey())))
+            .sorted(Comparator.comparingInt(entry -> entry.getKey()))
             .map(Map.Entry::getValue)
             .collect(Collectors.toUnmodifiableList());
     }
@@ -1263,7 +1263,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
             }
 
             for (String envId : environmentIds) {
-                this.environmentIds.put(String.valueOf(this.environmentIds.size()), envId);
+                this.environmentIds.put(this.environmentIds.size(), envId);
             }
         }
         return this;
@@ -1313,7 +1313,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
                     " specified more than once.");
             }
 
-            this.environmentIds.put(String.valueOf(this.environmentIds.size()), environment.getId());
+            this.environmentIds.put(this.environmentIds.size(), environment.getId());
         }
 
         return this;
