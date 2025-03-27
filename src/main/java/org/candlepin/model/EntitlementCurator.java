@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -561,7 +561,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         CriteriaQuery<Entitlement> query = cb.createQuery(Entitlement.class);
         Root<Entitlement> root = query.from(Entitlement.class);
         Join<Entitlement, Consumer> consumer = root.join(Entitlement_.consumer);
-        MapJoin<Consumer, String, String> consumerEnvironments = consumer.join(Consumer_.environmentIds);
+        MapJoin<Consumer, Integer, String> consumerEnvironments = consumer.join(Consumer_.environmentIds);
 
         query.select(root)
             .distinct(true)
