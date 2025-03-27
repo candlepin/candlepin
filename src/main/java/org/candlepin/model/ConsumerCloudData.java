@@ -309,15 +309,41 @@ public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData
         return this;
     }
 
+    public void updateFrom(ConsumerCloudData other) {
+        if (other == null) {
+            return;
+        }
+
+        if (other.getCloudProviderShortName() != null &&
+            !other.getCloudProviderShortName().equals(this.getCloudProviderShortName())) {
+            this.setCloudProviderShortName(other.getCloudProviderShortName());
+        }
+
+        if (other.getCloudAccountId() != null &&
+            !other.getCloudAccountId().equals(this.getCloudAccountId())) {
+            this.setCloudAccountId(other.getCloudAccountId());
+        }
+
+        if (other.getCloudInstanceId() != null &&
+            !other.getCloudInstanceId().equals(this.getCloudInstanceId())) {
+            this.setCloudInstanceId(other.getCloudInstanceId());
+        }
+
+        if (other.getCloudOfferingIds() != null && !other.getCloudOfferingIds().isEmpty() &&
+            !other.getCloudOfferingIds().equals(this.getCloudOfferingIds())) {
+            this.setCloudOfferingIds(other.getCloudOfferingIds());
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public String toString() {
-        // Why is short name after the account ID? Why do we show the object ID (which is worthless to us)
-        // when we could be showing the consumer?
-        return String.format("ConsumerCloudData [id: %s, cloudAccountId: %s, cloudProviderShortName: %s]",
-            this.getId(), this.getCloudAccountId(), this.getCloudProviderShortName());
+        return String.format("ConsumerCloudData [consumerUuid: %s, cloudProviderShortName: %s, " +
+                "cloudAccountId: %s, cloudInstanceId: %s, cloudOfferingIds: %s]",
+            this.getConsumer().getUuid(), this.getCloudProviderShortName(), this.getCloudAccountId(),
+            this.getCloudInstanceId(), this.getCloudOfferingIds());
     }
 
 }

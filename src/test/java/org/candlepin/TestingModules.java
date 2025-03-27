@@ -14,9 +14,7 @@
  */
 package org.candlepin;
 
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventSink;
@@ -71,6 +69,10 @@ import org.candlepin.resource.OwnerResource;
 import org.candlepin.resource.PoolResource;
 import org.candlepin.resource.ProductResource;
 import org.candlepin.resource.SubscriptionResource;
+import org.candlepin.resource.util.AWSProviderFactParser;
+import org.candlepin.resource.util.AzureProviderFactParser;
+import org.candlepin.resource.util.CloudProviderFactParser;
+import org.candlepin.resource.util.GCPProviderFactParser;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.filter.StoreFactory;
 import org.candlepin.service.CloudRegistrationAdapter;
@@ -105,6 +107,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.matcher.Matchers;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.persist.PersistService;
 import com.google.inject.persist.UnitOfWork;
 import com.google.inject.persist.jpa.JpaPersistModule;
@@ -344,6 +347,12 @@ public class TestingModules {
             bind(CPMContextListener.class).to(NoopContextListener.class).in(Singleton.class);
             bind(ObjectMapperFactory.class).asEagerSingleton();
             bind(ObjectMapper.class).toProvider(ObjectMapperFactory.class).asEagerSingleton();
+
+            Multibinder<CloudProviderFactParser> parserBinder =
+                Multibinder.newSetBinder(binder(), CloudProviderFactParser.class);
+            parserBinder.addBinding().to(AWSProviderFactParser.class);
+            parserBinder.addBinding().to(AzureProviderFactParser.class);
+            parserBinder.addBinding().to(GCPProviderFactParser.class);
         }
 
         @Provides
