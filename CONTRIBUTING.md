@@ -204,7 +204,7 @@ The Candlepin production base image is designed to be a base image for your own 
 
 #### Extend Candlepin Production Base Image
 
-The following is an example on how to extend the Candlepin production image using your own configurations and certificates to build a production Candlepin image that you can run.
+The following is an example on how to extend and run the Candlepin production image using your own configurations and certificates.
 
 Example:
 ``` dockerfile
@@ -233,8 +233,7 @@ The Candlepin development image is designed to run right after pulling the image
 
 The following is an example on how to run the Candlepin development container using a docker compose file or a kubernetes file via podman.
 
-Two compose files are in the dev-container directory. They will pull the development image and the most
-current PostgreSQL image. The configuration settings are in those compose files as environment variables.
+Two compose files are in the dev-container directory. They will pull the latest development Candlepin image and the latest PostgreSQL image. The configuration settings are in those compose files as environment variables.
 Refer to the [default configuration](#development-image-default-configurations) section for details on the Candlepin development container's default configurations.
 
 Once configured you can start and stop(remove) the docker container with
