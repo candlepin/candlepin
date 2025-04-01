@@ -12,6 +12,7 @@ concurrency:
 
 jobs:
   target_version_validation:
+    if: github.event.pull_request.head.repo.fork == false
     name: target version validation
     runs-on: ubuntu-latest
 
