@@ -373,8 +373,10 @@
         <validCheckSum>9:16c11c8edc80574ab030cd5fbcec5a07</validCheckSum>
         <!-- 4.4.10 -->
         <validCheckSum>9:56c16786668c16c345e8ce64ae890851</validCheckSum>
-        <!-- 4.4.11+ -->
+        <!-- 4.4.11 -->
         <validCheckSum>9:d11ca759108c7919ce364d946c825460</validCheckSum>
+        <!-- 4.5.3+ -->
+        <validCheckSum>9:5b03d74e0f43abd4e82e22303916f92f</validCheckSum>
 
         <sql>
             -- Migrate global products and content
@@ -421,18 +423,9 @@
                         -- cyclical product, or some other crazy thing that's entirely unsupported by CP's logic
                         -- and queries
                         WHERE pg.depth &lt; 9)
-                SELECT prod.uuid, prod.product_id, md5(concat('--global--', prod.product_id)) AS new_uuid, prod.uuid = best.uuid AS best_uuid
+                SELECT prod.uuid, prod.product_id, md5(concat('--global--', prod.product_id)) AS new_uuid, DENSE_RANK() OVER (PARTITION BY prod.product_id ORDER BY prod.updated DESC, prod.uuid DESC) = 1 AS best_uuid
                     FROM (SELECT DISTINCT uuid FROM product_graph) active
-                    JOIN cp2_products prod ON prod.uuid = active.uuid
-                    JOIN (SELECT prod2.product_id, MAX(prod2.uuid) AS uuid
-                        FROM product_graph pg1
-                        JOIN cp2_products prod2 ON prod2.uuid = pg1.uuid
-                        JOIN (SELECT prod3.product_id, MAX(prod3.updated) AS updated
-                            FROM product_graph pg2
-                            JOIN cp2_products prod3 ON prod3.uuid = pg2.uuid
-                            GROUP BY prod3.product_id) latest ON latest.product_id = prod2.product_id
-                        WHERE prod2.updated = latest.updated
-                        GROUP BY prod2.product_id) best ON best.product_id = prod.product_id;
+                    JOIN cp2_products prod ON prod.uuid = active.uuid;
 
             -- Collect "active" global content
             INSERT INTO tmp_active_global_contents (uuid, cid, new_uuid, best)
@@ -440,15 +433,9 @@
                     SELECT cont.uuid FROM cp2_owner_content oc JOIN cp2_content cont ON cont.uuid = oc.content_uuid WHERE cont.locked != 0
                     UNION
                     SELECT pc.content_uuid AS uuid FROM cp2_product_content pc JOIN tmp_active_global_products agp ON agp.uuid = pc.product_uuid)
-                SELECT cont.uuid, cont.content_id, md5(concat('--global--', cont.content_id)) AS new_uuid, cont.uuid = best.uuid AS best_uuid
+                SELECT cont.uuid, cont.content_id, md5(concat('--global--', cont.content_id)) AS new_uuid, DENSE_RANK() OVER (PARTITION BY cont.content_id ORDER BY cont.updated DESC, cont.uuid DESC) = 1 AS best_uuid
                     FROM active_contents active
-                    JOIN cp2_content cont ON cont.uuid = active.uuid
-                    JOIN (SELECT cont2.content_id, MAX(cont2.uuid) AS uuid
-                        FROM active_contents ac1
-                        JOIN cp2_content cont2 ON cont2.uuid = ac1.uuid
-                        JOIN (SELECT cont3.content_id, MAX(cont3.updated) AS updated FROM active_contents ac2 JOIN cp2_content cont3 ON cont3.uuid = ac2.uuid GROUP BY cont3.content_id) latest ON latest.content_id = cont2.content_id
-                        WHERE cont2.updated = latest.updated
-                        GROUP BY cont2.content_id) best ON best.content_id = cont.content_id;
+                    JOIN cp2_content cont ON cont.uuid = active.uuid;
 
             -- Copy over global content
             INSERT INTO cp_contents (uuid, created, updated, namespace, content_id, content_url, gpg_url, label, metadata_expire, name, release_ver, required_tags, type, vendor, arches)
@@ -482,18 +469,15 @@
 
             -- attributes
             INSERT INTO cp_product_attributes (product_uuid, name, value)
-            WITH attrib_map(product_id, name, latest) AS (
-                SELECT prod.product_id, attrib.name, MAX(prod.updated) AS latest
+            WITH attrib_rank(product_uuid, aname, avalue, rank) AS (
+                SELECT prod.uuid AS product_uuid, attrib.name AS aname, attrib.value AS avalue, DENSE_RANK() OVER (PARTITION BY prod.product_id, attrib.name ORDER BY prod.updated DESC, prod.uuid DESC) rank
                     FROM tmp_active_global_products agp
                     JOIN cp2_products prod ON prod.uuid = agp.uuid
-                    JOIN cp2_product_attributes attrib ON attrib.product_uuid = prod.uuid
-                    GROUP BY prod.product_id, attrib.name)
-                SELECT agp.new_uuid, attrib.name, attrib.value
-                    FROM attrib_map amap
-                    JOIN tmp_active_global_products agp ON agp.pid = amap.product_id
-                    JOIN cp2_products old_prod ON old_prod.uuid = agp.uuid
-                    JOIN cp2_product_attributes attrib ON attrib.product_uuid = old_prod.uuid AND attrib.name = amap.name
-                    WHERE old_prod.updated = amap.latest;
+                    JOIN cp2_product_attributes attrib ON attrib.product_uuid = prod.uuid)
+                SELECT agp.new_uuid, arank.aname, arank.avalue
+                    FROM tmp_active_global_products agp
+                    JOIN attrib_rank arank ON arank.product_uuid = agp.uuid
+                    WHERE arank.rank = 1;
 
             -- branding
             INSERT INTO cp_product_branding (id, created, updated, product_uuid, product_id, type, name)
@@ -585,34 +569,19 @@
                         -- cyclical product, or some other crazy thing that's entirely unsupported by CP's logic
                         -- and queries
                         WHERE pg.depth &lt; 9)
-                SELECT active.owner_id, prod.uuid, prod.product_id, md5(concat(active.owner_id, prod.product_id)) AS new_uuid, prod.uuid = best.uuid AS best_uuid
+                SELECT active.owner_id, prod.uuid, prod.product_id, md5(concat(active.owner_id, prod.product_id)) AS new_uuid, DENSE_RANK() OVER (PARTITION BY active.owner_id, prod.product_id ORDER BY prod.updated DESC, prod.uuid DESC) = 1 AS best_uuid
                     FROM (SELECT DISTINCT owner_id, uuid FROM product_graph) active
-                    JOIN cp2_products prod ON prod.uuid = active.uuid
-                    JOIN (SELECT pg1.owner_id, prod2.product_id, MAX(prod2.uuid) AS uuid
-                        FROM product_graph pg1
-                        JOIN cp2_products prod2 ON prod2.uuid = pg1.uuid
-                        JOIN (SELECT pg2.owner_id, prod3.product_id, MAX(prod3.updated) AS updated
-                            FROM product_graph pg2
-                            JOIN cp2_products prod3 ON prod3.uuid = pg2.uuid
-                            GROUP BY pg2.owner_id, prod3.product_id) latest ON latest.product_id = prod2.product_id
-                        WHERE prod2.updated = latest.updated
-                        GROUP BY pg1.owner_id, prod2.product_id) best ON best.owner_id = active.owner_id AND best.product_id = prod.product_id;
+                    JOIN cp2_products prod ON prod.uuid = active.uuid;
 
             -- Collect "active" custom content
-            INSERT INTO tmp_active_custom_contents (owner_id, uuid, cid, best, new_uuid)
+            INSERT INTO tmp_active_custom_contents (owner_id, uuid, cid, new_uuid, best)
                 WITH active_contents(owner_id, uuid) AS (
                     SELECT oc.owner_id, cont.uuid FROM cp2_owner_content oc JOIN cp2_content cont ON cont.uuid = oc.content_uuid WHERE cont.locked = 0
                     UNION
                     SELECT acp.owner_id, pc.content_uuid AS uuid FROM cp2_product_content pc JOIN tmp_active_custom_products acp ON acp.uuid = pc.product_uuid)
-                SELECT active.owner_id, cont.uuid, cont.content_id, cont.uuid = best.uuid AS best_uuid, md5(concat(active.owner_id, cont.content_id)) AS new_uuid
+                SELECT active.owner_id, cont.uuid, cont.content_id, md5(concat(active.owner_id, cont.content_id)) AS new_uuid, DENSE_RANK() OVER (PARTITION BY active.owner_id, cont.content_id ORDER BY cont.updated DESC, cont.uuid DESC) = 1 AS best
                     FROM active_contents active
-                    JOIN cp2_content cont ON cont.uuid = active.uuid
-                    JOIN (SELECT cont2.content_id, MAX(cont2.uuid) AS uuid
-                        FROM active_contents ac1
-                        JOIN cp2_content cont2 ON cont2.uuid = ac1.uuid
-                        JOIN (SELECT cont3.content_id, MAX(cont3.updated) AS updated FROM active_contents ac2 JOIN cp2_content cont3 ON cont3.uuid = ac2.uuid GROUP BY cont3.content_id) latest ON latest.content_id = cont2.content_id
-                        WHERE cont2.updated = latest.updated
-                        GROUP BY cont2.content_id) best ON best.content_id = cont.content_id;
+                    JOIN cp2_content cont ON cont.uuid = active.uuid;
 
 
             -- Copy over custom content
@@ -649,18 +618,16 @@
 
             -- attributes
             INSERT INTO cp_product_attributes (product_uuid, name, value)
-            WITH attrib_map(owner_id, product_id, name, latest) AS (
-                SELECT acp.owner_id, prod.product_id, attrib.name, MAX(prod.updated) AS latest
+            WITH attrib_rank(owner_id, product_uuid, aname, avalue, rank) AS (
+                SELECT acp.owner_id, prod.uuid AS product_uuid, attrib.name AS aname, attrib.value AS avalue, DENSE_RANK() OVER (PARTITION BY acp.owner_id, prod.product_id, attrib.name ORDER BY prod.updated DESC, prod.uuid DESC) rank
                     FROM tmp_active_custom_products acp
                     JOIN cp2_products prod ON prod.uuid = acp.uuid
                     JOIN cp2_product_attributes attrib ON attrib.product_uuid = prod.uuid
-                    GROUP BY acp.owner_id, prod.product_id, attrib.name)
-                SELECT acp.new_uuid, attrib.name, attrib.value
-                    FROM tmp_active_custom_products acp
-                    JOIN cp2_products old_prod ON old_prod.uuid = acp.uuid
-                    JOIN cp2_product_attributes attrib ON attrib.product_uuid = old_prod.uuid
-                    JOIN attrib_map ON attrib_map.owner_id = acp.owner_id AND attrib_map.product_id = old_prod.product_id AND attrib_map.name = attrib.name
-                    WHERE old_prod.updated = attrib_map.latest;
+            )
+            SELECT acp.new_uuid, arank.aname, arank.avalue
+                FROM tmp_active_custom_products acp
+                JOIN attrib_rank arank ON arank.owner_id = acp.owner_id AND arank.product_uuid = acp.uuid
+                WHERE arank.rank = 1;
 
             -- branding
             INSERT INTO cp_product_branding (id, created, updated, product_uuid, product_id, type, name)
