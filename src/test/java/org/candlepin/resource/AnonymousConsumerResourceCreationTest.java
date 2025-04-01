@@ -80,6 +80,7 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.consumer.ConsumerRules;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerBindUtil;
+import org.candlepin.resource.util.ConsumerCloudDataBuilder;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
@@ -195,6 +196,8 @@ public class AnonymousConsumerResourceCreationTest {
     private SCACertificateGenerator scaCertificateGenerator;
     @Mock
     private AnonymousCertificateGenerator anonymousCertificateGenerator;
+    @Mock
+    private ConsumerCloudDataBuilder consumerCloudDataBuilder;
 
     protected ModelTranslator modelTranslator;
 
@@ -229,7 +232,8 @@ public class AnonymousConsumerResourceCreationTest {
             this.dtoValidator, this.principalProvider, this.contentOverrideValidator,
             this.consumerContentOverrideCurator, this.entCertService, this.poolService,
             this.environmentContentCurator, this.anonymousConsumerCurator, this.anonymousCertCurator,
-            this.ownerService, this.scaCertificateGenerator, this.anonymousCertificateGenerator
+            this.ownerService, this.scaCertificateGenerator, this.anonymousCertificateGenerator,
+            this.consumerCloudDataBuilder
         );
 
         this.system = this.initConsumerType();
