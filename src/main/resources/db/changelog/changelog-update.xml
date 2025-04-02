@@ -205,4 +205,5 @@
     <include file="db/changelog/20241029000000-drop-fk-cp-owner.xml"/>
     <include file="/db/changelog/20250128162900-add-last-content-update-field.xml"/>
     <include file="db/changelog/20250130000000-add-cp-content-access-payload-table.xml" />
+    <include file="db/changelog/20250325000000-update-env-priority-column-type.xml" />
 </databaseChangeLog>
