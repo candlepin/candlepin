@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="20250325000000-1" author="jalbrech">
+        <sql dbms="mysql, mariadb">
+            DELETE FROM cp_consumer_environments WHERE priority REGEXP '[^0-9]+';
+        </sql>
+
+        <sql dbms="postgresql">
+            DELETE FROM cp_consumer_environments WHERE priority ~ '[^0-9]+';
+        </sql>
+
+        <modifyDataType tableName="cp_consumer_environments"
+            columnName="priority"
+            newDataType="SMALLINT" />
+    </changeSet>
+
+</databaseChangeLog>
