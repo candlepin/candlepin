@@ -75,7 +75,7 @@ keycloak = { module = "org.keycloak:keycloak-servlet-filter-adapter", version = 
 liquibase = { module = "org.liquibase:liquibase-core", version = { strictly = "4.29.0" } }
 liquibase-slf4j = { module = "com.mattbertolini:liquibase-slf4j", version = "5.1.0" }
 logback = { module = "ch.qos.logback:logback-classic", version = "1.5.18" }
-logstash = { module = "net.logstash.logback:logstash-logback-encoder", version = "8.0" }
+logstash = { module = "net.logstash.logback:logstash-logback-encoder", version = "8.1" }
 mariadb = { module = "org.mariadb.jdbc:mariadb-java-client", version = "3.5.3" }
 mockito-junit = { module = "org.mockito:mockito-junit-jupiter", version = "5.16.1" }
 oauth = { module = "net.oauth.core:oauth-provider", version = "20100527" }
