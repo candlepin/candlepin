@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.6.0
+Version: 4.6.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,98 @@ fi
 
 #raw
 %changelog
+* Thu Apr 10 2025 candlepin-bot 4.6.1-1
+- Add new translations using Weblate (noreply@weblate.org)
+- Bump org.apache.tomcat:tomcat-annotations-api from 11.0.5 to 11.0.6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump net.logstash.logback:logstash-logback-encoder from 8.0 to 8.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.owasp.dependencycheck from 12.1.0 to 12.1.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.16.1 to 5.17.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- CANDLEPIN-990: Updated cp_consumer_environments.priority to tinyint
+  (joshmalbrecht@gmail.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.21.4 to 10.23.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-943: Removed JIRA target check from forks PRs (sbakaj@redhat.com)
+- CANDLEPIN-1001: Refactored ConsumerCloudData creation/update
+  (sbakaj@redhat.com)
+- Bump io.smallrye.config:smallrye-config from 3.12.3 to 3.12.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mariadb.jdbc:mariadb-java-client from 3.5.2 to 3.5.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CHAINSAW-382: Updated dev container image to output Candlepin logs
+  (joshmalbrecht@gmail.com)
+- Bump org.sonarqube from 6.0.1.5171 to 6.1.0.5360
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.17 to 1.5.18
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump artemis from 2.39.0 to 2.40.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.16.0 to 5.16.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.spotbugs:spotbugs-annotations from 4.9.2 to 4.9.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.junit:junit-bom from 5.12.0 to 5.12.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-999: Fixed paging for list owner pools (joshmalbrecht@gmail.com)
+- CANDLEPIN-996: Additional SAST scan fixes (sbakaj@redhat.com)
+- CANDLEPIN-996: Fixed SAST scan issues (sbakaj@redhat.com)
+- Bump io.smallrye.config:smallrye-config from 3.12.2 to 3.12.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Updated hard coded unit test date (joshmalbrecht@gmail.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Revert "CANDLEPIN-938: Reverted explicit content bulk translation"
+  (crog@redhat.com)
+- CHAINSAW-341: Improved SCA payload regeneration performance
+  (joshmalbrecht@gmail.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 11.0.4 to 11.0.5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.21.3 to 10.21.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.15.2 to 5.16.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.spotbugs:spotbugs-annotations from 4.9.1 to 4.9.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson from 2.18.2 to 2.18.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump openapi-generator from 7.11.0 to 7.12.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-985: Switched default contentAccessModeList to SCA only
+  (sbakaj@redhat.com)
+- Bump slf4j from 2.0.16 to 2.0.17
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.16 to 1.5.17
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Updated JUnit dependencies to 5.12.0 using the BOM (sbakaj@redhat.com)
+- Update Gradle Wrapper from 8.12.1 to 8.13 (gradle-update-robot@regolo.cc)
+- Bump com.puppycrawl.tools:checkstyle from 10.21.2 to 10.21.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.12.0 to 3.12.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 11.0.3 to 11.0.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.11.2 to 3.12.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.owasp.dependencycheck from 12.0.2 to 12.1.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mariadb.jdbc:mariadb-java-client from 3.5.1 to 3.5.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.spotbugs:spotbugs-annotations from 4.9.0 to 4.9.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 11.0.2 to 11.0.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+
 * Fri Feb 07 2025 candlepin-bot 4.6.0-1
 - Bump com.github.ben-manes.caffeine:caffeine from 3.1.8 to 3.2.0
   (49699333+dependabot[bot]@users.noreply.github.com)
