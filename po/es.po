@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-04-03 07:10+0000\n"
-"PO-Revision-Date: 2025-04-09 13:20+0000\n"
+"PO-Revision-Date: 2025-04-11 03:53+0000\n"
 "Last-Translator: Javier Francisco <fserrador@gmail.com>\n"
 "Language-Team: Spanish <https://translate.fedoraproject.org/projects/"
 "candlepin/master/es/>\n"
@@ -51,17 +51,17 @@ msgstr "Evento desconocido para usuario {0} y destino {1}"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:122
 #, java-format
 msgid "{0} created new unit {1}"
-msgstr "{0} creó una nueva unidad {1}"
+msgstr "{0} ha creado una nueva unidad {1}"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:123
 #, java-format
 msgid "{0} modified the unit {1}"
-msgstr "{0} modificó la unidad {1}"
+msgstr "{0} ha modificado la unidad {1}"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:124
 #, java-format
 msgid "{0} deleted the unit {1}"
-msgstr "{0} borró la unidad {1}"
+msgstr "{0} ha borrado la unidad {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -87,7 +87,7 @@ msgstr "{0} ha borrado el usuario {1}"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
 #, java-format
 msgid "{0} attached a subscription for product {1}"
-msgstr "{0} suscripción adjunta para producto {1}"
+msgstr "{0} ha adjuntado una suscripción para el producto {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -129,7 +129,7 @@ msgstr "{0} ha borrado un grupo para el producto {1}"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
 #, java-format
 msgid "{0} created an export for unit {1}"
-msgstr "{0} creó una exportación para unidad {1}"
+msgstr "{0} ha creado una exportación para unidad {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -225,12 +225,12 @@ msgstr "{0} ha borrado el ID de huésped {1}"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
 #, java-format
 msgid "{0} updated the rules in the database to version {1}"
-msgstr "{0} actualizadas las reglas en la base de datos para la versión {1}"
+msgstr "{0} ha actualizado las reglas en la base de datos para la versión {1}"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
 #, java-format
 msgid "{0} removed the rules from the database"
-msgstr "{0} retiró las reglas de la base de datos"
+msgstr "{0} ha retirado las reglas de la base de datos"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
 #, java-format
@@ -280,7 +280,7 @@ msgstr "Error al contactar servicio de usuario"
 #: src/main/java/org/candlepin/resteasy/filter/StoreFactory.java:183
 #, java-format
 msgid "Unit {0} has been deleted"
-msgstr "La Unidad {0} ha sido borrada"
+msgstr "La unidad {0} ha sido borrada"
 
 #: src/main/java/org/candlepin/auth/OAuth.java:116
 #: src/main/java/org/candlepin/auth/OAuth.java:149
@@ -309,7 +309,7 @@ msgstr "Error al obtener la llave de unidad OAuth"
 # keys
 #: src/main/java/org/candlepin/auth/SSLAuth.java:96
 msgid "Invalid Certificate Type"
-msgstr "Tipo de Certificado inválido"
+msgstr "Tipo de Certificado Inválido"
 
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1422
@@ -357,7 +357,7 @@ msgstr "No pudo validar exportación frente a consumidor especificado: {0}"
 #: src/main/java/org/candlepin/controller/ManifestManager.java:307
 #, java-format
 msgid "Unable to download manifest: {0}"
-msgstr "No fue capaz de descargar manifiesto: {0}"
+msgstr "No es capaz de descargar manifiesto: {0}"
 
 #: src/main/java/org/candlepin/controller/ManifestManager.java:318
 #, java-format
@@ -478,6 +478,9 @@ msgid ""
 "You may have to log out of and back into the  Customer Portal in order to "
 "see the terms."
 msgstr ""
+"Primero debe aceptar los Términos de Red Hat y las condiciones. Visite {0}. "
+"Puede tener que salir y volver al Portal de Cliente con el fin de poder ver "
+"los términos."
 
 #: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:113
 #, java-format
@@ -531,7 +534,7 @@ msgstr "El sistema con UUID {0} es un huésped virtual. No tiene huéspedes."
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:166
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."
-msgstr ""
+msgstr "La unidad con ID «{0}» no pudo ser encontrada."
 
 #: src/main/java/org/candlepin/model/Pool.java:163
 msgid "Other"
@@ -588,12 +591,12 @@ msgstr ""
 "Demasiados conjuntos de contenido para certificado {0}. Un cliente más "
 "reciente puede estar disponible para abordar este problema. Consulte la base "
 "de conocimientos en https://access.redhat.com/knowledge/node/129003 para "
-"obtener más  información."
+"obtener más información."
 
 #: src/main/java/org/candlepin/pki/certs/UeberCertificateGenerator.java:116
 #, java-format
 msgid "Unable to find an owner with key: {0}"
-msgstr ""
+msgstr "No es capaz de encontrar un propietario con la clave: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gguerrer
@@ -639,7 +642,7 @@ msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:53
 msgid "Not supported by a valid subscription."
-msgstr "No está soportado por una suscripción válida"
+msgstr "No está soportado por una suscripción válida."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:55
 #, java-format
@@ -649,27 +652,27 @@ msgstr ""
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:57
 #, java-format
 msgid "Only supports {1} of {2} sockets."
-msgstr ""
+msgstr "Admite solo {1} de {2} zócalos."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:59
 #, java-format
 msgid "Only supports {1} of {2} cores."
-msgstr ""
+msgstr "Admite solo {1} de {2} cores."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:61
 #, java-format
 msgid "Only supports {1}GB of {2}GB of RAM."
-msgstr ""
+msgstr "Solo admite {1}GB de {2}GB de RAM."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:63
 #, java-format
 msgid "Only supports {1} of {2} virtual guests."
-msgstr ""
+msgstr "Solo admite {1} de {2} invitados virtuales."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:65
 #, java-format
 msgid "Only supports {1} of {2} vCPUs."
-msgstr ""
+msgstr "Solo admite {1} de {2} vCPU."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
 msgid ""
@@ -677,16 +680,19 @@ msgid ""
 "guest subscription. For more information, please see https://access.redhat."
 "com/solutions/1592573"
 msgstr ""
+"Adivinación no ha sido informado sobre cualquier hospedaje y está utilizando "
+"suscripción invitada no asignada. Para más información, consulte https://"
+"access.redhat.com/solutions/1592573"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
 msgid "Only supports {1}TB of {2}TB of storage."
-msgstr ""
+msgstr "Solo admite {1}TB de {2}TB de almacenaje."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:73
 #, java-format
 msgid "{0} COVERAGE PROBLEM.  Supports {1} of {2}"
-msgstr ""
+msgstr "PROBLEMA DE COBERTURA {0}.  Admite {1} de {2}"
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:252
 #, java-format
@@ -696,7 +702,7 @@ msgstr "Suscripciones para {0} expirados en: {1}"
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:335
 #, java-format
 msgid "\"{0}\" Should contain name, priority and at least one attribute"
-msgstr ""
+msgstr "\"{0}\" contendría nombre, prioridad y al menos un atributo"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -709,31 +715,38 @@ msgstr "Segundo parámetro debe ser el número de prioridad."
 msgid ""
 "This unit has already had the subscription matching pool ID \"{1}\" attached."
 msgstr ""
+"Esta unidad ya ha tenido la suscripción coincidiendo con el ID de consorcio "
+"\"{1}\" adjuntado."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:151
 #, java-format
 msgid "No subscriptions are available from the pool with ID \"{1}\"."
 msgstr ""
+"No está disponible ninguna suscripción desde el consorcio con el ID \"{1}\"."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:153
 #, java-format
 msgid "Units of this type are not allowed to attach the pool with ID \"{1}\"."
 msgstr ""
+"No están permitidas las unidades de este tipo para adjuntar el consorcio con "
+"el ID \"{1}\"."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:155
 #, java-format
 msgid "Multi-entitlement not supported for pool with ID \"{1}\"."
-msgstr ""
+msgstr "Multi-derecho no admitido para consorcio con ID \"{1}\"."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:157
 #, java-format
 msgid "Pool \"{1}\" is restricted to guests running on host: \"{4}\"."
 msgstr ""
+"Consorcio \"{1}\" está restringido para invitados ejecutando en hospedaje: "
+"\"{4}\"."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:159
 #, java-format
 msgid "Pool \"{1}\" is restricted to a specific consumer."
-msgstr ""
+msgstr "Consorcio \"{1}\" está restringido para un consumidor específico."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:161
 msgid "Pool not available to subscription management applications."
@@ -744,12 +757,12 @@ msgstr ""
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:163
 #, java-format
 msgid "Pool is restricted to virtual guests: \"{1}\"."
-msgstr ""
+msgstr "El consorcio está restringido para invitados virtuales: \"{1}\"."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:165
 #, java-format
 msgid "Pool is restricted to physical systems: \"{1}\"."
-msgstr ""
+msgstr "El consorcio está restringido a sistemas físicos: \"{1}\"."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:167
 #, java-format
@@ -757,17 +770,20 @@ msgid ""
 "Subscription \"{2}\" must be attached using a quantity evenly divisible by "
 "{3}"
 msgstr ""
+"La suscripción \"{2}\" debe estar adjuntada utilizando una cantidad "
+"eventualmente divisible entre {3}"
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:169
 #, java-format
 msgid ""
 "Unit does not support instance based calculation required by pool \"{1}\""
 msgstr ""
+"Unidad no admite instancia ha basado cálculo requerido por consorcio \"{1}\""
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:171
 #, java-format
 msgid "Unit does not support band calculation required by pool \"{1}\""
-msgstr ""
+msgstr "Unidad no admite cálculo de banda requerida por consorcio \"{1}\""
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:173
 #, java-format
@@ -886,7 +902,7 @@ msgstr ""
 #, java-format
 msgid "Pool ID \"{0}\" has already been registered with this activation key"
 msgstr ""
-"El ID de grupo \"{0}\"  que ya está registrado con la llave de activación"
+"El ID de consorcio \"{0}\" ya ha sido registrado con esta llave de activación"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:274
 #, java-format
@@ -898,7 +914,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/OwnerResource.java:444
 #, java-format
 msgid "Pool with id {0} could not be found."
-msgstr "No se encontró el grupo con ID {0}."
+msgstr "No se encontró el consorcio con ID {0}."
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:443
 #, java-format
@@ -975,7 +991,7 @@ msgstr "el ID de cuenta de la nube no pudo ser resuelto"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:353
 msgid "cloud instance ID could not be resolved"
-msgstr "la instancia del ID de nube no pudo ser resuelto"
+msgstr "el ID de instancia de la nube no pudo ser resuelto"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:360
 msgid "cloud provider could not be resolved"
@@ -1031,7 +1047,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:712
 #, java-format
 msgid "Consumer with id {0} could not be found."
-msgstr "No se encontró el usuario con ID {0}."
+msgstr "No se encontró el consumidor con ID {0}."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:732
 msgid "No UUIDs provided."
