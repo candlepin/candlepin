@@ -137,28 +137,34 @@ public class Huffman {
 
     private void makePathForURL(StringTokenizer st, PathNode parent, PathNode endMarker) {
         if (st.hasMoreTokens()) {
-            String childVal = st.nextToken();
-            if (childVal.isEmpty()) {
+            String nextValue = st.nextToken();
+            if (nextValue.isEmpty()) {
                 return;
             }
             boolean isNew = true;
-            for (NodePair child : parent.getChildren()) {
-                if (child.getName().equals(childVal) &&
-                    !child.getConnection().equals(endMarker)) {
-                    makePathForURL(st, child.getConnection(), endMarker);
+            for (NodePair peer : parent.getChildren()) {
+                if (peer.getName().equals(nextValue)) {
                     isNew = false;
+                    if (!peer.getConnection().equals(endMarker)) {
+                        if (!st.hasMoreTokens()) {
+                            peer.getConnection().getChildren().removeAll(peer.getConnection().getChildren());
+                        }
+                        else {
+                            makePathForURL(st, peer.getConnection(), endMarker);
+                        }
+                    }
                 }
             }
             if (isNew) {
                 PathNode next;
                 if (st.hasMoreTokens()) {
                     next = new PathNode(this.pathNodeId++);
-                    parent.addChild(new NodePair(childVal, next));
+                    parent.addChild(new NodePair(nextValue, next));
                     next.addParent(parent);
                     makePathForURL(st, next, endMarker);
                 }
                 else {
-                    parent.addChild(new NodePair(childVal, endMarker));
+                    parent.addChild(new NodePair(nextValue, endMarker));
                     if (!endMarker.getParents().contains(parent)) {
                         endMarker.addParent(parent);
                     }
