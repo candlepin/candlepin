@@ -176,6 +176,106 @@ public class HuffmanTest {
     }
 
     @Test
+    public void testPathTreeShouldNotContainSubPathIfBasePathIsPresentFirst() {
+        List<org.candlepin.model.dto.Content> contentList = new ArrayList<>();
+
+        org.candlepin.model.dto.Content contentA = new org.candlepin.model.dto.Content();
+        contentA.setPath("/AAA");
+        org.candlepin.model.dto.Content contentB = new org.candlepin.model.dto.Content();
+        contentB.setPath("/AAA/111");
+
+        contentList.add(contentA);
+        contentList.add(contentB);
+
+        PathNode location = this.huffman.makePathTree(contentList, new PathNode(1));
+
+        assertEquals(1, location.getChildren().size());
+        assertEquals("AAA", location.getChildren().get(0).getName());
+        assertEquals(0, location.getChildren().get(0).getConnection().getChildren().size());
+    }
+
+    @Test
+    public void testPathTreeShouldNotContainSubPathIfBasePathIsPresentAfterIt() {
+        List<org.candlepin.model.dto.Content> contentList = new ArrayList<>();
+
+        org.candlepin.model.dto.Content contentA = new org.candlepin.model.dto.Content();
+        contentA.setPath("/AAA/111");
+        org.candlepin.model.dto.Content contentB = new org.candlepin.model.dto.Content();
+        contentB.setPath("/AAA");
+
+        contentList.add(contentA);
+        contentList.add(contentB);
+
+        PathNode location = this.huffman.makePathTree(contentList, new PathNode(1));
+
+        assertEquals(1, location.getChildren().size());
+        assertEquals("AAA", location.getChildren().get(0).getName());
+        assertEquals(0, location.getChildren().get(0).getConnection().getChildren().size());
+    }
+
+    @Test
+    public void testPathTreeShouldContainBothSpecificPathsIfTheyShareABasePath() {
+        List<org.candlepin.model.dto.Content> contentList = new ArrayList<>();
+
+        org.candlepin.model.dto.Content contentA = new org.candlepin.model.dto.Content();
+        contentA.setPath("/AAA/111");
+        org.candlepin.model.dto.Content contentB = new org.candlepin.model.dto.Content();
+        contentB.setPath("/AAA/222");
+
+        contentList.add(contentA);
+        contentList.add(contentB);
+
+        PathNode location = this.huffman.makePathTree(contentList, new PathNode(1));
+
+        assertEquals(1, location.getChildren().size());
+        assertEquals("AAA", location.getChildren().get(0).getName());
+        assertEquals("111", location.getChildren().get(0).getConnection().getChildren().get(0).getName());
+        assertEquals("222", location.getChildren().get(0).getConnection().getChildren().get(1).getName());
+    }
+
+    @Test
+    public void testPathTreeShouldNotContainMultipleSpecificPathsIfBasePathIsPresent() {
+        List<org.candlepin.model.dto.Content> contentList = new ArrayList<>();
+
+        org.candlepin.model.dto.Content contentA = new org.candlepin.model.dto.Content();
+        contentA.setPath("/AAA/111");
+        org.candlepin.model.dto.Content contentB = new org.candlepin.model.dto.Content();
+        contentB.setPath("/AAA/222");
+        org.candlepin.model.dto.Content contentC = new org.candlepin.model.dto.Content();
+        contentC.setPath("/AAA");
+
+        contentList.add(contentA);
+        contentList.add(contentB);
+        contentList.add(contentC);
+
+        PathNode location = this.huffman.makePathTree(contentList, new PathNode(1));
+
+        assertEquals(1, location.getChildren().size());
+        assertEquals("AAA", location.getChildren().get(0).getName());
+        assertEquals(0, location.getChildren().get(0).getConnection().getChildren().size());
+    }
+
+    @Test
+    public void testPathTreeShouldIgnoreDuplicatePaths() {
+        List<org.candlepin.model.dto.Content> contentList = new ArrayList<>();
+
+        org.candlepin.model.dto.Content contentA = new org.candlepin.model.dto.Content();
+        contentA.setPath("/AAA/111");
+        org.candlepin.model.dto.Content contentB = new org.candlepin.model.dto.Content();
+        contentB.setPath("/AAA/111");
+
+        contentList.add(contentA);
+        contentList.add(contentB);
+
+        PathNode location = this.huffman.makePathTree(contentList, new PathNode(1));
+
+        assertEquals(1, location.getChildren().size());
+        assertEquals("AAA", location.getChildren().get(0).getName());
+        assertEquals(1, location.getChildren().get(0).getConnection().getChildren().size());
+        assertEquals("111", location.getChildren().get(0).getConnection().getChildren().get(0).getName());
+    }
+
+    @Test
     public void testPathDictionary() {
         List<org.candlepin.model.dto.Content> contentList = new ArrayList<>();
         org.candlepin.model.dto.Content cont;
