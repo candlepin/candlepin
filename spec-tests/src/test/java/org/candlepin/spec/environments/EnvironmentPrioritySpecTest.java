@@ -27,9 +27,11 @@ import org.candlepin.dto.api.client.v1.EnvironmentDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
+import org.candlepin.resource.client.v1.ConsumerApi;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
+import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.Environments;
@@ -37,6 +39,7 @@ import org.candlepin.spec.bootstrap.data.builder.Facts;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
+import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -542,6 +545,83 @@ public class EnvironmentPrioritySpecTest {
             .doesNotHaveContentRepoType(content2)
             .doesNotHaveContentRepoType(content3)
             .doesNotHaveContentRepoType(content4);
+    }
+
+    /*
+     * The 'Authorized Content URLs' section in SCA certs should only contain the URL from the
+     * environment with the most base URL and not more specific URLs, given 2 or more environments
+     * where one environment's name is a sub-path of the other environment's name. E.g.:
+     * Given environments named 'Env1' and 'Env1/A' in OrgA (regardless of their priority order),
+     * only '/OrgA/Env1' should be contained in 'Authorized Content URLs'.
+     */
+    @Test
+    public void shouldNotContainEnvironmentSubURLIfAnotherEnvironmentHasBaseUrlInSCACert() {
+        OwnerDTO owner1 = admin.owners().createOwner(Owners.randomSca());
+        ApiClient owner1Client = ApiClients.basic(UserUtil.createAdminUser(admin, owner1));
+
+        EnvironmentDTO env1 = owner1Client.owners()
+            .createEnvironment(owner1.getKey(), Environments.random().name("Env1"));
+        EnvironmentDTO env2 = owner1Client.owners()
+            .createEnvironment(owner1.getKey(), Environments.random().name("Env1/A"));
+        ContentDTO content1 = owner1Client.ownerContent()
+            .createContent(owner1.getKey(), Contents.random().arches("x86_64"));
+        ContentDTO content2 = owner1Client.ownerContent()
+            .createContent(owner1.getKey(), Contents.random().arches("x86_64"));
+
+        ProductDTO product = owner1Client.ownerProducts()
+            .createProduct(owner1.getKey(), Products.randomEng());
+        owner1Client.ownerProducts()
+            .addContentToProduct(owner1.getKey(), product.getId(), content1.getId(), true);
+        owner1Client.ownerProducts()
+            .addContentToProduct(owner1.getKey(), product.getId(), content2.getId(), true);
+
+        AsyncJobStatusDTO job = owner1Client.environments()
+            .promoteContent(env1.getId(), List.of(toPromote(content1)), null);
+        owner1Client.jobs().waitForJob(job);
+        AsyncJobStatusDTO job2 = owner1Client.environments()
+            .promoteContent(env2.getId(), List.of(toPromote(content2)), null);
+        owner1Client.jobs().waitForJob(job2);
+
+        owner1Client.owners().createPool(owner1.getKey(), Pools.random(product));
+
+        ConsumerDTO consumer = owner1Client.consumers().createConsumer(Consumers.random(owner1)
+            .putFactsItem(Facts.CertificateVersion.key(), "3.4")
+            .environments(Arrays.asList(env1, env2)));
+        assertThat(consumer.getEnvironments()).hasSize(2);
+        assertThat(consumer.getEnvironments().get(0).getName()).isEqualTo(env1.getName());
+        assertThat(consumer.getEnvironments().get(1).getName()).isEqualTo(env2.getName());
+
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        ConsumerApi consumerApi = new ConsumerApi(consumerClient.getApiClient());
+
+        Object export = consumerApi.exportCertificates(consumer.getUuid(), null);
+        List<String> payloadCerts = CertificateUtil.extractEncodedCertsFromPayload(export);
+        assertThat(payloadCerts).hasSize(1);
+        assertThatCert(X509Cert.from(payloadCerts.get(0)))
+            .extractingEntitlementPayload()
+            .containsOnly(
+                contentUrl(owner1.getKey(), env1)
+            );
+
+        // Switch order of the environments and check the same single path is included in the cert
+        consumerApi.updateConsumer(consumer.getUuid(), consumer.environments(List.of(env2, env1)));
+        consumer = consumerApi.getConsumer(consumer.getUuid());
+        assertThat(consumer.getEnvironments()).hasSize(2);
+        assertThat(consumer.getEnvironments().get(0).getName()).isEqualTo(env2.getName());
+        assertThat(consumer.getEnvironments().get(1).getName()).isEqualTo(env1.getName());
+
+        export = consumerApi.exportCertificates(consumer.getUuid(), null);
+        payloadCerts = CertificateUtil.extractEncodedCertsFromPayload(export);
+        assertThat(payloadCerts).hasSize(1);
+        assertThatCert(X509Cert.from(payloadCerts.get(0)))
+            .extractingEntitlementPayload()
+            .containsOnly(
+                contentUrl(owner1.getKey(), env1)
+            );
+    }
+
+    private String contentUrl(String ownerKey, EnvironmentDTO env) {
+        return "/" + ownerKey + "/" + env.getName();
     }
 
     private ConsumerDTO createConsumer(EnvironmentDTO... environments) {

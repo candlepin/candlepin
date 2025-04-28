@@ -92,6 +92,32 @@ public final class CertificateUtil {
     }
 
     /**
+     * Extracts the encoded and compressed bodies of the entitlement certificates.
+     *
+     * @param jsonPayload
+     *  the json object that contains the encoded and compressed entitlement certificates
+     *
+     * @return
+     *  a list entitlement certificates in string format (still encoded and compressed)
+     */
+    public static List<String> extractEncodedCertsFromPayload(Object jsonPayload) {
+        if (jsonPayload == null) {
+            return new ArrayList<>();
+        }
+
+        String json = String.valueOf(jsonPayload);
+        if (json == null || json.isEmpty() || json.isBlank()) {
+            return new ArrayList<>();
+        }
+
+        List<String> certs = new ArrayList<>();
+        ((List<Map<String, String>>) jsonPayload)
+            .forEach(entry -> certs.add(entry.get("cert")));
+
+        return certs;
+    }
+
+    /**
      * Decodes and uncompresses a certificate body into a {@link JsonNode}.
      * Note that this will fail if you forgot to make your consumer V3 capable
      *
