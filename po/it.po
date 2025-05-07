@@ -2,13 +2,15 @@
 # Pino Toscano <toscano.pino@tiscali.it>, 2023.
 # John Sefler <jsefler@redhat.com>, 2023.
 # Salvatore Cocuzza <info@salvatorecocuzza.it>, 2025.
+# Nikos Moumoulidis <nmoumoul@redhat.com>, 2025.
+# Stepan Bakaj <sbakaj@redhat.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-01-25 07:07+0000\n"
-"PO-Revision-Date: 2025-01-03 20:38+0000\n"
-"Last-Translator: Salvatore Cocuzza <info@salvatorecocuzza.it>\n"
+"PO-Revision-Date: 2025-05-07 14:53+0000\n"
+"Last-Translator: Stepan Bakaj <sbakaj@redhat.com>\n"
 "Language-Team: Italian <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-3-hotfix/it/>\n"
 "Language: it\n"
@@ -16,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.9.2\n"
+"X-Generator: Weblate 5.11.3\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -947,7 +949,7 @@ msgstr "L''utente \"{0}\" non ha ruoli per l''organizzazione \"{1}\""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1334
 #, java-format
 msgid "User \"{0}\" has already registered a personal consumer"
-msgstr "Utente \"{0}\" ha già registrato un consumatore personale"
+msgstr "L''utente \"{0}\" ha già registrato un consumatore personale"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1355
 msgid "Client is not authorized to register with any organization"
@@ -1140,7 +1142,7 @@ msgstr "Record di eliminazione per hypervisor \"{0}\" non trovato."
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:100
 #, java-format
 msgid "Unit type with id \"{0}\" could not be found."
-msgstr "Impossibile trovare il tipo di unità con ID \"{0}\"."
+msgstr "Non è stato possibile trovare il tipo di unità con ID \"{0}\"."
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:120
 #, java-format
@@ -1155,7 +1157,7 @@ msgstr "Impossibile trovare il tipo di unità con etichetta {0}."
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:148
 #, java-format
 msgid "Unit type with id {0} could not be found."
-msgstr "Impossibile trovare il tipo di unità con id {0}."
+msgstr "Non è stato possibile trovare il tipo di unità con ID {0}."
 
 #: src/main/java/org/candlepin/resource/ContentResource.java:54
 #, java-format
@@ -1721,7 +1723,7 @@ msgstr "non è stato possibile leggere il file delle regole"
 # keys, author fvalen
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:89
 msgid "Standalone candlepin does not support redeeming a subscription."
-msgstr "Candlepin standalone non supporta il redimere di una sottoscrizione"
+msgstr "Candlepin standalone non supporta il redimere di una sottoscrizione."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
