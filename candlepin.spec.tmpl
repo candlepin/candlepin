@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.21
+Version: 4.4.22
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,14 @@ fi
 
 #raw
 %changelog
+* Wed May 14 2025 candlepin-bot 4.4.22-1
+- Add new translations using Weblate (noreply@weblate.org)
+- CANDLEPIN-1009: Fix Content URLs in SCA cert for Multi Env
+  (nmoumoul@redhat.com)
+- CANDLEPIN-943: Removed JIRA target check from forks PRs (sbakaj@redhat.com)
+- CANDLEPIN-1003: Fixed SAST scan issues (sbakaj@redhat.com)
+- Updated hard coded unit test date (joshmalbrecht@gmail.com)
+
 * Wed Feb 05 2025 candlepin-bot 4.4.21-1
 - Add new translations using Weblate (noreply@weblate.org)
 - CANDLEPIN-995: Updated the entity layering migration's tiebreakers
