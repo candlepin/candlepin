@@ -2,7 +2,7 @@
 artemis = "2.40.0"
 guice = "6.0.0"
 hibernate = "5.6.15.Final"
-hibernate-validator = "6.2.5.Final"
+hibernate-validator = "9.0.0.Final"
 jackson = "2.19.0"
 jaxb = "4.0.5"
 junit = "5.12.2"
