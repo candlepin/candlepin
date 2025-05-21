@@ -1158,6 +1158,74 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testListOwnerPoolsWithPagingWithOrderByNotSpecified() {
+        int numberOfPools = 9;
+        int pageSize = 3;
+
+        List<String> expectedPoolIds = new ArrayList<>();
+        for (int i = 0; i < numberOfPools; i++) {
+            Product product = this.createProduct();
+            Pool pool = poolCurator.create(TestUtil.createPool(owner, product));
+            expectedPoolIds.add(pool.getId());
+        }
+
+        Collections.sort(expectedPoolIds);
+
+        for (int page = 1; page <= numberOfPools / pageSize; page++) {
+            ResteasyContext.pushContext(PageRequest.class,
+                new PageRequest()
+                    .setPage(page)
+                    .setPerPage(pageSize)
+                    .setOrder(Order.ASCENDING));
+
+            Stream<PoolDTO> actual = ownerResource.listOwnerPools(
+                owner.getKey(), null, null, null, null, true, null, null,
+                new ArrayList<>(), false, false, null, null, page, pageSize, null, "asc");
+
+            int pageIndex = (page - 1) * pageSize;
+
+            assertThat(actual)
+                .isNotNull()
+                .extracting(PoolDTO::getId)
+                .containsExactlyElementsOf(expectedPoolIds.subList(pageIndex, pageIndex + pageSize));
+        }
+    }
+
+    @Test
+    public void testListOwnerPoolsWithPagingWithOrderNotSpecified() {
+        int numberOfPools = 9;
+        int pageSize = 3;
+
+        List<String> expectedPoolIds = new ArrayList<>();
+        for (int i = 0; i < numberOfPools; i++) {
+            Product product = this.createProduct();
+            Pool pool = poolCurator.create(TestUtil.createPool(owner, product));
+            expectedPoolIds.add(pool.getId());
+        }
+
+        Collections.sort(expectedPoolIds);
+
+        for (int page = 1; page <= numberOfPools / pageSize; page++) {
+            ResteasyContext.pushContext(PageRequest.class,
+                new PageRequest()
+                    .setPage(page)
+                    .setPerPage(pageSize)
+                    .setSortBy("id"));
+
+            Stream<PoolDTO> actual = ownerResource.listOwnerPools(
+                owner.getKey(), null, null, null, null, true, null, null,
+                new ArrayList<>(), false, false, null, null, page, pageSize, "id", null);
+
+            int pageIndex = (page - 1) * pageSize;
+
+            assertThat(actual)
+                .isNotNull()
+                .extracting(PoolDTO::getId)
+                .containsExactlyElementsOf(expectedPoolIds.subList(pageIndex, pageIndex + pageSize));
+        }
+    }
+
+    @Test
     public void testListOwnerPoolsWithInvalidOrderKeyException() {
         ResteasyContext.pushContext(PageRequest.class,
             new PageRequest()
