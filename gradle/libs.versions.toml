@@ -99,5 +99,5 @@ slf4j-log4j = { module = "org.slf4j:log4j-over-slf4j", version.ref = "slf4j" }
 smallrye-config = { module = "io.smallrye.config:smallrye-config", version = "3.12.4" }
 spotbugs = { module = "com.github.spotbugs:spotbugs-annotations", version = "4.9.3" }
 tomcat-annotations = { module = "org.apache.tomcat:tomcat-annotations-api", version = "11.0.7" }
-swagger = { module = "io.swagger:swagger-annotations", version = "1.6.15" }
+swagger = { module = "io.swagger:swagger-annotations", version = "1.6.16" }
 test-logger-plugin = { module = "com.adarshr:gradle-test-logger-plugin", version.ref = "test-logger" }
