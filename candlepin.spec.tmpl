@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.6.1
+Version: 4.6.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,40 @@ fi
 
 #raw
 %changelog
+* Thu May 22 2025 candlepin-bot 4.6.2-1
+- Add new translations using Weblate (noreply@weblate.org)
+- CHAINSAW-481: IAE when sort_by query parameter not specified
+  (joshmalbrecht@gmail.com)
+- Bump org.sonarqube from 6.1.0.5360 to 6.2.0.5505
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 11.0.6 to 11.0.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump nebula.lint from 20.5.7 to 20.5.8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.23.0 to 10.23.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Update Gradle Wrapper from 8.13 to 8.14 (gradle-update-robot@regolo.cc)
+- Bump jackson from 2.18.3 to 2.19.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.google.code.gson:gson from 2.13.0 to 2.13.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.commons:commons-collections4 from 4.4 to 4.5.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump nebula.lint from 20.5.6 to 20.5.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1014: Fix Content URLs in SCA cert for Multi Env
+  (nmoumoul@redhat.com)
+- Bump info.picocli:picocli from 4.7.6 to 4.7.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump commons-io:commons-io from 2.18.0 to 2.19.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.google.code.gson:gson from 2.12.1 to 2.13.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.junit:junit-bom from 5.12.1 to 5.12.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+
 * Thu Apr 10 2025 candlepin-bot 4.6.1-1
 - Add new translations using Weblate (noreply@weblate.org)
 - Bump org.apache.tomcat:tomcat-annotations-api from 11.0.5 to 11.0.6
