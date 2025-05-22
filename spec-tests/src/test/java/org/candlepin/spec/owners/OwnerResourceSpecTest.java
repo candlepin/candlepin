@@ -435,6 +435,51 @@ public class OwnerResourceSpecTest {
                 .containsExactlyElementsOf(expectedPoolIds);
         }
 
+        @Test
+        public void shouldPageOwnersPoolsWithOrderByNotSpecified() {
+            int pageSize = 5;
+            List<String> actualPoolsIds = new ArrayList<>();
+            for (int pageIndex = 1; pageIndex * pageSize <= numberOfPools; pageIndex++) {
+                Paging paging = new Paging(pageIndex, pageSize, null, "asc");
+
+                List<String> poolIds = owners.listOwnerPools(ownerKey, paging).stream()
+                    .map(PoolDTO::getId)
+                    .collect(Collectors.toList());
+
+                actualPoolsIds.addAll(poolIds);
+            }
+
+            List<String> expectedPoolIds = pools.stream()
+                .map(PoolDTO::getId)
+                .toList();
+
+            assertThat(actualPoolsIds)
+                .containsExactlyElementsOf(expectedPoolIds);
+        }
+
+        @Test
+        public void shouldPageOwnersPoolsInDescendingOrderWithOrderNotSpecified() {
+            int pageSize = 5;
+            List<String> actualPoolsIds = new ArrayList<>();
+            for (int pageIndex = 1; pageIndex * pageSize <= numberOfPools; pageIndex++) {
+                Paging paging = new Paging(pageIndex, pageSize, "id", null);
+
+                List<String> poolIds = owners.listOwnerPools(ownerKey, paging).stream()
+                    .map(PoolDTO::getId)
+                    .collect(Collectors.toList());
+
+                actualPoolsIds.addAll(poolIds);
+            }
+
+            List<String> expectedPoolIds = pools.stream()
+                .sorted(comparatorMap.get("id").reversed())
+                .map(PoolDTO::getId)
+                .toList();
+
+            assertThat(actualPoolsIds)
+                .containsExactlyElementsOf(expectedPoolIds);
+        }
+
         @ParameterizedTest
         @ValueSource(ints = { 0, -1, -100 })
         public void shouldFailWithInvalidPage(int page) {

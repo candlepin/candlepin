@@ -327,6 +327,84 @@ public class PoolResourceTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testListPoolsWithPagingWithOrderByNotSpecified() {
+        int numberOfPools = 9;
+        int pageSize = 3;
+
+        Owner owner = createOwner();
+
+        doReturn(setupPrincipal(new ConsumerPrincipal(passConsumer, owner)))
+            .when(principalProvider)
+            .get();
+
+        List<String> expectedPoolIds = new ArrayList<>();
+        for (int i = 0; i < numberOfPools; i++) {
+            Product product = this.createProduct();
+            Pool pool = poolCurator.create(TestUtil.createPool(owner, product));
+            expectedPoolIds.add(pool.getId());
+        }
+
+        Collections.sort(expectedPoolIds);
+
+        for (int page = 1; page <= numberOfPools / pageSize; page++) {
+            ResteasyContext.pushContext(PageRequest.class,
+                new PageRequest()
+                    .setPage(page)
+                    .setPerPage(pageSize)
+                    .setOrder(Order.ASCENDING));
+
+            List<PoolDTO> actual = poolResource
+                .listPools(owner.getId(), null, null, false, null, page, pageSize, "asc", null);
+
+            int pageIndex = (page - 1) * pageSize;
+
+            assertThat(actual)
+                .isNotNull()
+                .extracting(PoolDTO::getId)
+                .containsExactlyElementsOf(expectedPoolIds.subList(pageIndex, pageIndex + pageSize));
+        }
+    }
+
+    @Test
+    public void testListPoolsWithPagingWithOrderNotSpecified() {
+        int numberOfPools = 9;
+        int pageSize = 3;
+
+        Owner owner = createOwner();
+
+        doReturn(setupPrincipal(new ConsumerPrincipal(passConsumer, owner)))
+            .when(principalProvider)
+            .get();
+
+        List<String> expectedPoolIds = new ArrayList<>();
+        for (int i = 0; i < numberOfPools; i++) {
+            Product product = this.createProduct();
+            Pool pool = poolCurator.create(TestUtil.createPool(owner, product));
+            expectedPoolIds.add(pool.getId());
+        }
+
+        Collections.sort(expectedPoolIds);
+
+        for (int page = 1; page <= numberOfPools / pageSize; page++) {
+            ResteasyContext.pushContext(PageRequest.class,
+                new PageRequest()
+                    .setPage(page)
+                    .setPerPage(pageSize)
+                    .setSortBy("id"));
+
+            List<PoolDTO> actual = poolResource
+                .listPools(owner.getId(), null, null, false, null, page, pageSize, null, "id");
+
+            int pageIndex = (page - 1) * pageSize;
+
+            assertThat(actual)
+                .isNotNull()
+                .extracting(PoolDTO::getId)
+                .containsExactlyElementsOf(expectedPoolIds.subList(pageIndex, pageIndex + pageSize));
+        }
+    }
+
+    @Test
     public void testConsumerCannotListPoolsForAnotherOwnersConsumer() {
         securityInterceptor.enable();
         when(this.principalProvider.get()).thenReturn(

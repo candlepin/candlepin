@@ -175,8 +175,10 @@ public class PoolResource implements PoolsApi {
             qualifier.setOffset(pageRequest.getPage())
                 .setLimit(pageRequest.getPerPage());
 
-            boolean reverse = pageRequest.getOrder() == PageRequest.DEFAULT_ORDER;
-            qualifier.addOrder(pageRequest.getSortBy(), reverse);
+            if (pageRequest.getSortBy() != null) {
+                boolean reverse = pageRequest.getOrder() == PageRequest.DEFAULT_ORDER;
+                qualifier.addOrder(pageRequest.getSortBy(), reverse);
+            }
         }
 
         Page<List<Pool>> pageResponse = poolManager.listAvailableEntitlementPools(qualifier);
