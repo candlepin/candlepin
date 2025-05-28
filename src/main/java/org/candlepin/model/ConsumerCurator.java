@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -98,6 +98,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         private Collection<String> hypervisorIds;
         private Map<String, Collection<String>> facts;
         private String environmentId;
+        private Collection<String> poolContractNumbers;
+        private Collection<String> productIds;
+        private Collection<String> subscriptionIds;
 
         public ConsumerQueryArguments setOwner(Owner owner) {
             this.owner = owner;
@@ -183,6 +186,105 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         public String getEnvironmentId() {
             return this.environmentId;
         }
+
+        /**
+         * Sets the pool contract numbers to the provided collection and overwrites any existing values.
+         *
+         * @param poolContractNumbers
+         *  the pool contract numbers to set
+         *
+         * @return this instance
+         */
+        public ConsumerQueryArguments setPoolContractNumbers(Collection<String> poolContractNumbers) {
+            this.poolContractNumbers = poolContractNumbers;
+            return this;
+        }
+
+        /**
+         * Sets the pool contract numbers to the provided values and overwrites any existing values.
+         *
+         * @param poolContractNumbers
+         *  the pool contract numbers to set
+         *
+         * @return this instance
+         */
+        public ConsumerQueryArguments setPoolContractNumbers(String... poolContractNumbers) {
+            return this.setPoolContractNumbers(poolContractNumbers != null ?
+                Arrays.asList(poolContractNumbers) :
+                null);
+        }
+
+        /**
+         * @return the pool contract numbers
+         */
+        public Collection<String> getPoolContractNumbers() {
+            return this.poolContractNumbers;
+        }
+
+        /**
+         * Sets the product IDs to the provided collection and overwrites any existing values.
+         *
+         * @param productIds
+         *  the product IDs to set
+         *
+         * @return this instance
+         */
+        public ConsumerQueryArguments setProductIds(Collection<String> productIds) {
+            this.productIds = productIds;
+            return this;
+        }
+
+        /**
+         * Sets the product IDs to the provided values and overwrites any existing values.
+         *
+         * @param productIds
+         *  the product IDs to set
+         *
+         * @return this instance
+         */
+        public ConsumerQueryArguments setProductIds(String... productIds) {
+            return this.setProductIds(productIds != null ? Arrays.asList(productIds) : null);
+        }
+
+        /**
+         * @return the product IDs
+         */
+        public Collection<String> getProductIds() {
+            return this.productIds;
+        }
+
+        /**
+         * Sets the subscription IDs to the provided collection and overwrites any existing values.
+         *
+         * @param subscriptionIds
+         *  the subscription IDs to set
+         *
+         * @return this instance
+         */
+        public ConsumerQueryArguments setSubscriptionIds(Collection<String> subscriptionIds) {
+            this.subscriptionIds = subscriptionIds;
+            return this;
+        }
+
+        /**
+         * Sets the subscription IDs to the provided values and overwrites any existing values.
+         *
+         * @param subscriptionIds
+         *  the subscription IDs to set
+         *
+         * @return this instance
+         */
+        public ConsumerQueryArguments setSubscriptionIds(String... subscriptionIds) {
+            return this.setSubscriptionIds(subscriptionIds != null ? Arrays.asList(subscriptionIds) : null);
+        }
+
+        /**
+         * @return the subscription IDs
+         */
+        public Collection<String> getSubscriptionIds() {
+            return this.subscriptionIds;
+        }
+
     }
 
     private final EntitlementCurator entitlementCurator;
@@ -1486,6 +1588,45 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 predicates.add(
                     criteriaBuilder.equal(environmentIdsJoin.value(), queryArgs.getEnvironmentId()));
             }
+
+            Join<Consumer, Entitlement> entitlementsJoin = null;
+            Join<Entitlement, Pool> poolsJoin = null;
+
+            if (this.checkQueryArgumentCollection(queryArgs.getPoolContractNumbers())) {
+                entitlementsJoin = root.join(Consumer_.entitlements);
+                poolsJoin = entitlementsJoin.join(Entitlement_.pool);
+
+                predicates.add(poolsJoin.get(Pool_.CONTRACT_NUMBER).in(queryArgs.getPoolContractNumbers()));
+            }
+
+            if (this.checkQueryArgumentCollection(queryArgs.getProductIds())) {
+                if (entitlementsJoin == null) {
+                    entitlementsJoin = root.join(Consumer_.entitlements);
+                }
+
+                if (poolsJoin == null) {
+                    poolsJoin = entitlementsJoin.join(Entitlement_.pool);
+                }
+
+                Join<Pool, Product> productsJoin = poolsJoin.join(Pool_.product);
+                predicates.add(productsJoin.get(Product_.ID).in(queryArgs.getProductIds()));
+            }
+
+            if (this.checkQueryArgumentCollection(queryArgs.getSubscriptionIds())) {
+                if (entitlementsJoin == null) {
+                    entitlementsJoin = root.join(Consumer_.entitlements);
+                }
+
+                if (poolsJoin == null) {
+                    poolsJoin = entitlementsJoin.join(Entitlement_.pool);
+                }
+
+                Join<Pool, SourceSubscription> sourceSubsJoin = poolsJoin.join(Pool_.sourceSubscription);
+                predicates.add(sourceSubsJoin
+                    .get(SourceSubscription_.SUBSCRIPTION_ID)
+                    .in(queryArgs.getSubscriptionIds()));
+            }
+
         }
 
         return predicates;
