@@ -5242,6 +5242,27 @@ paths:
             items:
               type: string
               format: key:value
+        - name: pool_contract_number
+          in: query
+          description: The pool contract number
+          schema:
+            type: array
+            items:
+              type: string
+        - name: product_id
+          in: query
+          description: The product ID
+          schema:
+            type: array
+            items:
+              type: string
+        - name: subscription_id
+          in: query
+          description: The subscription ID
+          schema:
+            type: array
+            items:
+              type: string
         - $ref: "#/components/parameters/paging_page"
         - $ref: "#/components/parameters/paging_per_page"
         - $ref: "#/components/parameters/paging_order"

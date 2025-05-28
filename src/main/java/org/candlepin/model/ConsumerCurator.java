@@ -98,6 +98,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         private Collection<String> hypervisorIds;
         private Map<String, Collection<String>> facts;
         private String environmentId;
+        private Collection<String> poolContractNumbers;
+        private Collection<String> productIds;
+        private Collection<String> subscriptionIds;
 
         public ConsumerQueryArguments setOwner(Owner owner) {
             this.owner = owner;
@@ -183,6 +186,40 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         public String getEnvironmentId() {
             return this.environmentId;
         }
+
+        // TODO: Java Doc
+        public ConsumerQueryArguments setPoolContractNumbers(Collection<String> poolContractNumbers) {
+            this.poolContractNumbers = poolContractNumbers;
+            return this;
+        }
+
+        // TODO: Java Doc
+        public Collection<String> getPoolContractNumbers() {
+            return this.poolContractNumbers;
+        }
+
+        // TODO: Java Doc
+        public ConsumerQueryArguments setProductIds(Collection<String> productIds) {
+            this.productIds = productIds;
+            return this;
+        }
+
+        // TODO: Java Doc
+        public Collection<String> getProductIds() {
+            return this.productIds;
+        }
+
+        // TODO: Java Doc
+        public ConsumerQueryArguments setSubscriptionIds(Collection<String> subscriptionIds) {
+            this.subscriptionIds = subscriptionIds;
+            return this;
+        }
+
+        // TODO: Java Doc
+        public Collection<String> getSubscriptionIds() {
+            return this.subscriptionIds;
+        }
+
     }
 
     private final EntitlementCurator entitlementCurator;
