@@ -298,14 +298,14 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
                 createdAnonConsumer = anonymousCloudConsumerCurator.create(createdAnonConsumer);
                 anonymousConsumerUuid = createdAnonConsumer.getUuid();
 
-                log.info("Anonymous consumer created for instance {} using cloud account {} {}",
-                    authResult.getCloudInstanceId(), authResult.getCloudProvider(),
+                log.info("Anonymous consumer {} created for instance {} using cloud account {} {}",
+                    anonymousConsumerUuid, authResult.getCloudInstanceId(), authResult.getCloudProvider(),
                     authResult.getCloudAccountId());
             }
             else {
                 anonymousConsumerUuid = existingAnonConsumer.getUuid();
-                log.info("Anonymous consumer already exists for instance {} using cloud account {} {}",
-                    authResult.getCloudInstanceId(), authResult.getCloudProvider(),
+                log.info("Anonymous consumer {} already exists for instance {} using cloud account {} {}",
+                    anonymousConsumerUuid, authResult.getCloudInstanceId(), authResult.getCloudProvider(),
                     authResult.getCloudAccountId());
             }
 

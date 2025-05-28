@@ -147,7 +147,7 @@ public class AnonymousCloudRegistrationAuth implements AuthProvider {
             return null;
         }
 
-        log.debug("Principal created for anonymous cloud consumer UUID {}", consumerUuid);
+        log.info("Principal created for anonymous cloud consumer UUID {}", consumerUuid);
         return new AnonymousCloudConsumerPrincipal(consumer);
     }
 
