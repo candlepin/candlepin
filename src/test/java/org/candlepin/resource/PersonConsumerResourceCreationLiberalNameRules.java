@@ -39,7 +39,7 @@ import org.mockito.quality.Strictness;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class PersonConsumerResourceCreationLiberalNameRules extends
-    ConsumerResourceCreationLiberalNameRules {
+    ConsumerResourceCreationTest {
 
     @Override
     public ConsumerType initConsumerType() {
