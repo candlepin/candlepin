@@ -387,84 +387,90 @@ public class ConsumerResourceCreationTest {
     }
 
     @Test
-    public void acceptedConsumerName() {
+    public void allowNameWithUnderscore() {
         assertNotNull(createConsumer("test_user"));
     }
 
     @Test
-    public void camelCaseName() {
+    public void allowNameWithCamelCase() {
         assertNotNull(createConsumer("ConsumerTest32953"));
     }
 
     @Test
-    public void startsWithUnderscore() {
+    public void allowNameThatStartsWithUnderscore() {
         assertNotNull(createConsumer("__init__"));
     }
 
     @Test
-    public void startsWithDash() {
+    public void allowNameThatStartsWithDash() {
         assertNotNull(createConsumer("-dash"));
     }
 
     @Test
-    public void containsNumbers() {
+    public void allowNameThatContainsNumbers() {
         assertNotNull(createConsumer("testmachine99"));
     }
 
     @Test
-    public void startsWithNumbers() {
+    public void allowNameThatStartsWithNumbers() {
         assertNotNull(createConsumer("001test7"));
     }
 
     @Test
-    public void containsPeriods() {
+    public void allowNameThatContainsPeriods() {
         assertNotNull(createConsumer("test-system.resource.net"));
     }
 
     @Test
-    public void containsUserServiceChars() {
+    public void allowNameThatContainsUserServiceChars() {
         assertNotNull(createConsumer("{bob}'s_b!g_#boi.`?uestlove!x"));
     }
 
     // These fail with the default consumer name pattern
     @Test
-    public void containsMultibyteKorean() {
+    public void disallowNameThatContainsMultibyteKorean() {
         assertThrows(BadRequestException.class,
             () -> createConsumer("서브스크립션 "));
     }
 
     @Test
-    public void containsMultibyteOriya() {
+    public void disallowNameThatContainsMultibyteOriya() {
         assertThrows(BadRequestException.class,
             () -> createConsumer("ପରିବେଶ"));
     }
 
     @Test
-    public void startsWithPound() {
+    public void disallowNameThatStartsWithPound() {
         assertThrows(BadRequestException.class,
             () -> createConsumer("#pound"));
     }
 
     @Test
-    public void emptyConsumerName() {
+    public void disallowEmptyConsumerName() {
         assertThrows(BadRequestException.class,
             () -> createConsumer(""));
     }
 
     @Test
-    public void nullConsumerName() {
+    public void disallowNameThatContainsWhitespace() {
+        assertThrows(BadRequestException.class,
+            () -> createConsumer("abc123 456"));
+    }
+
+    @Test
+    public void disallowNullConsumerName() {
         assertThrows(BadRequestException.class,
             () -> createConsumer(null));
     }
 
     @Test
-    public void startsWithBadCharacter() {
+    public void disallowNameThatStartsWithBadCharacter() {
         assertThrows(BadRequestException.class,
-            () -> createConsumer("#foo"));
+            () -> createConsumer("<foo"));
     }
 
     @Test
-    public void containsBadCharacter() {
+    public void disallowNameThatContainsBadCharacter() {
         assertThrows(BadRequestException.class,
             () -> createConsumer("bar$%camp"));
     }

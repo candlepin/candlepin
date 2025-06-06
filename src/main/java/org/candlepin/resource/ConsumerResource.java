@@ -1040,7 +1040,7 @@ public class ConsumerResource implements ConsumerApi {
         List<ActivationKey> keys = findActivationKeysInOrder(owner, activationKeys);
 
         userName = setUserName(consumer, principal, userName);
-        checkConsumerName(consumer);
+        validateConsumerName(consumer, type);
 
         validateViaConsumerType(consumer, type, keys, owner, userName, principal);
 
@@ -1260,15 +1260,7 @@ public class ConsumerResource implements ConsumerApi {
                     i18n.tr("A unit type of \"person\" cannot be used with activation keys"));
             }
 
-            if (!isConsumerPersonNameValid(consumer.getName())) {
-                throw new BadRequestException(i18n.tr("System name cannot contain most special characters."));
-            }
-
             verifyPersonConsumer(consumer, type, owner, userName, principal);
-        }
-
-        if (type.isType(ConsumerTypeEnum.SYSTEM) && !isConsumerSystemNameValid(consumer.getName())) {
-            throw new BadRequestException(i18n.tr("System name cannot contain most special characters."));
         }
 
         HttpRequest httpRequest = ResteasyContext.getContextData(HttpRequest.class);
@@ -1373,7 +1365,7 @@ public class ConsumerResource implements ConsumerApi {
         return change;
     }
 
-    private void checkConsumerName(ConsumerDTO consumer) {
+    private void validateConsumerName(ConsumerDTO consumer, ConsumerType type) {
         // for now this applies to both types consumer
         if (consumer.getName() != null) {
             if (consumer.getName().indexOf('#') == 0) {
@@ -1386,6 +1378,14 @@ public class ConsumerResource implements ConsumerApi {
                 String m = "Name of the consumer should be shorter than {0} characters.";
                 throw new BadRequestException(i18n.tr(m, Integer.toString(max + 1)));
             }
+        }
+
+        if (type.isType(ConsumerTypeEnum.PERSON) && !isConsumerPersonNameValid(consumer.getName())) {
+            throw new BadRequestException(i18n.tr("System name cannot contain most special characters."));
+        }
+
+        if (type.isType(ConsumerTypeEnum.SYSTEM) && !isConsumerSystemNameValid(consumer.getName())) {
+            throw new BadRequestException(i18n.tr("System name cannot contain most special characters."));
         }
     }
 
@@ -1621,8 +1621,6 @@ public class ConsumerResource implements ConsumerApi {
         // Sanitize the inbound facts before applying the update
         this.sanitizeConsumerFacts(dto);
 
-        ConsumerType toUpdateType = this.consumerTypeCurator.getConsumerType(toUpdate);
-
         GuestMigration guestMigration = migrationProvider.get();
         guestMigration.buildMigrationManifest(dto, toUpdate);
 
@@ -1718,10 +1716,12 @@ public class ConsumerResource implements ConsumerApi {
 
         changesMade = updateEnvironments(updated, toUpdate, true) || changesMade;
 
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(toUpdate);
+
         // like the other values in an update, if consumer name is null, act as if
         // it should remain the same
         if (updated.getName() != null && !toUpdate.getName().equals(updated.getName())) {
-            checkConsumerName(updated);
+            validateConsumerName(updated, ctype);
 
             log.info("Updating consumer name: {} -> {}", toUpdate.getName(), updated.getName());
             toUpdate.setName(updated.getName());
@@ -1732,8 +1732,6 @@ public class ConsumerResource implements ConsumerApi {
                 toUpdate.setIdCert(ic);
             }
         }
-
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(toUpdate);
 
         // Apply consumer-level content access changes
         String updatedContentAccessMode = updated.getContentAccessMode();
