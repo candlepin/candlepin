@@ -23,7 +23,7 @@
 
 Name: candlepin
 Version: 4.6.2
-Release: 1%{?dist}
+Release: 3%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -230,6 +230,12 @@ fi
 
 #raw
 %changelog
+* Fri Jun 06 2025 Nikos Moumoulidis <nmoumoul@redhat.com> 4.6.2-3
+- Add validation for name during consumer update (nmoumoul@redhat.com)
+- Add validation for name during consumer update (nmoumoul@redhat.com)
+- HOTFIX: Added a check to prevent sorting on nested object fields
+  (crog@redhat.com)
+
 * Thu May 22 2025 candlepin-bot 4.6.2-1
 - Add new translations using Weblate (noreply@weblate.org)
 - CHAINSAW-481: IAE when sort_by query parameter not specified
