@@ -39,6 +39,7 @@ import org.candlepin.dto.api.client.v1.ContentAccessDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
 import org.candlepin.dto.api.client.v1.ContentToPromoteDTO;
 import org.candlepin.dto.api.client.v1.EnvironmentDTO;
+import org.candlepin.dto.api.client.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.client.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
@@ -46,6 +47,7 @@ import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.client.v1.RoleDTO;
 import org.candlepin.dto.api.client.v1.SetConsumerEnvironmentsDTO;
+import org.candlepin.dto.api.client.v1.SubscriptionDTO;
 import org.candlepin.dto.api.client.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
 import org.candlepin.invoker.client.ApiException;
@@ -1799,6 +1801,248 @@ public class OwnerResourceSpecTest {
             .extractingByKey("content_access", as(collection(String.class)))
             .singleElement()
             .isEqualTo(content2.getId());
+    }
+
+    @Test
+    public void shouldRetrieveConsumersByUsername() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ApiClient user1Client = ApiClients.basic(UserUtil.createUser(admin, owner));
+        ConsumerDTO expected = user1Client.consumers().createConsumer(Consumers.random(owner));
+
+        ApiClient user2Client = ApiClients.basic(UserUtil.createUser(admin, owner));
+        user2Client.consumers().createConsumer(Consumers.random(owner));
+
+        List<ConsumerDTOArrayElement> actual = admin.owners()
+            .listConsumers(ownerKey, expected.getUsername(), null, null, null, null, null, null, null,
+                null, null, null, null);
+
+        assertThat(actual)
+            .isNotNull()
+            .singleElement()
+            .returns(expected.getUuid(), ConsumerDTOArrayElement::getUuid);
+    }
+
+    @Test
+    public void shouldRetrieveConsumersByType() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ConsumerTypeDTO expectedType1 = ConsumerTypes.System.value();
+        ConsumerTypeDTO expectedType2 = ConsumerTypes.Candlepin.value();
+
+        ConsumerDTO expectedConsumer1 = admin.consumers().createConsumer(Consumers.random(owner)
+            .type(expectedType1));
+        ConsumerDTO expectedConsumer2 = admin.consumers().createConsumer(Consumers.random(owner)
+            .type(expectedType2));
+        admin.consumers().createConsumer(Consumers.random(owner)
+            .type(ConsumerTypes.Hypervisor.value()));
+
+        Set<String> typeLabels = Set.of(expectedType1.getLabel(), expectedType2.getLabel(),
+            ConsumerTypes.Person.label());
+
+        List<ConsumerDTOArrayElement> actual = admin.owners().listConsumers(ownerKey, null,
+            typeLabels, null, null, null, null, null, null, null, null, null, null);
+
+        assertThat(actual)
+            .isNotNull()
+            .map(ConsumerDTOArrayElement::getUuid)
+            .containsExactlyInAnyOrder(expectedConsumer1.getUuid(), expectedConsumer2.getUuid());
+    }
+
+    @Test
+    public void shouldRetrieveConsumersByUUID() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ConsumerDTO expected1 = admin.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO expected2 = admin.consumers().createConsumer(Consumers.random(owner));
+        admin.consumers().createConsumer(Consumers.random(owner));
+
+        List<String> consumerUuids = List.of(expected1.getUuid(), expected2.getUuid(),
+            StringUtil.random("unknown-"));
+
+        List<ConsumerDTOArrayElement> actual = admin.owners().listConsumers(ownerKey, null, null,
+            consumerUuids, null, null, null, null, null, null, null, null, null);
+
+        assertThat(actual)
+            .isNotNull()
+            .map(ConsumerDTOArrayElement::getUuid)
+            .containsExactlyInAnyOrder(expected1.getUuid(), expected2.getUuid());
+    }
+
+    @Test
+    public void shouldRetrieveConsumersByHypervisorId() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ConsumerDTO expected1 = admin.consumers().createConsumer(Consumers.random(owner)
+            .name(StringUtil.random("hypervisor-name-"))
+            .type(ConsumerTypes.Hypervisor.value())
+            .hypervisorId(new HypervisorIdDTO().hypervisorId(StringUtil.random("hypervisor-id-"))));
+        ConsumerDTO expected2 = admin.consumers().createConsumer(Consumers.random(owner)
+            .name(StringUtil.random("hypervisor-name-"))
+            .type(ConsumerTypes.Hypervisor.value())
+            .hypervisorId(new HypervisorIdDTO().hypervisorId(StringUtil.random("hypervisor-id-"))));
+        admin.consumers().createConsumer(Consumers.random(owner)
+            .name(StringUtil.random("hypervisor-name-"))
+            .type(ConsumerTypes.Hypervisor.value())
+            .hypervisorId(new HypervisorIdDTO().hypervisorId(StringUtil.random("hypervisor-id-"))));
+
+        List<String> hypervisorIds = List.of(expected1.getHypervisorId().getHypervisorId(),
+            expected2.getHypervisorId().getHypervisorId(),
+            StringUtil.random("unknown-"));
+
+        List<ConsumerDTOArrayElement> actual = admin.owners().listConsumers(ownerKey, null, null, null,
+            hypervisorIds, null, null, null, null, null, null, null, null);
+
+        assertThat(actual)
+            .isNotNull()
+            .map(ConsumerDTOArrayElement::getUuid)
+            .containsExactlyInAnyOrder(expected1.getUuid(), expected2.getUuid());
+    }
+
+    @Test
+    public void shouldRetrieveConsumersByFacts() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        String expectedKey = StringUtil.random("key-");
+        String expectedValue = StringUtil.random("value-");
+
+        Map<String, String> facts1 =
+            Map.of(expectedKey, expectedValue, StringUtil.random("key-"), StringUtil.random("value-"));
+        Map<String, String> facts2 =
+            Map.of(expectedKey, expectedValue, StringUtil.random("key-"), StringUtil.random("value-"));
+
+        ConsumerDTO expected1 = admin.consumers().createConsumer(Consumers.random(owner)
+            .facts(facts1));
+        ConsumerDTO expected2 = admin.consumers().createConsumer(Consumers.random(owner)
+            .facts(facts2));
+        admin.consumers().createConsumer(Consumers.random(owner)
+            .facts(Map.of(StringUtil.random("key-"), StringUtil.random("value-"))));
+
+        List<String> facts = List.of(expectedKey + ":" + expectedValue);
+
+        List<ConsumerDTOArrayElement> actual = admin.owners().listConsumers(ownerKey, null, null, null,
+            null, facts, null, null, null, null, null, null, null);
+
+        assertThat(actual)
+            .isNotNull()
+            .map(ConsumerDTOArrayElement::getUuid)
+            .containsExactlyInAnyOrder(expected1.getUuid(), expected2.getUuid());
+    }
+
+    @Test
+    public void shouldRetrieveConsumersByPoolContractNumber() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        ProductDTO product1 = admin.ownerProducts().createProduct(ownerKey, Products.random());
+        ProductDTO product2 = admin.ownerProducts().createProduct(ownerKey, Products.random());
+        ProductDTO product3 = admin.ownerProducts().createProduct(ownerKey, Products.random());
+
+        PoolDTO pool1 = admin.owners().createPool(owner.getKey(), Pools.random(product1)
+            .contractNumber(StringUtil.random("contract-")));
+        PoolDTO pool2 = admin.owners().createPool(owner.getKey(), Pools.random(product2)
+            .contractNumber(StringUtil.random("contract-")));
+        PoolDTO pool3 = admin.owners().createPool(owner.getKey(), Pools.random(product3)
+            .contractNumber(StringUtil.random("contract-")));
+
+        ConsumerDTO expectedConsumer1 = admin.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO expectedConsumer2 = admin.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer3 = admin.consumers().createConsumer(Consumers.random(owner));
+
+        admin.consumers().bindPool(expectedConsumer1.getUuid(), pool1.getId(), 1);
+        admin.consumers().bindPool(expectedConsumer2.getUuid(), pool2.getId(), 1);
+        admin.consumers().bindPool(consumer3.getUuid(), pool3.getId(), 1);
+
+        List<String> contractNumbers = List.of(pool1.getContractNumber(), pool2.getContractNumber(),
+            StringUtil.random("unknown-"));
+
+        List<ConsumerDTOArrayElement> actual = admin.owners().listConsumers(ownerKey, null, null, null,
+            null, null, contractNumbers, null, null, null, null, null, null);
+
+        assertThat(actual)
+            .isNotNull()
+            .map(ConsumerDTOArrayElement::getUuid)
+            .containsExactlyInAnyOrder(expectedConsumer1.getUuid(), expectedConsumer2.getUuid());
+    }
+
+    @Test
+    public void shouldRetrieveConsumersByProductIds() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        ProductDTO product1 = admin.ownerProducts().createProduct(ownerKey, Products.random());
+        ProductDTO product2 = admin.ownerProducts().createProduct(ownerKey, Products.random());
+        ProductDTO product3 = admin.ownerProducts().createProduct(ownerKey, Products.random());
+
+        admin.owners().createPool(owner.getKey(), Pools.random(product1));
+        admin.owners().createPool(owner.getKey(), Pools.random(product2));
+        admin.owners().createPool(owner.getKey(), Pools.random(product3));
+
+        ConsumerDTO expectedConsumer1 = admin.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO expectedConsumer2 = admin.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer3 = admin.consumers().createConsumer(Consumers.random(owner));
+
+        admin.consumers().bindProduct(expectedConsumer1.getUuid(), product1.getId());
+        admin.consumers().bindProduct(expectedConsumer2.getUuid(), product2.getId());
+        admin.consumers().bindProduct(consumer3.getUuid(), product3.getId());
+
+        List<String> prodIds = List.of(product1.getId(), product2.getId(), StringUtil.random("unknown-"));
+
+        List<ConsumerDTOArrayElement> actual = admin.owners().listConsumers(ownerKey, null, null, null,
+            null, null, null, prodIds, null, null, null, null, null);
+
+        assertThat(actual)
+            .isNotNull()
+            .map(ConsumerDTOArrayElement::getUuid)
+            .containsExactlyInAnyOrder(expectedConsumer1.getUuid(), expectedConsumer2.getUuid());
+    }
+
+    @Test
+    @OnlyInHosted
+    public void shouldRetrieveConsumersBySubscriptionIds() {
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+        admin.hosted().createOwner(owner);
+        String ownerKey = owner.getKey();
+
+        ProductDTO product1 = admin.ownerProducts().createProduct(ownerKey, Products.random());
+        ProductDTO product2 = admin.ownerProducts().createProduct(ownerKey, Products.random());
+        ProductDTO product3 = admin.ownerProducts().createProduct(ownerKey, Products.random());
+
+        product1 = admin.hosted().createProduct(product1);
+        product2 = admin.hosted().createProduct(product2);
+        product3 = admin.hosted().createProduct(product3);
+
+        SubscriptionDTO sub1 = admin.hosted().createSubscription(Subscriptions.random(owner, product1));
+        SubscriptionDTO sub2 = admin.hosted().createSubscription(Subscriptions.random(owner, product2));
+        admin.hosted().createSubscription(Subscriptions.random(owner, product3));
+
+        ConsumerDTO expectedConsumer1 = admin.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO expectedConsumer2 = admin.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer3 = admin.consumers().createConsumer(Consumers.random(owner));
+
+        AsyncJobStatusDTO refresh = admin.owners().refreshPools(owner.getKey(), false);
+        if (refresh != null) {
+            admin.jobs().waitForJob(refresh.getId());
+        }
+
+        admin.consumers().bindProduct(expectedConsumer1.getUuid(), product1.getId());
+        admin.consumers().bindProduct(expectedConsumer2.getUuid(), product2.getId());
+        admin.consumers().bindProduct(consumer3.getUuid(), product3.getId());
+
+        List<String> subIds = List.of(sub1.getId(), sub2.getId(), StringUtil.random("unknown-"));
+
+        List<ConsumerDTOArrayElement> actual = admin.owners().listConsumers(ownerKey, null, null, null,
+            null, null, null, null, subIds, null, null, null, null);
+
+        assertThat(actual)
+            .isNotNull()
+            .map(ConsumerDTOArrayElement::getUuid)
+            .containsExactlyInAnyOrder(expectedConsumer1.getUuid(), expectedConsumer2.getUuid());
     }
 
 }

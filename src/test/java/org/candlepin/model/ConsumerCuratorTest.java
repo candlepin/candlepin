@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -34,6 +34,7 @@ import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.ConsumerCurator.ConsumerQueryArguments;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
@@ -2375,6 +2376,421 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertThat(actual)
             .isNotNull()
             .containsExactlyInAnyOrder(unknown1, unknown2, c4.getUuid());
+    }
+
+    @Test
+    public void testFindConsumersWithUsernameFilter() {
+        Owner owner = this.createOwner();
+
+        ConsumerType type = this.createConsumerType();
+        String expectedUsername = TestUtil.randomString("username-");
+        Consumer expected = new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(expectedUsername)
+            .setOwner(owner)
+            .setType(type);
+
+        expected = this.consumerCurator.create(expected);
+
+        // Other consumer
+        this.createConsumer(owner);
+
+        ConsumerQueryArguments args = new ConsumerQueryArguments()
+            .setUsername(expectedUsername);
+
+        List<Consumer> actual = consumerCurator.findConsumers(args);
+
+        assertThat(actual)
+            .isNotNull()
+            .singleElement()
+            .isEqualTo(expected);
+    }
+
+    @Test
+    public void testFindConsumersWithUsernameFilterUsingUnknownUsername() {
+        Owner owner = this.createOwner();
+
+        ConsumerType type = this.createConsumerType();
+        Consumer expected = new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(type);
+
+        expected = this.consumerCurator.create(expected);
+
+        // Other consumer
+        this.createConsumer(owner);
+
+        ConsumerQueryArguments args = new ConsumerQueryArguments()
+            .setUsername(TestUtil.randomString("unknown-"));
+
+        List<Consumer> actual = consumerCurator.findConsumers(args);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testFindConsumersWithUUIDFilter() {
+        Owner owner = this.createOwner();
+
+        Consumer expected1 = this.createConsumer(owner);
+        Consumer expected2 = this.createConsumer(owner);
+
+        // Other consumer
+        this.createConsumer(owner);
+
+        ConsumerQueryArguments args = new ConsumerQueryArguments()
+            .setUuids(expected1.getUuid(), expected2.getUuid(), TestUtil.randomString("unknown-"));
+
+        List<Consumer> actual = consumerCurator.findConsumers(args);
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(expected1, expected2);
+    }
+
+    @Test
+    public void testFindConsumersWithTypeFilter() {
+        Owner owner = this.createOwner();
+
+        ConsumerType type1 = this.createConsumerType();
+        ConsumerType type2 = this.createConsumerType();
+        ConsumerType otherType = this.createConsumerType();
+
+        Consumer expected1 = new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(type1);
+
+        Consumer expected2 = new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(type2);
+
+        expected1 = this.consumerCurator.create(expected1);
+        expected2 = this.consumerCurator.create(expected2);
+
+        // Other consumer
+        this.createConsumer(owner);
+
+        ConsumerQueryArguments args = new ConsumerQueryArguments()
+            .setTypes(type1, type2, otherType);
+
+        List<Consumer> actual = consumerCurator.findConsumers(args);
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(expected1, expected2);
+    }
+
+    @Test
+    public void testFindConsumersWithHypervisorIdFilter() {
+        Owner owner = this.createOwner();
+
+        String hypervisorId1 = TestUtil.randomString("hypervisor-");
+        String hypervisorId2 = TestUtil.randomString("hypervisor-");
+        Consumer expected1 = createHypervisor(owner, hypervisorId1);
+        Consumer expected2 = createHypervisor(owner, hypervisorId2);
+
+        // Other hypervisor
+        this.createHypervisor(owner);
+
+        ConsumerQueryArguments args = new ConsumerQueryArguments()
+            .setHypervisorIds(hypervisorId1, hypervisorId2);
+
+        List<Consumer> actual = consumerCurator.findConsumers(args);
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(expected1, expected2);
+    }
+
+    @Test
+    public void testFindConsumersWithFactsFilter() {
+        Owner owner = this.createOwner();
+
+        String factKey1 = TestUtil.randomString("key-");
+        String factValue1 = TestUtil.randomString("value-");
+        String factKey2 = TestUtil.randomString("key-");
+        String factValue2 = TestUtil.randomString("value-");
+
+        ConsumerType type = this.createConsumerType();
+        Consumer expected1 = new Consumer()
+            .setFact(factKey1, factValue1)
+            .setFact(factKey2, factValue2)
+            .setFact(TestUtil.randomString(), TestUtil.randomString())
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(type);
+
+        Consumer expected2 = new Consumer()
+            .setFact(factKey1, factValue1)
+            .setFact(factKey2, factValue2)
+            .setFact(TestUtil.randomString(), TestUtil.randomString())
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(type);
+
+        Consumer other = new Consumer()
+            .setFact(factKey1, factValue1)
+            .setFact(TestUtil.randomString(), TestUtil.randomString())
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(type);
+
+        expected1 = this.consumerCurator.create(expected1);
+        expected2 = this.consumerCurator.create(expected2);
+        other = this.consumerCurator.create(other);
+
+        ConsumerQueryArguments args = new ConsumerQueryArguments()
+            .addFact(factKey1, factValue1)
+            .addFact(factKey2, factValue2);
+
+        List<Consumer> actual = consumerCurator.findConsumers(args);
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(expected1, expected2);
+    }
+
+    @Test
+    public void testFindConsumersWithEnvironmentIdsFilter() {
+        Owner owner = this.createOwner();
+
+        Environment env1 = this.createEnvironment(owner);
+        Environment env2 = this.createEnvironment(owner);
+
+        ConsumerType type = this.createConsumerType();
+        Consumer expected = new Consumer()
+            .setEnvironmentIds(List.of(env1.getId()))
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(type);
+
+        Consumer other = new Consumer()
+            .setEnvironmentIds(List.of(env2.getId()))
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(type);
+
+        expected = this.consumerCurator.create(expected);
+        other = this.consumerCurator.create(other);
+
+        ConsumerQueryArguments args = new ConsumerQueryArguments()
+            .setEnvironmentId(env1.getId());
+
+        List<Consumer> actual = consumerCurator.findConsumers(args);
+
+        assertThat(actual)
+            .isNotNull()
+            .singleElement()
+            .isEqualTo(expected);
+    }
+
+    @Test
+    public void testFindConsumersWithPoolContractNumbersFilter() {
+        Owner owner = this.createOwner();
+
+        Product prod1 = this.createProduct();
+        Product prod2 = this.createProduct();
+        Product prod3 = this.createProduct();
+
+        Pool pool1 = new Pool()
+            .setOwner(owner)
+            .setProduct(prod1)
+            .setQuantity(1L)
+            .setStartDate(new Date())
+            .setEndDate(TestUtil.createDateOffset(0, 0, 1))
+            .setContractNumber(TestUtil.randomString())
+            .setAccountNumber(TestUtil.randomString())
+            .setOrderNumber(TestUtil.randomString());
+
+        Pool pool2 = new Pool()
+            .setOwner(owner)
+            .setProduct(prod2)
+            .setQuantity(1L)
+            .setStartDate(new Date())
+            .setEndDate(TestUtil.createDateOffset(0, 0, 1))
+            .setContractNumber(TestUtil.randomString())
+            .setAccountNumber(TestUtil.randomString())
+            .setOrderNumber(TestUtil.randomString());
+
+        Pool pool3 = new Pool()
+            .setOwner(owner)
+            .setProduct(prod3)
+            .setQuantity(1L)
+            .setStartDate(new Date())
+            .setEndDate(TestUtil.createDateOffset(0, 0, 1))
+            .setContractNumber(TestUtil.randomString())
+            .setAccountNumber(TestUtil.randomString())
+            .setOrderNumber(TestUtil.randomString());
+
+        pool1 = this.poolCurator.create(pool1);
+        pool2 = this.poolCurator.create(pool2);
+        pool3 = this.poolCurator.create(pool3);
+
+        Consumer expected1 = this.createConsumer(owner);
+        Consumer expected2 = this.createConsumer(owner);
+        Consumer other = this.createConsumer(owner);
+
+        this.createEntitlement(owner, expected1, pool1);
+        this.createEntitlement(owner, expected2, pool2);
+        this.createEntitlement(owner, other, pool3);
+
+        ConsumerQueryArguments args = new ConsumerQueryArguments()
+            .setPoolContractNumbers(pool1.getContractNumber(), pool2.getContractNumber(),
+                TestUtil.randomString());
+
+        List<Consumer> actual = consumerCurator.findConsumers(args);
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(expected1, expected2);
+    }
+
+    @Test
+    public void testFindConsumersWithProductIdsFilter() {
+        Owner owner = this.createOwner();
+
+        Product prod1 = this.createProduct();
+        Product prod2 = this.createProduct();
+        Product prod3 = this.createProduct();
+
+        Pool pool1 = new Pool()
+            .setOwner(owner)
+            .setProduct(prod1)
+            .setQuantity(1L)
+            .setStartDate(new Date())
+            .setEndDate(TestUtil.createDateOffset(0, 0, 1))
+            .setContractNumber(TestUtil.randomString())
+            .setAccountNumber(TestUtil.randomString())
+            .setOrderNumber(TestUtil.randomString());
+
+        Pool pool2 = new Pool()
+            .setOwner(owner)
+            .setProduct(prod2)
+            .setQuantity(1L)
+            .setStartDate(new Date())
+            .setEndDate(TestUtil.createDateOffset(0, 0, 1))
+            .setContractNumber(TestUtil.randomString())
+            .setAccountNumber(TestUtil.randomString())
+            .setOrderNumber(TestUtil.randomString());
+
+        Pool pool3 = new Pool()
+            .setOwner(owner)
+            .setProduct(prod3)
+            .setQuantity(1L)
+            .setStartDate(new Date())
+            .setEndDate(TestUtil.createDateOffset(0, 0, 1))
+            .setContractNumber(TestUtil.randomString())
+            .setAccountNumber(TestUtil.randomString())
+            .setOrderNumber(TestUtil.randomString());
+
+        pool1 = this.poolCurator.create(pool1);
+        pool2 = this.poolCurator.create(pool2);
+        pool3 = this.poolCurator.create(pool3);
+
+        Consumer expected1 = this.createConsumer(owner);
+        Consumer expected2 = this.createConsumer(owner);
+        Consumer other = this.createConsumer(owner);
+
+        this.createEntitlement(owner, expected1, pool1);
+        this.createEntitlement(owner, expected2, pool2);
+        this.createEntitlement(owner, other, pool3);
+
+        ConsumerQueryArguments args = new ConsumerQueryArguments()
+            .setProductIds(prod1.getId(), prod2.getId(), TestUtil.randomString());
+
+        List<Consumer> actual = consumerCurator.findConsumers(args);
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(expected1, expected2);
+    }
+
+    @Test
+    public void testFindConsumersWithSubscriptionIdsFilter() {
+        Owner owner = this.createOwner();
+
+        Product prod1 = this.createProduct();
+        Product prod2 = this.createProduct();
+        Product prod3 = this.createProduct();
+
+        String subscriptionId1 = TestUtil.randomString("sub-");
+        String subscriptionId2 = TestUtil.randomString("sub-");
+        SourceSubscription sub1 = new SourceSubscription()
+            .setSubscriptionId(subscriptionId1)
+            .setSubscriptionSubKey(TestUtil.randomString("sub-key-"));
+        SourceSubscription sub2 = new SourceSubscription()
+            .setSubscriptionId(subscriptionId1)
+            .setSubscriptionSubKey(TestUtil.randomString("sub-key-"));
+        SourceSubscription sub3 = new SourceSubscription()
+            .setSubscriptionId(TestUtil.randomString("sub-"))
+            .setSubscriptionSubKey(TestUtil.randomString("sub-key-"));
+
+        Pool pool1 = new Pool()
+            .setSourceSubscription(sub1)
+            .setOwner(owner)
+            .setProduct(prod1)
+            .setQuantity(1L)
+            .setStartDate(new Date())
+            .setEndDate(TestUtil.createDateOffset(0, 0, 1))
+            .setContractNumber(TestUtil.randomString())
+            .setAccountNumber(TestUtil.randomString())
+            .setOrderNumber(TestUtil.randomString());
+
+        Pool pool2 = new Pool()
+            .setSourceSubscription(sub2)
+            .setOwner(owner)
+            .setProduct(prod2)
+            .setQuantity(1L)
+            .setStartDate(new Date())
+            .setEndDate(TestUtil.createDateOffset(0, 0, 1))
+            .setContractNumber(TestUtil.randomString())
+            .setAccountNumber(TestUtil.randomString())
+            .setOrderNumber(TestUtil.randomString());
+
+        Pool pool3 = new Pool()
+            .setSourceSubscription(sub3)
+            .setOwner(owner)
+            .setProduct(prod3)
+            .setQuantity(1L)
+            .setStartDate(new Date())
+            .setEndDate(TestUtil.createDateOffset(0, 0, 1))
+            .setContractNumber(TestUtil.randomString())
+            .setAccountNumber(TestUtil.randomString())
+            .setOrderNumber(TestUtil.randomString());
+
+        pool1 = this.poolCurator.create(pool1);
+        pool2 = this.poolCurator.create(pool2);
+        pool3 = this.poolCurator.create(pool3);
+
+        Consumer expected1 = this.createConsumer(owner);
+        Consumer expected2 = this.createConsumer(owner);
+        Consumer other = this.createConsumer(owner);
+
+        this.createEntitlement(owner, expected1, pool1);
+        this.createEntitlement(owner, expected2, pool2);
+        this.createEntitlement(owner, other, pool3);
+
+        ConsumerQueryArguments args = new ConsumerQueryArguments()
+            .setSubscriptionIds(subscriptionId1, subscriptionId2, TestUtil.randomString());
+
+        List<Consumer> actual = consumerCurator.findConsumers(args);
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(expected1, expected2);
     }
 
     private IdentityCertificate createIdCert() {
