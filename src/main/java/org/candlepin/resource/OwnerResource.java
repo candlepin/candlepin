@@ -1354,9 +1354,15 @@ public class OwnerResource implements OwnerApi {
             qualifier.setOffset(pageRequest.getPage())
                 .setLimit(pageRequest.getPerPage());
 
-            if (pageRequest.getSortBy() != null) {
-                boolean reverse = pageRequest.getOrder() == PageRequest.DEFAULT_ORDER;
-                qualifier.addOrder(pageRequest.getSortBy(), reverse);
+            String orderField = pageRequest.getSortBy();
+            if (orderField != null) {
+                if (!orderField.contains(".")) {
+                    boolean reverse = pageRequest.getOrder() == PageRequest.DEFAULT_ORDER;
+                    qualifier.addOrder(orderField, reverse);
+                }
+                else {
+                    log.warn("Obsolete order field provided: {}; ignoring ordering...", orderField);
+                }
             }
         }
 
