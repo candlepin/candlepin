@@ -15,10 +15,12 @@
 package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
+import org.candlepin.exceptions.BadRequestException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,34 +43,57 @@ public class ConsumerResourceCreationLiberalNameRules extends ConsumerResourceCr
         return config;
     }
 
+    // These overridden tests should receive an error with the default regex (from superclass),
+    // but should be okay here
+
     @Test
-    public void containsMultibyteKorean() {
+    public void allowNameThatContainsMultibyteKorean() {
         assertNotNull(createConsumer("서브스크립션 "));
     }
 
     @Test
-    public void containsMultibyteOriya() {
+    public void allowNameThatContainsMultibyteOriya() {
         assertNotNull(createConsumer("ପରିବେଶ"));
     }
 
-    // This fails with the normal regex, but should be okay here
     @Test
-    public void containsBadCharacter() {
+    public void allowNameThatContainsBadCharacter() {
         createConsumer("bar$%camp");
     }
 
     @Test
-    public void containsJustAboutEverything() {
+    public void allowNameThatContainsWhitespace() {
+        createConsumer("abc123 456");
+    }
+
+    @Test
+    public void allowNameThatStartsWithBadCharacter() {
+        createConsumer("<foo");
+    }
+
+    /*
+     * This is a special case. We should never allow a name starting with pound,
+     * regardless of the regex config.
+     */
+    @Test
+    @Override
+    public void disallowNameThatStartsWithPound() {
+        assertThrows(BadRequestException.class,
+            () -> createConsumer("#pound"));
+    }
+
+    @Test
+    public void allowNameThatContainsJustAboutEverything() {
         createConsumer("0123456789-=~!@#$%^&*()_+{}[]|\\:;\"'<>,.?/");
     }
 
     @Test
-    public void containsRockDots() {
+    public void allowNameThatContainsRockDots() {
         createConsumer("áàéíñó€áâæÀÁåàüÄÆùúÆÔÓû");
     }
 
     @Test
-    public void containsFunUnicode() {
+    public void allowNameThatContainsFunUnicode() {
         // this is roughly: skull and crossbones,
         // snowman, neigher less than nor greater than,
         // intterobang

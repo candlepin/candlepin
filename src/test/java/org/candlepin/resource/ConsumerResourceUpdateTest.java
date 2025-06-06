@@ -408,6 +408,109 @@ public class ConsumerResourceUpdateTest {
     }
 
     @Test
+    public void allowNameWithUnderscore() {
+        ConsumerDTO consumer = getFakeConsumerDTO();
+        this.resource.updateConsumer(consumer.getUuid(), new ConsumerDTO().name("test_user"));
+    }
+
+    @Test
+    public void allowNameWithCamelCase() {
+        ConsumerDTO consumer = getFakeConsumerDTO();
+        this.resource.updateConsumer(consumer.getUuid(), new ConsumerDTO().name("ConsumerTest32953"));
+    }
+
+    @Test
+    public void allowNameThatStartsWithUnderscore() {
+        ConsumerDTO consumer = getFakeConsumerDTO();
+        this.resource.updateConsumer(consumer.getUuid(), new ConsumerDTO().name("__init__"));
+    }
+
+    @Test
+    public void allowNameThatStartsWithDash() {
+        ConsumerDTO consumer = getFakeConsumerDTO();
+        this.resource.updateConsumer(consumer.getUuid(), new ConsumerDTO().name("-dash"));
+    }
+
+    @Test
+    public void allowNameThatContainsNumbers() {
+        ConsumerDTO consumer = getFakeConsumerDTO();
+        this.resource.updateConsumer(consumer.getUuid(), new ConsumerDTO().name("testmachine99"));
+    }
+
+    @Test
+    public void allowNameThatStartsWithNumbers() {
+        ConsumerDTO consumer = getFakeConsumerDTO();
+        this.resource.updateConsumer(consumer.getUuid(), new ConsumerDTO().name("001test7"));
+    }
+
+    @Test
+    public void allowNameThatContainsPeriods() {
+        ConsumerDTO consumer = getFakeConsumerDTO();
+        this.resource.updateConsumer(consumer.getUuid(), new ConsumerDTO().name("test-system.resource.net"));
+    }
+
+    @Test
+    public void allowNameThatContainsUserServiceChars() {
+        ConsumerDTO consumer = getFakeConsumerDTO();
+        this.resource.updateConsumer(consumer.getUuid(),
+            new ConsumerDTO().name("{bob}'s_b!g_#boi.`?uestlove!x"));
+    }
+
+    // These should receive an error with the default consumer name pattern
+    @Test
+    public void disallowNameThatContainsMultibyteKorean() {
+        ConsumerDTO consumer = getFakeConsumerDTO();
+        assertThrows(BadRequestException.class,
+            () -> this.resource.updateConsumer(consumer.getUuid(), new ConsumerDTO().name("서브스크립션")));
+    }
+
+    @Test
+    public void disallowNameThatContainsMultibyteOriya() {
+        ConsumerDTO consumer = getFakeConsumerDTO();
+        assertThrows(BadRequestException.class,
+            () -> this.resource.updateConsumer(consumer.getUuid(), new ConsumerDTO().name("ପରିବେଶ")));
+    }
+
+    @Test
+    public void disallowEmptyConsumerName() {
+        ConsumerDTO consumer = getFakeConsumerDTO();
+        assertThrows(BadRequestException.class,
+            () -> this.resource.updateConsumer(consumer.getUuid(), new ConsumerDTO().name("")));
+    }
+
+    @Test
+    public void disallowNameThatContainsWhitespace() {
+        ConsumerDTO consumer = getFakeConsumerDTO();
+        assertThrows(BadRequestException.class,
+            () -> this.resource.updateConsumer(consumer.getUuid(), new ConsumerDTO().name("abc123 456")));
+    }
+
+    @Test
+    public void disallowNameThatStartsWithBadCharacter() {
+        ConsumerDTO consumer = getFakeConsumerDTO();
+        assertThrows(BadRequestException.class,
+            () -> this.resource.updateConsumer(consumer.getUuid(), new ConsumerDTO().name("<foo")));
+    }
+
+    @Test
+    public void disallowNameThatContainsBadCharacter() {
+        ConsumerDTO consumer = getFakeConsumerDTO();
+        assertThrows(BadRequestException.class,
+            () -> this.resource.updateConsumer(consumer.getUuid(), new ConsumerDTO().name("bar$%camp")));
+    }
+
+    /*
+     * This is a special case. We should never allow a name starting with pound,
+     * regardless of the regex config.
+     */
+    @Test
+    public void disallowNameThatStartsWithPound() {
+        ConsumerDTO consumer = getFakeConsumerDTO();
+        assertThrows(BadRequestException.class,
+            () -> this.resource.updateConsumer(consumer.getUuid(), new ConsumerDTO().name("#pound")));
+    }
+
+    @Test
     public void testUpdatesOnContentTagChanges() {
         HashSet<String> originalTags = new HashSet<>(Arrays.asList("hello", "world"));
         HashSet<String> changedTags = new HashSet<>(Arrays.asList("x", "y"));
@@ -1011,7 +1114,7 @@ public class ConsumerResourceUpdateTest {
     public void canUpdateName() {
         ConsumerDTO consumer = getFakeConsumerDTO();
         ConsumerDTO updated = new ConsumerDTO();
-        updated.setName("new name");
+        updated.setName("newname");
 
         ArgumentCaptor<Consumer> consumerCaptor = ArgumentCaptor.forClass(Consumer.class);
         resource.updateConsumer(consumer.getUuid(), updated);
@@ -1025,7 +1128,7 @@ public class ConsumerResourceUpdateTest {
     public void updatedNameRegeneratesIdCert() {
         ConsumerDTO consumer = getFakeConsumerDTO();
         ConsumerDTO updated = new ConsumerDTO();
-        updated.setName("new name");
+        updated.setName("newname");
 
         ArgumentCaptor<Consumer> consumerCaptor = ArgumentCaptor.forClass(Consumer.class);
         resource.updateConsumer(consumer.getUuid(), updated);
@@ -1039,9 +1142,9 @@ public class ConsumerResourceUpdateTest {
     @Test
     public void sameNameDoesntRegenIdCert() {
         ConsumerDTO consumer = getFakeConsumerDTO();
-        consumer.setName("old name");
+        consumer.setName("oldname");
         ConsumerDTO updated = new ConsumerDTO();
-        updated.setName("old name");
+        updated.setName("oldname");
 
         resource.updateConsumer(consumer.getUuid(), updated);
 
