@@ -592,9 +592,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(this.principalProvider.get()).thenReturn(principal);
         securityInterceptor.enable();
 
-        assertThrows(ForbiddenException.class, () -> ownerResource
-            .listConsumers(owner.getKey(), null, null, new ArrayList<>(),
-                null, null, null, null, null, null));
+        assertThrows(ForbiddenException.class, () -> ownerResource.listConsumers(owner.getKey(), null, null,
+            new ArrayList<>(), null, null, null, null, null, null, null, null, null));
     }
 
     @Test
@@ -610,8 +609,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         types.add("type");
         consumerTypeCurator.create(new ConsumerType("type"));
 
-        Stream<ConsumerDTOArrayElement> result = ownerResource
-            .listConsumers(owner.getKey(), "username", types, uuids, null, null, null, null, null, null);
+        Stream<ConsumerDTOArrayElement> result = ownerResource.listConsumers(owner.getKey(), "username",
+            types, uuids, null, null, null, null, null, null, null, null, null);
 
         assertNotNull(result);
         List<ConsumerDTOArrayElement> consumers = result.collect(Collectors.toList());
@@ -633,8 +632,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        Stream<ConsumerDTOArrayElement> result = ownerResource
-            .listConsumers(owner.getKey(), null, null, uuids, null, null, null, null, null, null);
+        Stream<ConsumerDTOArrayElement> result = ownerResource.listConsumers(owner.getKey(), null, null,
+            uuids, null, null, null, null, null, null, null, null, null);
 
         assertNotNull(result);
         List<ConsumerDTOArrayElement> consumers = result.collect(Collectors.toList());
@@ -653,7 +652,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         BadRequestException ex = assertThrows(BadRequestException.class, () -> ownerResource
             .listConsumers(owner.getKey(), null, types, new ArrayList<>(),
-                null, null, null, null, null, null));
+                null, null, null, null, null, null, null, null, null));
         assertEquals("No such unit type(s): unknown", ex.getMessage());
     }
 
@@ -669,8 +668,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        Stream<ConsumerDTOArrayElement> result = ownerResource
-            .listConsumers(owner.getKey(), null, null, uuids, null, null, null, null, null, null);
+        Stream<ConsumerDTOArrayElement> result = ownerResource.listConsumers(owner.getKey(), null, null,
+            uuids, null, null, null, null, null, null, null, null, null);
 
         assertNotNull(result);
         List<ConsumerDTOArrayElement> consumers = result.collect(Collectors.toList());
@@ -758,7 +757,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource resource = this.buildOwnerResource();
         Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), "username", null,
-            null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null, null, null);
 
         assertNotNull(result);
         assertEquals(expected.size(), result.count());
@@ -773,7 +772,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         doReturn(12000L).when(this.mockConsumerCurator).getConsumerCount(any(ConsumerQueryArguments.class));
 
         assertThrows(BadRequestException.class, () -> resource.listConsumers(ownerKey, "username", null, null,
-            null, null, null, null, null, null));
+            null, null, null, null, null, null, null, null, null));
     }
 
     @Test
@@ -790,7 +789,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource resource = this.buildOwnerResource();
         ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
         Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), null,
-            null, null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null, null, null, null);
 
         // Verify the input passthrough is working properly
         verify(this.mockConsumerCurator, times(1)).findConsumers(captor.capture());
@@ -803,6 +802,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNull(builder.getTypes());
         assertNull(builder.getHypervisorIds());
         assertNull(builder.getFacts());
+        assertNull(builder.getPoolContractNumbers());
+        assertNull(builder.getProductIds());
+        assertNull(builder.getSubscriptionIds());
 
         // Verify the output passthrough is working properly
         assertNotNull(result);
@@ -827,7 +829,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource resource = this.buildOwnerResource();
         ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
         Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), username, null,
-            null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null, null, null);
 
         // Verify the input passthrough is working properly
         verify(this.mockConsumerCurator, times(1)).findConsumers(captor.capture());
@@ -840,6 +842,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNull(builder.getTypes());
         assertNull(builder.getHypervisorIds());
         assertNull(builder.getFacts());
+        assertNull(builder.getPoolContractNumbers());
+        assertNull(builder.getProductIds());
+        assertNull(builder.getSubscriptionIds());
 
         // Verify the output passthrough is working properly
         assertNotNull(result);
@@ -864,7 +869,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource resource = this.buildOwnerResource();
         ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
         Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), null, null,
-            uuids, null, null, null, null, null, null);
+            uuids, null, null, null, null, null, null, null, null, null);
 
         // Verify the input passthrough is working properly
         verify(this.mockConsumerCurator, times(1)).findConsumers(captor.capture());
@@ -877,6 +882,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNull(builder.getTypes());
         assertNull(builder.getHypervisorIds());
         assertNull(builder.getFacts());
+        assertNull(builder.getPoolContractNumbers());
+        assertNull(builder.getProductIds());
+        assertNull(builder.getSubscriptionIds());
 
         // Verify the output passthrough is working properly
         assertNotNull(result);
@@ -923,7 +931,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource resource = this.buildOwnerResource();
         ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
         Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), null,
-            typeMap.keySet(), null, null, null, null, null, null, null);
+            typeMap.keySet(), null, null, null, null, null, null, null, null, null, null);
 
         // Verify the input passthrough is working properly
         verify(this.mockConsumerCurator, times(1)).findConsumers(captor.capture());
@@ -938,6 +946,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertTrue(Util.collectionsAreEqual(types, builder.getTypes()));
         assertNull(builder.getHypervisorIds());
         assertNull(builder.getFacts());
+        assertNull(builder.getPoolContractNumbers());
+        assertNull(builder.getProductIds());
+        assertNull(builder.getSubscriptionIds());
 
         // Verify the output passthrough is working properly
         assertNotNull(result);
@@ -962,7 +973,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource resource = this.buildOwnerResource();
         ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
         Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), null, null,
-            null, hids, null, null, null, null, null);
+            null, hids, null, null, null, null, null, null, null, null);
 
         // Verify the input passthrough is working properly
         verify(this.mockConsumerCurator, times(1)).findConsumers(captor.capture());
@@ -975,6 +986,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNull(builder.getTypes());
         assertEquals(hids, builder.getHypervisorIds());
         assertNull(builder.getFacts());
+        assertNull(builder.getPoolContractNumbers());
+        assertNull(builder.getProductIds());
+        assertNull(builder.getSubscriptionIds());
 
         // Verify the output passthrough is working properly
         assertNotNull(result);
@@ -1009,7 +1023,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource resource = this.buildOwnerResource();
         ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
         Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), null, null,
-            null, null, factsParam, null, null, null, null);
+            null, null, factsParam, null, null, null, null, null, null, null);
 
         // Verify the input passthrough is working properly
         verify(this.mockConsumerCurator, times(1)).findConsumers(captor.capture());
@@ -1022,6 +1036,129 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNull(builder.getTypes());
         assertNull(builder.getHypervisorIds());
         assertEquals(factsMap, builder.getFacts());
+        assertNull(builder.getPoolContractNumbers());
+        assertNull(builder.getProductIds());
+        assertNull(builder.getSubscriptionIds());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @Test
+    public void testListConsumersByPoolContractNumbers() {
+        List<String> contractNumbers = List.of("contract-1", "contract-2", "contract-3");
+        Owner owner = this.mockOwner("test_owner");
+        ConsumerType ctype = this.mockConsumerType();
+
+        List<Consumer> expected = Stream.generate(() -> this.mockConsumer(owner, ctype))
+            .limit(3)
+            .collect(Collectors.toList());
+
+        doReturn(expected).when(this.mockConsumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        OwnerResource resource = this.buildOwnerResource();
+        ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
+        Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), null, null,
+            null, null, null, contractNumbers, null, null, null, null, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.mockConsumerCurator, times(1)).findConsumers(captor.capture());
+        ConsumerQueryArguments builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertEquals(owner, builder.getOwner());
+        assertNull(builder.getUsername());
+        assertNull(builder.getUuids());
+        assertNull(builder.getTypes());
+        assertNull(builder.getHypervisorIds());
+        assertNull(builder.getFacts());
+        assertEquals(contractNumbers, builder.getPoolContractNumbers());
+        assertNull(builder.getProductIds());
+        assertNull(builder.getSubscriptionIds());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @Test
+    public void testListConsumersByProductIds() {
+        List<String> productIds = List.of("product-1", "product-2", "product-3");
+        Owner owner = this.mockOwner("test_owner");
+        ConsumerType ctype = this.mockConsumerType();
+
+        List<Consumer> expected = Stream.generate(() -> this.mockConsumer(owner, ctype))
+            .limit(3)
+            .collect(Collectors.toList());
+
+        doReturn(expected).when(this.mockConsumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        OwnerResource resource = this.buildOwnerResource();
+        ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
+        Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), null, null, null,
+            null, null, null, productIds, null, null, null, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.mockConsumerCurator, times(1)).findConsumers(captor.capture());
+        ConsumerQueryArguments builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertEquals(owner, builder.getOwner());
+        assertNull(builder.getUsername());
+        assertNull(builder.getUuids());
+        assertNull(builder.getTypes());
+        assertNull(builder.getHypervisorIds());
+        assertNull(builder.getFacts());
+        assertNull(builder.getPoolContractNumbers());
+        assertEquals(productIds, builder.getProductIds());
+        assertNull(builder.getSubscriptionIds());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @Test
+    public void testListConsumersBySubscriptionIds() {
+        List<String> subscriptionIds = List.of("sub-1", "sub-2", "sub-3");
+        Owner owner = this.mockOwner("test_owner");
+        ConsumerType ctype = this.mockConsumerType();
+
+        List<Consumer> expected = Stream.generate(() -> this.mockConsumer(owner, ctype))
+            .limit(3)
+            .collect(Collectors.toList());
+
+        doReturn(expected).when(this.mockConsumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        OwnerResource resource = this.buildOwnerResource();
+        ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
+        Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), null, null, null,
+            null, null, null, null, subscriptionIds, null, null, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.mockConsumerCurator, times(1)).findConsumers(captor.capture());
+        ConsumerQueryArguments builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertEquals(owner, builder.getOwner());
+        assertNull(builder.getUsername());
+        assertNull(builder.getUuids());
+        assertNull(builder.getTypes());
+        assertNull(builder.getHypervisorIds());
+        assertNull(builder.getFacts());
+        assertNull(builder.getPoolContractNumbers());
+        assertNull(builder.getProductIds());
+        assertEquals(subscriptionIds, builder.getSubscriptionIds());
 
         // Verify the output passthrough is working properly
         assertNotNull(result);

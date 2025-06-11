@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -98,6 +98,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         private Collection<String> hypervisorIds;
         private Map<String, Collection<String>> facts;
         private String environmentId;
+        private Collection<String> poolContractNumbers;
+        private Collection<String> productIds;
+        private Collection<String> subscriptionIds;
 
         public ConsumerQueryArguments setOwner(Owner owner) {
             this.owner = owner;
@@ -183,6 +186,105 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         public String getEnvironmentId() {
             return this.environmentId;
         }
+
+        /**
+         * Sets the pool contract numbers to the provided collection and overwrites any existing values.
+         *
+         * @param poolContractNumbers
+         *  the pool contract numbers to set
+         *
+         * @return this instance
+         */
+        public ConsumerQueryArguments setPoolContractNumbers(Collection<String> poolContractNumbers) {
+            this.poolContractNumbers = poolContractNumbers;
+            return this;
+        }
+
+        /**
+         * Sets the pool contract numbers to the provided values and overwrites any existing values.
+         *
+         * @param poolContractNumbers
+         *  the pool contract numbers to set
+         *
+         * @return this instance
+         */
+        public ConsumerQueryArguments setPoolContractNumbers(String... poolContractNumbers) {
+            return this.setPoolContractNumbers(poolContractNumbers != null ?
+                Arrays.asList(poolContractNumbers) :
+                null);
+        }
+
+        /**
+         * @return the pool contract numbers
+         */
+        public Collection<String> getPoolContractNumbers() {
+            return this.poolContractNumbers;
+        }
+
+        /**
+         * Sets the product IDs to the provided collection and overwrites any existing values.
+         *
+         * @param productIds
+         *  the product IDs to set
+         *
+         * @return this instance
+         */
+        public ConsumerQueryArguments setProductIds(Collection<String> productIds) {
+            this.productIds = productIds;
+            return this;
+        }
+
+        /**
+         * Sets the product IDs to the provided values and overwrites any existing values.
+         *
+         * @param productIds
+         *  the product IDs to set
+         *
+         * @return this instance
+         */
+        public ConsumerQueryArguments setProductIds(String... productIds) {
+            return this.setProductIds(productIds != null ? Arrays.asList(productIds) : null);
+        }
+
+        /**
+         * @return the product IDs
+         */
+        public Collection<String> getProductIds() {
+            return this.productIds;
+        }
+
+        /**
+         * Sets the subscription IDs to the provided collection and overwrites any existing values.
+         *
+         * @param subscriptionIds
+         *  the subscription IDs to set
+         *
+         * @return this instance
+         */
+        public ConsumerQueryArguments setSubscriptionIds(Collection<String> subscriptionIds) {
+            this.subscriptionIds = subscriptionIds;
+            return this;
+        }
+
+        /**
+         * Sets the subscription IDs to the provided values and overwrites any existing values.
+         *
+         * @param subscriptionIds
+         *  the subscription IDs to set
+         *
+         * @return this instance
+         */
+        public ConsumerQueryArguments setSubscriptionIds(String... subscriptionIds) {
+            return this.setSubscriptionIds(subscriptionIds != null ? Arrays.asList(subscriptionIds) : null);
+        }
+
+        /**
+         * @return the subscription IDs
+         */
+        public Collection<String> getSubscriptionIds() {
+            return this.subscriptionIds;
+        }
+
     }
 
     private final EntitlementCurator entitlementCurator;
@@ -1400,91 +1502,118 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         ConsumerQueryArguments queryArgs) {
 
         List<Predicate> predicates = new ArrayList<>();
+        if (queryArgs == null) {
+            return predicates;
+        }
 
-        if (queryArgs != null) {
-            if (queryArgs.getOwner() != null) {
-                predicates.add(
-                    criteriaBuilder.equal(root.get(Consumer_.ownerId), queryArgs.getOwner().getId()));
+        if (queryArgs.getOwner() != null) {
+            predicates.add(
+                criteriaBuilder.equal(root.get(Consumer_.ownerId), queryArgs.getOwner().getId()));
+        }
+
+        if (queryArgs.getUsername() != null) {
+            predicates.add(
+                criteriaBuilder.equal(root.get(Consumer_.username), queryArgs.getUsername()));
+        }
+
+        if (this.checkQueryArgumentCollection(queryArgs.getUuids())) {
+            predicates.add(root.get(Consumer_.uuid).in(queryArgs.getUuids()));
+        }
+
+        if (this.checkQueryArgumentCollection(queryArgs.getTypes())) {
+            List<String> typeIds = queryArgs.getTypes().stream()
+                .map(ConsumerType::getId)
+                .collect(Collectors.toList());
+
+            predicates.add(root.get(Consumer_.typeId).in(typeIds));
+        }
+
+        if (this.checkQueryArgumentCollection(queryArgs.getHypervisorIds())) {
+            // Impl note:
+            // This "case-insensitive" check is entirely dependent on a bit of code in the
+            // HypervisorId class which converts hypervisor IDs to lowercase.
+            List<String> lcaseHIDs = queryArgs.getHypervisorIds().stream()
+                .filter(Objects::nonNull)
+                .map(String::toLowerCase)
+                .collect(Collectors.toList());
+
+            Predicate hidPredicate;
+
+            if (lcaseHIDs.isEmpty()) {
+                // list contained nothing but nulls
+                Join<Consumer, HypervisorId> hypervisor = root.join(Consumer_.hypervisorId,
+                    JoinType.LEFT);
+
+                hidPredicate = hypervisor.get(HypervisorId_.hypervisorId).isNull();
+            }
+            else if (lcaseHIDs.size() < queryArgs.getHypervisorIds().size()) {
+                // nulls + non-nulls
+                Join<Consumer, HypervisorId> hypervisor = root.join(Consumer_.hypervisorId,
+                    JoinType.LEFT);
+
+                hidPredicate = criteriaBuilder.or(hypervisor.get(HypervisorId_.hypervisorId).isNull(),
+                    hypervisor.get(HypervisorId_.hypervisorId).in(lcaseHIDs));
+            }
+            else {
+                // non-nulls only
+                Join<Consumer, HypervisorId> hypervisor = root.join(Consumer_.hypervisorId);
+                hidPredicate = hypervisor.get(HypervisorId_.hypervisorId).in(lcaseHIDs);
             }
 
-            if (queryArgs.getUsername() != null) {
-                predicates.add(
-                    criteriaBuilder.equal(root.get(Consumer_.username), queryArgs.getUsername()));
+            predicates.add(hidPredicate);
+        }
+
+        Map<String, Collection<String>> facts = queryArgs.getFacts();
+        if (facts != null && !facts.isEmpty()) {
+            // Sanity check: make sure we don't have too many arguments for the backend to handle
+            // in a single query. 10 is well below the technical limits, but if we're hitting that
+            // we're probably doing something wrong, and this query will be sloooooooooow.
+            if (facts.size() > MAX_CONSUMER_FACTS_PER_QUERY) {
+                throw new IllegalArgumentException("query arguments contains too many facts");
             }
 
-            if (this.checkQueryArgumentCollection(queryArgs.getUuids())) {
-                predicates.add(root.get(Consumer_.uuid).in(queryArgs.getUuids()));
+            // Impl note:
+            // This behavior is kind of strange -- we use an implicit conjunction to combine
+            // facts of different keys, even though none of the other criteria function that way.
+            // However, until we're willing to break backward compatibility, this is how this
+            // part of the lookup needs to function.
+            facts.entrySet().stream()
+                .map(entry -> this.buildConsumerFactPredicate(criteriaBuilder, root,
+                    entry.getKey(), entry.getValue()))
+                .filter(Objects::nonNull)
+                .forEach(predicates::add);
+        }
+
+        if (queryArgs.getEnvironmentId() != null) {
+            MapJoin<Consumer, String, String> environmentIdsJoin =
+                root.joinMap(Consumer_.ENVIRONMENT_IDS);
+            predicates.add(
+                criteriaBuilder.equal(environmentIdsJoin.value(), queryArgs.getEnvironmentId()));
+        }
+
+        boolean hasContractNumbers = this.checkQueryArgumentCollection(queryArgs.getPoolContractNumbers());
+        boolean hasProductIds = this.checkQueryArgumentCollection(queryArgs.getProductIds());
+        boolean hasSubscriptionIds = this.checkQueryArgumentCollection(queryArgs.getSubscriptionIds());
+
+        if (hasContractNumbers || hasProductIds || hasSubscriptionIds) {
+            Join<Consumer, Entitlement> entitlementsJoin = root.join(Consumer_.entitlements);
+            Join<Entitlement, Pool> poolsJoin = entitlementsJoin.join(Entitlement_.pool);
+
+            if (hasContractNumbers) {
+                predicates.add(poolsJoin.get(Pool_.CONTRACT_NUMBER)
+                    .in(queryArgs.getPoolContractNumbers()));
             }
 
-            if (this.checkQueryArgumentCollection(queryArgs.getTypes())) {
-                List<String> typeIds = queryArgs.getTypes().stream()
-                    .map(ConsumerType::getId)
-                    .collect(Collectors.toList());
-
-                predicates.add(root.get(Consumer_.typeId).in(typeIds));
+            if (hasProductIds) {
+                Join<Pool, Product> productsJoin = poolsJoin.join(Pool_.product);
+                predicates.add(productsJoin.get(Product_.ID).in(queryArgs.getProductIds()));
             }
 
-            if (this.checkQueryArgumentCollection(queryArgs.getHypervisorIds())) {
-                // Impl note:
-                // This "case-insensitive" check is entirely dependent on a bit of code in the
-                // HypervisorId class which converts hypervisor IDs to lowercase.
-                List<String> lcaseHIDs = queryArgs.getHypervisorIds().stream()
-                    .filter(Objects::nonNull)
-                    .map(String::toLowerCase)
-                    .collect(Collectors.toList());
-
-                Predicate hidPredicate;
-
-                if (lcaseHIDs.isEmpty()) {
-                    // list contained nothing but nulls
-                    Join<Consumer, HypervisorId> hypervisor = root.join(Consumer_.hypervisorId,
-                        JoinType.LEFT);
-
-                    hidPredicate = hypervisor.get(HypervisorId_.hypervisorId).isNull();
-                }
-                else if (lcaseHIDs.size() < queryArgs.getHypervisorIds().size()) {
-                    // nulls + non-nulls
-                    Join<Consumer, HypervisorId> hypervisor = root.join(Consumer_.hypervisorId,
-                        JoinType.LEFT);
-
-                    hidPredicate = criteriaBuilder.or(hypervisor.get(HypervisorId_.hypervisorId).isNull(),
-                        hypervisor.get(HypervisorId_.hypervisorId).in(lcaseHIDs));
-                }
-                else {
-                    // non-nulls only
-                    Join<Consumer, HypervisorId> hypervisor = root.join(Consumer_.hypervisorId);
-                    hidPredicate = hypervisor.get(HypervisorId_.hypervisorId).in(lcaseHIDs);
-                }
-
-                predicates.add(hidPredicate);
-            }
-
-            Map<String, Collection<String>> facts = queryArgs.getFacts();
-            if (facts != null && !facts.isEmpty()) {
-                // Sanity check: make sure we don't have too many arguments for the backend to handle
-                // in a single query. 10 is well below the technical limits, but if we're hitting that
-                // we're probably doing something wrong, and this query will be sloooooooooow.
-                if (facts.size() > MAX_CONSUMER_FACTS_PER_QUERY) {
-                    throw new IllegalArgumentException("query arguments contains too many facts");
-                }
-
-                // Impl note:
-                // This behavior is kind of strange -- we use an implicit conjunction to combine
-                // facts of different keys, even though none of the other criteria function that way.
-                // However, until we're willing to break backward compatibility, this is how this
-                // part of the lookup needs to function.
-                facts.entrySet().stream()
-                    .map(entry -> this.buildConsumerFactPredicate(criteriaBuilder, root,
-                        entry.getKey(), entry.getValue()))
-                    .filter(Objects::nonNull)
-                    .forEach(predicates::add);
-            }
-
-            if (queryArgs.getEnvironmentId() != null) {
-                MapJoin<Consumer, String, String> environmentIdsJoin =
-                    root.joinMap(Consumer_.ENVIRONMENT_IDS);
-                predicates.add(
-                    criteriaBuilder.equal(environmentIdsJoin.value(), queryArgs.getEnvironmentId()));
+            if (hasSubscriptionIds) {
+                Join<Pool, SourceSubscription> sourceSubsJoin = poolsJoin.join(Pool_.sourceSubscription);
+                predicates.add(sourceSubsJoin
+                    .get(SourceSubscription_.SUBSCRIPTION_ID)
+                    .in(queryArgs.getSubscriptionIds()));
             }
         }
 

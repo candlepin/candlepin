@@ -1187,6 +1187,9 @@ public class OwnerResource implements OwnerApi {
         @Verify(value = Consumer.class, nullable = true) List<String> uuids,
         List<String> hypervisorIds,
         List<String> facts,
+        List<String> poolContractNumbers,
+        List<String> productIds,
+        List<String> subscriptionIds,
         Integer page, Integer perPage, String order, String sortBy) {
         Owner owner = findOwnerByKey(ownerKey);
         List<ConsumerType> types = this.consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
@@ -1196,7 +1199,10 @@ public class OwnerResource implements OwnerApi {
             .setUsername(username)
             .setUuids(uuids)
             .setTypes(types)
-            .setHypervisorIds(hypervisorIds);
+            .setHypervisorIds(hypervisorIds)
+            .setPoolContractNumbers(poolContractNumbers)
+            .setProductIds(productIds)
+            .setSubscriptionIds(subscriptionIds);
 
         new KeyValueStringParser(this.i18n).parseKeyValuePairs(facts)
             .forEach(kvpair -> queryArgs.addFact(kvpair.getKey(), kvpair.getValue()));

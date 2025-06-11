@@ -38,10 +38,21 @@ public class OwnerClient extends OwnerApi {
         return listOwnerConsumers(ownerKey, Set.of());
     }
 
-    public List<ConsumerDTOArrayElement> listOwnerConsumers(
-        String ownerKey, Set<String> consumerTypes) {
-        return super.listConsumers(ownerKey, null, consumerTypes, List.of(), List.of(), List.of(),
-            null, null, null, null);
+    public List<ConsumerDTOArrayElement> listOwnerConsumers(String ownerKey, Set<String> consumerTypes) {
+        return super.listConsumers(
+            ownerKey,
+            null,
+            consumerTypes,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null,
+            null,
+            null,
+            null);
     }
 
     public List<PoolDTO> listOwnerPools(String ownerKey) {

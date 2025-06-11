@@ -64,11 +64,13 @@ public class OwnerResourceConsumerFactFilterSpecTest {
     @Test
     public void shouldAllowOwnersFilterConsumersByASingleFact() throws ApiException {
         List<ConsumerDTOArrayElement> consumers = adminClient.owners().listConsumers(
-            owner.getKey(), null, null, null, null, List.of("key:value"), null, null, null, null);
+            owner.getKey(), null, null, null, null, List.of("key:value"), null, null, null, null, null, null,
+            null);
         assertEquals(2, consumers.size());
 
         consumers = adminClient.owners().listConsumers(
-            owner.getKey(), null, null, null, null, List.of("newkey:somevalue"), null, null, null, null);
+            owner.getKey(), null, null, null, null, List.of("newkey:somevalue"), null, null, null, null, null,
+            null, null);
         assertThat(consumers)
             .isNotNull()
             .singleElement()
@@ -80,7 +82,7 @@ public class OwnerResourceConsumerFactFilterSpecTest {
     public void shouldAllowOwnersFilterConsumersByMultipleFacts() throws ApiException {
         List<ConsumerDTOArrayElement> consumers = adminClient.owners().listConsumers(
             owner.getKey(), null, null, null, null, List.of("key:value", "otherkey:someval"),
-            null, null, null, null);
+            null, null, null, null, null, null, null);
         assertThat(consumers)
             .isNotNull()
             .singleElement()
@@ -92,7 +94,7 @@ public class OwnerResourceConsumerFactFilterSpecTest {
     public void shouldAllowOwnersFilterConsumersByMultipleFactsSameKeyAsOr() throws ApiException {
         List<ConsumerDTOArrayElement> consumers = adminClient.owners().listConsumers(
             owner.getKey(), null, null, null, null, List.of("otherkey:othervalue", "otherkey:someval"),
-            null, null, null, null);
+            null, null, null, null, null, null, null);
         assertThat(consumers)
             .isNotNull()
             .hasSize(2);
@@ -101,14 +103,16 @@ public class OwnerResourceConsumerFactFilterSpecTest {
     @Test
     public void shouldAllowOwnersFilterConsumersByFactsWithWildcards() throws ApiException {
         List<ConsumerDTOArrayElement> consumers = adminClient.owners().listConsumers(
-            owner.getKey(), null, null, null, null, List.of("*key*:*val*"), null, null, null, null);
+            owner.getKey(), null, null, null, null, List.of("*key*:*val*"), null, null, null, null, null,
+            null, null);
         assertThat(consumers)
             .isNotNull()
             .hasSize(3);
 
         // Also make sure the value half is checked case insensitively
         consumers = adminClient.owners().listConsumers(
-            owner.getKey(), null, null, null, null, List.of("ot*key*:OTher*"), null, null, null, null);
+            owner.getKey(), null, null, null, null, List.of("ot*key*:OTher*"), null, null, null, null, null,
+            null, null);
         assertThat(consumers)
             .isNotNull()
             .singleElement()
