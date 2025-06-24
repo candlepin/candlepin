@@ -768,6 +768,9 @@ public class OwnerResource implements OwnerApi {
             entity.setAttributes(Util.toMap(dto.getAttributes()));
         }
 
+        if (dto.getContractNumber() != null) {
+            entity.setContractNumber(dto.getContractNumber());
+        }
         // Impl note: derived product, provided products, and derived provided products are no longer
         // imported from the DTO.
     }
@@ -1533,7 +1536,7 @@ public class OwnerResource implements OwnerApi {
 
         // Forcefully set fields we don't allow the client to change.
         newPool.setSourceSubscription(currentPool.getSourceSubscription());
-        newPool.setContractNumber(currentPool.getContractNumber());
+        //newPool.setContractNumber(currentPool.getContractNumber());
         newPool.setAccountNumber(currentPool.getAccountNumber());
         newPool.setOrderNumber(currentPool.getOrderNumber());
         newPool.setUpstreamPoolId(currentPool.getUpstreamPoolId());

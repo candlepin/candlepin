@@ -588,13 +588,13 @@ public class OwnerResourceSpecTest {
         ProductDTO product = createProduct(owner);
         PoolDTO pool = owners.createPool(owner.getKey(), Pools.random(product));
 
-        pool.startDate(DateUtil.tomorrow());
+        pool.setContractNumber("random-98435-contract");
 
         owners.updatePool(owner.getKey(), pool);
         PoolDTO updatedPool = admin.pools().getPool(pool.getId(), null, null);
 
-        assertThat(updatedPool.getStartDate())
-            .isCloseTo(pool.getStartDate(), within(1, ChronoUnit.SECONDS));
+        assertThat(updatedPool.getContractNumber())
+            .isEqualTo(pool.getContractNumber(), updatedPool.getContractNumber());
     }
 
     @Test
