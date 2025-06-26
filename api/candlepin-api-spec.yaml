@@ -8669,6 +8669,75 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /rhsmapi/owners/{owner_key}/consumer_feeds:
+    get:
+      description: TODO complete
+      tags:
+        - rhsmapi
+      operationId: listConsumerFeeds
+      parameters:
+        - name: owner_key
+          in: path
+          description: TODO complete
+          required: true
+          schema:
+            type: string
+        - name: after_id
+          in: query
+          description: TODO complete
+          required: false
+          schema:
+            type: string
+        - name: after_uuid
+          in: query
+          description: TODO complete
+          required: false
+          schema:
+            type: string
+        - name: after_checkin
+          in: query
+          description: TODO complete
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2020-04-23 03:23:50.927000"
+        - $ref: "#/components/parameters/paging_page"
+        - $ref: "#/components/parameters/paging_per_page"
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
+      security: []
+      responses:
+        200:
+          description: TODO add
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConsumerFeedDTO'
+        400:
+          description: Unable to deserialize request or the page query parameters are negative.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Unable to deserialize request
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Insufficient permissions
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
 components:
   responses:
     default:
@@ -10271,6 +10340,55 @@ components:
           type: array
           items:
             type: string
+
+    ConsumerFeedDTO:
+      properties:
+        id:
+          type: string
+          deprecated: true
+        uuid:
+          type: string
+        name:
+          type: string
+        typeId:
+          type: string
+        ownerKey:
+          type: string
+        lastCheckin:
+          type: string
+          format: date-time
+        guestId:
+          type: string
+        hypervisorUuid:
+          type: string
+        hypervisorName:
+          type: string
+        serviceLevel:
+          type: string
+        syspurposeRole:
+          type: string
+        syspurposeUsage:
+          type: string
+        syspurposeAddons:
+          type: array
+          items:
+            type: string
+        releaseVer:
+          type: string
+        facts:
+          type: object
+          additionalProperties: true
+        installedProducts:
+          type: array
+          items:
+            type: object
+            properties:
+              productId:
+                type: string
+              productName:
+                type: string
+              productVersion:
+                type: string
 
   securitySchemes:
     basicAuth:
