@@ -50,7 +50,14 @@ public class Event {
      * Type - Constant representing the type of this event.
      */
     public enum Type {
-        CREATED, MODIFIED, DELETED, EXPIRED
+        CREATED, MODIFIED, DELETED, EXPIRED,
+
+        /**
+         * Represents a deletion event for multiple entities of the given target. Note that because this
+         * event type represents many entities, certain event fields *should not* be populated,
+         * such as: targetName, or entityId
+         */
+        BULK_DELETION
     }
 
     /**

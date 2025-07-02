@@ -17,25 +17,30 @@ package org.candlepin.async.tasks;
 import org.candlepin.async.AsyncJob;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
+import org.candlepin.audit.Event;
+import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventSink;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
-import org.candlepin.model.IdentityCertificateCurator;
+import org.candlepin.model.InactiveConsumerRecord;
+import org.candlepin.util.Transactional;
 
 import com.google.common.collect.Iterables;
-import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -64,23 +69,26 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
     private final Configuration config;
     private final ConsumerCurator consumerCurator;
     private final DeletedConsumerCurator deletedConsumerCurator;
-    private final IdentityCertificateCurator identityCertificateCurator;
-    private final ContentAccessCertificateCurator contentAccessCertificateCurator;
     private final CertificateSerialCurator certificateSerialCurator;
+
+    private final EventFactory eventFactory;
+    private final EventSink eventSink;
 
     @Inject
     public InactiveConsumerCleanerJob(Configuration config,
         ConsumerCurator consumerCurator,
         DeletedConsumerCurator deletedConsumerCurator,
-        IdentityCertificateCurator identityCertificateCurator,
-        ContentAccessCertificateCurator contentAccessCertificateCurator,
-        CertificateSerialCurator certificateSerialCurator) {
+        CertificateSerialCurator certificateSerialCurator,
+        EventSink eventSink,
+        EventFactory eventFactory) {
+
         this.config = Objects.requireNonNull(config);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.deletedConsumerCurator = Objects.requireNonNull(deletedConsumerCurator);
-        this.identityCertificateCurator = Objects.requireNonNull(identityCertificateCurator);
-        this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
         this.certificateSerialCurator = Objects.requireNonNull(certificateSerialCurator);
+
+        this.eventSink = Objects.requireNonNull(eventSink);
+        this.eventFactory = Objects.requireNonNull(eventFactory);
     }
 
     /**
@@ -88,32 +96,52 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
      * The identity certificate and content access certificate for the consumers
      * are removed and their serials are revoked.
      *
-     * @param inactiveConsumerIds - ids of inactive consumers to delete.
-     * @return the number of consumers that have been deleted.
+     * @param args
+     *  Arguments for this method; abstracted out due to restrictions in the transactional framework. Must
+     *  consist of a single element which is a collection of InactiveConsumerRecord instances.
+     *
+     * @return
+     *  the number of consumers that have been deleted.
      */
-    @Transactional
-    public int deleteInactiveConsumers(Collection<String> inactiveConsumerIds) {
-        if (inactiveConsumerIds == null || inactiveConsumerIds.isEmpty()) {
+    private Integer deleteInactiveConsumers(Object... args) {
+        if (args == null || args.length < 1) {
+            log.trace("No arguments sent to transactional operation");
             return 0;
         }
 
-        deletedConsumerCurator.createDeletedConsumers(inactiveConsumerIds);
+        Collection<InactiveConsumerRecord> inactiveConsumers = (Collection<InactiveConsumerRecord>) args[0];
+        if (inactiveConsumers == null || inactiveConsumers.isEmpty()) {
+            return 0;
+        }
+
+        log.debug("Deleting inactive consumers: {}", inactiveConsumers);
+
+        // This probably isn't the most efficient way to go about this. Once the stream gather operation is
+        // available, we can probably inline all of the partitioning and this into one lazy operation rather
+        // than doing this.
+        Map<String, List<String>> orgConsumerMap = new HashMap<>();
+        List<String> consumerIds = new ArrayList<>();
+
+        for (InactiveConsumerRecord rec : inactiveConsumers) {
+            consumerIds.add(rec.consumerId());
+            orgConsumerMap.computeIfAbsent(rec.ownerKey(), key -> new ArrayList<>())
+                .add(rec.consumerUuid());
+        }
 
         // Retrieve the certs and their serials for the inactive consumers.
-        List<String> idCertsToRemove = consumerCurator
-            .getIdentityCertIds(inactiveConsumerIds);
-        List<String> scaCertsToRemove = consumerCurator
-            .getContentAccessCertIds(inactiveConsumerIds);
-        List<Long> serialIdsToRevoke = consumerCurator
-            .getSerialIdsForCerts(scaCertsToRemove, idCertsToRemove);
+        List<Long> serialIdsToRevoke = this.consumerCurator.getConsumerCertSerialIds(consumerIds);
 
-        int deletedConsumers = consumerCurator
-            .deleteConsumers(inactiveConsumerIds);
+        this.deletedConsumerCurator.createDeletedConsumers(consumerIds);
+        int deletedConsumers = this.consumerCurator.deleteConsumers(consumerIds);
 
         // Delete the certificates and revoke their serials.
-        identityCertificateCurator.deleteByIds(idCertsToRemove);
-        contentAccessCertificateCurator.deleteByIds(scaCertsToRemove);
-        certificateSerialCurator.revokeByIds(serialIdsToRevoke);
+        this.certificateSerialCurator.revokeByIds(serialIdsToRevoke);
+
+        // Build and queue bulk-deletion events on a per-org basis :(
+        for (Map.Entry<String, List<String>> entry : orgConsumerMap.entrySet()) {
+            Event event = this.eventFactory.bulkConsumerDeletion(entry.getKey(), entry.getValue());
+            this.eventSink.queueEvent(event);
+        }
 
         return deletedConsumers;
     }
@@ -122,15 +150,19 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
     public void execute(JobExecutionContext context) throws JobExecutionException {
         Instant lastCheckedInRetention = getRetentionDate(CFG_LAST_CHECKED_IN_RETENTION_IN_DAYS);
         Instant nonCheckedInRetention = getRetentionDate(CFG_LAST_UPDATED_IN_RETENTION_IN_DAYS);
+        int batchSize = this.getBatchSize();
 
-        List<String> inactiveConsumerIds = consumerCurator
-            .getInactiveConsumerIds(lastCheckedInRetention, nonCheckedInRetention);
+        Transactional<Integer> transactional = this.consumerCurator
+            .transactional(this::deleteInactiveConsumers)
+            .onCommit(status -> this.eventSink.sendEvents())
+            .onRollback(status -> this.eventSink.rollback());
+
+        List<InactiveConsumerRecord> inactiveConsumers = this.consumerCurator
+            .getInactiveConsumers(lastCheckedInRetention, nonCheckedInRetention);
 
         int deletedCount = 0;
-        int batchSize = getBatchSize();
-        for (List<String> batch : Iterables.partition(inactiveConsumerIds, batchSize)) {
-            log.debug("Cleaning inactive consumers with a batch of ids: {}", batch);
-            deletedCount += deleteInactiveConsumers(batch);
+        for (List<InactiveConsumerRecord> batch : Iterables.partition(inactiveConsumers, batchSize)) {
+            deletedCount += transactional.execute(batch);
         }
 
         log.info("InactiveConsumerCleanerJob has run! {} consumers removed.", deletedCount);
