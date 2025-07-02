@@ -227,7 +227,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @JoinColumn(name = "consumer_idcert_id")
     private IdentityCertificate idCert;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     @JoinColumn(name = "cont_acc_cert_id")
     private SCACertificate contentAccessCert;
 

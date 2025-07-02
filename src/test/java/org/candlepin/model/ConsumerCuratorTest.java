@@ -1912,31 +1912,31 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetInactiveConsumerIdsWithNullLastCheckedInRetentionDate() {
+    public void testGetInactiveConsumersWithNullLastCheckedInRetentionDate() {
         Instant nonCheckedInRetention = Instant.now()
             .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_UPDATED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            consumerCurator.getInactiveConsumerIds(null, nonCheckedInRetention);
+            consumerCurator.getInactiveConsumers(null, nonCheckedInRetention);
         });
 
         assertEquals("Last checked-in retention date cannot be null.", exception.getMessage());
     }
 
     @Test
-    public void testGetInactiveConsumerIdsWithNullLastUpdatedRetentionDate() {
+    public void testGetInactiveConsumersWithNullLastUpdatedRetentionDate() {
         Instant lastCheckedInRetention = Instant.now()
             .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            consumerCurator.getInactiveConsumerIds(lastCheckedInRetention, null);
+            consumerCurator.getInactiveConsumers(lastCheckedInRetention, null);
         });
 
         assertEquals("Last updated retention date cannot be null.", exception.getMessage());
     }
 
     @Test
-    public void testGetInactiveConsumerIdsWithExpiredLastCheckedInDate() {
+    public void testGetInactiveConsumersWithExpiredLastCheckedInDate() {
         Instant lastCheckedInRetention = Instant.now()
             .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
         Instant nonCheckedInRetention = Instant.now()
@@ -1960,15 +1960,15 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         activeConsumer.setLastCheckin(Date.from(activeLastCheckedIn));
         consumerCurator.create(activeConsumer);
 
-        List<String> actual = consumerCurator.getInactiveConsumerIds(lastCheckedInRetention,
+        List<InactiveConsumerRecord> actual = consumerCurator.getInactiveConsumers(lastCheckedInRetention,
             nonCheckedInRetention);
 
         assertEquals(1, actual.size());
-        assertEquals(inactiveConsumer.getId(), actual.get(0));
+        assertEquals(inactiveConsumer.getId(), actual.get(0).consumerId());
     }
 
     @Test
-    public void testGetInactiveConsumerIdsWithTypeThatHasManifest() {
+    public void testGetInactiveConsumersWithTypeThatHasManifest() {
         Instant lastCheckedInRetention = Instant.now()
             .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
 
@@ -1987,12 +1987,14 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer.setLastCheckin(Date.from(lastCheckedIn));
         consumerCurator.create(consumer);
 
-        List<String> actual = consumerCurator.getInactiveConsumerIds(lastCheckedInRetention, Instant.now());
+        List<InactiveConsumerRecord> actual = this.consumerCurator
+            .getInactiveConsumers(lastCheckedInRetention, Instant.now());
+
         assertEquals(0, actual.size());
     }
 
     @Test
-    public void testGetInactiveConsumerIdsWithConsumerThatHasExistingEntitlements() {
+    public void testGetInactiveConsumersWithConsumerThatHasExistingEntitlements() {
         Instant lastCheckedInRetention = Instant.now()
             .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
         Instant nonCheckedInRetention = Instant.now()
@@ -2012,7 +2014,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         ent1.setUpdatedOnStart(false);
         entitlementCurator.create(ent1);
 
-        List<String> actual = consumerCurator.getInactiveConsumerIds(lastCheckedInRetention,
+        List<InactiveConsumerRecord> actual = consumerCurator.getInactiveConsumers(lastCheckedInRetention,
             nonCheckedInRetention);
 
         assertEquals(0, actual.size());
