@@ -123,13 +123,12 @@ public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedCons
         }
 
         Principal principal = this.principalProvider.get();
-        String deletedConsumersStatement = "INSERT INTO DeletedConsumer " +
-            "(id, created, updated, consumerUuid, ownerId, " +
-            "ownerDisplayName, ownerKey, principalName, consumerName) " +
+        String deletedConsumersStatement = "INSERT INTO DeletedConsumer (id, created, updated, " +
+            "  consumerUuid, ownerId, ownerDisplayName, ownerKey, principalName, consumerName) " +
             "SELECT consumer.id, NOW(), NOW(), consumer.uuid, consumer.ownerId, owner.displayName, " +
-            "owner.key, :principalName, consumer.name " +
+            "  owner.key, :principalName, consumer.name " +
             "FROM Consumer consumer " +
-            "JOIN Owner owner on owner.id=consumer.ownerId " +
+            "  JOIN consumer.owner owner " +
             "WHERE consumer.id IN (:consumerIds)";
 
         return entityManager.get()
