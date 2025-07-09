@@ -17,6 +17,7 @@ package org.candlepin.audit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -36,6 +37,8 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -48,8 +51,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 
+// TODO: FIXME: This test suite uses mocks wholly incorrectly. There is zero
+// reason to mock our model objects or DTOs to avoid calling setters. These
+// should be updated to use actual objects instead of this mess of mocking out
+// select accessors and hoping for the best.
 
 public class EventFactoryTest {
     private ConsumerTypeCurator mockConsumerTypeCurator;
@@ -207,5 +215,96 @@ public class EventFactoryTest {
         assertEquals(owner.getName(), event.getTargetName());
         assertEquals(owner.getOwnerKey(), event.getOwnerKey());
         assertEquals(Map.of("contentAccessMode", "org_environment"), event.getEventData());
+    }
+
+    @Test
+    public void testBulkConsumerDeletionEventGeneration() {
+        Owner owner = new Owner()
+            .setKey(TestUtil.randomString());
+
+        List<Consumer> consumers = Stream.generate(Consumer::new)
+            .map(consumer -> consumer.setUuid(Util.generateUUID()))
+            .limit(5)
+            .toList();
+
+        List<String> consumerUuids = consumers.stream()
+            .map(Consumer::getUuid)
+            .toList();
+
+        Event event = this.eventFactory.bulkConsumerDeletion(owner, consumers);
+        assertThat(event)
+            .isNotNull()
+            .returns(Event.Target.CONSUMER, Event::getTarget)
+            .returns(Event.Type.BULK_DELETION, Event::getType)
+            .returns(owner.getKey(), Event::getOwnerKey);
+
+        Map<String, Object> eventData = event.getEventData();
+        assertNotNull(eventData);
+
+        List<String> eventConsumerUuids = (List<String>) eventData.get("consumerUuids");
+        assertThat(eventConsumerUuids)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(consumerUuids);
+    }
+
+    @Test
+    public void testBulkConsumerDeletionRequiresOwner() {
+        List<Consumer> consumers = Stream.generate(Consumer::new)
+            .map(consumer -> consumer.setUuid(Util.generateUUID()))
+            .limit(5)
+            .toList();
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerDeletion((Owner) null, consumers));
+    }
+
+    @Test
+    public void testBulkConsumerDeletionRequiresConsumers() {
+        Owner owner = new Owner()
+            .setKey(TestUtil.randomString());
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerDeletion(owner, null));
+    }
+
+    @Test
+    public void testBulkConsumerDeletionEventGenerationByIds() {
+        String ownerKey = TestUtil.randomString();
+        List<String> consumerUuids = Stream.generate(Util::generateUUID)
+            .limit(5)
+            .toList();
+
+        Event event = this.eventFactory.bulkConsumerDeletion(ownerKey, consumerUuids);
+        assertThat(event)
+            .isNotNull()
+            .returns(Event.Target.CONSUMER, Event::getTarget)
+            .returns(Event.Type.BULK_DELETION, Event::getType)
+            .returns(ownerKey, Event::getOwnerKey);
+
+        Map<String, Object> eventData = event.getEventData();
+        assertNotNull(eventData);
+
+        List<String> eventConsumerUuids = (List<String>) eventData.get("consumerUuids");
+        assertThat(eventConsumerUuids)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(consumerUuids);
+    }
+
+    @Test
+    public void testBulkConsumerDeletionByIdRequiresOwnerKey() {
+        List<String> consumerUuids = Stream.generate(Util::generateUUID)
+            .limit(5)
+            .toList();
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerDeletion((String) null, consumerUuids));
+    }
+
+    @Test
+    public void testBulkConsumerDeletionByIdRequiresConsumerUuids() {
+        String ownerKey = TestUtil.randomString();
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerDeletion(ownerKey, null));
     }
 }
