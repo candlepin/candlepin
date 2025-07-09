@@ -35,6 +35,7 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
@@ -61,9 +62,6 @@ public class TestEventSink implements EventSink {
     private final Queue<Event> dispatchedEvents;
     private final Queue<Event> eventQueue;
 
-    /*
-     * needed cause guice needs public scope, default scope is package scope
-     */
     @Inject
     public TestEventSink(Configuration config, EventFilter eventFilter, CandlepinModeManager modeManager,
         EventFactory eventFactory) {
@@ -135,15 +133,24 @@ public class TestEventSink implements EventSink {
      * will represent events that went through the flow of being queued via <code>queueEvent(...)</code> and
      * then dispatched via successful call to <code>sendEvents()</code>. Events which were queued in the
      * event sink but rolled back are not included in this queue.
-     * <p>
-     * This method returns the same queue used internally by this EventSink to queue messages. Its contents
-     * may be changed after it is returned.
      *
      * @return
      *  a queue containing the events dispatched by this event sink
      */
     public Queue<Event> getDispatchedEvents() {
-        return this.dispatchedEvents;
+        return new LinkedList<>(this.dispatchedEvents);
+    }
+
+    /**
+     * Fetches a queue containing the events that are currently in queue, but not yet dispatched. This queue
+     * will represent events that have been received via <code>queueEvent(...)</code>, but have not yet been
+     * commited and dispatched during a call to <code>sendEvents()</code>.
+     *
+     * @return
+     *  a queue containing the events queued in this event sink
+     */
+    public Queue<Event> getQueuedEvents() {
+        return new LinkedList<>(this.eventQueue);
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////

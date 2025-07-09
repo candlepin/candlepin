@@ -18,6 +18,9 @@ import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.RegenEnvEntitlementCertsJob;
+import org.candlepin.audit.Event;
+import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventSink;
 import org.candlepin.auth.SecurityHole;
 import org.candlepin.auth.Verify;
 import org.candlepin.controller.ContentAccessManager;
@@ -107,8 +110,11 @@ public class EnvironmentResource implements EnvironmentApi {
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
     private final EntitlementCertificateService entCertService;
     private final EnvironmentContentOverrideCurator envContentOverrideCurator;
+    private final EventFactory eventFactory;
+    private final EventSink eventSink;
 
     private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
+
 
     @Inject
     public EnvironmentResource(
@@ -130,7 +136,9 @@ public class EnvironmentResource implements EnvironmentApi {
         ContentAccessCertificateCurator contentAccessCertificateCurator,
         EntitlementCurator entCurator,
         EntitlementCertificateService entCertService,
-        EnvironmentContentOverrideCurator envContentOverrideCurator) {
+        EnvironmentContentOverrideCurator envContentOverrideCurator,
+        EventFactory eventFactory,
+        EventSink eventSink) {
 
         this.envCurator = Objects.requireNonNull(envCurator);
         this.i18n = Objects.requireNonNull(i18n);
@@ -151,6 +159,8 @@ public class EnvironmentResource implements EnvironmentApi {
         Objects.requireNonNull(entCurator);
         this.entCertService = Objects.requireNonNull(entCertService);
         this.envContentOverrideCurator = Objects.requireNonNull(envContentOverrideCurator);
+        this.eventFactory = Objects.requireNonNull(eventFactory);
+        this.eventSink = Objects.requireNonNull(eventSink);
 
         this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(entCurator, envContentCurator);
     }
@@ -339,15 +349,19 @@ public class EnvironmentResource implements EnvironmentApi {
         List<Long> serialsToRevoke = new ArrayList<>(consumers.size());
         List<String> idCertsToDelete = new ArrayList<>(consumers.size());
         List<String> caCertsToDelete = new ArrayList<>(consumers.size());
+        List<String> consumerUuids = new ArrayList<>(consumers.size());
 
         for (Consumer consumer : consumers) {
             log.info("Deleting consumer: {}", consumer);
+
+            consumerUuids.add(consumer.getUuid());
 
             IdentityCertificate idCert = consumer.getIdCert();
             if (idCert != null) {
                 idCertsToDelete.add(idCert.getId());
                 serialsToRevoke.add(idCert.getSerial().getId());
             }
+
             SCACertificate contentAccessCert = consumer.getContentAccessCert();
             if (contentAccessCert != null) {
                 caCertsToDelete.add(contentAccessCert.getId());
@@ -359,6 +373,10 @@ public class EnvironmentResource implements EnvironmentApi {
             this.poolService.revokeAllEntitlements(consumer, false);
             this.consumerCurator.delete(consumer);
         }
+
+        // Queue a bulk-consumer-deletion event
+        Event event = this.eventFactory.bulkConsumerDeletion(environment.getOwnerKey(), consumerUuids);
+        this.eventSink.queueEvent(event);
 
         int deletedCerts = this.identityCertificateCurator.deleteByIds(idCertsToDelete);
         log.debug("Deleted {} identity certificates", deletedCerts);
