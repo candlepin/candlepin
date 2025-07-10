@@ -24,8 +24,10 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.InactiveConsumerRecord;
 import org.candlepin.util.Transactional;
 
@@ -69,6 +71,8 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
     private final Configuration config;
     private final ConsumerCurator consumerCurator;
     private final DeletedConsumerCurator deletedConsumerCurator;
+    private final IdentityCertificateCurator identityCertificateCurator;
+    private final ContentAccessCertificateCurator contentAccessCertificateCurator;
     private final CertificateSerialCurator certificateSerialCurator;
 
     private final EventFactory eventFactory;
@@ -78,6 +82,8 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
     public InactiveConsumerCleanerJob(Configuration config,
         ConsumerCurator consumerCurator,
         DeletedConsumerCurator deletedConsumerCurator,
+        IdentityCertificateCurator identityCertificateCurator,
+        ContentAccessCertificateCurator contentAccessCertificateCurator,
         CertificateSerialCurator certificateSerialCurator,
         EventSink eventSink,
         EventFactory eventFactory) {
@@ -85,6 +91,8 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
         this.config = Objects.requireNonNull(config);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.deletedConsumerCurator = Objects.requireNonNull(deletedConsumerCurator);
+        this.identityCertificateCurator = Objects.requireNonNull(identityCertificateCurator);
+        this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
         this.certificateSerialCurator = Objects.requireNonNull(certificateSerialCurator);
 
         this.eventSink = Objects.requireNonNull(eventSink);
@@ -129,12 +137,16 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
         }
 
         // Retrieve the certs and their serials for the inactive consumers.
+        List<String> idCertsToRemove = consumerCurator.getIdentityCertIds(consumerIds);
+        List<String> scaCertsToRemove = consumerCurator.getContentAccessCertIds(consumerIds);
         List<Long> serialIdsToRevoke = this.consumerCurator.getConsumerCertSerialIds(consumerIds);
 
         this.deletedConsumerCurator.createDeletedConsumers(consumerIds);
         int deletedConsumers = this.consumerCurator.deleteConsumers(consumerIds);
 
         // Delete the certificates and revoke their serials.
+        this.identityCertificateCurator.deleteByIds(idCertsToRemove);
+        this.contentAccessCertificateCurator.deleteByIds(scaCertsToRemove);
         this.certificateSerialCurator.revokeByIds(serialIdsToRevoke);
 
         // Build and queue bulk-deletion events on a per-org basis :(
