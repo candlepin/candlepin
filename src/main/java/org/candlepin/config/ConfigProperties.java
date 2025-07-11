@@ -321,6 +321,8 @@ public class ConfigProperties {
     public static final String BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT = "candlepin.consumers" +
         ".bulk_set_consumer_env.max_environments";
 
+    public static final String RHSM_API_PAGE_LIMIT = "candlepinm.rhsm.page_limit";
+
     /**
      * Fetches a string representing the prefix for all per-job configuration for the specified job.
      * The job key or class name may be used, but the usage must be consistent.
@@ -579,6 +581,8 @@ public class ConfigProperties {
 
             this.put(BULK_SET_CONSUMER_ENV_MAX_CONSUMER_LIMIT, "1000");
             this.put(BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT, "10");
+
+            this.put(RHSM_API_PAGE_LIMIT, "1000");
         }
     };
 
@@ -607,6 +611,9 @@ public class ConfigProperties {
                 .min(1));
 
             this.add(new IntegerConfigurationValidator(SCA_X509_CERT_EXPIRY_THRESHOLD)
+                .min(1));
+
+            this.add(new IntegerConfigurationValidator(RHSM_API_PAGE_LIMIT)
                 .min(1));
 
             this.add(new StringConfigurationValidator(DB_DRIVER_CLASS));

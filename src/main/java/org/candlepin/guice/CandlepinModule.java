@@ -140,6 +140,7 @@ import org.candlepin.resource.OwnerProductResource;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.resource.PoolResource;
 import org.candlepin.resource.ProductResource;
+import org.candlepin.resource.RhsmApiCompatResource;
 import org.candlepin.resource.RoleResource;
 import org.candlepin.resource.RootResource;
 import org.candlepin.resource.RulesResource;
@@ -351,6 +352,7 @@ public class CandlepinModule extends AbstractModule {
         bind(SubscriptionResource.class);
         bind(StatusResource.class);
         bind(UserResource.class);
+        bind(RhsmApiCompatResource.class);
     }
 
     private void miscConfigurations() {
