@@ -70,6 +70,7 @@ public final class TestConfig {
         defaults.put(ConfigProperties.BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT,
             String.valueOf(BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT));
         defaults.put(ConfigProperties.SCA_X509_CERT_EXPIRY_THRESHOLD, "5");
+        defaults.put(ConfigProperties.RHSM_API_PAGE_LIMIT, "10");
 
         return defaults;
     }
