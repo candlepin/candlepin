@@ -19,6 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.async.JobManager;
+import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventSink;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.controller.PoolService;
@@ -80,6 +82,9 @@ public class EnvironmentContentOverrideResourceTest extends DatabaseTestFixture 
     }
 
     private EnvironmentResource buildResource() {
+        EventFactory eventFactory = injector.getInstance(EventFactory.class);
+        EventSink eventSink = injector.getInstance(EventSink.class);
+
         return new EnvironmentResource(
             this.environmentCurator,
             this.i18n,
@@ -99,7 +104,9 @@ public class EnvironmentContentOverrideResourceTest extends DatabaseTestFixture 
             this.caCertCurator,
             this.entitlementCurator,
             this.mockEntitlementCertService,
-            this.environmentContentOverrideCurator);
+            this.environmentContentOverrideCurator,
+            eventFactory,
+            eventSink);
     }
 
     private Environment createEnvironment() {

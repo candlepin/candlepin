@@ -14,7 +14,10 @@
  */
 package org.candlepin.resource;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.collection;
+import static org.assertj.core.api.InstanceOfAssertFactories.map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -26,12 +29,14 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.TestingModules;
 import org.candlepin.async.JobManager;
+import org.candlepin.audit.Event;
+import org.candlepin.audit.EventFactory;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.EntitlementCertificateService;
 import org.candlepin.controller.PoolService;
@@ -69,9 +74,14 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.SCACertificate;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestEventSink;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.RdbmsExceptionTranslator;
+import org.candlepin.util.Util;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -94,6 +104,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -144,6 +155,7 @@ class EnvironmentResourceTest {
     private I18n i18n;
     private ModelTranslator translator;
     private EnvironmentResource environmentResource;
+    private TestEventSink eventSink;
 
     private Owner owner;
     private Environment environment1;
@@ -156,6 +168,14 @@ class EnvironmentResourceTest {
             Environment.class, EnvironmentDTO.class);
         this.translator.registerTranslator(new ContentTranslator(), Content.class, ContentDTO.class);
         this.translator.registerTranslator(new NestedOwnerTranslator(), Owner.class, NestedOwnerDTO.class);
+
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.ServletEnvironmentModule(),
+            new TestingModules.StandardTest());
+
+        this.eventSink = injector.getInstance(TestEventSink.class);
+        EventFactory eventFactory = injector.getInstance(EventFactory.class);
 
         this.environmentResource = new EnvironmentResource(
             this.envCurator,
@@ -176,7 +196,9 @@ class EnvironmentResourceTest {
             this.contentAccessCertificateCurator,
             this.entitlementCurator,
             this.entCertService,
-            this.envContentOverrideCurator);
+            this.envContentOverrideCurator,
+            eventFactory,
+            this.eventSink);
 
         // TODO: Stop doing this! Globally shared data means every test in the suite has to account
         // for this or risk counts/queries not returning precise results! Just create the objects in
@@ -564,7 +586,7 @@ class EnvironmentResourceTest {
     @ParameterizedTest
     @NullSource
     @ValueSource(booleans = { false })
-    void shouldCleanUpAfterDeletingEnvironment(Boolean retainConsumers) {
+    void shouldCleanUpConsumersAfterDeletingEnvironmentWhenRetainFlagNotSet(Boolean retainConsumers) {
         Consumer consumer1 = createConsumer(this.environment1);
         Consumer consumer2 = createConsumer(this.environment1);
         consumer2.setIdCert(null);
@@ -579,6 +601,17 @@ class EnvironmentResourceTest {
         verify(this.contentAccessCertificateCurator).deleteByIds(anyList());
         verify(this.certificateSerialCurator).revokeByIds(anyList());
         verify(this.envCurator).delete(this.environment1);
+
+        // Verify an event was queued that contains all of the UUIDs of the deleted consumers
+        Queue<Event> queuedEvents = this.eventSink.getQueuedEvents();
+        assertEquals(1, queuedEvents.size());
+
+        assertThat(queuedEvents.poll())
+            .isNotNull()
+            .returns(owner.getKey(), Event::getOwnerKey)
+            .extracting(Event::getEventData, as(map(String.class, Object.class)))
+            .extractingByKey("consumerUuids", as(collection(String.class)))
+            .containsOnly(consumer1.getUuid(), consumer2.getUuid());
     }
 
     @Test
@@ -598,6 +631,17 @@ class EnvironmentResourceTest {
 
         verify(this.consumerCurator).delete(consumer1);
         verify(this.contentAccessManager).removeContentAccessCert(consumer2);
+
+        // Verify an event was queued that contains all of the UUIDs of the deleted consumers
+        Queue<Event> queuedEvents = this.eventSink.getQueuedEvents();
+        assertEquals(1, queuedEvents.size());
+
+        assertThat(queuedEvents.poll())
+            .isNotNull()
+            .returns(owner.getKey(), Event::getOwnerKey)
+            .extracting(Event::getEventData, as(map(String.class, Object.class)))
+            .extractingByKey("consumerUuids", as(collection(String.class)))
+            .containsOnly(consumer1.getUuid());
     }
 
     @Test
@@ -616,8 +660,11 @@ class EnvironmentResourceTest {
         this.environmentResource.deleteEnvironment(ENV_ID_1, true);
 
         verify(this.consumerCurator, never()).delete(any(Consumer.class));
-        verify(this.contentAccessManager, times(2)).removeContentAccessCert(consumer2);
+        verify(this.contentAccessManager).removeContentAccessCert(consumer2);
         verify(this.envCurator).delete(this.environment1);
+
+        Queue<Event> queuedEvents = this.eventSink.getQueuedEvents();
+        assertEquals(0, queuedEvents.size());
     }
 
     @Test
@@ -737,6 +784,7 @@ class EnvironmentResourceTest {
         cType.setId("ctype1");
 
         return new Consumer()
+            .setUuid(Util.generateUUID())
             .setName("c1")
             .setUsername("u1")
             .setOwner(this.owner)
