@@ -15,9 +15,7 @@
 package org.candlepin.spec.bootstrap.data.builder;
 
 import org.candlepin.dto.api.client.v1.AttributeDTO;
-import org.candlepin.dto.api.client.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
-import org.candlepin.dto.api.client.v1.ProvidedProductDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 /**
@@ -103,17 +101,4 @@ public final class Products {
         }
         return product;
     }
-
-    public static ConsumerInstalledProductDTO toInstalled(ProductDTO product) {
-        return new ConsumerInstalledProductDTO()
-            .productId(product.getId())
-            .productName(product.getName());
-    }
-
-    public static ProvidedProductDTO toProvidedProduct(ProductDTO product) {
-        return new ProvidedProductDTO()
-            .productId(product.getId())
-            .productName(product.getName());
-    }
-
 }
