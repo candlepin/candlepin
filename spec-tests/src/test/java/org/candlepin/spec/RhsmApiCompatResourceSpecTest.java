@@ -16,6 +16,7 @@ package org.candlepin.spec;
 
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
@@ -26,6 +27,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerEntitlementCountsDTO;
+import org.candlepin.dto.api.client.v1.ConsumerFeedDTO;
+import org.candlepin.dto.api.client.v1.ConsumerInstalledProductDTO;
+import org.candlepin.dto.api.client.v1.GuestIdDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
@@ -38,8 +42,10 @@ import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.client.request.Response;
+import org.candlepin.spec.bootstrap.data.builder.ConsumerFeedInstalledProducts;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
+import org.candlepin.spec.bootstrap.data.builder.Facts;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
@@ -57,11 +63,17 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @SpecTest
 @OnlyInHosted
@@ -555,6 +567,575 @@ public class RhsmApiCompatResourceSpecTest {
             .isEqualTo(expected);
     }
 
+    @Test
+    public void shouldNotAllowNonAdminUsersToGetConsumerFeed() {
+        ApiClient adminClient = ApiClients.admin();
+
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
+
+        assertForbidden(() -> userClient.rhsmApi().getConsumerFeeds("randomOrg", null, null, null, null
+            , null));
+    }
+
+    @Test
+    public void shouldNotAllowNoAuthClientsToGetConsumerFeed() {
+        ApiClient noAuthClient = ApiClients.noAuth();
+
+        assertUnauthorized(() -> noAuthClient.rhsmApi().getConsumerFeeds("randomOrg", null, null, null, null
+            , null));
+    }
+
+    @Test
+    public void shouldGetConsumerFeed() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer3 = adminClient.consumers().createConsumer(Consumers.random(owner));
+
+        List<ConsumerFeedDTO> consumerFeed = adminClient.rhsmApi()
+            .getConsumerFeeds(ownerKey, null, null, null, null, null);
+
+        assertThat(consumerFeed)
+            .isNotNull()
+            .hasSize(3)
+            .extracting(ConsumerFeedDTO::getId)
+            .containsExactlyInAnyOrder(consumer1.getId(), consumer2.getId(), consumer3.getId());
+    }
+
+    @Test
+    public void shouldGetConsumerFeedIdFilter() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(
+            Consumers.random(owner).id(StringUtil.random("A")));
+        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(
+            Consumers.random(owner).id(StringUtil.random("B")));
+        ConsumerDTO consumer3 = adminClient.consumers().createConsumer(
+            Consumers.random(owner).id(StringUtil.random("C")));
+
+        List<ConsumerFeedDTO> consumerFeed = adminClient.rhsmApi()
+            .getConsumerFeeds(ownerKey, consumer1.getId(), null, null, null, null);
+
+        assertThat(consumerFeed)
+            .isNotNull()
+            .hasSize(2)
+            .extracting(ConsumerFeedDTO::getId)
+            .containsExactlyInAnyOrder(consumer2.getId(), consumer3.getId());
+    }
+
+    @Test
+    public void shouldGetConsumerFeedUuidFilter() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(
+            Consumers.random(owner).uuid(StringUtil.random("A")));
+        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(
+            Consumers.random(owner).uuid(StringUtil.random("B")));
+        ConsumerDTO consumer3 = adminClient.consumers().createConsumer(
+            Consumers.random(owner).uuid(StringUtil.random("C")));
+
+        List<ConsumerFeedDTO> consumerFeed = adminClient.rhsmApi()
+            .getConsumerFeeds(ownerKey, null, consumer1.getUuid(), null, null, null);
+
+        assertThat(consumerFeed)
+            .isNotNull()
+            .hasSize(2)
+            .extracting(ConsumerFeedDTO::getId)
+            .containsExactlyInAnyOrder(consumer2.getId(), consumer3.getId());
+    }
+
+    @Test
+    public void shouldGetConsumerFeedAfterCheckinFilter() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(
+            Consumers.random(owner).lastCheckin(OffsetDateTime.now().minusDays(3)));
+        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(
+            Consumers.random(owner).lastCheckin(OffsetDateTime.now().minusDays(2)));
+        ConsumerDTO consumer3 = adminClient.consumers().createConsumer(
+            Consumers.random(owner).lastCheckin(OffsetDateTime.now().minusDays(1)));
+
+        List<ConsumerFeedDTO> consumerFeed = adminClient.rhsmApi()
+            .getConsumerFeeds(ownerKey, null, null, consumer2.getLastCheckin().plusMinutes(1), null, null);
+
+        assertThat(consumerFeed)
+            .isNotNull()
+            .hasSize(1)
+            .extracting(ConsumerFeedDTO::getId)
+            .containsExactlyInAnyOrder(consumer3.getId());
+    }
+
+    @Test
+    public void shouldGetConsumerFeedAllFiltersCombined() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(
+            Consumers.random(owner)
+                .id(StringUtil.random("A"))
+                .uuid(StringUtil.random("A"))
+                .lastCheckin(OffsetDateTime.now().minusDays(4)));
+        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(
+            Consumers.random(owner)
+                .id(StringUtil.random("B"))
+                .uuid(StringUtil.random("B"))
+                .lastCheckin(OffsetDateTime.now().minusDays(3)));
+        ConsumerDTO consumer3 = adminClient.consumers().createConsumer(
+            Consumers.random(owner)
+                .id(StringUtil.random("C"))
+                .uuid(StringUtil.random("C"))
+                .lastCheckin(OffsetDateTime.now().minusDays(2)));
+        ConsumerDTO consumer4 = adminClient.consumers().createConsumer(
+            Consumers.random(owner)
+                .id(StringUtil.random("D"))
+                .uuid(StringUtil.random("D"))
+                .lastCheckin(OffsetDateTime.now().minusDays(1)));
+
+        List<ConsumerFeedDTO> consumerFeed = adminClient.rhsmApi()
+            .getConsumerFeeds(ownerKey, consumer3.getId(), consumer2.getUuid(),
+                consumer1.getLastCheckin().plusMinutes(1), null, null);
+
+        assertThat(consumerFeed)
+            .isNotNull()
+            .hasSize(1)
+            .extracting(ConsumerFeedDTO::getId)
+            .containsExactly(consumer4.getId());
+    }
+
+    @Test
+    public void shouldGetConsumerFeedWithInstalledProducts() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+        ConsumerInstalledProductDTO product = new ConsumerInstalledProductDTO()
+            .productId(StringUtil.random("productId"))
+            .productName(StringUtil.random("productName"))
+            .version(StringUtil.random("version"));
+        ConsumerDTO consumer =
+            adminClient.consumers().createConsumer(Consumers.random(owner).addInstalledProductsItem(product));
+
+        List<ConsumerFeedDTO> consumerFeed = adminClient.rhsmApi()
+            .getConsumerFeeds(ownerKey, null, null, null, null, null);
+
+        assertThat(consumerFeed)
+            .isNotNull()
+            .hasSize(1)
+            .extracting(ConsumerFeedDTO::getInstalledProducts)
+            .containsExactly(Set.of(ConsumerFeedInstalledProducts.toConsumerFeedInstalled(product)));
+    }
+
+    @Test
+    public void shouldGetConsumerFeedWithFacts() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+        Map<String, String> facts = new HashMap<>();
+        facts.put("cpu.cpu_socket(s)", "2");             // allowed
+        facts.put("network.fqdn", "host.redhat.com");    // allowed
+        facts.put("random.fact", "xxx");
+        ConsumerDTO consumer =
+            adminClient.consumers().createConsumer(Consumers.random(owner).facts(facts));
+
+        List<ConsumerFeedDTO> consumerFeed = adminClient.rhsmApi()
+            .getConsumerFeeds(ownerKey, null, null, null, null, null);
+
+        assertThat(consumerFeed)
+            .isNotNull()
+            .hasSize(1)
+            .extracting(ConsumerFeedDTO::getFacts)
+            .containsExactly(Map.of("cpu.cpu_socket(s)", "2", "network.fqdn", "host.redhat.com"));
+    }
+
+    @Test
+    public void shouldGetConsumerFeedWithAddons() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+        HashSet<String> addOns = new HashSet<>();
+        addOns.add("addon1");
+        addOns.add("addon2");
+        ConsumerDTO consumer =
+            adminClient.consumers().createConsumer(Consumers.random(owner).addOns(addOns));
+
+        List<ConsumerFeedDTO> consumerFeed = adminClient.rhsmApi()
+            .getConsumerFeeds(ownerKey, null, null, null, null, null);
+
+        assertThat(consumerFeed)
+            .isNotNull()
+            .hasSize(1)
+            .extracting(ConsumerFeedDTO::getSyspurposeAddons)
+            .containsExactly(addOns);
+    }
+
+    @Test
+    public void shouldGetConsumerFeedWithHypervisorsAndGuests() {
+        ApiClient admin = ApiClients.admin();
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        ConsumerDTO host1 = admin.consumers().createConsumer(Consumers.random(owner));
+        String host1Guest1VirtUuid = StringUtil.random("host1-guest1-virt-uuid-");
+        String host1Guest2VirtUuid = StringUtil.random("host1-guest2-virt-uuid-");
+        ConsumerDTO host1Guest1 = createGuest(admin, owner, host1Guest1VirtUuid);
+        ConsumerDTO host1Guest2 = createGuest(admin, owner, host1Guest2VirtUuid);
+        linkHostToGuests(admin, host1, host1Guest1VirtUuid, host1Guest2VirtUuid);
+
+        ConsumerDTO host2 = admin.consumers().createConsumer(Consumers.random(owner));
+        String host2Guest1VirtUuid = StringUtil.random("host2-guest1-virt-uuid-");
+        String host2Guest2VirtUuid = StringUtil.random("host2-guest2-virt-uuid-");
+        ConsumerDTO host2Guest1 = createGuest(admin, owner, host2Guest1VirtUuid);
+        ConsumerDTO host2Guest2 = createGuest(admin, owner, host2Guest2VirtUuid);
+        linkHostToGuests(admin, host2, host2Guest1VirtUuid, host2Guest2VirtUuid);
+
+        List<ConsumerFeedDTO> actual = admin.rhsmApi()
+            .getConsumerFeeds(owner.getKey(), null, null, null, null, null);
+
+        assertThat(actual)
+            .isNotNull()
+            .hasSize(6);
+
+        List<ConsumerFeedDTO> filteredResult = actual.stream()
+            .filter(x -> x.getHypervisorUuid() != null)
+            .toList();
+
+        assertThat(filteredResult)
+            .isNotNull()
+            .hasSize(4)
+            .extracting(
+                ConsumerFeedDTO::getHypervisorUuid,
+                ConsumerFeedDTO::getHypervisorName,
+                ConsumerFeedDTO::getGuestId,
+                ConsumerFeedDTO::getId,
+                ConsumerFeedDTO::getUuid
+            )
+            .containsExactly(
+                tuple(host1.getUuid(), host1.getName(), host1Guest1VirtUuid,
+                    host1Guest1.getId(), host1Guest1.getUuid()),
+                tuple(host1.getUuid(), host1.getName(), host1Guest2VirtUuid,
+                    host1Guest2.getId(), host1Guest2.getUuid()),
+                tuple(host2.getUuid(), host2.getName(), host2Guest1VirtUuid,
+                    host2Guest1.getId(), host2Guest1.getUuid()),
+                tuple(host2.getUuid(), host2.getName(), host2Guest2VirtUuid,
+                    host2Guest2.getId(), host2Guest2.getUuid())
+            );
+    }
+
+    @Test
+    public void shouldGetConsumerFeedWithAllAttributesAndFiltersCorrectlyApplied() {
+        ApiClient admin = ApiClients.admin();
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        OffsetDateTime now = OffsetDateTime.now();
+
+        // Host 1 will be filtered out
+        ConsumerDTO host1 = admin.consumers().createConsumer(Consumers.random(owner));
+        String host1Guest1VirtUuid = StringUtil.random("host1-guest1-virt-uuid-");
+        String host1Guest2VirtUuid = StringUtil.random("host1-guest2-virt-uuid-");
+        ConsumerDTO host1Guest1 = admin.consumers().createConsumer(Consumers.random(owner)
+            .id(StringUtil.random("aaa"))
+            .uuid(StringUtil.random("aaa-uuid"))
+            .lastCheckin(now.minusDays(4))
+            .facts(Map.ofEntries(
+                Facts.VirtUuid.withValue(host1Guest1VirtUuid),
+                Facts.VirtIsGuest.withValue("true"),
+                Facts.Arch.withValue("x86_64")
+            )));
+        admin.consumers().createConsumer(Consumers.random(owner)
+            .facts(Map.ofEntries(
+                Facts.VirtUuid.withValue(host1Guest2VirtUuid),
+                Facts.VirtIsGuest.withValue("true"),
+                Facts.Arch.withValue("x86_64")
+            )));
+        linkHostToGuests(admin, host1, host1Guest1VirtUuid, host1Guest2VirtUuid);
+
+        // Host 2 + guests (only one will be used)
+        ConsumerDTO host2 = admin.consumers().createConsumer(Consumers.random(owner));
+        String host2Guest1VirtUuid = StringUtil.random("host2-guest1-virt-uuid-");
+        String host2Guest2VirtUuid = StringUtil.random("host2-guest2-virt-uuid-");
+
+        // not used guest
+        createGuest(admin, owner, host2Guest1VirtUuid);
+
+        // target guest
+        Set<String> addons = Set.of("addon1", "addon2");
+        ConsumerInstalledProductDTO product = new ConsumerInstalledProductDTO()
+            .productId("pid")
+            .productName("pname")
+            .version("1.0");
+
+        Map<String, String> facts = Map.ofEntries(
+            Facts.VirtUuid.withValue(host2Guest2VirtUuid),
+            Facts.VirtIsGuest.withValue("true"),
+            Facts.Arch.withValue("x86_64"),
+            Facts.CpuSockets.withValue("2")
+        );
+
+        ConsumerDTO target = admin.consumers().createConsumer(Consumers.random(owner)
+            .id(StringUtil.random("bbb"))
+            .uuid(StringUtil.random("bbb-uuid"))
+            .lastCheckin(now.minusDays(1))
+            .addOns(addons)
+            .addInstalledProductsItem(product)
+            .facts(facts)
+        );
+
+        linkHostToGuests(admin, host2, host2Guest1VirtUuid, host2Guest2VirtUuid);
+
+        List<ConsumerFeedDTO> actual = admin.rhsmApi().getConsumerFeeds(
+            owner.getKey(), host1Guest1.getId(), host1Guest1.getUuid(), now.minusDays(4), null, null);
+
+        assertThat(actual)
+            .isNotNull()
+            .hasSize(1);
+
+        ConsumerFeedDTO feed = actual.get(0);
+
+        Map<String, String> expectedFacts = Map.of("cpu.cpu_socket(s)", "2",
+            "uname.machine", "x86_64",
+            "virt.is_guest", "true");
+
+        assertThat(feed)
+            .isNotNull()
+            .returns(host2Guest2VirtUuid, ConsumerFeedDTO::getGuestId)
+            .returns(host2.getUuid(), ConsumerFeedDTO::getHypervisorUuid)
+            .returns(host2.getName(), ConsumerFeedDTO::getHypervisorName)
+            .returns(expectedFacts, ConsumerFeedDTO::getFacts)
+            .returns(addons, ConsumerFeedDTO::getSyspurposeAddons)
+            .returns(Set.of(ConsumerFeedInstalledProducts.toConsumerFeedInstalled(product)),
+                ConsumerFeedDTO::getInstalledProducts);
+    }
+
+    @Test
+    public void shouldReturnGuestsWithReverseEndianVirtUuid() {
+        ApiClient admin = ApiClients.admin();
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+
+        ConsumerDTO host = admin.consumers().createConsumer(Consumers.random(owner));
+
+        String guestUuidSame = "78d7e200-b7d6-4cfe-b7a9-5700e8094df3"; // normal form
+        String guestUuidReversed = "00e2d778-d6b7-fe4c-b7a9-5700e8094df3"; // reverse-endian of host UUID
+
+        ConsumerDTO g1 = createGuest(admin, owner, guestUuidSame);
+        ConsumerDTO g2 = createGuest(admin, owner, guestUuidReversed);
+        linkHostToGuests(admin, host, guestUuidSame, guestUuidReversed);
+
+        List<ConsumerFeedDTO> feeds = admin.rhsmApi()
+            .getConsumerFeeds(owner.getKey(), null, null, null, null, null);
+
+        assertThat(feeds)
+            .isNotNull()
+            .hasSize(3);
+
+        List<ConsumerFeedDTO> filteredFeeds = feeds
+            .stream()
+            .filter(x -> x.getHypervisorUuid() != null)
+            .toList();
+
+        assertThat(filteredFeeds)
+            .isNotNull()
+            .hasSize(2)
+            .extracting(
+                ConsumerFeedDTO::getHypervisorUuid,
+                ConsumerFeedDTO::getHypervisorName,
+                ConsumerFeedDTO::getId,
+                ConsumerFeedDTO::getUuid
+            )
+            .containsExactly(
+                tuple(host.getUuid(), host.getName(), g1.getId(), g1.getUuid()),
+                tuple(host.getUuid(), host.getName(), g2.getId(), g2.getUuid())
+            );
+    }
+
+    private ConsumerDTO createGuest(ApiClient client, OwnerDTO owner, String virtUuid) {
+        return client.consumers().createConsumer(Consumers.random(owner).facts(Map.ofEntries(
+            Facts.VirtUuid.withValue(virtUuid),
+            Facts.VirtIsGuest.withValue("true"),
+            Facts.Arch.withValue("x86_64")
+        )));
+    }
+
+    private void linkHostToGuests(ApiClient client, ConsumerDTO host, String... virtUuid) {
+        List<GuestIdDTO> guestIds = Arrays.stream(virtUuid)
+            .map(this::toGuestId)
+            .collect(Collectors.toList());
+
+        linkHostToGuests(client, host, guestIds);
+    }
+
+    private void linkHostToGuests(ApiClient client, ConsumerDTO host, List<GuestIdDTO> guestIds) {
+        client.consumers()
+            .updateConsumer(host.getUuid(), host.guestIds(guestIds));
+    }
+
+    private GuestIdDTO toGuestId(String guestId) {
+        return new GuestIdDTO()
+            .guestId(guestId);
+    }
+
+    @Nested
+    @TestInstance(Lifecycle.PER_CLASS)
+    public class ListConsumerFeedPagingTests {
+        private final ApiClient adminClient = ApiClients.admin();
+
+        private OwnerDTO owner;
+        private String ownerKey;
+
+        private final int numberOfConsumers = 20;
+
+        private final List<String> consumerUuids = new ArrayList<>();
+
+        @BeforeAll
+        public void beforeAll() {
+            owner = adminClient.owners().createOwner(Owners.random());
+            ownerKey = owner.getKey();
+
+            for (int i = 0; i < numberOfConsumers; i++) {
+                ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+                consumerUuids.add(consumer.getUuid());
+            }
+        }
+
+        @Test
+        public void shouldPageConsumerFeed() {
+            int pageSize = 5;
+            for (int pageIndex = 1; pageIndex * pageSize <= numberOfConsumers; pageIndex++) {
+
+                Response response = Request.from(adminClient)
+                    .setPath("/rhsmapi/owners/{org_key}/consumer_feed")
+                    .setPathParam("org_key", ownerKey)
+                    .addQueryParam("page", String.valueOf(pageIndex))
+                    .addQueryParam("per_page", String.valueOf(pageSize))
+                    .execute();
+
+                assertThat(response)
+                    .isNotNull()
+                    .returns(200, Response::getCode);
+
+                List<ConsumerFeedDTO> consumerFeeds = response
+                    .deserialize(new TypeReference<List<ConsumerFeedDTO>>() {});
+
+                List<String> actualConsumerUuids = consumerFeeds
+                    .stream()
+                    .map(ConsumerFeedDTO::getUuid)
+                    .toList();
+
+                int startIndex = (pageIndex - 1) * pageSize;
+                int endIndex = startIndex + pageSize;
+                List<String> expected = new ArrayList<>(consumerUuids.subList(startIndex, endIndex));
+
+                assertThat(actualConsumerUuids)
+                    .isNotNull()
+                    .containsExactlyElementsOf(expected);
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = { 0, -1, -100 })
+        public void shouldFailWithInvalidPage(int page) throws Exception {
+            Response response = Request.from(adminClient)
+                .setPath("/rhsmapi/owners/{org_key}/consumer_feed")
+                .setPathParam("org_key", ownerKey)
+                .addQueryParam("page", String.valueOf(page))
+                .addQueryParam("per_page", "5")
+                .execute();
+
+            assertThat(response)
+                .isNotNull()
+                .returns(400, Response::getCode);
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = { 0, -1, -100 })
+        public void shouldFailWithInvalidPageSize(int pageSize) throws Exception {
+            Response response = Request.from(adminClient)
+                .setPath("/rhsmapi/owners/{org_key}/consumer_feed")
+                .setPathParam("org_key", ownerKey)
+                .addQueryParam("page", "1")
+                .addQueryParam("per_page", String.valueOf(pageSize))
+                .execute();
+
+            assertThat(response)
+                .isNotNull()
+                .returns(400, Response::getCode);
+        }
+
+        @Test
+        public void shouldPageUsingDefaultPageSizeWithOnlyPageIndex() throws Exception {
+            Response response = Request.from(adminClient)
+                .setPath("/rhsmapi/owners/{org_key}/consumer_feed")
+                .setPathParam("org_key", ownerKey)
+                .addQueryParam("page", "1")
+                .execute();
+
+            assertThat(response)
+                .isNotNull()
+                .returns(200, Response::getCode);
+
+            List<ConsumerFeedDTO> entCounts = response
+                .deserialize(new TypeReference<List<ConsumerFeedDTO>>() {});
+
+            List<String> actual = entCounts
+                .stream()
+                .map(ConsumerFeedDTO::getUuid)
+                .toList();
+
+            assertThat(actual)
+                .isNotNull()
+                .hasSize(DEFAULT_PAGE_SIZE);
+        }
+
+        @Test
+        public void shouldPageWithOnlyPerPage() throws Exception {
+            Response response = Request.from(adminClient)
+                .setPath("/rhsmapi/owners/{org_key}/consumer_feed")
+                .setPathParam("org_key", ownerKey)
+                .addQueryParam("per_page", "5")
+                .execute();
+
+            assertThat(response)
+                .isNotNull()
+                .returns(200, Response::getCode);
+
+            List<ConsumerFeedDTO> consumerFeeds = response
+                .deserialize(new TypeReference<List<ConsumerFeedDTO>>() {});
+
+            List<String> actual = consumerFeeds
+                .stream()
+                .map(ConsumerFeedDTO::getUuid)
+                .toList();
+
+            assertThat(actual)
+                .isNotNull()
+                .hasSize(5);
+        }
+
+        @Test
+        public void shouldReturnEmptyPageConsumerFeed() {
+            Response response = Request.from(adminClient)
+                .setPath("/rhsmapi/owners/{org_key}/consumer_feed")
+                .setPathParam("org_key", ownerKey)
+                .addQueryParam("page", String.valueOf(2))
+                .addQueryParam("per_page", String.valueOf(numberOfConsumers))
+                .execute();
+
+            assertThat(response)
+                .isNotNull()
+                .returns(200, Response::getCode);
+
+            List<ConsumerFeedDTO> consumerFeeds = response
+                .deserialize(new TypeReference<List<ConsumerFeedDTO>>() {});
+
+            assertThat(consumerFeeds)
+                .isNotNull()
+                .isEmpty();
+        }
+    }
+
     @Nested
     @TestInstance(Lifecycle.PER_CLASS)
     public class ListEntitlementCountsPagingTests {
@@ -737,5 +1318,4 @@ public class RhsmApiCompatResourceSpecTest {
                 .hasSize(5);
         }
     }
-
 }
