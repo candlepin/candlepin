@@ -28,6 +28,7 @@ import org.candlepin.spec.bootstrap.assertions.ReasonAttributes;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
+import org.candlepin.spec.bootstrap.data.builder.ConsumerInstalledProducts;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Facts;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
@@ -73,7 +74,8 @@ public class StackingComplianceReasonsSpecTest {
             .putFactsItem(Facts.CpuSockets.key(), "4"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers()
             .bindPoolSync(consumer.getUuid(), pool.getId(), 2);
         assertThat(entitlements)
@@ -140,7 +142,8 @@ public class StackingComplianceReasonsSpecTest {
             .putFactsItem(Facts.CpuSockets.key(), "6"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers()
             .bindPoolSync(consumer.getUuid(), pool.getId(), 2);
         assertThat(entitlements)
@@ -175,7 +178,8 @@ public class StackingComplianceReasonsSpecTest {
             .putFactsItem(Facts.CpuSockets.key(), "1"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers()
             .bindPoolSync(consumer.getUuid(), pool.getId(), 2);
         assertThat(entitlements)
@@ -212,7 +216,8 @@ public class StackingComplianceReasonsSpecTest {
         );
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers()
             .bindPoolSync(consumer.getUuid(), pool.getId(), 2);
         assertThat(entitlements)
@@ -248,7 +253,8 @@ public class StackingComplianceReasonsSpecTest {
         );
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers()
             .bindPoolSync(consumer.getUuid(), pool.getId(), 2);
         assertThat(entitlements)
@@ -285,8 +291,8 @@ public class StackingComplianceReasonsSpecTest {
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
         updateInstalledProducts(consumerClient, consumer, Set.of(
-            Products.toInstalled(product),
-            Products.toInstalled(notCoveredProduct)
+            ConsumerInstalledProducts.toInstalled(product),
+            ConsumerInstalledProducts.toInstalled(notCoveredProduct)
         ));
         List<EntitlementDTO> entitlements = consumerClient.consumers()
             .bindPoolSync(consumer.getUuid(), pool.getId(), 2);
@@ -321,7 +327,8 @@ public class StackingComplianceReasonsSpecTest {
         );
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers()
             .bindPoolSync(consumer.getUuid(), pool.getId(), 2);
         assertThat(entitlements)

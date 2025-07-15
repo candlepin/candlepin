@@ -51,6 +51,7 @@ import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.client.request.Response;
+import org.candlepin.spec.bootstrap.data.builder.ConsumerInstalledProducts;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
@@ -1308,7 +1309,7 @@ public class ContentAccessSpecTest {
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
         consumer.setReleaseVer(new ReleaseVerDTO().releaseVer(""));
-        consumer.installedProducts(Set.of(Products.toInstalled(prod2)));
+        consumer.installedProducts(Set.of(ConsumerInstalledProducts.toInstalled(prod2)));
         consumerClient.consumers().updateConsumer(consumer.getUuid(), consumer);
 
         assertBadRequest(() -> consumerClient.consumers()

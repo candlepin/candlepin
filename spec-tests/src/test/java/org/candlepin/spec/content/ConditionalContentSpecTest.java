@@ -30,6 +30,7 @@ import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.cert.X509Cert;
+import org.candlepin.spec.bootstrap.data.builder.ConsumerInstalledProducts;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.OID;
@@ -37,6 +38,7 @@ import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
+import org.candlepin.spec.bootstrap.data.builder.ProvidedProducts;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
@@ -587,14 +589,15 @@ public class ConditionalContentSpecTest {
 
         // Creating primary pool for prod2
         PoolDTO prod2Pool = adminClient.owners().createPool(ownerKey, Pools.random(prod2)
-            .providedProducts(Set.of(Products.toProvidedProduct(engProd2))));
+            .providedProducts(Set.of(ProvidedProducts.toProvidedProduct(engProd2))));
 
         // Create primary pool for prod1
         PoolDTO prod1Pool = adminClient.owners().createPool(ownerKey, Pools.random(prod1)
-            .providedProducts(Set.of(Products.toProvidedProduct(engProd1))));
+            .providedProducts(Set.of(ProvidedProducts.toProvidedProduct(engProd1))));
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner)
-            .installedProducts(Set.of(Products.toInstalled(engProd1), Products.toInstalled(engProd2))));
+            .installedProducts(Set.of(ConsumerInstalledProducts.toInstalled(engProd1),
+                ConsumerInstalledProducts.toInstalled(engProd2))));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
         // Auto-attach the system
@@ -671,15 +674,16 @@ public class ConditionalContentSpecTest {
 
         // Creating primary pool for prod2
         PoolDTO prod2Pool = adminClient.owners().createPool(ownerKey, Pools.random(prod2)
-            .providedProducts(Set.of(Products.toProvidedProduct(engProd2))));
+            .providedProducts(Set.of(ProvidedProducts.toProvidedProduct(engProd2))));
 
         // Create primary pool for prod1
         PoolDTO prod1Pool = adminClient.owners().createPool(ownerKey, Pools.random(prod1)
-            .providedProducts(Set.of(Products.toProvidedProduct(engProd1))));
+            .providedProducts(Set.of(ProvidedProducts.toProvidedProduct(engProd1))));
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner)
             .facts(Map.of("system.certificate_version", "1.0"))
-            .installedProducts(Set.of(Products.toInstalled(engProd1), Products.toInstalled(engProd2))));
+            .installedProducts(Set.of(ConsumerInstalledProducts.toInstalled(engProd1),
+                ConsumerInstalledProducts.toInstalled(engProd2))));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
         // Auto-attach the system

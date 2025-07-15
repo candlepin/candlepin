@@ -28,6 +28,7 @@ import org.candlepin.spec.bootstrap.assertions.ReasonAttributes;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
+import org.candlepin.spec.bootstrap.data.builder.ConsumerInstalledProducts;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Facts;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
@@ -74,7 +75,8 @@ public class EntitlementComplianceReasonsSpecTest {
             .putFactsItem(Facts.VirtIsGuest.key(), "true"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers()
             .bindPoolSync(consumer.getUuid(), pool.getId(), 1);
         assertThat(entitlements).hasSize(1);
@@ -104,7 +106,8 @@ public class EntitlementComplianceReasonsSpecTest {
             .putFactsItem(Facts.MemoryTotal.key(), "4194304"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
 
         ComplianceStatusDTO complianceStatus = consumerClient.consumers()
             .getComplianceStatus(consumer.getUuid());
@@ -158,7 +161,8 @@ public class EntitlementComplianceReasonsSpecTest {
             .putFactsItem(Facts.MemoryTotal.key(), "16777216"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers()
             .bindPoolSync(consumer.getUuid(), pool.getId(), 1);
         EntitlementDTO entitlement = entitlements.stream().findFirst().orElseThrow();
@@ -189,7 +193,8 @@ public class EntitlementComplianceReasonsSpecTest {
             .putFactsItem(Facts.CpuSockets.key(), "2"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers()
             .bindPoolSync(consumer.getUuid(), pool.getId(), 1);
         OffsetDateTime afterEndDate = entitlements.stream().findFirst()
@@ -220,7 +225,8 @@ public class EntitlementComplianceReasonsSpecTest {
             .putFactsItem(Facts.CpuSockets.key(), "12"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers()
             .bindPoolSync(consumer.getUuid(), pool.getId(), 1);
         EntitlementDTO entitlement = entitlements.stream().findFirst().orElseThrow();
@@ -252,7 +258,8 @@ public class EntitlementComplianceReasonsSpecTest {
             .putFactsItem(Facts.CpuSockets.key(), "2"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers()
             .bindPoolSync(consumer.getUuid(), pool.getId(), 1);
         EntitlementDTO entitlement = entitlements.stream().findFirst().orElseThrow();
@@ -282,7 +289,8 @@ public class EntitlementComplianceReasonsSpecTest {
             .putFactsItem(Facts.CpuSockets.key(), "2"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers()
             .bindPoolSync(consumer.getUuid(), pool.getId(), 1);
         EntitlementDTO entitlement = entitlements.stream().findFirst().orElseThrow();
@@ -314,7 +322,8 @@ public class EntitlementComplianceReasonsSpecTest {
             .putFactsItem(Facts.CpuSockets.key(), "20"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers()
             .bindPoolSync(consumer.getUuid(), pool.getId(), 1);
         EntitlementDTO entitlement = entitlements.stream().findFirst().orElseThrow();

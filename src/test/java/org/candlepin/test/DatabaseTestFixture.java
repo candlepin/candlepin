@@ -178,12 +178,12 @@ public class DatabaseTestFixture {
     protected ProductCertificateCurator productCertificateCurator;
     protected ProductCurator productCurator;
     protected PoolCurator poolCurator;
+    protected RhsmApiCompatCurator rhsmApiCompatCurator;
     protected RoleCurator roleCurator;
     protected RulesCurator rulesCurator;
     protected SubscriptionsCertificateCurator subscriptionsCertificateCurator;
     protected UeberCertificateCurator ueberCertificateCurator;
     protected UserCurator userCurator;
-    protected RhsmApiCompatCurator rhsmApiCompatCurator;
 
     protected PermissionFactory permissionFactory;
     protected ModelTranslator modelTranslator;
@@ -312,6 +312,7 @@ public class DatabaseTestFixture {
         productCertificateCurator = this.injector.getInstance(ProductCertificateCurator.class);
         productCurator = this.injector.getInstance(ProductCurator.class);
         poolCurator = this.injector.getInstance(PoolCurator.class);
+        rhsmApiCompatCurator = this.injector.getInstance(RhsmApiCompatCurator.class);
         roleCurator = this.injector.getInstance(RoleCurator.class);
         rulesCurator = this.injector.getInstance(RulesCurator.class);
         subscriptionsCertificateCurator = this.injector.getInstance(SubscriptionsCertificateCurator.class);

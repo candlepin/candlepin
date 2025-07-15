@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 
 import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.test.DatabaseTestFixture;
@@ -25,8 +26,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
 
@@ -385,6 +394,427 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
             .hasSize(consumerUuids.size());
     }
 
+    @Test
+    public void testGetConsumerFeedsFilterByOwner() {
+        Owner ownerA = createOwner();
+        Owner ownerB = createOwner();
+        Consumer consumerA1 = createConsumer(ownerA);
+        Consumer consumerA2 = createConsumer(ownerA);
+        Consumer consumerB1 = createConsumer(ownerB);
+
+        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeeds(ownerA, null, null, null, 1,
+            10);
+
+        assertThat(result).extracting(ConsumerFeed::getId)
+            .containsExactly(consumerA1.getId(), consumerA2.getId());
+    }
+
+    @Test
+    public void testGetConsumerFeedsFilterByAfterId() {
+        Owner owner = createOwner();
+        Consumer c1 = createConsumer(owner);
+        Consumer c2 = createConsumer(owner);
+        Consumer c3 = createConsumer(owner);
+
+        // Should only return consumers with id > id20
+        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeeds(owner, c2.getId(), null,
+            null, 1, 10);
+
+        assertThat(result)
+            .extracting(ConsumerFeed::getId)
+            .containsExactly(c3.getId());
+    }
+
+    @Test
+    public void testGetConsumerFeedsFilterByAfterUuid() {
+        Owner owner = createOwner();
+        Consumer c1 = createConsumer(owner, "uuid1", null, null, null, null);
+        Consumer c2 = createConsumer(owner, "uuid2", null, null, null, null);
+        Consumer c3 = createConsumer(owner, "uuid3", null, null, null, null);
+
+        // Should only return consumers with uuid1 > uuid2 (lexicographically)
+        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeeds(owner, null, "uuid2", null,
+            1, 10);
+
+        assertThat(result)
+            .extracting(ConsumerFeed::getUuid)
+            .containsExactly("uuid3");
+    }
+
+    @Test
+    public void testGetConsumerFeedsFilterByAfterCheckin() {
+        Owner owner = createOwner();
+        OffsetDateTime ts1 = OffsetDateTime.now().minusDays(3);
+        OffsetDateTime ts2 = OffsetDateTime.now().minusDays(2);
+        OffsetDateTime ts3 = OffsetDateTime.now().minusDays(1);
+        Consumer c1 = createConsumer(owner, "uuidX", Date.from(ts1.toInstant()), null, null, null);
+        Consumer c2 = createConsumer(owner, "uuidY", Date.from(ts2.toInstant()), null, null, null);
+        Consumer c3 = createConsumer(owner, "uuidZ", Date.from(ts3.toInstant()), null, null, null);
+
+        // Only return those after ts2 (should get c3 only)
+        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeeds(owner, null, null, ts2, 1,
+            10);
+
+        assertThat(result)
+            .extracting(ConsumerFeed::getId)
+            .containsExactly(c3.getId());
+    }
+
+    @Test
+    public void testGetConsumerFeedsFilterByAfterIdAndCheckin() {
+        Owner owner = createOwner();
+        OffsetDateTime ts1 = OffsetDateTime.now().minusDays(3);
+        OffsetDateTime ts2 = OffsetDateTime.now().minusDays(2);
+        OffsetDateTime ts3 = OffsetDateTime.now().minusDays(1);
+
+        Consumer c1 = createConsumer(owner, "uuidX", Date.from(ts1.toInstant()), null, null, null);
+        Consumer c2 = createConsumer(owner, "uuidY", Date.from(ts2.toInstant()), null, null, null);
+        Consumer c3 = createConsumer(owner, "uuidZ", Date.from(ts3.toInstant()), null, null, null);
+
+        // id > c1.getId() AND checkin > ts1 → c2 a c3
+        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeeds(owner, c1.getId(), null,
+            ts1, 1, 10);
+
+        assertThat(result)
+            .extracting(ConsumerFeed::getId)
+            .containsExactlyInAnyOrder(c2.getId(), c3.getId());
+    }
+
+    @Test
+    public void testGetConsumerFeedsFilterByAfterIdAndUuid() {
+        Owner owner = createOwner();
+        Consumer c1 = createConsumer(owner, "uuid1", null, null, null, null);
+        Consumer c2 = createConsumer(owner, "uuid2", null, null, null, null);
+        Consumer c3 = createConsumer(owner, "uuid3", null, null, null, null);
+
+        // id > c1.getId() AND uuid > "uuid1" → c2, c3
+        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeeds(owner, c1.getId(), "uuid1",
+            null, 1, 10);
+
+        assertThat(result)
+            .extracting(ConsumerFeed::getUuid)
+            .containsExactlyInAnyOrder("uuid2", "uuid3");
+    }
+
+    @Test
+    public void testGetConsumerFeedsFilterByAfterUuidAndCheckin() {
+        Owner owner = createOwner();
+        OffsetDateTime ts1 = OffsetDateTime.now().minusDays(3);
+        OffsetDateTime ts2 = OffsetDateTime.now().minusDays(2);
+        OffsetDateTime ts3 = OffsetDateTime.now().minusDays(1);
+
+        Consumer c1 = createConsumer(owner, "uuidA", Date.from(ts1.toInstant()), null, null, null);
+        Consumer c2 = createConsumer(owner, "uuidB", Date.from(ts2.toInstant()), null, null, null);
+        Consumer c3 = createConsumer(owner, "uuidC", Date.from(ts3.toInstant()), null, null, null);
+
+        // uuid > "uuidA" AND checkin > ts1 → c2, c3
+        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeeds(owner, null, "uuidA", ts1,
+            1, 10);
+
+        assertThat(result)
+            .extracting(ConsumerFeed::getUuid)
+            .containsExactlyInAnyOrder("uuidB", "uuidC");
+    }
+
+    @Test
+    public void testGetConsumerFeedsFilterByAll() {
+        Owner owner = createOwner();
+        OffsetDateTime ts1 = OffsetDateTime.now().minusDays(5);
+        OffsetDateTime ts2 = OffsetDateTime.now().minusDays(3);
+        OffsetDateTime ts3 = OffsetDateTime.now().minusDays(1);
+        Consumer c1 = createConsumer(owner, "uuidA", Date.from(ts1.toInstant()), null, null, null);
+        Consumer c2 = createConsumer(owner, "uuidB", Date.from(ts2.toInstant()), null, null, null);
+        Consumer c3 = createConsumer(owner, "uuidC", Date.from(ts3.toInstant()), null, null, null);
+
+        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeeds(owner, c1.getId(), "uuidA",
+            ts1, 1, 10);
+
+        assertThat(result)
+            .extracting(ConsumerFeed::getId)
+            .containsExactlyInAnyOrder(c2.getId(), c3.getId());
+    }
+
+    @Test
+    public void testGetConsumerFeedsPaging() {
+        Owner owner = createOwner();
+        int consumerCount = 20;
+        List<String> uuids = new ArrayList<>();
+        for (int i = 1; i <= consumerCount; i++) {
+            String uuid = "uuid" + i;
+            uuids.add(uuid);
+            createConsumer(owner, uuid, null, null, null, null);
+        }
+
+        int pageSize = 5;
+        int totalPages = (int) Math.ceil((double) consumerCount / pageSize);
+
+        for (int page = 1; page <= totalPages; page++) {
+            List<ConsumerFeed> result = rhsmApiCompatCurator
+                .getConsumerFeeds(owner, null, null, null, page, pageSize);
+
+            int expectedSize = Math.min(pageSize, consumerCount - (page - 1) * pageSize);
+
+            assertThat(result)
+                .hasSize(expectedSize);
+
+            List<String> expectedUuids = uuids
+                .subList((page - 1) * pageSize, Math.min(page * pageSize, consumerCount));
+
+            assertThat(result)
+                .extracting(ConsumerFeed::getUuid)
+                .containsExactlyElementsOf(expectedUuids);
+        }
+    }
+
+    @Test
+    public void testGetConsumerFeedsPagingEmptyPage() {
+        Owner owner = createOwner();
+        int consumerCount = 5;
+        for (int i = 1; i <= consumerCount; i++) {
+            createConsumer(owner, "uuid" + i, null, null, null, null);
+        }
+
+        int page = 3;
+        int pageSize = 3;
+        List<ConsumerFeed> emptyPage = rhsmApiCompatCurator
+            .getConsumerFeeds(owner, null, null, null, page, pageSize);
+
+        assertThat(emptyPage)
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetFactsByConsumerReturnsOnlyRelevantFacts() {
+        Owner owner = createOwner();
+        Map<String, String> facts = new HashMap<>();
+        facts.put("cpu.cpu_socket(s)", "2");             // allowed
+        facts.put("network.fqdn", "host.redhat.com");    // allowed
+        facts.put("random.fact", "xxx");                 // not allowed
+        Consumer consumer = createConsumer(owner, null, null, facts, null, null);
+
+        List<ConsumerFeed> consumerFeeds =
+            rhsmApiCompatCurator.getConsumerFeeds(owner, null, null, null, 1, 100);
+
+        assertThat(consumerFeeds.get(0))
+            .extracting(ConsumerFeed::getFacts)
+            .satisfies(x -> {
+                assertThat(x).containsEntry("cpu.cpu_socket(s)", "2");
+                assertThat(x).containsEntry("network.fqdn", "host.redhat.com");
+                assertThat(x).doesNotContainKey("random.fact");
+            });
+    }
+
+    @Test
+    public void testGetAddOnsByConsumerReturnsAllAddOns() {
+        Owner owner = createOwner();
+        HashSet<String> addOns = new HashSet<>();
+        addOns.add("addon1");
+        addOns.add("addon2");
+        Consumer consumer = createConsumer(owner, null, null, null, addOns, null);
+
+        List<ConsumerFeed> consumerFeed = rhsmApiCompatCurator.getConsumerFeeds(owner, null, null, null, 1,
+            100);
+
+        assertThat(consumerFeed.get(0))
+            .extracting(ConsumerFeed::getSyspurposeAddons)
+            .satisfies(x -> {
+                assertThat(x).containsExactlyInAnyOrder("addon1", "addon2");
+            });
+    }
+
+    @Test
+    public void testGetConsumerFeedsReturnsInstalledProducts() {
+        Owner owner = createOwner();
+        ConsumerInstalledProduct installedProd1 = createConsumerInstalledProduct();
+        ConsumerInstalledProduct installedProd2 = createConsumerInstalledProduct();
+        Consumer consumer = createConsumer(owner, null, null, null, null, List.of(installedProd1,
+            installedProd2));
+
+        List<ConsumerFeed> consumerFeed = rhsmApiCompatCurator.getConsumerFeeds(owner, null, null, null, 1,
+            100);
+
+        Set<ConsumerFeedInstalledProduct> installedProducts = consumerFeed.get(0).getInstalledProducts();
+        assertThat(installedProducts)
+            .extracting(ConsumerFeedInstalledProduct::productId)
+            .containsExactlyInAnyOrder(installedProd1.getProductId(), installedProd2.getProductId());
+        assertThat(installedProducts)
+            .extracting(ConsumerFeedInstalledProduct::productName)
+            .contains(installedProd1.getProductName(), installedProd2.getProductName());
+    }
+
+    @Test
+    public void testGetConsumerFeedsReturnsHypervisorGuestMapping() {
+        Owner owner = createOwner();
+        Consumer host = createConsumer(owner);
+        String hostGuestVirtUuid = TestUtil.randomString("host-guest-virt-uuid-");
+        createGuest(owner, hostGuestVirtUuid);
+        linkHostToGuests(host, hostGuestVirtUuid);
+
+        List<ConsumerFeed> consumerFeed = rhsmApiCompatCurator.getConsumerFeeds(owner, null, null, null, 1,
+            100);
+
+        assertThat(consumerFeed)
+            .isNotNull()
+            .hasSize(2);
+
+        List<ConsumerFeed> filteredResult = consumerFeed.stream()
+            .filter(x -> x.getHypervisorUuid() != null)
+            .toList();
+
+        assertThat(filteredResult)
+            .isNotNull()
+            .hasSize(1)
+            .extracting(
+                ConsumerFeed::getHypervisorUuid,
+                ConsumerFeed::getHypervisorName,
+                ConsumerFeed::getGuestId
+            )
+            .containsExactly(
+                tuple(host.getUuid(), host.getName(), hostGuestVirtUuid)
+            );
+    }
+
+    @Test
+    public void testCountConsumerFeedFilterByOwner() {
+        Owner ownerA = createOwner();
+        Owner ownerB = createOwner();
+        createConsumer(ownerA);
+        createConsumer(ownerA);
+        createConsumer(ownerB);
+
+        int count = rhsmApiCompatCurator.countConsumerFeedCount(ownerA, null, null, null);
+
+        assertThat(count)
+            .isEqualTo(2);
+    }
+
+    @Test
+    public void testCountConsumerFeedFilterByAfterId() {
+        Owner owner = createOwner();
+        Consumer c1 = createConsumer(owner);
+        Consumer c2 = createConsumer(owner);
+        Consumer c3 = createConsumer(owner);
+
+        int count = rhsmApiCompatCurator.countConsumerFeedCount(owner, c2.getId(), null, null);
+
+        assertThat(count)
+            .isEqualTo(1);
+    }
+
+    @Test
+    public void testCountConsumerFeedFilterByAfterUuid() {
+        Owner owner = createOwner();
+        createConsumer(owner, "uuid1", null, null, null, null);
+        createConsumer(owner, "uuid2", null, null, null, null);
+        createConsumer(owner, "uuid3", null, null, null, null);
+
+        int count = rhsmApiCompatCurator.countConsumerFeedCount(owner, null, "uuid2", null);
+
+        assertThat(count)
+            .isEqualTo(1);
+    }
+
+    @Test
+    public void testCountConsumerFeedFilterByAfterCheckin() {
+        Owner owner = createOwner();
+        OffsetDateTime ts1 = OffsetDateTime.now().minusDays(3);
+        OffsetDateTime ts2 = OffsetDateTime.now().minusDays(2);
+        OffsetDateTime ts3 = OffsetDateTime.now().minusDays(1);
+
+        createConsumer(owner, "uuidX", Date.from(ts1.toInstant()), null, null, null);
+        createConsumer(owner, "uuidY", Date.from(ts2.toInstant()), null, null, null);
+        createConsumer(owner, "uuidZ", Date.from(ts3.toInstant()), null, null, null);
+
+        int count = rhsmApiCompatCurator.countConsumerFeedCount(owner, null, null, ts2);
+
+        assertThat(count)
+            .isEqualTo(1);
+    }
+
+    @Test
+    public void testCountConsumerFeedFilterByAfterIdAndCheckin() {
+        Owner owner = createOwner();
+        OffsetDateTime ts1 = OffsetDateTime.now().minusDays(3);
+        OffsetDateTime ts2 = OffsetDateTime.now().minusDays(2);
+        OffsetDateTime ts3 = OffsetDateTime.now().minusDays(1);
+
+        Consumer c1 = createConsumer(owner, "uuidX", Date.from(ts1.toInstant()), null, null, null);
+        createConsumer(owner, "uuidY", Date.from(ts2.toInstant()), null, null, null);
+        createConsumer(owner, "uuidZ", Date.from(ts3.toInstant()), null, null, null);
+
+        int count = rhsmApiCompatCurator.countConsumerFeedCount(owner, c1.getId(), null, ts1);
+
+        assertThat(count)
+            .isEqualTo(2);
+    }
+
+    @Test
+    public void testCountConsumerFeedFilterByAfterIdAndUuid() {
+        Owner owner = createOwner();
+        Consumer c1 = createConsumer(owner, "uuid1", null, null, null, null);
+        createConsumer(owner, "uuid2", null, null, null, null);
+        createConsumer(owner, "uuid3", null, null, null, null);
+
+        int count = rhsmApiCompatCurator.countConsumerFeedCount(owner, c1.getId(), "uuid1", null);
+
+        assertThat(count)
+            .isEqualTo(2);
+    }
+
+    private Consumer createConsumer(Owner owner, String uuid, Date lastCheckin, Map<String, String> facts,
+        Set<String> addons, List<ConsumerInstalledProduct> installedProducts) {
+        Consumer consumer = new Consumer()
+            .setUuid(uuid)
+            .setOwner(owner)
+            .setName("test-consumer")
+            .setType(this.createConsumerType())
+            .setLastCheckin(lastCheckin)
+            .setFacts(facts)
+            .setAddOns(addons)
+            .setInstalledProducts(installedProducts);
+
+        return this.consumerCurator.create(consumer);
+    }
+
+    private Consumer createGuest(Owner owner, String virtUuid) {
+        return this.createConsumer(owner, null, null, Map.of(Consumer.Facts.VIRT_UUID, virtUuid,
+            Consumer.Facts.VIRT_IS_GUEST, "true", Consumer.Facts.ARCHITECTURE , "x86_64"), null, null);
+    }
+
+    private void linkHostToGuests(Consumer host, String... virtUuid) {
+        List<GuestId> guestIds = Arrays.stream(virtUuid)
+            .map(this::toGuestId)
+            .collect(Collectors.toList());
+
+        linkHostToGuests(host, guestIds);
+    }
+
+    private void linkHostToGuests(Consumer host, List<GuestId> guestIds) {
+        consumerCurator.update(host.setGuestIds(guestIds));
+    }
+
+    private GuestId toGuestId(String guestId) {
+        GuestId guest = new GuestId();
+        guest.setGuestId(guestId);
+        return guest;
+    }
+
+    private ConsumerInstalledProduct createConsumerInstalledProduct() {
+        ConsumerInstalledProduct source = new ConsumerInstalledProduct();
+
+        source.setProductId(TestUtil.randomString("test_product_id"));
+        source.setProductName(TestUtil.randomString("test_product_name"));
+        source.setVersion(TestUtil.randomString("test_version"));
+        source.setArch(TestUtil.randomString("test_arch"));
+        source.setStatus(TestUtil.randomString("test_status"));
+        source.setStartDate(new Date());
+        source.setEndDate(new Date());
+        source.setCreated(new Date());
+        source.setUpdated(new Date());
+
+        return source;
+    }
+
     private Entitlement createEntitlementWithQuantity(Owner owner, Consumer consumer, Pool pool,
         int quantity) {
 
@@ -402,5 +832,4 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
 
         return entitlement;
     }
-
 }

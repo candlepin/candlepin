@@ -8722,6 +8722,77 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /rhsmapi/owners/{org_key}/consumer_feed:
+    get:
+      description: |
+        A super-admin-only endpoint to retrieve consumer feed information for a specific owner.
+        This endpoint is deprecated and maintained only for compatibility with RHSM API.
+      tags:
+        - rhsmapi
+      operationId: getConsumerFeeds
+      deprecated: true
+      parameters:
+        - name: org_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: after_id
+          in: query
+          description: |
+            An optional string value indicating a consumer ID to use for filtering.
+            Deprecated, use after_uuid or after_checkin instead.
+          schema:
+            type: string
+        - name: after_uuid
+          in: query
+          description: |
+            An optional UUID indicating a consumer UUID to use for filtering.
+          schema:
+            type: string
+        - name: after_checkin
+          in: query
+          description: |
+            An optional ISO8601-formatted timestamp used to filter consumers based on their last check-in.
+          schema:
+            type: string
+            format: date-time
+        - $ref: "#/components/parameters/paging_page"
+        - $ref: "#/components/parameters/paging_per_page"
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
+      security: [ ]
+      responses:
+        200:
+          description: A list of consumer feed information objects.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConsumerFeedDTO'
+        400:
+          description: Bad request due to invalid query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid input parameters
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Insufficient permissions
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
 components:
   responses:
     default:
@@ -9124,6 +9195,62 @@ components:
                 type: array
                 items:
                   $ref: '#/components/schemas/EnvironmentDTO'
+
+    ConsumerFeedDTO:
+      description: Represents a consumer feed DTO for compatibility with RHSM API
+      type: object
+      properties:
+        id:
+          type: string
+          deprecated: true
+        uuid:
+          type: string
+        name:
+          type: string
+        typeId:
+          type: string
+        ownerKey:
+          type: string
+        lastCheckin:
+          type: string
+          format: date-time
+        guestId:
+          type: string
+        hypervisorUuid:
+          type: string
+        hypervisorName:
+          type: string
+        serviceLevel:
+          type: string
+        syspurposeRole:
+          type: string
+        syspurposeUsage:
+          type: string
+        syspurposeAddons:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        facts:
+          type: object
+          additionalProperties:
+            type: string
+        installedProducts:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ConsumerFeedInstalledProductDTO'
+
+    ConsumerFeedInstalledProductDTO:
+      description: Represents an installed product in consumer feed DTO for compatibility with RHSM API
+      type: object
+      properties:
+        productId:
+          type: string
+        productName:
+          type: string
+        productVersion:
+          type: string
 
     ConsumerActivationKeyDTO:
       description: Represent activation keys used by consumer in registration
@@ -10321,10 +10448,10 @@ components:
             entitlementCounts:
               type: array
               items:
-                type: RhsmApiEntitlementCountDTO
+                $ref: '#/components/schemas/RhsmApiEntitlementCountDTO'
 
     RhsmApiEntitlementCountDTO:
-      description: DTO containing entitlement cound information
+      description: DTO containing entitlement count information
       allOf:
         - type: object
           properties:

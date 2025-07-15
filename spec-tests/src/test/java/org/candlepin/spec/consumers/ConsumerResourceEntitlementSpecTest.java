@@ -39,6 +39,7 @@ import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.client.request.Response;
+import org.candlepin.spec.bootstrap.data.builder.ConsumerInstalledProducts;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
@@ -247,7 +248,7 @@ public class ConsumerResourceEntitlementSpecTest {
         ProductDTO prod = adminClient.ownerProducts()
             .createProduct(owner.getKey(), Products.random());
 
-        consumer.installedProducts(Set.of(Products.toInstalled(prod)));
+        consumer.installedProducts(Set.of(ConsumerInstalledProducts.toInstalled(prod)));
         adminClient.consumers().updateConsumer(consumer.getUuid(), consumer);
         consumer = adminClient.consumers().getConsumer(consumer.getUuid());
         PoolDTO pool = Pools.random(prod)
@@ -270,7 +271,7 @@ public class ConsumerResourceEntitlementSpecTest {
         assertThat(consumer).returns("valid", ConsumerDTO::getEntitlementStatus);
         ProductDTO prod =  adminClient.hosted().createProduct(Products.random());
 
-        consumer.installedProducts(Set.of(Products.toInstalled(prod)));
+        consumer.installedProducts(Set.of(ConsumerInstalledProducts.toInstalled(prod)));
         adminClient.consumers().updateConsumer(consumer.getUuid(), consumer);
         consumer = adminClient.consumers().getConsumer(consumer.getUuid());
         adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));

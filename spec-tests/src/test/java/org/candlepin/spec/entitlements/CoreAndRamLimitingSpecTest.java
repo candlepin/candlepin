@@ -27,6 +27,7 @@ import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
+import org.candlepin.spec.bootstrap.data.builder.ConsumerInstalledProducts;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Facts;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
@@ -285,7 +286,7 @@ public class CoreAndRamLimitingSpecTest {
 
     private void updateInstalledProducts(ApiClient client, ConsumerDTO consumer, ProductDTO... products) {
         Set<ConsumerInstalledProductDTO> installedProducts = Arrays.stream(products)
-            .map(Products::toInstalled)
+            .map(ConsumerInstalledProducts::toInstalled)
             .collect(Collectors.toSet());
 
         updateInstalledProducts(client, consumer, installedProducts);

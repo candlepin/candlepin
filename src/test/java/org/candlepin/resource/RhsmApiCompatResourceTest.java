@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.candlepin.dto.api.server.v1.ConsumerEntitlementCountsDTO;
+import org.candlepin.dto.api.server.v1.ConsumerFeedDTO;
 import org.candlepin.dto.api.server.v1.RhsmApiConsumerEntitlementCountsQueryDTO;
 import org.candlepin.dto.api.server.v1.RhsmApiEntitlementCountDTO;
 import org.candlepin.exceptions.BadRequestException;
@@ -38,6 +39,7 @@ import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
@@ -214,6 +216,84 @@ public class RhsmApiCompatResourceTest extends DatabaseTestFixture {
             assertThat(actual)
                 .isNotNull()
                 .map(ConsumerEntitlementCountsDTO::getConsumerUuid)
+                .containsExactlyElementsOf(expected);
+        }
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { " " })
+    public void testGetConsumerFeedWithNotValidOwner(String ownerKey) {
+        Stream<ConsumerFeedDTO> consumerFeed = rhsmApiCompatResource.getConsumerFeeds(ownerKey, null, null,
+            null, null, null);
+
+        assertThat(consumerFeed)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetConsumerFeedWithUnknownOwner() {
+        Stream<ConsumerFeedDTO> consumerFeed = rhsmApiCompatResource.getConsumerFeeds("unknownKey", null,
+            null, null, null, null);
+
+        assertThat(consumerFeed)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetConsumerFeedWithInvalidPageParameter() {
+        createOwner("test-owner");
+        ResteasyContext.pushContext(PageRequest.class, new PageRequest()
+            .setPage(-1)
+            .setPerPage(100));
+
+        assertThrows(BadRequestException.class, () -> rhsmApiCompatResource.getConsumerFeeds("test-owner",
+            null, null, null, -1, 100));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { -1, 1001 })
+    public void testGetConsumerFeedWithInvalidPerPageParameter(Integer perPage) {
+        createOwner("test-owner");
+        ResteasyContext.pushContext(PageRequest.class, new PageRequest()
+            .setPage(1)
+            .setPerPage(perPage));
+
+        assertThrows(BadRequestException.class, () -> rhsmApiCompatResource.getConsumerFeeds("test-owner",
+            null, null, null, 1, perPage));
+    }
+
+    @Test
+    public void testGetConsumerFeedPaging() {
+        Owner owner = this.createOwner();
+
+        int numberOfConsumers = 20;
+        List<String> consumerIds = new ArrayList<>();
+        for (int i = 0; i < numberOfConsumers; i++) {
+            Consumer consumer = createConsumer(owner);
+            consumerIds.add(consumer.getId());
+        }
+
+        int pageSize = 4;
+        for (int pageIndex = 1; pageIndex * pageSize <= numberOfConsumers; pageIndex++) {
+            ResteasyContext.pushContext(PageRequest.class, new PageRequest()
+                .setPage(pageIndex)
+                .setPerPage(pageSize));
+
+            Stream<ConsumerFeedDTO> actual = rhsmApiCompatResource
+                .getConsumerFeeds(owner.getKey(), null, null, null, null, null);
+
+            int startIndex = (pageIndex - 1) * pageSize;
+            int endIndex = startIndex + pageSize;
+
+            List<String> expected = consumerIds
+                .subList(startIndex, endIndex);
+
+            assertThat(actual)
+                .isNotNull()
+                .map(ConsumerFeedDTO::getId)
                 .containsExactlyElementsOf(expected);
         }
     }
