@@ -29,6 +29,7 @@ import org.candlepin.resource.client.v1.HypervisorsApi;
 import org.candlepin.resource.client.v1.OwnerContentApi;
 import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.resource.client.v1.ProductsApi;
+import org.candlepin.resource.client.v1.RhsmapiApi;
 import org.candlepin.resource.client.v1.RolesApi;
 import org.candlepin.resource.client.v1.RootApi;
 import org.candlepin.resource.client.v1.StatusApi;
@@ -184,5 +185,9 @@ public class ApiClient {
 
     public RulesClient rules() {
         return new RulesClient(this.client);
+    }
+
+    public RhsmapiApi rhsmApi() {
+        return new RhsmapiApi(this.client);
     }
 }

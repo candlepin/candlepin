@@ -79,6 +79,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.RhsmApiCompatCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.RulesCurator;
@@ -182,6 +183,7 @@ public class DatabaseTestFixture {
     protected SubscriptionsCertificateCurator subscriptionsCertificateCurator;
     protected UeberCertificateCurator ueberCertificateCurator;
     protected UserCurator userCurator;
+    protected RhsmApiCompatCurator rhsmApiCompatCurator;
 
     protected PermissionFactory permissionFactory;
     protected ModelTranslator modelTranslator;
@@ -315,6 +317,7 @@ public class DatabaseTestFixture {
         subscriptionsCertificateCurator = this.injector.getInstance(SubscriptionsCertificateCurator.class);
         ueberCertificateCurator = this.injector.getInstance(UeberCertificateCurator.class);
         userCurator = this.injector.getInstance(UserCurator.class);
+        rhsmApiCompatCurator = this.injector.getInstance(RhsmApiCompatCurator.class);
     }
 
     @AfterEach
