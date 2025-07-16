@@ -463,7 +463,7 @@ publishing {
         warArtifact(MavenPublication) {
             from components.web
 
-            groupId 'org.candlepin'
+            groupId 'com.joshmalbrecht.candlepin'
             artifactId 'candlepin'
         }
 
@@ -471,7 +471,7 @@ publishing {
         jarArtifact(MavenPublication) {
             artifact tasks.apiJar
 
-            groupId = 'org.candlepin'
+            groupId = 'com.joshmalbrecht.candlepin'
             artifactId = 'candlepin-api'
         }
     }
