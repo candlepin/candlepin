@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="20250722140921-1" author="crog">
+        <modifyDataType tableName="cp_consumer_environments"
+            columnName="priority"
+            newDataType="INTEGER"/>
+    </changeSet>
+
+    <changeSet id="20250722140921-2" author="crog">
+        <addNotNullConstraint tableName="cp_consumer_environments"
+            columnName="priority"
+            columnDataType="INTEGER"
+            defaultNullValue="0"/>
+    </changeSet>
+
+</databaseChangeLog>
