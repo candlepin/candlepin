@@ -22,8 +22,8 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.RyeConfig;
 import org.candlepin.config.validation.ConfigurationValidatorUtil;
-import org.candlepin.database.DatabaseConnectionManager;
 import org.candlepin.database.MigrationManager;
+import org.candlepin.liquibase.LiquibaseConnectionGenerator;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.logging.LoggingConfigurator;
 import org.candlepin.messaging.CPMContextListener;
@@ -321,7 +321,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
         RyeConfig ryeConfig = new RyeConfig(configBuilder.build());
 
-        log.info("Validating configurations.");
+        log.info("Validating configuration...");
         ConfigurationValidatorUtil.validateConfigurations(ConfigProperties.CONFIGURATION_VALIDATORS,
             ryeConfig);
 
@@ -330,12 +330,13 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
     protected void initializeDatabase() {
         try {
-            DatabaseConnectionManager connectionManager = new DatabaseConnectionManager(config);
-            MigrationManager migrationManager = new MigrationManager(config, connectionManager);
+            LiquibaseConnectionGenerator connectionGenerator = new LiquibaseConnectionGenerator(this.config);
+            MigrationManager migrationManager = new MigrationManager(this.config, connectionGenerator);
+
             migrationManager.migrate();
         }
         catch (Exception e) {
-            log.error("Error initializing database: " + e.getMessage(), e);
+            log.error("Error initializing database: {}", e.getMessage(), e);
             throw new RuntimeException(e);
         }
     }
