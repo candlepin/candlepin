@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.database;
+package org.candlepin.liquibase;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
@@ -30,20 +30,18 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Objects;
 
-/**
- * Class for creating and maintaining a connection to the database.
- */
-public class DatabaseConnectionManager {
-    private static Logger log = LoggerFactory.getLogger(DatabaseConnectionManager.class);
 
-    private Configuration config;
-    private Connection connection;
+
+/**
+ * Class for creating connection to the underlying database for Liquibase management
+ */
+public class LiquibaseConnectionGenerator {
+    private static final Logger log = LoggerFactory.getLogger(LiquibaseConnectionGenerator.class);
+
+    private final Configuration config;
 
     /**
      * Creates a database connection based on the defined configuration values.
-     *
-     * @throws LiquibaseException
-     *  if unable to establish a connection to the database
      *
      * @throws ReflectiveOperationException
      *  if unable to load the database driver
@@ -51,23 +49,17 @@ public class DatabaseConnectionManager {
      * @param config
      *  used to retrieve the database configuration values needed to establish a connection
      */
-    public DatabaseConnectionManager(Configuration config)
-        throws LiquibaseException, ReflectiveOperationException {
+    public LiquibaseConnectionGenerator(Configuration config) throws ReflectiveOperationException {
         this.config = Objects.requireNonNull(config);
-
-        loadDatabaseDriver();
-        this.connection = createConnection();
-    }
-
-    /**
-     * @return the established database connection
-     */
-    public Connection getConnection() {
-        return this.connection;
+        this.loadDatabaseDriver();
     }
 
     /**
      * Creates a {@link Database} object based on the database configuration.
+     * <p>
+     * <strong>Note:</strong> The caller is responsible for properly closing the database connection once
+     * liquibase tasks have been completed. Failure to do so may leave open connections or dangling
+     * transactions.
      *
      * @throws LiquibaseException
      *  if unable to create the {@link Database} from the database connection
@@ -75,7 +67,8 @@ public class DatabaseConnectionManager {
      * @return the database created from the database connection
      */
     public Database getDatabase() throws LiquibaseException {
-        JdbcConnection jdbcConnection = new JdbcConnection(this.connection);
+        Connection connection = this.createConnection();
+        JdbcConnection jdbcConnection = new JdbcConnection(connection);
 
         return DatabaseFactory.getInstance()
             .findCorrectDatabaseImplementation(jdbcConnection);
@@ -135,18 +128,18 @@ public class DatabaseConnectionManager {
         }
     }
 
-    protected void loadDatabaseDriver() throws ReflectiveOperationException {
+    private void loadDatabaseDriver() throws ReflectiveOperationException {
         String driverClass = config.getString(ConfigProperties.DB_DRIVER_CLASS);
         if (driverClass == null) {
             String msg = "No driver class specified for the database connection. Please specify it in " +
-                "'candlepin.conf' under 'jpa.config.hibernate.connection.driver_class' config or as ENV " +
-                "variable.";
+                "'candlepin.conf' under 'jpa.config.hibernate.connection.driver_class' config or as" +
+                " an environment variable.";
+
             log.error(msg);
             throw new RuntimeException(msg);
         }
-        Class.forName(driverClass)
-            .getDeclaredConstructor()
-            .newInstance();
+
+        Class.forName(driverClass);
     }
 }
 
