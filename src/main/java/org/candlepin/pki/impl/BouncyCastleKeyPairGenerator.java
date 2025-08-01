@@ -14,6 +14,7 @@
  */
 package org.candlepin.pki.impl;
 
+import org.bouncycastle.jcajce.spec.MLDSAParameterSpec;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.KeyPairData;
 import org.candlepin.model.KeyPairDataCurator;
@@ -30,10 +31,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.security.GeneralSecurityException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
@@ -114,8 +117,16 @@ public class BouncyCastleKeyPairGenerator implements KeyPairGenerator {
     @Override
     public KeyPair generateKeyPair() {
         try {
-            java.security.KeyPairGenerator keyGen = java.security.KeyPairGenerator.getInstance(KEY_ALGORITHM);
-            keyGen.initialize(KEY_SIZE);
+            java.security.KeyPairGenerator keyGen = null;
+            try {
+                keyGen = java.security.KeyPairGenerator.getInstance("MLDSA", "BC");
+                keyGen.initialize(MLDSAParameterSpec.ml_dsa_65);
+            } catch (NoSuchProviderException e) {
+                throw new RuntimeException(e);
+            } catch (InvalidAlgorithmParameterException e) {
+                throw new RuntimeException(e);
+            }
+
             return keyGen.generateKeyPair();
         }
         catch (NoSuchAlgorithmException e) {

@@ -14,13 +14,18 @@
  */
 package org.candlepin.pki.impl;
 
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider;
 import org.candlepin.pki.PrivateKeyReader;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,6 +34,7 @@ import java.security.Key;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.HashMap;
@@ -54,11 +60,27 @@ public abstract class ProviderBasedPrivateKeyReader implements PrivateKeyReader 
 
     @Override
     public PrivateKey read(String caKeyPath, String caKeyPassword) throws IOException {
-        try (
-            FileInputStream fis = new FileInputStream(caKeyPath)
-        ) {
-            return read(fis, caKeyPassword);
+        Security.addProvider(new BouncyCastlePQCProvider());
+        Security.addProvider(new BouncyCastleProvider());
+
+        try (PEMParser pemParser = new PEMParser(new FileReader(caKeyPath))) {
+            Object object = pemParser.readObject();
+
+            if (object instanceof PrivateKeyInfo) {
+                PrivateKeyInfo privateKeyInfo = (PrivateKeyInfo) object;
+
+                JcaPEMKeyConverter converter = new JcaPEMKeyConverter()
+                        .setProvider("BC");
+
+                PrivateKey privateKey = converter.getPrivateKey(privateKeyInfo);
+
+                System.out.println("Loaded ML-DSA private key: " + privateKey.getAlgorithm());
+                return privateKey;
+            } else {
+                System.err.println("Not a PrivateKeyInfo object. Got: " + object.getClass().getName());
+            }
         }
+        return null;
     }
 
     @Override

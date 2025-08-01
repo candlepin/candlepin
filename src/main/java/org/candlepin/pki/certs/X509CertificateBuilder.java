@@ -72,7 +72,7 @@ import javax.inject.Provider;
  * Builder for the construction of {@link X509Certificate}s.
  */
 public class X509CertificateBuilder {
-    private static final String SIGNATURE_ALGORITHM = "SHA256WithRSA";
+    private static final String SIGNATURE_ALGORITHM = "ML-DSA";
     private static final Pattern X500_SPECIAL_SYMBOL_REGEX = Pattern.compile("\\A([,=+<>#;\"])");
 
     private final Provider<BouncyCastleProvider> securityProvider;
