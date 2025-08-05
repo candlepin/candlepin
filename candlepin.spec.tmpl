@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.6.3
+Version: 4.6.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,9 @@ fi
 
 #raw
 %changelog
+* Tue Aug 05 2025 candlepin-bot 4.6.4-1
+- CANDLEPIN-1039: Fixed dangling Liquibase connections (crog@redhat.com)
+
 * Thu Jul 24 2025 candlepin-bot 4.6.3-1
 - CANDLEPIN-1037: Fixed consumer env priority database column type
   (crog@redhat.com)
