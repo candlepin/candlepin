@@ -23,7 +23,7 @@
 
 Name: candlepin
 Version: 4.5.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -234,6 +234,15 @@ fi
 
 #raw
 %changelog
+* Wed Aug 06 2025 candlepin-bot 4.5.2-2
+- CANDLEPIN-1041: Fixed dangling Liquibase connections (crog@redhat.com)
+- Prevent argument injection in SonarQube analysis step (sbakaj@redhat.com)
+- CANDLEPIN-943: Removed JIRA target check from forks PRs (sbakaj@redhat.com)
+- CANDLEPIN-995: Updated the entity layering migration's tiebreakers
+  (crog@redhat.com)
+- CANDLEPIN-1002: Fixed SAST scan issues (sbakaj@redhat.com)
+- Updated hard coded unit test date (joshmalbrecht@gmail.com)
+
 * Fri Mar 07 2025 candlepin-bot 4.5.2-1
 - CHAINSAW-341: Improved SCA payload regeneration performance
   (joshmalbrecht@gmail.com)
