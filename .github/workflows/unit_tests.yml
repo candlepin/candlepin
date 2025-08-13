@@ -59,7 +59,8 @@ jobs:
             **/build/**/jacoco*.xml
             **/build/classes/
 
-      - name: Analyze
+      - if: github.event.pull_request.head.repo.fork == false
+        name: Analyze
         env:
           HEAD_SHA: ${{ github.sha }}
           PR_KEY: ${{ github.event.pull_request.number }}
