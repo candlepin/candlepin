@@ -29,6 +29,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.Hibernate;
 import org.hibernate.query.NativeQuery;
+import org.hibernate.type.StandardBasicTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -878,11 +879,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Retrieves the identity Certificate ids for the provided consumer ids.
+     * Retrieves the identity certificate IDs for the provided consumer ids.
      *
      * @param consumerIds
-     *     - ids of the {@link Consumer}s.
-     * @return identity Certificate ids.
+     *  ids of the {@link Consumer}s.
+     *
+     * @return
+     *  identity Certificate ids.
      */
     public List<String> getIdentityCertIds(Collection<String> consumerIds) {
         if (consumerIds == null || consumerIds.isEmpty()) {
@@ -928,6 +931,55 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return caCertIds.stream()
             .filter(Objects::nonNull)
             .toList();
+    }
+
+    /**
+     * Fetches a list of certificate serial IDs associated with the provided consumer IDs. This method will
+     * fetch serials for identity certificates and content access certificates; all other certificates will
+     * be ignored. The output of this method is not ordered or in any way linked to its inputs.
+     *
+     * @param consumerIds
+     *  A collection of IDs of the consumers for which to fetch certificate serials
+     *
+     * @return
+     *  An unordered list of certificate serials for the given consumers
+     */
+    public List<Long> getConsumerCertSerialIds(Collection<String> consumerIds) {
+        String sql = """
+            WITH consumers (id, id_cert_id, ca_cert_id) AS (
+                -- bit of a hack job to avoid injecting the IDs parameter multiple times
+                SELECT id, consumer_idcert_id AS id_cert_id, cont_acc_cert_id AS ca_cert_id
+                  FROM cp_consumer
+                  WHERE id IN (:consumer_ids)
+            )
+            SELECT cert.serial_id
+                FROM consumers c
+                JOIN cp_id_cert cert ON cert.id = c.id_cert_id
+            UNION ALL
+            SELECT cert.serial_id
+                FROM consumers c
+                JOIN cp_cont_access_cert cert ON cert.id = c.ca_cert_id
+            """;
+
+        List<Long> output = new ArrayList<>();
+
+        // Impl note: The scalar is necessary here because the generics provide literally zero validation for
+        // us in this code. Without the scalar explicitly setting how the DB field should be converted, it
+        // will be fetched as a BigInteger, which will eventually cause problems when the output list is
+        // processed as longs.
+        Query query = this.getEntityManager()
+            .createNativeQuery(sql)
+            .unwrap(NativeQuery.class)
+            .addScalar("serial_id", StandardBasicTypes.LONG);
+
+        for (List<String> block : this.partition(consumerIds)) {
+            List<Long> qresult = query.setParameter("consumer_ids", block)
+                .getResultList();
+
+            output.addAll(qresult);
+        }
+
+        return output;
     }
 
     /**
@@ -979,35 +1031,52 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * Deletes {@link Consumer}s based on the provided consumer ids.
      *
      * @param consumerIds
-     *     - ids of the consumers to delete.
-     * @return the number of consumer that were deleted.
+     *  ids of the consumers to delete
+     *
+     * @return
+     *  the number of consumer that were deleted
      */
     public int deleteConsumers(Collection<String> consumerIds) {
         if (consumerIds == null || consumerIds.isEmpty()) {
             return 0;
         }
 
-        return getEntityManager()
-            .createQuery("DELETE Consumer WHERE id IN (:consumerIds)")
-            .setParameter("consumerIds", consumerIds)
-            .executeUpdate();
+        int deleted = 0;
+
+        Query query = this.getEntityManager()
+            .createQuery("DELETE Consumer WHERE id IN (:consumerIds)");
+
+        for (List<String> block : this.partition(consumerIds)) {
+            deleted += query.setParameter("consumerIds", block)
+                .executeUpdate();
+        }
+
+        return deleted;
     }
 
     /**
-     * Retrieves the Ids for inactive {@link Consumer}s based on the provided last checked in retention
-     * date and the last updated retention date. Consumers are considered inactive if the have a checked
-     * in date and that date is older than the provided checked in retention date, or the consumer's
-     * update date is older than the provided last update retention date. Also, the consumer must not
-     * have any attached entitlements and must have a non-manifest type to be considered inactive.
+     * Retrieves records of inactive consumers based on the provided last check-in and last-updated retention
+     * dates.
+     * <p>
+     * A given consumer is considered inactive if it is a non-manifest consumer, with no active entitlements,
+     * and either (a) the consumer's last check-in is older than the provided last-checked-in retention date,
+     * or (b) the consumer has not yet checked in, and it was last updated internally before the provided
+     * last-updated retention date.
      *
      * @param lastCheckedInRetention
-     *     - consumers that have not checked in before this date are considered inactive.
+     *  consumers that have not checked in before this date are considered inactive
+     *
      * @param lastUpdatedRetention
-     *     - if the consumer has no checked in date, then the consumers that have an update date older
-     *     than the provided retention date is considered inactive.
-     * @return a list of Ids for inactive {@link Consumer}s.
+     *  if the consumer has no checked in date, then the consumers that have an update date older than the
+     *  provided retention date is considered inactive.
+     *
+     * @return
+     *  a list of {@link InactiveConsumerRecord}s representing the consumers to be considered inactive
+     *  according to the provided retention dates
      */
-    public List<String> getInactiveConsumerIds(Instant lastCheckedInRetention, Instant lastUpdatedRetention) {
+    public List<InactiveConsumerRecord> getInactiveConsumers(Instant lastCheckedInRetention,
+        Instant lastUpdatedRetention) {
+
         if (lastCheckedInRetention == null) {
             throw new IllegalArgumentException("Last checked-in retention date cannot be null.");
         }
@@ -1016,17 +1085,20 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             throw new IllegalArgumentException("Last updated retention date cannot be null.");
         }
 
-        String jpql = "SELECT consumer.id " +
+        String jpql = "SELECT new org.candlepin.model.InactiveConsumerRecord(consumer.id, consumer.uuid, " +
+            "owner.key) " +
             "FROM Consumer consumer " +
-            "JOIN ConsumerType type ON type.id=consumer.typeId " +
-            "LEFT JOIN Entitlement ent ON ent.consumer.id=consumer.id " +
-            "WHERE ((consumer.lastCheckin < :lastCheckedInRetention) " +
-            "    OR (consumer.lastCheckin IS NULL AND consumer.updated < :nonCheckedInRetention)) " +
-            "AND ent.consumer.id IS NULL " +
-            "AND type.manifest = 'N'";
+            "  JOIN ConsumerType type on type.id = consumer.typeId " +
+            "  JOIN consumer.owner owner " +
+            "  LEFT JOIN consumer.entitlements ent " +
+            "WHERE ent IS NULL " +
+            "  AND type.manifest = 'N' " +
+            "  AND (consumer.lastCheckin < :lastCheckedInRetention OR " +
+            "    (consumer.lastCheckin IS NULL AND consumer.updated < :nonCheckedInRetention)) " +
+            "ORDER BY owner.key, consumer.uuid";
 
-        return getEntityManager()
-            .createQuery(jpql, String.class)
+        return this.getEntityManager()
+            .createQuery(jpql, InactiveConsumerRecord.class)
             .setParameter("lastCheckedInRetention", Date.from(lastCheckedInRetention))
             .setParameter("nonCheckedInRetention", Date.from(lastUpdatedRetention))
             .getResultList();

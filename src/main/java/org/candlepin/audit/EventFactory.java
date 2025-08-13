@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -208,6 +209,60 @@ public class EventFactory {
             .setEntityId(consumer.getUuid())
             .setOwnerKey(consumer.getOwnerKey())
             .setEventData(eventData);
+    }
+
+    /**
+     * Generates a bulk consumer deletion event for the given consumers in the specified owner.
+     *
+     * @param owner
+     *  The owner from which the consumers were deleted
+     *
+     * @param consumers
+     *  The consumers that were deleted
+     *
+     * @return
+     *  an event representing the bulk deletion of the given consumers
+     */
+    public Event bulkConsumerDeletion(Owner owner, Collection<Consumer> consumers) {
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
+
+        if (consumers == null) {
+            throw new IllegalArgumentException("consumers is null");
+        }
+
+        List<String> consumerUuids = consumers.stream()
+            .map(Consumer::getUuid)
+            .toList();
+
+        return this.bulkConsumerDeletion(owner.getKey(), consumerUuids);
+    }
+
+    /**
+     * Generates a bulk consumer deletion event for the given consumers in the specified owner.
+     *
+     * @param ownerKey
+     *  The key of the owner from which the consumers were deleted
+     *
+     * @param consumerUuids
+     *  The UUIDs of the consumers that were deleted
+     *
+     * @return
+     *  an event representing the bulk deletion of the given consumers
+     */
+    public Event bulkConsumerDeletion(String ownerKey, Collection<String> consumerUuids) {
+        if (ownerKey == null || ownerKey.isBlank()) {
+            throw new IllegalArgumentException("owner is null or empty");
+        }
+
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            throw new IllegalArgumentException("consumerUuids is null or empty");
+        }
+
+        return new Event(Type.BULK_DELETION, Target.CONSUMER, principalProvider.get().getData())
+            .setOwnerKey(ownerKey)
+            .setEventData(Map.of("consumerUuids", consumerUuids));
     }
 
     public Event complianceCreated(Consumer consumer, SystemPurposeComplianceStatus compliance) {

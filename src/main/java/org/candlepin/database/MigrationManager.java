@@ -17,6 +17,7 @@ package org.candlepin.database;
 import static org.candlepin.config.ConfigProperties.DB_MANAGE_ON_START;
 
 import org.candlepin.config.Configuration;
+import org.candlepin.liquibase.LiquibaseConnectionGenerator;
 
 import liquibase.changelog.ChangeLogParameters;
 import liquibase.changelog.ChangeSet;
@@ -42,16 +43,15 @@ import java.util.stream.Stream;
  * Class for managing database migrations.
  */
 public class MigrationManager {
-    private static Logger log = LoggerFactory.getLogger(MigrationManager.class);
-
+    private static final Logger log = LoggerFactory.getLogger(MigrationManager.class);
     private static final String CHANGELOG_FILE_NAME = "db/changelog/changelog-update.xml";
 
-    private Configuration config;
-    private DatabaseConnectionManager connectionManager;
+    private final Configuration config;
+    private final LiquibaseConnectionGenerator connectionGenerator;
 
-    public MigrationManager(Configuration config, DatabaseConnectionManager connectionManager) {
+    public MigrationManager(Configuration config, LiquibaseConnectionGenerator connectionGenerator) {
         this.config = Objects.requireNonNull(config);
-        this.connectionManager = Objects.requireNonNull(connectionManager);
+        this.connectionGenerator = Objects.requireNonNull(connectionGenerator);
     }
 
     /**
@@ -79,37 +79,45 @@ public class MigrationManager {
             return;
         }
 
-        Database database = connectionManager.getDatabase();
-        List<ChangeSet> unrunChangeSets = getUnrunChangeSets(database);
-        if (unrunChangeSets.isEmpty()) {
-            log.info("Candlepin database is up to date!");
-        }
-        else {
-            Stream<String> csStream = unrunChangeSets.stream()
-                .map(changeset ->
-                String.format("file: %s, changeset: %s", changeset.getFilePath(), changeset.getId()));
+        try (Database database = this.connectionGenerator.getDatabase()) {
+            List<ChangeSet> unrunChangeSets = getUnrunChangeSets(database);
+            if (unrunChangeSets.isEmpty()) {
+                log.info("Candlepin database is up to date!");
+            }
+            else {
+                Stream<String> csStream = unrunChangeSets.stream()
+                    .map(changeset ->
+                    String.format("file: %s, changeset: %s", changeset.getFilePath(), changeset.getId()));
 
-            switch (migrationLevel) {
-                case REPORT:
-                    log.warn("Database has {} unrun changeset(s): \n{}", unrunChangeSets.size(),
-                        csStream.collect(Collectors.joining("\n  ", "  ", "")));
-                    break;
-                case HALT:
-                    log.error("Database has {} unrun changeset(s); halting startup...\n{}",
-                        unrunChangeSets.size(), csStream.collect(Collectors.joining("\n  ", "  ", "")));
-                    throw new RuntimeException("The database is missing Liquibase changeset(s)");
-                case MANAGE:
-                    log.info("Calling liquibase to update the database");
-                    log.info("Database has {} unrun changeset(s): \n{}", unrunChangeSets.size(),
-                        csStream.collect(Collectors.joining("\n  ", "  ", "")));
-                    executeUpdate(database);
-                    log.info("Update complete");
-                    break;
-                default:
-                    throw new RuntimeException("Cannot determine database management mode.");
+                switch (migrationLevel) {
+                    case REPORT:
+                        log.warn("Database has {} unrun changeset(s): \n{}", unrunChangeSets.size(),
+                            csStream.collect(Collectors.joining("\n  ", "  ", "")));
+                        break;
+
+                    case HALT:
+                        log.error("Database has {} unrun changeset(s); halting startup...\n{}",
+                            unrunChangeSets.size(), csStream.collect(Collectors.joining("\n  ", "  ", "")));
+                        throw new RuntimeException("The database is missing Liquibase changeset(s)");
+
+                    case MANAGE:
+                        log.info("Calling liquibase to update the database");
+                        log.info("Database has {} unrun changeset(s): \n{}", unrunChangeSets.size(),
+                            csStream.collect(Collectors.joining("\n  ", "  ", "")));
+                        executeUpdate(database);
+                        log.info("Update complete");
+                        break;
+
+                    default:
+                        throw new RuntimeException("Unexpected database management mode: " + migrationLevel);
+                }
             }
         }
     }
+
+    // TODO: FIXME: These are only protected to deal with the way our testing infrastructure works. They
+    // should be private methods and the tests should be updated to either fully mock out the operations (ugh)
+    // or be backed by an actual or mocked database.
 
     /**
      * Reads the list of unrun changesets from the database supplied based on the changelog.
