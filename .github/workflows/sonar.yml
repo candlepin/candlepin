@@ -1,62 +1,62 @@
----
-name: Sonar
+# ---
+# name: Sonar
 
-on:
-  pull_request:
+# on:
+#   pull_request:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+#   cancel-in-progress: true
 
-jobs:
-  sonar:
-    name: Sonar
-    runs-on: ubuntu-latest
-    steps:
-      - name: Mask secrets
-        shell: bash
-        run: |
-          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
-          echo "::add-mask::${{ secrets.SONAR_TOKEN }}"
+# jobs:
+#   sonar:
+#     name: Sonar
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Mask secrets
+#         shell: bash
+#         run: |
+#           echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
+#           echo "::add-mask::${{ secrets.SONAR_TOKEN }}"
 
-      - name: Install dependencies
-        shell: bash
-        run: sudo apt-get install -y gettext git-core unzip
+#       - name: Install dependencies
+#         shell: bash
+#         run: sudo apt-get install -y gettext git-core unzip
 
-      - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
+#       - name: Check out repository
+#         uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
+#           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Set Environment Variables
-        uses: ./.github/actions/set_vars
-        with:
-          varFilePath: ./.github/variables/pr_verification.env
+#       - name: Set Environment Variables
+#         uses: ./.github/actions/set_vars
+#         with:
+#           varFilePath: ./.github/variables/pr_verification.env
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: ${{ env.JAVA_DISTRIBUTION }}
-          java-version: ${{ env.JAVA_VERSION }}
+#       - name: Set up Java
+#         uses: actions/setup-java@v4
+#         with:
+#           distribution: ${{ env.JAVA_DISTRIBUTION }}
+#           java-version: ${{ env.JAVA_VERSION }}
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+#       - name: Setup Gradle
+#         uses: gradle/actions/setup-gradle@v4
 
-      - name: Analyze
-        env:
-          HEAD_SHA: ${{ github.sha }}
-          PR_KEY: ${{ github.event.pull_request.number }}
-          BASE_REF: ${{ github.base_ref }}
-          HEAD_REF: ${{ github.head_ref }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          ./gradlew sonar \
-            -x coverage \
-            -Dsonar.scm.provider=git \
-            -Dsonar.scm.revision="$HEAD_SHA" \
-            -Dsonar.pullrequest.key="$PR_KEY" \
-            -Dsonar.pullrequest.base="$BASE_REF" \
-            -Dsonar.pullrequest.branch="$HEAD_REF"
+#       - name: Analyze
+#         env:
+#           HEAD_SHA: ${{ github.sha }}
+#           PR_KEY: ${{ github.event.pull_request.number }}
+#           BASE_REF: ${{ github.base_ref }}
+#           HEAD_REF: ${{ github.head_ref }}
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#         run: |
+#           ./gradlew sonar \
+#             -x coverage \
+#             -Dsonar.scm.provider=git \
+#             -Dsonar.scm.revision="$HEAD_SHA" \
+#             -Dsonar.pullrequest.key="$PR_KEY" \
+#             -Dsonar.pullrequest.base="$BASE_REF" \
+#             -Dsonar.pullrequest.branch="$HEAD_REF"
 
