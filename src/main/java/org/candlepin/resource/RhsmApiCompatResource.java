@@ -16,12 +16,18 @@ package org.candlepin.resource;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.ConsumerEntitlementCountsDTO;
+import org.candlepin.dto.api.server.v1.ConsumerFeedDTO;
 import org.candlepin.dto.api.server.v1.RhsmApiConsumerEntitlementCountsQueryDTO;
 import org.candlepin.dto.api.server.v1.RhsmApiEntitlementCountDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.ConsumerEntitlementCount;
+import org.candlepin.model.ConsumerFeed;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.RhsmApiCompatCurator;
+import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.PageRequest.Order;
 import org.candlepin.paging.PagingUtilFactory;
@@ -33,6 +39,7 @@ import com.google.inject.persist.Transactional;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.xnap.commons.i18n.I18n;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -45,23 +52,26 @@ import javax.validation.constraints.NotNull;
  * Entry point for endpoints that are dedicated for RHSM API for compatibility reasons.
  */
 public class RhsmApiCompatResource implements RhsmapiApi {
-    private final RhsmApiCompatCurator rhsmApiCompatCurator;
-    private final PagingUtilFactory pagingUtilFactory;
+
     private final Configuration config;
     private final I18n i18n;
+    private final ModelTranslator modelTranslator;
+    private final OwnerCurator ownerCurator;
+    private final PagingUtilFactory pagingUtilFactory;
+    private final RhsmApiCompatCurator rhsmApiCompatCurator;
 
     private final int pageLimit;
 
     @Inject
     public RhsmApiCompatResource(RhsmApiCompatCurator rhsmApiCompatCurator,
-        PagingUtilFactory pagingUtilFactory,
-        Configuration config,
-        I18n i18n) {
-
-        this.rhsmApiCompatCurator = Objects.requireNonNull(rhsmApiCompatCurator);
-        this.pagingUtilFactory = Objects.requireNonNull(pagingUtilFactory);
+        PagingUtilFactory pagingUtilFactory, Configuration config, ModelTranslator modelTranslator, I18n i18n,
+        OwnerCurator ownerCurator) {
         this.config = Objects.requireNonNull(config);
         this.i18n = Objects.requireNonNull(i18n);
+        this.modelTranslator = Objects.requireNonNull(modelTranslator);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.pagingUtilFactory = Objects.requireNonNull(pagingUtilFactory);
+        this.rhsmApiCompatCurator = Objects.requireNonNull(rhsmApiCompatCurator);
 
         this.pageLimit = this.config.getInt(ConfigProperties.RHSM_API_PAGE_LIMIT);
     }
@@ -136,5 +146,46 @@ public class RhsmApiCompatResource implements RhsmapiApi {
             .applyPaging(consumerEntCountDTOs.stream(), consumerEntCountDTOs.size());
     }
 
-}
+    @Override
+    @Transactional
+    public Stream<ConsumerFeedDTO> getConsumerFeeds(String orgKey, String afterId, String afterUuid,
+        OffsetDateTime afterCheckin, Integer page, Integer perPage) {
 
+        Owner owner = this.ownerCurator.getByKey(orgKey);
+        if (owner == null) {
+            return Stream.empty();
+        }
+
+        //Paging bit
+        int offset = 1;
+        int limit = this.pageLimit;
+        int count = this.rhsmApiCompatCurator.countConsumerFeedCount(owner, afterId, afterUuid, afterCheckin);
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
+        if (pageRequest != null) {
+            Page<Stream<ConsumerFeedDTO>> pageResponse = new Page<>();
+            pageResponse.setPageRequest(pageRequest);
+
+            if (pageRequest.isPaging()) {
+                offset = pageRequest.getPage();
+                limit = pageRequest.getPerPage();
+                if (offset < 1) {
+                    throw new BadRequestException(i18n.tr("Parameter page must be a positive integer"));
+                }
+                if (limit < 1 || limit > this.pageLimit) {
+                    throw new BadRequestException(i18n.tr("Parameter per_page must be in range 1-1000"));
+                }
+            }
+
+            pageResponse.setMaxRecords(count);
+
+            // Store the page for the LinkHeaderResponseFilter
+            ResteasyContext.pushContext(Page.class, pageResponse);
+        }
+
+        List<ConsumerFeed> consumerFeed = rhsmApiCompatCurator.getConsumerFeeds(owner, afterId, afterUuid,
+            afterCheckin, offset, limit);
+
+        return consumerFeed.stream()
+            .map(this.modelTranslator.getStreamMapper(ConsumerFeed.class, ConsumerFeedDTO.class));
+    }
+}
