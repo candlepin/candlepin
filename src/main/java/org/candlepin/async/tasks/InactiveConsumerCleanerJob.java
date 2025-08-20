@@ -141,7 +141,6 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
         List<String> scaCertsToRemove = consumerCurator.getContentAccessCertIds(consumerIds);
         List<Long> serialIdsToRevoke = this.consumerCurator.getConsumerCertSerialIds(consumerIds);
 
-        this.deletedConsumerCurator.createDeletedConsumers(consumerIds);
         int deletedConsumers = this.consumerCurator.deleteConsumers(consumerIds);
 
         // Delete the certificates and revoke their serials.
