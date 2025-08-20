@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
@@ -27,12 +28,14 @@ import org.candlepin.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-
+import java.util.stream.Stream;
 
 /**
  * DeletedConsumerCuratorTest
@@ -217,5 +220,66 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(consumer2.getOwner().getId(), deleteConsumer2.getOwnerId());
         assertEquals(consumer2.getOwner().getDisplayName(), deleteConsumer2.getOwnerDisplayName());
         assertEquals(consumer2.getOwner().getKey(), deleteConsumer2.getOwnerKey());
+    }
+
+    @Test
+    public void testDeleteDeletedConsumersByConsumerId() {
+        Consumer consumer = createConsumer(owner);
+        DeletedConsumer deletedConsumer = createDeletedConsumer(consumer);
+
+        int count = deletedConsumerCurator.deleteByConsumerIds(List.of(consumer.getId()));
+
+        assertThat(count)
+            .isEqualTo(1);
+
+        DeletedConsumer byConsumer = deletedConsumerCurator.findByConsumer(consumer);
+        assertThat(byConsumer)
+            .isNull();
+    }
+
+    @Test
+    public void testDeleteDeletedConsumersByConsumerIdMoreConsumersExist() {
+        Consumer consumer1 = createConsumer(owner);
+        Consumer consumer2 = createConsumer(owner);
+        Consumer consumer3 = createConsumer(owner);
+        createDeletedConsumer(consumer1);
+
+        int count = deletedConsumerCurator.deleteByConsumerIds(
+            List.of(consumer1.getId(), consumer2.getId(), consumer3.getId()));
+
+        assertThat(count)
+            .isEqualTo(1);
+
+        DeletedConsumer byConsumer = deletedConsumerCurator.findByConsumer(consumer1);
+        assertThat(byConsumer)
+            .isNull();
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidIdLists")
+    public void testDeleteDeletedConsumersReturnNull(List<String> ids) {
+        int count = deletedConsumerCurator.deleteByConsumerIds(ids);
+
+        assertThat(count)
+            .isZero();
+    }
+
+    static Stream<List<String>> invalidIdLists() {
+        return Stream.of(
+            null,
+            Collections.emptyList(),
+            List.of("unknownId"),
+            List.of("unknownId1", "unknownId1")
+        );
+    }
+
+    private DeletedConsumer createDeletedConsumer(Consumer consumer) {
+        DeletedConsumer deletedConsumer = new DeletedConsumer()
+            .setConsumerUuid(consumer.getUuid())
+            .setConsumerName(consumer.getName())
+            .setOwnerKey(consumer.getOwner().getKey())
+            .setOwnerDisplayName(consumer.getOwner().getDisplayName())
+            .setOwnerId(consumer.getOwner().getId());
+        return deletedConsumerCurator.create(deletedConsumer);
     }
 }

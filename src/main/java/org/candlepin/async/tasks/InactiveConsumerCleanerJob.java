@@ -26,7 +26,6 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.DeletedConsumer;
-import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.InactiveConsumerRecord;
 import org.candlepin.util.Transactional;
@@ -70,7 +69,6 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
 
     private final Configuration config;
     private final ConsumerCurator consumerCurator;
-    private final DeletedConsumerCurator deletedConsumerCurator;
     private final IdentityCertificateCurator identityCertificateCurator;
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
     private final CertificateSerialCurator certificateSerialCurator;
@@ -81,7 +79,6 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
     @Inject
     public InactiveConsumerCleanerJob(Configuration config,
         ConsumerCurator consumerCurator,
-        DeletedConsumerCurator deletedConsumerCurator,
         IdentityCertificateCurator identityCertificateCurator,
         ContentAccessCertificateCurator contentAccessCertificateCurator,
         CertificateSerialCurator certificateSerialCurator,
@@ -90,7 +87,6 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
 
         this.config = Objects.requireNonNull(config);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
-        this.deletedConsumerCurator = Objects.requireNonNull(deletedConsumerCurator);
         this.identityCertificateCurator = Objects.requireNonNull(identityCertificateCurator);
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
         this.certificateSerialCurator = Objects.requireNonNull(certificateSerialCurator);
@@ -141,7 +137,6 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
         List<String> scaCertsToRemove = consumerCurator.getContentAccessCertIds(consumerIds);
         List<Long> serialIdsToRevoke = this.consumerCurator.getConsumerCertSerialIds(consumerIds);
 
-        this.deletedConsumerCurator.createDeletedConsumers(consumerIds);
         int deletedConsumers = this.consumerCurator.deleteConsumers(consumerIds);
 
         // Delete the certificates and revoke their serials.

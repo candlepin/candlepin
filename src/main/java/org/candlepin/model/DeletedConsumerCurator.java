@@ -25,12 +25,12 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.NoResultException;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Root;
-
 
 /**
  * DeletedConsumerCurator
@@ -122,8 +122,13 @@ public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedCons
             return 0;
         }
 
+        deleteByConsumerIds(consumerIds);
+
+        int inserted = 0;
+
         Principal principal = this.principalProvider.get();
-        String deletedConsumersStatement = "INSERT INTO DeletedConsumer (id, created, updated, " +
+        String deletedConsumersStatement =
+            "INSERT INTO DeletedConsumer (id, created, updated, " +
             "  consumerUuid, ownerId, ownerDisplayName, ownerKey, principalName, consumerName) " +
             "SELECT consumer.id, NOW(), NOW(), consumer.uuid, consumer.ownerId, owner.displayName, " +
             "  owner.key, :principalName, consumer.name " +
@@ -131,11 +136,44 @@ public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedCons
             "  JOIN consumer.owner owner " +
             "WHERE consumer.id IN (:consumerIds)";
 
-        return entityManager.get()
+        Query query = entityManager.get()
             .createQuery(deletedConsumersStatement)
-            .setParameter("principalName", principal == null ? null : principal.getName())
-            .setParameter("consumerIds", consumerIds)
-            .executeUpdate();
+            .setParameter("principalName", principal == null ? null : principal.getName());
+
+        for (List<String> block : this.partition(consumerIds)) {
+            inserted += query
+                .setParameter("consumerIds", block)
+                .executeUpdate();
+        }
+
+        return inserted;
+    }
+
+    public int deleteByConsumerIds(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return 0;
+        }
+
+        int deleted = 0;
+
+        String jpql =
+            "DELETE FROM DeletedConsumer dc " +
+            "WHERE dc.consumerUuid IN ( " +
+            "  SELECT con.uuid " +
+            "  FROM Consumer con " +
+            "  WHERE con.id IN (:consumerIds) " +
+            ")";
+
+        Query query = entityManager.get()
+            .createQuery(jpql);
+
+        for (List<String> block : this.partition(consumerIds)) {
+            deleted += query
+                .setParameter("consumerIds", block)
+                .executeUpdate();
+        }
+
+        return deleted;
     }
 
     /**

@@ -67,7 +67,6 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
 
         inactiveConsumerCleanerJob = new InactiveConsumerCleanerJob(this.config,
             this.consumerCurator,
-            this.deletedConsumerCurator,
             this.identityCertificateCurator,
             this.caCertCurator,
             this.certSerialCurator,
