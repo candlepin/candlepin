@@ -1676,6 +1676,7 @@ public class ConsumerResource implements ConsumerApi {
         EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.CONSUMER, Type.MODIFIED)
             .setEventData(toUpdate);
 
+
         // version changed on non-checked in consumer, or list of capabilities
         // changed on checked in consumer
         boolean changesMade = updateCapabilities(toUpdate, updated);
@@ -1777,6 +1778,10 @@ public class ConsumerResource implements ConsumerApi {
             Event event = eventBuilder.setEventData(toUpdate).buildEvent();
             sink.queueEvent(event);
         }
+
+
+
+
 
         if (sysPurposeChangesMade) {
             // this should update compliance on toUpdate, but not call the curator

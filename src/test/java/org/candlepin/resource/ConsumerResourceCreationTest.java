@@ -509,6 +509,8 @@ public class ConsumerResourceCreationTest {
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
 
+
+
         consumer = resource.createConsumer(consumer, null, owner.getKey(), createKeysString(keys), true);
 
         verify(activationKeyCurator).findByKeyNames(owner.getKey(), keys);
@@ -529,6 +531,7 @@ public class ConsumerResourceCreationTest {
         ActivationKey key = new ActivationKey("autobind-disabled-key", owner);
         key.setAutoAttach(true);
         when(activationKeyCurator.getByKeyName(owner, key.getName())).thenReturn(key);
+
 
         // No auth should be required for registering with keys:
         Principal p = new NoAuthPrincipal();
