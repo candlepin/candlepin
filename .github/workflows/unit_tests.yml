@@ -45,15 +45,6 @@ jobs:
       - name: Run unit tests
         run: ./gradlew test coverage
 
-      - name: Save PR number to file
-        run: echo ${{ github.event.number }} > PR_NUMBER.txt
-
-      - name: Archive PR number
-        uses: actions/upload-artifact@v4
-        with:
-          name: pr_number
-          path: PR_NUMBER.txt
-
       - name: Archive reports
         uses: actions/upload-artifact@v4
         with:
@@ -61,3 +52,64 @@ jobs:
           path: |
             **/build/**/jacoco*.xml
             **/build/classes/
+  sonarqube:
+    name: sonarqube
+    if: github.event.pull_request.head.repo.fork == false
+    runs-on: ubuntu-latest
+    needs: unit_tests
+    steps:
+      - name: Mask secrets
+        shell: bash
+        run: |
+          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
+          echo "::add-mask::${{ secrets.SONAR_TOKEN }}"
+
+      - name: Install dependencies
+        shell: bash
+        run: sudo apt-get install -y gettext git-core
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
+
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_vars
+        with:
+          varFilePath: ./.github/variables/pr_verification.env
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Download unit test report
+        uses: actions/download-artifact@v5
+        with:
+          name: unit_test_reports
+
+      - name: Analyze
+        env:
+          HEAD_SHA: ${{ github.sha }}
+          PR_KEY: ${{ github.event.pull_request.number }}
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          ./gradlew sonar \
+            -x coverage \
+            -Dsonar.scm.provider=git \
+            -Dsonar.scm.revision="$HEAD_SHA" \
+            -Dsonar.pullrequest.key="$PR_KEY" \
+            -Dsonar.pullrequest.base="$BASE_REF" \
+            -Dsonar.pullrequest.branch="$HEAD_REF"
+
