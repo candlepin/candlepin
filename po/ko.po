@@ -347,8 +347,9 @@ msgstr "ID \"{0}\"로 소유자를 찾을 수 없습니다"
 #: src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1924
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
-msgstr "대응되지 않은 게스트 자격이 호스트/게스트 대응이 성립되지 않아 "
-"만료되었습니다."
+msgstr ""
+"대응되지 않은 게스트 자격이 호스트/게스트 대응이 성립되지 않아 만료되었습니"
+"다."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:237
 #, java-format
@@ -394,8 +395,9 @@ msgstr "상세목록을 내려받을 수 없습니다: {0}"
 msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "\"{1}\"."
-msgstr "장치 {0}는 내보낼 수 없습니다. 장치 유형 ''{1}''에 대한 상세목록을 만들 수 "
-"없습니다."
+msgstr ""
+"장치 {0}는 내보낼 수 없습니다. 장치 유형 ''{1}''에 대한 상세목록을 만들 수 없"
+"습니다."
 
 #: src/main/java/org/candlepin/controller/ManifestManager.java:322
 #, java-format
@@ -1703,8 +1705,9 @@ msgstr "보호된 자원을 접근 할 때에 SSL을 사용하세요"
 msgid ""
 "Candlepin is in Suspend mode, please check /status resource to get more "
 "details"
-msgstr "Candlepin이 일시 중지 방식에 있으며, 더 자세한 내용은 /status 자원을 "
-"확인하세요"
+msgstr ""
+"Candlepin이 일시 중지 방식에 있으며, 더 자세한 내용은 /status 자원을 확인하세"
+"요"
 
 #: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:90
 msgid "offset and limit parameters must be positive integers"
