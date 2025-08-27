@@ -851,7 +851,8 @@ msgstr "Nessuna informazione di registrazione cloud fornita"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:68
 msgid "Cloud registration is not supported by this Candlepin instance"
-msgstr "La registrazione sul cloud non è supportata da questa istanza Candlepin"
+msgstr ""
+"La registrazione sul cloud non è supportata da questa istanza Candlepin"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mospina
@@ -1197,7 +1198,8 @@ msgstr "Impossibile trovare il certificato originale per l''entitlement: {0}"
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:313
 #, java-format
 msgid "Entitlement migration is not permissible for units of type \"{0}\""
-msgstr "La migrazione dei diritti non è consentita per le unità di tipo \"{0}\""
+msgstr ""
+"La migrazione dei diritti non è consentita per le unità di tipo \"{0}\""
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:319
 msgid "Source and destination units must belong to the same organization"
@@ -1834,8 +1836,8 @@ msgid ""
 msgstr ""
 "Troppi set di contenuti per il certificato {0}. Potrebbe essere disponibile "
 "un client più recente per risolvere questo problema. Per ulteriori "
-"informazioni, consultare il database della conoscenza https://"
-"access.redhat.com/knowledge/node/129003."
+"informazioni, consultare il database della conoscenza https://access.redhat."
+"com/knowledge/node/129003."
 
 #: src/main/java/org/candlepin/servlet/filter/CandlepinContentTypeFilter.java:63
 #, java-format
