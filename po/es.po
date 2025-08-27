@@ -835,8 +835,8 @@ msgstr ""
 msgid ""
 "Pool is restricted when it is temporary and begins in the future: \"{1}\""
 msgstr ""
-"Consorcio está restringido cuando está temporalmente y comienza en el futuro:"
-" «{1}»"
+"Consorcio está restringido cuando está temporalmente y comienza en el "
+"futuro: «{1}»"
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:185
 #, java-format
@@ -847,7 +847,8 @@ msgstr "No es capaz de adjuntar consorcio con ID «{1}».: {0}."
 #, java-format
 msgid ""
 "This system already has a subscription for the product \"{1}\" attached."
-msgstr "Este sistema ya tiene una suscripción para el producto «{1}» adjuntado."
+msgstr ""
+"Este sistema ya tiene una suscripción para el producto «{1}» adjuntado."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:195
 #, java-format
@@ -1106,7 +1107,8 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1297
 msgid "You may not create a manifest consumer via Subscription Manager."
-msgstr "Puede no crear una declaración de consumidor por Gestor de Suscripción."
+msgstr ""
+"Puede no crear una declaración de consumidor por Gestor de Suscripción."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1189,7 +1191,8 @@ msgstr "Entorno «{0}» especificado más de una vez."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1967
 #, java-format
 msgid "Problem updating unit {0}. Hypervisor id: {1} is already used."
-msgstr "Problema actualizando unidad {0}. Hipervisor id: {1} ya está utilizado."
+msgstr ""
+"Problema actualizando unidad {0}. Hipervisor id: {1} ya está utilizado."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2179
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2190
@@ -1653,7 +1656,8 @@ msgstr "los productos proporcionados contienen uno o más elementos nulos"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:379
 msgid "one or more provided product references lacks a valid ID"
-msgstr "una o más referencias de producto proporcionado carecen de un ID válido"
+msgstr ""
+"una o más referencias de producto proporcionado carecen de un ID válido"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:391
 msgid "derived product reference lacks a valid ID"
@@ -2121,8 +2125,8 @@ msgstr "No existe dicho(s) tipo(s) de unidad: {0}"
 #, java-format
 msgid "Failed to parse parameter \"{0}\"; expected format: key:value"
 msgstr ""
-"No es capaz de interpretar el parámetro \"{0}\"; formato esperado: "
-"clave:valor"
+"No es capaz de interpretar el parámetro \"{0}\"; formato esperado: clave:"
+"valor"
 
 #: src/main/java/org/candlepin/resource/validation/DTOValidator.java:91
 msgid "collection contains null elements"
@@ -2402,8 +2406,8 @@ msgstr "debe ser mayor o igual que {0}"
 msgid ""
 "numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
 msgstr ""
-"el valor numérico está fuera de acotaciones (se esperaba <dígitos {integer}"
-">.<dígitos {fraction}>)"
+"el valor numérico está fuera de acotaciones (se esperaba <dígitos {integer}>."
+"<dígitos {fraction}>)"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:56
 msgid "must be in the future"
