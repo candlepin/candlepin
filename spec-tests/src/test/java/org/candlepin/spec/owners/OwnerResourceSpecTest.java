@@ -57,6 +57,7 @@ import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.client.api.Paging;
 import org.candlepin.spec.bootstrap.data.builder.ActivationKeys;
+import org.candlepin.spec.bootstrap.data.builder.ConsumerInstalledProducts;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
@@ -941,7 +942,7 @@ public class OwnerResourceSpecTest {
 
         consumer
             .releaseVer(new ReleaseVerDTO().releaseVer("1"))
-            .installedProducts(Set.of(Products.toInstalled(product)));
+            .installedProducts(Set.of(ConsumerInstalledProducts.toInstalled(product)));
         consumerClient.consumers().updateConsumer(consumer.getUuid(), consumer);
 
         AsyncJobStatusDTO healJob1 = userClient.owners().healEntire(owner.getKey());

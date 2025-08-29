@@ -27,6 +27,7 @@ import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
+import org.candlepin.spec.bootstrap.data.builder.ConsumerInstalledProducts;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Facts;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
@@ -71,7 +72,8 @@ public class CoreSpecTest {
                 .putFactsItem(Facts.VirtIsGuest.key(), "true"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers().autoBindSync(consumer.getUuid());
 
         assertThat(entitlements)
@@ -105,7 +107,8 @@ public class CoreSpecTest {
                 .putFactsItem(Facts.CertificateVersion.key(), "3.2"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         consumerClient.consumers().bindProduct(consumer.getUuid(), product);
 
         ComplianceStatusDTO complianceStatus = consumerClient.consumers()
@@ -127,7 +130,8 @@ public class CoreSpecTest {
                 .putFactsItem(Facts.CoresPerSocket.key(), "32"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
         ComplianceStatusDTO complianceStatus = consumerClient.consumers()
@@ -150,7 +154,8 @@ public class CoreSpecTest {
                 .putFactsItem(Facts.CpuSockets.key(), "8"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
         ComplianceStatusDTO complianceStatus = consumerClient.consumers()
@@ -173,7 +178,8 @@ public class CoreSpecTest {
                 .putFactsItem(Facts.CpuSockets.key(), "4"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
         ComplianceStatusDTO complianceStatus = consumerClient.consumers()
@@ -196,7 +202,8 @@ public class CoreSpecTest {
                 .putFactsItem(Facts.CpuSockets.key(), "4"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
         ComplianceStatusDTO complianceStatus = consumerClient.consumers()
@@ -218,7 +225,8 @@ public class CoreSpecTest {
                 .putFactsItem(Facts.CoresPerSocket.key(), "8"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers().autoBindSync(consumer.getUuid());
 
         assertThat(entitlements)
@@ -235,7 +243,8 @@ public class CoreSpecTest {
                 .putFactsItem(Facts.CoresPerSocket.key(), "12"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers().autoBindSync(consumer.getUuid());
 
         assertThat(entitlements)
@@ -253,7 +262,8 @@ public class CoreSpecTest {
                 .putFactsItem(Facts.CpuSockets.key(), "4"));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
+        updateInstalledProducts(
+            consumerClient, consumer, Set.of(ConsumerInstalledProducts.toInstalled(product)));
         List<EntitlementDTO> entitlements = consumerClient.consumers().autoBindSync(consumer.getUuid());
 
         assertThat(entitlements)
