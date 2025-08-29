@@ -402,8 +402,9 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         Consumer consumerA2 = createConsumer(ownerA);
         Consumer consumerB1 = createConsumer(ownerB);
 
-        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeeds(ownerA, null, null, null, 1,
-            10);
+        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(ownerA)
+            .getResultList();
 
         assertThat(result).extracting(ConsumerFeed::getId)
             .containsExactly(consumerA1.getId(), consumerA2.getId());
@@ -417,8 +418,11 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         Consumer c3 = createConsumer(owner);
 
         // Should only return consumers with id > id20
-        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeeds(owner, c2.getId(), null,
-            null, 1, 10);
+        List<ConsumerFeed> result =
+            rhsmApiCompatCurator.getConsumerFeedQuery()
+                .setOwner(owner)
+                .setAfterId(c2.getId())
+                .getResultList();
 
         assertThat(result)
             .extracting(ConsumerFeed::getId)
@@ -433,12 +437,14 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         Consumer c3 = createConsumer(owner, "uuid3", null, null, null, null);
 
         // Should only return consumers with uuid1 > uuid2 (lexicographically)
-        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeeds(owner, null, "uuid2", null,
-            1, 10);
+        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(owner)
+            .setAfterUuid(c2.getUuid())
+            .getResultList();
 
         assertThat(result)
             .extracting(ConsumerFeed::getUuid)
-            .containsExactly("uuid3");
+            .containsExactly(c3.getUuid());
     }
 
     @Test
@@ -452,8 +458,11 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         Consumer c3 = createConsumer(owner, "uuidZ", Date.from(ts3.toInstant()), null, null, null);
 
         // Only return those after ts2 (should get c3 only)
-        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeeds(owner, null, null, ts2, 1,
-            10);
+        List<ConsumerFeed> result =
+            rhsmApiCompatCurator.getConsumerFeedQuery()
+                .setOwner(owner)
+                .setAfterCheckin(ts2)
+                .getResultList();
 
         assertThat(result)
             .extracting(ConsumerFeed::getId)
@@ -472,8 +481,11 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         Consumer c3 = createConsumer(owner, "uuidZ", Date.from(ts3.toInstant()), null, null, null);
 
         // id > c1.getId() AND checkin > ts1 → c2 a c3
-        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeeds(owner, c1.getId(), null,
-            ts1, 1, 10);
+        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(owner)
+            .setAfterId(c1.getId())
+            .setAfterCheckin(ts1)
+            .getResultList();
 
         assertThat(result)
             .extracting(ConsumerFeed::getId)
@@ -488,12 +500,15 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         Consumer c3 = createConsumer(owner, "uuid3", null, null, null, null);
 
         // id > c1.getId() AND uuid > "uuid1" → c2, c3
-        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeeds(owner, c1.getId(), "uuid1",
-            null, 1, 10);
+        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(owner)
+            .setAfterId(c1.getId())
+            .setAfterUuid(c1.getUuid())
+            .getResultList();
 
         assertThat(result)
             .extracting(ConsumerFeed::getUuid)
-            .containsExactlyInAnyOrder("uuid2", "uuid3");
+            .containsExactlyInAnyOrder(c2.getUuid(), c3.getUuid());
     }
 
     @Test
@@ -508,12 +523,15 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         Consumer c3 = createConsumer(owner, "uuidC", Date.from(ts3.toInstant()), null, null, null);
 
         // uuid > "uuidA" AND checkin > ts1 → c2, c3
-        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeeds(owner, null, "uuidA", ts1,
-            1, 10);
+        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(owner)
+            .setAfterUuid(c1.getUuid())
+            .setAfterCheckin(ts1)
+            .getResultList();
 
         assertThat(result)
             .extracting(ConsumerFeed::getUuid)
-            .containsExactlyInAnyOrder("uuidB", "uuidC");
+            .containsExactlyInAnyOrder(c2.getUuid(), c3.getUuid());
     }
 
     @Test
@@ -526,8 +544,12 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         Consumer c2 = createConsumer(owner, "uuidB", Date.from(ts2.toInstant()), null, null, null);
         Consumer c3 = createConsumer(owner, "uuidC", Date.from(ts3.toInstant()), null, null, null);
 
-        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeeds(owner, c1.getId(), "uuidA",
-            ts1, 1, 10);
+        List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(owner)
+            .setAfterId(c1.getId())
+            .setAfterUuid(c1.getUuid())
+            .setAfterCheckin(ts1)
+            .getResultList();
 
         assertThat(result)
             .extracting(ConsumerFeed::getId)
@@ -549,8 +571,10 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         int totalPages = (int) Math.ceil((double) consumerCount / pageSize);
 
         for (int page = 1; page <= totalPages; page++) {
-            List<ConsumerFeed> result = rhsmApiCompatCurator
-                .getConsumerFeeds(owner, null, null, null, page, pageSize);
+            List<ConsumerFeed> result = rhsmApiCompatCurator.getConsumerFeedQuery()
+                .setOwner(owner)
+                .setPaging(page, pageSize)
+                .getResultList();
 
             int expectedSize = Math.min(pageSize, consumerCount - (page - 1) * pageSize);
 
@@ -576,8 +600,10 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
 
         int page = 3;
         int pageSize = 3;
-        List<ConsumerFeed> emptyPage = rhsmApiCompatCurator
-            .getConsumerFeeds(owner, null, null, null, page, pageSize);
+        List<ConsumerFeed> emptyPage = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(owner)
+            .setPaging(page, pageSize)
+            .getResultList();
 
         assertThat(emptyPage)
             .isEmpty();
@@ -592,8 +618,9 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         facts.put("random.fact", "xxx");                 // not allowed
         Consumer consumer = createConsumer(owner, null, null, facts, null, null);
 
-        List<ConsumerFeed> consumerFeeds =
-            rhsmApiCompatCurator.getConsumerFeeds(owner, null, null, null, 1, 100);
+        List<ConsumerFeed> consumerFeeds = rhsmApiCompatCurator.getConsumerFeedQuery()
+                .setOwner(owner)
+                .getResultList();
 
         assertThat(consumerFeeds.get(0))
             .extracting(ConsumerFeed::getFacts)
@@ -612,8 +639,9 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         addOns.add("addon2");
         Consumer consumer = createConsumer(owner, null, null, null, addOns, null);
 
-        List<ConsumerFeed> consumerFeed = rhsmApiCompatCurator.getConsumerFeeds(owner, null, null, null, 1,
-            100);
+        List<ConsumerFeed> consumerFeed = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(owner)
+            .getResultList();
 
         assertThat(consumerFeed.get(0))
             .extracting(ConsumerFeed::getSyspurposeAddons)
@@ -630,8 +658,9 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         Consumer consumer = createConsumer(owner, null, null, null, null, List.of(installedProd1,
             installedProd2));
 
-        List<ConsumerFeed> consumerFeed = rhsmApiCompatCurator.getConsumerFeeds(owner, null, null, null, 1,
-            100);
+        List<ConsumerFeed> consumerFeed = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(owner)
+            .getResultList();
 
         Set<ConsumerFeedInstalledProduct> installedProducts = consumerFeed.get(0).getInstalledProducts();
         assertThat(installedProducts)
@@ -650,8 +679,9 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         createGuest(owner, hostGuestVirtUuid);
         linkHostToGuests(host, hostGuestVirtUuid);
 
-        List<ConsumerFeed> consumerFeed = rhsmApiCompatCurator.getConsumerFeeds(owner, null, null, null, 1,
-            100);
+        List<ConsumerFeed> consumerFeed = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(owner)
+            .getResultList();
 
         assertThat(consumerFeed)
             .isNotNull()
@@ -682,7 +712,9 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         createConsumer(ownerA);
         createConsumer(ownerB);
 
-        int count = rhsmApiCompatCurator.countConsumerFeedCount(ownerA, null, null, null);
+        long count = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(ownerA)
+            .getResultCount();
 
         assertThat(count)
             .isEqualTo(2);
@@ -695,7 +727,10 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         Consumer c2 = createConsumer(owner);
         Consumer c3 = createConsumer(owner);
 
-        int count = rhsmApiCompatCurator.countConsumerFeedCount(owner, c2.getId(), null, null);
+        long count = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(owner)
+            .setAfterId(c2.getId())
+            .getResultCount();
 
         assertThat(count)
             .isEqualTo(1);
@@ -705,10 +740,13 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
     public void testCountConsumerFeedFilterByAfterUuid() {
         Owner owner = createOwner();
         createConsumer(owner, "uuid1", null, null, null, null);
-        createConsumer(owner, "uuid2", null, null, null, null);
+        Consumer consumer = createConsumer(owner, "uuid2", null, null, null, null);
         createConsumer(owner, "uuid3", null, null, null, null);
 
-        int count = rhsmApiCompatCurator.countConsumerFeedCount(owner, null, "uuid2", null);
+        long count = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(owner)
+            .setAfterUuid(consumer.getUuid())
+            .getResultCount();
 
         assertThat(count)
             .isEqualTo(1);
@@ -725,7 +763,10 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         createConsumer(owner, "uuidY", Date.from(ts2.toInstant()), null, null, null);
         createConsumer(owner, "uuidZ", Date.from(ts3.toInstant()), null, null, null);
 
-        int count = rhsmApiCompatCurator.countConsumerFeedCount(owner, null, null, ts2);
+        long count = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(owner)
+            .setAfterCheckin(ts2)
+            .getResultCount();
 
         assertThat(count)
             .isEqualTo(1);
@@ -742,7 +783,11 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         createConsumer(owner, "uuidY", Date.from(ts2.toInstant()), null, null, null);
         createConsumer(owner, "uuidZ", Date.from(ts3.toInstant()), null, null, null);
 
-        int count = rhsmApiCompatCurator.countConsumerFeedCount(owner, c1.getId(), null, ts1);
+        long count = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(owner)
+            .setAfterId(c1.getId())
+            .setAfterCheckin(ts1)
+            .getResultCount();
 
         assertThat(count)
             .isEqualTo(2);
@@ -755,7 +800,11 @@ public class RhsmApiCompatCuratorTest extends DatabaseTestFixture {
         createConsumer(owner, "uuid2", null, null, null, null);
         createConsumer(owner, "uuid3", null, null, null, null);
 
-        int count = rhsmApiCompatCurator.countConsumerFeedCount(owner, c1.getId(), "uuid1", null);
+        long count = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(owner)
+            .setAfterId(c1.getId())
+            .setAfterUuid(c1.getUuid())
+            .getResultCount();
 
         assertThat(count)
             .isEqualTo(2);

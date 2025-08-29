@@ -24,6 +24,7 @@ import org.candlepin.dto.api.server.v1.RhsmApiEntitlementCountDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.ConsumerEntitlementCount;
 import org.candlepin.model.ConsumerFeed;
+import org.candlepin.model.ConsumerFeedQueryBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.RhsmApiCompatCurator;
@@ -156,10 +157,15 @@ public class RhsmApiCompatResource implements RhsmapiApi {
             return Stream.empty();
         }
 
+        ConsumerFeedQueryBuilder consumerFeedQuery = rhsmApiCompatCurator.getConsumerFeedQuery()
+            .setOwner(owner)
+            .setAfterId(afterId)
+            .setAfterUuid(afterUuid)
+            .setAfterCheckin(afterCheckin);
+
         //Paging bit
         int offset = 1;
         int limit = this.pageLimit;
-        int count = this.rhsmApiCompatCurator.countConsumerFeedCount(owner, afterId, afterUuid, afterCheckin);
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
         if (pageRequest != null) {
             Page<Stream<ConsumerFeedDTO>> pageResponse = new Page<>();
@@ -176,16 +182,14 @@ public class RhsmApiCompatResource implements RhsmapiApi {
                 }
             }
 
-            pageResponse.setMaxRecords(count);
-
+            pageResponse.setMaxRecords(Math.toIntExact(consumerFeedQuery.getResultCount()));
             // Store the page for the LinkHeaderResponseFilter
             ResteasyContext.pushContext(Page.class, pageResponse);
         }
 
-        List<ConsumerFeed> consumerFeed = rhsmApiCompatCurator.getConsumerFeeds(owner, afterId, afterUuid,
-            afterCheckin, offset, limit);
-
-        return consumerFeed.stream()
+        return consumerFeedQuery
+            .setPaging(offset, limit)
+            .getResultStream()
             .map(this.modelTranslator.getStreamMapper(ConsumerFeed.class, ConsumerFeedDTO.class));
     }
 }
