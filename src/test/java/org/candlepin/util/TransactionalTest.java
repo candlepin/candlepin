@@ -16,9 +16,7 @@ package org.candlepin.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
@@ -26,10 +24,16 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import org.candlepin.util.Transactional.State;
+import org.candlepin.util.function.CheckedRunnable;
+import org.candlepin.util.function.CheckedSupplier;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.function.Supplier;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
@@ -107,16 +111,8 @@ public class TransactionalTest  {
         doReturn(this.transaction).when(this.entityManager).getTransaction();
     }
 
-    private <O> Transactional<O> buildTransactional() {
-        return new Transactional<>(this.entityManager);
-    }
-
-    @Test
-    public void testActionAssignmentOnlyOnce() {
-        Transactional transactional = this.buildTransactional()
-            .run(args -> "action");
-
-        assertThrows(IllegalStateException.class, () -> transactional.run(args -> "action"));
+    private Transactional buildTransactional() {
+        return new Transactional(this.entityManager);
     }
 
     @Test
@@ -150,6 +146,15 @@ public class TransactionalTest  {
     }
 
     @Test
+    public void testCannotSetCommitListenerInNonExclusiveMode() {
+        Transactional.Listener listener = status -> { };
+        Transactional transactional = this.buildTransactional()
+            .allowExistingTransactions();
+
+        assertThrows(IllegalStateException.class, () -> transactional.onCommit(listener));
+    }
+
+    @Test
     public void testSetRollbackListener() {
         Transactional transactional = this.buildTransactional();
 
@@ -179,6 +184,16 @@ public class TransactionalTest  {
         assertThrows(IllegalArgumentException.class, () -> transactional.onRollback(null));
     }
 
+    @Test
+    public void testCannotSetRollbackListenerInNonExclusiveMode() {
+        Transactional.Listener listener = status -> { };
+        Transactional transactional = this.buildTransactional()
+            .allowExistingTransactions();
+
+        assertThrows(IllegalStateException.class, () -> transactional.onRollback(listener));
+    }
+
+    @Test
     public void testSetOnCompleteListener() {
         Transactional transactional = this.buildTransactional();
 
@@ -209,389 +224,890 @@ public class TransactionalTest  {
     }
 
     @Test
-    public void testCannotExecuteWithoutAction() {
+    public void testExecuteWithRunnable() throws Exception {
+        Transactional transactional = this.buildTransactional();
+        Runnable task = mock(Runnable.class);
+
+        transactional.execute(task);
+
+        verify(task, times(1)).run();
+    }
+
+    @Test
+    public void testExecuteWithCheckedRunnable() throws Exception {
+        Transactional transactional = this.buildTransactional();
+        CheckedRunnable task = mock(CheckedRunnable.class);
+
+        transactional.checkedExecute(task);
+
+        verify(task, times(1)).run();
+    }
+
+    @Test
+    public void testExecuteWithSupplier() throws Exception {
         Transactional transactional = this.buildTransactional();
 
-        assertThrows(IllegalStateException.class, transactional::execute);
+        String expected = "output";
+        Supplier<String> task = mock(Supplier.class);
+        doReturn(expected).when(task).get();
+
+        String output = transactional.execute(task);
+
+        verify(task, times(1)).get();
+        assertEquals(expected, output);
     }
 
     @Test
-    public void testExecuteWithActionWithNoArgs() throws Exception {
+    public void testExecuteWithCheckedSupplier() throws Exception {
         Transactional transactional = this.buildTransactional();
-        Transactional.Action action = mock(Transactional.Action.class);
 
-        Object expected = "output";
-        doReturn(expected).when(action).execute();
+        String expected = "output";
+        CheckedSupplier<String, RuntimeException> task = mock(CheckedSupplier.class);
+        doReturn(expected).when(task).get();
 
-        Object actual = transactional.execute(action);
+        String output = transactional.checkedExecute(task);
 
-        verify(action, times(1)).execute();
-        assertEquals(expected, actual);
+        verify(task, times(1)).get();
+        assertEquals(expected, output);
     }
 
     @Test
-    public void testExecuteWithActionWithArgs() throws Exception {
+    public void testExecutionOfRunnableFailsOnActiveTransaction() {
         Transactional transactional = this.buildTransactional();
-        Transactional.Action action = mock(Transactional.Action.class);
-
-        Object expected = "output";
-        doReturn(expected).when(action).execute(any(Object[].class));
-
-        Object actual = transactional.execute(action, "arg1", "arg2", "arg3");
-
-        verify(action, times(1)).execute("arg1", "arg2", "arg3");
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    public void testExecuteWithActionConflictsWithConfiguredAction() {
-        Transactional transactional = this.buildTransactional()
-            .run(args -> "action1");
-
-        assertThrows(IllegalStateException.class, () -> transactional.execute(args -> "action2"));
-    }
-
-    @Test
-    public void testExecuteRunsActionWithNoArgs() throws Exception {
-        Transactional transactional = this.buildTransactional();
-        Transactional.Action action = mock(Transactional.Action.class);
-        Object expected = "output";
-
-        doReturn(expected).when(action).execute(any(Object[].class));
-
-        Object actual = transactional.run(action)
-            .execute();
-
-        verify(action, times(1)).execute();
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    public void testExecuteRunsActionWithArgs() throws Exception {
-        Transactional transactional = this.buildTransactional();
-        Transactional.Action action = mock(Transactional.Action.class);
-        Object expected = "output";
-
-        doReturn(expected).when(action).execute(any(Object[].class));
-
-        Object actual = transactional.run(action)
-            .execute("arg1", "arg2", "arg3");
-
-        verify(action, times(1)).execute("arg1", "arg2", "arg3");
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    public void testExecutionFailsOnActiveTransaction() {
-        Transactional transactional = this.buildTransactional()
-            .run(args -> "action");
 
         this.transaction.begin();
 
-        assertThrows(IllegalStateException.class, transactional::execute);
+        Runnable task = () -> { };
+        assertThrows(IllegalStateException.class, () -> transactional.execute(task));
     }
 
     @Test
-    public void testExecutionCanUseActiveTransactions() {
+    public void testExecutionOfSupplierFailsOnActiveTransaction() {
+        Transactional transactional = this.buildTransactional();
+
+        this.transaction.begin();
+
+        Supplier task = () -> "generated_output";
+        assertThrows(IllegalStateException.class, () -> transactional.execute(task));
+    }
+
+    @Test
+    public void testExecutionOfCheckedRunnableFailsOnActiveTransaction() {
+        Transactional transactional = this.buildTransactional();
+
+        this.transaction.begin();
+
+        CheckedRunnable task = () -> { };
+        assertThrows(IllegalStateException.class, () -> transactional.checkedExecute(task));
+    }
+
+    @Test
+    public void testExecutionOfCheckedSupplierFailsOnActiveTransaction() {
+        Transactional transactional = this.buildTransactional();
+
+        this.transaction.begin();
+
+        CheckedSupplier task = () -> "generated_output";
+        assertThrows(IllegalStateException.class, () -> transactional.checkedExecute(task));
+    }
+
+    @Test
+    public void testExecutionOfRunnableCanUseActiveTransactions() {
         Transactional transactional = this.buildTransactional()
-            .run(args -> "action")
             .allowExistingTransactions();
 
         this.transaction.begin();
         reset(this.transaction);
 
-        Object output = transactional.execute();
+        Runnable task = () -> { };
 
-        assertEquals("action", output);
+        transactional.execute(task);
+
         verify(this.transaction, never()).begin();
         verify(this.transaction, never()).commit();
     }
 
     @Test
-    public void testRollbackOnUncaughtActionException() throws Exception {
+    public void testExecutionOfSupplierCanUseActiveTransactions() {
+        Transactional transactional = this.buildTransactional()
+            .allowExistingTransactions();
+
+        this.transaction.begin();
+        reset(this.transaction);
+
+        String expected = "generated_output";
+        Supplier<String> task = () -> expected;
+
+        String output = transactional.execute(task);
+
+        assertEquals(expected, output);
+        verify(this.transaction, never()).begin();
+        verify(this.transaction, never()).commit();
+    }
+
+    @Test
+    public void testExecutionOfCheckedRunnableCanUseActiveTransactions() {
+        Transactional transactional = this.buildTransactional()
+            .allowExistingTransactions();
+
+        this.transaction.begin();
+        reset(this.transaction);
+
+        CheckedRunnable<RuntimeException> task = () -> { };
+
+        transactional.checkedExecute(task);
+
+        verify(this.transaction, never()).begin();
+        verify(this.transaction, never()).commit();
+    }
+
+    @Test
+    public void testExecutionOfCheckedSupplierCanUseActiveTransactions() {
+        Transactional transactional = this.buildTransactional()
+            .allowExistingTransactions();
+
+        this.transaction.begin();
+        reset(this.transaction);
+
+        String expected = "generated_output";
+        CheckedSupplier<String, RuntimeException> task = () -> expected;
+
+        String output = transactional.checkedExecute(task);
+
+        assertEquals(expected, output);
+        verify(this.transaction, never()).begin();
+        verify(this.transaction, never()).commit();
+    }
+
+    @Test
+    public void testRollbackOnUncaughtRunnableException() throws Exception {
         Transactional transactional = this.buildTransactional();
-        Transactional.Action action = mock(Transactional.Action.class);
+        Runnable task = () -> { throw new SecurityException("kaboom"); };
 
-        transactional.run(action);
-
-        doThrow(new SecurityException("kaboom")).when(action).execute(any(Object[].class));
-        assertThrows(TransactionExecutionException.class, transactional::execute);
+        assertThrows(TransactionExecutionException.class, () -> transactional.execute(task));
 
         verify(this.transaction, times(1)).begin();
         verify(this.transaction, times(1)).rollback();
     }
 
     @Test
-    public void testExecuteRunsCommitListenersAfterExecution() {
+    public void testRollbackOnUncaughtSupplierException() throws Exception {
         Transactional transactional = this.buildTransactional();
-        Transactional.Listener listener = mock(Transactional.Listener.class);
+        Supplier task = () -> { throw new SecurityException("kaboom"); };
 
-        transactional.run(args -> "action")
-            .onCommit(listener)
-            .execute();
+        assertThrows(TransactionExecutionException.class, () -> transactional.execute(task));
 
-        verify(listener, times(1)).transactionComplete(Status.STATUS_COMMITTED);
+        verify(this.transaction, times(1)).begin();
+        verify(this.transaction, times(1)).rollback();
     }
 
     @Test
-    public void testExecuteRunsMultipleCommitListenersAfterExecution() {
+    public void testRollbackOnCheckedRunnableException() throws Exception {
         Transactional transactional = this.buildTransactional();
+        CheckedRunnable task = () -> { throw new SecurityException("kaboom"); };
+
+        assertThrows(SecurityException.class, () -> transactional.checkedExecute(task));
+
+        verify(this.transaction, times(1)).begin();
+        verify(this.transaction, times(1)).rollback();
+    }
+
+    @Test
+    public void testRollbackOnCheckedSupplierException() throws Exception {
+        Transactional transactional = this.buildTransactional();
+        CheckedSupplier task = () -> { throw new SecurityException("kaboom"); };
+
+        assertThrows(SecurityException.class, () -> transactional.checkedExecute(task));
+
+        verify(this.transaction, times(1)).begin();
+        verify(this.transaction, times(1)).rollback();
+    }
+
+    @Test
+    public void testCommitOnUncaughtRunnableExceptionWithCommitOnException() throws Exception {
+        Transactional transactional = this.buildTransactional()
+            .commitOnException();
+
+        Runnable task = () -> { throw new SecurityException("kaboom"); };
+
+        assertThrows(TransactionExecutionException.class, () -> transactional.execute(task));
+
+        verify(this.transaction, times(1)).begin();
+        verify(this.transaction, times(1)).commit();
+    }
+
+    @Test
+    public void testCommitOnUncaughtSupplierExceptionWithCommitOnException() throws Exception {
+        Transactional transactional = this.buildTransactional()
+            .commitOnException();
+
+        Supplier task = () -> { throw new SecurityException("kaboom"); };
+
+        assertThrows(TransactionExecutionException.class, () -> transactional.execute(task));
+
+        verify(this.transaction, times(1)).begin();
+        verify(this.transaction, times(1)).commit();
+    }
+
+    @Test
+    public void testCommitOnCheckedRunnableExceptionWithCommitOnException() throws Exception {
+        Transactional transactional = this.buildTransactional()
+            .commitOnException();
+
+        CheckedRunnable task = () -> { throw new SecurityException("kaboom"); };
+
+        assertThrows(SecurityException.class, () -> transactional.checkedExecute(task));
+
+        verify(this.transaction, times(1)).begin();
+        verify(this.transaction, times(1)).commit();
+    }
+
+    @Test
+    public void testCommitOnCheckedSupplierExceptionWithCommitOnException() throws Exception {
+        Transactional transactional = this.buildTransactional()
+            .commitOnException();
+
+        CheckedSupplier task = () -> { throw new SecurityException("kaboom"); };
+
+        assertThrows(SecurityException.class, () -> transactional.checkedExecute(task));
+
+        verify(this.transaction, times(1)).begin();
+        verify(this.transaction, times(1)).commit();
+    }
+
+    @Test
+    public void testExecuteRunsCommitListenersAfterExecutionOfRunnable() {
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onCommit(listener);
+
+        Runnable task = () -> { };
+        transactional.execute(task);
+
+        verify(listener, times(1)).transactionComplete(State.COMMITTED);
+    }
+
+    @Test
+    public void testExecuteRunsCommitListenersAfterExecutionOfSupplier() {
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onCommit(listener);
+
+        String expected = "generated_output";
+        Supplier<String> task = () -> expected;
+
+        String output = transactional.execute(task);
+
+        assertEquals(expected, output);
+        verify(listener, times(1)).transactionComplete(State.COMMITTED);
+    }
+
+    @Test
+    public void testExecuteRunsCommitListenersAfterExecutionOfCheckedRunnable() {
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onCommit(listener);
+
+        CheckedRunnable task = () -> { };
+        transactional.checkedExecute(task);
+
+        verify(listener, times(1)).transactionComplete(State.COMMITTED);
+    }
+
+    @Test
+    public void testExecuteRunsCommitListenersAfterExecutionOfCheckedSupplier() {
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onCommit(listener);
+
+        String expected = "generated_output";
+        CheckedSupplier<String, RuntimeException> task = () -> expected;
+
+        String output = transactional.checkedExecute(task);
+
+        assertEquals(expected, output);
+        verify(listener, times(1)).transactionComplete(State.COMMITTED);
+    }
+
+    @Test
+    public void testExecuteRunsMultipleCommitListenersAfterExecutionOfRunnable() {
         Transactional.Listener listener1 = mock(Transactional.Listener.class);
         Transactional.Listener listener2 = mock(Transactional.Listener.class);
 
-        transactional.run(args -> "action")
+        Transactional transactional = this.buildTransactional()
             .onCommit(listener1)
-            .onCommit(listener2)
-            .execute();
+            .onCommit(listener2);
 
-        verify(listener1, times(1)).transactionComplete(Status.STATUS_COMMITTED);
-        verify(listener2, times(1)).transactionComplete(Status.STATUS_COMMITTED);
+        Runnable task = () -> { };
+        transactional.execute(task);
+
+        verify(listener1, times(1)).transactionComplete(State.COMMITTED);
+        verify(listener2, times(1)).transactionComplete(State.COMMITTED);
     }
 
     @Test
-    public void testExecuteRunsIdenticalCommitListenersAfterExecution() {
-        Transactional transactional = this.buildTransactional();
-        Transactional.Listener listener = mock(Transactional.Listener.class);
-
-        transactional.run(args -> "action")
-            .onCommit(listener)
-            .onCommit(listener)
-            .execute();
-
-        verify(listener, times(2)).transactionComplete(Status.STATUS_COMMITTED);
-    }
-
-    @Test
-    public void testExecuteRunsRollbackListenersAfterExecution() {
-        Transactional transactional = this.buildTransactional();
-        Transactional.Listener listener = mock(Transactional.Listener.class);
-
-        transactional.run(args -> { transaction.setRollbackOnly(); return null; })
-            .onRollback(listener)
-            .execute();
-
-        verify(listener, times(1)).transactionComplete(Status.STATUS_ROLLEDBACK);
-    }
-
-    @Test
-    public void testExecuteRunsMultipleRollbackListenersAfterExecution() {
-        Transactional transactional = this.buildTransactional();
+    public void testExecuteRunsMultipleCommitListenersAfterExecutionOfSupplier() {
         Transactional.Listener listener1 = mock(Transactional.Listener.class);
         Transactional.Listener listener2 = mock(Transactional.Listener.class);
 
-        transactional.run(args -> { transaction.setRollbackOnly(); return null; })
+        Transactional transactional = this.buildTransactional()
+            .onCommit(listener1)
+            .onCommit(listener2);
+
+        String expected = "generated_output";
+        Supplier<String> task = () -> expected;
+
+        String output = transactional.execute(task);
+
+        assertEquals(expected, output);
+        verify(listener1, times(1)).transactionComplete(State.COMMITTED);
+        verify(listener2, times(1)).transactionComplete(State.COMMITTED);
+    }
+
+    @Test
+    public void testExecuteRunsMultipleCommitListenersAfterExecutionOfCheckedRunnable() {
+        Transactional.Listener listener1 = mock(Transactional.Listener.class);
+        Transactional.Listener listener2 = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onCommit(listener1)
+            .onCommit(listener2);
+
+        CheckedRunnable<RuntimeException> task = () -> { };
+
+        transactional.checkedExecute(task);
+
+        verify(listener1, times(1)).transactionComplete(State.COMMITTED);
+        verify(listener2, times(1)).transactionComplete(State.COMMITTED);
+    }
+
+    @Test
+    public void testExecuteRunsMultipleCommitListenersAfterExecutionOfCheckedSupplier() {
+        Transactional.Listener listener1 = mock(Transactional.Listener.class);
+        Transactional.Listener listener2 = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onCommit(listener1)
+            .onCommit(listener2);
+
+        String expected = "generated_output";
+        CheckedSupplier<String, RuntimeException> task = () -> expected;
+
+        String output = transactional.checkedExecute(task);
+
+        assertEquals(expected, output);
+        verify(listener1, times(1)).transactionComplete(State.COMMITTED);
+        verify(listener2, times(1)).transactionComplete(State.COMMITTED);
+    }
+
+
+    @Test
+    public void testExecuteRunsIdenticalCommitListenersAfterExecutionOfRunnable() {
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onCommit(listener)
+            .onCommit(listener);
+
+        Runnable task = () -> { };
+        transactional.execute(task);
+
+        verify(listener, times(2)).transactionComplete(State.COMMITTED);
+    }
+
+    @Test
+    public void testExecuteRunsIdenticalCommitListenersAfterExecutionOfSupplier() {
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onCommit(listener)
+            .onCommit(listener);
+
+        String expected = "generated_output";
+        Supplier<String> task = () -> expected;
+
+        String output = transactional.execute(task);
+
+        assertEquals(expected, output);
+        verify(listener, times(2)).transactionComplete(State.COMMITTED);
+    }
+
+    @Test
+    public void testExecuteRunsIdenticalCommitListenersAfterExecutionOfCheckedRunnable() {
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onCommit(listener)
+            .onCommit(listener);
+
+        CheckedRunnable<RuntimeException> task = () -> { };
+
+        transactional.checkedExecute(task);
+
+        verify(listener, times(2)).transactionComplete(State.COMMITTED);
+    }
+
+    @Test
+    public void testExecuteRunsIdenticalCommitListenersAfterExecutionOfCheckedSupplier() {
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onCommit(listener)
+            .onCommit(listener);
+
+        String expected = "generated_output";
+        CheckedSupplier<String, RuntimeException> task = () -> expected;
+
+        String output = transactional.checkedExecute(task);
+
+        assertEquals(expected, output);
+
+        verify(listener, times(2)).transactionComplete(State.COMMITTED);
+    }
+
+    @Test
+    public void testExecuteRunsRollbackListenersAfterExecutionOfRunnable() {
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onRollback(listener);
+
+        Runnable task = () -> { this.transaction.setRollbackOnly(); };
+        transactional.execute(task);
+
+        verify(listener, times(1)).transactionComplete(State.ROLLED_BACK);
+    }
+
+    @Test
+    public void testExecuteRunsRollbackListenersAfterExecutionOfSupplier() {
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onRollback(listener);
+
+        String expected = "generated_output";
+        Supplier<String> task = () -> {
+            this.transaction.setRollbackOnly();
+            return expected;
+        };
+
+        String output = transactional.execute(task);
+
+        assertEquals(expected, output);
+        verify(listener, times(1)).transactionComplete(State.ROLLED_BACK);
+    }
+
+    @Test
+    public void testExecuteRunsRollbackListenersAfterExecutionOfCheckedRunnable() {
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onRollback(listener);
+
+        CheckedRunnable<RuntimeException> task = () -> { this.transaction.setRollbackOnly(); };
+
+        transactional.checkedExecute(task);
+
+        verify(listener, times(1)).transactionComplete(State.ROLLED_BACK);
+    }
+
+    @Test
+    public void testExecuteRunsRollbackListenersAfterExecutionOfCheckedSupplier() {
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onRollback(listener);
+
+        String expected = "generated_output";
+        CheckedSupplier<String, RuntimeException> task = () -> {
+            this.transaction.setRollbackOnly();
+            return expected;
+        };
+
+        String output = transactional.checkedExecute(task);
+
+        assertEquals(expected, output);
+        verify(listener, times(1)).transactionComplete(State.ROLLED_BACK);
+    }
+
+    @Test
+    public void testExecuteRunsMultipleRollbackListenersAfterExecutionOfRunnable() {
+        Transactional.Listener listener1 = mock(Transactional.Listener.class);
+        Transactional.Listener listener2 = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
             .onRollback(listener1)
-            .onRollback(listener2)
-            .execute();
+            .onRollback(listener2);
 
-        verify(listener1, times(1)).transactionComplete(Status.STATUS_ROLLEDBACK);
-        verify(listener2, times(1)).transactionComplete(Status.STATUS_ROLLEDBACK);
+        Runnable task = () -> { this.transaction.setRollbackOnly(); };
+        transactional.execute(task);
+
+        verify(listener1, times(1)).transactionComplete(State.ROLLED_BACK);
+        verify(listener2, times(1)).transactionComplete(State.ROLLED_BACK);
     }
 
     @Test
-    public void testExecuteRunsIdenticalRollbackListenersAfterExecution() {
-        Transactional transactional = this.buildTransactional();
+    public void testExecuteRunsMultipleRollbackListenersAfterExecutionOfSupplier() {
+        Transactional.Listener listener1 = mock(Transactional.Listener.class);
+        Transactional.Listener listener2 = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onRollback(listener1)
+            .onRollback(listener2);
+
+        String expected = "generated_output";
+        Supplier<String> task = () -> {
+            this.transaction.setRollbackOnly();
+            return expected;
+        };
+
+        String output = transactional.execute(task);
+
+        assertEquals(expected, output);
+        verify(listener1, times(1)).transactionComplete(State.ROLLED_BACK);
+        verify(listener2, times(1)).transactionComplete(State.ROLLED_BACK);
+    }
+
+    @Test
+    public void testExecuteRunsMultipleRollbackListenersAfterExecutionOfCheckedRunnable() {
+        Transactional.Listener listener1 = mock(Transactional.Listener.class);
+        Transactional.Listener listener2 = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onRollback(listener1)
+            .onRollback(listener2);
+
+        CheckedRunnable<RuntimeException> task = () -> { this.transaction.setRollbackOnly(); };
+
+        transactional.checkedExecute(task);
+
+        verify(listener1, times(1)).transactionComplete(State.ROLLED_BACK);
+        verify(listener2, times(1)).transactionComplete(State.ROLLED_BACK);
+    }
+
+    @Test
+    public void testExecuteRunsMultipleRollbackListenersAfterExecutionOfCheckedSupplier() {
+        Transactional.Listener listener1 = mock(Transactional.Listener.class);
+        Transactional.Listener listener2 = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onRollback(listener1)
+            .onRollback(listener2);
+
+        String expected = "generated_output";
+        CheckedSupplier<String, RuntimeException> task = () -> {
+            this.transaction.setRollbackOnly();
+            return expected;
+        };
+
+        String output = transactional.checkedExecute(task);
+
+        assertEquals(expected, output);
+        verify(listener1, times(1)).transactionComplete(State.ROLLED_BACK);
+        verify(listener2, times(1)).transactionComplete(State.ROLLED_BACK);
+    }
+
+    @Test
+    public void testExecuteRunsIdenticalRollbackListenersAfterExecutionOfRunnable() {
         Transactional.Listener listener = mock(Transactional.Listener.class);
 
-        transactional.run(args -> { transaction.setRollbackOnly(); return null; })
+        Transactional transactional = this.buildTransactional()
             .onRollback(listener)
+            .onRollback(listener);
+
+        Runnable task = () -> {
+            this.transaction.setRollbackOnly();
+        };
+
+        transactional.execute(task);
+
+        verify(listener, times(2)).transactionComplete(State.ROLLED_BACK);
+    }
+
+    @Test
+    public void testExecuteRunsIdenticalRollbackListenersAfterExecutionOfSupplier() {
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
             .onRollback(listener)
-            .execute();
+            .onRollback(listener);
 
-        verify(listener, times(2)).transactionComplete(Status.STATUS_ROLLEDBACK);
+        String expected = "generated_output";
+        CheckedSupplier<String, RuntimeException> task = () -> {
+            this.transaction.setRollbackOnly();
+            return expected;
+        };
+
+        String output = transactional.checkedExecute(task);
+
+        assertEquals(expected, output);
+        verify(listener, times(2)).transactionComplete(State.ROLLED_BACK);
     }
 
     @Test
-    public void testExceptionWhenTransactionCommittedDuringExclusiveExecution() {
+    public void testExecuteRunsIdenticalRollbackListenersAfterExecutionOfCheckedRunnable() {
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onRollback(listener)
+            .onRollback(listener);
+
+        CheckedRunnable<RuntimeException> task = () -> {
+            this.transaction.setRollbackOnly();
+        };
+
+        transactional.checkedExecute(task);
+
+        verify(listener, times(2)).transactionComplete(State.ROLLED_BACK);
+    }
+
+    @Test
+    public void testExecuteRunsIdenticalRollbackListenersAfterExecutionOfCheckedSupplier() {
+
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .onRollback(listener)
+            .onRollback(listener);
+
+        String expected = "generated_output";
+        CheckedSupplier<String, RuntimeException> task = () -> {
+            this.transaction.setRollbackOnly();
+            return expected;
+        };
+
+        String output = transactional.checkedExecute(task);
+
+        assertEquals(expected, output);
+        verify(listener, times(2)).transactionComplete(State.ROLLED_BACK);
+    }
+
+    @Test
+    public void testExceptionWhenTransactionCommittedDuringExclusiveExecutionOfRunnable() {
         Transactional transactional = this.buildTransactional();
         Transactional.Listener listener = mock(Transactional.Listener.class);
 
-        transactional.run(args -> { transaction.commit(); return null; });
+        Runnable task = () -> { this.transaction.rollback(); };
 
-        assertThrows(IllegalStateException.class, transactional::execute);
+        assertThrows(IllegalStateException.class, () -> transactional.execute(task));
     }
 
     @Test
-    public void testExceptionWhenTransactionRolledBackDuringExclusiveExecution() {
+    public void testExceptionWhenTransactionCommittedDuringExclusiveExecutionOfSupplier() {
         Transactional transactional = this.buildTransactional();
         Transactional.Listener listener = mock(Transactional.Listener.class);
 
-        transactional.run(args -> { transaction.rollback(); return null; });
+        Supplier task = () -> {
+            this.transaction.rollback();
+            return "output";
+        };
 
-        assertThrows(IllegalStateException.class, transactional::execute);
+        assertThrows(IllegalStateException.class, () -> transactional.execute(task));
     }
 
     @Test
-    public void testSetCommitValidator() {
+    public void testExceptionWhenTransactionCommittedDuringExclusiveExecutionOfCheckedRunnable() {
+        Transactional transactional = this.buildTransactional();
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        CheckedRunnable task = () -> { this.transaction.rollback(); };
+
+        assertThrows(IllegalStateException.class, () -> transactional.checkedExecute(task));
+    }
+
+    @Test
+    public void testExceptionWhenTransactionCommittedDuringExclusiveExecutionOfCheckedSupplier() {
+        Transactional transactional = this.buildTransactional();
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        CheckedSupplier task = () -> {
+            this.transaction.rollback();
+            return "output";
+        };
+
+        assertThrows(IllegalStateException.class, () -> transactional.checkedExecute(task));
+    }
+
+    @Test
+    public void testExceptionWhenTransactionRolledBackDuringExclusiveExecutionOfRunnable() {
+        Transactional transactional = this.buildTransactional();
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Runnable task = () -> { this.transaction.rollback(); };
+
+        assertThrows(IllegalStateException.class, () -> transactional.execute(task));
+    }
+
+    @Test
+    public void testExceptionWhenTransactionRolledBackDuringExclusiveExecutionOfSupplier() {
+        Transactional transactional = this.buildTransactional();
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        Supplier task = () -> {
+            this.transaction.rollback();
+            return "output";
+        };
+
+        assertThrows(IllegalStateException.class, () -> transactional.execute(task));
+    }
+
+    @Test
+    public void testExceptionWhenTransactionRolledBackDuringExclusiveExecutionOfCheckedRunnable() {
+        Transactional transactional = this.buildTransactional();
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        CheckedRunnable task = () -> { this.transaction.rollback(); };
+
+        assertThrows(IllegalStateException.class, () -> transactional.checkedExecute(task));
+    }
+
+    @Test
+    public void testExceptionWhenTransactionRolledBackDuringExclusiveExecutionOfCheckedSupplier() {
+        Transactional transactional = this.buildTransactional();
+        Transactional.Listener listener = mock(Transactional.Listener.class);
+
+        CheckedSupplier task = () -> {
+            this.transaction.rollback();
+            return "output";
+        };
+
+        assertThrows(IllegalStateException.class, () -> transactional.checkedExecute(task));
+    }
+
+    @Test
+    public void testExecuteRunsCommitListenersAfterExceptionInRunnableWithCommitOnException() {
+        Transactional.Listener commitListener = mock(Transactional.Listener.class);
+        Transactional.Listener rollbackListener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .commitOnException()
+            .onCommit(commitListener)
+            .onRollback(rollbackListener);
+
+        Runnable task = () -> { throw new SecurityException("Kaboom"); };
+
+        assertThrows(TransactionExecutionException.class, () -> transactional.execute(task));
+
+        verify(commitListener, times(1)).transactionComplete(State.COMMITTED);
+        verify(rollbackListener, never()).transactionComplete(State.ROLLED_BACK);
+    }
+
+    @Test
+    public void testExecuteRunsRollbackListenersAfterExceptionInSupplierWithCommitOnException() {
+        Transactional.Listener commitListener = mock(Transactional.Listener.class);
+        Transactional.Listener rollbackListener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .commitOnException()
+            .onCommit(commitListener)
+            .onRollback(rollbackListener);
+
+        Supplier<String> task = () -> { throw new SecurityException("Kaboom"); };
+
+        assertThrows(TransactionExecutionException.class, () -> transactional.execute(task));
+
+        verify(commitListener, times(1)).transactionComplete(State.COMMITTED);
+        verify(rollbackListener, never()).transactionComplete(State.ROLLED_BACK);
+    }
+
+    @Test
+    public void testExecuteRunsRollbackListenersAfterExceptionInCheckedRunnableWithCommitOnException() {
+        Transactional.Listener commitListener = mock(Transactional.Listener.class);
+        Transactional.Listener rollbackListener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .commitOnException()
+            .onCommit(commitListener)
+            .onRollback(rollbackListener);
+
+        CheckedRunnable<RuntimeException> task = () -> { throw new SecurityException("Kaboom"); };
+
+        assertThrows(SecurityException.class, () -> transactional.checkedExecute(task));
+
+        verify(commitListener, times(1)).transactionComplete(State.COMMITTED);
+        verify(rollbackListener, never()).transactionComplete(State.ROLLED_BACK);
+    }
+
+    @Test
+    public void testExecuteRunsRollbackListenersAfterExceptionInCheckedSupplierWithCommitOnException() {
+        Transactional.Listener commitListener = mock(Transactional.Listener.class);
+        Transactional.Listener rollbackListener = mock(Transactional.Listener.class);
+
+        Transactional transactional = this.buildTransactional()
+            .commitOnException()
+            .onCommit(commitListener)
+            .onRollback(rollbackListener);
+
+        CheckedSupplier<String, RuntimeException> task = () -> { throw new SecurityException("Kaboom"); };
+
+        assertThrows(SecurityException.class, () -> transactional.checkedExecute(task));
+
+        verify(commitListener, times(1)).transactionComplete(State.COMMITTED);
+        verify(rollbackListener, never()).transactionComplete(State.ROLLED_BACK);
+    }
+
+    @Test
+    public void testRuntimeExceptionsInCheckedRunnableDoNotTriggerCastClassException() {
         Transactional transactional = this.buildTransactional();
 
-        transactional.commitIf(output -> true);
+        CheckedRunnable<GeneralSecurityException> task = () -> {
+            int val = Integer.parseInt("hello");
+            throw new GeneralSecurityException("uh oh!");
+        };
+
+        assertThrows(NumberFormatException.class, () -> transactional.checkedExecute(task));
     }
 
     @Test
-    public void testSetMultipleCommitValidators() {
+    public void testRuntimeExceptionsInCheckedSupplierDoNotTriggerCastClassException() {
         Transactional transactional = this.buildTransactional();
 
-        transactional.commitIf(output -> true);
-        transactional.commitIf(output -> true);
+        CheckedSupplier<String, GeneralSecurityException> task = () -> {
+            int val = Integer.parseInt("hello");
+            throw new GeneralSecurityException("uh oh!");
+        };
+
+        assertThrows(NumberFormatException.class, () -> transactional.checkedExecute(task));
     }
 
     @Test
-    public void testSetSameCommitValidatorRepeatedly() {
-        Transactional transactional = this.buildTransactional();
-        Transactional.Validator validator = output -> true;
-
-        transactional.commitIf(validator);
-        transactional.commitIf(validator);
-    }
-
-    @Test
-    public void testCannotSetNullCommitValidator() {
-        Transactional transactional = this.buildTransactional();
-        assertThrows(IllegalArgumentException.class, () -> transactional.commitIf(null));
-    }
-
-    @Test
-    public void testSetRollbackValidator() {
+    public void testCheckedExceptionsInCheckedRunnableDoNotTriggerCastClassException() {
         Transactional transactional = this.buildTransactional();
 
-        transactional.rollbackIf(output -> true);
+        CheckedRunnable genericTask = () -> {
+            boolean branch = true;
+            if (branch) {
+                throw new GeneralSecurityException("uh oh!");
+            }
+
+            throw new IOException("nope");
+        };
+
+        CheckedRunnable<IOException> task = (CheckedRunnable<IOException>) genericTask;
+
+        assertThrows(GeneralSecurityException.class, () -> transactional.checkedExecute(task));
     }
 
     @Test
-    public void testSetMultipleRollbackValidators() {
+    public void testCheckedExceptionsInCheckedSupplierDoNotTriggerCastClassException() {
         Transactional transactional = this.buildTransactional();
 
-        transactional.rollbackIf(output -> true);
-        transactional.rollbackIf(output -> true);
+        CheckedSupplier genericTask = () -> {
+            boolean branch = true;
+            if (branch) {
+                throw new GeneralSecurityException("uh oh!");
+            }
+
+            throw new IOException("nope");
+        };
+
+        CheckedSupplier<String, IOException> task = (CheckedSupplier<String, IOException>) genericTask;
+
+        assertThrows(GeneralSecurityException.class, () -> transactional.checkedExecute(task));
     }
 
-    @Test
-    public void testSetSameRollbackValidatorRepeatedly() {
-        Transactional transactional = this.buildTransactional();
-        Transactional.Validator validator = output -> true;
-
-        transactional.rollbackIf(validator);
-        transactional.rollbackIf(validator);
-    }
-
-    @Test
-    public void testCannotSetNullRollbackValidator() {
-        Transactional transactional = this.buildTransactional();
-        assertThrows(IllegalArgumentException.class, () -> transactional.rollbackIf(null));
-    }
-
-    @Test
-    public void testSingleCommitValidatorCommitsOnPass() {
-        Transactional<String> transactional = this.buildTransactional();
-
-        transactional.run(args -> "abc")
-            .commitIf("abc"::equals)
-            .execute();
-
-        verify(this.transaction, times(1)).begin();
-        verify(this.transaction, times(1)).commit();
-        verify(this.transaction, never()).rollback();
-    }
-
-    @Test
-    public void testSingleCommitValidatorRollbacksOnFail() {
-        Transactional<String> transactional = this.buildTransactional();
-
-        transactional.run(args -> "abc")
-            .commitIf("123"::equals)
-            .execute();
-
-        verify(this.transaction, times(1)).begin();
-        verify(this.transaction, times(1)).rollback();
-        verify(this.transaction, never()).commit();
-    }
-
-    @Test
-    public void testMultiCommitValidatorCommitIfAllPass() {
-        Transactional<String> transactional = this.buildTransactional();
-
-        transactional.run(args -> "abc")
-            .commitIf(output -> output.startsWith("a"))
-            .commitIf(output -> output.contains("b"))
-            .commitIf(output -> output.endsWith("c"))
-            .execute();
-
-        verify(this.transaction, times(1)).begin();
-        verify(this.transaction, times(1)).commit();
-        verify(this.transaction, never()).rollback();
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"1", "2", "3"})
-    public void testMultiCommitValidatorRollbackIfAnyFail(String fail) {
-        Transactional<String> transactional = this.buildTransactional();
-
-        transactional.run(args -> fail)
-            .commitIf(output -> !"1".equals(output))
-            .commitIf(output -> !"2".equals(output))
-            .commitIf(output -> !"3".equals(output))
-            .execute();
-
-        verify(this.transaction, times(1)).begin();
-        verify(this.transaction, times(1)).rollback();
-        verify(this.transaction, never()).commit();
-    }
-
-    @Test
-    public void testSingleRollbackValidatorRollbackOnPass() {
-        Transactional<String> transactional = this.buildTransactional();
-
-        transactional.run(args -> "abc")
-            .rollbackIf("abc"::equals)
-            .execute();
-
-        verify(this.transaction, times(1)).begin();
-        verify(this.transaction, times(1)).rollback();
-        verify(this.transaction, never()).commit();
-    }
-
-    @Test
-    public void testSingleRollbackValidatorCommitsOnFail() {
-        Transactional<String> transactional = this.buildTransactional();
-
-        transactional.run(args -> "abc")
-            .rollbackIf("123"::equals)
-            .execute();
-
-        verify(this.transaction, times(1)).begin();
-        verify(this.transaction, times(1)).commit();
-        verify(this.transaction, never()).rollback();
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"1", "2", "3"})
-    public void testMultiRollbackValidatorRollbackIfAnyPass(String fail) {
-        Transactional<String> transactional = this.buildTransactional();
-
-        transactional.run(args -> fail)
-            .rollbackIf(output -> !"1".equals(output))
-            .rollbackIf(output -> !"2".equals(output))
-            .rollbackIf(output -> !"3".equals(output))
-            .execute();
-
-        verify(this.transaction, times(1)).begin();
-        verify(this.transaction, times(1)).rollback();
-        verify(this.transaction, never()).commit();
-    }
-
-    @Test
-    public void testMultiRollbackValidatorCommitIfAllFail() {
-        Transactional<String> transactional = this.buildTransactional();
-
-        transactional.run(args -> "abc")
-            .rollbackIf(output -> output.startsWith("x"))
-            .rollbackIf(output -> output.contains("y"))
-            .rollbackIf(output -> output.endsWith("z"))
-            .execute();
-
-        verify(this.transaction, times(1)).begin();
-        verify(this.transaction, times(1)).commit();
-        verify(this.transaction, never()).rollback();
-    }
 }

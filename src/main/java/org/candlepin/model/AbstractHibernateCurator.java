@@ -22,6 +22,8 @@ import org.candlepin.exceptions.ConcurrentModificationException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
+import org.candlepin.util.function.CheckedRunnable;
+import org.candlepin.util.function.CheckedSupplier;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.Provider;
@@ -48,6 +50,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
@@ -537,25 +540,98 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return
      *  a Transactional wrapper configured to execute the specified action
      */
-    public <O> org.candlepin.util.Transactional<O> transactional() {
-        return new org.candlepin.util.Transactional<O>(this.getEntityManager());
+    public org.candlepin.util.Transactional transactional() {
+        return new org.candlepin.util.Transactional(this.getEntityManager());
     }
 
     /**
-     * Creates a new transactional wrapper from the backing entity manager using the specified
-     * action.
+     * Executes the given task within the bounds of a new transaction. If a transaction is already in
+     * progress, this method will throw an exception.
+     * <p>
+     * This method is shorthand for the following code:
+     * <pre>{@code
+     * T result = curator.transactional()
+     *   .checkedExecute(task);
+     * }</pre>
      *
-     * @param action
-     *  The action to perform in a transaction
+     * @param task
+     *  the task to execute as a transaction
+     *
+     * @throws IllegalStateException
+     *  if a transaction is already in progress
      *
      * @return
-     *  a Transactional wrapper configured to execute the specified action
+     *  the value returned by the task
      */
-    public <O> org.candlepin.util.Transactional<O> transactional(
-        org.candlepin.util.Transactional.Action<O> action) {
+    public <T, E extends Exception> T checkedTransactional(CheckedSupplier<T, E> task) throws E {
+        return new org.candlepin.util.Transactional(this.getEntityManager())
+            .checkedExecute(task);
+    }
 
-        return this.<O>transactional()
-            .run(action);
+    /**
+     * Executes the given task within the bounds of a new transaction. If a transaction is already in
+     * progress, this method will throw an exception.
+     * <p>
+     * This method is shorthand for the following code:
+     * <pre>{@code
+     * T result = curator.transactional()
+     *   .execute(task);
+     * }</pre>
+     *
+     * @param task
+     *  the task to execute as a transaction
+     *
+     * @throws IllegalStateException
+     *  if a transaction is already in progress
+     *
+     * @return
+     *  the value returned by the task
+     */
+    public <T> T transactional(Supplier<T> task) {
+        return new org.candlepin.util.Transactional(this.getEntityManager())
+            .execute(task);
+    }
+
+    /**
+     * Executes the given task within the bounds of a new transaction. If a transaction is already in
+     * progress, this method will throw an exception.
+     * <p>
+     * This method is shorthand for the following code:
+     * <pre>{@code
+     * curator.transactional()
+     *   .checkedExecute(task);
+     * }</pre>
+     *
+     * @param task
+     *  the task to execute as a transaction
+     *
+     * @throws IllegalStateException
+     *  if a transaction is already in progress
+     */
+    public <E extends Exception> void checkedTransactional(CheckedRunnable<E> task) throws E {
+        new org.candlepin.util.Transactional(this.getEntityManager())
+            .checkedExecute(task);
+    }
+
+    /**
+     * Executes the given task within the bounds of a new transaction. If a transaction is already in
+     * progress, this method will throw an exception.
+     * <p>
+     * This method is shorthand for the following code:
+     * <pre>{@code
+     * curator.transactional()
+     *   .execute(task);
+     * }</pre>
+     *
+     * @param task
+     *  the task to execute as a transaction
+     *
+     * @throws IllegalStateException
+     *  if a transaction is already in progress
+     */
+    public void transactional(Runnable task) {
+        new org.candlepin.util.Transactional(this.getEntityManager())
+            .execute(task);
     }
 
     /**

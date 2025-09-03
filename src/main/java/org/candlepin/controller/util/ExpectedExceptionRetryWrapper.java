@@ -14,6 +14,8 @@
  */
 package org.candlepin.controller.util;
 
+import org.candlepin.util.function.CheckedSupplier;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +50,7 @@ public class ExpectedExceptionRetryWrapper {
      *  the exception to check
      *
      * @return
-     *  true if the exception originates from an entity versioning constraint violation; false
-     *  otherwise
+     *  true if the exception originates from an expected violation; false otherwise
      */
     private boolean isExpectedException(Exception exception) {
         for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
@@ -106,11 +107,11 @@ public class ExpectedExceptionRetryWrapper {
     }
 
     /**
-     * Executes this retry wrapper with the provided action. The action will always be executed at
-     * least once, and will retry the action if a constraint violation exception occurs.
-     * <p></p>
-     * If the action fails with a constraint violation, but is at the retry limit, this method
-     * throws the constraint violation exception.
+     * Executes this retry wrapper with the provided action. The action will always be executed at least
+     * once, and will retry the action if an expected exception occurs.
+     * <p/>
+     * If the action fails with an expected exception, but is at the retry limit, this method throws the
+     * received exception.
      *
      * @param action
      *  the action to retry until successful completion
@@ -126,7 +127,7 @@ public class ExpectedExceptionRetryWrapper {
                 return action.get();
             }
             catch (Exception e) {
-                if (retries++ < this.maxRetries && this.isExpectedException(e)) {
+                if (this.isExpectedException(e) && retries++ < this.maxRetries) {
                     log.warn("An expected exception occurred while attempting transactional operation; " +
                         "retrying...", e);
                     continue;
@@ -136,5 +137,41 @@ public class ExpectedExceptionRetryWrapper {
             }
         }
     }
+
+    /**
+     * Executes this retry wrapper with the provided action, passing through checked exceptions to the caller.
+     * The action will always be executed at least once, and will retry the action if an expected exception
+     * occurs.
+     * <p/>
+     * If the action fails with an expected exception, but is at the retry limit, this method throws the
+     * received exception.
+     *
+     * @param action
+     *  the action to retry until successful completion
+     *
+     * @return
+     *  the result of the provided action
+     */
+    @SuppressWarnings("unchecked")
+    public <T, E extends Exception> T checkedExecute(CheckedSupplier<T, E> action) throws E {
+        int retries = 0;
+
+        while (true) {
+            try {
+                return action.get();
+            }
+            catch (Exception e) {
+                if (this.isExpectedException(e) && retries++ < this.maxRetries) {
+                    log.warn("An expected exception occurred while attempting transactional operation; " +
+                        "retrying...", e);
+                    continue;
+                }
+
+                throw (E) e;
+            }
+        }
+    }
+
+    // TODO: Add overloads for different function shapes and checked/unchecked calls as needed
 
 }
