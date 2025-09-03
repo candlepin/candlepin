@@ -181,9 +181,9 @@ public class Refresher {
 
         for (Owner owner : this.owners.values()) {
             try {
-                poolManager.refreshPoolsWithRegeneration(this.subAdapter, owner, this.lazy);
-                recalculatePoolQuantitiesForOwner(owner);
-                updateRefreshDate(owner);
+                this.poolManager.refreshPoolsWithRegeneration(this.subAdapter, owner, this.lazy);
+                this.recalculatePoolQuantitiesForOwner(owner);
+                this.updateRefreshDate(owner);
             }
             catch (SubscriptionServiceException e) {
                 throw new RuntimeException(
@@ -201,12 +201,14 @@ public class Refresher {
     }
 
     private void recalculatePoolQuantitiesForOwner(Owner owner) {
-        this.poolCurator.transactional().allowExistingTransactions().execute((args -> {
-            this.poolCurator.calculateConsumedForOwnersPools(owner);
-            this.poolCurator.calculateExportedForOwnersPools(owner);
+        this.poolCurator.transactional()
+            .allowExistingTransactions()
+            .execute(() -> {
+                this.poolCurator.calculateConsumedForOwnersPools(owner);
+                this.poolCurator.calculateExportedForOwnersPools(owner);
 
-            return String.format("Successfully recalculated quantities for owner: %s %n", owner.getKey());
-        }));
+                log.info("Successfully recalculated quantities for owner: {}", owner.getKey());
+            });
     }
 
 }

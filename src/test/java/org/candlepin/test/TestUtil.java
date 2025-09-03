@@ -56,6 +56,8 @@ import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Transactional;
 import org.candlepin.util.Util;
+import org.candlepin.util.function.CheckedRunnable;
+import org.candlepin.util.function.CheckedSupplier;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -72,8 +74,10 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
@@ -787,8 +791,15 @@ public class TestUtil {
         return result;
     }
 
+    // TODO: FIXME: This mock should not exist, nor should mocks of the entire database layer in this fashion.
+    // This exists as a kludge and should be avoided. If you find yourself reaching for this function in your
+    // tests, you are probably doing something wrong. Seriously, this should not be used and is only being
+    // maintained for compatibility with the existing poorly written test suites. Do not add to that pile.
+
     public static void mockTransactionalFunctionality(EntityManager mockEntityManager,
         AbstractHibernateCurator... mockCurators) {
+
+        Objects.requireNonNull(mockEntityManager);
 
         EntityTransaction transaction = new EntityTransaction() {
             private boolean active;
@@ -841,15 +852,51 @@ public class TestUtil {
 
         doReturn(transaction).when(mockEntityManager).getTransaction();
 
-        for (AbstractHibernateCurator mockCurator : mockCurators) {
-            doReturn(mockEntityManager).when(mockCurator).getEntityManager();
-            doReturn(transaction).when(mockCurator).getTransaction();
+        if (mockCurators != null) {
+            for (AbstractHibernateCurator mockCurator : mockCurators) {
+                Objects.requireNonNull(mockCurator);
 
-            doAnswer(iom -> new Transactional(mockEntityManager)).when(mockCurator).transactional();
-            doAnswer(iom -> {
-                return new Transactional(mockEntityManager)
-                    .run((Transactional.Action) iom.getArguments()[0]);
-            }).when(mockCurator).transactional(any(Transactional.Action.class));
+                doReturn(mockEntityManager).when(mockCurator).getEntityManager();
+                doReturn(transaction).when(mockCurator).getTransaction();
+
+                doAnswer(iom -> new Transactional(mockEntityManager)).when(mockCurator).transactional();
+
+                // Runnables
+                doAnswer(iom -> {
+                    new Transactional(mockEntityManager)
+                        .execute((Runnable) iom.getArgument(0));
+                    return null;
+                }).when(mockCurator).transactional(any(Runnable.class));
+
+                try {
+                    doAnswer(iom -> {
+                        new Transactional(mockEntityManager)
+                            .checkedExecute((CheckedRunnable) iom.getArgument(0));
+                        return null;
+                    }).when(mockCurator).checkedTransactional(any(CheckedRunnable.class));
+                }
+                catch (Exception e) {
+                    // Mock shenanigans; shouldn't ever happen
+                    throw new RuntimeException(e);
+                }
+
+                // Suppliers
+                doAnswer(iom -> {
+                    return new Transactional(mockEntityManager)
+                        .execute((Supplier) iom.getArgument(0));
+                }).when(mockCurator).transactional(any(Supplier.class));
+
+                try {
+                    doAnswer(iom -> {
+                        return new Transactional(mockEntityManager)
+                            .checkedExecute((CheckedSupplier) iom.getArgument(0));
+                    }).when(mockCurator).checkedTransactional(any(CheckedSupplier.class));
+                }
+                catch (Exception e) {
+                    // Mock shenanigans; shouldn't ever happen
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 

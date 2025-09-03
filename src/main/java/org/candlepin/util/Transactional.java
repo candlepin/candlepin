@@ -14,63 +14,54 @@
  */
 package org.candlepin.util;
 
+import org.candlepin.util.function.CheckedRunnable;
+import org.candlepin.util.function.CheckedSupplier;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
-import javax.transaction.Status;
 
 
 
 /**
- * The Transactional class represents a simple transaction wrapper around a given method or closure,
- * as well as providing an interface for performing supplemental action upon completion of the
- * transaction.
+ * The Transactional class represents a simple transaction wrapper around a given method or lambda, as well
+ * as providing an interface for performing supplemental action upon completion of the transaction.
  * <p>
- * The wrapper can be reused within the context of a given operation if it is an operation that
- * needs to be performed several times, perhaps with different inputs. To facilitate this, the
- * arguments to pass into the action are provided on execution, rather than during configuration.
- * This allows the following pattern:
+ * The wrapper can be reused within the context of a given operation if it is an operation that needs to be
+ * performed several times, perhaps with different inputs, blocks, or tasks. To facilitate this, the
+ * Transactional object can be configured, and then the desired task provided to the execute method:
  *
  * <pre>{@code
- *  Transactional<String> transactional = this.curator.transactional(MyClass::some_action)
+ *  Transactional<String> transactional = this.curator.transactional()
  *      .onCommit(MyClass::commit_action)
  *      .onRollback(MyClass::rollback_action)
  *
  *  for (String input : collection_of_inputs) {
- *      String result = transactional.execute(input);
+ *      String result = transactional.execute(() -> myTask(input));
  *  }
  * }</pre>
- *
- * @param <O>
- *  The output type of the action wrapped by this instance
  */
-public class Transactional<O> {
+public class Transactional {
     private static final Logger log = LoggerFactory.getLogger(Transactional.class);
 
     /**
-     * An interface to execute an action within the bounds of a transaction
-     *
-     * @param <O>
-     *  the output type of this action
+     * Logical transaction states, loosely mapped to the detected state of the underlying transaction. These
+     * values are provided to listeners upon completion of a transaction.
      */
-    @FunctionalInterface
-    public interface Action<O> {
+    public static enum State {
+        /** Used when the transaction was successfully committed */
+        COMMITTED,
 
-        /**
-         * Called when a transaction this action is associated with has started.
-         *
-         * @param args
-         *  the arguments provided at the start of the transaction
-         *
-         * @return
-         *  the output of the operation (optional)
-         */
-        O execute(Object... args) throws Exception;
+        /** Used when the transaction was rolled back, usually as the result of an uncaught exception */
+        ROLLED_BACK
     }
 
     /**
@@ -78,51 +69,19 @@ public class Transactional<O> {
      */
     @FunctionalInterface
     public interface Listener {
-
         /**
          * Called when a transaction this listener is registered to has completed.
          *
-         * @param status
+         * @param state
          *  the status of the transaction, can be compared to the values provided by
          *  javax.transaction.Status
          */
-        void transactionComplete(int status);
-    }
-
-    /**
-     * A functional interface for validating the output of an action and either committing or
-     * rolling back the transaction as appropriate.
-     *
-     * @param <O>
-     *  The output type processed by this validator
-     */
-    @FunctionalInterface
-    public interface Validator<O> {
-
-        /**
-         * Called when the transaction action completes, and can be used to determine whether or
-         * not the transaction should be committed or rolled back based on the value.
-         * <p>
-         * When a validator is provided to the <tt>rollbackWhen</tt> method, the transaction will
-         * be rolled back if this method returns true and committed if it returns false. When
-         * provided to the <tt>commitWhen</tt> method, the transaction will be committed if this
-         * method returns true and rolled back if it returns false.
-         *
-         * @param output
-         *  the output of the transaction action; may be null
-         *
-         * @return
-         *  true if the registered transaction operation should be performed; false otherwise
-         */
-        boolean validate(O output);
+        void transactionComplete(State state);
     }
 
     private final EntityManager entityManager;
-    private final List<Listener> commitListeners;
-    private final List<Listener> rollbackListeners;
-    private final List<Validator<O>> validators;
+    private final Map<State, List<Listener>> listenerMap;
 
-    private Action<O> action;
     private boolean commitOnException;
     private boolean exclusive;
 
@@ -143,41 +102,10 @@ public class Transactional<O> {
 
         this.entityManager = entityManager;
 
-        this.commitListeners = new LinkedList<>();
-        this.rollbackListeners = new LinkedList<>();
-        this.validators = new LinkedList<>();
+        this.listenerMap = new EnumMap<>(State.class);
 
         this.commitOnException = false;
         this.exclusive = true;
-    }
-
-    /**
-     * Sets the action to perform/run within a transactional boundry. If the action has already
-     * been set, this method throws an exception.
-     *
-     * @param action
-     *  the action(s) to perform
-     *
-     * @throws IllegalArgumentException
-     *  if the provided action is null
-     *
-     * @throws IllegalStateException
-     *  if the action has already been set
-     *
-     * @return
-     *  this transactional wrapper
-     */
-    public Transactional<O> run(Action<O> action) {
-        if (action == null) {
-            throw new IllegalArgumentException("action is null");
-        }
-
-        if (this.action != null) {
-            throw new IllegalStateException("action already set");
-        }
-
-        this.action = action;
-        return this;
     }
 
     /**
@@ -193,12 +121,19 @@ public class Transactional<O> {
      * @return
      *  this transactional wrapper
      */
-    public Transactional<O> onCommit(Listener listener) {
+    public Transactional onCommit(Listener listener) {
         if (listener == null) {
             throw new IllegalArgumentException("listener is null");
         }
 
-        this.commitListeners.add(listener);
+        if (!this.exclusive) {
+            throw new IllegalStateException(
+                "Transaction listeners cannot be used when nested transactions are permitted");
+        }
+
+        this.listenerMap.computeIfAbsent(State.COMMITTED, key -> new ArrayList<>())
+            .add(listener);
+
         return this;
     }
 
@@ -215,12 +150,19 @@ public class Transactional<O> {
      * @return
      *  this transactional wrapper
      */
-    public Transactional<O> onRollback(Listener listener) {
+    public Transactional onRollback(Listener listener) {
         if (listener == null) {
             throw new IllegalArgumentException("listener is null");
         }
 
-        this.rollbackListeners.add(listener);
+        if (!this.exclusive) {
+            throw new IllegalStateException(
+                "Transaction listeners cannot be used when nested transactions are permitted");
+        }
+
+        this.listenerMap.computeIfAbsent(State.ROLLED_BACK, key -> new ArrayList<>())
+            .add(listener);
+
         return this;
     }
 
@@ -237,7 +179,7 @@ public class Transactional<O> {
      * @return
      *  this transactional wrapper
      */
-    public Transactional<O> onComplete(Listener listener) {
+    public Transactional onComplete(Listener listener) {
         this.onCommit(listener);
         this.onRollback(listener);
 
@@ -245,257 +187,267 @@ public class Transactional<O> {
     }
 
     /**
-     * Adds a result validator that will only allow the transaction to be committed if the result
-     * of the action passes validation. If the validation fails, the transaction will be rolled
-     * back instead.
-     * <p></p>
-     * Multiple validators may be added, and a given validator may be added multiple times.
-     *
-     * @param validator
-     *  a validator to use for testing the output of the transaction action
-     *
-     * @throws IllegalArgumentException
-     *  if validator is null
-     *
-     * @return
-     *  this transactional wrapper
-     */
-    public Transactional<O> commitIf(Validator<O> validator) {
-        if (validator == null) {
-            throw new IllegalArgumentException("validator is null");
-        }
-
-        this.validators.add(validator);
-        return this;
-    }
-
-    /**
-     * Adds a result validator that checks if the transaction should be rolled back upon completion
-     * of the transactional operation. Multiple validators may be added, and a given validator may
-     * be added multiple times.
-     * <p></p>
-     * <strong>Note:</strong> This method operates by wrapping the provided validator in another
-     * validator that simply negates its output. The method name is provided purely for code clarity
-     * purposes and should be avoided in favor of the <tt>commitIf</tt> method where appropriate.
-     *
-     * @param validator
-     *  a validator to use for testing the output of the transaction action
-     *
-     * @throws IllegalArgumentException
-     *  if validator is null
-     *
-     * @return
-     *  this transactional wrapper
-     */
-    public Transactional<O> rollbackIf(Validator<O> validator) {
-        if (validator == null) {
-            throw new IllegalArgumentException("validator is null");
-        }
-
-        this.validators.add(output -> !validator.validate(output));
-        return this;
-    }
-
-    /**
      * Sets this wrapper to automatically commit the transaction if an uncaught exception occurs.
      * By default, the wrapper will rollback the transaction on exception, but this method can be
-     * used to specify the behavior.
+     * used to modify that behavior.
      *
      * @return
      *  this transactional wrapper
      */
-    public Transactional<O> commitOnException() {
+    public Transactional commitOnException() {
         this.commitOnException = true;
         return this;
     }
 
     /**
-     * Sets this wrapper to allow use of a pre-existing active transaction. When reuse mode is
-     * enabled, a warning will be logged if a transactional block is executed with an active
-     * transaction already present.
+     * Permits executing this transactional within the bounds of an existing transaction. Enabling this
+     * "non-exclusive" mode will omit any transaction management during execution, allowing the execution
+     * of the block regardless of the current transaction state.
+     * <p>
+     * <strong>Warning:</strong> Transaction listeners cannot be used in non-exclusive mode, as it becomes
+     * impossible to know when the transaction will terminate once execution leaves the bounds of this object.
      *
      * @return
      *  this transactional wrapper
      */
-    public Transactional<O> allowExistingTransactions() {
+    public Transactional allowExistingTransactions() {
+        // Impl note:
+        // At the time of writing, JPA's API does not provide a means for hooking into a transaction from the
+        // EntityManager, nor does it make it clear if using a TransactionManager at the same time as the
+        // EntityManager will cause problems or otherwise have side effects. Because it is unknown what latent
+        // effects using both could have, I am opting to simply disallow using non-exclusive mode with
+        // listeners. We can revisit in the future as use cases demand.
+
+        if (!this.listenerMap.isEmpty()) {
+            throw new IllegalStateException("Nested transactions cannot be used with transaction listeners");
+        }
+
         this.exclusive = false;
         return this;
     }
 
     /**
-     * Commits the transaction and notifies listeners
+     * Notifies listeners of a completed transaction. The provided state is the state to be passed to
+     * registered listeners.
+     *
+     * @param state
+     *  the state of the transaction
      */
-    private void commitTransaction(EntityTransaction transaction) {
-        transaction.commit();
-
-        for (Listener listener : this.commitListeners) {
-            listener.transactionComplete(Status.STATUS_COMMITTED);
-        }
+    private void notifyListeners(State state) {
+        this.listenerMap.getOrDefault(state, List.of())
+            .forEach(listener -> listener.transactionComplete(state));
     }
 
     /**
-     * Rolls back the transaction and notifies listeners
-     */
-    private void rollbackTransaction(EntityTransaction transaction) {
-        transaction.rollback();
-
-        for (Listener listener : this.rollbackListeners) {
-            listener.transactionComplete(Status.STATUS_ROLLEDBACK);
-        }
-    }
-
-    /**
-     * Executes the given action within the context of an existing transaction.
+     * Executes the given task using a new, managed transaction. This method is should not be called directly
+     * and should only ever be executed as a delegate of the executeTransaction method.
      *
      * @param transaction
-     *  a transaction object for the current transactional context
+     *  the transaction object to use to manage the underlying database transaction
      *
-     * @param action
-     *  the action to execute transactionally
-     *
-     * @param args
-     *  the arguments to pass through to the action
-     *
-     * @throws TransactionExecutionException
-     *  if an exception occurs while executing the provided action
+     * @param task
+     *  the task to execute within the bounds of the transaction
      *
      * @return
-     *  the output of the given action
+     *  the value returned by the executed task
      */
-    private O executeNested(EntityTransaction transaction, Action<O> action, Object... args) {
-        // Impl note: at the time of writing, Hibernate does not support nested transactions
-        String errmsg = "Transactional block executed with a transaction already started";
-        if (this.exclusive) {
-            throw new IllegalStateException(errmsg);
-        }
-        log.warn(errmsg);
+    @SuppressWarnings("unchecked")
+    private <T, E extends Exception> T executeManagedTransaction(EntityTransaction transaction,
+        CheckedSupplier<T, E> task) throws E {
 
-        try {
-            return action.execute(args);
-        }
-        catch (Exception e) {
-            throw new TransactionExecutionException(e);
-        }
-    }
-
-    /**
-     * Executes the given action within the context of a new, fully-managed transaction.
-     *
-     * @param transaction
-     *  a transaction object for the current transactional context
-     *
-     * @param action
-     *  the action to execute transactionally
-     *
-     * @param args
-     *  the arguments to pass through to the action
-     *
-     * @throws TransactionExecutionException
-     *  if an exception occurs while executing the provided action
-     *
-     * @return
-     *  the output of the given action
-     */
-    private O executeTransactional(EntityTransaction transaction, Action<O> action, Object... args) {
         transaction.begin();
 
         try {
-            O output = action.execute(args);
-
-            for (Validator<O> validator : this.validators) {
-                if (!validator.validate(output)) {
-                    log.debug("Transaction operation output failed validation: {}", output);
-
-                    transaction.setRollbackOnly();
-                    break;
-                }
-            }
-
-            return output;
+            return task.get();
         }
         catch (Exception e) {
-            if (!this.commitOnException) {
+            if (transaction.isActive() && !this.commitOnException) {
                 transaction.setRollbackOnly();
             }
 
-            throw new TransactionExecutionException(e);
+            throw (E) e;
         }
         finally {
             if (!transaction.isActive()) {
-                String errmsg = "Transactional block completed without an active transaction";
-                if (this.exclusive) {
-                    throw new IllegalStateException(errmsg);
-                }
-
-                log.warn(errmsg);
+                throw new IllegalStateException(
+                    "Transactional block completed without an active transaction");
             }
 
             if (!transaction.getRollbackOnly()) {
-                this.commitTransaction(transaction);
+                transaction.commit();
+                this.notifyListeners(State.COMMITTED);
             }
             else {
-                this.rollbackTransaction(transaction);
+                transaction.rollback();
+                this.notifyListeners(State.ROLLED_BACK);
             }
         }
     }
 
     /**
-     * Executes this transactional block using the specified action by passing in the provided
-     * arguments. The specified action will be used in place of any action previously set via the
-     * call method. If no action is provided, this method will throw an exception.
+     * Executes the given task using the existing transaction. This method is should not be called directly
+     * and should only ever be executed as a delegate of the executeTransaction method.
      *
-     * @param action
-     *  the action to execute transactionally
+     * @param transaction
+     *  the transaction object to use to manage the underlying database transaction
      *
-     * @param args
-     *  the arguments to pass through to the action
-     *
-     * @throws IllegalArgumentException
-     *  if no action is provided
-     *
-     * @throws TransactionExecutionException
-     *  if an exception occurs while executing the provided action
+     * @param task
+     *  the task to execute within the bounds of the transaction
      *
      * @return
-     *  the output of the action
+     *  the value returned by the executed task
      */
-    public O execute(Action<O> action, Object... args) {
-        if (action == null) {
-            throw new IllegalArgumentException("no action provided");
+    @SuppressWarnings("unchecked")
+    private <T, E extends Exception> T executeNestedTransaction(EntityTransaction transaction,
+        CheckedSupplier<T, E> task) throws E {
+
+        // Impl note: at the time of writing, JPA/Hibernate does not support nested transactions, nor
+        // savepoints. Our only real recourse is pretending the transaction doesn't exist.
+        if (this.exclusive) {
+            String errmsg = "Transactional block executed with a transaction already active";
+            log.error(errmsg);
+            throw new IllegalStateException(errmsg);
+        }
+        else {
+            log.warn("Transaction already started; executing block as a nested transaction");
         }
 
-        return this.run(action)
-            .execute(args);
+        try {
+            return task.get();
+        }
+        catch (Exception e) {
+            if (transaction.isActive() && !this.commitOnException) {
+                transaction.setRollbackOnly();
+            }
+
+            throw (E) e;
+        }
+
+        // Impl note: this feels weird to omit, but since we don't know when the transaction will complete,
+        // we can't fire off transaction listeners. The alternative is firing listeners preemptively with
+        // fake statuses or a special state indicating the transaction didn't yet complete, but that doesn't
+        // really achieve what they're intended to do.
     }
 
     /**
-     * Executes this transactional block, passing the specified arguments through to the previously
-     * assigned action. If an action has not yet been set, this method throws an exception.
+     * Executes the given task within the bounds of a transaction.
      *
-     * @param args
-     *  the arguments to pass through to the action
+     * @param transaction
+     *  the transaction object to use to manage the underlying database transaction
      *
-     * @throws IllegalStateException
-     *  if the transactional action has not yet been assigned
-     *
-     * @throws TransactionExecutionException
-     *  if an exception occurs in the assigned action
+     * @param task
+     *  the task to execute within the bounds of the transaction
      *
      * @return
-     *  the output of the action
+     *  the value returned by the executed task
      */
-    public O execute(Object... args) {
-        if (this.action == null) {
-            throw new IllegalStateException("no action provided");
-        }
-
+    private <T, E extends Exception> T executeTransaction(CheckedSupplier<T, E> task) throws E {
         EntityTransaction transaction = this.entityManager.getTransaction();
         if (transaction == null) {
             throw new IllegalStateException("Unable to fetch the current context transaction");
         }
 
         return !transaction.isActive() ?
-            this.executeTransactional(transaction, this.action, args) :
-            this.executeNested(transaction, this.action, args);
+            this.executeManagedTransaction(transaction, task) :
+            this.executeNestedTransaction(transaction, task);
     }
+
+    /**
+     * Executes the given task within the bounds of a transaction.
+     *
+     * @param task
+     *  the task to execute
+     *
+     * @throws IllegalArgumentException
+     *  if the given task is null
+     */
+    public void execute(Runnable task) {
+        if (task == null) {
+            throw new IllegalArgumentException("no task provided");
+        }
+
+        CheckedSupplier<Object, TransactionExecutionException> wrapper = () -> {
+            try {
+                task.run();
+                return null;
+            }
+            catch (Exception e) {
+                throw new TransactionExecutionException(e);
+            }
+        };
+
+        this.executeTransaction(wrapper);
+    }
+
+    /**
+     * Executes the given task within the bounds of a transaction.
+     *
+     * @param task
+     *  the task to execute
+     *
+     * @throws IllegalArgumentException
+     *  if the given task is null
+     *
+     * @return
+     *  the value returned by the given task
+     */
+    public <T> T execute(Supplier<T> task) {
+        if (task == null) {
+            throw new IllegalArgumentException("no task provided");
+        }
+
+        CheckedSupplier<T, TransactionExecutionException> wrapper = () -> {
+            try {
+                return task.get();
+            }
+            catch (Exception e) {
+                throw new TransactionExecutionException(e);
+            }
+        };
+
+        return this.executeTransaction(wrapper);
+    }
+
+    /**
+     * Executes the given task within the bounds of a transaction.
+     *
+     * @param task
+     *  the task to execute
+     *
+     * @throws IllegalArgumentException
+     *  if the given task is null
+     */
+    public <E extends Exception> void checkedExecute(CheckedRunnable<E> task) throws E {
+        if (task == null) {
+            throw new IllegalArgumentException("no action provided");
+        }
+
+        CheckedSupplier<Object, E> wrapper = () -> {
+            task.run();
+            return null;
+        };
+
+        this.executeTransaction(wrapper);
+    }
+
+    /**
+     * Executes the given task within the bounds of a transaction.
+     *
+     * @param task
+     *  the task to execute
+     *
+     * @throws IllegalArgumentException
+     *  if the given task is null
+     *
+     * @return
+     *  the value returned by the given task
+     */
+    public <T, E extends Exception> T checkedExecute(CheckedSupplier<T, E> task) throws E {
+        if (task == null) {
+            throw new IllegalArgumentException("no action provided");
+        }
+
+        return this.executeTransaction(task);
+    }
+
 }
