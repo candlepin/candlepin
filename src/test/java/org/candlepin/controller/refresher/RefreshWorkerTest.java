@@ -46,7 +46,6 @@ import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.TransactionExecutionException;
 import org.candlepin.util.Util;
 
 import org.hibernate.exception.ConstraintViolationException;
@@ -1267,7 +1266,8 @@ public class RefreshWorkerTest {
 
         // Impl note: this only works because of the call to mockTransactionalFunctionality done in setup
         this.mockEntityManager.getTransaction().begin();
-        assertThrows(TransactionExecutionException.class, () -> worker.execute(owner));
+        Throwable thrown = assertThrows(Exception.class, () -> worker.execute(owner));
+        assertEquals(exception, thrown);
 
         verify(mockProductCurator, times(1)).getProductsByIds(eq(null), any(Collection.class));
         verify(mockProductCurator, times(1)).create(Mockito.any(Product.class), anyBoolean());

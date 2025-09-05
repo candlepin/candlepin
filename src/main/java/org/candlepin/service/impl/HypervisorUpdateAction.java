@@ -112,17 +112,14 @@ public class HypervisorUpdateAction {
         parseHypervisorList(hypervisors, hosts, guests, incomingHosts);
         VirtConsumerMap hypervisorConsumersMap = new VirtConsumerMap();
 
-        HypervisorUpdateAction act = this;
-        Transactional<Consumer> transaction = this.consumerCurator.transactional(args ->
-            act.reconcileHost((Owner) args[0], (ConsumerDTO) args[1], (HypervisorUpdateResultDTO) args[2],
-            (Boolean) args[3], (String) args[4], (String) args[5]))
+        Transactional transaction = this.consumerCurator.transactional()
             .onCommit(status -> sink.sendEvents())
             .onRollback(status -> sink.rollback());
 
         for (String hypervisorId : hosts) {
             try {
-                Consumer knownHost = transaction.execute(owner, incomingHosts.get(hypervisorId), result,
-                    create, principal, jobReporterId);
+                Consumer knownHost = transaction.execute(() -> this.reconcileHost(owner,
+                    incomingHosts.get(hypervisorId), result, create, principal, jobReporterId));
 
                 if (knownHost != null) {
                     hypervisorConsumersMap.add(knownHost.getHypervisorId().getHypervisorId(), knownHost);
@@ -148,7 +145,7 @@ public class HypervisorUpdateAction {
         return dto;
     }
 
-    public Consumer reconcileHost(Owner owner, ConsumerDTO incomingHost, HypervisorUpdateResultDTO result,
+    private Consumer reconcileHost(Owner owner, ConsumerDTO incomingHost, HypervisorUpdateResultDTO result,
         boolean create, String principal, String jobReporterId) {
 
         String systemUuid = incomingHost.getFacts() != null ?

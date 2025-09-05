@@ -80,10 +80,7 @@ public class ConsumerMigration {
         boolean failed = false;
         for (List<String> consumerIdsBlock : Iterables.partition(consumerIds, this.batchSize)) {
             try {
-                this.ownerCurator.transactional(args -> {
-                    migrateBatch(consumerIdsBlock, destinationOwner);
-                    return null;
-                }).execute();
+                this.ownerCurator.transactional(() -> this.migrateBatch(consumerIdsBlock, destinationOwner));
             }
             catch (Exception e) {
                 log.warn("Failed to migrate a batch of consumers.", e);

@@ -159,8 +159,7 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
         Instant nonCheckedInRetention = getRetentionDate(CFG_LAST_UPDATED_IN_RETENTION_IN_DAYS);
         int batchSize = this.getBatchSize();
 
-        Transactional<Integer> transactional = this.consumerCurator
-            .transactional(this::deleteInactiveConsumers)
+        Transactional transaction = this.consumerCurator.transactional()
             .onCommit(status -> this.eventSink.sendEvents())
             .onRollback(status -> this.eventSink.rollback());
 
@@ -169,7 +168,7 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
 
         int deletedCount = 0;
         for (List<InactiveConsumerRecord> batch : Iterables.partition(inactiveConsumers, batchSize)) {
-            deletedCount += transactional.execute(batch);
+            deletedCount += transaction.execute(() -> this.deleteInactiveConsumers(batch));
         }
 
         log.info("InactiveConsumerCleanerJob has run! {} consumers removed.", deletedCount);
