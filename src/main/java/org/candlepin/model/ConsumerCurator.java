@@ -1028,7 +1028,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Deletes {@link Consumer}s based on the provided consumer ids.
+     * Deletes {@link Consumer}s based on the provided consumer ids and
+     * creates corresponding records in {@link DeletedConsumer}.
+     *
+     * <p>For each consumer id in the input collection:</p>
+     * <ul>
+     *   <li>The consumer entry is removed from the {@code Consumer} table.</li>
+     *   <li>A record is created in the {@code DeletedConsumer} table
+     *       to track the deletion.</li>
+     * </ul>
      *
      * @param consumerIds
      *  ids of the consumers to delete
@@ -1040,6 +1048,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         if (consumerIds == null || consumerIds.isEmpty()) {
             return 0;
         }
+
+        this.deletedConsumerCurator.createDeletedConsumers(consumerIds);
 
         int deleted = 0;
 

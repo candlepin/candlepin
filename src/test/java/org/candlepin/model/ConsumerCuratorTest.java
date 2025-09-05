@@ -46,6 +46,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.Mockito;
 
@@ -55,6 +56,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,6 +65,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 
@@ -2377,6 +2380,53 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertThat(actual)
             .isNotNull()
             .containsExactlyInAnyOrder(unknown1, unknown2, c4.getUuid());
+    }
+
+    @ParameterizedTest
+    @MethodSource("listOfIdsReturnZero")
+    public void testDeleteConsumerReturnZero(List<String> consumerIds) {
+        int count = this.consumerCurator.deleteConsumers(consumerIds);
+
+        assertThat(count)
+            .isZero();
+    }
+
+    static Stream<List<String>> listOfIdsReturnZero() {
+        return Stream.of(
+            null,
+            Collections.emptyList(),
+            List.of("unknownId"),
+            List.of("unknownId1", "unknownId1")
+        );
+    }
+
+    @Test
+    public void testDeleteConsumer() {
+        Owner owner = this.createOwner();
+        Consumer consumer = createConsumer(owner);
+
+        int count = this.consumerCurator.deleteConsumers(List.of(consumer.getId()));
+
+        assertThat(count)
+            .isEqualTo(1);
+
+        // Verify that specific consumer does not exist
+        Consumer result = this.consumerCurator.findByUuid(consumer.getUuid());
+        assertThat(result)
+            .isNull();
+    }
+
+    @Test
+    public void testDeleteConsumerCreateCorrespondingRecordInDeleteConsumerTable() {
+        Owner owner = this.createOwner();
+        Consumer consumer = createConsumer(owner);
+
+        this.consumerCurator.deleteConsumers(List.of(consumer.getId()));
+
+        DeletedConsumer deletedConsumer = this.deletedConsumerCurator.findByConsumer(consumer);
+        assertThat(deletedConsumer)
+            .isNotNull()
+            .returns(consumer.getUuid(), DeletedConsumer::getConsumerUuid);
     }
 
     private IdentityCertificate createIdCert() {

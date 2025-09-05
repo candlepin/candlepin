@@ -15,6 +15,7 @@
 package org.candlepin.spec.jobs;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertGone;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -42,11 +43,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @SpecTest
 public class InactiveConsumerCleanerJobSpecTest {
@@ -106,7 +109,8 @@ public class InactiveConsumerCleanerJobSpecTest {
 
         String jobId = jobsClient.scheduleJob(JOB_KEY).getId();
         AsyncJobStatusDTO status = jobsClient.waitForJob(jobId);
-        assertEquals("FINISHED", status.getState());
+        assertThatJob(status)
+            .isFinished();
 
         // Verify that the inactive consumer has been deleted.
         final String inactiveConsumer1Uuid = inactiveConsumer.getUuid();
@@ -134,6 +138,65 @@ public class InactiveConsumerCleanerJobSpecTest {
         compareConsumers(consumerWithEntitlement, consumerApi.getConsumer(consumerWithEntitlement.getUuid()));
         compareConsumers(activeConsumer, consumerApi.getConsumer(activeConsumer.getUuid()));
         compareConsumers(activeConsumer2, consumerApi.getConsumer(activeConsumer2.getUuid()));
+    }
+
+    @Test
+    public void shouldUpdateDeletedConsumerWhenUuidReused() {
+        final String uuid = UUID.randomUUID().toString();
+
+        Instant inactiveTime = Instant.now()
+            .minus(DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS + 10, ChronoUnit.DAYS);
+
+        ConsumerDTO c1 = Consumers.random(owner)
+            .uuid(uuid)
+            .lastCheckin(inactiveTime.atOffset(ZoneOffset.UTC));
+        c1 = consumerApi.createConsumer(c1, null, owner.getKey(), null, false);
+
+        // Delete Consumer1 (simulate previous deletion in the past)
+        consumerApi.deleteConsumer(c1.getUuid());
+
+        // Capture the first deletion record (must exist now)
+        List<DeletedConsumerDTO> afterFirstDeletion = deletedConsumerApi
+            .listByDate(c1.getCreated(), 1, 200, "desc", "created");
+        List<DeletedConsumerDTO> firstDeletionForUuid = afterFirstDeletion.stream()
+            .filter(dc -> uuid.equals(dc.getConsumerUuid()))
+            .toList();
+
+        assertThat(firstDeletionForUuid)
+            .hasSize(1);
+
+        OffsetDateTime firstDeletedCreated = firstDeletionForUuid.get(0).getCreated();
+
+        // create Consumer2 with the SAME UUID, make it inactive
+        ConsumerDTO c2 = Consumers.random(owner)
+            .uuid(uuid)
+            .lastCheckin(inactiveTime.atOffset(ZoneOffset.UTC));
+        c2 = consumerApi.createConsumer(c2, null, owner.getKey(), null, false);
+
+        String jobId = jobsClient.scheduleJob(JOB_KEY).getId();
+        AsyncJobStatusDTO status = jobsClient.waitForJob(jobId);
+        assertThatJob(status)
+            .isFinished();
+
+        // ensure only ONE row exists for this UUID and it reflects the 2nd deletion
+        List<DeletedConsumerDTO> afterSecondDeletion = deletedConsumerApi
+            .listByDate(firstDeletedCreated.minusDays(1), 1, 200, "desc", "created");
+        List<DeletedConsumerDTO> rowsForUuid = afterSecondDeletion.stream()
+            .filter(dc -> uuid.equals(dc.getConsumerUuid()))
+            .toList();
+
+        assertThat(rowsForUuid)
+            .isNotNull()
+            .singleElement()
+            .returns(c2.getName(), DeletedConsumerDTO::getConsumerName)
+            .returns(c2.getOwner().getId(), DeletedConsumerDTO::getOwnerId)
+            .returns(c2.getOwner().getKey(), DeletedConsumerDTO::getOwnerKey)
+            .returns(c2.getOwner().getDisplayName(), DeletedConsumerDTO::getOwnerDisplayName)
+            .extracting(DeletedConsumerDTO::getCreated)
+            .satisfies(created -> assertThat(created).isAfterOrEqualTo(firstDeletedCreated));
+
+        // And verify that the live consumer is now gone
+        assertGone(() -> consumerApi.getConsumer(uuid));
     }
 
     private void createProductAndPoolForConsumer(ConsumerDTO consumer) {
