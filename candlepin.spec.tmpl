@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.6.4
+Version: 4.7.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,45 @@ fi
 
 #raw
 %changelog
+* Wed Sep 10 2025 candlepin-bot 4.7.0-1
+- CANDLEPIN-1059: Reduced 429s while fetching content access payloads
+  (crog@redhat.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 11.0.10 to 11.0.11
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1050: Fixed constraint violation in InactiveConsumerCleanerJob
+  (sbakaj@redhat.com)
+- CANDLEPIN-1059: Refactored Transactional and EERetry utility classes
+  (crog@redhat.com)
+- Bump com.puppycrawl.tools:checkstyle from 11.0.0 to 11.0.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.ehcache:ehcache from 3.11.0 to 3.11.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson from 2.19.2 to 2.20.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.sonarqube from 6.2.0.5505 to 6.3.1.5724
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Updated i18n job to support Candlepin 4.6 (crog@redhat.com)
+- CANDLEPIN-1045: Disallow running sonar from a fork PR
+  (joshmalbrecht@gmail.com)
+- Bump org.openapitools:jackson-databind-nullable from 0.2.6 to 0.2.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.ehcache:ehcache from 3.10.8 to 3.11.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.18.0 to 5.19.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.spotbugs:spotbugs-annotations from 4.9.3 to 4.9.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.assertj:assertj-core from 3.27.3 to 3.27.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mariadb.jdbc:mariadb-java-client from 3.5.4 to 3.5.5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.26.1 to 11.0.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 11.0.9 to 11.0.10
+  (49699333+dependabot[bot]@users.noreply.github.com)
+
 * Tue Aug 05 2025 candlepin-bot 4.6.4-1
 - CANDLEPIN-1039: Fixed dangling Liquibase connections (crog@redhat.com)
 
