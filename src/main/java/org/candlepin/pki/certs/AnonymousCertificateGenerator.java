@@ -46,8 +46,6 @@ import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
-import com.google.inject.persist.Transactional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -142,7 +140,6 @@ public class AnonymousCertificateGenerator {
      * @return
      *  the retrieved or generated certificate
      */
-    @Transactional
     public AnonymousContentAccessCertificate generate(AnonymousCloudConsumer consumer) {
         if (this.isStandalone()) {
             String msg = "cannot retrieve or create content access certificate in standalone mode";

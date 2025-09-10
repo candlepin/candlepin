@@ -169,6 +169,7 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -188,9 +189,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Provider;
+import javax.persistence.EntityManager;
 import javax.persistence.OptimisticLockException;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
+
+
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -206,6 +210,8 @@ public class ConsumerResourceTest {
     private Configuration config;
     private FactValidator factValidator;
 
+    @Mock
+    private EntityManager mockEntityManager;
     @Mock
     private ConsumerCurator consumerCurator;
     @Mock
@@ -312,10 +318,18 @@ public class ConsumerResourceTest {
         when(eventBuilder.setEventData(any(Consumer.class))).thenReturn(eventBuilder);
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);
 
+        // Necessary because this entire test suite is the most brittle, poorly mocked suite in the entire
+        // project, and I don't have the time to rewrite thousands of lines of "tests" to do it properly. :/
+        TestUtil.mockTransactionalFunctionality(this.mockEntityManager, this.consumerCurator,
+            this.ownerCurator, this.entitlementCurator, this.consumerTypeCurator, this.environmentCurator,
+            this.activationKeyCurator, this.cdnCurator, this.deletedConsumerCurator,
+            this.distributorVersionCurator, this.consumerContentOverrideCurator,
+            this.environmentContentCurator, this.anonymousConsumerCurator, this.anonymousCertCurator);
+
         this.factValidator = new FactValidator(this.config, this.i18nProvider);
 
         this.consumerResource = this.buildConsumerResource();
-        mockedConsumerResource = Mockito.spy(consumerResource);
+        this.mockedConsumerResource = Mockito.spy(consumerResource);
 
         ResteasyContext.pushContext(Principal.class, principal);
 
@@ -1393,15 +1407,17 @@ public class ConsumerResourceTest {
         certificates.add(expectedCertificate);
         doReturn(certificates).when(entitlementCertServiceAdapter).listForConsumer(any(Consumer.class));
 
-        Object export = consumerResource.exportCertificates(consumer.getId(),
-            Long.toString(expectedCertificate.getSerial().getId()));
+        String serialsFilter = Long.toString(expectedCertificate.getSerial().getId());
+        Response response = this.consumerResource.exportCertificates(consumer.getUuid(), serialsFilter);
+        assertThat(response)
+            .isNotNull()
+            .extracting(Response::getEntity)
+            .isInstanceOf(Stream.class);
 
-        assertThat(export)
-            .isInstanceOf(List.class);
+        List<CertificateDTO> actualCerts = ((Stream<CertificateDTO>) response.getEntity()).toList();
 
-        List<CertificateDTO> actual = (List<CertificateDTO>) export;
-        assertEquals(1, actual.size());
-        CertificateDTO actualCertificate = actual.get(0);
+        assertEquals(1, actualCerts.size());
+        CertificateDTO actualCertificate = actualCerts.get(0);
         assertEquals(expectedCertificate.getId(), actualCertificate.getId());
         assertEquals(expectedCertificate.getKey(), actualCertificate.getKey());
         assertEquals(expectedCertificate.getCert(), actualCertificate.getCert());
@@ -1436,15 +1452,17 @@ public class ConsumerResourceTest {
         when(this.scaCertificateGenerator.generate(any(Consumer.class)))
             .thenReturn(expectedCertificate);
 
-        Object export = consumerResource.exportCertificates(consumer.getId(),
-            Long.toString(expectedCertificate.getSerial().getId()));
+        String serialsFilter = Long.toString(expectedCertificate.getSerial().getId());
+        Response response = this.consumerResource.exportCertificates(consumer.getUuid(), serialsFilter);
+        assertThat(response)
+            .isNotNull()
+            .extracting(Response::getEntity)
+            .isInstanceOf(Stream.class);
 
-        assertThat(export)
-            .isInstanceOf(List.class);
+        List<CertificateDTO> actualCerts = ((Stream<CertificateDTO>) response.getEntity()).toList();
+        assertEquals(1, actualCerts.size());
 
-        List<CertificateDTO> actual = (List<CertificateDTO>) export;
-        assertEquals(1, actual.size());
-        CertificateDTO actualCertificate = actual.get(0);
+        CertificateDTO actualCertificate = actualCerts.get(0);
         assertEquals(expectedCertificate.getId(), actualCertificate.getId());
         assertEquals(expectedCertificate.getKey(), actualCertificate.getKey());
         assertEquals(expectedCertificate.getCert(), actualCertificate.getCert());
@@ -1506,13 +1524,16 @@ public class ConsumerResourceTest {
             "expected-cert", 18084729L);
         when(this.anonymousCertificateGenerator.generate(consumer)).thenReturn(expectedCert);
 
-        Object export = consumerResource.exportCertificates(consumer.getUuid(), null);
-        assertThat(export)
-            .isInstanceOf(List.class);
+        Response response = this.consumerResource.exportCertificates(consumer.getUuid(), null);
+        assertThat(response)
+            .isNotNull()
+            .extracting(Response::getEntity)
+            .isInstanceOf(Stream.class);
 
-        List<CertificateDTO> actual = (List<CertificateDTO>) export;
-        assertEquals(1, actual.size());
-        CertificateDTO actualCert = actual.get(0);
+        List<CertificateDTO> actualCerts = ((Stream<CertificateDTO>) response.getEntity()).toList();
+
+        assertEquals(1, actualCerts.size());
+        CertificateDTO actualCert = actualCerts.get(0);
         assertEquals(expectedCert.getId(), actualCert.getId());
         assertEquals(expectedCert.getKey(), actualCert.getKey());
         assertEquals(expectedCert.getCert(), actualCert.getCert());
@@ -1522,7 +1543,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testExportCertificatesWithFilteringExistingAnonymousCloudConsumer() throws Exception {
+    public void testExportCertificatesWithFilteringIncludesExistingAnonymousCloudConsumer() throws Exception {
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
         consumer.setUuid("uuid");
         consumer.setProductIds(List.of("product-id"));
@@ -1530,16 +1551,64 @@ public class ConsumerResourceTest {
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
         ResteasyContext.pushContext(Principal.class, principal);
 
+        MockHttpRequest mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/fake")
+            .header("accept", "application/json");
+        ResteasyContext.pushContext(HttpRequest.class, mockReq);
+        ResteasyContext.pushContext(HttpServletResponse.class, mock(HttpServletResponse.class));
+
         AnonymousContentAccessCertificate expectedCertificate = createAnonContentAccessCert("expected-key",
             "expected-cert", 18084729L);
         when(this.anonymousCertificateGenerator.generate(consumer))
             .thenReturn(expectedCertificate);
         String serials = Long.toString(expectedCertificate.getSerial().getId());
 
-        List<CertificateDTO> actual = (List<CertificateDTO>) consumerResource
-            .exportCertificates(consumer.getUuid(), serials);
+        Response response = this.consumerResource.exportCertificates(consumer.getUuid(), serials);
+        assertThat(response)
+            .isNotNull()
+            .extracting(Response::getEntity)
+            .isInstanceOf(Stream.class);
 
-        assertEquals(0, actual.size());
+        List<CertificateDTO> actualCerts = ((Stream<CertificateDTO>) response.getEntity()).toList();
+        assertThat(actualCerts)
+            .isNotNull()
+            .singleElement()
+            .returns(expectedCertificate.getKey(), CertificateDTO::getKey)
+            .returns(expectedCertificate.getCert(), CertificateDTO::getCert)
+            .extracting(CertificateDTO::getSerial)
+            .returns(expectedCertificate.getSerial().getId(), CertificateSerialDTO::getId);
+    }
+
+    @Test
+    public void testExportCertificatesWithFilteringIncludesExistingAnonymousCloudConsumerOnMismatch()
+        throws Exception {
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+        consumer.setUuid("uuid");
+        consumer.setProductIds(List.of("product-id"));
+
+        AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
+        ResteasyContext.pushContext(Principal.class, principal);
+
+        MockHttpRequest mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/fake")
+            .header("accept", "application/json");
+        ResteasyContext.pushContext(HttpRequest.class, mockReq);
+        ResteasyContext.pushContext(HttpServletResponse.class, mock(HttpServletResponse.class));
+
+        AnonymousContentAccessCertificate expectedCertificate = createAnonContentAccessCert("expected-key",
+            "expected-cert", 18084729L);
+        when(this.anonymousCertificateGenerator.generate(consumer))
+            .thenReturn(expectedCertificate);
+
+        Response response = this.consumerResource.exportCertificates(consumer.getUuid(), "123,456,789");
+        assertThat(response)
+            .isNotNull()
+            .extracting(Response::getEntity)
+            .isInstanceOf(Stream.class);
+
+        List<CertificateDTO> actualCerts = ((Stream<CertificateDTO>) response.getEntity()).toList();
+        assertThat(actualCerts)
+            .isNotNull()
+            .isEmpty();
     }
 
     @Test
@@ -1584,13 +1653,23 @@ public class ConsumerResourceTest {
         ResteasyContext.pushContext(HttpRequest.class, mockReq);
         ResteasyContext.pushContext(HttpServletResponse.class, mock(HttpServletResponse.class));
 
-        Long serial = 123456L;
-        File mockFile = mock(File.class);
-        doReturn(mockFile).when(manifestManager).generateEntitlementArchive(consumer, Set.of(serial));
+        File tmpArchive = File.createTempFile("test_archive", "zip");
+        tmpArchive.deleteOnExit();
 
-        Object actual = consumerResource.exportCertificates(consumer.getUuid(), Long.toString(serial));
+        String expectedContents = TestUtil.randomString(32, TestUtil.CHARSET_ALPHANUMERIC);
+        Files.writeString(tmpArchive.toPath(), expectedContents);
 
-        assertEquals(mockFile, actual);
+        doReturn(tmpArchive)
+            .when(manifestManager)
+            .generateEntitlementArchive(consumer, null);
+
+        Response response = this.consumerResource.exportCertificates(consumer.getUuid(), null);
+        assertThat(response)
+            .isNotNull()
+            .extracting(Response::getEntity)
+            .isInstanceOf(File.class);
+
+        assertEquals(tmpArchive, response.getEntity());
     }
 
     @Test
@@ -1635,12 +1714,14 @@ public class ConsumerResourceTest {
             "key-1", "key-2", 18084729L);
         doReturn(certificate).when(this.scaCertificateGenerator).generate(any(Consumer.class));
 
-        Object export = consumerResource.exportCertificates(consumer.getId(), "123456");
-        assertThat(export)
-            .isInstanceOf(List.class);
+        Response response = this.consumerResource.exportCertificates(consumer.getUuid(), "123456");
+        assertThat(response)
+            .isNotNull()
+            .extracting(Response::getEntity)
+            .isInstanceOf(Stream.class);
 
-        List<CertificateDTO> actual = (List<CertificateDTO>) export;
-        assertEquals(0, actual.size());
+        List<CertificateDTO> actualCerts = ((Stream<CertificateDTO>) response.getEntity()).toList();
+        assertEquals(0, actualCerts.size());
     }
 
     @Test

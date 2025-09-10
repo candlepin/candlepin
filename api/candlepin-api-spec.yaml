@@ -1227,6 +1227,9 @@ paths:
       tags:
         - consumer
       operationId: exportCertificates
+      x-java-response:
+        type: javax.ws.rs.core.Response
+        isContainer: false
       security: [ ]
       parameters:
         - name: consumer_uuid
@@ -1259,18 +1262,15 @@ paths:
                 format: binary
             application/json:
               schema:
-                $ref: '#/components/schemas/CertificateDTO'
+                type: array
+                items:
+                  $ref: '#/components/schemas/CertificateDTO'
         400:
-          description: Consumer is null or does not have a defined type ID or Consumer is not associated
-            with a valid type.
+          description: if the provided list of serials are invalid or malformed
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Consumer is null or does not have a defined type ID or Consumer is
-                  not associated with a valid type.
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
           description: Consumer with this UUID could not be found.
           content:
