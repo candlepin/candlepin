@@ -39,7 +39,6 @@ import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
-import org.candlepin.util.Transactional;
 
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
@@ -52,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -390,7 +390,7 @@ public class RefreshWorker {
      */
     @SuppressWarnings("indentation")
     public RefreshResult execute(Owner owner) {
-        Transactional<RefreshResult> block = this.poolCurator.transactional((args) -> {
+        Supplier<RefreshResult> block = () -> {
             NodeMapper nodeMapper = new NodeMapper();
 
             NodeFactory nodeFactory = new NodeFactory()
@@ -452,7 +452,7 @@ public class RefreshWorker {
 
             log.debug("Done. Returning refresh worker result");
             return result;
-        });
+        };
 
         // Attempt to retry if we're not already in a transaction
         // Impl note: at the time of writing, nested transactions are not supported in Hibernate
@@ -465,12 +465,11 @@ public class RefreshWorker {
                 .addException(ConstraintViolationException.class)
                 .addException(LockAcquisitionException.class)
                 .retries(CONSTRAINT_VIOLATION_RETRIES)
-                .execute(block::execute);
+                .execute(() -> this.poolCurator.transactional(block));
         }
         else {
             // A transaction is already active, just run the block as-is
-            return block.allowExistingTransactions()
-                .execute();
+            return block.get();
         }
     }
 

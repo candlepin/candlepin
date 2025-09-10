@@ -23,8 +23,6 @@ import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.audit.EventSink;
-import org.candlepin.controller.AutobindDisabledForOwnerException;
-import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -102,7 +100,7 @@ public class HealEntireOrgJob implements AsyncJob {
             Date entitleDate = arguments.getAs(ENTITLE_DATE_KEY, Date.class);
             StringBuilder result = new StringBuilder();
 
-            Transactional<String> transaction = this.consumerCurator.transactional(this::healSingleConsumer)
+            Transactional transaction = this.consumerCurator.transactional()
                 .onCommit(status -> eventSink.sendEvents())
                 .onRollback(status -> eventSink.rollback());
 
@@ -112,8 +110,16 @@ public class HealEntireOrgJob implements AsyncJob {
                 try {
                     Consumer consumer = consumerCurator.getConsumer(uuid);
 
-                    String output = transaction.execute(consumer, owner, entitleDate);
-                    result.append(output);
+                    transaction.checkedExecute(() -> {
+                        AutobindData autobindData = new AutobindData(consumer, owner)
+                            .on(entitleDate);
+
+                        List<Entitlement> ents = this.entitler.bindByProducts(autobindData, true);
+                        this.entitler.sendEvents(ents);
+                    });
+
+                    result.append(String.format("Successfully healed consumer with UUID: %s\n",
+                        consumer.getUuid()));
                 }
                 catch (Exception e) {
                     // We want to catch everything and continue.
@@ -141,25 +147,6 @@ public class HealEntireOrgJob implements AsyncJob {
      */
     public static HealEntireOrgJobConfig createJobConfig() {
         return new HealEntireOrgJobConfig();
-    }
-
-    /*
-     * Each consumer heal should be a separate transaction
-     */
-    public String healSingleConsumer(Object... args)
-        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
-
-        Consumer consumer = (Consumer) args[0];
-        Owner owner = (Owner) args[1];
-        Date date = (Date) args[2];
-
-        AutobindData autobindData = new AutobindData(consumer, owner)
-            .on(date);
-
-        List<Entitlement> ents = entitler.bindByProducts(autobindData, true);
-        entitler.sendEvents(ents);
-
-        return String.format("Successfully healed consumer with UUID: %s\n", consumer.getUuid());
     }
 
     /**

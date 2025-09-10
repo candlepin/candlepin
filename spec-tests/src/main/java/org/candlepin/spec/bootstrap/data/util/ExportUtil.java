@@ -157,4 +157,37 @@ public final class ExportUtil {
         }
     }
 
+    /**
+     * Extracts the given entry from the provided archive. If the entry does not exist or otherwise cannot be
+     * read, this method throws an IOException.
+     *
+     * @param archive
+     *  the archive from which to read an entry
+     *
+     * @param entry
+     *  the entry to read
+     *
+     * @throws IllegalArgumentException
+     *  if either archive or entry are null
+     *
+     * @throws IOException
+     *  if the entry does not exist or otherwise cannot be read
+     *
+     * @return
+     *  the contents of the entry as a byte array
+     */
+    public static byte[] extractEntry(ZipFile archive, ZipEntry entry) throws IOException {
+        if (archive == null) {
+            throw new IllegalArgumentException("archive is null");
+        }
+
+        if (entry == null) {
+            throw new IllegalArgumentException("entry is null");
+        }
+
+        try (InputStream istream = archive.getInputStream(entry)) {
+            return istream.readAllBytes();
+        }
+    }
+
 }

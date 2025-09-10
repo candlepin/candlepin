@@ -29,7 +29,6 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.AnonymousCloudConsumerPrincipal;
 import org.candlepin.auth.CloudConsumerPrincipal;
-import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SecurityHole;
 import org.candlepin.auth.SubResource;
@@ -49,6 +48,7 @@ import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.PoolService;
 import org.candlepin.controller.RefresherFactory;
+import org.candlepin.controller.util.ExpectedExceptionRetryWrapper;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.server.v1.CertificateDTO;
@@ -157,6 +157,7 @@ import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.PropertyValidationException;
 import org.candlepin.util.Util;
+import org.candlepin.util.function.CheckedSupplier;
 
 import com.google.inject.persist.Transactional;
 
@@ -189,6 +190,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -214,6 +216,10 @@ public class ConsumerResource implements ConsumerApi {
     private static final int CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME = 2;
     private static final DateTimeFormatter SINCE_DATE_FORMATER = DateTimeFormatter
         .ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+
+    private static final Pattern APPLICATION_JSON_ACCEPT_HEADER_REGEX =
+        Pattern.compile("(?:,|^)\\s*application/json\\s*(?:,|$)", Pattern.CASE_INSENSITIVE);
+
 
     private final ConsumerCurator consumerCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
@@ -2208,85 +2214,38 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     /**
-     * Retrieves entitlement certificates for a specific consumer
-     *
-     * @param consumerUuid
-     *  the UUID of the consumer to retrieve entitlement certificate for
-     *
-     * @param serials
-     *  the serial IDs used to filter out entitlement certificates
-     *
-     * @throws TooManyRequestsException
-     *  if a concurrent request persists the content payload and causes a database constraint violation
-     *
-     * @return a list of entitlement certificates for the consumer
-     */
-    private List<CertificateDTO> getEntitlementCertificatesForConsumer(String consumerUuid, String serials) {
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-
-        revokeOnGuestMigration(consumer);
-        poolManager.regenerateDirtyEntitlements(consumer);
-
-        Set<Long> serialSet = this.extractSerials(serials);
-        List<? extends Certificate> entitlementCerts = this.entCertAdapter.listForConsumer(consumer);
-
-        SCACertificate caCert = null;
-        try {
-            caCert = this.scaCertificateGenerator.generate(consumer);
-        }
-        catch (ConcurrentContentPayloadCreationException e) {
-            throw new TooManyRequestsException(i18n.tr("Unable to create content access payload"), e)
-                .setRetryAfterTime(CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME);
-        }
-
-        Stream<? extends Certificate> certStream = this.buildCertificateStream(entitlementCerts, caCert);
-
-        // Check if we should filter certs by the cert serial
-        if (serialSet != null && !serialSet.isEmpty()) {
-            certStream = certStream
-                .filter(cert -> cert.getSerial() != null && serialSet.contains(cert.getSerial().getId()));
-        }
-
-        return certStream.map(this.translator.getStreamMapper(Certificate.class, CertificateDTO.class))
-            .collect(Collectors.toList());
-    }
-
-    /**
-     * Retrieves a {@link AnonymousContentAccessCertificate} for the anonymous cloud consumer. If there
-     * if no existing certificate, a new one will be created.
-     *
-     * @param consumer
-     *  the anonymous cloud consumer to retrieve a certificate for
+     * Converts the given string of comma-delimited serials into a set of longs. Each serial must be numeric,
+     * but leading or trailing whitespace on the entire list or between each element is ignored. If the list
+     * of contains one or more serials using non-numeric characters, this method throws a BadRequestException.
+     * If the input list of serials is null, empty, or blank, this method returns null.
      *
      * @param serials
-     *  certificate serials used to filter out a certificate
+     *  a comma-delimited list of serials to parse
      *
-     * @throws IseException
-     *  if unable to retrieve or create an {@link AnonymousContentAccessCertificate}
+     * @throws BadRequestException
+     *  if any of the provided serials contain non-numeric characters
      *
-     * @return a {@link AnonymousContentAccessCertificate}, or null if a certificate was not able to be
-     *  retrieved, created, or filtered by the serial IDs
+     * @return
+     *  the provided serials converted to a set of longs, or null if no serials were provided.
      */
-    private CertificateDTO getCertForAnonCloudConsumer(AnonymousCloudConsumer consumer, String serials) {
-        Certificate caCert;
-        try {
-            caCert = this.anonymousCertGenerator.generate(consumer);
-        }
-        catch (Exception e) {
-            log.error(e.getMessage(), e);
-            throw new IseException(i18n.tr("Unable to retrieve or create anonymous content access " +
-            "certificate for consumer"));
-        }
-
-        // Filter the certificate if we need to
-        Set<Long> serialSet = this.extractSerials(serials);
-        if (caCert.getSerial() != null && serialSet.contains(caCert.getSerial().getId())) {
-            log.debug("Anonymous content access certificate serial {} has been filtered",
-                caCert.getSerial().getId());
+    private Set<Long> extractSerials(String serials) {
+        if (serials == null || serials.isBlank()) {
             return null;
         }
 
-        return this.translator.translate(caCert, CertificateDTO.class);
+        Function<String, Long> converter = serial -> {
+            try {
+                return Long.valueOf(serial);
+            }
+            catch (NumberFormatException e) {
+                throw new BadRequestException(this.i18n.tr(
+                    "Invalid certificate serial; serials may only contain numeric characters: {}", serial));
+            }
+        };
+
+        return Stream.of(serials.trim().split("\\s*,\\s*"))
+            .map(converter)
+            .collect(Collectors.toSet());
     }
 
     /**
@@ -2319,17 +2278,19 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
-    @Transactional
     public Response getContentAccessBody(@Verify(Consumer.class) String consumerUuid, String since) {
-        log.debug("Getting content access certificate for consumer: {}", consumerUuid);
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        // Impl note: transaction is managed by a transactional block. This method MUST NOT be annotated
+        // with @Transactional
 
-        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
-        if (!owner.isUsingSimpleContentAccess()) {
-            throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
-        }
+        CheckedSupplier<Response, ConcurrentContentPayloadCreationException> task = () -> {
+            Consumer consumer = this.consumerCurator.verifyAndLookupConsumer(consumerUuid);
+            log.debug("Getting content access certificate for consumer: {}", consumerUuid);
 
-        try {
+            Owner owner = this.ownerCurator.findOwnerById(consumer.getOwnerId());
+            if (!owner.isUsingSimpleContentAccess()) {
+                throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
+            }
+
             SCACertificate scaCert = this.scaCertificateGenerator.getX509Certificate(consumer);
             ContentAccessPayload scaPayload = this.scaCertificateGenerator.getContentPayload(consumer);
 
@@ -2369,6 +2330,12 @@ public class ConsumerResource implements ConsumerApi {
 
             return Response.ok(result, MediaType.APPLICATION_JSON)
                 .build();
+        };
+
+        try {
+            return new ExpectedExceptionRetryWrapper()
+                .addException(ConcurrentContentPayloadCreationException.class)
+                .checkedExecute(() -> this.consumerCurator.checkedTransactional(task));
         }
         catch (ConcurrentContentPayloadCreationException e) {
             throw new TooManyRequestsException(i18n.tr("Unable to create content access payload"), e)
@@ -2376,80 +2343,176 @@ public class ConsumerResource implements ConsumerApi {
         }
     }
 
-    @Override
-    @Transactional
-    public Object exportCertificates(
-        @Verify({AnonymousCloudConsumer.class, Consumer.class}) String consumerUuid, String serials) {
+    /**
+     * Builds and returns a collection containing the entitlement and content access certificates for the
+     * given consumer, optionally filtered by the provided serials.
+     * <p>
+     * If the serials parameter is null, empty, or blank, no filtering will occur and all applicable
+     * certificates will be included in the output. If a list of serials is provided, only certificates with
+     * a serial matching an entry in the provided list will be returned.
+     * <p>
+     * <strong>Note</strong>: This method is a delegate of the exportCertificates endpoint handler, and should
+     * not be called by any other methods.
+     *
+     * @param consumerUuid
+     *  The UUID of the consumer for which to fetch a certificate archive
+     *
+     * @param serials
+     *  A comma-delimited list of serials of the certificates to fetch, or a null, empty or blank string to
+     *  fetch all certificates
+     *
+     * @return
+     *  a response consisting of the certificate collection and any applicable headers and typing for clients
+     *  to properly interpret the output.
+     */
+    private Response getConsumerEntitlementCertificates(String consumerUuid, String serials)
+        throws ConcurrentContentPayloadCreationException {
 
         Principal principal = ResteasyContext.getContextData(Principal.class);
-        HttpRequest httpRequest = ResteasyContext.getContextData(HttpRequest.class);
-        if (httpRequest.getHttpHeaders().getRequestHeader("accept").contains("application/json")) {
-            if (principal instanceof AnonymousCloudConsumerPrincipal anonPrincipal) {
-                log.debug("Getting client certificates for anonymous consumer: {}", consumerUuid);
-                AnonymousCloudConsumer consumer = anonPrincipal.getAnonymousCloudConsumer();
-                CertificateDTO cert = getCertForAnonCloudConsumer(consumer, serials);
-
-                return cert == null ? List.of() : List.of(cert);
-            }
-
-            // UpdateConsumerCheckIn
-            // Explicitly updating consumer check-in,
-            // as we merged getEntitlementCertificates & exportCertificates methods due to OpenAPI
-            // constraint which doesn't allow more than one HTTP method key under same URL pattern.
-
-            log.debug("Getting client certificates for consumer: {}", consumerUuid);
-            if (principal instanceof ConsumerPrincipal) {
-                ConsumerPrincipal p = (ConsumerPrincipal) principal;
-                consumerCurator.updateLastCheckin(p.getConsumer());
-            }
-
-            return getEntitlementCertificatesForConsumer(consumerUuid, serials);
-        }
-
-        if (principal instanceof AnonymousCloudConsumerPrincipal) {
-            throw new BadRequestException(i18n.tr("Cannot create export for anonymous cloud consumer"));
-        }
-
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        HttpServletResponse response = ResteasyContext.getContextData(HttpServletResponse.class);
-        revokeOnGuestMigration(consumer);
 
         Set<Long> serialSet = this.extractSerials(serials);
-        // filtering requires a null set, so make this null if it is
-        // empty
-        if (serialSet.isEmpty()) {
-            serialSet = null;
+        Stream<? extends Certificate> certStream;
+
+        // TODO: This split is a mess, but is kind of necessary since anon cloud consumers and reggo consumers
+        // don't share a common ancestor, so while the logic should be reusable/innocuous between the two,
+        // the typing gets in the way a bit. In the future, anon consumers should just be another type of
+        // consumer and this problem goes away.
+        if (principal instanceof AnonymousCloudConsumerPrincipal anonPrincipal) {
+            log.debug("Getting client certificates for anonymous consumer: {}", consumerUuid);
+
+            try {
+                AnonymousCloudConsumer consumer = anonPrincipal.getAnonymousCloudConsumer();
+                AnonymousContentAccessCertificate anonCert = this.anonymousCertGenerator.generate(consumer);
+
+                certStream = Stream.of(anonCert);
+            }
+            catch (Exception e) {
+                log.error(e.getMessage(), e);
+                throw new IseException(this.i18n.tr("Unable to retrieve or create anonymous content access " +
+                    "certificate for consumer"));
+            }
+        }
+        else {
+            log.debug("Getting client certificates for consumer: {}", consumerUuid);
+
+            Consumer consumer = this.consumerCurator.verifyAndLookupConsumer(consumerUuid);
+            this.revokeOnGuestMigration(consumer);
+
+            this.poolManager.regenerateDirtyEntitlements(consumer);
+            List<? extends Certificate> entitlementCerts = this.entCertAdapter.listForConsumer(consumer);
+            SCACertificate caCert = this.scaCertificateGenerator.generate(consumer);
+
+            certStream = this.buildCertificateStream(entitlementCerts, caCert);
         }
 
-        File archive;
-        try {
-            archive = manifestManager.generateEntitlementArchive(consumer, serialSet);
-            response.addHeader("Content-Disposition", "attachment; filename=" +
-                archive.getName());
+        // Check if we should filter certs by the cert serial
+        if (serialSet != null && !serialSet.isEmpty()) {
+            certStream = certStream
+                .filter(cert -> cert.getSerial() != null && serialSet.contains(cert.getSerial().getId()));
+        }
 
-            return archive;
+        Stream<CertificateDTO> translatedCertStream = certStream
+            .map(this.translator.getStreamMapper(Certificate.class, CertificateDTO.class));
+
+        return Response.ok()
+            .type(MediaType.APPLICATION_JSON)
+            .entity(translatedCertStream)
+            .build();
+    }
+
+    /**
+     * Builds and returns an archive containing the entitlement and content access certificates for the given
+     * consumer, optionally filtered by the provided serials.
+     * <p>
+     * If the serials parameter is null, empty, or blank, no filtering will occur and all applicable
+     * certificates will be included in the output. If a list of serials is provided, only certificates with
+     * a serial matching an entry in the provided list will be returned.
+     * <p>
+     * <strong>Note</strong>: This method is a delegate of the exportCertificates endpoint handler, and should
+     * not be called by any other methods.
+     *
+     * @param consumerUuid
+     *  The UUID of the consumer for which to fetch a certificate archive
+     *
+     * @param serials
+     *  A comma-delimited list of serials of the certificates to fetch, or a null, empty or blank string to
+     *  fetch all certificates
+     *
+     * @return
+     *  a response consisting of the certificate archive and any applicable headers and typing for clients to
+     *  properly interpret the output.
+     */
+    private Response getConsumerEntitlementCertificateArchive(String consumerUuid, String serials)
+        throws ConcurrentContentPayloadCreationException {
+
+        Principal principal = ResteasyContext.getContextData(Principal.class);
+        if (principal instanceof AnonymousCloudConsumerPrincipal) {
+            throw new BadRequestException(this.i18n.tr("Cannot create export for anonymous cloud consumer"));
+        }
+
+        Consumer consumer = this.consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        this.revokeOnGuestMigration(consumer);
+
+        try {
+            Set<Long> serialSet = this.extractSerials(serials);
+            File archive = this.manifestManager.generateEntitlementArchive(consumer, serialSet);
+
+            return Response.ok()
+                .type("application/zip")
+                .header("Content-Disposition", "attachment; filename=" + archive.getName())
+                .entity(archive)
+                .build();
         }
         catch (ExportCreationException e) {
-            throw new IseException(
-                i18n.tr("Unable to create entitlement certificate archive"), e);
+            throw new IseException(this.i18n.tr("Unable to create entitlement certificate archive"), e);
+        }
+    }
+
+    /**
+     * API endpoint for exporting certificates in both JSON and binary archive formats; combined due to
+     * limitations in OpenAPI. Actual logic for each export format can be found at
+     * <tt>getConsumerEntitlementCertificates</tt> and <tt>getConsumerEntitlementCertificateArchive</tt>
+     * respectively.
+     *
+     * @param consumerUuid
+     *  The UUID of the consumer for which to export certificates
+     *
+     * @param serials
+     *  An optional, comma-delimited string consisting of the serials to fetch. Only certificates with
+     *  serials matching those provided in this string will be returned by this endpoint. If omitted,
+     *  no filtering will occur.
+     *
+     * @return
+     *  a Response containing the consumer's certificates in the appropriate export format
+     */
+    @Override
+    @UpdateConsumerCheckIn
+    public Response exportCertificates(
+        @Verify({AnonymousCloudConsumer.class, Consumer.class}) String consumerUuid, String serials) {
+
+        // Impl note: the transaction for these operations are managed by a transactional block defined below.
+        // This method MUST NOT be annotated with @Transactional.
+
+        boolean jsonRequest = ResteasyContext.getContextData(HttpRequest.class)
+            .getHttpHeaders()
+            .getRequestHeaders()
+            .getOrDefault("accept", List.of())
+            .stream()
+            .anyMatch(header -> APPLICATION_JSON_ACCEPT_HEADER_REGEX.matcher(header).matches());
+
+        CheckedSupplier<Response, ConcurrentContentPayloadCreationException> task = () -> jsonRequest ?
+            this.getConsumerEntitlementCertificates(consumerUuid, serials) :
+            this.getConsumerEntitlementCertificateArchive(consumerUuid, serials);
+
+        try {
+            return new ExpectedExceptionRetryWrapper()
+                .addException(ConcurrentContentPayloadCreationException.class)
+                .checkedExecute(() -> this.consumerCurator.checkedTransactional(task));
         }
         catch (ConcurrentContentPayloadCreationException e) {
             throw new TooManyRequestsException(i18n.tr("Unable to create content access payload"), e)
                 .setRetryAfterTime(CONTENT_PAYLOAD_CREATION_EXCEPTION_RETRY_AFTER_TIME);
         }
-    }
-
-    private Set<Long> extractSerials(String serials) {
-        Set<Long> serialSet = new HashSet<>();
-        if (serials != null && !serials.isEmpty()) {
-            log.debug("Requested serials: {}", serials);
-            for (String s : serials.split(",")) {
-                log.debug("   {}", s);
-                serialSet.add(Long.valueOf(s));
-            }
-        }
-
-        return serialSet;
     }
 
     private Set<String> splitKeys(String activationKeyString) {

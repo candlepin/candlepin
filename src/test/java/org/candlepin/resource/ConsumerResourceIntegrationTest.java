@@ -16,8 +16,6 @@ package org.candlepin.resource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.test.TestUtil.createConsumerDTO;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -135,7 +133,10 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @BeforeEach
-    public void setUp() {
+    @Override
+    public void init() throws Exception {
+        super.init(false);
+
         poolService = injector.getInstance(PoolService.class);
         consumerResource = injector.getInstance(ConsumerResource.class);
         idCertGenerator = injector.getInstance(IdentityCertificateGenerator.class);
@@ -213,12 +214,15 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ResteasyContext.pushContext(HttpServletResponse.class, mock(HttpServletResponse.class));
 
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
-        Object export = consumerResource.exportCertificates(consumer.getUuid(), null);
-        assertThat(export)
-            .isInstanceOf(List.class);
 
-        assertThat((List<CertificateDTO>) export)
-            .hasSize(1);
+        Response response = this.consumerResource.exportCertificates(consumer.getUuid(), null);
+        assertThat(response)
+            .isNotNull()
+            .extracting(Response::getEntity)
+            .isInstanceOf(Stream.class);
+
+        List<CertificateDTO> certificates = ((Stream<CertificateDTO>) response.getEntity()).toList();
+        assertThat(certificates).hasSize(1);
     }
 
     @Test
@@ -235,11 +239,13 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
 
-        Object export = consumerResource.exportCertificates(consumer.getUuid(), null);
-        assertThat(export)
-            .isInstanceOf(List.class);
+        Response response = this.consumerResource.exportCertificates(consumer.getUuid(), null);
+        assertThat(response)
+            .isNotNull()
+            .extracting(Response::getEntity)
+            .isInstanceOf(Stream.class);
 
-        List<CertificateDTO> certificates = (List<CertificateDTO>) export;
+        List<CertificateDTO> certificates = ((Stream<CertificateDTO>) response.getEntity()).toList();
         assertThat(certificates)
             .hasSize(4);
 
@@ -248,11 +254,13 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         String serialsToFilter = serial1 + "," + serial2;
 
-        export = consumerResource.exportCertificates(consumer.getUuid(), serialsToFilter);
-        assertThat(export)
-            .isInstanceOf(List.class);
+        response = this.consumerResource.exportCertificates(consumer.getUuid(), serialsToFilter);
+        assertThat(response)
+            .isNotNull()
+            .extracting(Response::getEntity)
+            .isInstanceOf(Stream.class);
 
-        certificates = (List<CertificateDTO>) export;
+        certificates = ((Stream<CertificateDTO>) response.getEntity()).toList();
         assertThat(certificates)
             .hasSize(2);
 
@@ -542,14 +550,17 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerResource.bind(consumer.getUuid(), pool.getId(),
             null, 1, null, null, false, null, null);
 
-        Object export = consumerResource.exportCertificates(consumer.getUuid(), null);
-        assertThat(export)
-            .isInstanceOf(List.class);
+        Response response = this.consumerResource.exportCertificates(consumer.getUuid(), null);
+        assertThat(response)
+            .isNotNull()
+            .extracting(Response::getEntity)
+            .isInstanceOf(Stream.class);
 
-        List<CertificateDTO> serials = (List<CertificateDTO>) export;
-        assertEquals(1, serials.size());
+        List<CertificateDTO> certificates = ((Stream<CertificateDTO>) response.getEntity()).toList();
+        assertEquals(1, certificates.size());
 
-        consumerResource.unbindBySerial(consumer.getUuid(), Long.valueOf(serials.get(0).getSerial().getId()));
+        this.consumerResource.unbindBySerial(consumer.getUuid(),
+            Long.valueOf(certificates.get(0).getSerial().getId()));
         assertEquals(0, consumerResource.listEntitlements(
             consumer.getUuid(), null, true, new ArrayList<>(), null, null, null, null).size());
     }
@@ -592,11 +603,13 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             null, 1, null, null, false, null, null);
         setupPrincipal(new ConsumerPrincipal(consumer, owner));
 
-        Object export = consumerResource.exportCertificates(consumer.getUuid(), null);
-        assertThat(export)
-            .isInstanceOf(List.class);
+        Response response = this.consumerResource.exportCertificates(consumer.getUuid(), null);
+        assertThat(response)
+            .isNotNull()
+            .extracting(Response::getEntity)
+            .isInstanceOf(Stream.class);
 
-        List<CertificateDTO> certificates = (List<CertificateDTO>) export;
+        List<CertificateDTO> certificates = ((Stream<CertificateDTO>) response.getEntity()).toList();
         assertEquals(3, certificates.size());
     }
 
@@ -640,11 +653,13 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupAdminPrincipal("admin");
         securityInterceptor.enable();
 
-        Object export = consumerResource.exportCertificates(consumer.getUuid(), null);
-        assertThat(export)
-            .isInstanceOf(List.class);
+        Response response = this.consumerResource.exportCertificates(consumer.getUuid(), null);
+        assertThat(response)
+            .isNotNull()
+            .extracting(Response::getEntity)
+            .isInstanceOf(Stream.class);
 
-        List<CertificateDTO> certificates = (List<CertificateDTO>) export;
+        List<CertificateDTO> certificates = ((Stream<CertificateDTO>) response.getEntity()).toList();
         assertEquals(0, certificates.size());
     }
 
@@ -837,14 +852,16 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumer.setFact("system.certificate_version", "3.3");
         consumerCurator.create(consumer);
 
-        Object export = consumerResource.exportCertificates(consumer.getUuid(), null);
-        assertThat(export)
-            .isInstanceOf(List.class);
+        Response response = this.consumerResource.exportCertificates(consumer.getUuid(), null);
+        assertThat(response)
+            .isNotNull()
+            .extracting(Response::getEntity)
+            .isInstanceOf(Stream.class);
 
-        List<CertificateDTO> serials = (List<CertificateDTO>) export;
-        assertEquals(1, serials.size());
+        List<CertificateDTO> certificates = ((Stream<CertificateDTO>) response.getEntity()).toList();
+        assertEquals(1, certificates.size());
 
-        CertificateDTO original = serials.get(0);
+        CertificateDTO original = certificates.get(0);
         CertificateSerialDTO serialDTO = original.getSerial();
         CertificateSerial serial = new CertificateSerial(serialDTO.getId(),
             Util.toDate(serialDTO.getExpiration()));
@@ -857,15 +874,20 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         serial.setExpiration(cal.getTime());
         certSerialCurator.merge(serial);
 
-        export = consumerResource.exportCertificates(consumer.getUuid(), null);
-        assertThat(export)
-            .isInstanceOf(List.class);
+        response = this.consumerResource.exportCertificates(consumer.getUuid(), null);
+        assertThat(response)
+            .isNotNull()
+            .extracting(Response::getEntity)
+            .isInstanceOf(Stream.class);
 
-        serials = (List<CertificateDTO>) export;
-        assertEquals(1, serials.size());
-        CertificateDTO updated = serials.get(0);
-        assertThat(updated, instanceOf(CertificateDTO.class));
-        assertNotEquals(original.getSerial().getId(), updated.getSerial().getId());
+        certificates = ((Stream<CertificateDTO>) response.getEntity()).toList();
+        assertEquals(1, certificates.size());
+
+        assertThat(certificates.get(0))
+            .isInstanceOf(CertificateDTO.class)
+            .extracting(CertificateDTO::getSerial)
+            .extracting(CertificateSerialDTO::getId)
+            .isNotEqualTo(original.getSerial().getId());
     }
 
     @Test
