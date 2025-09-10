@@ -23,7 +23,7 @@
 
 Name: candlepin
 Version: 4.6.4
-Release: 1%{?dist}
+Release: 2%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -230,6 +230,14 @@ fi
 
 #raw
 %changelog
+* Wed Sep 10 2025 candlepin-bot 4.6.4-2
+- CANDLEPIN-1059: Reduced 429s while fetching content access payloads
+  (crog@redhat.com)
+- CANDLEPIN-1059: Refactored Transactional and EERetry utility classes
+  (crog@redhat.com)
+- CANDLEPIN-1045: Disallow running sonar from a fork PR
+  (joshmalbrecht@gmail.com)
+
 * Tue Aug 05 2025 candlepin-bot 4.6.4-1
 - CANDLEPIN-1039: Fixed dangling Liquibase connections (crog@redhat.com)
 
