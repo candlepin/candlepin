@@ -29,17 +29,23 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Map;
+import java.util.stream.Stream;
 
 
 public class EventBuilderTest {
@@ -114,4 +120,57 @@ public class EventBuilderTest {
         IseException e = assertThrows(IseException.class, () -> eventBuilder.setEventData(pool, pool));
         assertEquals("This method is only for type MODIFIED Events.", e.getMessage());
     }
+
+    private static Stream<Arguments> consumerEventMatrix() {
+        return Stream.of(
+            Arguments.of(true, Event.Type.CREATED),
+            Arguments.of(false, Event.Type.CREATED),
+            Arguments.of(null, Event.Type.CREATED),
+            Arguments.of(true, Event.Type.MODIFIED),
+            Arguments.of(false, Event.Type.MODIFIED),
+            Arguments.of(null, Event.Type.MODIFIED),
+            Arguments.of(true, Event.Type.DELETED),
+            Arguments.of(false, Event.Type.DELETED),
+            Arguments.of(null, Event.Type.DELETED)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("consumerEventMatrix")
+    public void testSetEventDataShouldSetAnonymousOwnerFieldForOwnedEntities(Boolean anonymous, Event.Type type) {
+        Owner owner = new Owner()
+            .setId(TestUtil.randomString("id-"))
+            .setAnonymous(anonymous);
+
+        Consumer consumer = new Consumer()
+            .setId(TestUtil.randomString("id-"))
+            .setOwner(owner);
+
+        EventBuilder eventBuilder = new EventBuilder(factory, Event.Target.CONSUMER, type);
+
+        Event actual = eventBuilder.setEventData(consumer)
+            .buildEvent();
+
+        // If the Owner's anonymous value is null, we default to false
+        boolean expected = owner.getAnonymous() == null ? false : owner.getAnonymous();
+
+        assertThat(actual)
+            .isNotNull()
+            .returns(expected, Event::isOwnerAnonymous);
+    }
+
+    @Test
+    public void testSetEventDataShouldSetAnonymousOwnerFieldToNullForNonOwnedEntities() {
+        Product product = new Product();
+
+        EventBuilder eventBuilder = new EventBuilder(factory, Event.Target.CONSUMER, Event.Type.CREATED);
+
+        Event actual = eventBuilder.setEventData(product)
+            .buildEvent();
+
+        assertThat(actual)
+            .isNotNull()
+            .returns(null, Event::isOwnerAnonymous);
+    }
+
 }

@@ -465,6 +465,15 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean isOwnerAnonymous() {
+        Owner owner = this.getOwner();
+        return owner == null ? null : owner.getAnonymous();
+    }
+
+    /**
      * @param owner changes the owner of the pool.
      *
      * @return

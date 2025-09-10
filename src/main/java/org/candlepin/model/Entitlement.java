@@ -176,6 +176,15 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean isOwnerAnonymous() {
+        Owner owner = this.getOwner();
+        return owner == null ? null : owner.getAnonymous();
+    }
+
+    /**
      * @param ownerIn the owner to set
      *
      * @return

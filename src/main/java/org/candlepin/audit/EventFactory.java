@@ -265,6 +265,32 @@ public class EventFactory {
             .setEventData(Map.of("consumerUuids", consumerUuids));
     }
 
+    // TODO: Java Doc
+    public Event bulkConsumerMigration(Collection<String> consumerUuids, String sourceOwnerKey,
+        boolean isSourceOwnerAnonymous, String destinationOwnerKey, boolean isDestinationOwnerAnonymous) {
+
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            throw new IllegalArgumentException("consumerUuids is null or empty");
+        }
+
+        if (sourceOwnerKey == null || sourceOwnerKey.isBlank()) {
+            throw new IllegalArgumentException("sourceOwnerKey is null or blank");
+        }
+
+        if (destinationOwnerKey == null || destinationOwnerKey.isBlank()) {
+            throw new IllegalArgumentException("destinationOwnerKey is null or blank");
+        }
+
+        // TODO: Maybe we can clean this up
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("consumerUuids", consumerUuids);
+        eventData.put("sourceOwner", Map.of("key", sourceOwnerKey, "anonymous", isSourceOwnerAnonymous));
+        eventData.put("destinationOwner", Map.of("key", destinationOwnerKey, "anonymous", isDestinationOwnerAnonymous));
+
+        return new Event(Type.BULK_MIGRATION, Target.CONSUMER, principalProvider.get().getData())
+            .setEventData(eventData);
+    }
+
     public Event complianceCreated(Consumer consumer, SystemPurposeComplianceStatus compliance) {
 
         // TODO: We *should* have an event-specific set of DTOs if we're going to output model objects

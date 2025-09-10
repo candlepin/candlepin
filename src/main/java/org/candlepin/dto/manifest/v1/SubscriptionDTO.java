@@ -138,6 +138,16 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
      * {@inheritDoc}
      */
     @Override
+    @JsonIgnore
+    public Boolean isOwnerAnonymous() {
+        // TODO: Is this the correct thing to do here?
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getId() {
         return id;
     }

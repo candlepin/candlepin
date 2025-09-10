@@ -45,6 +45,9 @@ import com.google.common.collect.ImmutableSet;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -307,4 +310,61 @@ public class EventFactoryTest {
         assertThrows(IllegalArgumentException.class,
             () -> this.eventFactory.bulkConsumerDeletion(ownerKey, null));
     }
+
+    @Test
+    public void testBulkConsumerMigrationWithNullConsumerUuids() {
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerMigration(null, "key", false, "key", false));
+    }
+
+    @Test
+    public void testBulkConsumerMigrationWithEmptyConsumerUuids() {
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerMigration(List.of(), "key", false, "key", false));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testBulkConsumerMigrationWithInvalidSourceOwnerKey(String key) {
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerMigration(List.of("uuid"), key, false, "key", false));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testBulkConsumerMigrationWithInvalidDestinationOwnerKey(String key) {
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerMigration(List.of("uuid"), "key", false, key, false));
+    }
+
+    @Test
+    public void testBulkConsumerMigration() {
+        String sourceOwnerKey = "source-key";
+        boolean sourceOwnerIsAnonymous = false;
+        String destinationOwnerKey = "destination-key-";
+        boolean destinationOwnerIsAnonymous = true;
+        List<String> consumerUuids = List.of("uuid-1", "uuid-2");
+
+        Map<String, Object> expectedData = new HashMap<>();
+        expectedData.put("consumerUuids", consumerUuids);
+        expectedData.put("sourceOwner", Map.of("key", sourceOwnerKey, "anonymous", sourceOwnerIsAnonymous));
+        expectedData.put("destinationOwner", Map.of("key", destinationOwnerKey, "anonymous", destinationOwnerIsAnonymous));
+
+        Event actual = this.eventFactory.bulkConsumerMigration(consumerUuids, sourceOwnerKey,
+            sourceOwnerIsAnonymous, destinationOwnerKey, destinationOwnerIsAnonymous);
+
+        assertThat(actual)
+            .isNotNull()
+            .returns(Type.BULK_MIGRATION, Event::getType)
+            .returns(Target.CONSUMER, Event::getTarget)
+            .returns(null, Event::getTargetName)
+            .returns(null, Event::getEntityId)
+            .returns(null, Event::getOwnerKey)
+            .returns(null, Event::isOwnerAnonymous)
+            .returns(null, Event::getConsumerUuid)
+            .returns(null, Event::getReferenceId)
+            .returns(null, Event::getReferenceType)
+            .returns(expectedData, Event::getEventData);
+    }
+
 }

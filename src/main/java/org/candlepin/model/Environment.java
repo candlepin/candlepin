@@ -151,6 +151,15 @@ public class Environment extends AbstractHibernateObject<Environment> implements
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean isOwnerAnonymous() {
+        Owner owner = this.getOwner();
+        return owner == null ? null : owner.getAnonymous();
+    }
+
+    /**
      * Fetches the owner of this environment, if the owner ID is set. This may perform a lazy
      * lookup of the owner, and should generally be avoided if the owner ID is sufficient.
      *
