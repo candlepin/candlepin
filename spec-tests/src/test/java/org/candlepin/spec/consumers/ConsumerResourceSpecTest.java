@@ -28,6 +28,7 @@ import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.client.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.client.v1.EnvironmentDTO;
 import org.candlepin.dto.api.client.v1.GuestIdDTO;
+import org.candlepin.dto.api.client.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.client.v1.RoleDTO;
@@ -1198,6 +1199,39 @@ public class ConsumerResourceSpecTest {
         assertThat(consumerAfterCheckIn)
             .isNotNull()
             .doesNotReturn(before, ConsumerDTO::getLastCheckin);
+    }
+
+    @Test
+    public void shouldIndicateOwnerIsAnonymousWhenRetrievingConsumer() {
+        ApiClient adminClient = ApiClients.admin();
+
+        OwnerDTO anonymousOwner = adminClient.owners().createOwner(Owners.randomSca()
+            .anonymous(true));
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(anonymousOwner));
+        
+        ConsumerDTO actual = adminClient.consumers().getConsumer(consumer.getUuid());
+
+        assertThat(actual)
+            .isNotNull()
+            .extracting(ConsumerDTO::getOwner)
+            .isNotNull()
+            .returns(true, NestedOwnerDTO::getAnonymous);
+    }
+
+    @Test
+    public void shouldIndicateOwnerIsNotAnonymousWhenRetrievingConsumer() {
+        ApiClient adminClient = ApiClients.admin();
+
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+
+        ConsumerDTO actual = adminClient.consumers().getConsumer(consumer.getUuid());
+
+        assertThat(actual)
+            .isNotNull()
+            .extracting(ConsumerDTO::getOwner)
+            .isNotNull()
+            .returns(false, NestedOwnerDTO::getAnonymous);
     }
 
     private UserDTO createUserTypeAllAccess(ApiClient client, OwnerDTO owner) {

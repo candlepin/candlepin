@@ -50,11 +50,14 @@ public class NestedOwnerTranslator implements ObjectTranslator<Owner, NestedOwne
             throw new IllegalArgumentException("destination is null");
         }
 
+        boolean isAnonymous = source.getAnonymous() == null ? false : source.getAnonymous();
+
         dest.id(source.getId())
             .key(source.getKey())
             .displayName(source.getDisplayName())
             .href(source.getHref())
-            .contentAccessMode((source.getContentAccessMode()));
+            .contentAccessMode((source.getContentAccessMode()))
+            .anonymous(isAnonymous);
 
         return dest;
     }
