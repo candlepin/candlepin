@@ -236,7 +236,7 @@ public class EventFactory {
             .map(Consumer::getUuid)
             .toList();
 
-        return this.bulkConsumerDeletion(owner.getKey(), consumerUuids);
+        return this.bulkConsumerDeletion(owner.getKey(), owner.getAnonymous(), consumerUuids);
     }
 
     /**
@@ -245,13 +245,16 @@ public class EventFactory {
      * @param ownerKey
      *  The key of the owner from which the consumers were deleted
      *
+     * @param anonymous
+     *  The anonymous state of the owner from which the consumers were deleted
+     *
      * @param consumerUuids
      *  The UUIDs of the consumers that were deleted
      *
      * @return
      *  an event representing the bulk deletion of the given consumers
      */
-    public Event bulkConsumerDeletion(String ownerKey, Collection<String> consumerUuids) {
+    public Event bulkConsumerDeletion(String ownerKey, boolean anonymous, Collection<String> consumerUuids) {
         if (ownerKey == null || ownerKey.isBlank()) {
             throw new IllegalArgumentException("owner is null or empty");
         }
@@ -262,6 +265,7 @@ public class EventFactory {
 
         return new Event(Type.BULK_DELETION, Target.CONSUMER, principalProvider.get().getData())
             .setOwnerKey(ownerKey)
+            .setIsOwnerAnonymous(anonymous)
             .setEventData(Map.of("consumerUuids", consumerUuids));
     }
 

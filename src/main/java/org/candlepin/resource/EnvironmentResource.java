@@ -375,7 +375,9 @@ public class EnvironmentResource implements EnvironmentApi {
         }
 
         // Queue a bulk-consumer-deletion event
-        Event event = this.eventFactory.bulkConsumerDeletion(environment.getOwnerKey(), consumerUuids);
+        String ownerKey = environment.getOwnerKey();
+        boolean isOwnerAnonymous = environment.isOwnerAnonymous() == null ? false : environment.isOwnerAnonymous();
+        Event event = this.eventFactory.bulkConsumerDeletion(ownerKey, isOwnerAnonymous, consumerUuids);
         this.eventSink.queueEvent(event);
 
         int deletedCerts = this.identityCertificateCurator.deleteByIds(idCertsToDelete);

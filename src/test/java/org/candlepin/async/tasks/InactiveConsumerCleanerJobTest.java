@@ -106,6 +106,32 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testExecutionShouldDefaultNullAnonymousStateToFalse() throws Exception {
+        Owner owner = this.createOwner(TestUtil.randomString(), TestUtil.randomString());
+        int inactiveLastCheckin = InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS + 10;
+
+        assertNull(owner.isOwnerAnonymous());
+
+        this.createConsumer(owner, inactiveLastCheckin);
+
+        consumerCurator.flush();
+        consumerCurator.clear();
+
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        inactiveConsumerCleanerJob.execute(context);
+
+        consumerCurator.flush();
+        consumerCurator.clear();
+
+        Queue<Event> dispatchedEvents = this.eventSink.getDispatchedEvents();
+        Event event = dispatchedEvents.poll();
+
+        assertThat(event)
+            .isNotNull()
+            .returns(false, Event::isOwnerAnonymous);
+    }
+
+    @Test
     public void testExecutionWithInactiveConsumersInSingleOrg() throws Exception {
         Owner owner = this.createOwner(TestUtil.randomString(), TestUtil.randomString());
         int activeLastCheckin = InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS - 10;
@@ -162,8 +188,13 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
         Map<Owner, List<Consumer>> inactiveConsumersMap = new HashMap<>();
         Map<String, Owner> ownerMap = new HashMap<>();
 
+        boolean anonymous = false;
         for (int i = 0; i < 5; ++i) {
-            Owner owner = this.createOwner(TestUtil.randomString(), TestUtil.randomString());
+            Owner owner = this.createOwner(TestUtil.randomString(), TestUtil.randomString())
+                .setAnonymous(anonymous);
+
+            // Set half the owners to an anonymous state
+            anonymous = !anonymous;
 
             List<Consumer> activeConsumers =
                 Stream.generate(() -> this.createConsumer(owner, activeLastCheckin))
@@ -225,7 +256,6 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
         }
     }
 
-
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = { "0", "-50" })
     public void testExecutionWithInvalidCheckedInRetentionConfig(int rententionDays)
@@ -272,11 +302,15 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
      * Validates that the event is a bulk deletion event for the target org with the given inactive consumers
      */
     private void validateBulkDeletionEvent(Event event, Owner owner, Collection<Consumer> inactiveConsumers) {
+        // Anonymous state should default to false
+        boolean expectedAnonymousState = owner.getAnonymous() == null ? false : owner.getAnonymous();
+
         assertThat(event)
             .isNotNull()
             .returns(Event.Target.CONSUMER, Event::getTarget)
             .returns(Event.Type.BULK_DELETION, Event::getType)
-            .returns(owner.getKey(), Event::getOwnerKey);
+            .returns(owner.getKey(), Event::getOwnerKey)
+            .returns(expectedAnonymousState, Event::isOwnerAnonymous);
 
         Map<String, Object> eventData = event.getEventData();
         assertNotNull(eventData);

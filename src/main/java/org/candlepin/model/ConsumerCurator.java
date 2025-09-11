@@ -1096,7 +1096,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
 
         String jpql = "SELECT new org.candlepin.model.InactiveConsumerRecord(consumer.id, consumer.uuid, " +
-            "owner.key) " +
+            "owner.key, owner.anonymous) " +
             "FROM Consumer consumer " +
             "  JOIN ConsumerType type on type.id = consumer.typeId " +
             "  JOIN consumer.owner owner " +

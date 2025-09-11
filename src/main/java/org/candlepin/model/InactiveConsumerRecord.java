@@ -27,7 +27,10 @@ package org.candlepin.model;
  *
  * @param ownerKey
  *  The key of the owner the inactive consumer belongs to
+ *
+ * @param isOwnerAnonymous
+ *  The anonymous state of the owner
  */
-public record InactiveConsumerRecord(String consumerId, String consumerUuid, String ownerKey) {
+public record InactiveConsumerRecord(String consumerId, String consumerUuid, String ownerKey, Boolean isOwnerAnonymous) {
     // intentionally left empty
 }

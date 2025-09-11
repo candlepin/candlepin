@@ -47,7 +47,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -222,8 +221,10 @@ public class EventFactoryTest {
 
     @Test
     public void testBulkConsumerDeletionEventGeneration() {
+        boolean anonymous = true;
         Owner owner = new Owner()
-            .setKey(TestUtil.randomString());
+            .setKey(TestUtil.randomString())
+            .setAnonymous(anonymous);
 
         List<Consumer> consumers = Stream.generate(Consumer::new)
             .map(consumer -> consumer.setUuid(Util.generateUUID()))
@@ -239,7 +240,8 @@ public class EventFactoryTest {
             .isNotNull()
             .returns(Event.Target.CONSUMER, Event::getTarget)
             .returns(Event.Type.BULK_DELETION, Event::getType)
-            .returns(owner.getKey(), Event::getOwnerKey);
+            .returns(owner.getKey(), Event::getOwnerKey)
+            .returns(anonymous, Event::isOwnerAnonymous);
 
         Map<String, Object> eventData = event.getEventData();
         assertNotNull(eventData);
@@ -273,16 +275,18 @@ public class EventFactoryTest {
     @Test
     public void testBulkConsumerDeletionEventGenerationByIds() {
         String ownerKey = TestUtil.randomString();
+        boolean anonymous = false;
         List<String> consumerUuids = Stream.generate(Util::generateUUID)
             .limit(5)
             .toList();
 
-        Event event = this.eventFactory.bulkConsumerDeletion(ownerKey, consumerUuids);
+        Event event = this.eventFactory.bulkConsumerDeletion(ownerKey, anonymous, consumerUuids);
         assertThat(event)
             .isNotNull()
             .returns(Event.Target.CONSUMER, Event::getTarget)
             .returns(Event.Type.BULK_DELETION, Event::getType)
-            .returns(ownerKey, Event::getOwnerKey);
+            .returns(ownerKey, Event::getOwnerKey)
+            .returns(anonymous, Event::isOwnerAnonymous);
 
         Map<String, Object> eventData = event.getEventData();
         assertNotNull(eventData);
@@ -300,7 +304,7 @@ public class EventFactoryTest {
             .toList();
 
         assertThrows(IllegalArgumentException.class,
-            () -> this.eventFactory.bulkConsumerDeletion((String) null, consumerUuids));
+            () -> this.eventFactory.bulkConsumerDeletion((String) null, false, consumerUuids));
     }
 
     @Test
@@ -308,7 +312,7 @@ public class EventFactoryTest {
         String ownerKey = TestUtil.randomString();
 
         assertThrows(IllegalArgumentException.class,
-            () -> this.eventFactory.bulkConsumerDeletion(ownerKey, null));
+            () -> this.eventFactory.bulkConsumerDeletion(ownerKey, false, null));
     }
 
     @Test
