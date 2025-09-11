@@ -2470,6 +2470,44 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             .returns(consumer.getUuid(), DeletedConsumer::getConsumerUuid);
     }
 
+    @Test
+    public void testGetConsumerUuidsWithNullConsumerIds() {
+        List<String> actual = this.consumerCurator.getConsumerUuids(null);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetConsumerUuidsWithEmptyConsumerIds() {
+        List<String> actual = this.consumerCurator.getConsumerUuids(List.of());
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetConsumerUuids() {
+        Owner owner = this.createOwner();
+        Consumer consumer1 = createConsumer(owner);
+        Consumer consumer2 = createConsumer(owner);
+        Consumer consumer3 = createConsumer(owner);
+        Consumer consumer4 = createConsumer(owner);
+        Consumer consumer5 = createConsumer(owner);
+
+        List<String> ids = List.of(consumer1.getId(), consumer3.getId(), consumer5.getId(),
+            TestUtil.randomString());
+
+        List<String> actual = this.consumerCurator.getConsumerUuids(ids);
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(List.of(consumer1.getUuid(), consumer3.getUuid(),
+                consumer5.getUuid()));
+    }
+
     private IdentityCertificate createIdCert() {
         IdentityCertificate idCert = TestUtil.createIdCert(TestUtil.createDateOffset(2, 0, 0));
         return saveCert(idCert);

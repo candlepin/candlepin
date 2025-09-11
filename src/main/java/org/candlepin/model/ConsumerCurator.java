@@ -1957,4 +1957,33 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .setParameter("owner_key", ownerKey)
             .getResultList();
     }
+
+    /**
+     * Retrieves the {@link Consumer} UUIDs for all of the consumers that have the provided IDs.
+     *
+     * @param consumerIds
+     *  the IDs of the consumers to retrieve UUIDs for
+     *
+     * @return UUIDs of all the consumers that have an ID in the provided consumer
+     */
+    public List<String> getConsumerUuids(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return List.of();
+        }
+
+        String jpql = "SELECT c.uuid " +
+            "FROM Consumer c " +
+            "WHERE c.id IN (:ids)";
+
+        TypedQuery<String> query = getEntityManager()
+            .createQuery(jpql, String.class);
+
+        List<String> consumerUuids = new ArrayList<>(consumerIds.size());
+        for (List<String> block : this.partition(consumerIds)) {
+            consumerUuids.addAll(query.setParameter("ids", block).getResultList());
+        }
+
+        return consumerUuids;
+    }
+
 }
