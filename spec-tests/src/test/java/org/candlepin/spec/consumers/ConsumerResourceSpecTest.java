@@ -1015,7 +1015,6 @@ public class ConsumerResourceSpecTest {
 
         this.adminClient.consumers().createConsumer(decoy);
 
-
         List<String> facts = List.of("fact1:value1");
 
         List<ConsumerDTOArrayElement> output = this.adminClient.consumers()
