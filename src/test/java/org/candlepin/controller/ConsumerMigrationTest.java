@@ -34,6 +34,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestEventSink;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -163,7 +164,7 @@ class ConsumerMigrationTest extends DatabaseTestFixture {
 
         Consumer consumer = this.createConsumer(anonOwner);
         consumer.setIdCert(identCert);
-        
+
         return this.consumerCurator.saveOrUpdate(consumer);
     }
 
@@ -174,7 +175,8 @@ class ConsumerMigrationTest extends DatabaseTestFixture {
         Map<String, Object> expectedData = new HashMap<>();
         expectedData.put("consumerUuids", consumerUuids);
         expectedData.put("sourceOwner", Map.of("key", sourceOwnerKey, "anonymous", sourceOwnerIsAnonymous));
-        expectedData.put("destinationOwner", Map.of("key", destinationOwnerKey, "anonymous", destinationOwnerIsAnonymous));
+        expectedData.put("destinationOwner", Map.of("key", destinationOwnerKey, "anonymous",
+            destinationOwnerIsAnonymous));
 
         assertThat(event)
             .isNotNull()

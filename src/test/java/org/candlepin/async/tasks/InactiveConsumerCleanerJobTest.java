@@ -119,7 +119,7 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
         Owner owner = TestUtil.createOwner(TestUtil.randomString(), TestUtil.randomString())
             .setId(null)
             .setAnonymous(false);
-            owner = this.ownerCurator.create(owner);
+        owner = this.ownerCurator.create(owner);
 
         this.createConsumer(owner, inactiveLastCheckin);
 

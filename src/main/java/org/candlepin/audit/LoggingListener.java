@@ -40,8 +40,9 @@ public class LoggingListener implements EventListener {
 
     @Override
     public void onEvent(Event e) {
-        auditLog.info(
-            "principalType={} principal={} target={} entityId={} type={} owner={} anonymousOwner={} eventData={}\n",
+        String message = "principalType={} principal={} target={} entityId={} type={} owner={} " +
+            "anonymousOwner={} eventData={}\n";
+        auditLog.info(message,
             e.getPrincipalData().getType(),
             e.getPrincipalData().getName(),
             e.getTarget(),

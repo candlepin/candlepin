@@ -121,7 +121,7 @@ public class EventBuilderTest {
         assertEquals("This method is only for type MODIFIED Events.", e.getMessage());
     }
 
-    private static Stream<Arguments> consumerEventMatrix() {
+    private static Stream<Arguments> anonymousEventMatrix() {
         return Stream.of(
             Arguments.of(true, Event.Type.CREATED),
             Arguments.of(false, Event.Type.CREATED),
@@ -136,8 +136,10 @@ public class EventBuilderTest {
     }
 
     @ParameterizedTest
-    @MethodSource("consumerEventMatrix")
-    public void testSetEventDataShouldSetAnonymousOwnerFieldForOwnedEntities(Boolean anonymous, Event.Type type) {
+    @MethodSource("anonymousEventMatrix")
+    public void testSetEventDataShouldSetAnonymousOwnerFieldForOwnedEntities(Boolean anonymous,
+        Event.Type type) {
+
         Owner owner = new Owner()
             .setId(TestUtil.randomString("id-"))
             .setAnonymous(anonymous);

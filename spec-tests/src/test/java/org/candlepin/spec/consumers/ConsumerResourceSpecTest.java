@@ -1207,7 +1207,7 @@ public class ConsumerResourceSpecTest {
         OwnerDTO anonymousOwner = adminClient.owners().createOwner(Owners.randomSca()
             .anonymous(true));
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(anonymousOwner));
-        
+
         ConsumerDTO actual = adminClient.consumers().getConsumer(consumer.getUuid());
 
         assertThat(actual)
