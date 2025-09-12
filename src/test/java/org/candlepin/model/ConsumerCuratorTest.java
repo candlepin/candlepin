@@ -1973,7 +1973,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             .returns(inactiveConsumer.getId(), InactiveConsumerRecord::consumerId)
             .returns(inactiveConsumer.getUuid(), InactiveConsumerRecord::consumerUuid)
             .returns(inactiveConsumer.getOwnerKey(), InactiveConsumerRecord::ownerKey)
-            .returns(inactiveConsumer.isOwnerAnonymous(), InactiveConsumerRecord::isOwnerAnonymous);
+            .returns(null, InactiveConsumerRecord::isOwnerAnonymous);
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
