@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -394,7 +394,7 @@ public class Owner extends AbstractHibernateObject<Owner>
      */
     @Override
     public boolean isOwnerAnonymous() {
-        return this.anonymous == null ? false : this.anonymous;
+        return this.getAnonymous();
     }
 
     public Set<ActivationKey> getActivationKeys() {
@@ -596,7 +596,7 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     public boolean getAnonymous() {
-        return anonymous == null ? false : anonymous;
+        return this.anonymous == null ? false : anonymous;
     }
 
     public Owner setAnonymous(Boolean anonymous) {

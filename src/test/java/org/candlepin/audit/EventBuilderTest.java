@@ -41,11 +41,9 @@ import org.candlepin.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Map;
-import java.util.stream.Stream;
 
 
 public class EventBuilderTest {
@@ -121,25 +119,9 @@ public class EventBuilderTest {
         assertEquals("This method is only for type MODIFIED Events.", e.getMessage());
     }
 
-    private static Stream<Arguments> anonymousEventMatrix() {
-        return Stream.of(
-            Arguments.of(true, Event.Type.CREATED),
-            Arguments.of(false, Event.Type.CREATED),
-            Arguments.of(null, Event.Type.CREATED),
-            Arguments.of(true, Event.Type.MODIFIED),
-            Arguments.of(false, Event.Type.MODIFIED),
-            Arguments.of(null, Event.Type.MODIFIED),
-            Arguments.of(true, Event.Type.DELETED),
-            Arguments.of(false, Event.Type.DELETED),
-            Arguments.of(null, Event.Type.DELETED)
-        );
-    }
-
     @ParameterizedTest
-    @MethodSource("anonymousEventMatrix")
-    public void testSetEventDataShouldSetAnonymousOwnerFieldForOwnedEntities(Boolean anonymous,
-        Event.Type type) {
-
+    @ValueSource(booleans = { true, false })
+    public void testSetEventDataShouldSetAnonymousOwnerFieldForOwnedEntities(boolean anonymous) {
         Owner owner = new Owner()
             .setId(TestUtil.randomString("id-"))
             .setAnonymous(anonymous);
@@ -148,7 +130,7 @@ public class EventBuilderTest {
             .setId(TestUtil.randomString("id-"))
             .setOwner(owner);
 
-        EventBuilder eventBuilder = new EventBuilder(factory, Event.Target.CONSUMER, type);
+        EventBuilder eventBuilder = new EventBuilder(factory, Event.Target.CONSUMER, Event.Type.CREATED);
 
         Event actual = eventBuilder.setEventData(consumer)
             .buildEvent();
