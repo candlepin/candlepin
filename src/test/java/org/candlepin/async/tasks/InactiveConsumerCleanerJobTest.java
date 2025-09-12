@@ -106,11 +106,20 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testExecutionShouldDefaultNullAnonymousStateToFalse() throws Exception {
-        Owner owner = this.createOwner(TestUtil.randomString(), TestUtil.randomString());
+    public void testExecutionShouldSetAnonymousOwnerFieldOnEvent() throws Exception {
         int inactiveLastCheckin = InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS + 10;
 
-        assertNull(owner.isOwnerAnonymous());
+        Owner anonymousOwner = TestUtil.createOwner(TestUtil.randomString(), TestUtil.randomString())
+            .setId(null)
+            .setAnonymous(true);
+        anonymousOwner = this.ownerCurator.create(anonymousOwner);
+
+        this.createConsumer(anonymousOwner, inactiveLastCheckin);
+
+        Owner owner = TestUtil.createOwner(TestUtil.randomString(), TestUtil.randomString())
+            .setId(null)
+            .setAnonymous(false);
+            owner = this.ownerCurator.create(owner);
 
         this.createConsumer(owner, inactiveLastCheckin);
 
@@ -124,11 +133,21 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
         consumerCurator.clear();
 
         Queue<Event> dispatchedEvents = this.eventSink.getDispatchedEvents();
-        Event event = dispatchedEvents.poll();
+        assertThat(dispatchedEvents)
+            .hasSize(2)
+            .extracting(Event::getOwnerKey)
+            .containsExactly(anonymousOwner.getKey(), owner.getKey());
 
-        assertThat(event)
-            .isNotNull()
-            .returns(false, Event::isOwnerAnonymous);
+        Event event1 = dispatchedEvents.poll();
+        Event event2 = dispatchedEvents.poll();
+        if (anonymousOwner.getKey().equals(event1.getOwnerKey())) {
+            assertThat(event1).returns(true, Event::isOwnerAnonymous);
+            assertThat(event2).returns(false, Event::isOwnerAnonymous);
+        }
+        else {
+            assertThat(event1).returns(false, Event::isOwnerAnonymous);
+            assertThat(event2).returns(true, Event::isOwnerAnonymous);
+        }
     }
 
     @Test
@@ -302,15 +321,12 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
      * Validates that the event is a bulk deletion event for the target org with the given inactive consumers
      */
     private void validateBulkDeletionEvent(Event event, Owner owner, Collection<Consumer> inactiveConsumers) {
-        // Anonymous state should default to false
-        boolean expectedAnonymousState = owner.getAnonymous() == null ? false : owner.getAnonymous();
-
         assertThat(event)
             .isNotNull()
             .returns(Event.Target.CONSUMER, Event::getTarget)
             .returns(Event.Type.BULK_DELETION, Event::getType)
             .returns(owner.getKey(), Event::getOwnerKey)
-            .returns(expectedAnonymousState, Event::isOwnerAnonymous);
+            .returns(owner.getAnonymous(), Event::isOwnerAnonymous);
 
         Map<String, Object> eventData = event.getEventData();
         assertNotNull(eventData);

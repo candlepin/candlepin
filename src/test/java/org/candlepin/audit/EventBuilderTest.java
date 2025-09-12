@@ -151,12 +151,9 @@ public class EventBuilderTest {
         Event actual = eventBuilder.setEventData(consumer)
             .buildEvent();
 
-        // If the Owner's anonymous value is null, we default to false
-        boolean expected = owner.getAnonymous() == null ? false : owner.getAnonymous();
-
         assertThat(actual)
             .isNotNull()
-            .returns(expected, Event::isOwnerAnonymous);
+            .returns(owner.getAnonymous(), Event::isOwnerAnonymous);
     }
 
     @Test
