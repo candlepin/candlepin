@@ -393,8 +393,8 @@ public class Owner extends AbstractHibernateObject<Owner>
      * {@inheritDoc}
      */
     @Override
-    public Boolean isOwnerAnonymous() {
-        return anonymous;
+    public boolean isOwnerAnonymous() {
+        return anonymous == null ? false : true;
     }
 
     public Set<ActivationKey> getActivationKeys() {

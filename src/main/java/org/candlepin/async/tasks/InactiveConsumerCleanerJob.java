@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -130,9 +130,7 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
             orgConsumerMap.computeIfAbsent(rec.ownerKey(), key -> new ArrayList<>())
                 .add(rec.consumerUuid());
 
-            orgAnonymousMap.computeIfAbsent(rec.ownerKey(), (key) -> {
-                return rec.isOwnerAnonymous() == null ? false : rec.isOwnerAnonymous();
-            });
+            orgAnonymousMap.computeIfAbsent(rec.ownerKey(), key -> rec.isOwnerAnonymous());
         }
 
         // Retrieve the certs and their serials for the inactive consumers.

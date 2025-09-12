@@ -182,9 +182,9 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
      * {@inheritDoc}
      */
     @Override
-    public Boolean isOwnerAnonymous() {
+    public boolean isOwnerAnonymous() {
         Owner owner = this.getOwner();
-        return owner == null ? null : owner.getAnonymous();
+        return owner == null ? false : owner.getAnonymous();
     }
 
     /**

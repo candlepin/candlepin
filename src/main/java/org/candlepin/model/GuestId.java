@@ -187,9 +187,9 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
      * {@inheritDoc}
      */
     @Override
-    public Boolean isOwnerAnonymous() {
+    public boolean isOwnerAnonymous() {
         Consumer consumer = this.getConsumer();
-        return consumer == null ? null : consumer.isOwnerAnonymous();
+        return consumer == null ? false : consumer.isOwnerAnonymous();
     }
 
     public String toString() {

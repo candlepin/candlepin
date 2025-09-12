@@ -32,5 +32,5 @@ public interface Owned {
     /**
      * @return the anonymous state of the {@link Owner} that owns this entity
      */
-    Boolean isOwnerAnonymous();
+    boolean isOwnerAnonymous();
 }

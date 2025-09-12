@@ -139,9 +139,8 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
      */
     @Override
     @JsonIgnore
-    public Boolean isOwnerAnonymous() {
-        // TODO: Is this the correct thing to do here?
-        return null;
+    public boolean isOwnerAnonymous() {
+        return false;
     }
 
     /**

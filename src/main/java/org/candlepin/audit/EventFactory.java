@@ -269,7 +269,69 @@ public class EventFactory {
             .setEventData(Map.of("consumerUuids", consumerUuids));
     }
 
-    // TODO: Java Doc
+    /**
+     * Creates a bulk migration event for consumers based on the provided {@link Consumer} UUIDs, source
+     * {@link Owner}, and destination {@link Owner}.The consumer bulk migration event represents a collection
+     * of consumers moving from the source owner to the destination owner.
+     *
+     * @param consumerUuids
+     *  the UUIDs of the consumers that being migrated
+     *
+     * @param sourceOwner
+     *  the owner that the consumers are being migrated from
+     *
+     * @param destinationOwner
+     *  the owner that the consumers are being migrated to
+     *
+     * @throws IllegalArgumentException
+     *  if the consumer UUIDs is null or empty, or if the source/destination owner is null.
+     *
+     * @return the generated consumer bulk migration event
+     */
+    public Event bulkConsumerMigration(Collection<String> consumerUuids, Owner sourceOwner,
+        Owner destinationOwner) {
+
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            throw new IllegalArgumentException("consumerUuids is null or empty");
+        }
+
+        if (sourceOwner == null) {
+            throw new IllegalArgumentException("source owner is null");
+        }
+
+        if (destinationOwner  == null) {
+            throw new IllegalArgumentException("destination owner is null");
+        }
+
+        return bulkConsumerMigration(consumerUuids, sourceOwner.getKey(), sourceOwner.getAnonymous(),
+            destinationOwner.getKey(), destinationOwner.getAnonymous());
+    }
+
+    /**
+     * Creates a bulk migration event for consumers based on the provided {@link Consumer} UUIDs, source
+     * {@link Owner}, and destination {@link Owner}.The consumer bulk migration event represents a collection
+     * of consumers moving from the source owner to the destination owner.
+     *
+     * @param consumerUuids
+     *  the UUIDs of the consumers that being migrated
+     *
+     * @param sourceOwnerKey
+     *  the key of the source owner
+     *
+     * @param isSourceOwnerAnonymous
+     *  if the source owner is anonymous or not
+     *
+     * @param destinationOwnerKey
+     *  the key of the destination owner
+     *
+     * @param isDestinationOwnerAnonymous
+     *  if the destination owner is anonymous or not
+     *
+     * @throws IllegalArgumentException
+     *  if the consumer UUIDs is null or empty, or if the source/destination owner key is null or blank.
+     *
+     * @return the generated consumer bulk migration event
+     */
     public Event bulkConsumerMigration(Collection<String> consumerUuids, String sourceOwnerKey,
         boolean isSourceOwnerAnonymous, String destinationOwnerKey, boolean isDestinationOwnerAnonymous) {
 
@@ -285,11 +347,11 @@ public class EventFactory {
             throw new IllegalArgumentException("destinationOwnerKey is null or blank");
         }
 
-        // TODO: Maybe we can clean this up
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("consumerUuids", consumerUuids);
         eventData.put("sourceOwner", Map.of("key", sourceOwnerKey, "anonymous", isSourceOwnerAnonymous));
-        eventData.put("destinationOwner", Map.of("key", destinationOwnerKey, "anonymous", isDestinationOwnerAnonymous));
+        eventData.put("destinationOwner", Map.of("key", destinationOwnerKey, "anonymous",
+            isDestinationOwnerAnonymous));
 
         return new Event(Type.BULK_MIGRATION, Target.CONSUMER, principalProvider.get().getData())
             .setEventData(eventData);

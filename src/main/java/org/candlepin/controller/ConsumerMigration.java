@@ -103,10 +103,8 @@ public class ConsumerMigration {
                     this.migrateBatch(consumerIdsBlock, destinationOwner);
 
                     List<String> consumerUuids = this.consumerCurator.getConsumerUuids(consumerIdsBlock);
-                    boolean isOrginAnonymous = originOwner.getAnonymous() == null ? false : originOwner.getAnonymous();
-                    boolean isDestinationAnonymous = destinationOwner.getAnonymous() == null ? false : destinationOwner.getAnonymous();
-                    Event event = this.eventFactory.bulkConsumerMigration(consumerUuids, originOwnerKey,
-                        isOrginAnonymous, destinationOwnerKey, isDestinationAnonymous);
+                    Event event = this.eventFactory
+                        .bulkConsumerMigration(consumerUuids, originOwner, destinationOwner);
 
                     this.eventSink.queueEvent(event);
                 });

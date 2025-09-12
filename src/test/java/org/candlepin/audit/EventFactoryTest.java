@@ -316,13 +316,55 @@ public class EventFactoryTest {
     }
 
     @Test
+    public void testBulkConsumerMigrationWithNullSourceOwner() {
+        Owner owner2 = new Owner()
+            .setKey("key-2")
+            .setAnonymous(false);
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerMigration(List.of("uuid"), null, owner2));
+    }
+
+    @Test
+    public void testBulkConsumerMigrationWithNullDestinationOwner() {
+        Owner owner1 = new Owner()
+            .setKey("key-1")
+            .setAnonymous(true);
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerMigration(List.of("uuid"), owner1, null));
+    }
+
+    @Test
     public void testBulkConsumerMigrationWithNullConsumerUuids() {
+        Owner owner1 = new Owner()
+            .setKey("key-1")
+            .setAnonymous(true);
+
+        Owner owner2 = new Owner()
+            .setKey("key-2")
+            .setAnonymous(false);
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerMigration(null, owner1, owner2));
+
         assertThrows(IllegalArgumentException.class,
             () -> this.eventFactory.bulkConsumerMigration(null, "key", false, "key", false));
     }
 
     @Test
     public void testBulkConsumerMigrationWithEmptyConsumerUuids() {
+        Owner owner1 = new Owner()
+            .setKey("key-1")
+            .setAnonymous(true);
+
+        Owner owner2 = new Owner()
+            .setKey("key-2")
+            .setAnonymous(false);
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerMigration(List.of(), owner1, owner2));
+
         assertThrows(IllegalArgumentException.class,
             () -> this.eventFactory.bulkConsumerMigration(List.of(), "key", false, "key", false));
     }
@@ -343,19 +385,28 @@ public class EventFactoryTest {
 
     @Test
     public void testBulkConsumerMigration() {
-        String sourceOwnerKey = "source-key";
-        boolean sourceOwnerIsAnonymous = false;
-        String destinationOwnerKey = "destination-key-";
-        boolean destinationOwnerIsAnonymous = true;
+        String sourceOwnerKey = "source-owner-key";
+        boolean sourceOwnerIsAnonymous = true;
+        String destinationOwnerKey = "destination-owner-key";
+        boolean destinationOwnerIsAnonymous = false;
+
+        Owner sourceOwner = new Owner()
+            .setKey(sourceOwnerKey)
+            .setAnonymous(sourceOwnerIsAnonymous);
+
+        Owner destinationOwner = new Owner()
+            .setKey(destinationOwnerKey)
+            .setAnonymous(destinationOwnerIsAnonymous);
+
         List<String> consumerUuids = List.of("uuid-1", "uuid-2");
 
         Map<String, Object> expectedData = new HashMap<>();
         expectedData.put("consumerUuids", consumerUuids);
         expectedData.put("sourceOwner", Map.of("key", sourceOwnerKey, "anonymous", sourceOwnerIsAnonymous));
-        expectedData.put("destinationOwner", Map.of("key", destinationOwnerKey, "anonymous", destinationOwnerIsAnonymous));
+        expectedData.put("destinationOwner", Map.of("key", destinationOwnerKey, "anonymous",
+            destinationOwnerIsAnonymous));
 
-        Event actual = this.eventFactory.bulkConsumerMigration(consumerUuids, sourceOwnerKey,
-            sourceOwnerIsAnonymous, destinationOwnerKey, destinationOwnerIsAnonymous);
+        Event actual = this.eventFactory.bulkConsumerMigration(consumerUuids, sourceOwner, destinationOwner);
 
         assertThat(actual)
             .isNotNull()
