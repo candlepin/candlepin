@@ -130,7 +130,9 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
             orgConsumerMap.computeIfAbsent(rec.ownerKey(), key -> new ArrayList<>())
                 .add(rec.consumerUuid());
 
-            orgAnonymousMap.computeIfAbsent(rec.ownerKey(), key -> rec.isOwnerAnonymous());
+            orgAnonymousMap.computeIfAbsent(rec.ownerKey(), key -> {
+                return rec.isOwnerAnonymous() == null ? false : rec.isOwnerAnonymous();
+            });
         }
 
         // Retrieve the certs and their serials for the inactive consumers.

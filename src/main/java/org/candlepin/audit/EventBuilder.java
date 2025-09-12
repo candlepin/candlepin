@@ -88,8 +88,7 @@ public class EventBuilder {
                     event.setOwnerKey(ownerKey);
                 }
 
-                Boolean anonymous = owned.isOwnerAnonymous();
-                event.setIsOwnerAnonymous(anonymous == null ? false : anonymous);
+                event.setAnonymousOwner(owned.isOwnerAnonymous());
             }
 
             if (entity instanceof Entitlement ent) {

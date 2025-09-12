@@ -394,7 +394,7 @@ public class Owner extends AbstractHibernateObject<Owner>
      */
     @Override
     public boolean isOwnerAnonymous() {
-        return anonymous == null ? false : true;
+        return this.anonymous == null ? false : this.anonymous;
     }
 
     public Set<ActivationKey> getActivationKeys() {
@@ -595,8 +595,8 @@ public class Owner extends AbstractHibernateObject<Owner>
         return this.setLastContentUpdate(new Date());
     }
 
-    public Boolean getAnonymous() {
-        return anonymous;
+    public boolean getAnonymous() {
+        return anonymous == null ? false : anonymous;
     }
 
     public Owner setAnonymous(Boolean anonymous) {

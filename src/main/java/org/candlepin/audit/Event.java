@@ -18,6 +18,7 @@ import org.candlepin.auth.PrincipalData;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.slf4j.Logger;
@@ -253,8 +254,9 @@ public class Event {
     }
 
     /**
-     * @return true if the event's owner is anonymous
+     * @return the anonymous state of the owner for this event
      */
+    @JsonProperty("anonymousOwner")
     public Boolean isOwnerAnonymous() {
         return this.anonymousOwner;
     }
@@ -267,7 +269,8 @@ public class Event {
      *
      * @return a reference to this event
      */
-    public Event setIsOwnerAnonymous(Boolean anonymousOwner) {
+    @JsonProperty("anonymousOwner")
+    public Event setAnonymousOwner(Boolean anonymousOwner) {
         this.anonymousOwner = anonymousOwner;
         return this;
     }

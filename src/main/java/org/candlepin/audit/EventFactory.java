@@ -265,7 +265,7 @@ public class EventFactory {
 
         return new Event(Type.BULK_DELETION, Target.CONSUMER, principalProvider.get().getData())
             .setOwnerKey(ownerKey)
-            .setIsOwnerAnonymous(anonymous)
+            .setAnonymousOwner(anonymous)
             .setEventData(Map.of("consumerUuids", consumerUuids));
     }
 
