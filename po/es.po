@@ -733,7 +733,8 @@ msgstr "No es capaz de adjuntar consorcio con ID “{1}”.: {0}."
 #, java-format
 msgid ""
 "This system already has a subscription for the product \"{1}\" attached."
-msgstr "Este sistema ya tiene una suscripción para el producto “{1}” adjuntado."
+msgstr ""
+"Este sistema ya tiene una suscripción para el producto “{1}” adjuntado."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:195
 #, java-format
@@ -915,7 +916,8 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1178
 msgid "You may not create a manifest consumer via Subscription Manager."
-msgstr "Puede no crear una declaración de consumidor por Gestor de Suscripción."
+msgstr ""
+"Puede no crear una declaración de consumidor por Gestor de Suscripción."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -935,7 +937,8 @@ msgstr "El usuario “{0}” ya tiene registrado un consumidor personal"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1355
 msgid "Client is not authorized to register with any organization"
-msgstr "El cliente no está autorizado para registrar con cualquier organización"
+msgstr ""
+"El cliente no está autorizado para registrar con cualquier organización"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1367
 msgid "You must specify an organization for new units."
@@ -2027,8 +2030,8 @@ msgstr "debe ser mayor o igual a {0}"
 msgid ""
 "numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
 msgstr ""
-"valor numérico fuera de acotaciones (dígitos esperados: "
-"<{integer}>.<{fraction}>)"
+"valor numérico fuera de acotaciones (dígitos esperados: <{integer}>."
+"<{fraction}>)"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:56
 msgid "must be in the future"
