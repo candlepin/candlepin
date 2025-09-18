@@ -203,7 +203,8 @@ class EnvironmentResourceTest {
         // TODO: Stop doing this! Globally shared data means every test in the suite has to account
         // for this or risk counts/queries not returning precise results! Just create the objects in
         // the test as necessary!
-        this.owner = TestUtil.createOwner("owner1");
+        this.owner = TestUtil.createOwner("owner1")
+            .setAnonymous(false);
         this.environment1 = createEnvironment(owner, ENV_ID_1);
 
         doAnswer(returnsFirstArg()).when(this.envCurator).merge(any(Environment.class));
@@ -609,6 +610,7 @@ class EnvironmentResourceTest {
         assertThat(queuedEvents.poll())
             .isNotNull()
             .returns(owner.getKey(), Event::getOwnerKey)
+            .returns(owner.getAnonymous(), Event::isOwnerAnonymous)
             .extracting(Event::getEventData, as(map(String.class, Object.class)))
             .extractingByKey("consumerUuids", as(collection(String.class)))
             .containsOnly(consumer1.getUuid(), consumer2.getUuid());
@@ -639,6 +641,7 @@ class EnvironmentResourceTest {
         assertThat(queuedEvents.poll())
             .isNotNull()
             .returns(owner.getKey(), Event::getOwnerKey)
+            .returns(owner.getAnonymous(), Event::isOwnerAnonymous)
             .extracting(Event::getEventData, as(map(String.class, Object.class)))
             .extractingByKey("consumerUuids", as(collection(String.class)))
             .containsOnly(consumer1.getUuid());

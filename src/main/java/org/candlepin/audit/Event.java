@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -18,6 +18,7 @@ import org.candlepin.auth.PrincipalData;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.slf4j.Logger;
@@ -44,8 +45,6 @@ public class Event {
 
     private static final Logger log = LoggerFactory.getLogger(Event.class);
 
-    private static final long serialVersionUID = 1L;
-
     /**
      * Type - Constant representing the type of this event.
      */
@@ -57,7 +56,14 @@ public class Event {
          * event type represents many entities, certain event fields *should not* be populated,
          * such as: targetName, or entityId
          */
-        BULK_DELETION
+        BULK_DELETION,
+
+        /**
+         * Represents the migration of multiple entities to a target entity. Note that because this event type
+         * represents many entities, certain event fields *should not* be populated, such as: targetName or
+         * entityId.
+         */
+        BULK_MIGRATION
     }
 
     /**
@@ -93,6 +99,7 @@ public class Event {
     private Date timestamp;
     private String entityId;
     private String ownerKey;
+    private Boolean anonymousOwner;
     private String consumerUuid;
     private String referenceId;
     private ReferenceType referenceType;
@@ -243,6 +250,28 @@ public class Event {
      */
     public Event setOwnerKey(String ownerKey) {
         this.ownerKey = ownerKey;
+        return this;
+    }
+
+    /**
+     * @return the anonymous state of the owner for this event
+     */
+    @JsonProperty("anonymousOwner")
+    public Boolean isOwnerAnonymous() {
+        return this.anonymousOwner;
+    }
+
+    /**
+     * Sets if the event's owner is anonymous or not.
+     *
+     * @param anonymousOwner
+     *  if the owner is anonymous or not
+     *
+     * @return a reference to this event
+     */
+    @JsonProperty("anonymousOwner")
+    public Event setAnonymousOwner(Boolean anonymousOwner) {
+        this.anonymousOwner = anonymousOwner;
         return this;
     }
 

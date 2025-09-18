@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -181,6 +181,15 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
     public String getOwnerKey() {
         Consumer consumer = this.getConsumer();
         return consumer == null ? null : consumer.getOwnerKey();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isOwnerAnonymous() {
+        Consumer consumer = this.getConsumer();
+        return consumer == null ? false : consumer.isOwnerAnonymous();
     }
 
     public String toString() {
