@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -15,11 +15,22 @@
 package org.candlepin.model;
 
 /**
- *
+ * Represents an entity that belongs to an {@link Owner}.
  */
 public interface Owned {
 
+    /**
+     * @return the ID of the {@link Owner} that owns this entity
+     */
     String getOwnerId();
 
+    /**
+     * @return the key of the {@link Owner} that owns this entity
+     */
     String getOwnerKey();
+
+    /**
+     * @return the anonymous state of the {@link Owner} that owns this entity
+     */
+    boolean isOwnerAnonymous();
 }

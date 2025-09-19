@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -40,14 +40,16 @@ public class LoggingListener implements EventListener {
 
     @Override
     public void onEvent(Event e) {
-        auditLog.info(
-            "principalType={} principal={} target={} entityId={} type={} owner={} eventData={}\n",
+        String message = "principalType={} principal={} target={} entityId={} type={} owner={} " +
+            "anonymousOwner={} eventData={}\n";
+        auditLog.info(message,
             e.getPrincipalData().getType(),
             e.getPrincipalData().getName(),
             e.getTarget(),
             e.getEntityId(),
             e.getType(),
             e.getOwnerKey(),
+            e.isOwnerAnonymous(),
             e.getEventData());
     }
 }

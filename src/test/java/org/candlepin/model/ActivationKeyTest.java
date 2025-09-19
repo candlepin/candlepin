@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -25,6 +26,9 @@ import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Date;
 
@@ -142,5 +146,28 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         ActivationKey key = new ActivationKey();
 
         assertNull(key.getOwnerKey());
+    }
+
+    @Test
+    public void testIsOwnerAnonymousWithNullOwner() {
+        ActivationKey key = new ActivationKey();
+
+        assertFalse(key.isOwnerAnonymous());
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(booleans = {true, false})
+    public void testIsOwnerAnonymous(Boolean anonymous) {
+        Owner owner = TestUtil.createOwner(TestUtil.randomString(), TestUtil.randomString())
+            .setId(null)
+            .setAnonymous(anonymous);
+
+        owner = this.ownerCurator.create(owner);
+
+        ActivationKey key = this.createActivationKey(owner);
+
+        boolean expected = anonymous == null ? false : anonymous;
+        assertEquals(expected, key.isOwnerAnonymous());
     }
 }

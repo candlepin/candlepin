@@ -12,12 +12,13 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.model;
+package org.candlepin.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
+import org.candlepin.model.Owner;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
@@ -25,32 +26,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-public class EntitlementTest {
-
-    @Test
-    public void testGetOwnerKey() {
-        String ownerKey = TestUtil.randomString();
-        Owner owner = new Owner();
-        owner.setId(TestUtil.randomString());
-        owner.setKey(ownerKey);
-        Entitlement entitlement = new Entitlement();
-        entitlement.setOwner(owner);
-
-        assertEquals(ownerKey, entitlement.getOwnerKey());
-    }
-
-    @Test
-    public void testGetOwnerKeyWithNoOwner() {
-        Entitlement entitlement = new Entitlement();
-
-        assertNull(entitlement.getOwnerKey());
-    }
+public class SubscriptionTest {
 
     @Test
     public void testIsOwnerAnonymousWithNullOwner() {
-        Entitlement entitlement = new Entitlement();
+        Subscription subscription = new Subscription();
 
-        assertFalse(entitlement.isOwnerAnonymous());
+        assertFalse(subscription.isOwnerAnonymous());
     }
 
     @ParameterizedTest
@@ -58,14 +40,14 @@ public class EntitlementTest {
     @ValueSource(booleans = {true, false})
     public void testIsOwnerAnonymous(Boolean anonymous) {
         Owner owner = TestUtil.createOwner(TestUtil.randomString(), TestUtil.randomString())
-            .setId(TestUtil.randomString())
+            .setId(null)
             .setAnonymous(anonymous);
 
-        Entitlement entitlement = new Entitlement()
+        Subscription subscription = new Subscription()
             .setOwner(owner);
 
         boolean expected = anonymous == null ? false : anonymous;
-        assertEquals(expected, entitlement.isOwnerAnonymous());
+        assertEquals(expected, subscription.isOwnerAnonymous());
     }
 
 }
