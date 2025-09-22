@@ -29,15 +29,19 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Map;
 
@@ -114,4 +118,38 @@ public class EventBuilderTest {
         IseException e = assertThrows(IseException.class, () -> eventBuilder.setEventData(pool, pool));
         assertEquals("This method is only for type MODIFIED Events.", e.getMessage());
     }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    public void testSetEventDataShouldSetAnonymousOwnerFieldForOwnedEntities(boolean anonymous) {
+        Owner owner = new Owner()
+            .setId(TestUtil.randomString("id-"))
+            .setAnonymous(anonymous);
+
+        Consumer consumer = new Consumer()
+            .setId(TestUtil.randomString("id-"))
+            .setOwner(owner);
+
+        EventBuilder eventBuilder = new EventBuilder(factory, Event.Target.CONSUMER, Event.Type.CREATED);
+
+        Event actual = eventBuilder.setEventData(consumer)
+            .buildEvent();
+
+        assertThat(actual)
+            .isNotNull()
+            .returns(owner.getAnonymous(), Event::isOwnerAnonymous);
+    }
+
+    @Test
+    public void testSetEventDataShouldSetAnonymousOwnerFieldToNullForNonOwnedEntities() {
+        EventBuilder eventBuilder = new EventBuilder(factory, Event.Target.CONSUMER, Event.Type.CREATED);
+
+        Event actual = eventBuilder.setEventData(new Product())
+            .buildEvent();
+
+        assertThat(actual)
+            .isNotNull()
+            .returns(null, Event::isOwnerAnonymous);
+    }
+
 }

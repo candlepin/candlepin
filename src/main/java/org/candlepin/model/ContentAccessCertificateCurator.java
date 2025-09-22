@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -195,24 +195,26 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<SC
     }
 
     /**
-     * Takes a list of consumer ids and lists certificate serials of their content access certificates.
+     * Takes a list of consumer UUIDs and lists certificate serials of their content access certificates.
      *
-     * @param consumerIds consumers to list serials for
+     * @param consumerUuids
+     *  consumers to list serials for
+     *
      * @return a list of certificate serials
      */
-    public List<CertSerial> listCertSerials(Collection<String> consumerIds) {
-        if (consumerIds == null || consumerIds.isEmpty()) {
+    public List<CertSerial> listCertSerials(Collection<String> consumerUuids) {
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
             return new ArrayList<>();
         }
 
         String hql = """
             SELECT new org.candlepin.model.CertSerial(c.contentAccessCert.id, c.contentAccessCert.serial.id)
-            FROM Consumer c WHERE id IN (:consumerIds)""";
+            FROM Consumer c WHERE uuid IN (:consumerUuids)""";
         Query query = entityManager.get().createQuery(hql, CertSerial.class);
 
-        List<CertSerial> serials = new ArrayList<>(consumerIds.size());
-        for (Collection<String> idBlock : this.partition(consumerIds)) {
-            serials.addAll(query.setParameter("consumerIds", idBlock).getResultList());
+        List<CertSerial> serials = new ArrayList<>(consumerUuids.size());
+        for (Collection<String> uuidBlock : this.partition(consumerUuids)) {
+            serials.addAll(query.setParameter("consumerUuids", uuidBlock).getResultList());
         }
 
         return serials;

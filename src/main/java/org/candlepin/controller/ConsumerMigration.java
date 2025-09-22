@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -15,6 +15,9 @@
 
 package org.candlepin.controller;
 
+import org.candlepin.audit.Event;
+import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventSink;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.model.CertSerial;
@@ -24,6 +27,7 @@ import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.util.Transactional;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
@@ -38,7 +42,7 @@ import java.util.Objects;
 import javax.inject.Inject;
 
 /**
- * Class responsible for migration of consumers from anonymous orgs.
+ * Class responsible for migration of consumers from anonymous owners.
  */
 public class ConsumerMigration {
 
@@ -49,6 +53,8 @@ public class ConsumerMigration {
     private final IdentityCertificateCurator identityCertificateCurator;
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
     private final CertificateSerialCurator serialCurator;
+    private final EventFactory eventFactory;
+    private final EventSink eventSink;
     private final I18n i18n;
     private final int batchSize;
 
@@ -56,31 +62,51 @@ public class ConsumerMigration {
     public ConsumerMigration(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
         IdentityCertificateCurator identityCertificateCurator,
         ContentAccessCertificateCurator contentAccessCertificateCurator,
-        CertificateSerialCurator serialCurator, I18n i18n, Configuration config) {
+        CertificateSerialCurator serialCurator, EventFactory eventFactory, EventSink eventSink, I18n i18n,
+        Configuration config) {
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.identityCertificateCurator = Objects.requireNonNull(identityCertificateCurator);
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
         this.serialCurator = Objects.requireNonNull(serialCurator);
+        this.eventFactory = Objects.requireNonNull(eventFactory);
+        this.eventSink = Objects.requireNonNull(eventSink);
         this.i18n = Objects.requireNonNull(i18n);
         this.batchSize = config.getInt(ConfigProperties.CONSUMER_MIGRATION_BATCH_SIZE);
     }
 
     /**
-     * Migrates all consumers of the given anonymous org to the target org.
+     * Migrates all consumers of the given anonymous owner to the target owner.
      *
-     * @param originOwnerKey key of the source anonymous org
-     * @param destinationOwnerKey key of the destination org
+     * @param originOwnerKey
+     *  key of the source anonymous owner
+     *
+     * @param destinationOwnerKey
+     *  key of the destination owner
+     *
+     * @throws ConsumerMigrationFailedException
+     *  if there is a failure to migrate a batch of consumers
      */
     public void migrate(String originOwnerKey, String destinationOwnerKey) {
         Owner originOwner = this.ownerCurator.getByKey(originOwnerKey);
         Owner destinationOwner = this.ownerCurator.getByKey(destinationOwnerKey);
-        List<String> consumerIds = this.ownerCurator.getConsumerIds(originOwner);
+        List<String> consumerUuids = this.ownerCurator.getConsumerUuids(originOwner);
+
+        Transactional transaction = this.ownerCurator.transactional()
+            .onCommit(status -> this.eventSink.sendEvents())
+            .onRollback(status -> this.eventSink.rollback());
 
         boolean failed = false;
-        for (List<String> consumerIdsBlock : Iterables.partition(consumerIds, this.batchSize)) {
+        for (List<String> consumerUuidsBlock : Iterables.partition(consumerUuids, this.batchSize)) {
             try {
-                this.ownerCurator.transactional(() -> this.migrateBatch(consumerIdsBlock, destinationOwner));
+                transaction.execute(() -> {
+                    this.migrateBatch(consumerUuidsBlock, destinationOwner);
+
+                    Event event = this.eventFactory
+                        .bulkConsumerMigration(consumerUuidsBlock, originOwner, destinationOwner);
+
+                    this.eventSink.queueEvent(event);
+                });
             }
             catch (Exception e) {
                 log.warn("Failed to migrate a batch of consumers.", e);
@@ -93,11 +119,11 @@ public class ConsumerMigration {
         }
     }
 
-    private void migrateBatch(List<String> consumerIds, Owner destination) {
-        this.consumerCurator.lockAndLoadIds(consumerIds);
+    private void migrateBatch(List<String> consumerUuids, Owner destination) {
+        this.consumerCurator.lockAndLoadUuids(consumerUuids);
 
-        List<CertSerial> idCertSerials = this.identityCertificateCurator.listCertSerials(consumerIds);
-        List<CertSerial> caCertSerials = this.contentAccessCertificateCurator.listCertSerials(consumerIds);
+        List<CertSerial> idCertSerials = this.identityCertificateCurator.listCertSerials(consumerUuids);
+        List<CertSerial> caCertSerials = this.contentAccessCertificateCurator.listCertSerials(consumerUuids);
         List<String> idCerts = idCertSerials.stream().map(CertSerial::certId).toList();
         List<String> caCerts = caCertSerials.stream().map(CertSerial::certId).toList();
         List<Long> serials = Streams.concat(idCertSerials.stream(), caCertSerials.stream())
@@ -109,7 +135,7 @@ public class ConsumerMigration {
         this.contentAccessCertificateCurator.deleteByIds(caCerts);
         this.serialCurator.revokeByIds(serials);
 
-        this.consumerCurator.bulkUpdateOwner(consumerIds, destination);
+        this.consumerCurator.bulkUpdateOwner(consumerUuids, destination);
     }
 
 }

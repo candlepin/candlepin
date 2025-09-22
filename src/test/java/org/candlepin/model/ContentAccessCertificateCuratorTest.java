@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -229,7 +229,7 @@ public class ContentAccessCertificateCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testListCertSerialsWithNullOrEmptyConsumerIds() {
+    public void testListCertSerialsWithNullOrEmptyConsumerUuids() {
         List<CertSerial> actual = caCertCurator.listCertSerials(null);
         assertThat(actual).isEmpty();
 
@@ -286,7 +286,7 @@ public class ContentAccessCertificateCuratorTest extends DatabaseTestFixture {
         consumer3.setContentAccessCert(cert3);
 
         List<CertSerial> actual = caCertCurator
-            .listCertSerials(List.of(consumer1.getId(), consumer2.getId()));
+            .listCertSerials(List.of(consumer1.getUuid(), consumer2.getUuid()));
 
         assertThat(actual)
             .isNotNull()

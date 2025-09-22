@@ -85,24 +85,26 @@ public class IdentityCertificateCurator extends AbstractHibernateCurator<Identit
     }
 
     /**
-     * Takes a list of consumer ids and lists certificate serials of their identity certificates.
+     * Takes a list of {@link Consumer} UUIDs and lists certificate serials of their identity certificates.
      *
-     * @param consumerIds consumers to list serials for
+     * @param consumerUuids
+     *  consumers to list serials for
+     *
      * @return a list of certificate serials
      */
-    public List<CertSerial> listCertSerials(Collection<String> consumerIds) {
-        if (consumerIds == null || consumerIds.isEmpty()) {
+    public List<CertSerial> listCertSerials(Collection<String> consumerUuids) {
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
             return new ArrayList<>();
         }
 
         String hql = """
             SELECT new org.candlepin.model.CertSerial(c.idCert.id, c.idCert.serial.id)
-            FROM Consumer c WHERE id IN (:consumerIds)""";
+            FROM Consumer c WHERE uuid IN (:consumerUuids)""";
         Query query = entityManager.get().createQuery(hql, CertSerial.class);
 
-        List<CertSerial> serials = new ArrayList<>(consumerIds.size());
-        for (Collection<String> idBlock : this.partition(consumerIds)) {
-            serials.addAll(query.setParameter("consumerIds", idBlock).getResultList());
+        List<CertSerial> serials = new ArrayList<>(consumerUuids.size());
+        for (Collection<String> uuidBlock : this.partition(consumerUuids)) {
+            serials.addAll(query.setParameter("consumerUuids", uuidBlock).getResultList());
         }
 
         return serials;

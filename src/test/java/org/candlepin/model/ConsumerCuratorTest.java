@@ -48,6 +48,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
 import java.lang.reflect.Field;
@@ -1966,8 +1967,48 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         List<InactiveConsumerRecord> actual = consumerCurator.getInactiveConsumers(lastCheckedInRetention,
             nonCheckedInRetention);
 
-        assertEquals(1, actual.size());
-        assertEquals(inactiveConsumer.getId(), actual.get(0).consumerId());
+        assertThat(actual)
+            .isNotNull()
+            .singleElement()
+            .returns(inactiveConsumer.getId(), InactiveConsumerRecord::consumerId)
+            .returns(inactiveConsumer.getUuid(), InactiveConsumerRecord::consumerUuid)
+            .returns(inactiveConsumer.getOwnerKey(), InactiveConsumerRecord::ownerKey)
+            .returns(null, InactiveConsumerRecord::isOwnerAnonymous);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(booleans = {true, false})
+    public void testGetInactiveConsumersShouldPopulateAnonymousFieldBasedOnOwner(boolean anonymous) {
+        Owner anonOwner = TestUtil.createOwner(TestUtil.randomString(), TestUtil.randomString())
+            .setId(null)
+            .setAnonymous(anonymous);
+
+        anonOwner = this.ownerCurator.create(anonOwner);
+
+        Instant lastCheckedInRetention = Instant.now()
+            .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
+        Instant nonCheckedInRetention = Instant.now()
+            .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_UPDATED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
+
+        Consumer inactiveConsumer = new Consumer()
+            .setName("inactiveConsumer")
+            .setUsername("testUser")
+            .setOwner(anonOwner)
+            .setType(ct);
+        Instant lastCheckedIn = Instant.ofEpochMilli(lastCheckedInRetention.toEpochMilli() - 86400L);
+        inactiveConsumer.setLastCheckin(Date.from(lastCheckedIn));
+        inactiveConsumer = consumerCurator.create(inactiveConsumer);
+
+        List<InactiveConsumerRecord> actual = consumerCurator.getInactiveConsumers(lastCheckedInRetention,
+            nonCheckedInRetention);
+
+        assertThat(actual)
+            .isNotNull()
+            .singleElement()
+            .returns(inactiveConsumer.getId(), InactiveConsumerRecord::consumerId)
+            .returns(inactiveConsumer.getUuid(), InactiveConsumerRecord::consumerUuid)
+            .returns(inactiveConsumer.getOwnerKey(), InactiveConsumerRecord::ownerKey)
+            .returns(anonymous, InactiveConsumerRecord::isOwnerAnonymous);
     }
 
     @Test
@@ -2167,16 +2208,16 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Owner newOwner = createOwner();
         Consumer consumer1 = createConsumer(owner);
         Consumer consumer2 = createConsumer(owner);
-        List<String> consumerIds = List.of(
-            consumer1.getId(),
-            consumer2.getId()
+        List<String> consumerUuids = List.of(
+            consumer1.getUuid(),
+            consumer2.getUuid()
         );
 
-        consumerCurator.bulkUpdateOwner(consumerIds, newOwner);
+        consumerCurator.bulkUpdateOwner(consumerUuids, newOwner);
         this.consumerCurator.flush();
         this.consumerCurator.clear();
 
-        List<Consumer> consumers = this.consumerCurator.listAllByIds(consumerIds);
+        Collection<Consumer> consumers = this.consumerCurator.findByUuids(consumerUuids);
         Assertions.assertThat(consumers)
             .hasSize(2)
             .extracting(Consumer::getOwnerId)
@@ -2193,6 +2234,39 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         );
 
         Collection<String> lockedIds = consumerCurator.lockAndLoadIds(consumerIds);
+
+        Assertions.assertThat(lockedIds)
+            .hasSize(2)
+            .containsExactlyInAnyOrderElementsOf(consumerIds);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @NullAndEmptySource
+    public void testLockAndLoadUuidsWithNullOrEmptyUuids(Collection<String> uuids) {
+        List<String> actual = this.consumerCurator.lockAndLoadUuids(uuids);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void shouldLockConsumersByUuids() {
+        Consumer consumer1 = createConsumer(owner);
+        Consumer consumer2 = createConsumer(owner);
+        List<String> consumerUuids = List.of(
+            consumer1.getUuid(),
+            consumer2.getUuid(),
+            TestUtil.randomString("unknown-"),
+            consumer1.getUuid()
+        );
+
+        List<String> consumerIds = List.of(
+            consumer1.getId(),
+            consumer2.getId()
+        );
+
+        Collection<String> lockedIds = consumerCurator.lockAndLoadUuids(consumerUuids);
 
         Assertions.assertThat(lockedIds)
             .hasSize(2)

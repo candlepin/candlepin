@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -132,6 +132,15 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
     @JsonIgnore
     public String getOwnerKey() {
         return this.getOwner() == null ? null : this.getOwner().getKey();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @JsonIgnore
+    public boolean isOwnerAnonymous() {
+        return false;
     }
 
     /**

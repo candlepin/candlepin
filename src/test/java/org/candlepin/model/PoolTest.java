@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -25,6 +25,7 @@ import static org.mockito.Mockito.verify;
 
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.DisplayName;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.lang.reflect.Field;
@@ -448,6 +450,30 @@ public class PoolTest {
             Pool pool = new Pool();
 
             assertNull(pool.getOwnerKey());
+        }
+
+        @Test
+        public void testIsOwnerAnonymousWithNullOwner() {
+            Pool pool = new Pool();
+
+            assertFalse(pool.isOwnerAnonymous());
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @ValueSource(booleans = {true, false})
+        public void testIsOwnerAnonymous(Boolean anonymous) {
+            Owner owner = TestUtil.createOwner(TestUtil.randomString(), TestUtil.randomString())
+                .setId(null)
+                .setAnonymous(anonymous);
+
+            owner = this.ownerCurator.create(owner);
+
+            Product product = this.createProduct();
+            Pool pool = this.createPool(owner, product);
+
+            boolean expected = anonymous == null ? false : anonymous;
+            assertEquals(expected, pool.isOwnerAnonymous());
         }
     }
 }

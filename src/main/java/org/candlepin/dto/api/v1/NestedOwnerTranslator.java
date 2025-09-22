@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -54,7 +54,8 @@ public class NestedOwnerTranslator implements ObjectTranslator<Owner, NestedOwne
             .key(source.getKey())
             .displayName(source.getDisplayName())
             .href(source.getHref())
-            .contentAccessMode((source.getContentAccessMode()));
+            .contentAccessMode((source.getContentAccessMode()))
+            .anonymous(source.getAnonymous());
 
         return dest;
     }
