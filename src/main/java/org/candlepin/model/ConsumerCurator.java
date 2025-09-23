@@ -53,6 +53,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -1096,7 +1097,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
 
         String jpql = "SELECT new org.candlepin.model.InactiveConsumerRecord(consumer.id, consumer.uuid, " +
-            "owner.key) " +
+            "owner.key, owner.anonymous) " +
             "FROM Consumer consumer " +
             "  JOIN ConsumerType type on type.id = consumer.typeId " +
             "  JOIN consumer.owner owner " +
@@ -1878,14 +1879,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Takes a list of consumers and of each, updates its owner to the given one.
      *
-     * @param consumerIds
+     * @param consumerUuids
      *  consumer to be updated
+     *
      * @param newOwner
      *  owner to update the consumers to
      */
     @Transactional
-    public void bulkUpdateOwner(Collection<String> consumerIds, Owner newOwner) {
-        if (consumerIds == null || consumerIds.isEmpty()) {
+    public void bulkUpdateOwner(Collection<String> consumerUuids, Owner newOwner) {
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
             return;
         }
         if (newOwner == null) {
@@ -1895,14 +1897,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         String jpql = """
             UPDATE Consumer c
             SET c.owner.id = :ownerId
-            WHERE c.id IN (:consumers)
+            WHERE c.uuid IN (:consumerUuids)
             """;
 
         Query query = getEntityManager().createQuery(jpql)
             .setParameter("ownerId", newOwner.getId());
 
-        for (Collection<String> consumersBlock : this.partition(consumerIds)) {
-            query.setParameter("consumers", consumersBlock)
+        for (Collection<String> consumersBlock : this.partition(consumerUuids)) {
+            query.setParameter("consumerUuids", consumersBlock)
                 .executeUpdate();
         }
     }
@@ -1935,6 +1937,47 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
+     * Loads a collection {@link Consumer} IDs with a pessimistic lock using the provided consumer UUIDs.
+     * If no entities could be found matching the given IDs, this method returns an empty collection.
+     * It is possible for the output collection to be smaller than the provided set of UUIDs.
+     *
+     * @param uuids
+     *  the UUIDs for Consumers to lock
+     *
+     * @return the Consumer IDs based on the provided UUIDs
+     */
+    public List<String> lockAndLoadUuids(Collection<String> uuids) {
+        if (uuids == null || uuids.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Sort and de-duplicate the provided collection of IDs so we have a deterministic locking
+        // order for the entities (helps avoid deadlock)
+        List<String> ordered = StreamSupport.stream(uuids.spliterator(), false)
+            .filter(Objects::nonNull)
+            .sorted()
+            .distinct()
+            .toList();
+
+        // Fetch the IDs of locked entities from the DB...
+        String hql = """
+            SELECT c.id FROM Consumer c
+            WHERE c.uuid IN (:uuids)
+            """;
+
+        TypedQuery<String> query = getEntityManager()
+            .createQuery(hql, String.class)
+            .setLockMode(LockModeType.PESSIMISTIC_WRITE);
+
+        List<String> lockedIds = new ArrayList<>(ordered.size());
+        for (List<String> idBlock : this.partition(ordered)) {
+            lockedIds.addAll(query.setParameter("uuids", idBlock).getResultList());
+        }
+
+        return lockedIds;
+    }
+
+    /**
      * Retrieves all the non-manifest type consumer UUIDs that belong to the provided owner.
      *
      * @param ownerKey
@@ -1957,4 +2000,5 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .setParameter("owner_key", ownerKey)
             .getResultList();
     }
+
 }

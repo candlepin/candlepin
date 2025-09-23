@@ -106,6 +106,51 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testExecutionShouldSetAnonymousOwnerFieldOnEvent() throws Exception {
+        int inactiveLastCheckin = InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS + 10;
+
+        Owner anonymousOwner = TestUtil.createOwner(TestUtil.randomString(), TestUtil.randomString())
+            .setId(null)
+            .setAnonymous(true);
+        anonymousOwner = this.ownerCurator.create(anonymousOwner);
+
+        this.createConsumer(anonymousOwner, inactiveLastCheckin);
+
+        Owner owner = TestUtil.createOwner(TestUtil.randomString(), TestUtil.randomString())
+            .setId(null)
+            .setAnonymous(false);
+        owner = this.ownerCurator.create(owner);
+
+        this.createConsumer(owner, inactiveLastCheckin);
+
+        consumerCurator.flush();
+        consumerCurator.clear();
+
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        inactiveConsumerCleanerJob.execute(context);
+
+        consumerCurator.flush();
+        consumerCurator.clear();
+
+        Queue<Event> dispatchedEvents = this.eventSink.getDispatchedEvents();
+        assertThat(dispatchedEvents)
+            .hasSize(2)
+            .extracting(Event::getOwnerKey)
+            .containsExactlyInAnyOrder(anonymousOwner.getKey(), owner.getKey());
+
+        Event event1 = dispatchedEvents.poll();
+        Event event2 = dispatchedEvents.poll();
+        if (anonymousOwner.getKey().equals(event1.getOwnerKey())) {
+            assertThat(event1).returns(true, Event::isOwnerAnonymous);
+            assertThat(event2).returns(false, Event::isOwnerAnonymous);
+        }
+        else {
+            assertThat(event1).returns(false, Event::isOwnerAnonymous);
+            assertThat(event2).returns(true, Event::isOwnerAnonymous);
+        }
+    }
+
+    @Test
     public void testExecutionWithInactiveConsumersInSingleOrg() throws Exception {
         Owner owner = this.createOwner(TestUtil.randomString(), TestUtil.randomString());
         int activeLastCheckin = InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS - 10;
@@ -162,8 +207,13 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
         Map<Owner, List<Consumer>> inactiveConsumersMap = new HashMap<>();
         Map<String, Owner> ownerMap = new HashMap<>();
 
+        boolean anonymous = false;
         for (int i = 0; i < 5; ++i) {
-            Owner owner = this.createOwner(TestUtil.randomString(), TestUtil.randomString());
+            Owner owner = this.createOwner(TestUtil.randomString(), TestUtil.randomString())
+                .setAnonymous(anonymous);
+
+            // Set half the owners to an anonymous state
+            anonymous = !anonymous;
 
             List<Consumer> activeConsumers =
                 Stream.generate(() -> this.createConsumer(owner, activeLastCheckin))
@@ -225,7 +275,6 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
         }
     }
 
-
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = { "0", "-50" })
     public void testExecutionWithInvalidCheckedInRetentionConfig(int rententionDays)
@@ -276,7 +325,8 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
             .isNotNull()
             .returns(Event.Target.CONSUMER, Event::getTarget)
             .returns(Event.Type.BULK_DELETION, Event::getType)
-            .returns(owner.getKey(), Event::getOwnerKey);
+            .returns(owner.getKey(), Event::getOwnerKey)
+            .returns(owner.getAnonymous(), Event::isOwnerAnonymous);
 
         Map<String, Object> eventData = event.getEventData();
         assertNotNull(eventData);

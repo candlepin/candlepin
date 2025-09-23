@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -15,11 +15,15 @@
 package org.candlepin.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class GuestIdTest {
 
@@ -44,6 +48,32 @@ public class GuestIdTest {
         GuestId guest = new GuestId(TestUtil.randomString());
 
         assertNull(guest.getOwnerKey());
+    }
+
+    @Test
+    public void testIsOwnerAnonymousWithNullOwner() {
+        GuestId guest = new GuestId(TestUtil.randomString());
+
+        assertFalse(guest.isOwnerAnonymous());
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(booleans = {true, false})
+    public void testIsOwnerAnonymous(Boolean anonymous) {
+        Owner owner = TestUtil.createOwner(TestUtil.randomString(), TestUtil.randomString())
+            .setId(TestUtil.randomString())
+            .setAnonymous(anonymous);
+
+
+        Consumer consumer = new Consumer()
+            .setOwner(owner);
+
+        GuestId guest = new GuestId(TestUtil.randomString());
+        guest.setConsumer(consumer);
+
+        boolean expected = anonymous == null ? false : anonymous;
+        assertEquals(expected, guest.isOwnerAnonymous());
     }
 
 }

@@ -9658,6 +9658,8 @@ components:
           type: string
         contentAccessMode:
           type: string
+        anonymous:
+          type: boolean
 
     OwnerDTO:
       description: DTO representing an owner/organization

@@ -48,6 +48,7 @@ public class NestedOwnerTranslatorTest extends
         owner.setKey("owner_key-1");
         owner.setDisplayName("owner_name-1");
         owner.setContentAccessMode("owner_cam-1");
+        owner.setAnonymous(false);
 
         return owner;
 
@@ -67,6 +68,7 @@ public class NestedOwnerTranslatorTest extends
             assertEquals(source.getDisplayName(), dest.getDisplayName());
             assertEquals(source.getHref(), dest.getHref());
             assertEquals(source.getContentAccessMode(), dest.getContentAccessMode());
+            assertEquals(source.getAnonymous(), dest.getAnonymous());
         }
         else {
             assertNull(dest);

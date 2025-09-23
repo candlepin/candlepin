@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -48,6 +49,28 @@ public class EnvironmentTest {
         Environment environment = new Environment();
 
         assertNull(environment.getOwnerKey());
+    }
+
+    @Test
+    public void testIsOwnerAnonymousWithNullOwner() {
+        Environment environment = new Environment();
+
+        assertFalse(environment.isOwnerAnonymous());
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(booleans = {true, false})
+    public void testIsOwnerAnonymous(Boolean anonymous) {
+        Owner owner = TestUtil.createOwner(TestUtil.randomString(), TestUtil.randomString())
+            .setId(TestUtil.randomString())
+            .setAnonymous(anonymous);
+
+        Environment environment = new Environment()
+            .setOwner(owner);
+
+        boolean expected = anonymous == null ? false : anonymous;
+        assertEquals(expected, environment.isOwnerAnonymous());
     }
 
     @ParameterizedTest

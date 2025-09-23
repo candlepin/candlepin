@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -118,18 +118,21 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
             return 0;
         }
 
-        log.debug("Deleting inactive consumers: {}", inactiveConsumers);
-
         // This probably isn't the most efficient way to go about this. Once the stream gather operation is
         // available, we can probably inline all of the partitioning and this into one lazy operation rather
         // than doing this.
         Map<String, List<String>> orgConsumerMap = new HashMap<>();
         List<String> consumerIds = new ArrayList<>();
+        Map<String, Boolean> orgAnonymousMap = new HashMap<>();
 
         for (InactiveConsumerRecord rec : inactiveConsumers) {
             consumerIds.add(rec.consumerId());
             orgConsumerMap.computeIfAbsent(rec.ownerKey(), key -> new ArrayList<>())
                 .add(rec.consumerUuid());
+
+            orgAnonymousMap.computeIfAbsent(rec.ownerKey(), key -> {
+                return rec.isOwnerAnonymous() == null ? false : rec.isOwnerAnonymous();
+            });
         }
 
         // Retrieve the certs and their serials for the inactive consumers.
@@ -146,7 +149,8 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
 
         // Build and queue bulk-deletion events on a per-org basis :(
         for (Map.Entry<String, List<String>> entry : orgConsumerMap.entrySet()) {
-            Event event = this.eventFactory.bulkConsumerDeletion(entry.getKey(), entry.getValue());
+            Boolean anonymous = orgAnonymousMap.get(entry.getKey());
+            Event event = this.eventFactory.bulkConsumerDeletion(entry.getKey(), anonymous, entry.getValue());
             this.eventSink.queueEvent(event);
         }
 
