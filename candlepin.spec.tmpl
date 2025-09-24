@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.7.0
+Version: 4.7.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,37 @@ fi
 
 #raw
 %changelog
+* Wed Sep 24 2025 candlepin-bot 4.7.1-1
+- Add new translations using Weblate (noreply@weblate.org)
+- Bump org.assertj:assertj-core from 3.27.5 to 3.27.6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jaxb from 4.0.5 to 4.0.6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1065: Added bulk migration event (joshmalbrecht@gmail.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.19.0 to 5.20.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.13.4 to 3.14.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.assertj:assertj-core from 3.27.4 to 3.27.5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.postgresql:postgresql from 42.7.7 to 42.7.8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.bouncycastle:bcprov-jdk18on from 1.81 to 1.82
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.spotbugs:spotbugs-annotations from 4.9.5 to 4.9.6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.spotbugs:spotbugs-annotations from 4.9.4 to 4.9.5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mariadb.jdbc:mariadb-java-client from 3.5.5 to 3.5.6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.google.code.gson:gson from 2.13.1 to 2.13.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+
 * Wed Sep 10 2025 candlepin-bot 4.7.0-1
 - CANDLEPIN-1059: Reduced 429s while fetching content access payloads
   (crog@redhat.com)
