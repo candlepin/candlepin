@@ -2,36 +2,40 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # Didik Supriadi <didiksupriadi41@gmail.com>, 2021, 2022.
+# data informasi <mh1227330@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-01-25 07:07+0000\n"
-"PO-Revision-Date: 2022-07-08 10:19+0000\n"
-"Last-Translator: Didik Supriadi <didiksupriadi41@gmail.com>\n"
+"PO-Revision-Date: 2025-09-16 19:54+0000\n"
+"Last-Translator: data informasi <mh1227330@gmail.com>\n"
 "Language-Team: Indonesian <https://translate.fedoraproject.org/projects/"
-"candlepin/master/id/>\n"
+"candlepin/candlepin-4-3-hotfix/id/>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.13\n"
+"X-Generator: Weblate 5.13.3\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
+#, fuzzy
 msgid "Healing attempted against non-existent org key \"{}\""
-msgstr ""
+msgstr "Upaya perbaikan dilakukan terhadap org key \"{}\" yang tidak ada"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:92
 #: src/main/java/org/candlepin/controller/Entitler.java:229
-#, java-format
+#, fuzzy, java-format
 msgid "Auto-attach is disabled for owner {0}"
-msgstr ""
+msgstr "Auto-attach dinonaktifkan untuk pemilik {0}"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:97
-#, java-format
+#, fuzzy, java-format
 msgid "Auto-attach is disabled for owner {0} while using simple content access"
 msgstr ""
+"Auto-attach dinonaktifkan untuk pemilik {0} saat menggunakan akses konten "
+"sederhana"
 
 #: src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:140
 #, java-format
@@ -74,9 +78,9 @@ msgid "{0} deleted the owner {1}"
 msgstr "{0} menghapus pemilik {1}"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
-#, java-format
+#, fuzzy, java-format
 msgid "{0} attached a subscription for product {1}"
-msgstr ""
+msgstr "{0} attached a subscription for product {1}"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
@@ -86,9 +90,9 @@ msgstr "{0} memodifikasi langganan untuk produk {1}"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:131
-#, java-format
+#, fuzzy, java-format
 msgid "{0} returned the subscription for {1}"
-msgstr ""
+msgstr "{0} mengembalikan langganan untuk {1}"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
 #, java-format

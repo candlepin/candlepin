@@ -36,8 +36,8 @@ msgstr "L’assignation automatique est désactivée pour le propriétaire {0}"
 #, java-format
 msgid "Auto-attach is disabled for owner {0} while using simple content access"
 msgstr ""
-"L’assignation automatique est désactivée pour le propriétaire {0} lors de l’"
-"utilisation de Simple Content Access"
+"L’assignation automatique est désactivée pour le propriétaire {0} lors de "
+"l’utilisation de Simple Content Access"
 
 #: src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:140
 #, java-format
@@ -1091,8 +1091,8 @@ msgid ""
 "the hypervisor autobind setting."
 msgstr ""
 "Requête d’assignation automatique ignorée. La fonctionnalité est désactivée "
-"pour l’organisation « {0} » en raison du paramètre d’hyperviseur d’"
-"association automatique."
+"pour l’organisation « {0} » en raison du paramètre d’hyperviseur "
+"d’association automatique."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2450
 #, java-format
