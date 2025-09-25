@@ -214,6 +214,11 @@ class LegacySSLContextEditor(AbstractBaseEditor):
         return connector
 
 
+class LegacySSLContextRepoEditor(LegacySSLContextEditor):
+    def __init__(self, *args, **kwargs):
+        self.port = "9443"
+        super(LegacySSLContextRepoEditor, self).__init__(*args, **kwargs)
+
 
 class CandlepinConnectorEditorV3(AbstractBaseEditor):
     def __init__(self, *args, **kwargs):
@@ -299,6 +304,11 @@ class CandlepinConnectorEditorV3(AbstractBaseEditor):
         # return
         return connector
 
+
+class CandlepinRepoConnectorEditorV3(CandlepinConnectorEditorV3):
+    def __init__(self, *args, **kwargs):
+        self.port = "9443"
+        super(CandlepinRepoConnectorEditorV3, self).__init__(*args, **kwargs)
 
 
 class AccessLogValveEditor(AbstractBaseEditor):
@@ -412,14 +422,17 @@ def main():
     tversion = parse_tc_version(options.tc_version)
     if not tversion or len(tversion) < 1 or tversion[0] > 8 or (tversion[0] == 8 and tversion[1] >= 5):
         ssl_editor_target = CandlepinConnectorEditorV3
+        ssl_repo_editor_target = CandlepinRepoConnectorEditorV3
     else:
         logger.warn("Using legacy Tomcat configuration")
         ssl_editor_target = LegacySSLContextEditor
+        ssl_repo_editor_target = LegacySSLContextRepoEditor
 
     xml_file = os.path.join(conf_dir, "server.xml")
     logger.debug("Opening %s" % xml_file)
     with open_xml(xml_file) as doc:
         ssl_editor_target(doc).insert()
+        ssl_repo_editor_target(doc).insert()
         AccessLogValveEditor(doc).insert()
         AprListenerDeleter(doc).remove()
 

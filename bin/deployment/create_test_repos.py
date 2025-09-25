@@ -179,7 +179,8 @@ def create_repo_definition(product, content):
         'type': content['type'],
         'content_url': os.path.join(content['content_url'], str(product['id']) + '-' + str(content['id'])),
         'gpg_url': content.get('gpg_url', ""),
-        'packages': content.get('packages', [])
+        'packages': content.get('packages', []),
+        'releases': content.get('releases', None)
     }
     return repo_definition
 
@@ -327,8 +328,44 @@ def generate_symlinks_for_owners(owner_names):
                 )
             )
 
+def generate_repository(session, repo, content_url, packages_definitions):
+    """
+    This function tries to generate one yum repository. The content_url can
+    be altered from repo["content_url"] before calling this function, when
+    release is set for this repository.
+    """
+    repo_path = REPO_ROOT_DIR + content_url
+    log.info("creating repository %s in %s" % (repo['name'], repo_path ))
 
-def generate_repositories(repo_definitions, package_definitions):
+    repo_path_rpms = os.path.join(repo_path, 'RPMS')
+    if not os.path.exists(repo_path_rpms):
+        os.makedirs(repo_path_rpms)
+    else:
+        # Delete all previous RPM files, because we don't to have there
+        # obsolete RPM files (definition of rpm has been changed in test_data.json)
+        for file_name in os.listdir(repo_path_rpms):
+            file_path = os.path.join(repo_path_rpms, file_name)
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+
+    add_packages_to_repo(repo['packages'], repo_path, packages_definitions)
+
+    # Create repository with RPM packages
+    run_command(['createrepo_c', repo_path])
+
+    # Try to get product certificate from candlepin server and add it to repository
+    cert_path = get_productid_cert(session, repo)
+    if cert_path is not None:
+        # Note: the cert has to have name 'productid', because modifyrepo
+        # command creates new record in repomd.xml according name of file
+        os.link(cert_path, 'productid')
+        # This command add productid certificate to repository
+        run_command(['modifyrepo_c', 'productid', '%s/repodata' % repo_path])
+        # Remove temporary link
+        os.unlink('productid')
+
+
+def generate_repositories(repo_definitions, packages_definitions):
     """
     This function tries to generate yum repositories with some dummy packages
     """
@@ -352,35 +389,33 @@ def generate_repositories(repo_definitions, package_definitions):
     session.auth = (CANDLEPIN_USER, CANDLEPIN_PASS)
 
     for repo in repo_definitions:
-        repo_path = REPO_ROOT_DIR + repo['content_url']
-        log.info("creating repository %s in %s" % (repo['name'], repo_path ))
+        content_url = repo["content_url"]
+        if repo["releases"] is not None:
+            # Check that repo definition also contains content URL containing $releasever
+            if "$releasever" not in content_url:
+                log.error(
+                    "Releases defined for {repo}, but 'content_url' does not contain $releasever".format(
+                        repo=repo["name"]
+                    )
+                )
+                log.warning("Skipping repository {repo}".format(repo=repo["name"]))
+                continue
 
-        repo_path_rpms = os.path.join(repo_path, 'RPMS')
-        if not os.path.exists(repo_path_rpms):
-            os.makedirs(repo_path_rpms)
+            # Generate repository for all releases
+            for release in repo["releases"]:
+                release_content_url = content_url.replace("$releasever", release)
+                generate_repository(session, repo, release_content_url, packages_definitions)
+
+            # Put listing file to the right position in the path
+            base_url_path = content_url.split("$releasever", 1)[0]
+            base_path = REPO_ROOT_DIR + base_url_path
+            listing_path = os.path.join(base_path, "listing")
+            with open(listing_path, "w") as listing_file:
+                for release in repo["releases"]:
+                    listing_file.write("{release}\n".format(release=release))
         else:
-            # Delete all previous RPM files, because we don't to have there
-            # obsolete RPM files (definition of rpm has been changed in test_data.json)
-            for file_name in os.listdir(repo_path_rpms):
-                file_path = os.path.join(repo_path_rpms, file_name)
-                if os.path.isfile(file_path):
-                    os.unlink(file_path)
+            generate_repository(session, repo, content_url, packages_definitions)
 
-        add_packages_to_repo(repo['packages'], repo_path, package_definitions)
-
-        # Create repository with RPM packages
-        run_command(['createrepo_c', repo_path])
-
-        # Try to get product certificate from candlepin server and add it to repository
-        cert_path = get_productid_cert(session, repo)
-        if cert_path is not None:
-            # Note: the cert has to have name 'productid', because modifyrepo
-            # command creates new record in repomd.xml according name of file
-            os.link(cert_path, 'productid')
-            # This command add productid certificate to repository
-            run_command(['modifyrepo_c', 'productid', '%s/repodata' % repo_path])
-            # Remove temporary link
-            os.unlink('productid')
 
     # Copy exported file to root of repositories
     gpg_key_path = os.path.join(REPO_ROOT_DIR, "RPM-GPG-KEY-candlepin")
