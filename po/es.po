@@ -2,13 +2,14 @@
 # John Sefler <jsefler@redhat.com>, 2022.
 # Weblate Translation Memory <noreply-mt-weblate-translation-memory@weblate.org>, 2025.
 # Javier Francisco <fserrador@gmail.com>, 2025.
+# "Fco. Javier F. Serrador" <fserrador@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-09-11 07:10+0000\n"
-"PO-Revision-Date: 2025-04-13 18:53+0000\n"
-"Last-Translator: Javier Francisco <fserrador@gmail.com>\n"
+"PO-Revision-Date: 2025-09-29 10:53+0000\n"
+"Last-Translator: \"Fco. Javier F. Serrador\" <fserrador@gmail.com>\n"
 "Language-Team: Spanish <https://translate.fedoraproject.org/projects/"
 "candlepin/master/es/>\n"
 "Language: es\n"
@@ -16,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.10.4\n"
+"X-Generator: Weblate 5.13.3\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -1211,6 +1212,8 @@ msgstr "No puede cancelar registro {0} {1} porque: {2}"
 msgid ""
 "Invalid certificate serial; serials may only contain numeric characters: {}"
 msgstr ""
+"Serial de certificado no válido; los seriales solo pueden contener "
+"caracteres numéricos: {}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2291
 msgid "Content access mode does not allow this request."
