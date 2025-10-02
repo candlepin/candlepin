@@ -962,6 +962,20 @@ paths:
               example:
                 displayMessage: Consumer with this UUID could not be found.
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        410:
+          description: The consumer with this UUID has been deleted.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - '#/components/schemas/ExceptionMessage'
+                properties:
+                  deletedId:
+                    type: string
+              example:
+                displayMessage: Unit 3ae36a11-e6b8-4f27-92a7-468358d0c4f7 has been deleted
+                requestUuid: 8c98ce41-9479-4453-bcc4-d52eb0d91af7
+                deletedId: 3ae36a11-e6b8-4f27-92a7-468358d0c4f7
         default:
           $ref: '#/components/responses/default'
 
