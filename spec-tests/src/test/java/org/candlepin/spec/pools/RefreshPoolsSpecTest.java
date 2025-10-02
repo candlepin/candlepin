@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -67,6 +67,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -513,7 +517,6 @@ public class RefreshPoolsSpecTest {
             .isNotNull()
             .singleElement()
             .isEqualTo(content.getId());
-
 
         // Modify the content for this product/sub
         String updatedUrl = "http://www.updated-url.com";
@@ -1246,7 +1249,6 @@ public class RefreshPoolsSpecTest {
             .isNotEqualTo(serialBeforeUpdate.longValue());
     }
 
-
     @Test
     @OnlyInHosted
     public void shouldRegenerateEntsWhenProvidedProductIsRemoved() throws Exception {
@@ -1536,7 +1538,7 @@ public class RefreshPoolsSpecTest {
 
     @Test
     @OnlyInHosted
-    public void shouldRegenerateEntsWhenPooolEndDataChanges() throws Exception {
+    public void shouldRegenerateEntsWhenPoolEndDataChanges() throws Exception {
         ProductDTO prod = createProductWithContent();
         SubscriptionDTO sub = adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
 
@@ -1801,7 +1803,6 @@ public class RefreshPoolsSpecTest {
             .singleElement()
             .returns(owner2EntCertificate.getId(), CertificateDTO::getId);
 
-
         // Refresh the second org and verify it now detects the product change and regenerates its
         // entitlement(s)
         this.refreshPools(adminClient, owner2.getKey());
@@ -1960,6 +1961,36 @@ public class RefreshPoolsSpecTest {
         assertNotEquals(owner2SCALastUpdate1, owner2SCALastUpdate3);
         assertNotEquals(owner2SCAContent2, owner2SCAContent3);
         assertNotEquals(owner2SCALastUpdate2, owner2SCALastUpdate3);
+    }
+
+    @Test
+    @OnlyInHosted
+    public void shouldRecoverFromConcurrentProductCreation() throws Exception {
+        int numberOfOwners = 5;
+
+        ProductDTO globalProduct = adminClient.hosted().createProduct(Products.random());
+
+        List<OwnerDTO> owners = new ArrayList<>();
+        List<Callable<AsyncJobStatusDTO>> tasks = new ArrayList<>();
+        for (int i = 0; i < numberOfOwners; i++) {
+            OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+            adminClient.consumers().createConsumer(Consumers.random(owner));
+            adminClient.hosted().createSubscription(Subscriptions.random(owner, globalProduct));
+
+            owners.add(owner);
+
+            tasks.add(() -> this.refreshPools(adminClient, owner.getKey()));
+        }
+
+        /*
+         * Invoke multiple concurrent refresh pools jobs for the same product that has not been created yet.
+         * This will trigger a ConstraintViolationException when attempting to persist the product
+         * concurrently and the job should recover from this state.
+         */
+        ExecutorService execService = Executors.newFixedThreadPool(tasks.size());
+        execService.invokeAll(tasks);
+        execService.shutdown();
+        execService.awaitTermination(10L, TimeUnit.SECONDS);
     }
 
     private AsyncJobStatusDTO refreshPools(ApiClient client, String ownerKey) {
