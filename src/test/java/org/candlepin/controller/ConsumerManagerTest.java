@@ -202,26 +202,29 @@ public class ConsumerManagerTest {
         Owner owner = new Owner()
             .setKey("owner");
 
-        String consumerUuid = "consumer-uuid";
-        List<String> consumerUuids = List.of(consumerUuid);
+        String consumerUuidWithDifferentPriority = "consumer-uuid-1";
+        String consumerUuidWithSamePriority = "consumer-uuid-2";
+        Set<String> consumerUuids = Set.of(consumerUuidWithDifferentPriority, consumerUuidWithSamePriority);
         NonNullLinkedHashSet<String> envIds = new NonNullLinkedHashSet<>();
         envIds.add("env-1");
         envIds.add("env-2");
 
         Map<String, List<String>> consumerUuidToEnvs = new HashMap<>();
-        consumerUuidToEnvs.put(consumerUuid, List.of("env-2", "env-1"));
+        consumerUuidToEnvs.put(consumerUuidWithDifferentPriority, List.of("env-2", "env-1"));
+        consumerUuidToEnvs.put(consumerUuidWithSamePriority, List.of("env-1", "env-2"));
 
-        doReturn(consumerUuidToEnvs).when(envCurator).findEnvironmentsOf(any(List.class));
+        doReturn(consumerUuidToEnvs).when(envCurator).findEnvironmentsOf(any(Collection.class));
 
         ConsumerManager consumerManager = buildConsumerManager();
         Set<String> actual = consumerManager.setConsumersEnvironments(owner, consumerUuids, envIds);
 
-        verify(envCurator).setConsumersEnvironments(consumerUuids, envIds);
-        verify(contentAccessCertificateCurator).deleteForConsumers(consumerUuids);
+        verify(envCurator).setConsumersEnvironments(Set.of(consumerUuidWithDifferentPriority), envIds);
+        verify(contentAccessCertificateCurator).deleteForConsumers(Set.of(consumerUuidWithDifferentPriority));
 
         assertThat(actual)
             .isNotNull()
-            .containsAll(consumerUuids);
+            .singleElement()
+            .isEqualTo(consumerUuidWithDifferentPriority);
     }
 
     @Test
@@ -251,15 +254,15 @@ public class ConsumerManagerTest {
 
         String consumer1Uuid = "consumer-1-uuid";
         String consumer2Uuid = "consumer-2-uuid";
-        List<String> consumerUuids = List.of(consumer1Uuid, consumer2Uuid);
+        Set<String> consumerUuids = Set.of(consumer1Uuid, consumer2Uuid);
         NonNullLinkedHashSet<String> envIds = new NonNullLinkedHashSet<>();
         envIds.add("env-1");
         envIds.add("env-2");
 
         Map<String, List<String>> consumerUuidToEnvs = new HashMap<>();
-        consumerUuidToEnvs.put(consumerUuids.get(0), List.of("env-1"));
+        consumerUuidToEnvs.put(consumer1Uuid, List.of("env-1"));
 
-        doReturn(consumerUuidToEnvs).when(envCurator).findEnvironmentsOf(any(List.class));
+        doReturn(consumerUuidToEnvs).when(envCurator).findEnvironmentsOf(any(Collection.class));
 
         ConsumerManager consumerManager = buildConsumerManager();
         Set<String> actual = consumerManager.setConsumersEnvironments(owner, consumerUuids, envIds);
