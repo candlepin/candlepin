@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -513,7 +513,6 @@ public class RefreshPoolsSpecTest {
             .isNotNull()
             .singleElement()
             .isEqualTo(content.getId());
-
 
         // Modify the content for this product/sub
         String updatedUrl = "http://www.updated-url.com";
@@ -1246,7 +1245,6 @@ public class RefreshPoolsSpecTest {
             .isNotEqualTo(serialBeforeUpdate.longValue());
     }
 
-
     @Test
     @OnlyInHosted
     public void shouldRegenerateEntsWhenProvidedProductIsRemoved() throws Exception {
@@ -1536,7 +1534,7 @@ public class RefreshPoolsSpecTest {
 
     @Test
     @OnlyInHosted
-    public void shouldRegenerateEntsWhenPooolEndDataChanges() throws Exception {
+    public void shouldRegenerateEntsWhenPoolEndDataChanges() throws Exception {
         ProductDTO prod = createProductWithContent();
         SubscriptionDTO sub = adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
 
@@ -1800,7 +1798,6 @@ public class RefreshPoolsSpecTest {
             .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
             .singleElement()
             .returns(owner2EntCertificate.getId(), CertificateDTO::getId);
-
 
         // Refresh the second org and verify it now detects the product change and regenerates its
         // entitlement(s)

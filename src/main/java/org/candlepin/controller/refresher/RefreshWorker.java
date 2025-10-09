@@ -26,7 +26,6 @@ import org.candlepin.controller.refresher.visitors.ContentNodeVisitor;
 import org.candlepin.controller.refresher.visitors.NodeProcessor;
 import org.candlepin.controller.refresher.visitors.PoolNodeVisitor;
 import org.candlepin.controller.refresher.visitors.ProductNodeVisitor;
-import org.candlepin.controller.util.ExpectedExceptionRetryWrapper;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
@@ -51,11 +50,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.persistence.EntityTransaction;
 
 
 
@@ -65,12 +62,6 @@ import javax.persistence.EntityTransaction;
  */
 public class RefreshWorker {
     private static final Logger log = LoggerFactory.getLogger(RefreshWorker.class);
-
-    /**
-     * The number of times to retry the refresh operation if it fails as a result of a constraint
-     * violation.
-     */
-    private static final int CONSTRAINT_VIOLATION_RETRIES = 4;
 
     private final PoolCurator poolCurator;
     private final ContentCurator contentCurator;
@@ -385,92 +376,79 @@ public class RefreshWorker {
     /**
      * Performs the import operation on the currently compiled objects
      *
+     * @throws ConstraintViolationException
+     *  if two owners create the same products or content in simultaneous transactions
+     *
+     * @throws LockAcquisitionException
+     *  if two owners create the same products or content in simultaneous transactions but in a specific
+     *  ordering
+     *
      * @return
      *  the result of this refresh operation
      */
     @SuppressWarnings("indentation")
     public RefreshResult execute(Owner owner) {
-        Supplier<RefreshResult> block = () -> {
-            NodeMapper nodeMapper = new NodeMapper();
+        NodeMapper nodeMapper = new NodeMapper();
 
-            NodeFactory nodeFactory = new NodeFactory()
-                .setNodeMapper(nodeMapper)
-                .addMapper(this.poolMapper)
-                .addMapper(this.productMapper)
-                .addMapper(this.contentMapper)
-                .addBuilder(new PoolNodeBuilder())
-                .addBuilder(new ProductNodeBuilder())
-                .addBuilder(new ContentNodeBuilder());
+        NodeFactory nodeFactory = new NodeFactory()
+            .setNodeMapper(nodeMapper)
+            .addMapper(this.poolMapper)
+            .addMapper(this.productMapper)
+            .addMapper(this.contentMapper)
+            .addBuilder(new PoolNodeBuilder())
+            .addBuilder(new ProductNodeBuilder())
+            .addBuilder(new ContentNodeBuilder());
 
-            NodeProcessor nodeProcessor = new NodeProcessor()
-                .setNodeMapper(nodeMapper)
-                .addVisitor(new PoolNodeVisitor(this.poolCurator))
-                .addVisitor(new ProductNodeVisitor(this.productCurator))
-                .addVisitor(new ContentNodeVisitor(this.contentCurator));
+        NodeProcessor nodeProcessor = new NodeProcessor()
+            .setNodeMapper(nodeMapper)
+            .addVisitor(new PoolNodeVisitor(this.poolCurator))
+            .addVisitor(new ProductNodeVisitor(this.productCurator))
+            .addVisitor(new ContentNodeVisitor(this.contentCurator));
 
-            // We shouldn't need these locks anymore. Simultaneous creations may cause one job to
-            // fail and retry when its transaction commits (and fails), but simultaneous updates
-            // will just clobber each other in a way that doesn't matter anymore with refresh only
-            // affecting the global namespace.
+        // We shouldn't need these locks anymore. Simultaneous creations may cause one job to
+        // fail and retry when its transaction commits (and fails), but simultaneous updates
+        // will just clobber each other in a way that doesn't matter anymore with refresh only
+        // affecting the global namespace.
 
-            // Clear existing entities in the event this isn't the first run of this refresher
-            this.poolMapper.clearExistingEntities();
-            this.productMapper.clearExistingEntities();
-            this.contentMapper.clearExistingEntities();
+        // Clear existing entities in the event this isn't the first run of this refresher
+        this.poolMapper.clearExistingEntities();
+        this.productMapper.clearExistingEntities();
+        this.contentMapper.clearExistingEntities();
 
-            // Add in our existing entities
-            Collection<String> importedProductIds = this.productMapper.getImportedEntities().keySet();
-            Collection<String> importedContentIds = this.contentMapper.getImportedEntities().keySet();
+        // Add in our existing entities
+        Collection<String> importedProductIds = this.productMapper.getImportedEntities().keySet();
+        Collection<String> importedContentIds = this.contentMapper.getImportedEntities().keySet();
 
-            log.debug("Adding existing subscriptions to mapper...");
-            List<Pool> pools = this.poolCurator
-                .listByOwnerAndTypes(owner.getId(), PoolType.NORMAL);
-            this.mapExistingPools(pools);
+        log.debug("Adding existing subscriptions to mapper...");
+        List<Pool> pools = this.poolCurator
+            .listByOwnerAndTypes(owner.getId(), PoolType.NORMAL);
+        this.mapExistingPools(pools);
 
-            // Add globally namespaced products and content to refresh.
-            // TODO: FIXME: We don't need to do this on a per-org basis anymore (kind of)!
-            log.debug("Adding affected products to mapper for {} product IDs: {}", importedProductIds.size(),
-                importedProductIds);
-            Collection<Product> products = this.productCurator.getProductsByIds(null, importedProductIds)
-                .values();
-            this.mapExistingProducts(products);
+        // Add globally namespaced products and content to refresh.
+        // TODO: FIXME: We don't need to do this on a per-org basis anymore (kind of)!
+        log.debug("Adding affected products to mapper for {} product IDs: {}", importedProductIds.size(),
+            importedProductIds);
+        Collection<Product> products = this.productCurator.getProductsByIds(null, importedProductIds)
+            .values();
+        this.mapExistingProducts(products);
 
-            log.debug("Adding affected contents to mapper for {} product IDs: {}", importedContentIds.size(),
-                importedContentIds);
-            Collection<Content> contents = this.contentCurator.getContentsByIds(null, importedContentIds)
-                .values();
-            this.mapExistingContent(contents);
+        log.debug("Adding affected contents to mapper for {} product IDs: {}", importedContentIds.size(),
+            importedContentIds);
+        Collection<Content> contents = this.contentCurator.getContentsByIds(null, importedContentIds)
+            .values();
+        this.mapExistingContent(contents);
 
-            // Have our node factory build the node trees
-            log.debug("Building entity nodes...");
-            nodeFactory.buildNodes(owner);
+        // Have our node factory build the node trees
+        log.debug("Building entity nodes...");
+        nodeFactory.buildNodes(owner);
 
-            // Process our nodes, starting at the roots, letting the processors build up any persistence
-            // state necessary to finalize everything
-            log.debug("Processing entity nodes...");
-            RefreshResult result = nodeProcessor.processNodes();
+        // Process our nodes, starting at the roots, letting the processors build up any persistence
+        // state necessary to finalize everything
+        log.debug("Processing entity nodes...");
+        RefreshResult result = nodeProcessor.processNodes();
 
-            log.debug("Done. Returning refresh worker result");
-            return result;
-        };
-
-        // Attempt to retry if we're not already in a transaction
-        // Impl note: at the time of writing, nested transactions are not supported in Hibernate
-        EntityTransaction transaction = this.poolCurator.getTransaction();
-        if (transaction == null || !transaction.isActive()) {
-            // Retry this operation if we hit a unique constraint violation (two orgs creating the
-            // same products or content in simultaneous transactions), or we deadlock (same deal,
-            // but in a spicy entity order).
-            return new ExpectedExceptionRetryWrapper()
-                .addException(ConstraintViolationException.class)
-                .addException(LockAcquisitionException.class)
-                .retries(CONSTRAINT_VIOLATION_RETRIES)
-                .execute(() -> this.poolCurator.transactional(block));
-        }
-        else {
-            // A transaction is already active, just run the block as-is
-            return block.get();
-        }
+        log.debug("Done. Returning refresh worker result");
+        return result;
     }
 
 }
