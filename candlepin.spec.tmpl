@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.22
+Version: 4.4.23
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,13 @@ fi
 
 #raw
 %changelog
+* Fri Oct 10 2025 candlepin-bot 4.4.23-1
+- Add new translations using Weblate (noreply@weblate.org)
+- CANDLEPIN-1095: Fixed dangling Liquibase connections (crog@redhat.com)
+- CANDLEPIN-1056: Disallow running sonar from a fork PR
+  (joshmalbrecht@gmail.com)
+- Prevent argument injection in SonarQube analysis step (sbakaj@redhat.com)
+
 * Wed May 14 2025 candlepin-bot 4.4.22-1
 - Add new translations using Weblate (noreply@weblate.org)
 - CANDLEPIN-1009: Fix Content URLs in SCA cert for Multi Env
