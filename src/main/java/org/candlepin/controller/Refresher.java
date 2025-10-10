@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,17 +14,20 @@
  */
 package org.candlepin.controller;
 
+import org.candlepin.controller.util.ExpectedExceptionRetryWrapper;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.service.exception.product.ProductServiceException;
 import org.candlepin.service.exception.subscription.SubscriptionServiceException;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.SubscriptionInfo;
+import org.candlepin.util.Transactional;
 
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.LockAcquisitionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,11 +40,19 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
+
 
 
 
 public class Refresher {
     private static final Logger log = LoggerFactory.getLogger(Refresher.class);
+
+    /**
+     * The number of times to retry the refresh operation if it fails as a result of a constraint
+     * violation.
+     */
+    private static final int CONSTRAINT_VIOLATION_RETRIES = 4;
 
     private final PoolManager poolManager;
     private final SubscriptionServiceAdapter subAdapter;
@@ -80,6 +91,25 @@ public class Refresher {
         return this;
     }
 
+    /**
+     * @return true if the refresher should perform lazy entitlement certificate regeneration or false if the
+     *  refresher should regenerate entitlement certificates immediately.
+     */
+    public boolean getLazyCertificateRegeneration() {
+        return this.lazy;
+    }
+
+    /**
+     * Adds the {@link Owner} to list of owners that should be refreshed.
+     *
+     * @param owner
+     *  that should be refreshed
+     *
+     * @throws IllegalArgumentException
+     *  if the provided owner is null or has a null key
+     *
+     * @return a reference to this refresher
+     */
     public Refresher add(Owner owner) {
         if (owner == null || owner.getKey() == null) {
             throw new IllegalArgumentException("Owner is null or lacks identifying information");
@@ -87,6 +117,13 @@ public class Refresher {
 
         this.owners.put(owner.getKey(), owner);
         return this;
+    }
+
+    /**
+     * @return the owners that are to be refreshed in an unmodifiable map.
+     */
+    public Map<String, Owner> getOwners() {
+        return Collections.unmodifiableMap(this.owners);
     }
 
     /**
@@ -100,6 +137,8 @@ public class Refresher {
      * for other orgs.
      *
      * @param product
+     *  the product that should be refreshed globally
+     *
      * @return this Refresher instance
      */
     public Refresher add(Product product) {
@@ -107,8 +146,41 @@ public class Refresher {
         return this;
     }
 
-    public void run() {
+    /**
+     * @return an unmodifiable set of {@link Product}s that should be refreshed.
+     */
+    public Set<Product> getProducts() {
+        return Collections.unmodifiableSet(this.products);
+    }
 
+    public void run() {
+        // This call to refreshProducts is commented out because it is currently a dead code branch.
+        // If we are to use product/subscription specific refreshes in the future, we can uncomment this
+        // method invocation.
+        // this.refreshProducts();
+
+        for (Owner owner : this.owners.values()) {
+            Supplier<Owner> refreshTask = () -> {
+                this.poolManager.refreshPoolsWithRegeneration(this.subAdapter, owner, this.lazy);
+                this.recalculatePoolQuantitiesForOwner(owner);
+
+                return this.updateRefreshDate(owner);
+            };
+
+            // Retry this operation if we hit a unique constraint violation (two orgs creating the
+            // same products or content in simultaneous transactions), or we deadlock (same deal,
+            // but in a spicy entity order).
+            new ExpectedExceptionRetryWrapper()
+                .addException(ConstraintViolationException.class)
+                .addException(LockAcquisitionException.class)
+                .retries(CONSTRAINT_VIOLATION_RETRIES)
+                .execute(() -> new Transactional(this.poolCurator.getEntityManager())
+                    .allowExistingTransactions()
+                    .execute(refreshTask));
+        }
+    }
+
+    private void refreshProducts() {
         // If products were specified on the refresher, lookup any subscriptions
         // using them, regardless of organization, and trigger a refresh for those
         // specific subscriptions.
@@ -178,21 +250,6 @@ public class Refresher {
             Pool primaryPool = this.poolConverter.convertToPrimaryPool(subscription);
             poolManager.refreshPoolsForPrimaryPool(primaryPool, true, lazy, Collections.emptyMap());
         }
-
-        for (Owner owner : this.owners.values()) {
-            try {
-                this.poolManager.refreshPoolsWithRegeneration(this.subAdapter, owner, this.lazy);
-                this.recalculatePoolQuantitiesForOwner(owner);
-                this.updateRefreshDate(owner);
-            }
-            catch (SubscriptionServiceException e) {
-                throw new RuntimeException(
-                    String.format("Unexpected subscription error for organization '%s'", owner.getKey()), e);
-            }
-            catch (ProductServiceException e) {
-                throw new RuntimeException("Unexpected product error in pool refresh", e);
-            }
-        }
     }
 
     private Owner updateRefreshDate(Owner owner) {
@@ -201,14 +258,10 @@ public class Refresher {
     }
 
     private void recalculatePoolQuantitiesForOwner(Owner owner) {
-        this.poolCurator.transactional()
-            .allowExistingTransactions()
-            .execute(() -> {
-                this.poolCurator.calculateConsumedForOwnersPools(owner);
-                this.poolCurator.calculateExportedForOwnersPools(owner);
+        this.poolCurator.calculateConsumedForOwnersPools(owner);
+        this.poolCurator.calculateExportedForOwnersPools(owner);
 
-                log.info("Successfully recalculated quantities for owner: {}", owner.getKey());
-            });
+        log.info("Successfully recalculated quantities for owner: {}", owner.getKey());
     }
 
 }
