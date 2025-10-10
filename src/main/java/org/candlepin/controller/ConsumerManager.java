@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -153,10 +153,10 @@ public class ConsumerManager {
             return new HashSet<>();
         }
 
-        int updated = envCurator.setConsumersEnvironments(consumerUuids, targetEnvIds);
+        int updated = envCurator.setConsumersEnvironments(consumersToUpdate, targetEnvIds);
         log.info("{} consumers have been set to the target environments", updated);
 
-        int deletedCerts = caCertificateCurator.deleteForConsumers(consumerUuids);
+        int deletedCerts = caCertificateCurator.deleteForConsumers(consumersToUpdate);
         log.info("{} content access certs unlinked and removed", deletedCerts);
 
         return consumersToUpdate;
