@@ -11,7 +11,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-09-11 07:10+0000\n"
-"PO-Revision-Date: 2025-09-11 09:54+0000\n"
+"PO-Revision-Date: 2025-09-25 17:54+0000\n"
 "Last-Translator: Léane GRASSER <leane.grasser@proton.me>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
 "candlepin/master/fr/>\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 5.13.2\n"
+"X-Generator: Weblate 5.13.3\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -1119,8 +1119,8 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1278
 msgid "You may not create a manifest consumer via Subscription Manager."
 msgstr ""
-"Vous ne pourrez sans doute pas créer de consommateur de manifeste par "
-"l’intermédiaire du gestionnaire d’abonnements."
+"Vous ne pouvez pas créer de consommateur de manifeste via le gestionnaire "
+"d’abonnements."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
