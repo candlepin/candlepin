@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -267,4 +267,130 @@ public class ExpectedExceptionRetryWrapperTest {
         assertEquals(exception, actual);
     }
 
+    @Test
+    public void testRunnableExecuteSucceedsWithoutRetries() {
+        Exception exception = new TestExecutionException();
+        Runnable runnable = mock(Runnable.class);
+
+        new ExpectedExceptionRetryWrapper()
+            .addException(exception.getClass())
+            .retries(0)
+            .execute(runnable);
+
+        verify(runnable, times(1)).run();
+    }
+
+    @Test
+    public void testRunnableExecuteWontRetryWithoutRetries() {
+        Exception exception = new TestExecutionException();
+
+        Runnable runnable = mock(Runnable.class);
+        doThrow(exception).doNothing().doThrow(new TestFailureException()).when(runnable).run();
+
+        Exception actual = assertThrows(exception.getClass(), () -> {
+            new ExpectedExceptionRetryWrapper()
+                .addException(exception.getClass())
+                .retries(0)
+                .execute(runnable);
+        });
+
+        verify(runnable, times(1)).run();
+        assertEquals(exception, actual);
+    }
+
+    @Test
+    public void testRunnableExecuteReturnsUponSuccess() {
+        Exception exception = new TestExecutionException();
+        Runnable runnable = mock(Runnable.class);
+
+        new ExpectedExceptionRetryWrapper()
+            .addException(exception.getClass())
+            .retries(2)
+            .execute(runnable);
+
+        verify(runnable, times(1)).run();
+    }
+
+    @Test
+    public void testRunnableExecuteRetriesOnExpectedException() {
+        Exception exception = new TestExecutionException();
+
+        Runnable runnable = mock(Runnable.class);
+        doThrow(exception).doNothing().doThrow(new TestFailureException()).when(runnable).run();
+
+        new ExpectedExceptionRetryWrapper()
+            .addException(exception.getClass())
+            .retries(2)
+            .execute(runnable);
+
+        verify(runnable, times(2)).run();
+    }
+
+    @Test
+    public void testRunnableExecuteRetriesOnMultipleExpectedExceptions() {
+        Exception exception1 = new TestExecutionException();
+        Exception exception2 = new TestExecutionAltException();
+
+        Runnable runnable = mock(Runnable.class);
+        doThrow(exception1).doThrow(exception2).doNothing().doThrow(new TestFailureException())
+            .when(runnable).run();
+
+        new ExpectedExceptionRetryWrapper()
+            .addException(exception1.getClass())
+            .addException(exception2.getClass())
+            .retries(2)
+            .execute(runnable);
+
+        verify(runnable, times(3)).run();
+    }
+
+    @Test
+    public void testRunnableExecuteRetriesOnNestedExpectedException() {
+        Exception exception = new TestExecutionAltException("outer exception", new TestExecutionException());
+
+        Runnable runnable = mock(Runnable.class);
+        doThrow(exception).doNothing().doThrow(new TestFailureException()).when(runnable).run();
+
+        new ExpectedExceptionRetryWrapper()
+            .addException(TestExecutionException.class)
+            .retries(2)
+            .execute(runnable);
+
+        verify(runnable, times(2)).run();
+    }
+
+    @Test
+    public void testRunnableExecuteLimitsRetriesOnExpectedException() {
+        Exception exception = new TestExecutionException();
+
+        Runnable runnable = mock(Runnable.class);
+        doThrow(exception).doThrow(exception).doThrow(exception).doNothing().when(runnable).run();
+
+        assertThrows(exception.getClass(), () -> {
+            new ExpectedExceptionRetryWrapper()
+                .addException(exception.getClass())
+                .retries(2)
+                .execute(runnable);
+        });
+
+        verify(runnable, times(3)).run();
+    }
+
+    @Test
+    public void testRunnableRetryOmittedForNonExpectedExceptions() {
+        Exception exception = new TestFailureException("fail");
+
+        Runnable runnable = mock(Runnable.class);
+        doThrow(exception).when(runnable).run();
+
+        Exception actual = assertThrows(TestFailureException.class, () -> {
+            new ExpectedExceptionRetryWrapper()
+                .addException(TestExecutionException.class)
+                .retries(3)
+                .execute(runnable);
+        });
+
+        verify(runnable, times(1)).run();
+        assertEquals(exception, actual);
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -136,6 +136,25 @@ public class ExpectedExceptionRetryWrapper {
                 throw e;
             }
         }
+    }
+
+    /**
+     * Executes this retry wrapper with the provided {@link Runnable}. The action will always be executed at
+     * least once, and will retry the action if an expected exception occurs.
+     * <p/>
+     * If the action fails with an expected exception, but is at the retry limit, this method throws the
+     * received exception.
+     *
+     * @param action
+     *  the action to retry until successful completion
+     */
+    public void execute(Runnable action) {
+        Supplier<Object> supplier = () -> {
+            action.run();
+            return null;
+        };
+
+        this.execute(supplier);
     }
 
     /**

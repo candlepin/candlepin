@@ -801,7 +801,7 @@ public class DatabaseTestFixture {
         return TestConfig.defaults();
     }
 
-    protected void createProductContent(Owner owner, boolean enabled, Content... contents) {
+    protected Product createProductContent(Owner owner, boolean enabled, Content... contents) {
         EntityManager entityManager = this.getEntityManager();
         Product product = createProduct();
         this.createPool(owner, product);
@@ -811,5 +811,7 @@ public class DatabaseTestFixture {
             entityManager.persist(productContent);
         }
         entityManager.flush();
+
+        return product;
     }
 }
