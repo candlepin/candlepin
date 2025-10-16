@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.7.1
+Version: 4.7.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,41 @@ fi
 
 #raw
 %changelog
+* Thu Oct 16 2025 candlepin-bot 4.7.2-1
+- Add new translations using Weblate (noreply@weblate.org)
+- CHAINSAW-474: Updated Refresher to use a single transaction
+  (joshmalbrecht@gmail.com)
+- Bump org.sonarqube from 6.3.1.5724 to 7.0.0.6105
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.spotbugs:spotbugs-annotations from 4.9.6 to 4.9.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.owasp.dependencycheck from 12.1.7 to 12.1.8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 11.0.12 to 11.0.13
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.owasp.dependencycheck from 12.1.3 to 12.1.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump okhttp3 from 5.2.0 to 5.2.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Updated setConsumersEnvironments to only update appropriate consumers
+  (joshmalbrecht@gmail.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 11.0.11 to 11.0.12
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump okhttp3 from 5.1.0 to 5.2.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Fixed malformed $ref in getConsumer operation (thsimmon@redhat.com)
+- Bump io.smallrye.config:smallrye-config from 3.14.0 to 3.14.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Documented 410 gone response for getConsumer API (thsimmon@redhat.com)
+- Bump ch.qos.logback:logback-classic from 1.5.18 to 1.5.19
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.junit:junit-bom from 5.13.4 to 6.0.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 11.0.1 to 11.1.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.ben-manes.versions from 0.52.0 to 0.53.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+
 * Wed Sep 24 2025 candlepin-bot 4.7.1-1
 - Add new translations using Weblate (noreply@weblate.org)
 - Bump org.assertj:assertj-core from 3.27.5 to 3.27.6
