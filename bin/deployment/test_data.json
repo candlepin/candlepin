@@ -419,6 +419,42 @@
             "content_url": "/path/to/fake-content",
             "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "packages": ["insights-client"]
+        },
+        {
+            "name": "release-content",
+            "id": 22222,
+            "label": "release-content",
+            "type": "yum",
+            "vendor": "Red Hat",
+            "content_url": "/foo/path/rhel10/$releasever/release-content",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
+            "required_tags": "rhel-10",
+            "releases": ["10", "10.0", "10.1", "10.2"],
+            "packages": ["lazy-fox", "white-lion", "fluffy-snake"]
+        },
+        {
+            "name": "awesome-release-content",
+            "id": 33333,
+            "label": "awesome-release-content",
+            "type": "yum",
+            "vendor": "Red Hat",
+            "content_url": "/path/to/fake-content/rhel10/$releasever/awesome-release-content",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
+            "required_tags": "rhel-10",
+            "releases": ["10", "10.1", "10.2", "10.4"],
+            "packages": ["awesome-sheep", "awesome-cow", "awesome-rabbit"]
+        },
+        {
+            "name": "another-release-content",
+            "id": 44444,
+            "label": "another-release-content",
+            "type": "yum",
+            "vendor": "Red Hat",
+            "content_url": "/path/to/fake-content/rhel10/$releasever/another-release-content",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
+            "required_tags": "rhel-10",
+            "releases": ["10", "10.1", "10.2", "10.4"],
+            "packages": ["awesome-sheep", "awesome-goat", "awesome-pig"]
         }
     ],
     "owners": [
@@ -1064,6 +1100,51 @@
             "type": "MKT",
             "provided_products": [
                 "38072"
+            ]
+        },
+        {
+            "name": "OS Bits with Releases",
+            "id": "38090",
+            "content": [
+                [22222, true]
+            ]
+        },
+        {
+            "name": "OS Bits with Releases",
+            "id": "release-bits",
+            "type": "MKT",
+            "provided_products": [
+                "38090"
+            ]
+        },
+        {
+            "name": "Awesome OS Bits with Releases",
+            "id": "38091",
+            "content": [
+                [33333, true]
+            ]
+        },
+        {
+            "name": "Awesome OS Bits with Releases",
+            "id": "awesome-release-bits",
+            "type": "MKT",
+            "provided_products": [
+                "38091"
+            ]
+        },
+        {
+            "name": "Another OS Bits with Releases",
+            "id": "38092",
+            "content": [
+                [44444, false]
+            ]
+        },
+        {
+            "name": "Another OS Bits with Releases",
+            "id": "another-release-bits",
+            "type": "MKT",
+            "provided_products": [
+                "38092"
             ]
         },
         {
