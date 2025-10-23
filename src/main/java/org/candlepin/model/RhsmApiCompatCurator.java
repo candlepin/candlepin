@@ -37,17 +37,15 @@ import javax.persistence.TypedQuery;
 @Singleton
 public class RhsmApiCompatCurator {
 
-    private final EntityManager entityManager;
+    private final Provider<EntityManager> entityManagerProvider;
     private final Configuration config;
 
     private final int inBlockSize;
 
     @Inject
     public RhsmApiCompatCurator(Provider<EntityManager> entityManager, Configuration config) {
-        Provider<EntityManager> provider = Objects.requireNonNull(entityManager);
+        this.entityManagerProvider = Objects.requireNonNull(entityManager);
         this.config = Objects.requireNonNull(config);
-
-        this.entityManager = provider.get();
 
         inBlockSize = this.config.getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE);
     }
@@ -84,7 +82,7 @@ public class RhsmApiCompatCurator {
             "GROUP BY consumer.id, consumer.uuid, pool.contractNumber, pss.subscriptionId, prod.uuid " +
             "ORDER BY consumer.id, consumer.uuid ASC";
 
-        TypedQuery<ConsumerEntitlementCount> query = this.entityManager
+        TypedQuery<ConsumerEntitlementCount> query = this.getEntityManager()
             .createQuery(jpql, ConsumerEntitlementCount.class);
 
         List<ConsumerEntitlementCount> consumerEntCounts = new ArrayList<>();
@@ -101,6 +99,14 @@ public class RhsmApiCompatCurator {
         }
 
         return consumerEntCounts;
+    }
+
+    public ConsumerFeedQueryBuilder getConsumerFeedQuery() {
+        return new ConsumerFeedQueryBuilder(entityManagerProvider);
+    }
+
+    private EntityManager getEntityManager() {
+        return entityManagerProvider.get();
     }
 
 }

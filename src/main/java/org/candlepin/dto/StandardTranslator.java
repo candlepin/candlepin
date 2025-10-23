@@ -23,6 +23,8 @@ import org.candlepin.dto.api.server.v1.CertificateDTO;
 import org.candlepin.dto.api.server.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.server.v1.ComplianceReasonDTO;
 import org.candlepin.dto.api.server.v1.ComplianceStatusDTO;
+import org.candlepin.dto.api.server.v1.ConsumerFeedDTO;
+import org.candlepin.dto.api.server.v1.ConsumerFeedInstalledProductDTO;
 import org.candlepin.dto.api.server.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
@@ -55,6 +57,8 @@ import org.candlepin.dto.api.v1.CertificateSerialTranslator;
 import org.candlepin.dto.api.v1.CertificateTranslator;
 import org.candlepin.dto.api.v1.ComplianceReasonTranslator;
 import org.candlepin.dto.api.v1.ComplianceStatusTranslator;
+import org.candlepin.dto.api.v1.ConsumerFeedInstalledProductTranslator;
+import org.candlepin.dto.api.v1.ConsumerFeedTranslator;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductTranslator;
 import org.candlepin.dto.api.v1.ContentOverrideTranslator;
 import org.candlepin.dto.api.v1.ContentTranslator;
@@ -95,6 +99,8 @@ import org.candlepin.model.Certificate;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerFeed;
+import org.candlepin.model.ConsumerFeedInstalledProduct;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -182,6 +188,12 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new org.candlepin.dto.api.v1.ConsumerTypeTranslator(),
             ConsumerType.class, org.candlepin.dto.api.server.v1.ConsumerTypeDTO.class);
+        this.registerTranslator(
+            new ConsumerFeedTranslator(), ConsumerFeed.class,
+            ConsumerFeedDTO.class);
+        this.registerTranslator(
+            new ConsumerFeedInstalledProductTranslator(), ConsumerFeedInstalledProduct.class,
+            ConsumerFeedInstalledProductDTO.class);
         this.registerTranslator(
             new ContentTranslator(), Content.class, ContentDTO.class);
         this.registerTranslator(
