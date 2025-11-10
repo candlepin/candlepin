@@ -23,7 +23,7 @@
 
 Name: candlepin
 Version: 4.7.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -230,6 +230,10 @@ fi
 
 #raw
 %changelog
+* Mon Nov 10 2025 candlepin-bot 4.7.2-2
+- CANDLEPIN-1109: Updated anonymous consumer certificate expiration
+  (joshmalbrecht@gmail.com)
+
 * Thu Oct 16 2025 candlepin-bot 4.7.2-1
 - Add new translations using Weblate (noreply@weblate.org)
 - CHAINSAW-474: Updated Refresher to use a single transaction
