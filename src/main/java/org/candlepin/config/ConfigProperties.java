@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -264,6 +264,12 @@ public class ConfigProperties {
      */
     public static final String SCA_X509_CERT_EXPIRY_THRESHOLD = "candlepin.cert.sca.expiry.threshold";
 
+    /**
+     * The expiration duration for an {@link AnonymousCloudConsumer}'s content access certificate.
+     * This configuration is measured in days.
+     */
+    public static final String ANON_CERT_DURATION = "candlepin.cert.anonymous.expiry";
+
     public static final String SWAGGER_ENABLED = "candlepin.swagger.enabled";
 
     /** Enabled dev page used to interactively login to a Keycloak instance and generate offline token. */
@@ -453,6 +459,7 @@ public class ConfigProperties {
             this.put(IDENTITY_CERT_YEAR_ADDENDUM, "5");
             this.put(IDENTITY_CERT_EXPIRY_THRESHOLD, "90");
             this.put(SCA_X509_CERT_EXPIRY_THRESHOLD, "10");
+            this.put(ANON_CERT_DURATION, "21");
             this.put(SHARD_WEBAPP, "candlepin");
 
             // defaults
@@ -607,6 +614,9 @@ public class ConfigProperties {
                 .min(1));
 
             this.add(new IntegerConfigurationValidator(SCA_X509_CERT_EXPIRY_THRESHOLD)
+                .min(1));
+
+            this.add(new IntegerConfigurationValidator(ANON_CERT_DURATION)
                 .min(1));
 
             this.add(new StringConfigurationValidator(DB_DRIVER_CLASS));
