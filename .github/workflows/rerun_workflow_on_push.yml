@@ -29,7 +29,7 @@ jobs:
         run: |
           base_branch="${GITHUB_REF#refs/heads/}"
           if [[ $base_branch == "main" ]] || [[ $base_branch == "feature/"* ]]; then
-            pr_workflows=("bugzilla_check.yml" "checkstyle.yml" "spec_tests.yml" "unit_tests.yml" "woke.yml" "validate_translations.yml")
+            pr_workflows=("checkstyle.yml" "spec_tests.yml" "unit_tests.yml" "woke.yml" "validate_translations.yml")
           else
             pr_workflows=("pr_verification.yml")
           fi
