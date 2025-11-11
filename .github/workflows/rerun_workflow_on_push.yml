@@ -6,7 +6,7 @@ on:
     branches:
       - main
       - candlepin-*-HOTFIX
-      - feature/autoreg_v2
+      - feature/*
 
 jobs:
   rerun-workflows:
@@ -18,7 +18,7 @@ jobs:
           echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
 
       - name: Get PR info
-        uses: 8BitJonny/gh-get-current-pr@fa2160116055f6fe10376375892b255f8b2ed8f6
+        uses: 8BitJonny/gh-get-current-pr@c4d46fe5fc6220b6ddca19eff228e4c54e3ded8c
         id: PR
         with:
           github-token: ${{ github.token }}
@@ -28,8 +28,8 @@ jobs:
         shell: bash
         run: |
           base_branch="${GITHUB_REF#refs/heads/}"
-          if [ $base_branch = main ] || [ $base_branch = feature/autoreg_v2 ]; then
-            pr_workflows=("bugzilla_check.yml" "checkstyle.yml" "spec_tests.yml" "unit_tests.yml" "woke.yml" "validate_translations.yml")
+          if [[ $base_branch == "main" ]] || [[ $base_branch == "feature/"* ]]; then
+            pr_workflows=("checkstyle.yml" "spec_tests.yml" "unit_tests.yml" "woke.yml" "validate_translations.yml")
           else
             pr_workflows=("pr_verification.yml")
           fi
