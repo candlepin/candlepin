@@ -1360,7 +1360,7 @@ public class ConsumerResourceTest {
         Consumer consumer = createConsumer();
         when(consumerCurator.findByUuid(consumer.getUuid())).thenReturn(consumer);
         when(consumerCurator.lock(consumer)).thenThrow(OptimisticLockException.class);
-        when(deletedConsumerCurator.findByConsumerUuid(consumer.getUuid()))
+        when(deletedConsumerCurator.findByConsumerId(consumer.getId()))
             .thenReturn(new DeletedConsumer());
 
         UserPrincipal uap = mock(UserPrincipal.class);
@@ -1375,7 +1375,7 @@ public class ConsumerResourceTest {
         Consumer consumer = createConsumer();
         when(consumerCurator.findByUuid(consumer.getUuid())).thenReturn(consumer);
         when(consumerCurator.lock(consumer)).thenThrow(OptimisticLockException.class);
-        when(deletedConsumerCurator.findByConsumerUuid(consumer.getUuid())).thenReturn(null);
+        when(deletedConsumerCurator.findByConsumerId(consumer.getId())).thenReturn(null);
 
         UserPrincipal uap = mock(UserPrincipal.class);
         when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))

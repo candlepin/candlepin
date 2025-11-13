@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="20251111143000-1" author="crog" dbms="postgresql,mysql,mariadb">
+        <preConditions onFail="MARK_RAN">
+            <uniqueConstraintExists tableName="cp_deleted_consumers" constraintName="cp_deleted_consumers_consumer_uuid_key"/>
+        </preConditions>
+
+        <dropUniqueConstraint tableName="cp_deleted_consumers" constraintName="cp_deleted_consumers_consumer_uuid_key"/>
+    </changeSet>
+
+    <!-- The name may have been malformed due to long-name restrictions in the early days of the project -->
+    <changeSet id="20251111143000-2" author="crog" dbms="postgresql,mysql,mariadb">
+        <preConditions onFail="MARK_RAN">
+            <uniqueConstraintExists tableName="cp_deleted_consumers" constraintName="cp_dltd_cnsmrs_cnsmr_uuid_key"/>
+        </preConditions>
+
+        <dropUniqueConstraint tableName="cp_deleted_consumers" constraintName="cp_dltd_cnsmrs_cnsmr_uuid_key"/>
+    </changeSet>
+
+    <changeSet id="20251111143000-3" author="crog" dbms="hsqldb,mysql,mariadb">
+        <preConditions onFail="MARK_RAN">
+            <!--
+                This is not a typo. uniqueConstraintExists does not work on hsqldb, mysql, mariadb, or seemingly anywhere other
+                than postgresql, so we're hacking around it with indexExists and abusing the knowledge that the unique
+                constraint is/was created as an index... or is backed by/implemented as a unique index, or whatever goofy
+                property is making the index check work.
+
+                Querying INFORMATION_SCHEMA.TABLE_CONSTRAINTS is not reliable here, because how each dbms populates that table
+                *also* differs per platform. So we'd end up having to roll queries specific to each dbms that is likely only to
+                work for whatever versions we happened to be running at the time of writing. No thank you.
+            -->
+            <indexExists tableName="cp_deleted_consumers" indexName="cp_deleted_consumers_consumer_uuid_key"/>
+        </preConditions>
+
+        <dropUniqueConstraint tableName="cp_deleted_consumers" constraintName="cp_deleted_consumers_consumer_uuid_key"/>
+    </changeSet>
+
+    <changeSet id="20251111143000-4" author="crog" dbms="hsqldb,mysql,mariadb">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="cp_deleted_consumers" indexName="cp_dltd_cnsmrs_cnsmr_uuid_key"/>
+        </preConditions>
+
+        <dropUniqueConstraint tableName="cp_deleted_consumers" constraintName="cp_dltd_cnsmrs_cnsmr_uuid_key"/>
+    </changeSet>
+</databaseChangeLog>

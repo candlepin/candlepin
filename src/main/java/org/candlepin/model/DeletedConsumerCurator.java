@@ -17,6 +17,9 @@ package org.candlepin.model;
 import org.candlepin.auth.Principal;
 import org.candlepin.guice.PrincipalProvider;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Date;
@@ -37,6 +40,7 @@ import javax.persistence.criteria.Root;
  */
 @Singleton
 public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedConsumer> {
+    private static Logger log = LoggerFactory.getLogger(DeletedConsumerCurator.class);
 
     private PrincipalProvider principalProvider;
 
@@ -62,26 +66,35 @@ public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedCons
         this.principalProvider = principalProvider;
     }
 
-    public DeletedConsumer findByConsumer(Consumer c) {
-        return findByConsumerUuid(c.getUuid());
-    }
-
-    public DeletedConsumer findByConsumerUuid(String uuid) {
-        if (uuid == null || uuid.isBlank()) {
+    public DeletedConsumer findByConsumerId(String id) {
+        if (id == null || id.isBlank()) {
             return null;
         }
 
-        String query = "SELECT dc FROM DeletedConsumer dc WHERE dc.consumerUuid = :uuid";
-
         try {
+            String jpql = "SELECT dc FROM DeletedConsumer dc WHERE dc.id = :id";
+
             return this.getEntityManager()
-                .createQuery(query, DeletedConsumer.class)
-                .setParameter("uuid", uuid)
+                .createQuery(jpql, DeletedConsumer.class)
+                .setParameter("id", id)
                 .getSingleResult();
         }
         catch (NoResultException e) {
             return null;
         }
+    }
+
+    public List<DeletedConsumer> findByConsumerUuid(String uuid) {
+        if (uuid == null || uuid.isBlank()) {
+            return List.of();
+        }
+
+        String jpql = "SELECT dc FROM DeletedConsumer dc WHERE dc.consumerUuid = :uuid";
+
+        return this.getEntityManager()
+            .createQuery(jpql, DeletedConsumer.class)
+            .setParameter("uuid", uuid)
+            .getResultList();
     }
 
     public List<DeletedConsumer> findByOwner(Owner o) {
@@ -97,10 +110,6 @@ public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedCons
             .createQuery(jpql)
             .setParameter("owner_id", oid)
             .getResultList();
-    }
-
-    public int countByConsumer(Consumer c) {
-        return countByConsumerUuid(c.getUuid());
     }
 
     public int countByConsumerUuid(String uuid) {
@@ -122,58 +131,91 @@ public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedCons
             return 0;
         }
 
-        deleteByConsumerIds(consumerIds);
-
-        int inserted = 0;
+        int rows = 0;
 
         Principal principal = this.principalProvider.get();
-        String deletedConsumersStatement =
-            "INSERT INTO DeletedConsumer (id, created, updated, " +
-            "  consumerUuid, ownerId, ownerDisplayName, ownerKey, principalName, consumerName) " +
-            "SELECT consumer.id, NOW(), NOW(), consumer.uuid, consumer.ownerId, owner.displayName, " +
-            "  owner.key, :principalName, consumer.name " +
-            "FROM Consumer consumer " +
-            "  JOIN consumer.owner owner " +
-            "WHERE consumer.id IN (:consumerIds)";
+        String principalName = principal == null ? null : principal.getName();
 
-        Query query = entityManager.get()
-            .createQuery(deletedConsumersStatement)
-            .setParameter("principalName", principal == null ? null : principal.getName());
+        // Impl note:
+        // This function is an unfortunate pile of per-database native queries. Attempting to do an upsert
+        // with pure JPQL following typical query-insert-update flows results in an operation that's simply
+        // too slow, taking around 5-15s per block of 1000 consumers with a sufficiently populated deleted
+        // consumers table. Performing an upsert operation using INSERT ... ON CONFLICT or MERGE INTO
+        // statements drops per-block runtime by an order of magnitude or two down to around 500-700ms.
+
+        // I would prefer not doing this in general as Candlepin's codebase is not at all setup for doing
+        // per-dialect queries in a maintainable way, but the performance requirements demand it.
+
+        String postgresqlMerge = """
+            INSERT INTO cp_deleted_consumers (id, created, updated, consumer_uuid, consumer_name, owner_id,
+                owner_key, owner_displayname, principal_name)
+            SELECT consumer.id, CURRENT_TIMESTAMP , CURRENT_TIMESTAMP , consumer.uuid, consumer.name,
+                owner.id, owner.account, owner.displayname, :principal_name
+            FROM cp_consumer consumer
+            JOIN cp_owner owner ON owner.id = consumer.owner_id
+            WHERE consumer.id IN (:consumer_ids)
+            ON CONFLICT (id) DO UPDATE SET updated=EXCLUDED.updated, consumer_uuid=EXCLUDED.consumer_uuid,
+                consumer_name=EXCLUDED.consumer_name, owner_id=EXCLUDED.owner_id,
+                owner_key=EXCLUDED.owner_key, owner_displayname=EXCLUDED.owner_displayname,
+                principal_name=EXCLUDED.principal_name
+            """;
+
+        // Impl note: This query uses the doubly deprecated VALUES() keyword (note the S on VALUES) to
+        // reference values from the conflicting row. The modern way to do this is with VALUE (singular) on
+        // MariaDB and with "new." or an explicit column alias declaration on MySQL. The documentation for
+        // the latest versions of both dbms call out that the plural VALUES should not be used, but there
+        // does not appear to be any overlap with the newer methods. In the future, we may need to
+        // differentiate between MySQL and MariaDB as they continue to stray from each other.
+        String mariadbMerge = """
+            INSERT INTO cp_deleted_consumers (id, created, updated, consumer_uuid, consumer_name, owner_id,
+                owner_key, owner_displayname, principal_name)
+            SELECT consumer.id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, consumer.uuid, consumer.name, owner.id,
+                owner.account, owner.displayname, :principal_name
+            FROM cp_consumer consumer
+            JOIN cp_owner owner ON owner.id = consumer.owner_id
+            WHERE consumer.id IN (:consumer_ids)
+            ON DUPLICATE KEY UPDATE updated=VALUES(updated), consumer_uuid=VALUES(consumer_uuid),
+                consumer_name=VALUES(consumer_name), owner_id=VALUES(owner_id), owner_key=VALUES(owner_key),
+                owner_displayname=VALUES(owner_displayname), principal_name=VALUES(principal_name)
+            """;
+
+        // Impl note: HyperSQL does not appear to support conflict resolution on the INSERT statement itself,
+        // but it does provide MERGE which is just as good for our purposes.
+        String hsqldbMerge = """
+            MERGE INTO cp_deleted_consumers dc USING (
+                SELECT consumer.id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, consumer.uuid, consumer.name,
+                    owner.id, owner.account, owner.displayname, :principal_name
+                FROM cp_consumer consumer
+                JOIN cp_owner owner ON owner.id = consumer.owner_id
+                WHERE consumer.id IN (:consumer_ids))
+            AS entry(id, created, updated, uuid, name, owner_id, owner_key, owner_name, principal)
+                ON dc.id = entry.id
+            WHEN MATCHED THEN UPDATE SET
+                dc.updated = entry.updated, dc.consumer_uuid = entry.uuid, dc.consumer_name = entry.name,
+                dc.owner_id = entry.owner_id, dc.owner_key = entry.owner_key,
+                dc.owner_displayname = entry.owner_name, dc.principal_name = entry.principal
+            WHEN NOT MATCHED THEN INSERT (id, created, updated, consumer_uuid, consumer_name, owner_id,
+                owner_key, owner_displayname, principal_name) VALUES entry.id, entry.created, entry.updated,
+                entry.uuid, entry.name, entry.owner_id, entry.owner_key, entry.owner_name, entry.principal
+            """;
+
+        // Determine the best query for this insert
+        String statement = switch (this.getDatabaseDialect()) {
+            case POSTGRESQL -> postgresqlMerge;
+            case MARIADB -> mariadbMerge;
+            case HSQLDB -> hsqldbMerge;
+        };
+
+        Query query = this.getEntityManager()
+            .createNativeQuery(statement)
+            .setParameter("principal_name", principalName);
 
         for (List<String> block : this.partition(consumerIds)) {
-            inserted += query
-                .setParameter("consumerIds", block)
+            rows += query.setParameter("consumer_ids", block)
                 .executeUpdate();
         }
 
-        return inserted;
-    }
-
-    public int deleteByConsumerIds(Collection<String> consumerIds) {
-        if (consumerIds == null || consumerIds.isEmpty()) {
-            return 0;
-        }
-
-        int deleted = 0;
-
-        String jpql =
-            "DELETE FROM DeletedConsumer dc " +
-            "WHERE dc.consumerUuid IN ( " +
-            "  SELECT con.uuid " +
-            "  FROM Consumer con " +
-            "  WHERE con.id IN (:consumerIds) " +
-            ")";
-
-        Query query = entityManager.get()
-            .createQuery(jpql);
-
-        for (List<String> block : this.partition(consumerIds)) {
-            deleted += query
-                .setParameter("consumerIds", block)
-                .executeUpdate();
-        }
-
-        return deleted;
+        return rows;
     }
 
     /**

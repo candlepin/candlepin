@@ -141,7 +141,7 @@ public class InactiveConsumerCleanerJobSpecTest {
     }
 
     @Test
-    public void shouldUpdateDeletedConsumerWhenUuidReused() {
+    public void shouldCreateNewConsumerDeletionRecordWhenConsumerUuidReused() {
         final String uuid = UUID.randomUUID().toString();
 
         Instant inactiveTime = Instant.now()
@@ -149,6 +149,7 @@ public class InactiveConsumerCleanerJobSpecTest {
 
         ConsumerDTO c1 = Consumers.random(owner)
             .uuid(uuid)
+            .name("consumer1")
             .lastCheckin(inactiveTime.atOffset(ZoneOffset.UTC));
         c1 = consumerApi.createConsumer(c1, null, owner.getKey(), null, false);
 
@@ -170,6 +171,7 @@ public class InactiveConsumerCleanerJobSpecTest {
         // create Consumer2 with the SAME UUID, make it inactive
         ConsumerDTO c2 = Consumers.random(owner)
             .uuid(uuid)
+            .name("consumer2")
             .lastCheckin(inactiveTime.atOffset(ZoneOffset.UTC));
         c2 = consumerApi.createConsumer(c2, null, owner.getKey(), null, false);
 
@@ -187,13 +189,18 @@ public class InactiveConsumerCleanerJobSpecTest {
 
         assertThat(rowsForUuid)
             .isNotNull()
-            .singleElement()
-            .returns(c2.getName(), DeletedConsumerDTO::getConsumerName)
-            .returns(c2.getOwner().getId(), DeletedConsumerDTO::getOwnerId)
-            .returns(c2.getOwner().getKey(), DeletedConsumerDTO::getOwnerKey)
-            .returns(c2.getOwner().getDisplayName(), DeletedConsumerDTO::getOwnerDisplayName)
-            .extracting(DeletedConsumerDTO::getCreated)
-            .satisfies(created -> assertThat(created).isAfterOrEqualTo(firstDeletedCreated));
+            .hasSize(2);
+
+        for (DeletedConsumerDTO rec : rowsForUuid) {
+            ConsumerDTO source = rec.getConsumerName().equals(c1.getName()) ? c1 : c2;
+
+            assertThat(rec)
+                .returns(source.getUuid(), DeletedConsumerDTO::getConsumerUuid)
+                .returns(source.getName(), DeletedConsumerDTO::getConsumerName)
+                .returns(source.getOwner().getId(), DeletedConsumerDTO::getOwnerId)
+                .returns(source.getOwner().getKey(), DeletedConsumerDTO::getOwnerKey)
+                .returns(source.getOwner().getDisplayName(), DeletedConsumerDTO::getOwnerDisplayName);
+        }
 
         // And verify that the live consumer is now gone
         assertGone(() -> consumerApi.getConsumer(uuid));

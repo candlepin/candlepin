@@ -1170,56 +1170,150 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void delete() {
-        Consumer consumer = new Consumer()
-            .setName("testConsumer")
-            .setUsername("testUser")
+        Consumer consumer = this.consumerCurator.create(new Consumer()
+            .setUuid("test_consumer_uuid")
+            .setName("test_consumer")
+            .setUsername("test_user")
             .setOwner(owner)
-            .setType(ct);
-        consumer = consumerCurator.create(consumer);
-        String cid = consumer.getUuid();
+            .setType(ct));
 
-        consumerCurator.delete(consumer);
-        assertEquals(1, deletedConsumerCurator.countByConsumerUuid(cid));
-        DeletedConsumer dc = deletedConsumerCurator.findByConsumerUuid(cid);
+        this.consumerCurator.delete(consumer);
 
-        assertEquals(cid, dc.getConsumerUuid());
-        assertEquals(consumer.getName(), dc.getConsumerName());
-        assertEquals(owner.getId(), dc.getOwnerId());
+        // We should be able to find a deletion record using the consumer's ID
+        assertThat(this.deletedConsumerCurator.findByConsumerId(consumer.getId()))
+            .isNotNull()
+            .returns(consumer.getId(), DeletedConsumer::getId)
+            .returns(consumer.getUuid(), DeletedConsumer::getConsumerUuid)
+            .returns(consumer.getName(), DeletedConsumer::getConsumerName)
+            .returns(consumer.getOwner().getId(), DeletedConsumer::getOwnerId);
+
+        // ...and using their UUID
+        assertThat(this.deletedConsumerCurator.findByConsumerUuid(consumer.getUuid()))
+            .isNotNull()
+            .singleElement()
+            .returns(consumer.getId(), DeletedConsumer::getId)
+            .returns(consumer.getUuid(), DeletedConsumer::getConsumerUuid)
+            .returns(consumer.getName(), DeletedConsumer::getConsumerName)
+            .returns(consumer.getOwner().getId(), DeletedConsumer::getOwnerId);
     }
 
     @Test
-    public void deleteTwice() {
+    public void deleteConsumerWithSameUuidTwiceInSameOrg() throws Exception {
         // attempt to create and delete the same consumer uuid twice
-        Owner altOwner = new Owner()
-            .setKey("test-owner2")
-            .setDisplayName("Test Owner2");
+        Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
 
-        altOwner = ownerCurator.create(altOwner);
+        String uuid = "Doppelganger";
 
-        Consumer consumer = new Consumer()
-            .setName("testConsumer")
-            .setUsername("testUser")
+        Consumer consumer1 = this.consumerCurator.create(new Consumer()
+            .setUuid(uuid)
+            .setName("test_consumer-1")
+            .setUsername("test_user")
             .setOwner(owner)
-            .setType(ct);
-        consumer.setUuid("Doppelganger");
-        consumer = consumerCurator.create(consumer);
+            .setType(this.ct));
 
-        consumerCurator.delete(consumer);
-        DeletedConsumer dc = deletedConsumerCurator.findByConsumerUuid("Doppelganger");
-        Date deletionDate1 = dc.getUpdated();
+        // Delete the consumer, then verify the entry shows up in the deleted consumers table
+        this.consumerCurator.delete(consumer1);
 
-        consumer = new Consumer()
-            .setName("testConsumer")
-            .setUsername("testUser")
-            .setOwner(altOwner)
-            .setType(ct);
-        consumer.setUuid("Doppelganger");
-        consumer = consumerCurator.create(consumer);
-        consumerCurator.delete(consumer);
-        dc = deletedConsumerCurator.findByConsumerUuid("Doppelganger");
-        Date deletionDate2 = dc.getUpdated();
-        assertEquals(-1, deletionDate1.compareTo(deletionDate2));
-        assertEquals(altOwner.getId(), dc.getOwnerId());
+        DeletedConsumer deletedConsumer1 = this.deletedConsumerCurator.findByConsumerId(consumer1.getId());
+        assertThat(deletedConsumer1)
+            .isNotNull()
+            .returns(consumer1.getId(), DeletedConsumer::getId)
+            .returns(consumer1.getName(), DeletedConsumer::getConsumerName)
+            .returns(uuid, DeletedConsumer::getConsumerUuid)
+            .returns(owner.getId(), DeletedConsumer::getOwnerId)
+            .returns(owner.getKey(), DeletedConsumer::getOwnerKey);
+
+        // Wait a moment to ensure that our second consumer and deletion record have later timestamps.
+        Thread.sleep(1000);
+
+        // Create another consumer using the same uuid...
+        Consumer consumer2 = this.consumerCurator.create(new Consumer()
+            .setUuid(uuid)
+            .setName("test_consumer-2")
+            .setUsername("test_user")
+            .setOwner(owner)
+            .setType(this.ct));
+
+        // ...and delete them
+        this.consumerCurator.delete(consumer2);
+
+        DeletedConsumer deletedConsumer2 = this.deletedConsumerCurator.findByConsumerId(consumer2.getId());
+        assertThat(deletedConsumer2)
+            .isNotNull()
+            .returns(consumer2.getId(), DeletedConsumer::getId)
+            .returns(consumer2.getName(), DeletedConsumer::getConsumerName)
+            .returns(uuid, DeletedConsumer::getConsumerUuid)
+            .returns(owner.getId(), DeletedConsumer::getOwnerId)
+            .returns(owner.getKey(), DeletedConsumer::getOwnerKey);
+
+        assertThat(deletedConsumer1.getCreated()).isBefore(deletedConsumer2.getCreated());
+        assertThat(deletedConsumer1.getUpdated()).isBefore(deletedConsumer2.getUpdated());
+
+        // Verify that we have two entries for this uuid, and it's the two we created above.
+        List<DeletedConsumer> deletedConsumers = this.deletedConsumerCurator.findByConsumerUuid(uuid);
+        assertThat(deletedConsumers)
+            .isNotNull()
+            .containsExactlyInAnyOrder(deletedConsumer1, deletedConsumer2);
+    }
+
+    @Test
+    public void deleteConsumerWithSameUuidTwiceInDifferentOrgs() throws Exception {
+        // attempt to create and delete the same consumer uuid twice
+        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
+        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
+
+        String uuid = "Doppelganger";
+
+        Consumer consumer1 = this.consumerCurator.create(new Consumer()
+            .setUuid(uuid)
+            .setName("test_consumer-1")
+            .setUsername("test_user")
+            .setOwner(owner1)
+            .setType(this.ct));
+
+        // Delete the consumer, then verify the entry shows up in the deleted consumers table
+        this.consumerCurator.delete(consumer1);
+
+        DeletedConsumer deletedConsumer1 = this.deletedConsumerCurator.findByConsumerId(consumer1.getId());
+        assertThat(deletedConsumer1)
+            .isNotNull()
+            .returns(consumer1.getId(), DeletedConsumer::getId)
+            .returns(consumer1.getName(), DeletedConsumer::getConsumerName)
+            .returns(uuid, DeletedConsumer::getConsumerUuid)
+            .returns(owner1.getId(), DeletedConsumer::getOwnerId)
+            .returns(owner1.getKey(), DeletedConsumer::getOwnerKey);
+
+        // Wait a moment to ensure that our second consumer and deletion record have later timestamps.
+        Thread.sleep(1000);
+
+        // Create another consumer using the same uuid, but in a different org...
+        Consumer consumer2 = this.consumerCurator.create(new Consumer()
+            .setUuid(uuid)
+            .setName("test_consumer-2")
+            .setUsername("test_user")
+            .setOwner(owner2)
+            .setType(this.ct));
+
+        // ...and delete them
+        this.consumerCurator.delete(consumer2);
+
+        DeletedConsumer deletedConsumer2 = this.deletedConsumerCurator.findByConsumerId(consumer2.getId());
+        assertThat(deletedConsumer2)
+            .isNotNull()
+            .returns(consumer2.getId(), DeletedConsumer::getId)
+            .returns(consumer2.getName(), DeletedConsumer::getConsumerName)
+            .returns(uuid, DeletedConsumer::getConsumerUuid)
+            .returns(owner2.getId(), DeletedConsumer::getOwnerId)
+            .returns(owner2.getKey(), DeletedConsumer::getOwnerKey);
+
+        assertThat(deletedConsumer1.getCreated()).isBefore(deletedConsumer2.getCreated());
+        assertThat(deletedConsumer1.getUpdated()).isBefore(deletedConsumer2.getUpdated());
+
+        // Verify that we have two entries for this uuid, and it's the two we created above.
+        List<DeletedConsumer> deletedConsumers = this.deletedConsumerCurator.findByConsumerUuid(uuid);
+        assertThat(deletedConsumers)
+            .isNotNull()
+            .containsExactlyInAnyOrder(deletedConsumer1, deletedConsumer2);
     }
 
     @Test
@@ -1240,9 +1334,81 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Consumer fetched = this.consumerCurator.get(consumer.getUuid());
         assertNull(fetched);
 
-        DeletedConsumer deletionRecord = this.deletedConsumerCurator.findByConsumerUuid(consumer.getUuid());
+        DeletedConsumer deletionRecord = this.deletedConsumerCurator.findByConsumerId(consumer.getId());
         assertNotNull(deletionRecord);
         assertEquals(principalName, deletionRecord.getPrincipalName());
+    }
+
+    @Test
+    public void deletionRecordsSelfHealWhenDeletingTheSameConsumerTwice() {
+        // This test verifies the self-healing nature of an explicit delete op. Note that this is different
+        // than attempting to create two DeletedConsumer entries directly, which we would expect to fail with
+        // a pkey collision.
+
+        Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
+
+        String initName = "test_consumer";
+        String updatedName = "updated_consumer";
+
+        Consumer consumer = this.consumerCurator.create(new Consumer()
+            .setName(updatedName)
+            .setOwner(owner)
+            .setType(this.ct));
+
+        // Simulate some date at some point in the past. We don't really care how far back.
+        Date created = new Date(System.currentTimeMillis() - 25000);
+
+        // Simulate a pre-existing deletion of this consumer by creating a fake consumer deletion record
+        // manually
+        this.deletedConsumerCurator.create(new DeletedConsumer()
+            .setCreated(created)
+            .setUpdated(created)
+            .setId(consumer.getId())
+            .setConsumerUuid(consumer.getUuid())
+            .setConsumerName(initName)
+            .setOwnerId(owner.getId())
+            .setOwnerKey(owner.getKey())
+            .setOwnerDisplayName(owner.getDisplayName()));
+
+        // Verify it exists by querying + validating it
+        DeletedConsumer deletedConsumer1 = this.deletedConsumerCurator.findByConsumerId(consumer.getId());
+        assertThat(deletedConsumer1)
+            .isNotNull()
+            .returns(consumer.getId(), DeletedConsumer::getId)
+            .returns(consumer.getUuid(), DeletedConsumer::getConsumerUuid)
+            .returns(initName, DeletedConsumer::getConsumerName)
+            .returns(owner.getId(), DeletedConsumer::getOwnerId)
+            .returns(owner.getKey(), DeletedConsumer::getOwnerKey);
+
+        // Detach this entity to ensure Hibernate doesn't try to get too helpful
+        this.deletedConsumerCurator.detach(deletedConsumer1);
+
+        // Delete the consumer. This should result in a warning (untestable) and an update to the existing
+        // deletion record
+        this.consumerCurator.delete(consumer);
+        DeletedConsumer deletedConsumer2 = this.deletedConsumerCurator.findByConsumerId(consumer.getId());
+        assertThat(deletedConsumer2)
+            .isNotNull()
+            .returns(consumer.getId(), DeletedConsumer::getId)
+            .returns(consumer.getUuid(), DeletedConsumer::getConsumerUuid)
+            .returns(updatedName, DeletedConsumer::getConsumerName)
+            .returns(owner.getId(), DeletedConsumer::getOwnerId)
+            .returns(owner.getKey(), DeletedConsumer::getOwnerKey);
+
+        // Impl note: assertj does some very unnecessary subclass checking on .returns, .extracting, and date
+        // assertions in general. For whatever reason, doing these tests in assertj will trigger assertion
+        // errors if either of our date checks end up with a subclass of date, like java.sql.timestamp. :/
+        assertFalse(deletedConsumer2.getCreated().after(deletedConsumer1.getCreated()));
+        assertTrue(deletedConsumer2.getUpdated().after(deletedConsumer1.getUpdated()));
+
+        // We should only have one record when fetching by uuid
+        List<DeletedConsumer> deletionRecords = this.deletedConsumerCurator
+            .findByConsumerUuid(consumer.getUuid());
+
+        assertThat(deletionRecords)
+            .isNotNull()
+            .singleElement()
+            .returns(consumer.getId(), DeletedConsumer::getId);
     }
 
     @Test
@@ -2497,10 +2663,14 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         this.consumerCurator.deleteConsumers(List.of(consumer.getId()));
 
-        DeletedConsumer deletedConsumer = this.deletedConsumerCurator.findByConsumer(consumer);
+        DeletedConsumer deletedConsumer = this.deletedConsumerCurator.findByConsumerId(consumer.getId());
         assertThat(deletedConsumer)
             .isNotNull()
-            .returns(consumer.getUuid(), DeletedConsumer::getConsumerUuid);
+            .returns(consumer.getId(), DeletedConsumer::getId)
+            .returns(consumer.getUuid(), DeletedConsumer::getConsumerUuid)
+            .returns(consumer.getName(), DeletedConsumer::getConsumerName)
+            .returns(owner.getId(), DeletedConsumer::getOwnerId)
+            .returns(owner.getKey(), DeletedConsumer::getOwnerKey);
     }
 
     private IdentityCertificate createIdCert() {

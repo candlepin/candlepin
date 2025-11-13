@@ -40,7 +40,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -90,19 +89,29 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
         consumerCurator.clear();
 
         Collection<Consumer> activeConsumers = this.consumerCurator.getConsumers(
-            Arrays.asList(inactiveConsumer.getId(),
-            activeConsumer.getId()));
+            List.of(inactiveConsumer.getId(), activeConsumer.getId()));
 
-        assertEquals(1, activeConsumers.size());
-        assertEquals(activeConsumer, activeConsumers.iterator().next());
+        assertThat(activeConsumers)
+            .isNotNull()
+            .containsExactly(activeConsumer);
 
-        DeletedConsumer deletedConsumer = this.deletedConsumerCurator
+        List<DeletedConsumer> dcRecords = this.deletedConsumerCurator
             .findByConsumerUuid(inactiveConsumer.getUuid());
-        assertNotNull(deletedConsumer);
-        assertEquals(inactiveConsumer.getUuid(), deletedConsumer.getConsumerUuid());
-        assertEquals(inactiveConsumer.getName(), deletedConsumer.getConsumerName());
 
-        assertNull(this.deletedConsumerCurator.findByConsumer(activeConsumer));
+        assertThat(dcRecords)
+            .isNotNull()
+            .singleElement()
+            .returns(inactiveConsumer.getId(), DeletedConsumer::getId)
+            .returns(inactiveConsumer.getUuid(), DeletedConsumer::getConsumerUuid)
+            .returns(inactiveConsumer.getName(), DeletedConsumer::getConsumerName);
+
+        DeletedConsumer dcRecord = this.deletedConsumerCurator.findByConsumerId(inactiveConsumer.getId());
+
+        assertThat(dcRecord)
+            .isNotNull()
+            .returns(inactiveConsumer.getId(), DeletedConsumer::getId)
+            .returns(inactiveConsumer.getUuid(), DeletedConsumer::getConsumerUuid)
+            .returns(inactiveConsumer.getName(), DeletedConsumer::getConsumerName);
     }
 
     @Test
@@ -176,17 +185,16 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
 
         // Verify all of our inactive consumers were removed
         for (Consumer consumer : inactiveConsumers) {
-            DeletedConsumer deleted = this.deletedConsumerCurator.findByConsumerUuid(consumer.getUuid());
-
-            assertNotNull(deleted);
-            assertEquals(consumer.getUuid(), deleted.getConsumerUuid());
-            assertEquals(consumer.getName(), deleted.getConsumerName());
+            DeletedConsumer deleted = this.deletedConsumerCurator.findByConsumerId(consumer.getId());
+            assertThat(deleted)
+                .isNotNull()
+                .returns(consumer.getUuid(), DeletedConsumer::getConsumerUuid)
+                .returns(consumer.getName(), DeletedConsumer::getConsumerName);
         }
 
         // Verify the active consumers were not removed
         for (Consumer consumer : activeConsumers) {
-            DeletedConsumer deleted = this.deletedConsumerCurator.findByConsumerUuid(consumer.getUuid());
-
+            DeletedConsumer deleted = this.deletedConsumerCurator.findByConsumerId(consumer.getId());
             assertNull(deleted);
         }
 
@@ -242,7 +250,7 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
         // Verify all of our inactive consumers were removed
         for (List<Consumer> inactiveConsumers : inactiveConsumersMap.values()) {
             for (Consumer consumer : inactiveConsumers) {
-                DeletedConsumer deleted = this.deletedConsumerCurator.findByConsumerUuid(consumer.getUuid());
+                DeletedConsumer deleted = this.deletedConsumerCurator.findByConsumerId(consumer.getId());
 
                 assertNotNull(deleted);
                 assertEquals(consumer.getUuid(), deleted.getConsumerUuid());
@@ -253,7 +261,7 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
         // Verify the active consumers were not removed
         for (List<Consumer> activeConsumers : activeConsumersMap.values()) {
             for (Consumer consumer : activeConsumers) {
-                DeletedConsumer deleted = this.deletedConsumerCurator.findByConsumerUuid(consumer.getUuid());
+                DeletedConsumer deleted = this.deletedConsumerCurator.findByConsumerId(consumer.getId());
 
                 assertNull(deleted);
             }
@@ -298,10 +306,10 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
     }
 
     private Consumer createConsumer(Owner owner, Integer lastCheckedInDaysAgo) {
-        Consumer newConsumer = new Consumer();
-        newConsumer.setOwner(owner);
-        newConsumer.setType(consumerType);
-        newConsumer.setName(TestUtil.randomString());
+        Consumer newConsumer = new Consumer()
+            .setOwner(owner)
+            .setType(consumerType)
+            .setName(TestUtil.randomString());
 
         if (lastCheckedInDaysAgo != null) {
             newConsumer.setLastCheckin(Util.addDaysToDt(lastCheckedInDaysAgo * -1));

@@ -14,11 +14,8 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -31,15 +28,13 @@ import javax.validation.constraints.Size;
  */
 @Entity
 @Table(name = DeletedConsumer.DB_TABLE)
-public class DeletedConsumer extends AbstractHibernateObject {
+public class DeletedConsumer extends AbstractHibernateObject<DeletedConsumer> {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_deleted_consumers";
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(length = 32)
+    @Size(max = 32)
     @NotNull
     private String id;
 
@@ -77,15 +72,14 @@ public class DeletedConsumer extends AbstractHibernateObject {
     @Column(name = "principal_name")
     private String principalName;
 
-    public DeletedConsumer(String cuuid, String oid, String okey, String oname) {
-        consumerUuid = cuuid;
-        ownerId = oid;
-        ownerKey = okey;
-        ownerDisplayName = oname;
+    public DeletedConsumer() {
+        // Intentionally left empty
     }
 
-    public DeletedConsumer() {
-
+    @Override
+    public String toString() {
+        return String.format("DeletedConsumer [id: %s, uuid: %s, name: %s, owner: %s]",
+            this.getId(), this.getConsumerUuid(), this.getConsumerName(), this.getOwnerKey());
     }
 
     @Override
@@ -93,6 +87,16 @@ public class DeletedConsumer extends AbstractHibernateObject {
         return id;
     }
 
+    /**
+     * Sets the ID for this deleted consumer instance. This should originate from the ID (not the UUID) of the
+     * consumer being deleted.
+     *
+     * @param id
+     *  the ID to use for this deleted consumer, or null to clear any previously set ID
+     *
+     * @return
+     *  this DeletedConsumer instance
+     */
     public DeletedConsumer setId(String id) {
         this.id = id;
         return this;

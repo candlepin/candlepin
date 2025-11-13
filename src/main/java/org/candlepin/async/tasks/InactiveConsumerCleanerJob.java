@@ -65,7 +65,9 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
     public static final String CFG_LAST_UPDATED_IN_RETENTION_IN_DAYS = "last_updated_retention_in_days";
     public static final int DEFAULT_LAST_UPDATED_IN_RETENTION_IN_DAYS = 30;
     public static final String CFG_BATCH_SIZE = "batch_size";
-    public static final String DEFAULT_BATCH_SIZE = "1000";
+
+    // Any higher than 1k runs the risk of hitting memory/heap limits and crashing with an OOM
+    public static final int DEFAULT_BATCH_SIZE = 1000;
 
     private final Configuration config;
     private final ConsumerCurator consumerCurator;
@@ -159,24 +161,38 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        Instant lastCheckedInRetention = getRetentionDate(CFG_LAST_CHECKED_IN_RETENTION_IN_DAYS);
-        Instant nonCheckedInRetention = getRetentionDate(CFG_LAST_UPDATED_IN_RETENTION_IN_DAYS);
+        Instant lastCheckedInRetention = this.getRetentionDate(CFG_LAST_CHECKED_IN_RETENTION_IN_DAYS);
+        Instant nonCheckedInRetention = this.getRetentionDate(CFG_LAST_UPDATED_IN_RETENTION_IN_DAYS);
         int batchSize = this.getBatchSize();
 
         Transactional transaction = this.consumerCurator.transactional()
             .onCommit(status -> this.eventSink.sendEvents())
             .onRollback(status -> this.eventSink.rollback());
 
+        log.info("Fetching inactive consumers using retention dates: last checkin: {}, last update: {}",
+            lastCheckedInRetention, nonCheckedInRetention);
+
         List<InactiveConsumerRecord> inactiveConsumers = this.consumerCurator
             .getInactiveConsumers(lastCheckedInRetention, nonCheckedInRetention);
 
+        log.info("Found {} inactive consumers", inactiveConsumers.size());
+
+        int batches = (inactiveConsumers.size() / batchSize) +
+            Math.min(inactiveConsumers.size() % batchSize, 1);
+
+        int bcount = 0;
         int deletedCount = 0;
+
         for (List<InactiveConsumerRecord> batch : Iterables.partition(inactiveConsumers, batchSize)) {
+            log.info("Deleting {} inactive consumers (batch {} of {})", batch.size(), ++bcount, batches);
             deletedCount += transaction.execute(() -> this.deleteInactiveConsumers(batch));
         }
 
-        log.info("InactiveConsumerCleanerJob has run! {} consumers removed.", deletedCount);
-        context.setJobResult(JOB_NAME + " completed successfully. %d consumers removed.", deletedCount);
+        // Output result string
+        String result = String.format("%s complete; %d consumers removed", JOB_NAME, deletedCount);
+
+        log.info(result);
+        context.setJobResult(result);
     }
 
     /**

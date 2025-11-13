@@ -28,14 +28,15 @@ import org.candlepin.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
+
+
+
+// TODO: FIXME: This entire test suite is very questionable in terms of quality. Deleted consumers on the
+// whole is in a very weird/bad state, and at some point both need a major overhaul and/or refactor.
 
 /**
  * DeletedConsumerCuratorTest
@@ -52,64 +53,142 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
     public void init() throws Exception {
         super.init();
 
-        DeletedConsumer dc = new DeletedConsumer("abcde", "10", "key", "name");
-        dc.setConsumerName("consumerName");
-        deletedConsumerCurator.create(dc);
-        try {
-            Thread.sleep(5);
-        }
-        catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        DeletedConsumer dc1 = this.deletedConsumerCurator.create(new DeletedConsumer()
+            .setId("test_consumer_1")
+            .setConsumerUuid("abcde")
+            .setConsumerName("consumerName")
+            .setOwnerId("10")
+            .setOwnerKey("key")
+            .setOwnerDisplayName("name"));
+
+        Thread.sleep(5);
 
         // save the current time, DCs created after this will have
         // a created timestamp after this time
-        twoResultsDate = OffsetDateTime.now();
-        dc = new DeletedConsumer("fghij", "10", "key", "name");
-        dc.setConsumerName("consumerName");
-        deletedConsumerCurator.create(dc);
-        try {
-            Thread.sleep(5);
-        }
-        catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        this.twoResultsDate = OffsetDateTime.now(); // wtf? seriously?
+        DeletedConsumer dc2 = this.deletedConsumerCurator.create(new DeletedConsumer()
+            .setId("test_consumer_2")
+            .setConsumerUuid("fghij")
+            .setConsumerName("consumerName")
+            .setOwnerId("10")
+            .setOwnerKey("key")
+            .setOwnerDisplayName("name"));
 
-        oneResultDate = OffsetDateTime.now();
-        dc = new DeletedConsumer("klmno", "20", "key", "name");
-        dc.setConsumerName("consumerName");
-        deletedConsumerCurator.create(dc);
+        Thread.sleep(5);
 
+        this.oneResultDate = OffsetDateTime.now(); // FIXME: Sigh... this is awful. Remove this.
+        DeletedConsumer dc3 = this.deletedConsumerCurator.create(new DeletedConsumer()
+            .setId("test_consumer_3")
+            .setConsumerUuid("klmno")
+            .setConsumerName("consumerName")
+            .setOwnerId("20")
+            .setOwnerKey("key")
+            .setOwnerDisplayName("name"));
+
+        // Why are we creating a global owner instance *after* we go out of way to poorly fake owner data in
+        // the above deleted consumer records!?
         this.owner = this.createOwner("test-owner", "Test Owner");
-        ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        ct = consumerTypeCurator.create(ct);
+        this.ct = this.consumerTypeCurator.create(new ConsumerType(ConsumerTypeEnum.SYSTEM));
+    }
+
+    public void testFindByConsumerId() {
+        DeletedConsumer dc1 = this.deletedConsumerCurator.create(new DeletedConsumer()
+            .setId("test_consumer_1")
+            .setConsumerUuid("abcde")
+            .setConsumerName("consumer1")
+            .setOwnerId("10")
+            .setOwnerKey("owner_key-1")
+            .setOwnerDisplayName("owner 1"));
+
+        DeletedConsumer dc2 = this.deletedConsumerCurator.create(new DeletedConsumer()
+            .setId("test_consumer_2")
+            .setConsumerUuid("abcde")
+            .setConsumerName("consumer2")
+            .setOwnerId("20")
+            .setOwnerKey("owner_key-2")
+            .setOwnerDisplayName("owner 2"));
+
+        DeletedConsumer deletedConsumer = this.deletedConsumerCurator.findByConsumerId(dc1.getId());
+        assertThat(deletedConsumer)
+            .isNotNull()
+            .returns(dc1.getId(), DeletedConsumer::getId)
+            .returns(dc1.getConsumerUuid(), DeletedConsumer::getConsumerUuid)
+            .returns(dc1.getConsumerName(), DeletedConsumer::getConsumerName)
+            .returns(dc1.getOwnerId(), DeletedConsumer::getOwnerId)
+            .returns(dc1.getOwnerDisplayName(), DeletedConsumer::getOwnerDisplayName)
+            .returns(dc1.getOwnerKey(), DeletedConsumer::getOwnerKey);
+    }
+
+    @Test
+    public void testFindByConsumerIdWithNonExistingDeletedConsumer() {
+        assertNull(this.deletedConsumerCurator.findByConsumerId(TestUtil.randomString()));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testFindByConsumerIdWithInvalidConsumerUuid(String id) {
+        assertNull(this.deletedConsumerCurator.findByConsumerId(id));
     }
 
     @ParameterizedTest
     @NullAndEmptySource
     public void testFindByConsumerUuidWithInvalidConsumerUuid(String uuid) {
-        assertNull(deletedConsumerCurator.findByConsumerUuid(uuid));
+        assertThat(this.deletedConsumerCurator.findByConsumerUuid(uuid))
+            .isNotNull()
+            .isEmpty();
     }
 
     @Test
     public void testFindByConsumerUuid() {
-        DeletedConsumer found = deletedConsumerCurator.findByConsumerUuid("abcde");
-        assertEquals("abcde", found.getConsumerUuid());
+        String uuid = "abcde";
+        List<DeletedConsumer> found = this.deletedConsumerCurator.findByConsumerUuid(uuid);
+
+        assertThat(found)
+            .isNotNull()
+            .singleElement()
+            .returns(uuid, DeletedConsumer::getConsumerUuid);
+    }
+
+    @Test
+    public void testFindByConsumerUuidMultipleUuidMatches() {
+        String uuid = "test_uuid";
+
+        DeletedConsumer dc1 = this.deletedConsumerCurator.create(new DeletedConsumer()
+            .setId(TestUtil.randomString("test_consumer-"))
+            .setConsumerUuid(uuid)
+            .setConsumerName("consumer_name-1")
+            .setOwnerId("test_owner-1")
+            .setOwnerKey("test_owner-1")
+            .setOwnerDisplayName("Test owner 1"));
+
+        DeletedConsumer dc2 = this.deletedConsumerCurator.create(new DeletedConsumer()
+            .setId(TestUtil.randomString("test_consumer-"))
+            .setConsumerUuid(uuid)
+            .setConsumerName("consumer_name-1")
+            .setOwnerId("test_owner-1")
+            .setOwnerKey("test_owner-1")
+            .setOwnerDisplayName("Test owner 1"));
+
+        DeletedConsumer dc3 = this.deletedConsumerCurator.create(new DeletedConsumer()
+            .setId(TestUtil.randomString("test_consumer-"))
+            .setConsumerUuid("alt_uuid")
+            .setConsumerName("consumer_name-1")
+            .setOwnerId("test_owner-1")
+            .setOwnerKey("test_owner-1")
+            .setOwnerDisplayName("Test owner 1"));
+
+        List<DeletedConsumer> result = this.deletedConsumerCurator.findByConsumerUuid(uuid);
+
+        assertThat(result)
+            .isNotNull()
+            .containsExactlyInAnyOrder(dc1, dc2);
     }
 
     @Test
     public void testFindByConsumerUuidWithNonExistingDeletedConsumer() {
-        assertNull(deletedConsumerCurator.findByConsumerUuid(TestUtil.randomString()));
-    }
-
-    @Test
-    public void byConsumer() {
-        Consumer c = mock(Consumer.class);
-        when(c.getUuid()).thenReturn("abcde");
-        DeletedConsumer found = deletedConsumerCurator.findByConsumer(c);
-        assertEquals("abcde", found.getConsumerUuid());
+        assertThat(this.deletedConsumerCurator.findByConsumerUuid(TestUtil.randomString()))
+            .isNotNull()
+            .isEmpty();
     }
 
     @Test
@@ -137,17 +216,6 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(1, deletedConsumerCurator.countByConsumerUuid("abcde"));
         assertEquals(0, deletedConsumerCurator.countByConsumerUuid("dontfind"));
         assertEquals(1, deletedConsumerCurator.countByConsumerUuid("fghij"));
-    }
-
-    @Test
-    public void countByConsumer() {
-        Consumer c = mock(Consumer.class);
-        when(c.getUuid()).thenReturn("abcde");
-        assertEquals(1, deletedConsumerCurator.countByConsumer(c));
-
-        c = mock(Consumer.class);
-        when(c.getUuid()).thenReturn("dontfind");
-        assertEquals(0, deletedConsumerCurator.countByConsumer(c));
     }
 
     @Test
@@ -189,97 +257,146 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCreateDeletedConsumersWithExistingConsumers() {
-        Consumer consumer1 = new Consumer()
+    public void testCreateDeletedConsumers() {
+        Consumer consumer1 = this.consumerCurator.create(new Consumer()
             .setName("consumer-1")
             .setUsername("testUser")
-            .setOwner(owner)
-            .setType(ct);
-        consumer1 = consumerCurator.create(consumer1);
-        Consumer consumer2 = new Consumer()
+            .setOwner(this.owner)
+            .setType(this.ct));
+
+        Consumer consumer2 = this.consumerCurator.create(new Consumer()
             .setName("consumer-2")
             .setUsername("testUser")
-            .setOwner(owner)
-            .setType(ct);
-        consumer2 = consumerCurator.create(consumer2);
+            .setOwner(this.owner)
+            .setType(this.ct));
 
-        int actual = deletedConsumerCurator.createDeletedConsumers(Arrays
-            .asList(consumer1.getId(), consumer2.getId(), "unknown-id"));
+        int actual = this.deletedConsumerCurator.createDeletedConsumers(
+            List.of(consumer1.getId(), consumer2.getId(), "unknown-id"));
 
         assertEquals(2, actual);
-        DeletedConsumer deleteConsumer1 = deletedConsumerCurator.findByConsumerUuid(consumer1.getUuid());
-        assertEquals(consumer1.getConsumer().getName(), deleteConsumer1.getConsumerName());
-        assertEquals(consumer1.getConsumer().getUuid(), deleteConsumer1.getConsumerUuid());
-        assertEquals(consumer1.getOwner().getId(), deleteConsumer1.getOwnerId());
-        assertEquals(consumer1.getOwner().getDisplayName(), deleteConsumer1.getOwnerDisplayName());
-        assertEquals(consumer1.getOwner().getKey(), deleteConsumer1.getOwnerKey());
 
-        DeletedConsumer deleteConsumer2 = deletedConsumerCurator.findByConsumerUuid(consumer2.getUuid());
-        assertEquals(consumer2.getConsumer().getName(), deleteConsumer2.getConsumerName());
-        assertEquals(consumer2.getConsumer().getUuid(), deleteConsumer2.getConsumerUuid());
-        assertEquals(consumer2.getOwner().getId(), deleteConsumer2.getOwnerId());
-        assertEquals(consumer2.getOwner().getDisplayName(), deleteConsumer2.getOwnerDisplayName());
-        assertEquals(consumer2.getOwner().getKey(), deleteConsumer2.getOwnerKey());
+        for (Consumer consumer : List.of(consumer1, consumer2)) {
+            DeletedConsumer deletedConsumer = this.deletedConsumerCurator.findByConsumerId(consumer.getId());
+
+            assertThat(deletedConsumer)
+                .isNotNull()
+                .returns(consumer.getId(), DeletedConsumer::getId)
+                .returns(consumer.getUuid(), DeletedConsumer::getConsumerUuid)
+                .returns(consumer.getName(), DeletedConsumer::getConsumerName)
+                .returns(consumer.getOwner().getId(), DeletedConsumer::getOwnerId)
+                .returns(consumer.getOwner().getDisplayName(), DeletedConsumer::getOwnerDisplayName)
+                .returns(consumer.getOwner().getKey(), DeletedConsumer::getOwnerKey);
+        }
     }
 
     @Test
-    public void testDeleteDeletedConsumersByConsumerId() {
-        Consumer consumer = createConsumer(owner);
-        DeletedConsumer deletedConsumer = createDeletedConsumer(consumer);
+    public void testCreateDeletedConsumersIsIdempotent() {
+        Consumer consumer1 = this.consumerCurator.create(new Consumer()
+            .setName("consumer-1")
+            .setUsername("testUser")
+            .setOwner(this.owner)
+            .setType(this.ct));
 
-        int count = deletedConsumerCurator.deleteByConsumerIds(List.of(consumer.getId()));
+        Consumer consumer2 = this.consumerCurator.create(new Consumer()
+            .setName("consumer-2")
+            .setUsername("testUser")
+            .setOwner(this.owner)
+            .setType(this.ct));
 
-        assertThat(count)
-            .isEqualTo(1);
+        int result1 = this.deletedConsumerCurator.createDeletedConsumers(
+            List.of(consumer1.getId(), consumer2.getId(), "unknown-id"));
 
-        DeletedConsumer byConsumer = deletedConsumerCurator.findByConsumer(consumer);
-        assertThat(byConsumer)
-            .isNull();
-    }
+        assertEquals(2, result1);
 
-    @Test
-    public void testDeleteDeletedConsumersByConsumerIdMoreConsumersExist() {
-        Consumer consumer1 = createConsumer(owner);
-        Consumer consumer2 = createConsumer(owner);
-        Consumer consumer3 = createConsumer(owner);
-        createDeletedConsumer(consumer1);
+        for (Consumer consumer : List.of(consumer1, consumer2)) {
+            DeletedConsumer deletedConsumer = this.deletedConsumerCurator.findByConsumerId(consumer.getId());
 
-        int count = deletedConsumerCurator.deleteByConsumerIds(
-            List.of(consumer1.getId(), consumer2.getId(), consumer3.getId()));
+            assertThat(deletedConsumer)
+                .isNotNull()
+                .returns(consumer.getId(), DeletedConsumer::getId)
+                .returns(consumer.getUuid(), DeletedConsumer::getConsumerUuid)
+                .returns(consumer.getName(), DeletedConsumer::getConsumerName)
+                .returns(consumer.getOwner().getId(), DeletedConsumer::getOwnerId)
+                .returns(consumer.getOwner().getDisplayName(), DeletedConsumer::getOwnerDisplayName)
+                .returns(consumer.getOwner().getKey(), DeletedConsumer::getOwnerKey);
+        }
 
-        assertThat(count)
-            .isEqualTo(1);
+        for (Consumer consumer : List.of(consumer1, consumer2)) {
+            List<DeletedConsumer> deletedConsumers = this.deletedConsumerCurator
+                .findByConsumerUuid(consumer.getUuid());
 
-        DeletedConsumer byConsumer = deletedConsumerCurator.findByConsumer(consumer1);
-        assertThat(byConsumer)
-            .isNull();
+            assertThat(deletedConsumers)
+                .isNotNull()
+                .singleElement()
+                .returns(consumer.getId(), DeletedConsumer::getId)
+                .returns(consumer.getUuid(), DeletedConsumer::getConsumerUuid)
+                .returns(consumer.getName(), DeletedConsumer::getConsumerName)
+                .returns(consumer.getOwner().getId(), DeletedConsumer::getOwnerId)
+                .returns(consumer.getOwner().getDisplayName(), DeletedConsumer::getOwnerDisplayName)
+                .returns(consumer.getOwner().getKey(), DeletedConsumer::getOwnerKey);
+        }
+
+        // Change the consumer's names and then add new entries for them (note, the clear is necessary for
+        // these changes to be persisted by Hibernate).
+        consumer1.setName("consumer_1-updated");
+        consumer2.setName("consumer_2-updated");
+
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        // This deletion should still return 2, and the number of rows for the consumer when looked up by
+        // ID or UUID should also only equal 2.
+        int result2 = this.deletedConsumerCurator.createDeletedConsumers(
+            List.of(consumer1.getId(), consumer2.getId(), "unknown-id"));
+
+        assertEquals(2, result2);
+
+        for (Consumer consumer : List.of(consumer1, consumer2)) {
+            DeletedConsumer deletedConsumer = this.deletedConsumerCurator.findByConsumerId(consumer.getId());
+
+            assertThat(deletedConsumer)
+                .isNotNull()
+                .returns(consumer.getId(), DeletedConsumer::getId)
+                .returns(consumer.getUuid(), DeletedConsumer::getConsumerUuid)
+                .returns(consumer.getName(), DeletedConsumer::getConsumerName)
+                .returns(consumer.getOwner().getId(), DeletedConsumer::getOwnerId)
+                .returns(consumer.getOwner().getDisplayName(), DeletedConsumer::getOwnerDisplayName)
+                .returns(consumer.getOwner().getKey(), DeletedConsumer::getOwnerKey);
+        }
+
+        for (Consumer consumer : List.of(consumer1, consumer2)) {
+            List<DeletedConsumer> deletedConsumers = this.deletedConsumerCurator
+                .findByConsumerUuid(consumer.getUuid());
+
+            assertThat(deletedConsumers)
+                .isNotNull()
+                .singleElement()
+                .returns(consumer.getId(), DeletedConsumer::getId)
+                .returns(consumer.getUuid(), DeletedConsumer::getConsumerUuid)
+                .returns(consumer.getName(), DeletedConsumer::getConsumerName)
+                .returns(consumer.getOwner().getId(), DeletedConsumer::getOwnerId)
+                .returns(consumer.getOwner().getDisplayName(), DeletedConsumer::getOwnerDisplayName)
+                .returns(consumer.getOwner().getKey(), DeletedConsumer::getOwnerKey);
+        }
     }
 
     @ParameterizedTest
-    @MethodSource("invalidIdLists")
-    public void testDeleteDeletedConsumersReturnNull(List<String> ids) {
-        int count = deletedConsumerCurator.deleteByConsumerIds(ids);
-
-        assertThat(count)
-            .isZero();
-    }
-
-    static Stream<List<String>> invalidIdLists() {
-        return Stream.of(
-            null,
-            Collections.emptyList(),
-            List.of("unknownId"),
-            List.of("unknownId1", "unknownId1")
-        );
+    @NullAndEmptySource
+    public void testCreateDeletedConsumersHandlesNullAndEmptyValues(List<String> consumerIds) {
+        // This should do nothing, but should not fail
+        int actual = this.deletedConsumerCurator.createDeletedConsumers(consumerIds);
+        assertEquals(0, actual);
     }
 
     private DeletedConsumer createDeletedConsumer(Consumer consumer) {
         DeletedConsumer deletedConsumer = new DeletedConsumer()
+            .setId(consumer.getId())
             .setConsumerUuid(consumer.getUuid())
             .setConsumerName(consumer.getName())
             .setOwnerKey(consumer.getOwner().getKey())
             .setOwnerDisplayName(consumer.getOwner().getDisplayName())
             .setOwnerId(consumer.getOwner().getId());
-        return deletedConsumerCurator.create(deletedConsumer);
+
+        return this.deletedConsumerCurator.create(deletedConsumer);
     }
 }
