@@ -474,5 +474,34 @@ publishing {
             groupId = 'org.candlepin'
             artifactId = 'candlepin-api'
         }
+
+        /* Publish a BOM from all declared compile/runtime dependencies.
+           See https://github.com/gradle/gradle/issues/16784 and https://github.com/gradle/gradle/pull/17078 for
+           hints at an alternative implementation based on java-platform, which is a tool to enforce dependency versions
+           (including transitive dependencies) and can be converted to a BOM.
+        */
+        bomArtifact(MavenPublication) {
+            groupId = 'org.candlepin'
+            artifactId = 'candlepin-bom'
+
+            def resolvedDeps = configurations.runtimeClasspath.incoming.resolutionResult.allDependencies.findAll {
+                it instanceof ResolvedDependencyResult
+            }.collect {
+                it.selected.moduleVersion
+            }.unique {
+                "%s:%s:%s".formatted(it.group, it.name, it.version)
+            }
+
+            pom.withXml {
+                def dependenciesNode = asNode().appendNode("dependencyManagement").appendNode("dependencies")
+                resolvedDeps.each {
+                    def dependency = dependenciesNode.appendNode("dependency")
+                    dependency.appendNode("groupId", it.group)
+                    dependency.appendNode("artifactId", it.name)
+                    dependency.appendNode("version", it.version)
+                    dependency.appendNode("scope", "compile")
+                }
+            }
+        }
     }
 }
