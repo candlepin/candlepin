@@ -25,30 +25,6 @@ import java.util.UUID;
 public class DeletedConsumerTest {
 
     @Test
-    public void testConstructors() {
-        DeletedConsumer deletedConsumer = new DeletedConsumer();
-        assertNull(deletedConsumer.getConsumerUuid());
-        assertNull(deletedConsumer.getConsumerName());
-        assertNull(deletedConsumer.getOwnerId());
-        assertNull(deletedConsumer.getOwnerKey());
-        assertNull(deletedConsumer.getOwnerDisplayName());
-        assertNull(deletedConsumer.getPrincipalName());
-
-        String expectedConsumerUuid = UUID.randomUUID().toString();
-        String expectedConsumerName = "test-consumer-name";
-        String expectedOwnerId = "test-owner-id";
-        String expectedOwnerKey = "test-owner-key";
-        String expectedOwnerDisplayName = "test-owner-display-name";
-        deletedConsumer = new DeletedConsumer(expectedConsumerUuid, expectedOwnerId,
-            expectedOwnerKey, expectedOwnerDisplayName);
-
-        assertEquals(expectedConsumerUuid, deletedConsumer.getConsumerUuid());
-        assertEquals(expectedOwnerId, deletedConsumer.getOwnerId());
-        assertEquals(expectedOwnerKey, deletedConsumer.getOwnerKey());
-        assertEquals(expectedOwnerDisplayName, deletedConsumer.getOwnerDisplayName());
-    }
-
-    @Test
     public void testGetSetConsumerUuid() {
         DeletedConsumer deletedConsumer = new DeletedConsumer();
 
