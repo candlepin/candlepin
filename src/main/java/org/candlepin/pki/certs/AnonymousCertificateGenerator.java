@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -92,6 +92,8 @@ public class AnonymousCertificateGenerator {
     private final Signer signer;
     private final Provider<X509CertificateBuilder> certificateBuilder;
 
+    private int certDuration;
+
     @Inject
     public AnonymousCertificateGenerator(
         Configuration config,
@@ -119,6 +121,23 @@ public class AnonymousCertificateGenerator {
         this.signer = Objects.requireNonNull(signer);
         this.certificateBuilder = Objects.requireNonNull(certificateBuilder);
         this.config = Objects.requireNonNull(config);
+
+        try {
+            this.certDuration = this.config.getInt(ConfigProperties.ANON_CERT_DURATION);
+            if (this.certDuration <= 0) {
+                throw new IllegalStateException("Anonymous certificate duration config is less than 1 day");
+            }
+
+            if (this.certDuration > ConfigProperties.CERT_MAX_DURATION) {
+                String msg = String.format("Anonymous certificate duration config exceeds %d days",
+                    ConfigProperties.CERT_MAX_DURATION);
+                throw new IllegalStateException(msg);
+            }
+
+        }
+        catch (NumberFormatException e) {
+            throw new IllegalStateException("Anonymous certificate duration config not a number");
+        }
     }
 
     /**
@@ -227,7 +246,7 @@ public class AnonymousCertificateGenerator {
             consumer.getUuid());
 
         OffsetDateTime start = OffsetDateTime.now().minusHours(1L);
-        OffsetDateTime end = start.plusDays(2L);
+        OffsetDateTime end = start.plusDays(this.certDuration);
 
         CertificateSerial serial = createSerial(end);
         KeyPair keyPair = this.keyPairGenerator.generateKeyPair();

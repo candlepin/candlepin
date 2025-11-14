@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -59,11 +59,13 @@ import org.candlepin.util.X509V3ExtensionUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -92,13 +94,21 @@ class AnonymousCertificateGeneratorTest {
     void setUp() throws CertificateException, IOException {
         this.config = TestConfig.defaults();
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        this.generator = this.createGenerator();
+    }
+
+    private AnonymousCertificateGenerator createGenerator() throws CertificateException, IOException {
         X509V3ExtensionUtil extensionUtil = spy(new X509V3ExtensionUtil(
             config, this.entitlementCurator, new Huffman()));
+
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
         BouncyCastleKeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(
             securityProvider, mock(KeyPairDataCurator.class));
+
         CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
-        this.generator = new AnonymousCertificateGenerator(
+
+        return new AnonymousCertificateGenerator(
             config,
             extensionUtil,
             new EntitlementPayloadGenerator(new ObjectMapper()),
@@ -179,6 +189,74 @@ class AnonymousCertificateGeneratorTest {
 
         assertThatThrownBy(() -> this.generator.generate(consumer))
             .isInstanceOf(CertificateCreationException.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { -1, 0 })
+    public void shouldThrowIllegalStateExceptionWithInvalidCertDurationConfig(int certDuration) {
+        this.config.setProperty(ConfigProperties.ANON_CERT_DURATION, String.valueOf(certDuration));
+
+        assertThrows(IllegalStateException.class, () -> {
+            this.createGenerator();
+        });
+    }
+
+    @Test
+    public void shouldThrowIllegalStateExceptionWithNonNumberCertDurationConfig() {
+        this.config.setProperty(ConfigProperties.ANON_CERT_DURATION, "bad config");
+
+        assertThrows(IllegalStateException.class, () -> {
+            this.createGenerator();
+        });
+    }
+
+    @Test
+    public void shouldThrowIllegalStateExceptionWithCertDurationConfigLargerThanMax() throws Exception {
+        String duration = String.valueOf(ConfigProperties.CERT_MAX_DURATION + 1);
+        this.config.setProperty(ConfigProperties.ANON_CERT_DURATION, duration);
+
+        assertThrows(IllegalStateException.class, () -> {
+            this.createGenerator();
+        });
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 1, 21, 30, ConfigProperties.CERT_MAX_DURATION })
+    public void shouldSetCertExpirationForNewCert(int certDuration) throws Exception {
+        this.config.setProperty(ConfigProperties.ANON_CERT_DURATION, String.valueOf(certDuration));
+        this.generator = this.createGenerator();
+
+        List<ProductInfo> productInfo = List.of(
+            createProductInfo(), createProductInfo(), createProductInfo()
+        );
+
+        when(this.anonymousCertificateCurator.create(any(AnonymousContentAccessCertificate.class)))
+            .thenAnswer(returnsFirstArg());
+        when(this.productAdapter.getChildrenByProductIds(anyCollection())).thenReturn(productInfo);
+        when(this.serialCurator.create(any(CertificateSerial.class))).thenAnswer(invocation -> {
+            CertificateSerial argument = invocation.getArgument(0);
+            argument.setSerial(123L);
+            return argument;
+        });
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setId(TestUtil.randomString("id-"))
+            .setUuid(TestUtil.randomString("uuid-"))
+            .setCloudAccountId(TestUtil.randomString("cloudAccountId-"))
+            .setCloudInstanceId(TestUtil.randomString("instanceId-"))
+            .setProductIds(List.of("productId"))
+            .setCloudProviderShortName("aws");
+
+        AnonymousContentAccessCertificate actual = this.generator.generate(consumer);
+
+        assertThat(actual)
+            .isNotNull()
+            .extracting(AnonymousContentAccessCertificate::getSerial)
+            .isNotNull()
+            .extracting(CertificateSerial::getExpiration)
+            .asInstanceOf(InstanceOfAssertFactories.DATE)
+            .isAfterOrEqualTo(TestUtil.createDateOffset(0, 0, certDuration))
+            .isBefore(TestUtil.createDateOffset(0, 0, certDuration + 1));
     }
 
     @Test
