@@ -1558,7 +1558,7 @@ paths:
         causing it to no longer be auto-detected via virt-who.
       tags:
         - consumer
-      operationId: removeDeletionRecord
+      operationId: removeDeletionRecords
       security: []
       parameters:
         - name: consumer_uuid

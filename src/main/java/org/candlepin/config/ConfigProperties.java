@@ -546,7 +546,7 @@ public class ConfigProperties {
             this.put(jobConfig(InactiveConsumerCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 ConfigProperties.ASYNC_JOBS_MANUAL_SCHEDULE);
             this.put(jobConfig(InactiveConsumerCleanerJob.JOB_KEY, InactiveConsumerCleanerJob.CFG_BATCH_SIZE),
-                InactiveConsumerCleanerJob.DEFAULT_BATCH_SIZE);
+                Integer.toString(InactiveConsumerCleanerJob.DEFAULT_BATCH_SIZE));
             this.put(jobConfig(InactiveConsumerCleanerJob.JOB_KEY,
                 InactiveConsumerCleanerJob.CFG_LAST_CHECKED_IN_RETENTION_IN_DAYS),
                 Integer.toString(InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS));
