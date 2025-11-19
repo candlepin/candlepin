@@ -2182,14 +2182,17 @@ public class ConsumerResource implements ConsumerApi {
             this.consumerCurator.lock(toDelete);
         }
         catch (OptimisticLockException e) {
-            DeletedConsumer deleted = deletedConsumerCurator.findByConsumerUuid(uuid);
+            // We *must* check by the consumer's internal instance ID and *not* the UUID, as UUID REUSE IS A
+            // THING. Checking for a record by UUID could result in erroneously reporting that a consumer was
+            // already deleted when some other issue actually occurred.
+            DeletedConsumer deleted = this.deletedConsumerCurator.findByConsumerId(toDelete.getId());
             if (deleted != null) {
                 log.debug("The consumer with UUID {} was deleted while waiting for lock.", uuid);
-                throw new GoneException(
-                    i18n.tr("Consumer with UUID {0} was already deleted.", uuid));
+                throw new GoneException(this.i18n.tr("Consumer with UUID {0} was already deleted.", uuid));
             }
-            // Could have just been an update that caused the exception. In that case,
-            // just rethrow the exception.
+
+            // Could have just been an update that caused the exception. In that case just rethrow the
+            // exception.
             throw e;
         }
 
@@ -3249,14 +3252,22 @@ public class ConsumerResource implements ConsumerApi {
 
     @Override
     @Transactional
-    public void removeDeletionRecord(String uuid) {
-        DeletedConsumer dc = deletedConsumerCurator.findByConsumerUuid(uuid);
-        if (dc == null) {
+    public void removeDeletionRecords(String uuid) {
+        log.warn("Received request to remove consumer deletion records for consumer UUID: {}", uuid);
+
+        // wtf...? This method should not exist, and everything about its assumptions are wrong.
+        List<DeletedConsumer> records = this.deletedConsumerCurator.findByConsumerUuid(uuid);
+        if (records == null || records.isEmpty()) {
             throw new NotFoundException(
-                i18n.tr("Deletion record for hypervisor \"{0}\" not found.", uuid));
+                this.i18n.tr("Deletion record for hypervisor \"{0}\" not found.", uuid));
         }
 
-        deletedConsumerCurator.delete(dc);
+        log.info("Deleting {} consumer deletion records with consumer UUID: {}", records.size(), uuid);
+        for (DeletedConsumer rec : records) {
+            this.deletedConsumerCurator.delete(rec);
+        }
+
+        // I guess we're just outputting nothing here...?
     }
 
     private void addCalculatedAttributes(Entitlement ent) {

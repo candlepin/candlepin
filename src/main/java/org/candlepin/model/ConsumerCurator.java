@@ -218,32 +218,76 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Override
     @Transactional
     public void delete(Consumer entity) {
+        if (entity == null || entity.getId() == null) {
+            // If this isn't a valid consumer entity, we have nothing to delete anyway
+            throw new IllegalArgumentException("entity is null or has no ID");
+        }
+
         log.debug("Deleting consumer: {}", entity);
 
         // Fetch the principal that's triggering this
         Principal principal = this.principalProvider.get();
-
         Owner owner = entity.getOwner();
 
-        // Check if we've already got a record for this consumer (???), creating one if necessary
-        DeletedConsumer deletedConsumer = this.deletedConsumerCurator.findByConsumerUuid(entity.getUuid());
-        if (deletedConsumer == null) {
-            deletedConsumer = new DeletedConsumer();
+        DeletedConsumer deletionRecord = this.deletedConsumerCurator.findByConsumerId(entity.getId());
+        if (deletionRecord != null) {
+            log.error("Consumer already has a deletion record; updating existing: {} => {}",
+                deletionRecord, entity);
+        }
+        else {
+            deletionRecord = new DeletedConsumer()
+                .setId(entity.getId());
         }
 
-        // Set/update the properties on our deleted consumer record
-        deletedConsumer.setConsumerUuid(entity.getUuid())
+        deletionRecord.setConsumerUuid(entity.getUuid())
+            .setConsumerName(entity.getName())
             .setOwnerId(entity.getOwnerId())
             .setOwnerKey(owner.getKey())
-            .setConsumerName(entity.getName())
             .setOwnerDisplayName(owner.getDisplayName())
             .setPrincipalName(principal != null ? principal.getName() : null);
 
+        // Save our deletion record
+        this.deletedConsumerCurator.saveOrUpdate(deletionRecord);
+
         // Actually delete the consumer
         super.delete(entity);
+    }
 
-        // Save our deletion record
-        this.deletedConsumerCurator.saveOrUpdate(deletedConsumer);
+    /**
+     * Deletes {@link Consumer}s based on the provided consumer ids and
+     * creates corresponding records in {@link DeletedConsumer}.
+     *
+     * <p>For each consumer id in the input collection:</p>
+     * <ul>
+     *   <li>The consumer entry is removed from the {@code Consumer} table.</li>
+     *   <li>A record is created in the {@code DeletedConsumer} table
+     *       to track the deletion.</li>
+     * </ul>
+     *
+     * @param consumerIds
+     *  ids of the consumers to delete
+     *
+     * @return
+     *  the number of consumer that were deleted
+     */
+    public int deleteConsumers(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return 0;
+        }
+
+        this.deletedConsumerCurator.createDeletedConsumers(consumerIds);
+
+        int deleted = 0;
+
+        Query query = this.getEntityManager()
+            .createQuery("DELETE Consumer WHERE id IN (:consumerIds)");
+
+        for (List<String> block : this.partition(consumerIds)) {
+            deleted += query.setParameter("consumerIds", block)
+                .executeUpdate();
+        }
+
+        return deleted;
     }
 
     /**
@@ -655,10 +699,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public void heartbeatUpdate(final String reporterId, final Date checkIn, final String ownerKey)
         throws PersistenceException {
-        final String query;
-        final String dialect = this.getDatabaseDialect();
 
-        if (dialect.contains("mysql") || dialect.contains("maria")) {
+        String query;
+        Dialect dialect = this.getDatabaseDialect();
+
+        if (dialect == Dialect.MARIADB) {
             query = "" +
                 "UPDATE cp_consumer consumer" +
                 " JOIN cp_consumer_hypervisor hypervisor on consumer.id = hypervisor.consumer_id " +
@@ -667,7 +712,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 " WHERE hypervisor.reporter_id = :reporter" +
                 " AND owner.account = :ownerKey";
         }
-        else if (dialect.contains("postgresql")) {
+        else if (dialect == Dialect.POSTGRESQL) {
             query = "" +
                 "UPDATE cp_consumer consumer" +
                 " SET lastcheckin = :checkin" +
@@ -1026,43 +1071,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 .toList());
         }
         return serialIds;
-    }
-
-    /**
-     * Deletes {@link Consumer}s based on the provided consumer ids and
-     * creates corresponding records in {@link DeletedConsumer}.
-     *
-     * <p>For each consumer id in the input collection:</p>
-     * <ul>
-     *   <li>The consumer entry is removed from the {@code Consumer} table.</li>
-     *   <li>A record is created in the {@code DeletedConsumer} table
-     *       to track the deletion.</li>
-     * </ul>
-     *
-     * @param consumerIds
-     *  ids of the consumers to delete
-     *
-     * @return
-     *  the number of consumer that were deleted
-     */
-    public int deleteConsumers(Collection<String> consumerIds) {
-        if (consumerIds == null || consumerIds.isEmpty()) {
-            return 0;
-        }
-
-        this.deletedConsumerCurator.createDeletedConsumers(consumerIds);
-
-        int deleted = 0;
-
-        Query query = this.getEntityManager()
-            .createQuery("DELETE Consumer WHERE id IN (:consumerIds)");
-
-        for (List<String> block : this.partition(consumerIds)) {
-            deleted += query.setParameter("consumerIds", block)
-                .executeUpdate();
-        }
-
-        return deleted;
     }
 
     /**

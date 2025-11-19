@@ -85,7 +85,7 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCloudProfileUpdatedOnGuestUpdate() {
+    public void testCloudProfileUpdatedOnGuestUpdate() throws Exception {
         Consumer testConsumer = new Consumer()
             .setName("test_consumer")
             .setUsername(someuser.getUsername())
@@ -99,6 +99,8 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
 
         Date beforeUpdateTimestamp = consumerCurator.findByUuid(testConsumer.getUuid())
             .getRHCloudProfileModified();
+
+        Thread.sleep(1000);
 
         guestIdResource.updateGuest(testConsumer.getUuid(), guest.getGuestId(), guest);
         Date afterUpdateTimestamp = consumerCurator.findByUuid(testConsumer.getUuid())

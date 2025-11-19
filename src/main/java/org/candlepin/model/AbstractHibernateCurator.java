@@ -82,6 +82,12 @@ import javax.persistence.criteria.Root;
 public abstract class AbstractHibernateCurator<E extends Persisted> {
     private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
+    public enum Dialect {
+        MARIADB,
+        POSTGRESQL,
+        HSQLDB
+    }
+
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected Provider<I18n> i18nProvider;
     @Inject protected Configuration config;
@@ -109,9 +115,21 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return config.getInt(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT);
     }
 
-    public String getDatabaseDialect() {
-        return ((String) this.currentSession().getSessionFactory().getProperties()
+    public Dialect getDatabaseDialect() {
+        String dialect = ((String) this.currentSession().getSessionFactory().getProperties()
             .get("hibernate.dialect")).toLowerCase();
+
+        if (dialect.contains("mysql") || dialect.contains("maria")) {
+            return Dialect.MARIADB;
+        }
+        else if (dialect.contains("postgresql")) {
+            return Dialect.POSTGRESQL;
+        }
+        else if (dialect.contains("hsqldialect")) {
+            return Dialect.HSQLDB;
+        }
+
+        throw new IllegalStateException("unknown database dialect: " + dialect);
     }
 
     protected final <T> T secureGet(Class<T> clazz, Serializable id) {
@@ -1016,14 +1034,14 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      *  the name of the system lock to create
      */
     private void createSystemLock(String lockName) {
-        String dialect = this.getDatabaseDialect();
+        Dialect dialect = this.getDatabaseDialect();
         String query = "%s INTO %s VALUES (:lock_name) %s";
         String[] pieces;
 
-        if (dialect.contains("mysql") || dialect.contains("maria")) {
+        if (dialect == Dialect.MARIADB) {
             pieces = new String[] { "INSERT IGNORE", SystemLock.DB_TABLE, "" };
         }
-        else if (dialect.contains("postgresql")) {
+        else if (dialect == Dialect.POSTGRESQL) {
             pieces = new String[] { "INSERT", SystemLock.DB_TABLE, "ON CONFLICT DO NOTHING" };
         }
         else {
