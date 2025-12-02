@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  mariadb:
+    image: mariadb:10.6.14
+    command: --transaction-isolation=READ-COMMITTED --innodb-print-all-deadlocks=ON
+    container_name: mariadb
+    environment:
+      MARIADB_USER: candlepin
+      MARIADB_PASSWORD: candlepin
+      MARIADB_DATABASE: candlepin
+      MARIADB_ROOT_PASSWORD: candlepin
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -ucandlepin -pcandlepin"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  primary-broker:
+    image: apache/activemq-artemis:latest
+    container_name: primary
+    environment:
+      ANONYMOUS_LOGIN: true
+      ARTEMIS_JOURNAL_TYPE: NIO
+    # ports:
+    #   - "8161:8161"
+    #   - "61616:61616"
+    volumes:
+      - ./broker-master.xml:/var/lib/artemis-instance/etc-override/broker.xml
+
+  backup-broker:
+    image: apache/activemq-artemis:latest
+    container_name: backup
+    environment:
+      ARTEMIS_JOURNAL_TYPE: NIO
+      ANONYMOUS_LOGIN: true
+    # ports:
+    #   - "8162:8161"
+    #   - "61617:61616"
+    volumes:
+      - ./broker-backup.xml:/var/lib/artemis-instance/etc-override/broker.xml
+
+  candlepin:
+    image: broker-testing:latest
+    container_name: candlepin
+    environment:
+      JPA_CONFIG_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL5InnoDBDialect
+      JPA_CONFIG_HIBERNATE_CONNECTION_DRIVER_CLASS: org.mariadb.jdbc.Driver
+      JPA_CONFIG_HIBERNATE_CONNECTION_URL: jdbc:mariadb://mariadb/candlepin
+      JPA_CONFIG_HIBERNATE_CONNECTION_USERNAME: candlepin
+      JPA_CONFIG_HIBERNATE_CONNECTION_PASSWORD: candlepin
+      CANDLEPIN_AUDIT_HORNETQ_EMBEDDED: "false"
+      CANDLEPIN_AUDIT_HORNETQ_BROKER_URL: tcp://172.18.0.4:61616?sslEnabled=false&retryInterval=1000&retryIntervalMultiplier=1.5&reconnectAttempts=3
+      CANDLEPIN_AUTH_CLOUD_ENABLE: "false"
+      CANDLEPIN_AUTH_TRUSTED_ENABLE: "true"
+      CANDLEPIN_STANDALONE: "false"
+      MODULE_CONFIG_HOSTED_CONFIGURATION_MODULE: org.candlepin.testext.hostedtest.HostedTestModule
+    ports:
+      - "8443:8443"
+    healthcheck:
+      test: curl --fail -k https://localhost:8443/candlepin/status
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      primary-broker:
+        condition: service_started
+      backup-broker:
+        condition: service_started
