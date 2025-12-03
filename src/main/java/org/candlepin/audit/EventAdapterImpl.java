@@ -122,6 +122,7 @@ public class EventAdapterImpl implements EventAdapter {
         MESSAGES.put("CONSUMERCREATED", I18n.marktr("{0} created new unit {1}"));
         MESSAGES.put("CONSUMERMODIFIED", I18n.marktr("{0} modified the unit {1}"));
         MESSAGES.put("CONSUMERDELETED", I18n.marktr("{0} deleted the unit {1}"));
+        MESSAGES.put("CONSUMERBULK_MODIFICATION", I18n.marktr("{0} updated multiple consumers"));
         MESSAGES.put("OWNERCREATED", I18n.marktr("{0} created new owner {1}"));
         MESSAGES.put("OWNERMODIFIED", I18n.marktr("{0} modified the owner {1}"));
         MESSAGES.put("OWNERDELETED", I18n.marktr("{0} deleted the owner {1}"));

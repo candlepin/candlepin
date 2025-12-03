@@ -2003,8 +2003,32 @@ public class OwnerResource implements OwnerApi {
             }
         }
 
-        consumerManager.setConsumersEnvironments(owner, consumerUuids, envSet);
+        Set<String> updatedConsumerUuids = consumerManager
+            .setConsumersEnvironments(owner, consumerUuids, envSet);
+
+        queueBulkConsumerEnvironmentEvents(owner, consumerUuids, updatedConsumerUuids);
     }
 
+    private void queueBulkConsumerEnvironmentEvents(Owner owner, List<String> requestedConsumerUuids,
+        Set<String> updatedConsumerUuids) {
+
+        if (owner == null || requestedConsumerUuids == null || requestedConsumerUuids.isEmpty() ||
+            updatedConsumerUuids == null || updatedConsumerUuids.isEmpty()) {
+            return;
+        }
+
+        // To keep uuid in the same order as they came in request
+        List<String> orderedUpdatedConsumers = requestedConsumerUuids.stream()
+            .filter(updatedConsumerUuids::contains)
+            .distinct()
+            .toList();
+
+        if (orderedUpdatedConsumers.isEmpty()) {
+            return;
+        }
+
+        Event event = eventFactory.bulkConsumerEnvironmentChange(owner, orderedUpdatedConsumers);
+        sink.queueEvent(event);
+    }
 }
 
