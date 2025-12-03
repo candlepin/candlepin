@@ -1,11 +1,17 @@
 # Broker testing
 
+## Build WAR
+
+```
+./gradlew war -Ptest_extensions=hostedtest,manifestgen
+```
+
 ## Building the Candlepin test image
 
 ```
 sudo docker build -f ./containers/release.Containerfile -t broker-testing:latest . \
 	--target development \
-	--build-arg WAR_FILE=./build/libs/candlepin-4.7.1.war \
+	--build-arg WAR_FILE=./build/libs/candlepin-4.7.2.war \
 	--no-cache
 ```
 

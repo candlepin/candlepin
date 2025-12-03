@@ -18,9 +18,9 @@ services:
       timeout: 5s
       retries: 10
 
-  primary-broker:
+  broker:
     image: apache/activemq-artemis:latest
-    container_name: primary
+    container_name: broker
     environment:
       ANONYMOUS_LOGIN: true
       ARTEMIS_JOURNAL_TYPE: NIO
@@ -30,17 +30,17 @@ services:
     volumes:
       - ./broker-master.xml:/var/lib/artemis-instance/etc-override/broker.xml
 
-  backup-broker:
-    image: apache/activemq-artemis:latest
-    container_name: backup
-    environment:
-      ARTEMIS_JOURNAL_TYPE: NIO
-      ANONYMOUS_LOGIN: true
-    # ports:
-    #   - "8162:8161"
-    #   - "61617:61616"
-    volumes:
-      - ./broker-backup.xml:/var/lib/artemis-instance/etc-override/broker.xml
+  # backup-broker:
+  #   image: apache/activemq-artemis:latest
+  #   container_name: backup
+  #   environment:
+  #     ARTEMIS_JOURNAL_TYPE: NIO
+  #     ANONYMOUS_LOGIN: true
+  #   # ports:
+  #   #   - "8162:8161"
+  #   #   - "61617:61616"
+  #   volumes:
+  #     - ./broker-backup.xml:/var/lib/artemis-instance/etc-override/broker.xml
 
   candlepin:
     image: broker-testing:latest
@@ -52,7 +52,7 @@ services:
       JPA_CONFIG_HIBERNATE_CONNECTION_USERNAME: candlepin
       JPA_CONFIG_HIBERNATE_CONNECTION_PASSWORD: candlepin
       CANDLEPIN_AUDIT_HORNETQ_EMBEDDED: "false"
-      CANDLEPIN_AUDIT_HORNETQ_BROKER_URL: tcp://172.18.0.4:61616?sslEnabled=false&retryInterval=1000&retryIntervalMultiplier=1.5&reconnectAttempts=3
+      CANDLEPIN_AUDIT_HORNETQ_BROKER_URL: tcp://broker:61616?sslEnabled=false&retryInterval=1000&retryIntervalMultiplier=1.5&reconnectAttempts=3
       CANDLEPIN_AUTH_CLOUD_ENABLE: "false"
       CANDLEPIN_AUTH_TRUSTED_ENABLE: "true"
       CANDLEPIN_STANDALONE: "false"
@@ -67,7 +67,6 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
-      primary-broker:
+      broker:
         condition: service_started
-      backup-broker:
-        condition: service_started
+

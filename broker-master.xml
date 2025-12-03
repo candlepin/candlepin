@@ -270,6 +270,12 @@ under the License.
       </broker-plugins>
       -->
 
+
+    <connectors>
+        <connector name="broker">tcp://broker:61616</connector>
+     </connectors>
+
+    <!--
     <ha-policy>
         <replication>
            <master>
@@ -291,6 +297,8 @@ under the License.
            </static-connectors>
         </cluster-connection>
      </cluster-connections>
+
+   -->
 
    </core>
 </configuration>
