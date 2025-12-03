@@ -146,6 +146,7 @@ public class JobMessageReceiver {
     private void startSessions() throws CPMException {
         Set<CPMSession> created = null;
 
+        int count = 0;
         Iterator<CPMSession> iterator = this.sessions.iterator();
         while (iterator.hasNext()) {
             CPMSession session = iterator.next();
@@ -156,7 +157,14 @@ public class JobMessageReceiver {
                 }
 
                 iterator.remove();
-                session = this.createSession();
+
+                // Simulation of createSession throwing a CPMException
+                // session = this.createSession();
+                if (count == 1) {
+                    throw new CPMException("TESTING: Bogus exception");
+                }
+
+                count++;
 
                 created.add(session);
             }
@@ -258,7 +266,7 @@ public class JobMessageReceiver {
             if (this.suspended) {
                 this.startSessions();
 
-                log.debug("Job message processing started");
+                log.info("Job message processing started");
                 this.suspended = false;
             }
         }
@@ -276,7 +284,7 @@ public class JobMessageReceiver {
             if (!this.suspended) {
                 this.closeSessions();
 
-                log.debug("Job message processing suspended");
+                log.info("Job message processing suspended");
                 this.suspended = true;
             }
         }

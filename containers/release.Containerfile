@@ -54,7 +54,7 @@ RUN microdnf -y update && \
 
 ENV JAVA_HOME=/usr/lib/jvm/jre-17-openjdk
 ENV JRE_HOME=/usr/lib/jvm/jre-17-openjdk
-ENV CATALINA_OPTS=-Djavax.net.ssl.trustStore=$JAVA_HOME/lib/security/cacerts
+ENV CATALINA_OPTS="-Djavax.net.ssl.trustStore=$JAVA_HOME/lib/security/cacerts -Xdebug -Xrunjdwp:transport=dt_socket,address=*:8000,server=y,suspend=n"
 
 # Tomcat Setup
 COPY --from=builder /opt/tomcat/ /opt/tomcat/
