@@ -5364,6 +5364,9 @@ paths:
     put:
       description: |
         Sets the environments of the provided consumers to the exact environments that are provided.
+        When this operation changes any consumer's environments, Candlepin publishes a consumer bulk
+        modification event that contains the UUIDs of every affected consumer so downstream
+        systems such as Errata can process the updates.
       tags:
         - owner
       operationId: setConsumersToEnvironments

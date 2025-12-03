@@ -270,6 +270,59 @@ public class EventFactory {
     }
 
     /**
+     * Generates a bulk consumer modification event for the given owner and consumers.
+     *
+     * @param owner
+     *  The owner associated with the consumers that were modified
+     *
+     * @param consumerUuids
+     *  The UUIDs of the consumers that were modified
+     *
+     * @return an event representing the bulk modification
+     */
+    public Event bulkConsumerModified(Owner owner, Collection<String> consumerUuids) {
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
+
+        return this.bulkConsumerModified(owner.getKey(), owner.getAnonymous(), consumerUuids);
+    }
+
+    /**
+     * Generates a bulk consumer modification event for the given owner key and consumers.
+     *
+     * @param ownerKey
+     *  The key of the owner associated with the consumers
+     *
+     * @param anonymous
+     *  The anonymous state of the owner
+     *
+     * @param consumerUuids
+     *  The UUIDs of the consumers that were modified
+     *
+     * @return an event representing the bulk modification
+     */
+    public Event bulkConsumerModified(String ownerKey, boolean anonymous,
+        Collection<String> consumerUuids) {
+
+        if (ownerKey == null || ownerKey.isBlank()) {
+            throw new IllegalArgumentException("ownerKey is null or empty");
+        }
+
+        if (consumerUuids == null || consumerUuids.isEmpty()) {
+            throw new IllegalArgumentException("consumerUuids is null or empty");
+        }
+
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("consumerUuids", consumerUuids);
+
+        return new Event(Type.BULK_MODIFICATION, Target.CONSUMER, principalProvider.get().getData())
+            .setOwnerKey(ownerKey)
+            .setAnonymousOwner(anonymous)
+            .setEventData(eventData);
+    }
+
+    /**
      * Creates a bulk consumer migration event based on the provided {@link Consumer} UUIDs, source
      * {@link Owner}, and destination {@link Owner}.The consumer bulk migration event represents a collection
      * of consumers moving from the source owner to the destination owner.

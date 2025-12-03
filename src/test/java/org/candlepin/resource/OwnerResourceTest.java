@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -43,6 +44,7 @@ import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.ImportJob;
+import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
@@ -2762,8 +2764,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         List<String> envIds) {
 
         return new SetConsumerEnvironmentsDTO()
-            .consumerUuids(consumerUuids)
-            .environmentIds(envIds);
+            .consumerUuids(consumerUuids == null ? null : new ArrayList<>(consumerUuids))
+            .environmentIds(envIds == null ? null : new ArrayList<>(envIds));
     }
 
     @Test
@@ -3060,6 +3062,136 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         envIdsSet.addAll(envIds);
 
         verify(mockConsumerManager).setConsumersEnvironments(owner, List.of(consumerUuid), envIdsSet);
+    }
+
+    @Test
+    public void testSetConsumersToEnvironmentsEmitsBulkEnvironmentEvents() {
+        String ownerKey = TestUtil.randomString("owner-");
+        String ownerId = TestUtil.randomString("owner-");
+        Owner owner = new Owner()
+            .setId(ownerId)
+            .setKey(ownerKey)
+            .setDisplayName(ownerId)
+            .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue())
+            .setAnonymous(false);
+        doReturn(owner).when(this.mockOwnerCurator).getByKey(owner.getKey());
+
+        String envId = TestUtil.randomString("env-");
+        List<String> consumerUuids = List.of("consumer-1", "consumer-2", "consumer-3");
+
+        doReturn(Set.of())
+            .when(mockConsumerCurator)
+            .getNonExistentConsumerUuids(eq(ownerKey), any(Collection.class));
+
+        doReturn(Set.of())
+            .when(mockEnvironmentCurator)
+            .getNonExistentEnvironmentIds(eq(owner), any(Collection.class));
+
+        Set<String> updatedConsumers = new HashSet<>(Set.of("consumer-2", "consumer-3"));
+        doReturn(updatedConsumers)
+            .when(mockConsumerManager)
+            .setConsumersEnvironments(eq(owner), eq(consumerUuids), any(NonNullLinkedHashSet.class));
+
+        OwnerResource ownerResource = buildOwnerResource();
+        SetConsumerEnvironmentsDTO dto = createConsumerEnvsDTO(consumerUuids, List.of(envId));
+
+        Event event = mock(Event.class);
+        ArgumentCaptor<Collection<String>> eventConsumersCaptor = ArgumentCaptor.forClass(Collection.class);
+        when(mockEventFactory.bulkConsumerModified(eq(owner), eventConsumersCaptor.capture()))
+            .thenReturn(event);
+
+        ownerResource.setConsumersToEnvironments(ownerKey, dto);
+
+        List<Collection<String>> capturedBatches = eventConsumersCaptor.getAllValues();
+        assertThat(capturedBatches)
+            .hasSize(1);
+        assertThat(capturedBatches.get(0))
+            .containsExactlyInAnyOrder("consumer-2", "consumer-3");
+
+        verify(mockEventSink).queueEvent(event);
+    }
+
+    @Test
+    public void testSetConsumersToEnvironmentsDeduplicatesEventPayload() {
+        String ownerKey = TestUtil.randomString("owner-");
+        String ownerId = TestUtil.randomString("owner-");
+        Owner owner = new Owner()
+            .setId(ownerId)
+            .setKey(ownerKey)
+            .setDisplayName(ownerId)
+            .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue())
+            .setAnonymous(false);
+        doReturn(owner).when(this.mockOwnerCurator).getByKey(owner.getKey());
+
+        List<String> consumerUuids =
+            List.of("consumer-1", "consumer-2", "consumer-2", "consumer-3", "consumer-3");
+
+        doReturn(Set.of())
+            .when(mockConsumerCurator)
+            .getNonExistentConsumerUuids(eq(ownerKey), any(Collection.class));
+
+        doReturn(Set.of())
+            .when(mockEnvironmentCurator)
+            .getNonExistentEnvironmentIds(eq(owner), any(Collection.class));
+
+        Set<String> updatedConsumers = new HashSet<>(Set.of("consumer-2", "consumer-3"));
+        doReturn(updatedConsumers)
+            .when(mockConsumerManager)
+            .setConsumersEnvironments(eq(owner), eq(consumerUuids), any(NonNullLinkedHashSet.class));
+
+        OwnerResource ownerResource = buildOwnerResource();
+        SetConsumerEnvironmentsDTO dto =
+            createConsumerEnvsDTO(consumerUuids, List.of(TestUtil.randomString("env-")));
+
+        Event event = mock(Event.class);
+        ArgumentCaptor<Collection<String>> eventConsumersCaptor = ArgumentCaptor.forClass(Collection.class);
+        when(mockEventFactory.bulkConsumerModified(eq(owner), eventConsumersCaptor.capture()))
+            .thenReturn(event);
+
+        ownerResource.setConsumersToEnvironments(ownerKey, dto);
+
+        List<Collection<String>> capturedConsumers = eventConsumersCaptor.getAllValues();
+        assertThat(capturedConsumers)
+            .hasSize(1);
+        assertThat(capturedConsumers.get(0))
+            .containsExactlyInAnyOrder("consumer-2", "consumer-3");
+
+        verify(mockEventSink).queueEvent(event);
+    }
+
+    @Test
+    public void testSetConsumersToEnvironmentsSkipsEventsWhenNoConsumersUpdated() {
+        String ownerKey = TestUtil.randomString("owner-");
+        String ownerId = TestUtil.randomString("owner-");
+        Owner owner = new Owner()
+            .setId(ownerId)
+            .setKey(ownerKey)
+            .setDisplayName(ownerId)
+            .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue())
+            .setAnonymous(false);
+        doReturn(owner).when(this.mockOwnerCurator).getByKey(owner.getKey());
+
+        doReturn(Set.of())
+            .when(mockConsumerCurator)
+            .getNonExistentConsumerUuids(eq(ownerKey), any(Collection.class));
+
+        doReturn(Set.of())
+            .when(mockEnvironmentCurator)
+            .getNonExistentEnvironmentIds(eq(owner), any(Collection.class));
+
+        doReturn(new HashSet<>())
+            .when(mockConsumerManager)
+            .setConsumersEnvironments(eq(owner), any(List.class), any(NonNullLinkedHashSet.class));
+
+        OwnerResource ownerResource = buildOwnerResource();
+        SetConsumerEnvironmentsDTO dto =
+            createConsumerEnvsDTO(
+                List.of(TestUtil.randomString("consumer-")), List.of(TestUtil.randomString("env-")));
+
+        ownerResource.setConsumersToEnvironments(ownerKey, dto);
+
+        verify(mockEventFactory, never()).bulkConsumerModified(any(Owner.class), anyList());
+        verify(mockEventSink, never()).queueEvent(any(Event.class));
     }
 
 }
