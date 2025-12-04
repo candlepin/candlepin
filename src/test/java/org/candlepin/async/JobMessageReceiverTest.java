@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -17,8 +17,8 @@ package org.candlepin.async;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -200,7 +200,7 @@ public class JobMessageReceiverTest {
     @Test
     public void testMessageAckAndSessionCommitOnSuccess() throws Exception {
         CPMMessage message = this.createCPMMessage("test_id", "test_key");
-        JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
@@ -217,7 +217,7 @@ public class JobMessageReceiverTest {
     @Test
     public void testMessageCommitOnJobExecutionException() throws Exception {
         CPMMessage message = this.createCPMMessage("test_id", "test_key");
-        JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
@@ -236,7 +236,7 @@ public class JobMessageReceiverTest {
     @Test
     public void testMessageCommitOnTerminalJobStateManagementException() throws Exception {
         CPMMessage message = this.createCPMMessage("test_id", "test_key");
-        JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
@@ -258,7 +258,7 @@ public class JobMessageReceiverTest {
     @Test
     public void testMessageRollbackOnNonTerminalJobStateManagementException() throws Exception {
         CPMMessage message = this.createCPMMessage("test_id", "test_key");
-        JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
@@ -280,7 +280,7 @@ public class JobMessageReceiverTest {
     @Test
     public void testMessageRollbackOnMessageDispatchException() throws Exception {
         CPMMessage message = this.createCPMMessage("test_id", "test_key");
-        JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
@@ -299,7 +299,7 @@ public class JobMessageReceiverTest {
     @Test
     public void testMessageCommitOnTerminalJobException() throws Exception {
         CPMMessage message = this.createCPMMessage("test_id", "test_key");
-        JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
@@ -318,7 +318,7 @@ public class JobMessageReceiverTest {
     @Test
     public void testMessageRollbackOnNonTerminalJobException() throws Exception {
         CPMMessage message = this.createCPMMessage("test_id", "test_key");
-        JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
@@ -341,7 +341,7 @@ public class JobMessageReceiverTest {
         this.mapper = mock(ObjectMapper.class);
         doThrow(new RuntimeException("kaboom")).when(this.mapper).readValue(anyString(), any(Class.class));
 
-        JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 

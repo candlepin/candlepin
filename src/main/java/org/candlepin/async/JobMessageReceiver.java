@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -25,7 +25,6 @@ import org.candlepin.messaging.CPMMessageListener;
 import org.candlepin.messaging.CPMSession;
 import org.candlepin.messaging.CPMSessionConfig;
 import org.candlepin.messaging.CPMSessionFactory;
-import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
 
@@ -49,8 +47,6 @@ import javax.inject.Inject;
  */
 public class JobMessageReceiver {
     private static Logger log = LoggerFactory.getLogger(JobMessageReceiver.class);
-
-    private static final String JOB_KEY_MESSAGE_PROPERTY = "job_key";
 
     private final Configuration config;
     private final CPMSessionFactory cpmSessionFactory;
@@ -144,28 +140,31 @@ public class JobMessageReceiver {
      * will recreate it.
      */
     private void startSessions() throws CPMException {
-        Set<CPMSession> created = null;
+        Set<CPMSession> updatedSessions = new HashSet<>();
+        CPMException bufferedException = null;
 
-        Iterator<CPMSession> iterator = this.sessions.iterator();
-        while (iterator.hasNext()) {
-            CPMSession session = iterator.next();
-
-            if (session == null || session.isClosed()) {
-                if (created == null) {
-                    created = new HashSet<>();
+        for (CPMSession session : this.sessions) {
+            try {
+                if (session == null) {
+                    continue;
                 }
 
-                iterator.remove();
-                session = this.createSession();
-
-                created.add(session);
+                if (session.isClosed() && bufferedException == null) {
+                    session = this.createSession();
+                    session.start();
+                }
+            }
+            catch (CPMException exception) {
+                bufferedException = exception;
             }
 
-            session.start();
+            updatedSessions.add(session);
         }
 
-        if (created != null) {
-            this.sessions.addAll(created);
+        this.sessions = updatedSessions;
+
+        if (bufferedException != null) {
+            throw bufferedException;
         }
     }
 
@@ -347,7 +346,7 @@ public class JobMessageReceiver {
                 this.unitOfWork.begin();
 
                 // Execute the job
-                AsyncJobStatus jobStatus = this.manager.executeJob(jobMessage);
+                this.manager.executeJob(jobMessage);
 
                 // We didn't fail! Commit the message
                 this.commit(session);
