@@ -26,8 +26,8 @@ import org.apache.activemq.artemis.core.remoting.CloseListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 
 

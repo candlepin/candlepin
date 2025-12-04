@@ -30,8 +30,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Date;
 
-import javax.inject.Singleton;
-import javax.persistence.NoResultException;
+import jakarta.inject.Singleton;
+import jakarta.persistence.NoResultException;
 
 /**
  * RulesCurator

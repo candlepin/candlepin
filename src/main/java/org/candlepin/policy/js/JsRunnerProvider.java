@@ -32,7 +32,7 @@ import java.util.Date;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * Reads/compiles our javascript rules and the standard js objects only

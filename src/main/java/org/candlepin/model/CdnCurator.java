@@ -14,11 +14,11 @@
  */
 package org.candlepin.model;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.TypedQuery;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
+import jakarta.persistence.TypedQuery;
 
 /**
  * Subscription manager.

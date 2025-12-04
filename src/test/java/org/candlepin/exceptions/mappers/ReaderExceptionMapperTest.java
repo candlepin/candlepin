@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import org.jboss.resteasy.spi.ReaderException;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 
 

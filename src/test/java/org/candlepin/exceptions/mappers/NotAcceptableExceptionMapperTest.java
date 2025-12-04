@@ -18,8 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.NotAcceptableException;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.NotAcceptableException;
+import jakarta.ws.rs.core.Response;
 
 /**
  * NotAcceptableExceptionMapperTest

@@ -18,7 +18,7 @@ import ch.qos.logback.classic.Logger;
 
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * LoggingListener

@@ -20,7 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * A ManifestFileService implementation that stores manifest files in a DB.

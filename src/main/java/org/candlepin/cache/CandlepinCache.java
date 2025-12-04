@@ -15,8 +15,8 @@
 package org.candlepin.cache;
 
 import javax.cache.CacheManager;
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 /**
  * Wrapper that makes it easier to retrieve various caches in Candlepin

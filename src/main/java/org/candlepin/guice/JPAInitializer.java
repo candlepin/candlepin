@@ -16,7 +16,7 @@ package org.candlepin.guice;
 
 import com.google.inject.persist.PersistService;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * Initializes the JPA service

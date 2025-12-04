@@ -20,7 +20,7 @@ import com.google.inject.Provider;
 
 import org.jboss.resteasy.core.ResteasyContext;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 /**
  * Guice provider that pulls the principal out of the ResteasyProviderFactory's context.

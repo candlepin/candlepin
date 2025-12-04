@@ -91,7 +91,7 @@ import java.util.stream.Stream;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 
 @ExtendWith(MockitoExtension.class)

@@ -41,7 +41,7 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.Locale;
 import java.util.stream.Stream;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 
 /**

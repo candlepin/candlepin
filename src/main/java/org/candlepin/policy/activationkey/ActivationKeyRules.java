@@ -27,7 +27,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.Objects;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 
 /**

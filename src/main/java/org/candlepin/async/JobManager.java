@@ -77,13 +77,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-import javax.persistence.EntityTransaction;
-import javax.persistence.PersistenceException;
-import javax.transaction.Status;
-import javax.transaction.Synchronization;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.PersistenceException;
+import jakarta.transaction.Status;
+import jakarta.transaction.Synchronization;
 
 
 // FIXME: The transaction management here is getting out of hand. The annotations should probably

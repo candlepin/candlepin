@@ -21,8 +21,8 @@ import org.candlepin.service.model.UserInfo;
 
 import org.xnap.commons.i18n.I18n;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 
 

@@ -16,7 +16,7 @@ package org.candlepin.model;
 
 import java.util.List;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 
 

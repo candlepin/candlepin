@@ -30,8 +30,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.core.MediaType;
 
 /**
  * EventAdapterImpl

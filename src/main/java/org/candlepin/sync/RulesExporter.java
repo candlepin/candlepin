@@ -19,7 +19,7 @@ import org.candlepin.model.RulesCurator;
 import java.io.IOException;
 import java.io.Writer;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * RulesExporter

@@ -25,8 +25,8 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Objects;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 /**
  * A thread safe cache for consumer certificate content. Entries are evicted based on a time-to-live eviction

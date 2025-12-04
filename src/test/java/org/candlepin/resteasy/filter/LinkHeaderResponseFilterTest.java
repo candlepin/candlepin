@@ -41,11 +41,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.net.URI;
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerResponseContext;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriBuilder;
+import jakarta.servlet.ServletContext;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerResponseContext;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.UriBuilder;
 
 @ExtendWith(MockitoExtension.class)
 public class LinkHeaderResponseFilterTest {

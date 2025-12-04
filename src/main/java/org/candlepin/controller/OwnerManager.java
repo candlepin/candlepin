@@ -42,8 +42,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.Objects;
 
-import javax.inject.Inject;
-import javax.persistence.LockModeType;
+import jakarta.inject.Inject;
+import jakarta.persistence.LockModeType;
 
 
 

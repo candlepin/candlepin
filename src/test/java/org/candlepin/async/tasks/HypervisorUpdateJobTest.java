@@ -67,7 +67,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.Date;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 
 public class HypervisorUpdateJobTest {

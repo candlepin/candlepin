@@ -22,7 +22,7 @@ import org.candlepin.model.PoolCurator;
 
 import java.util.Arrays;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * Manages Cdn entity operations.

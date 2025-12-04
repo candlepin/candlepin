@@ -27,7 +27,7 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 
 import java.util.Objects;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 
 public class RefreshPoolsForProductJob implements AsyncJob {

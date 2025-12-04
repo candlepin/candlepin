@@ -72,7 +72,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 
 /**

@@ -30,8 +30,8 @@ import org.candlepin.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.From;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.From;
 
 
 public class UsernameConsumersPermissionTest {

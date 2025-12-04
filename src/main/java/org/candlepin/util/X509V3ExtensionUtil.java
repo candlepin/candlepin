@@ -44,8 +44,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 
 @Singleton

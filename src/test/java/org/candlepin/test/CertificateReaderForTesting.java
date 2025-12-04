@@ -30,7 +30,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 
 public class CertificateReaderForTesting extends CertificateReader {

@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Objects;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * Deletes all but the newest N records, defined by the num_of_records_to_keep/DEFAULT_KEEP variable,

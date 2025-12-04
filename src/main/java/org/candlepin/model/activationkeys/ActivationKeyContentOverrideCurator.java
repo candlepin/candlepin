@@ -16,7 +16,7 @@ package org.candlepin.model.activationkeys;
 
 import org.candlepin.model.ContentOverrideCurator;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 
 
