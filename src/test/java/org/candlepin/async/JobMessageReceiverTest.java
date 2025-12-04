@@ -118,9 +118,8 @@ public class JobMessageReceiverTest {
         CPMConsumer consumer = mock(CPMConsumer.class);
 
         doAnswer(iom -> {
-            CPMMessageListener prev = container.get();
             container.set((CPMMessageListener) iom.getArguments()[0]);
-            return prev;
+            return consumer;
         })
             .when(consumer)
             .setMessageListener(any(CPMMessageListener.class));
@@ -353,6 +352,113 @@ public class JobMessageReceiverTest {
 
         verify(this.unitOfWork, times(0)).begin();
         verify(this.unitOfWork, times(1)).end();
+    }
+
+    @Test
+    public void testStartSessionsStartsMultipleSessions() throws Exception {
+        int numberOfSessions = 3;
+        this.config.setProperty(ConfigProperties.ASYNC_JOBS_THREADS, String.valueOf(numberOfSessions));
+
+        CPMSession initialSession1 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        CPMSession initialSession2 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        CPMSession initialSession3 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        doReturn(true).when(initialSession1).isClosed();
+        doReturn(true).when(initialSession2).isClosed();
+        doReturn(true).when(initialSession3).isClosed();
+
+        CPMSession recreatedSession1 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        CPMSession recreatedSession2 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        CPMSession recreatedSession3 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+
+        doReturn(initialSession1).doReturn(initialSession2).doReturn(initialSession3)
+        .doReturn(recreatedSession1).doReturn(recreatedSession2).doReturn(recreatedSession3)
+            .when(this.cpmSessionFactory)
+            .createSession(any(CPMSessionConfig.class));
+
+        JobMessageReceiver receiver = buildJobMessageReceiver();
+
+        receiver.start();
+
+        verify(recreatedSession1).start();
+        verify(recreatedSession2).start();
+        verify(recreatedSession3).start();
+    }
+
+    @Test
+    public void testStartSessionsStartsOnlyClosedSessions() throws Exception {
+        int numberOfSessions = 3;
+        this.config.setProperty(ConfigProperties.ASYNC_JOBS_THREADS, String.valueOf(numberOfSessions));
+
+        CPMSession initialSession1 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        CPMSession initialSession2 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        CPMSession initialSession3 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        doReturn(true).when(initialSession1).isClosed();
+        doReturn(false).when(initialSession2).isClosed();
+        doReturn(true).when(initialSession3).isClosed();
+
+        CPMSession recreatedSession1 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        CPMSession recreatedSession3 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+
+        doReturn(initialSession1).doReturn(initialSession2).doReturn(initialSession3)
+        .doReturn(recreatedSession1).doReturn(recreatedSession3)
+            .when(this.cpmSessionFactory)
+            .createSession(any(CPMSessionConfig.class));
+
+        JobMessageReceiver receiver = buildJobMessageReceiver();
+
+        receiver.start();
+
+        verify(recreatedSession1).start();
+        verify(recreatedSession3).start();
+    }
+
+    @Test
+    public void testStartSessionsHandlesCPMException() throws Exception {
+        int numberOfSessions = 3;
+        this.config.setProperty(ConfigProperties.ASYNC_JOBS_THREADS, String.valueOf(numberOfSessions));
+
+        CPMSession initialSession1 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        CPMSession initialSession2 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        CPMSession initialSession3 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        doReturn(true).when(initialSession1).isClosed();
+        doReturn(true).when(initialSession2).isClosed();
+        doReturn(true).when(initialSession3).isClosed();
+
+        CPMSession recreatedSession1 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        CPMSession recreatedSession2 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        CPMSession recreatedSession3 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+
+        // Throw a CPMException when we attempt to recreate initialSession2
+        doReturn(initialSession1).doReturn(initialSession2).doReturn(initialSession3)
+        .doReturn(recreatedSession1).doThrow(new CPMException()).doReturn(recreatedSession3)
+            .when(this.cpmSessionFactory)
+            .createSession(any(CPMSessionConfig.class));
+
+        JobMessageReceiver receiver = buildJobMessageReceiver();
+
+        assertThrows(JobException.class, () -> receiver.start());
+
+        verify(recreatedSession1).start();
+        verify(recreatedSession2, never()).start();
+        // We will not attempt to start additional sessions after a CPMException occurs
+        verify(recreatedSession3, never()).start();
+    }
+
+    @Test
+    public void testStartDoesNothingWhenNotSuspended() throws Exception {
+        CPMSession session = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        doReturn(true).when(session).isClosed();
+        doReturn(session).when(this.cpmSessionFactory).createSession(any(CPMSessionConfig.class));
+
+        JobMessageReceiver receiver = buildJobMessageReceiver();
+
+        // Initial start to create the session and move out of suspend mode
+        receiver.start();
+        verify(session).start();
+
+        // Running start again should not do anything
+        receiver.start();
+        verify(session).start();
     }
 
 }
