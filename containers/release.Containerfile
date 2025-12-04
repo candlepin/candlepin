@@ -95,6 +95,8 @@ This is a development image and not intended for production use."
 
 USER root
 
+ENV CATALINA_OPTS="$CATALINA_OPTS -Xdebug -Xrunjdwp:transport=dt_socket,address=*:8000,server=y,suspend=n"
+
 # Add default Candlepin configurations
 RUN echo "jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQL92Dialect" > /etc/candlepin/candlepin.conf; \
     echo "jpa.config.hibernate.connection.driver_class=org.postgresql.Driver" >> /etc/candlepin/candlepin.conf; \
@@ -124,6 +126,6 @@ WORKDIR /opt/tomcat/bin
 USER tomcat
 
 # Expose ports for tomcat, candlepin, postgres and mariadb
-EXPOSE 8080 8443 5432 3306
+EXPOSE 8080 8000 8443 5432 3306
 
 ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "run"]
