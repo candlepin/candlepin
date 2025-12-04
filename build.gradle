@@ -101,11 +101,11 @@ dependencies {
     // Bean validation API is explicitly added to this version
     // This is a transitive dependency of
     // com.fasterxml.jackson.module:jackson-module-jsonSchema
-    implementation(libs.javax.validation)
+    implementation(libs.jakarta.validation)
 
-    // Javax
+    // Jakarta
     implementation(libs.hibernate)
-    implementation(libs.javax.annotation)
+    implementation(libs.jakarta.annotation)
 
     // Liquibase
     implementation(libs.liquibase)
@@ -129,11 +129,11 @@ dependencies {
     implementation(libs.resteasy.multipart)
     implementation(libs.resteasy.validator)
 
-    implementation(libs.javax.rs)
+    implementation(libs.jakarta.rs)
 
-    // Sun jaxb
-    implementation(libs.jaxb)
-    implementation(libs.jaxb.core)
+    // Jakarta JAXB
+    implementation(libs.jaxb.api)
+    implementation(libs.jaxb.impl)
 
     // Swagger
     implementation(libs.swagger)
@@ -172,14 +172,14 @@ dependencies {
     // OTEL
     implementation(libs.otel.annotation)
 
-    providedCompile(libs.javax.servlet)
+    providedCompile(libs.jakarta.servlet)
 
     // DB Drivers
     runtimeOnly(libs.postgresql)
     runtimeOnly(libs.mariadb)
 
     testRuntimeOnly(libs.hsqldb)
-    testRuntimeOnly(libs.javax.el)
+    testRuntimeOnly(libs.jakarta.el)
 
     // Core testing libraries
     // Junit 5
@@ -243,7 +243,8 @@ openApiGenerate {
             interfaceOnly: 'true',
             dateLibrary  : "java8",
             useTags      : "true",
-            containerDefaultToNull: "true"
+            containerDefaultToNull: "true",
+            useJakartaEe : "true"
     ]
     templateDir = "$rootDir/buildSrc/src/main/resources/templates"
 }
