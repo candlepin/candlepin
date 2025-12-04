@@ -316,6 +316,66 @@ public class EventFactoryTest {
     }
 
     @Test
+    public void testBulkConsumerEnvironmentChangeEventGeneration() {
+        boolean anonymous = false;
+        Owner owner = new Owner()
+            .setKey(TestUtil.randomString())
+            .setAnonymous(anonymous);
+
+        List<String> consumerUuids = Stream.generate(Util::generateUUID)
+            .limit(3)
+            .toList();
+
+        Event event = this.eventFactory.bulkConsumerEnvironmentChange(owner, consumerUuids);
+
+        assertThat(event)
+            .isNotNull()
+            .returns(Event.Target.CONSUMER, Event::getTarget)
+            .returns(Event.Type.BULK_MODIFICATION, Event::getType)
+            .returns(owner.getKey(), Event::getOwnerKey)
+            .returns(anonymous, Event::isOwnerAnonymous);
+
+        Map<String, Object> eventData = event.getEventData();
+        assertNotNull(eventData);
+        assertEquals("setEnvironments", eventData.get("operation"));
+
+        List<String> eventConsumerUuids = (List<String>) eventData.get("consumerUuids");
+        assertThat(eventConsumerUuids)
+            .isNotNull()
+            .containsExactlyElementsOf(consumerUuids);
+    }
+
+    @Test
+    public void testBulkConsumerEnvironmentChangeRequiresOwner() {
+        List<String> consumerUuids = Stream.generate(Util::generateUUID)
+            .limit(2)
+            .toList();
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerEnvironmentChange((Owner) null, consumerUuids));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testBulkConsumerEnvironmentChangeRequiresOwnerKey(String ownerKey) {
+        List<String> consumerUuids = Stream.generate(Util::generateUUID)
+            .limit(2)
+            .toList();
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerEnvironmentChange(ownerKey, false, consumerUuids));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testBulkConsumerEnvironmentChangeRequiresConsumerUuids(List<String> consumerUuids) {
+        String ownerKey = TestUtil.randomString();
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerEnvironmentChange(ownerKey, false, consumerUuids));
+    }
+
+    @Test
     public void testBulkConsumerMigrationWithNullSourceOwner() {
         Owner owner2 = new Owner()
             .setKey("key-2")
