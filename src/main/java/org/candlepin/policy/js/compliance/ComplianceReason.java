@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlTransient;
+import jakarta.xml.bind.annotation.XmlTransient;
 
 /**
  * ComplianceReason

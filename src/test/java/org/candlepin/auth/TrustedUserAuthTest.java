@@ -42,8 +42,8 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.List;
 import java.util.Locale;
 
-import javax.inject.Provider;
-import javax.ws.rs.core.HttpHeaders;
+import jakarta.inject.Provider;
+import jakarta.ws.rs.core.HttpHeaders;
 
 public class TrustedUserAuthTest {
 

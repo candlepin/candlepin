@@ -37,7 +37,7 @@ import org.xnap.commons.i18n.I18n;
 import java.util.Collection;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * API implementation for Role operations

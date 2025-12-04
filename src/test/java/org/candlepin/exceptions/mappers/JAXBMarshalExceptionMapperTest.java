@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 import org.jboss.resteasy.plugins.providers.jaxb.JAXBMarshalException;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 /**
  * JAXBMarshalExceptionMapperTest

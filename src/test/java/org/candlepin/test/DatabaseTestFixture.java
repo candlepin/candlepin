@@ -103,10 +103,6 @@ import com.google.inject.persist.PersistFilter;
 import com.google.inject.util.Modules;
 
 import org.hibernate.Session;
-import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -122,12 +118,12 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Locale;
 
-import javax.inject.Provider;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.inject.Provider;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 
 
@@ -201,29 +197,7 @@ public class DatabaseTestFixture {
     @BeforeAll
     public static void initClass() {
         parentInjector = Guice.createInjector(new TestingModules.JpaModule());
-        insertValidationEventListeners(parentInjector);
-    }
-
-    /**
-     * There's no way to really get Guice to perform injections on stuff that the JpaPersistModule is
-     * creating, so we resort to grabbing the EntityManagerFactory after the fact and adding the
-     * Validation EventListener ourselves.
-     *
-     * @param inj
-     */
-    private static void insertValidationEventListeners(Injector inj) {
-        Provider<EntityManagerFactory> emfProvider = inj.getProvider(EntityManagerFactory.class);
-        SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) emfProvider.get();
-        EventListenerRegistry registry = sessionFactoryImpl
-            .getServiceRegistry()
-            .getService(EventListenerRegistry.class);
-
-        Provider<BeanValidationEventListener> listenerProvider = inj
-            .getProvider(BeanValidationEventListener.class);
-
-        registry.getEventListenerGroup(EventType.PRE_INSERT).appendListener(listenerProvider.get());
-        registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
-        registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
+        //         insertValidationEventListeners(parentInjector);
     }
 
     // Need a before each here and a Liquibase extension...

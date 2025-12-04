@@ -28,11 +28,11 @@ import java.io.OutputStream;
 import java.util.List;
 
 import javax.security.cert.X509Certificate;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response.ResponseBuilder;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * Facade to allow the Keycloak classes to interface with RestEasy's HttpRequest and ResponseBuilder.
@@ -139,7 +139,7 @@ public class KeycloakOIDCFacade implements HttpFacade {
     protected class ResponseFacade implements OIDCHttpFacade.Response {
 
         private ResponseBuilder responseBuilder =
-            javax.ws.rs.core.Response.status(204);
+            jakarta.ws.rs.core.Response.status(204);
 
         @Override
         public void setStatus(int status) {

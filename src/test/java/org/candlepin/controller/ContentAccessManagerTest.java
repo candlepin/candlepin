@@ -78,7 +78,7 @@ import java.security.KeyPair;
 import java.util.Date;
 import java.util.Set;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 
 @ExtendWith(MockitoExtension.class)

@@ -30,7 +30,7 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Objects;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 
 /**

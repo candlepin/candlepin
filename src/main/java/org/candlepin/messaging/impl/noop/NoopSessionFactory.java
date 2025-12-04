@@ -19,7 +19,7 @@ import org.candlepin.messaging.CPMSession;
 import org.candlepin.messaging.CPMSessionConfig;
 import org.candlepin.messaging.CPMSessionFactory;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 
 

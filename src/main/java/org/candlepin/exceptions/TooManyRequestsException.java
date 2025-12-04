@@ -16,7 +16,7 @@ package org.candlepin.exceptions;
 
 import java.util.Map;
 
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * TooManyRequestsException represents an exception that generates a 429 HTTP response status code.

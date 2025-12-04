@@ -61,8 +61,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.core.MediaType;
 
 
 

@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
 import java.util.List;
 import java.util.Objects;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * Class responsible for migration of consumers from anonymous owners.

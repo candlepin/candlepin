@@ -25,13 +25,13 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.Objects;
 
-import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.ws.rs.Priorities;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.Provider;
+import jakarta.annotation.Priority;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Priorities;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerRequestFilter;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.ext.Provider;
 
 
 
@@ -43,13 +43,13 @@ import javax.ws.rs.ext.Provider;
 public class PageRequestFilter implements ContainerRequestFilter {
 
     private final Configuration config;
-    private final javax.inject.Provider<I18n> i18nProvider;
+    private final jakarta.inject.Provider<I18n> i18nProvider;
 
     private final int defaultPageSize;
     private final int maxPageSize;
 
     @Inject
-    public PageRequestFilter(Configuration config, javax.inject.Provider<I18n> i18nProvider) {
+    public PageRequestFilter(Configuration config, jakarta.inject.Provider<I18n> i18nProvider) {
         this.config = Objects.requireNonNull(config);
         this.i18nProvider = Objects.requireNonNull(i18nProvider);
 

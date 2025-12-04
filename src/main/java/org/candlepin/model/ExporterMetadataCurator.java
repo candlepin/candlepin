@@ -14,9 +14,9 @@
  */
 package org.candlepin.model;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.persistence.NoResultException;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.persistence.NoResultException;
 
 
 

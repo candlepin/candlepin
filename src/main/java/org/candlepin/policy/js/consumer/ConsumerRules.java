@@ -24,7 +24,7 @@ import org.candlepin.model.PoolCurator;
 
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 
 

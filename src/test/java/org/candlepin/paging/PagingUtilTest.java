@@ -48,7 +48,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 
 

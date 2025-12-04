@@ -42,9 +42,9 @@ import org.xnap.commons.i18n.I18n;
 
 import java.net.URISyntaxException;
 
-import javax.inject.Provider;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.container.ContainerRequestContext;
+import jakarta.inject.Provider;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.container.ContainerRequestContext;
 
 
 

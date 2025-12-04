@@ -48,8 +48,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import javax.inject.Provider;
-import javax.ws.rs.core.HttpHeaders;
+import jakarta.inject.Provider;
+import jakarta.ws.rs.core.HttpHeaders;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)

@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.Writer;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * Meta maps to meta.json in the export

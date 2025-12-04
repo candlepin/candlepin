@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.EOFException;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 /**
  * ApplicationExceptionMapperTest

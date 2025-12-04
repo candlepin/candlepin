@@ -16,8 +16,8 @@ package org.candlepin.resteasy.filter;
 
 import java.io.IOException;
 
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerRequestFilter;
 
 /**
  * This class is a no-op implementation of the ContainerRequestFilter

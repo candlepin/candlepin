@@ -34,8 +34,8 @@ import java.util.Objects;
 import java.util.WeakHashMap;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 
 

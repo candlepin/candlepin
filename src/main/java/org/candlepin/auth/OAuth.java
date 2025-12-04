@@ -43,9 +43,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.ws.rs.core.Response;
 
 /**
  * Uses two legged OAuth. If it succeeds, then it pulls the username off of a

@@ -60,7 +60,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.SortedSet;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 
 

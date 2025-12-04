@@ -81,7 +81,7 @@ import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.persistence.LockModeType;
+import jakarta.persistence.LockModeType;
 
 
 

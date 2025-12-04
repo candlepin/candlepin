@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 /**
  * EnvironmentContentOverrideCurator

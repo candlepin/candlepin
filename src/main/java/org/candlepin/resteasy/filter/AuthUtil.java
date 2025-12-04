@@ -18,7 +18,7 @@ import org.jboss.resteasy.spi.HttpRequest;
 
 import java.util.List;
 
-import javax.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.HttpHeaders;
 
 /**
  * AuthUtil

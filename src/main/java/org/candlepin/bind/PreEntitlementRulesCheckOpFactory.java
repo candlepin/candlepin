@@ -18,7 +18,7 @@ import org.candlepin.policy.js.entitlement.Enforcer;
 
 import java.util.Objects;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 
 

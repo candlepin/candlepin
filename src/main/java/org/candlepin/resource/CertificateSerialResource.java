@@ -22,7 +22,7 @@ import org.candlepin.resource.server.v1.CertificateSerialApi;
 
 import com.google.inject.persist.Transactional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 
 

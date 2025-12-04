@@ -14,7 +14,7 @@
  */
 package org.candlepin.exceptions;
 
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * Represents a ACCEPTED (HTTP 202) error.

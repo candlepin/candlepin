@@ -23,8 +23,8 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 /**
  * This auth form allows for a consumer id to
  * be passed in a clear http header. This should

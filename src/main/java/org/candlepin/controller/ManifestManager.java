@@ -61,8 +61,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * This class serves as a controller layer for manifest export and import and encapsulates

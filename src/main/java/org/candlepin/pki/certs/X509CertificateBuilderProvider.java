@@ -22,8 +22,8 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.util.Objects;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 public class X509CertificateBuilderProvider implements Provider<X509CertificateBuilder> {
     private final Provider<BouncyCastleProvider> securityProvider;

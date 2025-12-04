@@ -32,10 +32,10 @@ import org.candlepin.service.exception.user.UserUnauthorizedException;
 
 import org.apache.commons.lang3.StringUtils;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
 
 /**
  * ServiceExceptionMapper maps the RESTEasy Failure into JSON and allows the

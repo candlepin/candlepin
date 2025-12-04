@@ -16,9 +16,9 @@ package org.candlepin.model;
 
 import org.candlepin.service.model.CertificateInfo;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.validation.constraints.NotNull;
 
 
 

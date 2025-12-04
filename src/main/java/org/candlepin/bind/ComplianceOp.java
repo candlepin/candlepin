@@ -25,7 +25,7 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import java.util.Map;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * This bind operation pre-computes the compliance of a consumer,

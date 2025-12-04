@@ -55,8 +55,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextEvent;
 
 // TODO: Currently the tests in this class are in a state where we have mocking for some objects, but we are
 // backing up and restoring the drivers as part of some tests. We should commit to a testing paradigm in

@@ -21,9 +21,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.persistence.Query;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.persistence.Query;
 
 /**
  * IdentityCertificateCurator

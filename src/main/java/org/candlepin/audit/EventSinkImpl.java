@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * EventSink - Queues events to be sent after request/job completes, and handles actual

@@ -151,9 +151,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.inject.Provider;
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
+import jakarta.inject.Provider;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 
 
 

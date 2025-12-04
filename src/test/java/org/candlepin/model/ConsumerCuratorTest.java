@@ -68,7 +68,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 public class ConsumerCuratorTest extends DatabaseTestFixture {
 

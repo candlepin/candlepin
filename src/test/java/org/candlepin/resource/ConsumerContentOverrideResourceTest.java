@@ -76,7 +76,7 @@ import org.mockito.quality.Strictness;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 
 

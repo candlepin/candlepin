@@ -31,7 +31,7 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Locale;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 
 public class AttributeValidatorTest {

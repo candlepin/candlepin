@@ -23,11 +23,11 @@ import org.xnap.commons.i18n.I18n;
 
 import java.lang.reflect.Method;
 
-import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.ws.rs.Priorities;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ResourceInfo;
+import jakarta.annotation.Priority;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Priorities;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ResourceInfo;
 
 /**
  * This class is responsible for determining whether or not the principal
@@ -40,7 +40,7 @@ public class SuperAdminAuthorizationFilter extends AbstractAuthorizationFilter {
     private static final Logger log = LoggerFactory.getLogger(SuperAdminAuthorizationFilter.class);
 
     @Inject
-    public SuperAdminAuthorizationFilter(javax.inject.Provider<I18n> i18nProvider) {
+    public SuperAdminAuthorizationFilter(jakarta.inject.Provider<I18n> i18nProvider) {
         this.i18nProvider = i18nProvider;
     }
 

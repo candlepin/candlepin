@@ -28,7 +28,7 @@ import java.security.cert.X509Certificate;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * A generic mechanism for reading CA certificates from an underlying datastore.
