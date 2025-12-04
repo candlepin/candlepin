@@ -559,7 +559,7 @@ paths:
       operationId: cloudAuthorize
       security: []
       x-java-response:
-        type: javax.ws.rs.core.Response
+        type: jakarta.ws.rs.core.Response
         isContainer: false
       parameters:
         - name: version
@@ -907,7 +907,7 @@ paths:
               items:
                 type: string
       x-java-response:
-        type: javax.ws.rs.core.Response
+        type: jakarta.ws.rs.core.Response
         isContainer: false
       responses:
         204:
@@ -1109,7 +1109,7 @@ paths:
       operationId: getContentAccessBody
       security: [ ]
       x-java-response:
-        type: javax.ws.rs.core.Response
+        type: jakarta.ws.rs.core.Response
         isContainer: false
       parameters:
         - name: consumer_uuid
@@ -1242,7 +1242,7 @@ paths:
         - consumer
       operationId: exportCertificates
       x-java-response:
-        type: javax.ws.rs.core.Response
+        type: jakarta.ws.rs.core.Response
         isContainer: false
       security: [ ]
       parameters:
@@ -1699,7 +1699,7 @@ paths:
       operationId: bind
       security: []
       x-java-response:
-        type: javax.ws.rs.core.Response
+        type: jakarta.ws.rs.core.Response
         isContainer: false
       parameters:
         - name: consumer_uuid
@@ -3995,7 +3995,7 @@ paths:
             type: integer
       security: []
       x-java-response:
-        type: javax.ws.rs.core.Response
+        type: jakarta.ws.rs.core.Response
         isContainer: false
       responses:
         200:
@@ -8335,7 +8335,7 @@ paths:
       operationId: activateSubscription
       security: []
       x-java-response:
-        type: javax.ws.rs.core.Response
+        type: jakarta.ws.rs.core.Response
       parameters:
         - name: consumer_uuid
           in: query
