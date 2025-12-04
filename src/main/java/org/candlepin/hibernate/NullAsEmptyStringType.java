@@ -14,9 +14,7 @@
  */
 package org.candlepin.hibernate;
 
-import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.usertype.UserType;
 
 import java.io.Serializable;
@@ -33,128 +31,75 @@ import java.sql.Types;
  * database level to properly implement a unique constraint with empty and null values; but may have
  * other uses.
  */
-public class NullAsEmptyStringType implements UserType {
+public class NullAsEmptyStringType implements UserType<String> {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public String assemble(Serializable cached, Object owner) {
-        if (cached != null && !(cached instanceof String)) {
-            throw new IllegalStateException("cached value is not a string: " + cached);
-        }
-
-        return (String) cached;
+    public int getSqlType() {
+        return Types.VARCHAR;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Object deepCopy(Object value) {
-        // From the Hibernate docs: "It is not necessary to copy immutable objects, or null values,
-        // in which case it is safe to simply return the argument."
-
-        return value;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Serializable disassemble(Object value) {
-        if (value != null && !(value instanceof String)) {
-            throw new IllegalStateException("value is not a string: " + value);
-        }
-
-        return (Serializable) value;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals(Object x, Object y) throws HibernateException {
-        if (x == y) {
-            return true;
-        }
-
-        // We can't compare non-Strings
-        if ((x != null && !(x instanceof String)) || (y != null && !(y instanceof String))) {
-            return false;
-        }
-
-        String xstr = x != null ? (String) x : "";
-        String ystr = y != null ? (String) y : "";
-
-        return xstr.equals(ystr);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode(Object x) throws HibernateException {
-        return x != null ? x.hashCode() : 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isMutable() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Object nullSafeGet(ResultSet resultSet, String[] names,
-        SharedSessionContractImplementor sscImplementor, Object owner) throws SQLException {
-
-        // Convert empty strings back to nulls
-        String value = StandardBasicTypes.STRING.nullSafeGet(resultSet, names[0], sscImplementor);
-        return value != null && !value.isEmpty() ? value : null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void nullSafeSet(PreparedStatement statement, Object value, int index,
-        SharedSessionContractImplementor sscImplementor)
-        throws HibernateException, SQLException {
-
-        // Convert null values to empty strings; ignore everything else
-        StandardBasicTypes.STRING.nullSafeSet(statement, (value != null ? value : ""), index, sscImplementor);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Object replace(Object original, Object target, Object owner) throws HibernateException {
-        // From the Hibernate docs: "For immutable objects, or null values, it is safe to simply
-        // return the first parameter."
-
-        return original;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Class<String> returnedClass() {
         return String.class;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public int[] sqlTypes() {
-        return new int[] { Types.VARCHAR };
+    public boolean equals(String x, String y) {
+        if (x == y) {
+            return true;
+        }
+
+        String xstr = x != null ? x : "";
+        String ystr = y != null ? y : "";
+
+        return xstr.equals(ystr);
+    }
+
+    @Override
+    public int hashCode(String x) {
+        return x != null ? x.hashCode() : 0;
+    }
+
+    @Override
+    public String nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session,
+        Object owner) throws SQLException {
+        // Convert empty strings back to nulls
+        String value = rs.getString(position);
+        return (value != null && !value.isEmpty()) ? value : null;
+    }
+
+    @Override
+    public void nullSafeSet(PreparedStatement st, String value, int index,
+        SharedSessionContractImplementor session) throws SQLException {
+        // Convert null values to empty strings
+        st.setString(index, value != null ? value : "");
+    }
+
+    @Override
+    public String deepCopy(String value) {
+        // Strings are immutable, so just return the value
+        return value;
+    }
+
+    @Override
+    public boolean isMutable() {
+        return false;
+    }
+
+    @Override
+    public Serializable disassemble(String value) {
+        return value;
+    }
+
+    @Override
+    public String assemble(Serializable cached, Object owner) {
+        return (String) cached;
+    }
+
+    @Override
+    public String replace(String detached, String managed, Object owner) {
+        // Strings are immutable
+        return detached;
     }
 
 }

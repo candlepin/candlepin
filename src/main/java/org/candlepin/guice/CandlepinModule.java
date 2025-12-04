@@ -193,7 +193,6 @@ import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.persist.jpa.JpaPersistOptions;
 
-import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
 import org.quartz.SchedulerFactory;
 import org.quartz.impl.StdSchedulerFactory;
@@ -205,12 +204,13 @@ import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
 
 import javax.cache.CacheManager;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-import javax.validation.MessageInterpolator;
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
+
+import jakarta.inject.Named;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidatorFactory;
 
 
 public class CandlepinModule extends AbstractModule {
@@ -227,7 +227,6 @@ public class CandlepinModule extends AbstractModule {
         bindScope(CandlepinRequestScoped.class, requestScope);
         bind(CandlepinRequestScope.class).toInstance(requestScope);
         bind(I18n.class).toProvider(I18nProvider.class);
-        bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
         bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
 
         configureJPA();

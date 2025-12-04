@@ -105,7 +105,8 @@ public class ColumnarResultIterator<T> implements ResultIterator<T> {
         }
 
         this.useStateCache = false;
-        T element = (T) this.cursor.get(this.column);
+        Object[] row = (Object[]) this.cursor.get();
+        T element = (T) row[this.column];
 
         if (this.evict) {
             this.toEvict = element;

@@ -75,7 +75,7 @@ public class RowResultIterator implements ResultIterator<Object[]> {
         }
 
         this.useStateCache = false;
-        return this.cursor.get();
+        return (Object[]) this.cursor.get();
     }
 
     @Override

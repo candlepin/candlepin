@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import org.candlepin.auth.AuthenticationMethod;
 import org.candlepin.exceptions.DuplicateEntryException;
+import org.candlepin.hibernate.EmptyStringUserType;
 import org.candlepin.service.model.ConsumerInfo;
 import org.candlepin.util.Util;
 
@@ -44,28 +45,28 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.Basic;
-import javax.persistence.CascadeType;
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.persistence.Basic;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 
 
@@ -180,17 +181,17 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     private String complianceStatusHash;
 
     @Column(length = 255, nullable = true)
-    @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
+    @Type(EmptyStringUserType.class)
     @Size(max = 255)
     private String serviceLevel;
 
     @Column(name = "sp_role", length = 255, nullable = true)
-    @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
+    @Type(EmptyStringUserType.class)
     @Size(max = 255)
     private String role;
 
     @Column(name = "sp_usage", length = 255, nullable = true)
-    @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
+    @Type(EmptyStringUserType.class)
     @Size(max = 255)
     private String usage;
 
@@ -325,7 +326,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     private Set<ConsumerActivationKey> activationKeys;
 
     @Column(name = "sp_service_type")
-    @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
+    @Type(EmptyStringUserType.class)
     @Size(max = 255)
     private String serviceType;
 

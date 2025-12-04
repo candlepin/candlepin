@@ -25,9 +25,10 @@ import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.Date;
 
+import javax.sql.rowset.serial.SerialBlob;
+
 import jakarta.inject.Singleton;
 import jakarta.persistence.Query;
-import javax.sql.rowset.serial.SerialBlob;
 
 /**
  * Provides DB management for stored manifest archive files.

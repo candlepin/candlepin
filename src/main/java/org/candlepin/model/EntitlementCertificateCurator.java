@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.persistence.Query;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.persistence.Query;
 
 
 
@@ -135,7 +135,7 @@ public class EntitlementCertificateCurator extends AbstractHibernateCurator<Enti
         // If we don't set the flush mode here, we will trigger inserts on any pending new
         // entitlement certificates, on top of potentially catching certs we don't intend
         // to pick up.
-        selector.setFlushMode(javax.persistence.FlushModeType.COMMIT);
+        selector.setFlushMode(jakarta.persistence.FlushModeType.COMMIT);
 
         // Get certificate and serial IDs...
         for (List<String> block : this.partition(entitlementIds)) {

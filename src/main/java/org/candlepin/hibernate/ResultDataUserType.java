@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 import org.slf4j.Logger;
@@ -57,7 +56,7 @@ import java.util.Properties;
  * as an Object but at least readers of the data can downcast correctly later if they know what type the
  * job is storing.
  */
-public class ResultDataUserType implements UserType, DynamicParameterizedType {
+public class ResultDataUserType implements UserType<Object>, DynamicParameterizedType {
     private static final Logger log = LoggerFactory.getLogger(ResultDataUserType.class);
     public static final String JSON_CLASS = "jsonClass";
 
@@ -66,13 +65,13 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
     private Class<?> jsonClass;
 
     @Override
-    public int[] sqlTypes() {
-        return new int[] { Types.VARBINARY };
+    public int getSqlType() {
+        return Types.VARBINARY;
     }
 
     @Override
-    public Class returnedClass() {
-        return jsonClass;
+    public Class<Object> returnedClass() {
+        return Object.class;
     }
 
     @Override
@@ -86,11 +85,11 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
     }
 
     @Override
-    public Object nullSafeGet(ResultSet rs, String[] names,
+    public Object nullSafeGet(ResultSet rs, int position,
         SharedSessionContractImplementor session, Object owner)
         throws HibernateException, SQLException {
 
-        byte[] data = StandardBasicTypes.BINARY.nullSafeGet(rs, names[0], session);
+        byte[] data = rs.getBytes(position);
         return deserialize(data);
     }
 
@@ -99,7 +98,12 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
         SharedSessionContractImplementor session)
         throws HibernateException, SQLException {
 
-        StandardBasicTypes.BINARY.nullSafeSet(st, serializeJson(value), index, session);
+        if (value == null) {
+            st.setNull(index, Types.VARBINARY);
+        }
+        else {
+            st.setBytes(index, serializeJson(value));
+        }
     }
 
     private Object deserialize(byte[] data) {

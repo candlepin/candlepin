@@ -15,6 +15,7 @@
 package org.candlepin.cache;
 
 import javax.cache.CacheManager;
+
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 

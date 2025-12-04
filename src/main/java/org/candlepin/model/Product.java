@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.hibernate.NullAsEmptyStringType;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.MapView;
@@ -45,22 +46,22 @@ import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 
 
@@ -185,7 +186,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     // any namespace-aware queries will need to be updated to change the global namespace lookup
     // from "namespace = ''" to "namespace IS NULL".
     @Column(name = "namespace")
-    @Type(type = "org.candlepin.hibernate.NullAsEmptyStringType")
+    @Type(NullAsEmptyStringType.class)
     private String namespace;
 
     // Internal RH product ID

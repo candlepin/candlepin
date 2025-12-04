@@ -41,12 +41,6 @@ import com.google.inject.util.Modules;
 import io.smallrye.config.PropertiesConfigSource;
 import io.smallrye.config.SmallRyeConfigBuilder;
 
-import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
-import org.jboss.resteasy.plugins.guice.GuiceResteasyBootstrapServletContextListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18nManager;
@@ -66,9 +60,10 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.cache.CacheManager;
-import javax.persistence.EntityManagerFactory;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
+
+import dev.resteasy.guice.GuiceResteasyBootstrapServletContextListener;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextEvent;
 
 
 /**
@@ -173,7 +168,8 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
     private void initializeSubsystems(Injector injector) throws Exception {
         // Must call super.contextInitialized() before accessing injector
-        insertValidationEventListeners(injector);
+        // Hibernate 6 handles bean validation automatically - no manual listener registration needed
+        // insertValidationEventListeners(injector);
 
         MethodLocator methodLocator = injector.getInstance(MethodLocator.class);
         methodLocator.init();
@@ -386,29 +382,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         modules.add(new CandlepinFilterModule(config));
 
         return modules;
-    }
-
-    /**
-     * There's no way to really get Guice to perform injections on stuff that
-     * the JpaPersistModule is creating, so we resort to grabbing the EntityManagerFactory
-     * after the fact and adding the Validation EventListener ourselves.
-     * @param injector
-     */
-    private void insertValidationEventListeners(Injector injector) {
-        javax.inject.Provider<EntityManagerFactory> emfProvider =
-            injector.getProvider(EntityManagerFactory.class);
-        HibernateEntityManagerFactory hibernateEntityManagerFactory =
-            (HibernateEntityManagerFactory) emfProvider.get();
-        SessionFactoryImpl sessionFactoryImpl =
-            (SessionFactoryImpl) hibernateEntityManagerFactory.getSessionFactory();
-        EventListenerRegistry registry =
-            sessionFactoryImpl.getServiceRegistry().getService(EventListenerRegistry.class);
-
-        javax.inject.Provider<BeanValidationEventListener> listenerProvider =
-            injector.getProvider(BeanValidationEventListener.class);
-        registry.getEventListenerGroup(EventType.PRE_INSERT).appendListener(listenerProvider.get());
-        registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
-        registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
     }
 
 }

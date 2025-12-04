@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.hibernate.NullAsEmptyStringType;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.util.Util;
@@ -32,16 +33,16 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 
 
@@ -72,7 +73,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     // any namespace-aware queries will need to be updated to change the global namespace lookup
     // from "namespace = ''" to "namespace IS NULL".
     @Column(name = "namespace")
-    @Type(type = "org.candlepin.hibernate.NullAsEmptyStringType")
+    @Type(NullAsEmptyStringType.class)
     private String namespace;
 
     // Internal RH content ID
