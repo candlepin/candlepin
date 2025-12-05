@@ -16,7 +16,7 @@ package org.candlepin.policy.js;
 
 import org.mozilla.javascript.Scriptable;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 
 

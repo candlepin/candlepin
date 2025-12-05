@@ -27,10 +27,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.persistence.NoResultException;
-import javax.persistence.Query;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.Query;
 
 
 @Singleton

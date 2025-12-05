@@ -18,14 +18,14 @@ import org.candlepin.version.VersionUtil;
 
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.persistence.RollbackException;
-import javax.validation.ValidationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import jakarta.inject.Inject;
+import jakarta.persistence.RollbackException;
+import jakarta.validation.ValidationException;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.ResponseBuilder;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
 
 /**
  * When validation fails, Hibernate can throw RollbackExceptions.  This mapper takes
@@ -36,10 +36,10 @@ import javax.ws.rs.ext.Provider;
 public class RollbackExceptionMapper extends CandlepinExceptionMapper
     implements ExceptionMapper<RollbackException> {
 
-    private javax.inject.Provider<ValidationExceptionMapper> exceptionMapperProvider;
+    private jakarta.inject.Provider<ValidationExceptionMapper> exceptionMapperProvider;
 
     @Inject
-    public RollbackExceptionMapper(javax.inject.Provider<ValidationExceptionMapper> mapper) {
+    public RollbackExceptionMapper(jakarta.inject.Provider<ValidationExceptionMapper> mapper) {
         this.exceptionMapperProvider = mapper;
     }
 

@@ -14,8 +14,8 @@
  */
 package org.candlepin.model;
 
-import javax.inject.Singleton;
-import javax.persistence.NoResultException;
+import jakarta.inject.Singleton;
+import jakarta.persistence.NoResultException;
 
 /**
  * Curator responsible for datastore operation for the {@link ContentAccessPayload} entity.

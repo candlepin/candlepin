@@ -20,7 +20,7 @@ import org.candlepin.model.Entitlement;
 
 import java.util.Map;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * This BindOperation will be replaced shortly in an upcoming PR, where we

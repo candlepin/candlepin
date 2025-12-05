@@ -17,9 +17,9 @@ package org.candlepin.servlet.filter.logging;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.ServletResponse;
-import javax.servlet.WriteListener;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.WriteListener;
 
 /**
  * Heavily borrowed from the logback-access package.

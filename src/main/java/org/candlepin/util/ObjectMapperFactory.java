@@ -28,10 +28,10 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
+import com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
+import com.fasterxml.jackson.module.jakarta.xmlbind.JakartaXmlBindAnnotationIntrospector;
 import com.google.inject.Provider;
 
 
@@ -59,14 +59,14 @@ public class ObjectMapperFactory implements Provider<ObjectMapper> {
 
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        Hibernate5Module hbm = new Hibernate5Module();
-        hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
+        Hibernate6Module hbm = new Hibernate6Module();
+        hbm.enable(Hibernate6Module.Feature.FORCE_LAZY_LOADING);
         mapper.registerModule(hbm);
         mapper.registerModule(new Jdk8Module());
         mapper.registerModule(new JavaTimeModule());
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
+        AnnotationIntrospector secondary = new JakartaXmlBindAnnotationIntrospector(mapper.getTypeFactory());
         AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
         mapper.setAnnotationIntrospector(pair);
 

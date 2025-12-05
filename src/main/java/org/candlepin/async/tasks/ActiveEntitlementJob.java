@@ -25,7 +25,7 @@ import org.candlepin.policy.js.compliance.ComplianceRules;
 import java.util.List;
 import java.util.Objects;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 
 

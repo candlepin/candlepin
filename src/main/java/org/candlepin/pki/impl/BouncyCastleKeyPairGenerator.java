@@ -41,7 +41,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Objects;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 /**
  * Class handles creation of {@link KeyPair}.

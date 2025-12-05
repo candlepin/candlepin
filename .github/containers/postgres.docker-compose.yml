@@ -25,7 +25,7 @@ services:
       args:
       - WAR_FILE=${WAR_FILE}
     environment:
-      JPA_CONFIG_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQL92Dialect
+      JPA_CONFIG_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
       JPA_CONFIG_HIBERNATE_CONNECTION_DRIVER_CLASS: org.postgresql.Driver
       JPA_CONFIG_HIBERNATE_CONNECTION_URL: jdbc:postgresql://postgres/candlepin
       JPA_CONFIG_HIBERNATE_CONNECTION_USERNAME: candlepin

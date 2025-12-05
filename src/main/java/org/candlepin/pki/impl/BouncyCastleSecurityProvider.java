@@ -19,9 +19,9 @@ package org.candlepin.pki.impl;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
- * Class serves as a {@link javax.inject.Provider} of {@link BouncyCastleProvider}.
+ * Class serves as a {@link jakarta.inject.Provider} of {@link BouncyCastleProvider}.
  */
-public class BouncyCastleSecurityProvider implements javax.inject.Provider<BouncyCastleProvider> {
+public class BouncyCastleSecurityProvider implements jakarta.inject.Provider<BouncyCastleProvider> {
 
     private static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
 

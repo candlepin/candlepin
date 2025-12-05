@@ -14,7 +14,7 @@
  */
 package org.candlepin.exceptions;
 
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * Thrown when there is a resource conflict such as an out of date edit.

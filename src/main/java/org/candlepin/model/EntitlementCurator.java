@@ -38,23 +38,23 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.MapJoin;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.SetJoin;
-import javax.persistence.criteria.Subquery;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
 
 
 /**
@@ -657,7 +657,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
          *
          */
         String jpql = "SELECT e FROM Entitlement e " +
-            "JOIN Pool p on e.pool = p.id " +
+            "JOIN Pool p on e.pool.id = p.id " +
             "WHERE e.consumer = :consumer " +
             "AND :activeOn >= p.startDate " +
             "AND :activeOn <= p.endDate";
@@ -981,10 +981,11 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         if (entitlementIds != null) {
             String jpql = "DELETE FROM Entitlement e WHERE e.id IN (:eids)";
-            Query query = this.getEntityManager().createQuery(jpql);
 
             int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit());
             for (List<String> block : Iterables.partition(entitlementIds, blockSize)) {
+                // Hibernate 6 requires a fresh query for each parameter binding in bulk operations
+                Query query = this.getEntityManager().createQuery(jpql);
                 deleted += query.setParameter("eids", block)
                     .executeUpdate();
             }

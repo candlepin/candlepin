@@ -24,7 +24,7 @@ import org.candlepin.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 
 

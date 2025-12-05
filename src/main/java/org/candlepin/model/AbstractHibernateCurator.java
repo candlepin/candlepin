@@ -37,7 +37,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import jakarta.persistence.Id;
 import java.io.Serializable;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -53,22 +56,22 @@ import java.util.TreeMap;
 import java.util.function.Supplier;
 import java.util.stream.StreamSupport;
 
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.LockModeType;
-import javax.persistence.NoResultException;
-import javax.persistence.OptimisticLockException;
-import javax.persistence.TransactionRequiredException;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.From;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 
 
 
@@ -1016,14 +1019,60 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
         // Fetch the entities from the DB...
         if (ordered.size() > 0) {
+            // Hibernate 6 has strict type requirements for multiLoad
+            // We need to pass each ID individually as varargs
+            // This requires creating a properly typed array
+            Class<?> idType = getIdType(entityClass);
+            Object typedArray = Array.newInstance(idType, ordered.size());
+            for (int i = 0; i < ordered.size(); i++) {
+                Array.set(typedArray, i, ordered.get(i));
+            }
+
+            // Use varargs expansion by casting to the correct array type
+            // This ensures Hibernate receives String[] instead of Object[]
             return this.currentSession()
                 .byMultipleIds(entityClass)
                 .enableOrderedReturn(false)
                 .with(new LockOptions(LockMode.PESSIMISTIC_WRITE))
-                .multiLoad(ordered);
+                .multiLoad(castToVarargs(typedArray));
         }
 
         return new ArrayList<>();
+    }
+
+    /**
+     * Gets the type of the @Id field for the given entity class using reflection.
+     * This is needed for Hibernate 6's stricter type requirements in multiLoad operations.
+     *
+     * @param entityClass the entity class to inspect
+     * @return the class of the ID field
+     */
+    private Class<?> getIdType(Class<E> entityClass) {
+        // Check current class and all superclasses for @Id field
+        Class<?> clazz = entityClass;
+        while (clazz != null && clazz != Object.class) {
+            for (Field field : clazz.getDeclaredFields()) {
+                if (field.isAnnotationPresent(Id.class)) {
+                    return field.getType();
+                }
+            }
+            clazz = clazz.getSuperclass();
+        }
+        // Default to String if no @Id field found (most common in this codebase)
+        return String.class;
+    }
+
+    /**
+     * Casts a dynamically-created array to Object[] for varargs usage.
+     * This is needed because Java's varargs require the array to be properly typed,
+     * but we create the array dynamically using reflection.
+     *
+     * @param array the array to cast (created via Array.newInstance)
+     * @return the array as Object[] suitable for varargs
+     */
+    @SuppressWarnings("unchecked")
+    private <T> T[] castToVarargs(Object array) {
+        return (T[]) array;
     }
 
     /**

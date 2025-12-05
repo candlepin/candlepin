@@ -19,8 +19,8 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import java.util.Collection;
 import java.util.List;
 
-import javax.inject.Singleton;
-import javax.persistence.NoResultException;
+import jakarta.inject.Singleton;
+import jakarta.persistence.NoResultException;
 
 
 

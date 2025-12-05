@@ -70,8 +70,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.persistence.LockModeType;
+import jakarta.inject.Inject;
+import jakarta.persistence.LockModeType;
 
 
 

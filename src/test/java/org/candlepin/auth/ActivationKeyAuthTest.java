@@ -42,7 +42,7 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.List;
 import java.util.Locale;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 @ExtendWith(MockitoExtension.class)
 class ActivationKeyAuthTest {

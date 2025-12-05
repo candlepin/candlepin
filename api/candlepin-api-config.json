@@ -4,5 +4,6 @@
   "invokerPackage": "org.candlepin.invoker.server",
   "groupId": "org.candlepin",
   "artifactId": "candlepin-api",
-  "java8": true
+  "java8": true,
+  "useJakartaEe": true
 }

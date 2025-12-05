@@ -19,7 +19,7 @@ import org.candlepin.messaging.CPMException;
 
 import com.google.inject.Injector;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 
 

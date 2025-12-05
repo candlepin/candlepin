@@ -26,13 +26,13 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Id;
-import javax.persistence.Persistence;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Id;
+import jakarta.persistence.Persistence;
+import jakarta.persistence.Table;
 
 
 
@@ -47,7 +47,7 @@ public class EmptyStringUserTypeTest {
         private int id;
 
         @Column
-        @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
+        @Type(EmptyStringUserType.class)
         private String typed;
 
         @Column

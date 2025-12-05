@@ -14,10 +14,10 @@
  */
 package org.candlepin.exceptions.mappers;
 
-import javax.ws.rs.NotSupportedException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.NotSupportedException;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
 
 /**
  * UnsupportedMediaTypeExceptionMapper maps the RESTEasy

@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 
-import javax.ws.rs.Path;
+import jakarta.ws.rs.Path;
 
 
 /**

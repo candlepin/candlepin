@@ -16,7 +16,7 @@ package org.candlepin.model;
 
 import java.util.Optional;
 
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.ManagedType;
 
 
 

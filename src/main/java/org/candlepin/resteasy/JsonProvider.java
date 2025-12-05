@@ -44,20 +44,20 @@ import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
+import com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.jaxrs.cfg.Annotations;
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
+import com.fasterxml.jackson.jakarta.rs.cfg.Annotations;
+import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
+import com.fasterxml.jackson.module.jakarta.xmlbind.JakartaXmlBindAnnotationIntrospector;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Produces;
-import javax.ws.rs.ext.Provider;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.ext.Provider;
 
 /**
  * JsonProvider
@@ -77,7 +77,7 @@ public class JsonProvider extends JacksonJsonProvider {
 
     public JsonProvider(boolean indentJson) {
         // Prefer jackson annotations, but use jaxb if no jackson.
-        super(Annotations.JACKSON, Annotations.JAXB);
+        super(Annotations.JACKSON, Annotations.JAKARTA_XML_BIND);
 
         ObjectMapper mapper = _mapperConfig.getDefaultMapper();
 
@@ -90,8 +90,8 @@ public class JsonProvider extends JacksonJsonProvider {
         timeModule.addSerializer(OffsetDateTime.class, new OffsetDateTimeSerializer());
         mapper.registerModule(timeModule);
 
-        Hibernate5Module hbm = new Hibernate5Module();
-        hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
+        Hibernate6Module hbm = new Hibernate6Module();
+        hbm.enable(Hibernate6Module.Feature.FORCE_LAZY_LOADING);
         mapper.registerModule(hbm);
 
         SimpleModule customModule = new SimpleModule("CustomModule", new Version(1, 0, 0, null, null,
@@ -127,7 +127,7 @@ public class JsonProvider extends JacksonJsonProvider {
         addMixInAnnotationsForDTOs(mapper);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
+        AnnotationIntrospector secondary = new JakartaXmlBindAnnotationIntrospector(mapper.getTypeFactory());
         AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
         mapper.setAnnotationIntrospector(pair);
     }

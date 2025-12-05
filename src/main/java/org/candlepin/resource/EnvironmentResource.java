@@ -80,9 +80,9 @@ import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.persistence.PersistenceException;
-import javax.persistence.RollbackException;
+import jakarta.inject.Inject;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.RollbackException;
 
 
 

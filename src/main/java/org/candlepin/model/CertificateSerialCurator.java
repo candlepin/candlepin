@@ -24,9 +24,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-import javax.inject.Singleton;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
+import jakarta.inject.Singleton;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 
 
 /**

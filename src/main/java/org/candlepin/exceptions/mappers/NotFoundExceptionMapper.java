@@ -16,11 +16,11 @@ package org.candlepin.exceptions.mappers;
 
 import org.candlepin.exceptions.util.JaxRsExceptionResponseBuilder;
 
-import javax.inject.Inject;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
 
 /**
  * NotFoundExceptionMapper maps the RESTEasy NotFoundException into JSON and

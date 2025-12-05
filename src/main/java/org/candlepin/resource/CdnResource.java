@@ -35,7 +35,7 @@ import org.xnap.commons.i18n.I18n;
 import java.time.OffsetDateTime;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 
 

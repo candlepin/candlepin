@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 
 /**

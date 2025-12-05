@@ -16,7 +16,7 @@ package org.candlepin.util;
 
 import org.candlepin.exceptions.CandlepinException;
 
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.Response.Status;
 
 
 

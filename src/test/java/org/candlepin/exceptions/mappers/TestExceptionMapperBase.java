@@ -31,9 +31,9 @@ import com.google.inject.servlet.RequestScoped;
 import org.junit.jupiter.api.BeforeEach;
 import org.xnap.commons.i18n.I18n;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.Response;
 
 /**
  * TestExceptionMapperBase

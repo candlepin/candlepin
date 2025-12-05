@@ -16,8 +16,8 @@ package org.candlepin.model;
 
 import java.util.List;
 
-import javax.inject.Singleton;
-import javax.persistence.NoResultException;
+import jakarta.inject.Singleton;
+import jakarta.persistence.NoResultException;
 
 /**
  * RoleCurator

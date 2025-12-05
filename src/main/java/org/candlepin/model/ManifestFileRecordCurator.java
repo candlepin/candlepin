@@ -25,8 +25,8 @@ import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.Date;
 
-import javax.inject.Singleton;
-import javax.persistence.Query;
+import jakarta.inject.Singleton;
+import jakarta.persistence.Query;
 import javax.sql.rowset.serial.SerialBlob;
 
 /**

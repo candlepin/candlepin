@@ -166,9 +166,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.persistence.PersistenceException;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MultivaluedMap;
+import jakarta.persistence.PersistenceException;
+import jakarta.ws.rs.core.GenericType;
+import jakarta.ws.rs.core.MultivaluedMap;
 
 
 

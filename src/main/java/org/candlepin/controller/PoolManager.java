@@ -89,8 +89,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 public class PoolManager {
     private static final Logger log = LoggerFactory.getLogger(PoolManager.class);

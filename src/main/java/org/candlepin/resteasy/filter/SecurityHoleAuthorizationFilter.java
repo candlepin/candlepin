@@ -36,12 +36,12 @@ import org.xnap.commons.i18n.I18n;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
-import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.ws.rs.Priorities;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ResourceInfo;
+import jakarta.annotation.Priority;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.ws.rs.Priorities;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ResourceInfo;
 
 /**
  * SecurityHoleAuthorizationFilter is a no-op JAX-RS 2.0 Filter that is applied

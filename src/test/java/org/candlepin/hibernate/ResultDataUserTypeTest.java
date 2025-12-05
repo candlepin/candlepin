@@ -33,16 +33,16 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Id;
-import javax.persistence.Persistence;
-import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Id;
+import jakarta.persistence.Persistence;
+import jakarta.persistence.Table;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Test for ResultDataUserType
@@ -115,15 +115,15 @@ public class ResultDataUserTypeTest {
 
         // VARBINARY is like bytea in PostgreSQL. See https://stackoverflow.com/a/9693743/6124862
         @Column(columnDefinition = "VARBINARY(1000000)")
-        @Type(type = "org.candlepin.hibernate.ResultDataUserType")
+        @Type(ResultDataUserType.class)
         private JsonThing resultData;
 
         @Column(columnDefinition = "VARBINARY(1000000)")
-        @Type(type = "org.candlepin.hibernate.ResultDataUserType")
+        @Type(ResultDataUserType.class)
         private Object untypedData;
 
         @Column(columnDefinition = "VARBINARY(1000000)")
-        @Type(type = "org.candlepin.hibernate.ResultDataUserType")
+        @Type(ResultDataUserType.class)
         private Serializable unmappableData;
 
         public int getId() {

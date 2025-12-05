@@ -69,7 +69,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 
 // FIXME: Rewrite this class to not mock the DB-level operations and just use the mock DB as a whole.
