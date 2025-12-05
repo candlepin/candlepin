@@ -26,7 +26,7 @@ services:
       args:
       - WAR_FILE=${WAR_FILE}
     environment:
-      JPA_CONFIG_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL5InnoDBDialect
+      JPA_CONFIG_HIBERNATE_DIALECT: org.hibernate.dialect.MariaDBDialect
       JPA_CONFIG_HIBERNATE_CONNECTION_DRIVER_CLASS: org.mariadb.jdbc.Driver
       JPA_CONFIG_HIBERNATE_CONNECTION_URL: jdbc:mariadb://mariadb/candlepin
       JPA_CONFIG_HIBERNATE_CONNECTION_USERNAME: candlepin
