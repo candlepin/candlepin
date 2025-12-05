@@ -108,7 +108,10 @@ dependencies {
     implementation(libs.jakarta.annotation)
 
     // Liquibase
-    implementation(libs.liquibase)
+    implementation(libs.liquibase) {
+        // Exclude javax library pulled by liquibase which is incompatible with Jakarta EE
+        exclude group: 'javax.xml.bind', module: 'jaxb-api'
+    }
     implementation(libs.picocli)
 
     // Logging
@@ -124,14 +127,25 @@ dependencies {
     implementation(libs.oauth)
 
     // Resteasy
-    implementation(libs.resteasy.atom)
-    implementation(libs.resteasy.guice)
-    implementation(libs.resteasy.multipart)
-    implementation(libs.resteasy.validator)
+    // Exclude org.jboss:jandex:2.x pulled by RESTEasy, because it is incompatible with
+    // the version that Hibernate 6.2 needs/pulls itself (io.smallrye:jandex:3.x+)
+    implementation(libs.resteasy.atom) {
+        exclude group: 'org.jboss', module: 'jandex'
+    }
+    implementation(libs.resteasy.guice) {
+        exclude group: 'org.jboss', module: 'jandex'
+    }
+    implementation(libs.resteasy.multipart) {
+        exclude group: 'org.jboss', module: 'jandex'
+    }
+    implementation(libs.resteasy.validator) {
+        // We don't need resteasy-cdi, since we use Guice
+        exclude group: 'org.jboss.resteasy', module: 'resteasy-cdi'
+        exclude group: 'org.jboss', module: 'jandex'
+    }
 
     implementation(libs.jakarta.rs)
 
-    // Jakarta JAXB
     implementation(libs.jaxb.api)
     implementation(libs.jaxb.impl)
 
@@ -144,9 +158,13 @@ dependencies {
 
     // Hibernate
     implementation(libs.hibernate.c3p0)
+
     // Ehcache (for use with hibernate primarily)
     implementation(libs.hibernate.jcache)
-    implementation(libs.ehcache)
+    // We need to specify the full dependency definition here because ehcache needs
+    // the 'jakarta' classifier in order to fetch the jakarta-compatible version of
+    // ehcache, but the libs.versions.toml format does not support classifiers
+    implementation "org.ehcache:ehcache:3.11.1:jakarta"
     implementation(libs.javax.cache)
 
     // Artemis server & client
