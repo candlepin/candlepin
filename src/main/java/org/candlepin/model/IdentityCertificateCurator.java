@@ -48,7 +48,7 @@ public class IdentityCertificateCurator extends AbstractHibernateCurator<Identit
         String hql = "SELECT new org.candlepin.model.CertSerial(c.id, s.id)" +
             " FROM IdentityCertificate c" +
             " INNER JOIN c.serial s" +
-            " INNER JOIN Consumer con on con.idCert = c.id" +
+            " INNER JOIN Consumer con on con.idCert = c" +
             " INNER JOIN ConsumerType type on con.typeId = type.id" +
             " WHERE s.expiration < :nowDate" +
             " AND type.manifest <> true";

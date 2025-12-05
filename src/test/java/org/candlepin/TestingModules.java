@@ -40,7 +40,6 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.ScriptEngineProvider;
 import org.candlepin.guice.TestPrincipalProvider;
 import org.candlepin.guice.TestingScope;
-import org.candlepin.guice.ValidationListenerProvider;
 import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.messaging.CPMSessionFactory;
 import org.candlepin.messaging.impl.noop.NoopContextListener;

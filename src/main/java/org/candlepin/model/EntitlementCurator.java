@@ -657,7 +657,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
          *
          */
         String jpql = "SELECT e FROM Entitlement e " +
-            "JOIN Pool p on e.pool = p.id " +
+            "JOIN Pool p on e.pool.id = p.id " +
             "WHERE e.consumer = :consumer " +
             "AND :activeOn >= p.startDate " +
             "AND :activeOn <= p.endDate";
@@ -981,10 +981,11 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         if (entitlementIds != null) {
             String jpql = "DELETE FROM Entitlement e WHERE e.id IN (:eids)";
-            Query query = this.getEntityManager().createQuery(jpql);
 
             int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit());
             for (List<String> block : Iterables.partition(entitlementIds, blockSize)) {
+                // Hibernate 6 requires a fresh query for each parameter binding in bulk operations
+                Query query = this.getEntityManager().createQuery(jpql);
                 deleted += query.setParameter("eids", block)
                     .executeUpdate();
             }

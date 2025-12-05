@@ -1634,7 +1634,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                  WHERE ent.pool.id = p.id
                  AND ent.consumer.id = cons.id
                  AND cons.typeId = ctype.id
-                 AND ctype.manifest = 'Y'), 0)
+                 AND ctype.manifest = true), 0)
             WHERE p.owner = :owner""";
 
         Query query = getEntityManager().createQuery(jpql);

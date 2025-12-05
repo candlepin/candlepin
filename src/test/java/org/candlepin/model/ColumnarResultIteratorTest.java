@@ -20,9 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
+import org.hibernate.query.Query;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
