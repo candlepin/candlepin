@@ -278,7 +278,7 @@ By default the Candlepin development image is configured to run using a Postgres
 
 Default candlepin.conf file:
 ```
-jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQL92Dialect
+jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 jpa.config.hibernate.connection.driver_class=org.postgresql.Driver
 jpa.config.hibernate.connection.url=jdbc:postgresql://localhost/candlepin
 jpa.config.hibernate.connection.username=candlepin

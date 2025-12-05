@@ -96,7 +96,7 @@ This is a development image and not intended for production use."
 USER root
 
 # Add default Candlepin configurations
-RUN echo "jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQL92Dialect" > /etc/candlepin/candlepin.conf; \
+RUN echo "jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect" > /etc/candlepin/candlepin.conf; \
     echo "jpa.config.hibernate.connection.driver_class=org.postgresql.Driver" >> /etc/candlepin/candlepin.conf; \
     echo "jpa.config.hibernate.connection.url=jdbc:postgresql://localhost/candlepin" >> /etc/candlepin/candlepin.conf; \
     echo "jpa.config.hibernate.connection.username=candlepin" >> /etc/candlepin/candlepin.conf; \
