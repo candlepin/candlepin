@@ -958,7 +958,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
             ids.add(TestUtil.randomString());
         }
 
-        Optional<Predicate> actual = ownerCurator.buildQueryArgumentInPredicate(root, ids);
+        Optional<Predicate> actual = ownerCurator.buildQueryArgumentInPredicate(root.get("id"), ids);
         assertThat(actual)
             .isNotEmpty()
             .containsInstanceOf(Predicate.class);
@@ -976,7 +976,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         }
 
         assertThrows(IllegalArgumentException.class, () -> ownerCurator
-            .buildQueryArgumentInPredicate(root, ids));
+            .buildQueryArgumentInPredicate(root.get("id"), ids));
     }
 
 }

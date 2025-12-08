@@ -279,10 +279,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         int deleted = 0;
 
-        Query query = this.getEntityManager()
-            .createQuery("DELETE Consumer WHERE id IN (:consumerIds)");
-
         for (List<String> block : this.partition(consumerIds)) {
+            Query query = this.getEntityManager()
+                .createQuery("DELETE FROM Consumer WHERE id IN (:consumerIds)");
+
             deleted += query.setParameter("consumerIds", block)
                 .executeUpdate();
         }
@@ -1111,7 +1111,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             "  JOIN consumer.owner owner " +
             "  LEFT JOIN consumer.entitlements ent " +
             "WHERE ent IS NULL " +
-            "  AND type.manifest = 'N' " +
+            "  AND type.manifest = false " +
             "  AND (consumer.lastCheckin < :lastCheckedInRetention OR " +
             "    (consumer.lastCheckin IS NULL AND consumer.updated < :nonCheckedInRetention)) " +
             "ORDER BY owner.key, consumer.uuid";
@@ -2001,7 +2001,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         String jpql = "SELECT c.uuid FROM Consumer c " +
             "JOIN ConsumerType type ON type.id = c.typeId " +
-            "WHERE c.owner.key = :owner_key AND type.manifest = 'N'";
+            "WHERE c.owner.key = :owner_key AND type.manifest = false";
 
         return this.getEntityManager()
             .createQuery(jpql, String.class)

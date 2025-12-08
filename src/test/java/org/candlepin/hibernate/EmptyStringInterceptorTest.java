@@ -93,7 +93,7 @@ public class EmptyStringInterceptorTest {
 
     @Test
     public void testInterceptedEmptyStringPersistence() {
-        props.put("hibernate.ejb.interceptor",
+        props.put("hibernate.session_factory.interceptor",
             "org.candlepin.hibernate.EmptyStringInterceptor");
 
         emf = Persistence.createEntityManagerFactory("testingEmptyStringInterceptor", props);
@@ -111,7 +111,7 @@ public class EmptyStringInterceptorTest {
 
     @Test
     public void testInterceptedNullStringPersistence() {
-        props.put("hibernate.ejb.interceptor", "org.candlepin.hibernate.EmptyStringInterceptor");
+        props.put("hibernate.session_factory.interceptor", "org.candlepin.hibernate.EmptyStringInterceptor");
 
         emf = Persistence.createEntityManagerFactory("testingEmptyStringInterceptor", props);
         em = emf.createEntityManager();

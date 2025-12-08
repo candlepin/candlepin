@@ -75,7 +75,16 @@ public class RowResultIterator implements ResultIterator<Object[]> {
         }
 
         this.useStateCache = false;
-        return (Object[]) this.cursor.get();
+        Object result = this.cursor.get();
+
+        // In Hibernate 6, single entity selects return the entity directly, not wrapped in Object[]
+        if (result instanceof Object[]) {
+            return (Object[]) result;
+        }
+        else {
+            // Single entity result - wrap it in an array
+            return new Object[] { result };
+        }
     }
 
     @Override

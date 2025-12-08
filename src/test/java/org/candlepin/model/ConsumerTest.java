@@ -33,6 +33,7 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
+import org.hibernate.exception.DataException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -46,8 +47,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-
-import jakarta.validation.ConstraintViolationException;
 
 
 
@@ -85,7 +84,8 @@ public class ConsumerTest extends DatabaseTestFixture {
         newConsumer.setName("cname");
         newConsumer.setOwner(owner);
 
-        assertThrows(ConstraintViolationException.class, () -> consumerCurator.create(newConsumer));
+        assertThrows(org.hibernate.exception.ConstraintViolationException.class,
+            () -> consumerCurator.create(newConsumer));
     }
 
     @Test
@@ -100,7 +100,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         newConsumer.setOwner(owner);
         newConsumer.setType(consumerType);
 
-        assertThrows(ConstraintViolationException.class, () -> consumerCurator.create(newConsumer));
+        assertThrows(DataException.class, () -> consumerCurator.create(newConsumer));
     }
 
     @Test
@@ -115,7 +115,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         newConsumer.setOwner(owner);
         newConsumer.setType(consumerType);
 
-        assertThrows(ConstraintViolationException.class, () -> consumerCurator.update(newConsumer));
+        assertThrows(DataException.class, () -> consumerCurator.update(newConsumer));
     }
 
     @Test

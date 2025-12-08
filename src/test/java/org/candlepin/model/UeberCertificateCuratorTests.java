@@ -69,7 +69,18 @@ public class UeberCertificateCuratorTests extends DatabaseTestFixture {
             fail("Expected an exception due to multiple certs for the owner.");
         }
         catch (PersistenceException e) {
-            assertTrue(e.getCause() != null && e.getCause() instanceof ConstraintViolationException);
+            // In Hibernate 6, check if the exception or any cause in the chain is a
+            // ConstraintViolationException
+            Throwable cause = e;
+            boolean foundConstraintViolation = false;
+            while (cause != null && !foundConstraintViolation) {
+                if (cause instanceof ConstraintViolationException) {
+                    foundConstraintViolation = true;
+                }
+                cause = cause.getCause();
+            }
+            assertTrue(foundConstraintViolation,
+                "Expected a ConstraintViolationException in the cause chain");
         }
     }
 

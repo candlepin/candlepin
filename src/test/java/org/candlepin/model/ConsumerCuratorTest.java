@@ -52,7 +52,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
 import java.lang.reflect.Field;
-import java.math.BigInteger;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -2285,12 +2284,12 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         String countQuery = "SELECT COUNT(*) FROM cp_consumer_content_tags";
 
         consumerCurator.create(c);
-        BigInteger i = (BigInteger) em.createNativeQuery(countQuery).getSingleResult();
-        assertEquals(new BigInteger("2"), i);
+        Long i = (Long) em.createNativeQuery(countQuery).getSingleResult();
+        assertEquals(2L, i);
 
         consumerCurator.delete(c);
-        i = (BigInteger) em.createNativeQuery(countQuery).getSingleResult();
-        assertEquals(new BigInteger("0"), i);
+        i = (Long) em.createNativeQuery(countQuery).getSingleResult();
+        assertEquals(0L, i);
     }
 
     @Test

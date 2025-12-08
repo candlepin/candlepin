@@ -58,7 +58,6 @@ import java.util.stream.Stream;
 
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceException;
-import jakarta.validation.ConstraintViolationException;
 
 
 public class ProductCuratorTest extends DatabaseTestFixture {
@@ -615,7 +614,8 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test
     public void testProductIdRequired() {
         Product prod = new Product(null, "My Product Name");
-        assertThrows(ConstraintViolationException.class, () -> productCurator.create(prod, true));
+        assertThrows(org.hibernate.exception.ConstraintViolationException.class,
+            () -> productCurator.create(prod, true));
     }
 
     @Test

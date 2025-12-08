@@ -13,7 +13,7 @@
             <property name="hibernate.connection.username" value="candlepin"/>
             <property name="hibernate.connection.password" value=""/>
             <property name="hibernate.show_sql" value="false" />
-            <property name="hibernate.ejb.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
+            <property name="hibernate.session_factory.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
             <property name="hibernate.connection.provider_class" value="org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider" />
             <!-- c3p0 connection manager settings -->
             <property name="hibernate.c3p0.min_size" value="5" />
@@ -45,7 +45,7 @@
             <property name="hibernate.connection.password" value=""/>
             <property name="hibernate.show_sql" value="false" />
             <property name="hibernate.cache.use_second_level_cache" value="false" />
-            <property name="hibernate.ejb.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
+            <property name="hibernate.session_factory.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
         </properties>
     </persistence-unit>
 
@@ -65,7 +65,7 @@
             <property name="hibernate.hbm2ddl.auto" value="create-drop" />
             <property name="hibernate.show_sql" value="false" />
             <property name="hibernate.cache.use_second_level_cache" value="false" />
-            <property name="hibernate.ejb.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
+            <property name="hibernate.session_factory.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
         </properties>
     </persistence-unit>
 

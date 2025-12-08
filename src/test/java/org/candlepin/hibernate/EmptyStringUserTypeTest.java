@@ -47,7 +47,7 @@ public class EmptyStringUserTypeTest {
         private int id;
 
         @Column
-        @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
+        @Type(EmptyStringUserType.class)
         private String typed;
 
         @Column

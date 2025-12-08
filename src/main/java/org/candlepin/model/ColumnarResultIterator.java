@@ -105,8 +105,22 @@ public class ColumnarResultIterator<T> implements ResultIterator<T> {
         }
 
         this.useStateCache = false;
-        Object[] row = (Object[]) this.cursor.get();
-        T element = (T) row[this.column];
+        Object result = this.cursor.get();
+
+        // In Hibernate 6, single entity selects return the entity directly, not wrapped in Object[]
+        T element;
+        if (result instanceof Object[]) {
+            Object[] row = (Object[]) result;
+            element = (T) row[this.column];
+        }
+        else {
+            // Single entity result - use it directly if column is 0
+            if (this.column != 0) {
+                throw new IllegalStateException(
+                    "Column index " + this.column + " requested, but result is not an array");
+            }
+            element = (T) result;
+        }
 
         if (this.evict) {
             this.toEvict = element;
