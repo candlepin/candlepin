@@ -36,7 +36,7 @@ public abstract class EventMessageReceiver extends MessageReceiver {
 
     @Override
     protected void initialize() throws Exception {
-        session = this.sessionFactory.getIngressSession(false);
+        session = this.sessionFactory.getIngressSession(true);
         consumer = session.createConsumer(queueName);
         consumer.setMessageHandler(this);
         session.start();

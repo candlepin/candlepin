@@ -151,7 +151,6 @@ dependencies {
 
     // Artemis server & client
     implementation(libs.artemis.server)
-    implementation(libs.artemis.stomp)
 
     // Javascript Engine
     implementation(libs.rhino)

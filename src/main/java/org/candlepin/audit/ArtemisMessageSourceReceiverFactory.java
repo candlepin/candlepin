@@ -71,7 +71,7 @@ public class ArtemisMessageSourceReceiverFactory implements MessageSourceReceive
     private MessageReceiver buildEventMessageReceiver(ActiveMQSessionFactory sessionFactory,
         EventListener listener) {
 
-        log.debug("Registering event listener for queue: {}", ArtemisMessageSource.getQueueName(listener));
+        log.info("Registering event listener for queue: {}", ArtemisMessageSource.getQueueName(listener));
         return new DefaultEventMessageReceiver(listener, sessionFactory, mapper);
     }
 

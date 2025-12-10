@@ -133,6 +133,7 @@
                 <multicast>
                     <queue name="event.org.candlepin.audit.LoggingListener" />
                     <queue name="event.org.candlepin.audit.ActivationListener" />
+                    <queue name="event.org.candlepin.audit.WebhooksListener" />
                 </multicast>
             </address>
             <address name="job">

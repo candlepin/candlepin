@@ -142,6 +142,9 @@ public class ConfigProperties {
     public static final String CLOUD_AUTHENTICATION = "candlepin.auth.cloud.enable";
     public static final String ACTIVATION_KEY_AUTHENTICATION = "candlepin.auth.activation_key.enable";
 
+    public static final String WEBHOOKS_SHARED_SECRET = "candlepin.audit.webhooks.shared_secret";
+    public static final String WEBHOOKS_ENDPOINT_URL = "candlepin.audit.webhooks.endpoint_url";
+
     // JWT configuration
     public static final String JWT_ISSUER = "candlepin.jwt.issuer";
     public static final String JWT_TOKEN_TTL = "candlepin.jwt.token_ttl";
@@ -415,16 +418,15 @@ public class ConfigProperties {
                 "org.candlepin.audit.LoggingListener," +
                     "org.candlepin.audit.ActivationListener");
             this.put(AUDIT_FILTER_ENABLED, "false");
+            this.put(WEBHOOKS_SHARED_SECRET, "");
+            this.put(WEBHOOKS_ENDPOINT_URL, "");
 
             this.put(ENTITLER_BULK_SIZE, "1000");
 
             // These default DO_NOT_FILTER events are those events needed by other Satellite components.
             this.put(AUDIT_FILTER_DO_NOT_FILTER,
-                "CREATED-ENTITLEMENT," +
-                    "DELETED-ENTITLEMENT," +
                     "CREATED-POOL," +
-                    "DELETED-POOL," +
-                    "CREATED-COMPLIANCE");
+                    "DELETED-POOL");
 
             this.put(AUDIT_FILTER_DO_FILTER, "");
             this.put(AUDIT_FILTER_DEFAULT_POLICY, "DO_FILTER");
