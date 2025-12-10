@@ -76,21 +76,21 @@ jobs:
       - uses: actions/cache/restore@v4
         id: restore-tomcat
         with:
-          path: apache-tomcat-9.0.76.tar.gz
-          key: tomcat-9.0.76
+          path: apache-tomcat-10.1.36.tar.gz
+          key: tomcat-10.1.36
 
       - name: Ensure Tomcat Artifact
         run: |
-          if [ ! -f apache-tomcat-9.0.76.tar.gz ]; then
-            wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.76/bin/apache-tomcat-9.0.76.tar.gz \
-                -O apache-tomcat-9.0.76.tar.gz
+          if [ ! -f apache-tomcat-10.1.36.tar.gz ]; then
+            wget https://archive.apache.org/dist/tomcat/tomcat-10/v10.1.36/bin/apache-tomcat-10.1.36.tar.gz \
+                -O apache-tomcat-10.1.36.tar.gz
           fi
 
       - uses: actions/cache/save@v4
         if: steps.restore-tomcat.outputs.cache-matched-key == '' # If cache is not present save tomcat to cache
         with:
-          path: apache-tomcat-9.0.76.tar.gz
-          key: tomcat-9.0.76
+          path: apache-tomcat-10.1.36.tar.gz
+          key: tomcat-10.1.36
 
       - name: Create Candlepin and database containers
         shell: bash
