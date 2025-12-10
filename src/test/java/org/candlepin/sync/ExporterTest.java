@@ -56,7 +56,7 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SCACertificate;
 import org.candlepin.pki.certs.SCACertificateGenerator;
-import org.candlepin.pki.impl.Signer;
+import org.candlepin.pki.impl.jca.Signer;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.test.TestUtil;

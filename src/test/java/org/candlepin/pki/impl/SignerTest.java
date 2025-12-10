@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.SignatureFailedException;
+import org.candlepin.pki.impl.jca.Signer;
 import org.candlepin.test.CertificateReaderForTesting;
 
 import org.apache.commons.io.IOUtils;
