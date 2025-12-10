@@ -15,6 +15,7 @@
 package org.candlepin.hibernate;
 
 import org.hibernate.EmptyInterceptor;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,8 +54,10 @@ public class EmptyStringInterceptor extends EmptyInterceptor {
     private boolean convertEmptyStringToNull(Object[] state, String[] propertyNames, Type[] types) {
         boolean modified = false;
         for (int i = 0; i < types.length; i++) {
-            // In Hibernate 6, check if the type represents a String
-            if (types[i].getReturnedClass() == String.class && "".equals(state[i])) {
+            // In Hibernate 6, check if the type represents a String, but skip CustomTypes
+            // which wrap UserTypes - those should handle their own conversions
+            if (types[i].getReturnedClass() == String.class && "".equals(state[i]) &&
+                !(types[i] instanceof CustomType)) {
                 log.debug("Attempting to write an empty string to the database for field \"{}\"; " +
                     "Substituting null instead", propertyNames[i]);
 

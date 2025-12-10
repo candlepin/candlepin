@@ -165,7 +165,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         when(cert.getSubjectX500Principal()).thenReturn(dn);
 
         certs[0] = cert;
-        mockReq.setAttribute("javax.servlet.request.X509Certificate", certs);
+        mockReq.setAttribute("jakarta.servlet.request.X509Certificate", certs);
 
         Principal p = sslAuth.getPrincipal(mockReq);
         when(mockSecurityContext.getUserPrincipal()).thenReturn(p);
@@ -201,7 +201,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         when(cert.getSubjectX500Principal()).thenReturn(dn);
 
         certs[0] = cert;
-        mockReq.setAttribute("javax.servlet.request.X509Certificate", certs);
+        mockReq.setAttribute("jakarta.servlet.request.X509Certificate", certs);
 
         Principal p = sslAuth.getPrincipal(mockReq);
         when(mockSecurityContext.getUserPrincipal()).thenReturn(p);
@@ -227,7 +227,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
             .when(cert).getSubjectX500Principal();
         X509Certificate[] certs = new X509Certificate[1];
         certs[0] = cert;
-        mockReq.setAttribute("javax.servlet.request.X509Certificate", certs);
+        mockReq.setAttribute("jakarta.servlet.request.X509Certificate", certs);
 
         doReturn(sslAuth.getPrincipal(mockReq)).when(mockSecurityContext).getUserPrincipal();
 
@@ -258,7 +258,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         doReturn(new X500Principal("CN=123, C=US, L=Raleigh")).when(cert).getSubjectX500Principal();
         X509Certificate[] certs = new X509Certificate[1];
         certs[0] = cert;
-        mockReq.setAttribute("javax.servlet.request.X509Certificate", certs);
+        mockReq.setAttribute("jakarta.servlet.request.X509Certificate", certs);
 
         doReturn(new AnonymousCloudConsumerPrincipal(consumer)).when(mockSecurityContext).getUserPrincipal();
 
@@ -281,7 +281,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         doReturn(new X500Principal("CN=123, C=US, L=Raleigh")).when(cert).getSubjectX500Principal();
         X509Certificate[] certs = new X509Certificate[1];
         certs[0] = cert;
-        mockReq.setAttribute("javax.servlet.request.X509Certificate", certs);
+        mockReq.setAttribute("jakarta.servlet.request.X509Certificate", certs);
 
         doReturn(sslAuth.getPrincipal(mockReq)).when(mockSecurityContext).getUserPrincipal();
 
@@ -309,7 +309,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         doReturn(new X500Principal("CN=123, C=US, L=Raleigh")).when(cert).getSubjectX500Principal();
         X509Certificate[] certs = new X509Certificate[1];
         certs[0] = cert;
-        mockReq.setAttribute("javax.servlet.request.X509Certificate", certs);
+        mockReq.setAttribute("jakarta.servlet.request.X509Certificate", certs);
 
         doReturn(new AnonymousCloudConsumerPrincipal(consumer)).when(mockSecurityContext).getUserPrincipal();
 

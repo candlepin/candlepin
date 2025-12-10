@@ -126,7 +126,7 @@ public class SSLAuthTest {
     @Test
     public void invalidCertTypeThrowsException() {
         X509Certificate idCert =  mock(X509Certificate.class);
-        when(this.httpRequest.getAttribute("javax.servlet.request.X509Certificate"))
+        when(this.httpRequest.getAttribute("jakarta.servlet.request.X509Certificate"))
             .thenReturn(new X509Certificate[]{idCert});
         when(idCert.getExtensionValue(any())).thenReturn("random".getBytes());
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
@@ -140,7 +140,7 @@ public class SSLAuthTest {
         X500Principal principal = new X500Principal(dn);
 
         when(idCert.getSubjectX500Principal()).thenReturn(principal);
-        when(this.httpRequest.getAttribute("javax.servlet.request.X509Certificate"))
+        when(this.httpRequest.getAttribute("jakarta.servlet.request.X509Certificate"))
             .thenReturn(new X509Certificate[]{idCert});
     }
 

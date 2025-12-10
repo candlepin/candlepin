@@ -47,7 +47,7 @@ public class JaxRsExceptionResponseBuilder {
      * Regex for JAX-RS exception class names.
      */
     private static final Pattern PARAM_REGEX = Pattern
-        .compile("(?:javax\\.ws\\.rs\\.\\w+\\(\\\")([\\w\\s]+)(\\\"\\))");
+        .compile("(?:jakarta\\.ws\\.rs\\.\\w+\\(\\\")([\\w\\s]+)(\\\"\\))");
 
     /**
      * Regex to extract the errored values from the JAX-RS Exception.

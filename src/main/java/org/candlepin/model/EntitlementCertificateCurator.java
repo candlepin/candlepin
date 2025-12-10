@@ -77,7 +77,7 @@ public class EntitlementCertificateCurator extends AbstractHibernateCurator<Enti
     @Transactional
     public void delete(EntitlementCertificate cert) {
         // make sure to delete it! else get ready to face
-        // javax.persistence.EntityNotFoundException('deleted entity passed to persist')
+        // jakarta.persistence.EntityNotFoundException('deleted entity passed to persist')
         cert.getEntitlement().removeCertificate(cert);
         super.delete(cert);
     }

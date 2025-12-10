@@ -31,7 +31,7 @@ public class BadRequestExceptionMapperTest extends TestExceptionMapperBase {
     @Test
     public void extractIllegalValue() {
         rem = injector.getInstance(BadRequestExceptionMapper.class);
-        String foo = "javax.ws.rs.SomeThing(\"paramName\") value is 'strVal' for";
+        String foo = "jakarta.ws.rs.SomeThing(\"paramName\") value is 'strVal' for";
         BadRequestException bre = new BadRequestException(foo);
         Response r = rem.toResponse(bre);
 

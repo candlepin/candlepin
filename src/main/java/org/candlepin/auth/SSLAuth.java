@@ -39,7 +39,7 @@ import jakarta.inject.Provider;
  * Remember, certs are easy.
  */
 public class SSLAuth extends ConsumerAuth {
-    private static final String CERTIFICATES_ATTR = "javax.servlet.request.X509Certificate";
+    private static final String CERTIFICATES_ATTR = "jakarta.servlet.request.X509Certificate";
     private static final String UUID_DN_ATTRIBUTE = "CN";
 
     private static Logger log = LoggerFactory.getLogger(SSLAuth.class);

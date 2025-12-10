@@ -74,7 +74,7 @@ public class Transactional {
          *
          * @param state
          *  the status of the transaction, can be compared to the values provided by
-         *  javax.transaction.Status
+         *  jakarta.transaction.Status
          */
         void transactionComplete(State state);
     }

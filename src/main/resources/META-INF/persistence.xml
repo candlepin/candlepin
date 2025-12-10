@@ -5,7 +5,7 @@
 
     <persistence-unit name="default" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
-        <validation-mode>NONE</validation-mode>
+        <validation-mode>AUTO</validation-mode>
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
             <property name="hibernate.connection.driver_class" value="org.postgresql.Driver"/>
