@@ -97,6 +97,8 @@ public class ConsumerMigration {
             .onRollback(status -> this.eventSink.rollback());
 
         boolean failed = false;
+        int totalMigrated = 0;
+        int totalFailedToMigrate = 0;
         for (List<String> consumerUuidsBlock : Iterables.partition(consumerUuids, this.batchSize)) {
             try {
                 transaction.execute(() -> {
@@ -107,16 +109,22 @@ public class ConsumerMigration {
 
                     this.eventSink.queueEvent(event);
                 });
+                totalMigrated += consumerUuidsBlock.size();
             }
             catch (Exception e) {
                 log.warn("Failed to migrate a batch of consumers.", e);
                 failed = true;
+                totalFailedToMigrate += consumerUuidsBlock.size();
             }
         }
 
         if (failed) {
-            throw new ConsumerMigrationFailedException(i18n.tr("Failed to migrate consumers"));
+            log.info("Successfully migrated {} consumers, but failed to migrate {} consumers.",
+                totalMigrated,  totalFailedToMigrate);
+            throw new ConsumerMigrationFailedException(i18n.tr("Failed to migrate " +
+                totalFailedToMigrate + " consumers"));
         }
+        log.info("Successfully migrated {} consumers.", totalMigrated);
     }
 
     private void migrateBatch(List<String> consumerUuids, Owner destination) {
