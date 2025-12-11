@@ -26,9 +26,9 @@ services:
       CANDLEPIN_AUTH_TRUSTED_ENABLE: "true"
       CANDLEPIN_STANDALONE: "false"
       MODULE_CONFIG_HOSTED_CONFIGURATION_MODULE: org.candlepin.testext.hostedtest.HostedTestModule
-
     ports:
       - "8443:8443"
+      - "8000:8000"
     healthcheck:
       test: curl --fail -k https://localhost:8443/candlepin/status
       timeout: 5s
