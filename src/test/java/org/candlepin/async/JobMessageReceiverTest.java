@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -17,8 +17,8 @@ package org.candlepin.async;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -118,9 +118,8 @@ public class JobMessageReceiverTest {
         CPMConsumer consumer = mock(CPMConsumer.class);
 
         doAnswer(iom -> {
-            CPMMessageListener prev = container.get();
             container.set((CPMMessageListener) iom.getArguments()[0]);
-            return prev;
+            return consumer;
         })
             .when(consumer)
             .setMessageListener(any(CPMMessageListener.class));
@@ -200,7 +199,7 @@ public class JobMessageReceiverTest {
     @Test
     public void testMessageAckAndSessionCommitOnSuccess() throws Exception {
         CPMMessage message = this.createCPMMessage("test_id", "test_key");
-        JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
@@ -217,7 +216,7 @@ public class JobMessageReceiverTest {
     @Test
     public void testMessageCommitOnJobExecutionException() throws Exception {
         CPMMessage message = this.createCPMMessage("test_id", "test_key");
-        JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
@@ -236,7 +235,7 @@ public class JobMessageReceiverTest {
     @Test
     public void testMessageCommitOnTerminalJobStateManagementException() throws Exception {
         CPMMessage message = this.createCPMMessage("test_id", "test_key");
-        JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
@@ -258,7 +257,7 @@ public class JobMessageReceiverTest {
     @Test
     public void testMessageRollbackOnNonTerminalJobStateManagementException() throws Exception {
         CPMMessage message = this.createCPMMessage("test_id", "test_key");
-        JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
@@ -280,7 +279,7 @@ public class JobMessageReceiverTest {
     @Test
     public void testMessageRollbackOnMessageDispatchException() throws Exception {
         CPMMessage message = this.createCPMMessage("test_id", "test_key");
-        JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
@@ -299,7 +298,7 @@ public class JobMessageReceiverTest {
     @Test
     public void testMessageCommitOnTerminalJobException() throws Exception {
         CPMMessage message = this.createCPMMessage("test_id", "test_key");
-        JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
@@ -318,7 +317,7 @@ public class JobMessageReceiverTest {
     @Test
     public void testMessageRollbackOnNonTerminalJobException() throws Exception {
         CPMMessage message = this.createCPMMessage("test_id", "test_key");
-        JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
@@ -341,7 +340,7 @@ public class JobMessageReceiverTest {
         this.mapper = mock(ObjectMapper.class);
         doThrow(new RuntimeException("kaboom")).when(this.mapper).readValue(anyString(), any(Class.class));
 
-        JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
@@ -353,6 +352,109 @@ public class JobMessageReceiverTest {
 
         verify(this.unitOfWork, times(0)).begin();
         verify(this.unitOfWork, times(1)).end();
+    }
+
+    @Test
+    public void testStartWithClosedAndOpenSessions() throws Exception {
+        this.config.setProperty(ConfigProperties.ASYNC_JOBS_THREADS, "3");
+
+        CPMSession initialSession1 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        CPMSession initialSession2 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        CPMSession initialSession3 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        doReturn(true).when(initialSession1).isClosed();
+        doReturn(false).when(initialSession2).isClosed();
+        doReturn(true).when(initialSession3).isClosed();
+
+        CPMSession recreatedSession1 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        CPMSession recreatedSession3 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+
+        doReturn(initialSession1).doReturn(initialSession2).doReturn(initialSession3)
+        // Session 2 is open and should not be recreated
+        .doReturn(recreatedSession1).doReturn(recreatedSession3)
+            .when(this.cpmSessionFactory)
+            .createSession(any(CPMSessionConfig.class));
+
+        JobMessageReceiver receiver = buildJobMessageReceiver();
+
+        receiver.start();
+
+        verify(recreatedSession1).start();
+        verify(recreatedSession3).start();
+    }
+
+    @Test
+    public void testStartWithCPMExceptionWhenCreatingSession() throws Exception {
+        this.config.setProperty(ConfigProperties.ASYNC_JOBS_THREADS, "3");
+
+        CPMSession initialSession1 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        CPMSession initialSession2 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        CPMSession initialSession3 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        doReturn(true).when(initialSession1).isClosed();
+        doReturn(true).when(initialSession2).isClosed();
+        doReturn(true).when(initialSession3).isClosed();
+
+        CPMSession recreatedSession1 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        doReturn(false).when(recreatedSession1).isClosed();
+
+        doReturn(initialSession1).doReturn(initialSession2).doReturn(initialSession3)
+        // Throw a CPMException when we attempt to recreate initialSession2
+        .doReturn(recreatedSession1).doThrow(new CPMException())
+            .when(this.cpmSessionFactory)
+            .createSession(any(CPMSessionConfig.class));
+
+        JobMessageReceiver receiver = buildJobMessageReceiver();
+
+        assertThrows(JobException.class, () -> receiver.start());
+        // We should only start the first session
+        verify(recreatedSession1).start();
+
+        // When we attempt to start again, we should start recreate initialSession2 and initialSession3
+
+        CPMSession recreatedSession2 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        doReturn(false).when(recreatedSession2).isClosed();
+        CPMSession recreatedSession3 = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        doReturn(false).when(recreatedSession3).isClosed();
+
+        doReturn(recreatedSession2).doReturn(recreatedSession3)
+            .when(this.cpmSessionFactory)
+            .createSession(any(CPMSessionConfig.class));
+
+        receiver.start();
+        // Session1 was already opened, but we should attempt to start open sessions as well.
+        verify(recreatedSession1, times(2)).start();
+        verify(recreatedSession2).start();
+        verify(recreatedSession3).start();
+    }
+
+    @Test
+    public void testStartShouldStartAnOpenSession() throws Exception {
+        this.config.setProperty(ConfigProperties.ASYNC_JOBS_THREADS, "1");
+
+        CPMSession session = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        doReturn(false).when(session).isClosed();
+        doReturn(session).when(this.cpmSessionFactory).createSession(any(CPMSessionConfig.class));
+        JobMessageReceiver receiver = buildJobMessageReceiver();
+
+        receiver.start();
+
+        verify(session).start();
+    }
+
+    @Test
+    public void testStartWhenNotSuspended() throws Exception {
+        CPMSession session = createMockCPMSession(createMockCPMConsumer(new ThreadLocal<>()));
+        doReturn(true).when(session).isClosed();
+        doReturn(session).when(this.cpmSessionFactory).createSession(any(CPMSessionConfig.class));
+
+        JobMessageReceiver receiver = buildJobMessageReceiver();
+
+        // Initial start to create the session and move out of suspend mode
+        receiver.start();
+        verify(session).start();
+
+        // Running start again should not do anything
+        receiver.start();
+        verify(session).start();
     }
 
 }

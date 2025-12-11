@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -25,7 +25,6 @@ import org.candlepin.messaging.CPMMessageListener;
 import org.candlepin.messaging.CPMSession;
 import org.candlepin.messaging.CPMSessionConfig;
 import org.candlepin.messaging.CPMSessionFactory;
-import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
 
@@ -49,8 +47,6 @@ import javax.inject.Inject;
  */
 public class JobMessageReceiver {
     private static Logger log = LoggerFactory.getLogger(JobMessageReceiver.class);
-
-    private static final String JOB_KEY_MESSAGE_PROPERTY = "job_key";
 
     private final Configuration config;
     private final CPMSessionFactory cpmSessionFactory;
@@ -77,6 +73,9 @@ public class JobMessageReceiver {
      *
      * @param mapper
      *  the object mapper to use to deserialize job messages
+     *
+     * @throws IllegalStateException
+     *  if the session retry configurations are invalid
      */
     @Inject
     public JobMessageReceiver(Configuration config, CPMSessionFactory cpmSessionFactory,
@@ -142,30 +141,42 @@ public class JobMessageReceiver {
     /**
      * Starts all of the managed sessions. If a given session has died or been closed, this method
      * will recreate it.
+     *
+     * @throws CPMException
+     *  if there is a session that cannot be recreated or started
      */
     private void startSessions() throws CPMException {
-        Set<CPMSession> created = null;
-
-        Iterator<CPMSession> iterator = this.sessions.iterator();
-        while (iterator.hasNext()) {
-            CPMSession session = iterator.next();
-
-            if (session == null || session.isClosed()) {
-                if (created == null) {
-                    created = new HashSet<>();
+        Set<CPMSession> updatedSessions = new HashSet<>();
+        CPMException bufferedException = null;
+        int openSessionCount = 0;
+        for (CPMSession session : this.sessions) {
+            try {
+                if (bufferedException != null) {
+                    continue;
                 }
 
-                iterator.remove();
-                session = this.createSession();
+                if (session == null || session.isClosed()) {
+                    session = this.createSession();
+                }
 
-                created.add(session);
+                session.start();
             }
-
-            session.start();
+            catch (CPMException exception) {
+                bufferedException = exception;
+            }
+            finally {
+                updatedSessions.add(session);
+                if (session != null && !session.isClosed()) {
+                    ++openSessionCount;
+                }
+            }
         }
 
-        if (created != null) {
-            this.sessions.addAll(created);
+        this.sessions = updatedSessions;
+        log.info("Open sessions updated to {} out of {}", openSessionCount, this.sessions.size());
+
+        if (bufferedException != null) {
+            throw bufferedException;
         }
     }
 
@@ -347,7 +358,7 @@ public class JobMessageReceiver {
                 this.unitOfWork.begin();
 
                 // Execute the job
-                AsyncJobStatus jobStatus = this.manager.executeJob(jobMessage);
+                this.manager.executeJob(jobMessage);
 
                 // We didn't fail! Commit the message
                 this.commit(session);
