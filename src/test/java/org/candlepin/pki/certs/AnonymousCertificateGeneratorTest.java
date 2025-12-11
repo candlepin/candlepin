@@ -47,7 +47,7 @@ import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
-import org.candlepin.pki.impl.Signer;
+import org.candlepin.pki.impl.jca.Signer;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;

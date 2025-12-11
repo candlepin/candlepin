@@ -38,7 +38,7 @@ import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509Extension;
-import org.candlepin.pki.impl.Signer;
+import org.candlepin.pki.impl.jca.Signer;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;

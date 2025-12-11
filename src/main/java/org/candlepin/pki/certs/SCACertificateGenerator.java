@@ -40,7 +40,7 @@ import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.X509Extension;
-import org.candlepin.pki.impl.Signer;
+import org.candlepin.pki.impl.jca.Signer;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
