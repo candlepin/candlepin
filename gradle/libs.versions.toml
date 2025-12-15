@@ -17,7 +17,7 @@ dependency-check = { id = "org.owasp.dependencycheck", version = "12.1.9" }
 gradle-versions = { id = "com.github.ben-manes.versions", version = "0.53.0" }
 nebula-lint = { id = "nebula.lint", version = "20.6.2" }
 openapi-generator = { id = "org.openapi.generator", version.ref = "openapi-generator" }
-sonarqube = { id = "org.sonarqube", version = "7.1.0.6387" }
+sonarqube = { id = "org.sonarqube", version = "7.2.1.6560" }
 test-logger = { id = "com.adarshr.test-logger", version.ref = "test-logger" }
 
 [libraries]
