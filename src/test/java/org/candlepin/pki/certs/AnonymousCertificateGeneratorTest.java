@@ -47,7 +47,7 @@ import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
-import org.candlepin.pki.impl.Signer;
+import org.candlepin.pki.impl.jca.JcaSigner;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
@@ -119,9 +119,9 @@ class AnonymousCertificateGeneratorTest {
             contentCache,
             new BouncyCastlePemEncoder(),
             keyPairGenerator,
-            new Signer(certificateReader),
-            () -> new X509CertificateBuilder(
-                certificateReader, securityProvider, new BouncyCastleSubjectKeyIdentifierWriter())
+            new JcaSigner(certificateReader),
+                () -> new X509CertificateBuilder(
+                    certificateReader, securityProvider, new BouncyCastleSubjectKeyIdentifierWriter())
         );
     }
 

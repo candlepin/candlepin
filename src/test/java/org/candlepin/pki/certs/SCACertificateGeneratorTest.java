@@ -47,7 +47,7 @@ import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
-import org.candlepin.pki.impl.Signer;
+import org.candlepin.pki.impl.jca.JcaSigner;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -141,7 +141,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             this.environmentCurator,
             new BouncyCastlePemEncoder(),
             keyPairGenerator,
-            new Signer(certificateReader),
+            new JcaSigner(certificateReader),
             x509CertificateBuilderProvider,
             this.config
         );
