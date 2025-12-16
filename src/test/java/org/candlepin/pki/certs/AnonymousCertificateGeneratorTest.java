@@ -42,6 +42,7 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.dto.Content;
+import org.candlepin.pki.certs.bouncycastle.BCX509CertificateBuilder;
 import org.candlepin.pki.huffman.Huffman;
 import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
@@ -120,7 +121,7 @@ class AnonymousCertificateGeneratorTest {
             new BouncyCastlePemEncoder(),
             keyPairGenerator,
             new Signer(certificateReader),
-            () -> new X509CertificateBuilder(
+            () -> new BCX509CertificateBuilder(
                 certificateReader, securityProvider, new BouncyCastleSubjectKeyIdentifierWriter())
         );
     }
