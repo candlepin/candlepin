@@ -39,7 +39,7 @@ import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
-import org.candlepin.pki.impl.Signer;
+import org.candlepin.pki.impl.jca.JcaSigner;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.sync.file.ManifestFile;
@@ -125,7 +125,7 @@ public class Importer {
     private final OwnerCurator ownerCurator;
     private final IdentityCertificateCurator idCertCurator;
     private final RefresherFactory refresherFactory;
-    private final Signer signer;
+    private final JcaSigner signer;
     private final ExporterMetadataCurator expMetaCurator;
     private final CertificateSerialCurator csCurator;
     private final CdnCurator cdnCurator;
@@ -140,7 +140,8 @@ public class Importer {
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator,
         RulesImporter rulesImporter, OwnerCurator ownerCurator, IdentityCertificateCurator idCertCurator,
-        RefresherFactory refresherFactory, Signer signer, ExporterMetadataCurator emc,
+        RefresherFactory refresherFactory, JcaSigner signer,
+        ExporterMetadataCurator emc,
         CertificateSerialCurator csc, EventSink sink, I18n i18n, DistributorVersionCurator distVerCurator,
         CdnCurator cdnCurator, SyncUtils syncUtils, @Named("ImportObjectMapper") ObjectMapper mapper,
         ImportRecordCurator importRecordCurator, SubscriptionReconciler subscriptionReconciler,
@@ -373,6 +374,7 @@ public class Importer {
                     i18n.tr("The archive does not contain the required signature file"));
             }
 
+            // TODO: This should be replaced with the signature validator when it is implemented
             boolean verifiedSignature = this.signer.verifySignature(
                 new File(exportDir, "consumer_export.zip"),
                 loadSignature(new File(exportDir, "signature"))
