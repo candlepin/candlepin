@@ -22,11 +22,24 @@ package org.candlepin.messaging;
  */
 public class CPMProducerConfig {
 
+    private boolean transactional;
+
     /**
      * Creates a new CPMProducerConfig instance with the default producer configuration.
      */
     public CPMProducerConfig() {
         // Add defaults here as necessary
+    }
+
+    // TODO: We should use a builder and make this immutable
+
+    public CPMProducerConfig setTransactional(boolean transactional) {
+        this.transactional = transactional;
+        return this;
+    }
+
+    public boolean isTransactional() {
+        return this.transactional;
     }
 
 }

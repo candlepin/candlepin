@@ -1,0 +1,128 @@
+package org.candlepin.messaging.impl.artemis;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+
+import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
+import org.apache.activemq.artemis.api.core.client.ClientConsumer;
+import org.apache.activemq.artemis.api.core.client.ClientSession;
+import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
+import org.apache.activemq.artemis.api.core.client.ServerLocator;
+import org.apache.activemq.artemis.core.remoting.CloseListener;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
+import org.candlepin.messaging.CPMConsumer;
+import org.candlepin.messaging.CPMConsumerConfig;
+import org.candlepin.messaging.CPMException;
+import org.candlepin.messaging.CPMProducer;
+import org.candlepin.messaging.CPMProducerConfig;
+import org.candlepin.messaging.CPMSessionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+@Singleton
+public class ArtemisSessionManager implements CPMSessionManager, CloseListener {
+        private static Logger log = LoggerFactory.getLogger(ArtemisSessionManager.class);
+
+        private Configuration config;
+        private ServerLocator locator;
+
+        private ClientSessionFactory sessionFactory;
+        private Map<CPMConsumerConfig, ArtemisSession> consumerSessions = new HashMap<>();
+        private Map<CPMProducerConfig, ArtemisSession> producerSessions = new HashMap<>();
+
+        @Inject
+        public ArtemisSessionManager(Configuration config) throws Exception {
+            this.config = Objects.requireNonNull(config);
+
+            String brokerUrl = this.config.getString(ConfigProperties.ACTIVEMQ_BROKER_URL);
+            log.info("Connecting to Artemis server at {}", brokerUrl);
+
+            this.locator = ActiveMQClient.createServerLocator(brokerUrl);
+            if (locator == null) {
+                throw new IllegalArgumentException("locator is null");
+            }
+
+            this.sessionFactory = this.locator.createSessionFactory();
+            this.sessionFactory.getConnection().addCloseListener(this);
+        }
+
+        @Override
+        public CPMProducer createProducerSession(CPMProducerConfig config) throws CPMException {
+            try {
+                ClientSession clientSession = config.isTransactional() ?
+                    this.sessionFactory.createTransactedSession() :
+                    this.sessionFactory.createSession();
+
+                ArtemisSession session = new ArtemisSession(clientSession);
+                producerSessions.put(config, session);
+
+                return session.createProducer();
+            }
+            catch (Exception e) {
+                throw new CPMException(e);
+            }
+        }
+
+        @Override
+        public CPMConsumer createConsumerSession(CPMConsumerConfig config) throws CPMException {
+            try {
+                ClientSession clientSession = config.isTransactional() ?
+                    this.sessionFactory.createTransactedSession() :
+                    this.sessionFactory.createSession();
+
+                String filter = config.getMessageFilter();
+
+                ClientConsumer consumer = (filter != null && !filter.isEmpty()) ?
+                    clientSession.createConsumer(config.getQueue(), filter) :
+                    clientSession.createConsumer(config.getQueue());
+
+                ArtemisSession session = new ArtemisSession(clientSession);
+                // sessions.put(config, session);
+
+                return new ArtemisConsumer(session, consumer);
+            }
+            catch (Exception e) {
+                throw new CPMException(e);
+            }
+        }
+
+        @Override
+        public void connectionClosed() {
+            log.info("Closing all sessions for Artemis connection");
+            for (Entry<CPMConsumerConfig, ArtemisSession> entry : consumerSessions.entrySet()) {
+                ArtemisSession session = entry.getValue();
+                if (session == null) {
+                    continue;
+                }
+
+                try {
+                    session.close();
+                }
+                catch (CPMException e) {
+                    log.error("Unable to close consumer session", e);
+                }
+            }
+
+            for (Entry<CPMProducerConfig, ArtemisSession> entry : producerSessions.entrySet()) {
+                ArtemisSession session = entry.getValue();
+                if (session == null) {
+                    continue;
+                }
+
+                try {
+                    session.close();
+                }
+                catch (CPMException e) {
+                    log.error("Unable to close consumer session", e);
+                }
+            }
+
+        }
+
+}

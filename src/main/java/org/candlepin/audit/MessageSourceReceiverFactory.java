@@ -15,7 +15,7 @@
 package org.candlepin.audit;
 
 
-import org.candlepin.async.impl.ActiveMQSessionFactory;
+import org.candlepin.messaging.CPMSessionManager;
 
 import java.util.Collection;
 
@@ -29,9 +29,9 @@ public interface MessageSourceReceiverFactory {
     /**
      * Builds a collection of message receivers to be used by the message source.
      *
-     * @param sessionFactory the session factory of the message broker.
+     * @param sessionManager the session manager of the message broker.
      * @return a collection of message receivers that will receive messages from the message source.
      */
-    Collection<MessageReceiver> get(ActiveMQSessionFactory sessionFactory);
+    Collection<MessageReceiver> get(CPMSessionManager sessionManager);
 
 }

@@ -14,14 +14,10 @@
  */
 package org.candlepin.audit;
 
-import org.candlepin.async.impl.ActiveMQSessionFactory;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.candlepin.messaging.CPMSessionManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -35,28 +31,14 @@ import javax.inject.Singleton;
 public class ArtemisMessageSource implements MessageSource {
     private static Logger log = LoggerFactory.getLogger(ArtemisMessageSource.class);
 
-    private ObjectMapper mapper;
-    private ActiveMQSessionFactory sessionFactory;
-    private Collection<MessageReceiver> messageReceivers;
-
     @Inject
-    public ArtemisMessageSource(ActiveMQSessionFactory sessionFactory, ObjectMapper mapper,
-        MessageSourceReceiverFactory receiverFactory) {
-        this.sessionFactory = sessionFactory;
-        this.mapper = mapper;
-        this.messageReceivers = receiverFactory.get(this.sessionFactory);
+    public ArtemisMessageSource(CPMSessionManager manager, MessageSourceReceiverFactory receiverFactory) {
+        receiverFactory.get(manager);
     }
 
     @Override
     public void shutDown() {
-        closeEventReceivers();
-        // TODO Need to determine if it is OK to not close the sessionFactory.
-        //      On candlepin shutdown, will this be required.
-//        this.sessionFactory.close();
-    }
-
-    private void closeEventReceivers() {
-        this.messageReceivers.forEach(MessageReceiver::close);
+        log.info("Shutdown");
     }
 
     /**
@@ -68,27 +50,7 @@ public class ArtemisMessageSource implements MessageSource {
      */
     @Override
     public void onStatusUpdate(ActiveMQStatus oldStatus, ActiveMQStatus newStatus) {
-        log.info("ActiveMQ status has been updated: {}:{}", oldStatus, newStatus);
-        if (ActiveMQStatus.DOWN.equals(newStatus) && !ActiveMQStatus.DOWN.equals(oldStatus)) {
-            log.info("Shutting down all message receivers because the broker went down.");
-            shutDown();
-        }
-        else if (ActiveMQStatus.CONNECTED.equals(newStatus) && !ActiveMQStatus.CONNECTED.equals(oldStatus)) {
-            log.info("Connecting to message broker and initializing all message listeners.");
-
-            // Attempt a shutdown to be sure that all resources are cleared.
-            shutDown();
-
-            this.messageReceivers.forEach(receiver -> {
-                try {
-                    receiver.connect();
-                }
-                catch (Exception e) {
-                    log.warn("Unable to reconnect message listeners. Messages will not be received: {}",
-                        receiver.getQueueAddress(), e);
-                }
-            });
-        }
+        log.info("onStatusUpdate");
     }
 
     public static String getQueueName(EventListener listener) {

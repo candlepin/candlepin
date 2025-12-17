@@ -98,9 +98,6 @@ public class ArtemisContextListener implements CPMContextListener {
             }
         }
 
-        // Initialize our session factory
-        ArtemisSessionFactory factory = injector.getInstance(ArtemisSessionFactory.class);
-        factory.initialize();
     }
 
     /**

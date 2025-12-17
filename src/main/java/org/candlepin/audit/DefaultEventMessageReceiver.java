@@ -14,13 +14,14 @@
  */
 package org.candlepin.audit;
 
-import org.candlepin.async.impl.ActiveMQSessionFactory;
+import org.candlepin.messaging.CPMConsumer;
+import org.candlepin.messaging.CPMException;
+import org.candlepin.messaging.CPMMessage;
+import org.candlepin.messaging.CPMSession;
+import org.candlepin.messaging.CPMSessionManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.activemq.artemis.api.core.ActiveMQException;
-import org.apache.activemq.artemis.api.core.SimpleString;
-import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,47 +34,42 @@ public class DefaultEventMessageReceiver extends EventMessageReceiver {
 
     private static Logger log = LoggerFactory.getLogger(DefaultEventMessageReceiver.class);
 
-    public DefaultEventMessageReceiver(EventListener listener, ActiveMQSessionFactory sessionFactory,
-        ObjectMapper mapper) {
-        super(listener, sessionFactory, mapper);
+    public DefaultEventMessageReceiver(EventListener listener, CPMSessionManager manager,
+        ObjectMapper mapper) throws CPMException {
+        super(listener, manager, mapper);
+    }
+
+    protected String getQueueAddress() {
+        return MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS;
     }
 
     @Override
-    public void onMessage(ClientMessage msg) {
+    public void handleMessage(CPMSession session, CPMConsumer consumer, CPMMessage message) {
         String body = "";
         try {
             // Acknowledge the message so that the server knows that it was received.
             // By doing this, the server can update the delivery counts which plays
             // part in calculating redelivery delays.
-            msg.acknowledge();
-            log.debug("ActiveMQ message {} acknowledged for listener: {}", msg.getMessageID(), listener);
+            message.acknowledge();
+            log.debug("Message {} acknowledged for listener: {}", message.getMessageId(), listener);
 
-            // Process the message via our EventListener framework.
-            if (msg.getType() == ClientMessage.TEXT_TYPE) {
-                SimpleString sstr = msg.getBodyBuffer().readNullableSimpleString();
-                if (sstr != null) {
-                    body = sstr.toString();
-                }
-            }
-            else {
-                body = msg.getBodyBuffer().readString();
-            }
+            body = message.getBody();
 
             log.debug("Got event: {}", body);
             Event event = mapper.readValue(body, Event.class);
             listener.onEvent(event);
 
-            log.debug("Message listener {} processed message: {}: SUCCESS", listener, msg.getMessageID());
+            log.debug("Message listener {} processed message: {}: SUCCESS", listener, message.getMessageId());
             // Finally commit the session so that the message is taken out of the queue.
             session.commit();
         }
         catch (Exception e) {
             // Log a warning instead of a full stack trace to reduce log size.
-            String messageId = (msg == null) ? "" : Long.toString(msg.getMessageID());
+            String messageId = (message == null) ? "" : message.getMessageId();
             String reason = (e.getCause() == null) ? e.getMessage() : e.getCause().getMessage();
             log.error("Unable to process message {}: {}", messageId, reason);
 
-            log.debug("Message listener {} processed message: {}: FAILURE", listener, msg.getMessageID());
+            log.debug("Message listener {} processed message: {}: FAILURE", listener, message.getMessageId());
 
             // If debugging is enabled log a more in depth message.
             log.debug("Unable to process message. Rolling back client session.\n{}", body, e);
@@ -82,16 +78,12 @@ public class DefaultEventMessageReceiver extends EventMessageReceiver {
                 // the session so that the message remains on the queue.
                 session.rollback();
             }
-            catch (ActiveMQException amqe) {
-                log.error("Unable to roll back client session.", amqe);
+            catch (CPMException exception) {
+                log.error("Unable to roll back client session.", exception);
             }
 
             // Session was rolled back, nothing left to do.
         }
-    }
-
-    protected String getQueueAddress() {
-        return MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS;
     }
 
 }

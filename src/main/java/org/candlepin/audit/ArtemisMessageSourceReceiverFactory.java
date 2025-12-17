@@ -14,8 +14,9 @@
  */
 package org.candlepin.audit;
 
-import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.config.Configuration;
+import org.candlepin.messaging.CPMException;
+import org.candlepin.messaging.CPMSessionManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
@@ -50,29 +51,29 @@ public class ArtemisMessageSourceReceiverFactory implements MessageSourceReceive
     }
 
     @Override
-    public Collection<MessageReceiver> get(ActiveMQSessionFactory sessionFactory) {
+    public Collection<MessageReceiver> get(CPMSessionManager sessionManager) {
         List<MessageReceiver> messageReceivers = new LinkedList<>();
 
         // Build up the collection of Event message receivers.
         ActiveMQContextListener.getActiveMQListeners(this.config).forEach(listenerClass -> {
             try {
                 Class<?> clazz = this.getClass().getClassLoader().loadClass(listenerClass);
-                messageReceivers.add(buildEventMessageReceiver(sessionFactory,
+                messageReceivers.add(buildEventMessageReceiver(sessionManager,
                     (EventListener) injector.getInstance(clazz)));
             }
             catch (Exception e) {
-                log.warn("Unable to register listener {}", listenerClass, e);
+                log.error("Unable to register listener {}", listenerClass, e);
             }
         });
 
         return messageReceivers;
     }
 
-    private MessageReceiver buildEventMessageReceiver(ActiveMQSessionFactory sessionFactory,
-        EventListener listener) {
+    private MessageReceiver buildEventMessageReceiver(CPMSessionManager sessionManager,
+        EventListener listener) throws CPMException {
 
         log.debug("Registering event listener for queue: {}", ArtemisMessageSource.getQueueName(listener));
-        return new DefaultEventMessageReceiver(listener, sessionFactory, mapper);
+        return new DefaultEventMessageReceiver(listener, sessionManager, mapper);
     }
 
 }

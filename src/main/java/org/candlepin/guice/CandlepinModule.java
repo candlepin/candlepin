@@ -88,12 +88,9 @@ import org.candlepin.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.exceptions.mappers.WriterExceptionMapper;
 import org.candlepin.messaging.CPMContextListener;
-import org.candlepin.messaging.CPMSessionFactory;
 import org.candlepin.messaging.impl.artemis.ArtemisContextListener;
-import org.candlepin.messaging.impl.artemis.ArtemisSessionFactory;
 import org.candlepin.messaging.impl.artemis.ArtemisUtil;
 import org.candlepin.messaging.impl.noop.NoopContextListener;
-import org.candlepin.messaging.impl.noop.NoopSessionFactory;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
@@ -384,11 +381,9 @@ public class CandlepinModule extends AbstractModule {
 
         if (ArtemisUtil.PROVIDER.equalsIgnoreCase(provider)) {
             bind(CPMContextListener.class).to(ArtemisContextListener.class).asEagerSingleton();
-            bind(CPMSessionFactory.class).to(ArtemisSessionFactory.class).asEagerSingleton();
         }
         else {
             bind(CPMContextListener.class).to(NoopContextListener.class).asEagerSingleton();
-            bind(CPMSessionFactory.class).to(NoopSessionFactory.class).asEagerSingleton();
         }
     }
 

@@ -14,11 +14,11 @@
  */
 package org.candlepin.audit;
 
-import org.candlepin.async.impl.ActiveMQSessionFactory;
+import org.candlepin.messaging.CPMConsumerConfig;
+import org.candlepin.messaging.CPMException;
+import org.candlepin.messaging.CPMSessionManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-
 
 /**
  * An abstract base class for all message receivers listening for Event messages.
@@ -27,19 +27,18 @@ public abstract class EventMessageReceiver extends MessageReceiver {
 
     protected EventListener listener;
 
-    public EventMessageReceiver(EventListener listener, ActiveMQSessionFactory sessionFactory,
-        ObjectMapper mapper) {
+    public EventMessageReceiver(EventListener listener, CPMSessionManager sessionManager,
+        ObjectMapper mapper) throws CPMException {
 
-        super(ArtemisMessageSource.getQueueName(listener), sessionFactory, mapper);
+        super(ArtemisMessageSource.getQueueName(listener), sessionManager, mapper);
         this.listener = listener;
-    }
 
-    @Override
-    protected void initialize() throws Exception {
-        session = this.sessionFactory.getIngressSession(false);
-        consumer = session.createConsumer(queueName);
-        consumer.setMessageHandler(this);
-        session.start();
+        CPMConsumerConfig config = new CPMConsumerConfig()
+            .setTransactional(true)
+            .setQueue(queueName);
+
+        this.session = this.sessionManager.createConsumerSession(config);
+        this.session.setMessageListener(this);
     }
 
 }

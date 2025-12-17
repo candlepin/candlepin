@@ -14,14 +14,14 @@
  */
 package org.candlepin.audit;
 
-import org.candlepin.async.impl.ActiveMQSessionFactory;
+import org.candlepin.messaging.CPMConsumer;
+import org.candlepin.messaging.CPMMessageListener;
+import org.candlepin.messaging.CPMSessionManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
-import org.apache.activemq.artemis.api.core.client.ClientSession;
-import org.apache.activemq.artemis.api.core.client.MessageHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,13 +29,13 @@ import org.slf4j.LoggerFactory;
 /**
  * A base implementation of Candlepin's ActiveMQ MessageHandler.
  */
-public abstract class MessageReceiver implements MessageHandler {
+public abstract class MessageReceiver implements CPMMessageListener {
 
     private static Logger log = LoggerFactory.getLogger(MessageReceiver.class);
 
-    protected ActiveMQSessionFactory sessionFactory;
+    protected CPMSessionManager sessionManager;
 
-    protected ClientSession session;
+    protected CPMConsumer session;
     protected ObjectMapper mapper;
 
     protected ClientConsumer consumer;
@@ -44,8 +44,8 @@ public abstract class MessageReceiver implements MessageHandler {
     // FIXME Do we even need this? Looks like it is just for logging.
     protected abstract String getQueueAddress();
 
-    public MessageReceiver(String queueName, ActiveMQSessionFactory sessionFactory, ObjectMapper mapper) {
-        this.sessionFactory = sessionFactory;
+    public MessageReceiver(String queueName, CPMSessionManager sessionManager, ObjectMapper mapper) {
+        this.sessionManager = sessionManager;
         this.mapper = mapper;
         this.queueName = queueName;
     }
@@ -63,48 +63,4 @@ public abstract class MessageReceiver implements MessageHandler {
         }
     }
 
-    /**
-     * Resume message consumption for this receiver.
-     */
-    public void resume() {
-        if (session.isClosed()) {
-            log.warn("MessageReceiver was unable to resume message consumption. Artemis DOWN!");
-            return;
-        }
-
-        try {
-            if (this.consumer.isClosed()) {
-                log.debug("Resuming message consumption for {}.", queueName);
-                this.consumer = session.createConsumer(queueName);
-                this.consumer.setMessageHandler(this);
-            }
-        }
-        catch (ActiveMQException e) {
-            log.warn("MessageReceiver could not start client session.", e);
-        }
-    }
-
-    /**
-     * Close the current session.
-     */
-    public void close() {
-        log.debug("Shutting down message receiver for {}.", queueName);
-        if (session != null && !session.isClosed()) {
-            try {
-                this.session.close();
-            }
-            catch (ActiveMQException e) {
-                log.warn("Error closing client session.", e);
-            }
-        }
-
-    }
-
-    protected abstract void initialize() throws Exception;
-
-    public void connect() throws Exception {
-        if (session == null || session.isClosed()) {
-            initialize();
-        }
-    }
 }

@@ -24,6 +24,7 @@ public class CPMConsumerConfig {
 
     private String queue;
     private String messageFilter;
+    private boolean transactional;
 
 
     /**
@@ -86,6 +87,15 @@ public class CPMConsumerConfig {
      */
     public String getMessageFilter() {
         return this.messageFilter;
+    }
+
+    public CPMConsumerConfig setTransactional(boolean transactional) {
+        this.transactional = transactional;
+        return this;
+    }
+
+    public boolean isTransactional() {
+        return this.transactional;
     }
 
 }

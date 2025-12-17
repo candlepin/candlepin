@@ -23,8 +23,7 @@ import org.candlepin.messaging.CPMException;
 import org.candlepin.messaging.CPMMessage;
 import org.candlepin.messaging.CPMMessageListener;
 import org.candlepin.messaging.CPMSession;
-import org.candlepin.messaging.CPMSessionConfig;
-import org.candlepin.messaging.CPMSessionFactory;
+import org.candlepin.messaging.CPMSessionManager;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 
@@ -34,10 +33,7 @@ import com.google.inject.persist.UnitOfWork;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Objects;
-import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -50,19 +46,15 @@ import javax.inject.Inject;
 public class JobMessageReceiver {
     private static Logger log = LoggerFactory.getLogger(JobMessageReceiver.class);
 
-    private static final String JOB_KEY_MESSAGE_PROPERTY = "job_key";
-
     private final Configuration config;
-    private final CPMSessionFactory cpmSessionFactory;
     private final ObjectMapper mapper;
+    private final CPMSessionManager sessionManager;
 
     private boolean initialized;
-    private boolean suspended;
 
     private MessageListener listener;
     private String receiveAddress;
     private String receiveFilter;
-    private Set<CPMSession> sessions;
     private UnitOfWork unitOfWork;
 
 
@@ -79,17 +71,15 @@ public class JobMessageReceiver {
      *  the object mapper to use to deserialize job messages
      */
     @Inject
-    public JobMessageReceiver(Configuration config, CPMSessionFactory cpmSessionFactory,
+    public JobMessageReceiver(Configuration config, CPMSessionManager sessionManager,
         ObjectMapper mapper, UnitOfWork unitOfWork) throws ConfigurationException {
 
         this.config = Objects.requireNonNull(config);
-        this.cpmSessionFactory = Objects.requireNonNull(cpmSessionFactory);
         this.mapper = Objects.requireNonNull(mapper);
+        this.sessionManager = Objects.requireNonNull(sessionManager);
         this.unitOfWork = Objects.requireNonNull(unitOfWork);
 
         this.initialized = false;
-        this.suspended = false;
-        this.sessions = new HashSet<>();
 
         this.configure(this.config);
     }
@@ -110,72 +100,6 @@ public class JobMessageReceiver {
         }
 
         this.receiveFilter = config.getString(ConfigProperties.ASYNC_JOBS_RECEIVE_FILTER);
-    }
-
-    /**
-     * Creates and configures a new session and consumer
-     *
-     * @return
-     *  The newly created CPM session
-     */
-    private CPMSession createSession() throws CPMException {
-        CPMSessionConfig sconfig = this.cpmSessionFactory.createSessionConfig()
-            .setTransactional(true);
-
-        // TODO: Add any other job-system-specific session configuration here
-
-        CPMSession session = this.cpmSessionFactory.createSession(sconfig);
-
-        CPMConsumerConfig cconfig = session.createConsumerConfig()
-            .setQueue(this.receiveAddress)
-            .setMessageFilter(this.receiveFilter);
-
-        session.createConsumer(cconfig)
-            .setMessageListener(this.listener);
-
-        // Once the consumer is configured, we no longer need to propagate it, as it'll be managed
-        // indirectly through the session, and passed into the message listener as needed
-
-        return session;
-    }
-
-    /**
-     * Starts all of the managed sessions. If a given session has died or been closed, this method
-     * will recreate it.
-     */
-    private void startSessions() throws CPMException {
-        Set<CPMSession> created = null;
-
-        Iterator<CPMSession> iterator = this.sessions.iterator();
-        while (iterator.hasNext()) {
-            CPMSession session = iterator.next();
-
-            if (session == null || session.isClosed()) {
-                if (created == null) {
-                    created = new HashSet<>();
-                }
-
-                iterator.remove();
-                session = this.createSession();
-
-                created.add(session);
-            }
-
-            session.start();
-        }
-
-        if (created != null) {
-            this.sessions.addAll(created);
-        }
-    }
-
-    /**
-     * Close all known sessions.
-     */
-    private void closeSessions() throws CPMException {
-        for (CPMSession session : this.sessions) {
-            session.close();
-        }
     }
 
     /**
@@ -210,29 +134,17 @@ public class JobMessageReceiver {
             for (int i = 0; i < listenerThreads; ++i) {
                 // Each session+consumer gives us an implicit thread for async job processing, so
                 // we don't need to do any additional thread creation/management ourselves.
-                CPMSession session = this.createSession();
-                this.sessions.add(session);
+
+                CPMConsumerConfig config = new CPMConsumerConfig()
+                    .setQueue(this.receiveAddress)
+                    .setMessageFilter(this.receiveFilter)
+                    .setTransactional(true);
+
+                CPMConsumer consumer = this.sessionManager.createConsumerSession(config);
+                consumer.setMessageListener(this.listener);
             }
 
             this.initialized = true;
-
-            // We're not technically suspended, but we're not started, either. This avoids
-            // needing an additional state
-            this.suspended = true;
-        }
-        catch (CPMException e) {
-            throw new JobException(e);
-        }
-    }
-
-    /**
-     * Shuts down this job message receiver, closing any sessions it may have opened
-     */
-    public synchronized void shutdown() throws JobException {
-        try {
-            for (CPMSession session : this.sessions) {
-                session.close();
-            }
         }
         catch (CPMException e) {
             throw new JobException(e);
@@ -247,60 +159,6 @@ public class JobMessageReceiver {
      */
     public synchronized boolean isInitialized() {
         return this.initialized;
-    }
-
-    /**
-     * Starts the operations of this message receiver. If this receiver has already been started,
-     * this method returns silently.
-     */
-    public synchronized void start() throws JobException {
-        try {
-            if (this.suspended) {
-                this.startSessions();
-
-                log.debug("Job message processing started");
-                this.suspended = false;
-            }
-        }
-        catch (CPMException e) {
-            throw new JobException(e);
-        }
-    }
-
-    /**
-     * Suspends the operations of this message receiver. If this receiver is already suspended, this
-     * method returns silently.
-     */
-    public synchronized void suspend() throws JobException {
-        try {
-            if (!this.suspended) {
-                this.closeSessions();
-
-                log.debug("Job message processing suspended");
-                this.suspended = true;
-            }
-        }
-        catch (CPMException e) {
-            throw new JobException(e);
-        }
-    }
-
-    /**
-     * Resume the operations of this message receiver. If this receiver is not suspended, this
-     * method returns silently.
-     */
-    public void resume() throws JobException {
-        this.start();
-    }
-
-    /**
-     * Checks if this message receiver is currently suspended.
-     *
-     * @return
-     *  true if this message receiver is currently suspended; false otherwise
-     */
-    public synchronized boolean isSuspended() {
-        return this.suspended;
     }
 
     /**
@@ -347,7 +205,7 @@ public class JobMessageReceiver {
                 this.unitOfWork.begin();
 
                 // Execute the job
-                AsyncJobStatus jobStatus = this.manager.executeJob(jobMessage);
+                this.manager.executeJob(jobMessage);
 
                 // We didn't fail! Commit the message
                 this.commit(session);

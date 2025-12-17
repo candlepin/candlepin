@@ -14,13 +14,15 @@
  */
 package org.candlepin.audit;
 
-import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.dto.api.server.v1.QueueStatus;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.guice.CandlepinRequestScoped;
+import org.candlepin.messaging.CPMProducer;
+import org.candlepin.messaging.CPMProducerConfig;
+import org.candlepin.messaging.CPMSessionManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -63,12 +65,13 @@ public class EventSinkImpl implements EventSink {
     private CandlepinModeManager modeManager;
     private Configuration config;
 
-    private ActiveMQSessionFactory sessionFactory;
-    private EventMessageSender messageSender;
+    private CPMSessionManager sessionManager;
+    private CPMProducer session;
+    // private EventMessageSender messageSender;
 
     @Inject
     public EventSinkImpl(EventFilter eventFilter, EventFactory eventFactory,
-        ObjectMapper mapper, Configuration config, ActiveMQSessionFactory sessionFactory,
+        ObjectMapper mapper, Configuration config, CPMSessionManager sessionManager,
         CandlepinModeManager modeManager) {
 
         this.eventFactory = eventFactory;
@@ -76,7 +79,7 @@ public class EventSinkImpl implements EventSink {
         this.eventFilter = eventFilter;
         this.modeManager = modeManager;
         this.config = config;
-        this.sessionFactory = sessionFactory;
+        this.sessionManager = sessionManager;
     }
 
     // FIXME This method really does not belong here. It should probably be moved
@@ -85,7 +88,7 @@ public class EventSinkImpl implements EventSink {
     public List<QueueStatus> getQueueInfo() {
         List<QueueStatus> results = new LinkedList<>();
 
-        try (ClientSession session = this.sessionFactory.getEgressSession(false)) {
+        try (ClientSession session = this.sessionManager.getEgressSession(false)) {
             session.start();
             for (String listenerClassName : ActiveMQContextListener.getActiveMQListeners(config)) {
                 String queueName = "event." + listenerClassName;
@@ -128,10 +131,10 @@ public class EventSinkImpl implements EventSink {
         log.debug("Queuing event: {}", event);
 
         try {
-            // Lazily initialize the message sender when the first
-            // message gets queued.
-            if (messageSender == null) {
-                messageSender = new EventMessageSender(this.sessionFactory);
+
+            if (session == null) {
+                CPMProducerConfig config = new CPMProducerConfig()
+                    .setTransactional();
             }
 
             messageSender.queueMessage(mapper.writeValueAsString(event), event.getType(), event.getTarget());
@@ -152,7 +155,8 @@ public class EventSinkImpl implements EventSink {
             log.debug("No events to send.");
             return;
         }
-        messageSender.sendMessages();
+
+        session;
     }
 
     @Override
@@ -161,11 +165,11 @@ public class EventSinkImpl implements EventSink {
             log.debug("No events to roll back.");
             return;
         }
-        messageSender.cancelMessages();
+        session.cancelMessages();
     }
 
     private boolean hasQueuedMessages() {
-        return messageSender != null;
+        return session != null;
     }
 
     public void emitConsumerCreated(Consumer newConsumer) {
@@ -239,7 +243,7 @@ public class EventSinkImpl implements EventSink {
      */
     private class EventMessageSender {
 
-        private ActiveMQSessionFactory sessionFactory;
+        private CPMSessionManager sessionManager;
         private ClientSession session;
         private ClientProducer producer;
 
@@ -251,7 +255,7 @@ public class EventSinkImpl implements EventSink {
                  * messages safely and the session is then ready to start over the next time
                  * the thread is used.
                  */
-                this.sessionFactory = sessionFactory;
+                this.sessionManager = sessionFactory;
                 session = sessionFactory.getEgressSession(true);
                 producer = session.createProducer(MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS);
             }
@@ -265,7 +269,7 @@ public class EventSinkImpl implements EventSink {
             throws ActiveMQException {
             if (session.isClosed()) {
                 try {
-                    session = sessionFactory.getEgressSession(true);
+                    session = sessionManager.getEgressSession(true);
                     producer = session.createProducer(MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS);
                 }
                 catch (Exception e) {
