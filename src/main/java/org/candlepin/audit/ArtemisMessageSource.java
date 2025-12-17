@@ -14,6 +14,7 @@
  */
 package org.candlepin.audit;
 
+import org.candlepin.messaging.CPMMessageListener;
 import org.candlepin.messaging.CPMSessionManager;
 
 import org.slf4j.Logger;
@@ -53,7 +54,9 @@ public class ArtemisMessageSource implements MessageSource {
         log.info("onStatusUpdate");
     }
 
-    public static String getQueueName(EventListener listener) {
+    // TODO: Is this a breaking change?
+
+    public static String getQueueName(CPMMessageListener listener) {
         return MessageAddress.EVENT_ADDRESS_PREFIX + "." + listener.getClass().getCanonicalName();
     }
 

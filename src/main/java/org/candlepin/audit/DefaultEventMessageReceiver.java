@@ -17,6 +17,7 @@ package org.candlepin.audit;
 import org.candlepin.messaging.CPMConsumer;
 import org.candlepin.messaging.CPMException;
 import org.candlepin.messaging.CPMMessage;
+import org.candlepin.messaging.CPMMessageListener;
 import org.candlepin.messaging.CPMSession;
 import org.candlepin.messaging.CPMSessionManager;
 
@@ -34,7 +35,7 @@ public class DefaultEventMessageReceiver extends EventMessageReceiver {
 
     private static Logger log = LoggerFactory.getLogger(DefaultEventMessageReceiver.class);
 
-    public DefaultEventMessageReceiver(EventListener listener, CPMSessionManager manager,
+    public DefaultEventMessageReceiver(CPMMessageListener listener, CPMSessionManager manager,
         ObjectMapper mapper) throws CPMException {
         super(listener, manager, mapper);
     }
@@ -56,8 +57,7 @@ public class DefaultEventMessageReceiver extends EventMessageReceiver {
             body = message.getBody();
 
             log.debug("Got event: {}", body);
-            Event event = mapper.readValue(body, Event.class);
-            listener.onEvent(event);
+            listener.handleMessage(session, consumer, message);
 
             log.debug("Message listener {} processed message: {}: SUCCESS", listener, message.getMessageId());
             // Finally commit the session so that the message is taken out of the queue.

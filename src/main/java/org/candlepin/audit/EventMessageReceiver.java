@@ -15,7 +15,7 @@
 package org.candlepin.audit;
 
 import org.candlepin.messaging.CPMConsumerConfig;
-import org.candlepin.messaging.CPMException;
+import org.candlepin.messaging.CPMMessageListener;
 import org.candlepin.messaging.CPMSessionManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,20 +25,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public abstract class EventMessageReceiver extends MessageReceiver {
 
-    protected EventListener listener;
+    protected CPMMessageListener listener;
 
-    public EventMessageReceiver(EventListener listener, CPMSessionManager sessionManager,
-        ObjectMapper mapper) throws CPMException {
+    public EventMessageReceiver(CPMMessageListener listener, CPMSessionManager sessionManager,
+        ObjectMapper mapper) {
 
         super(ArtemisMessageSource.getQueueName(listener), sessionManager, mapper);
         this.listener = listener;
+    }
+
+    @Override
+    protected void initialize() throws Exception {
+        session = this.sessionManager.createSession(false);
 
         CPMConsumerConfig config = new CPMConsumerConfig()
-            .setTransactional(true)
             .setQueue(queueName);
 
-        this.session = this.sessionManager.createConsumerSession(config);
-        this.session.setMessageListener(this);
+        consumer = session.createConsumer(config);
+        consumer.setMessageListener(listener);
+        session.start();
     }
 
 }

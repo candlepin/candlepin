@@ -16,6 +16,7 @@ package org.candlepin.audit;
 
 import org.candlepin.config.Configuration;
 import org.candlepin.messaging.CPMException;
+import org.candlepin.messaging.CPMMessageListener;
 import org.candlepin.messaging.CPMSessionManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,7 +60,7 @@ public class ArtemisMessageSourceReceiverFactory implements MessageSourceReceive
             try {
                 Class<?> clazz = this.getClass().getClassLoader().loadClass(listenerClass);
                 messageReceivers.add(buildEventMessageReceiver(sessionManager,
-                    (EventListener) injector.getInstance(clazz)));
+                    (CPMMessageListener) injector.getInstance(clazz)));
             }
             catch (Exception e) {
                 log.error("Unable to register listener {}", listenerClass, e);
@@ -70,7 +71,7 @@ public class ArtemisMessageSourceReceiverFactory implements MessageSourceReceive
     }
 
     private MessageReceiver buildEventMessageReceiver(CPMSessionManager sessionManager,
-        EventListener listener) throws CPMException {
+        CPMMessageListener listener) throws CPMException {
 
         log.debug("Registering event listener for queue: {}", ArtemisMessageSource.getQueueName(listener));
         return new DefaultEventMessageReceiver(listener, sessionManager, mapper);

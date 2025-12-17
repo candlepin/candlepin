@@ -85,6 +85,28 @@ public class JobMessageReceiver {
     }
 
     /**
+     * Creates and configures a new session and consumer
+     *
+     * @return
+     *  The newly created CPM session
+     */
+    private CPMSession createSession() throws CPMException {
+        CPMSession session = this.sessionManager.createSession(true);
+
+        CPMConsumerConfig cconfig = session.createConsumerConfig()
+            .setQueue(this.receiveAddress)
+            .setMessageFilter(this.receiveFilter);
+
+        session.createConsumer(cconfig)
+            .setMessageListener(this.listener);
+
+        // Once the consumer is configured, we no longer need to propagate it, as it'll be managed
+        // indirectly through the session, and passed into the message listener as needed
+
+        return session;
+    }
+
+    /**
      * Configures this object using the configuration provided.
      *
      * @param config
@@ -134,14 +156,7 @@ public class JobMessageReceiver {
             for (int i = 0; i < listenerThreads; ++i) {
                 // Each session+consumer gives us an implicit thread for async job processing, so
                 // we don't need to do any additional thread creation/management ourselves.
-
-                CPMConsumerConfig config = new CPMConsumerConfig()
-                    .setQueue(this.receiveAddress)
-                    .setMessageFilter(this.receiveFilter)
-                    .setTransactional(true);
-
-                CPMConsumer consumer = this.sessionManager.createConsumerSession(config);
-                consumer.setMessageListener(this.listener);
+                this.createSession();
             }
 
             this.initialized = true;

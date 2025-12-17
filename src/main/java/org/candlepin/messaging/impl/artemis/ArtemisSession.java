@@ -26,7 +26,9 @@ import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientProducer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 
 
@@ -36,6 +38,9 @@ import java.util.Objects;
 public class ArtemisSession implements CPMSession {
 
     private final ClientSession session;
+
+    private Set<ProducerSessionStore> producerConfigs = new HashSet<>();
+    private Set<ConsumerSessionStore> consumerConfigs = new HashSet<>();
 
     /**
      * Creates a new Artemis session backed by the given ClientSession instance.
@@ -183,6 +188,7 @@ public class ArtemisSession implements CPMSession {
 
         try {
             ClientProducer producer = this.session.createProducer();
+            producerConfigs.add(new ProducerSessionStore(producer, config));
             return new ArtemisProducer(this, producer);
         }
         catch (ActiveMQException e) {
@@ -214,6 +220,8 @@ public class ArtemisSession implements CPMSession {
                 this.session.createConsumer(config.getQueue(), filter) :
                 this.session.createConsumer(config.getQueue());
 
+            consumerConfigs.add(new ConsumerSessionStore(consumer, config));
+
             return new ArtemisConsumer(this, consumer);
         }
         catch (ActiveMQException e) {
@@ -240,6 +248,26 @@ public class ArtemisSession implements CPMSession {
 
         ClientMessage message = this.session.createMessage(ClientMessage.TEXT_TYPE, config.isDurable());
         return new ArtemisMessage(this, message);
+    }
+
+    // TODO: Do we need these? Can we just store the ClientConsumer and the ClientProducer?
+
+    private static record ConsumerSessionStore (
+        ClientConsumer consumer,
+        CPMConsumerConfig config
+    ) {}
+
+    private static record ProducerSessionStore (
+        ClientProducer producer,
+        CPMProducerConfig config
+    ) {}
+
+    @Override
+    public boolean reconnect() throws CPMException {
+        // TODO: Implement this
+
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'reconnect'");
     }
 
 }

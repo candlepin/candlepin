@@ -15,13 +15,17 @@
 package org.candlepin.audit;
 
 import org.candlepin.messaging.CPMConsumer;
+import org.candlepin.messaging.CPMException;
 import org.candlepin.messaging.CPMMessageListener;
+import org.candlepin.messaging.CPMSession;
 import org.candlepin.messaging.CPMSessionManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
+import org.apache.activemq.artemis.api.core.client.ClientSession;
+import org.apache.activemq.artemis.api.core.client.MessageHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,10 +39,10 @@ public abstract class MessageReceiver implements CPMMessageListener {
 
     protected CPMSessionManager sessionManager;
 
-    protected CPMConsumer session;
+    protected CPMSession session;
     protected ObjectMapper mapper;
 
-    protected ClientConsumer consumer;
+    protected CPMConsumer consumer;
     protected String queueName;
 
     // FIXME Do we even need this? Looks like it is just for logging.
@@ -58,9 +62,55 @@ public abstract class MessageReceiver implements CPMMessageListener {
             log.debug("Pausing message consumption for: {}.", queueName);
             this.consumer.close();
         }
-        catch (ActiveMQException e) {
+        catch (CPMException e) {
             log.warn("Message receiver could not stop client consumer.", e);
         }
     }
 
+    /**
+     * Resume message consumption for this receiver.
+     */
+    public void resume() {
+        if (session.isClosed()) {
+            log.warn("MessageReceiver was unable to resume message consumption. Artemis DOWN!");
+            return;
+        }
+
+        // TODO: Do we want this here or only let the SessionManager manage the sessions?
+
+        // try {
+        //     if (this.consumer.isClosed()) {
+        //         log.debug("Resuming message consumption for {}.", queueName);
+        //         this.consumer = session.createConsumer(queueName);
+        //         this.consumer.setMessageHandler(this);
+        //     }
+        // }
+        // catch (CPMException e) {
+        //     log.warn("MessageReceiver could not start client session.", e);
+        // }
+    }
+
+    /**
+     * Close the current session.
+     */
+    public void close() {
+        log.debug("Shutting down message receiver for {}.", queueName);
+        if (session != null && !session.isClosed()) {
+            try {
+                this.session.close();
+            }
+            catch (CPMException e) {
+                log.warn("Error closing client session.", e);
+            }
+        }
+
+    }
+
+    protected abstract void initialize() throws Exception;
+
+    public void connect() throws Exception {
+        if (session == null || session.isClosed()) {
+            initialize();
+        }
+    }
 }

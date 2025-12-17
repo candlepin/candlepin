@@ -187,4 +187,6 @@ public interface CPMSession extends AutoCloseable {
      */
     CPMMessage createMessage(CPMMessageConfig config) throws CPMException;
 
+    boolean reconnect() throws CPMException;
+
 }

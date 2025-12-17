@@ -22,8 +22,7 @@ import org.candlepin.messaging.CPMMessage;
 import org.candlepin.messaging.CPMProducer;
 import org.candlepin.messaging.CPMProducerConfig;
 import org.candlepin.messaging.CPMSession;
-import org.candlepin.messaging.CPMSessionConfig;
-import org.candlepin.messaging.CPMSessionFactory;
+import org.candlepin.messaging.CPMSessionManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -54,7 +53,7 @@ public class JobMessageDispatcher {
      * The ThreadSessionStore is used to store session information per thread.
      */
     private static final class ThreadSessionStore {
-        private final CPMSessionFactory sessionFactory;
+        private final CPMSessionManager sessionManager;
 
         private CPMSession session;
         private CPMProducer producer;
@@ -69,12 +68,12 @@ public class JobMessageDispatcher {
          * @throws IllegalArgumentException
          *  if sessionFactory is null
          */
-        public ThreadSessionStore(CPMSessionFactory sessionFactory) {
-            if (sessionFactory == null) {
+        public ThreadSessionStore(CPMSessionManager sessionManager) {
+            if (sessionManager == null) {
                 throw new IllegalArgumentException("sessionFactory is null");
             }
 
-            this.sessionFactory = sessionFactory;
+            this.sessionManager = sessionManager;
         }
 
         /**
@@ -88,12 +87,9 @@ public class JobMessageDispatcher {
                 log.debug("Creating new CPM session for job message dispatch for thread {}",
                     Thread.currentThread());
 
-                CPMSessionConfig config = this.sessionFactory.createSessionConfig()
-                    .setTransactional(true);
-
                 // Add any other job-system-specific session configuration here
 
-                this.session = this.sessionFactory.createSession(config);
+                this.session = this.sessionManager.createSession(true);
                 this.session.start();
 
                 log.debug("Created new CPM session: {}", this.session);
@@ -194,7 +190,7 @@ public class JobMessageDispatcher {
 
 
     private final Configuration config;
-    private final CPMSessionFactory cpmSessionFactory;
+    private final CPMSessionManager sessionManager;
     private final ObjectMapper objMapper;
 
     private final ReferenceQueue<Thread> referenceQueue;
@@ -220,11 +216,11 @@ public class JobMessageDispatcher {
      *  if the necessary configuration cannot be read or is invalid
      */
     @Inject
-    public JobMessageDispatcher(Configuration config, CPMSessionFactory cpmSessionFactory,
+    public JobMessageDispatcher(Configuration config, CPMSessionManager sessionManager,
         ObjectMapper objMapper) throws ConfigurationException {
 
         this.config = Objects.requireNonNull(config);
-        this.cpmSessionFactory = Objects.requireNonNull(cpmSessionFactory);
+        this.sessionManager = Objects.requireNonNull(sessionManager);
         this.objMapper = Objects.requireNonNull(objMapper);
 
         this.referenceQueue = new ReferenceQueue<>();
@@ -295,7 +291,7 @@ public class JobMessageDispatcher {
         ThreadReference ref = new ThreadReference(Thread.currentThread(), this.referenceQueue);
         ThreadSessionStore store = this.sessions.get(ref);
         if (store == null) {
-            store = new ThreadSessionStore(this.cpmSessionFactory);
+            store = new ThreadSessionStore(this.sessionManager);
             this.sessions.put(ref, store);
         }
 

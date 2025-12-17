@@ -2,8 +2,10 @@ package org.candlepin.messaging;
 
 public interface CPMSessionManager {
 
-    CPMConsumer createConsumerSession(CPMConsumerConfig config) throws CPMException;
+    // A connection can create many Sessions
+    // A session can create many Producers
+    // A session can create many Consumers
 
-    CPMProducer createProducerSession(CPMProducerConfig config) throws CPMException;
+    CPMSession createSession(boolean transactional) throws CPMException;
 
 }

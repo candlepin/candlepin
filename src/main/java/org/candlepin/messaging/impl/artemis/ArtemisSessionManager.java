@@ -1,9 +1,11 @@
 package org.candlepin.messaging.impl.artemis;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
@@ -18,6 +20,7 @@ import org.candlepin.messaging.CPMConsumerConfig;
 import org.candlepin.messaging.CPMException;
 import org.candlepin.messaging.CPMProducer;
 import org.candlepin.messaging.CPMProducerConfig;
+import org.candlepin.messaging.CPMSession;
 import org.candlepin.messaging.CPMSessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +36,7 @@ public class ArtemisSessionManager implements CPMSessionManager, CloseListener {
         private ServerLocator locator;
 
         private ClientSessionFactory sessionFactory;
-        private Map<CPMConsumerConfig, ArtemisSession> consumerSessions = new HashMap<>();
-        private Map<CPMProducerConfig, ArtemisSession> producerSessions = new HashMap<>();
+        private Set<CPMSession> sessions = new HashSet<>();
 
         @Inject
         public ArtemisSessionManager(Configuration config) throws Exception {
@@ -52,40 +54,18 @@ public class ArtemisSessionManager implements CPMSessionManager, CloseListener {
             this.sessionFactory.getConnection().addCloseListener(this);
         }
 
+
         @Override
-        public CPMProducer createProducerSession(CPMProducerConfig config) throws CPMException {
+        public CPMSession createSession(boolean transactional) throws CPMException {
             try {
-                ClientSession clientSession = config.isTransactional() ?
+                ClientSession clientSession = transactional ?
                     this.sessionFactory.createTransactedSession() :
                     this.sessionFactory.createSession();
 
                 ArtemisSession session = new ArtemisSession(clientSession);
-                producerSessions.put(config, session);
+                sessions.add(session);
 
-                return session.createProducer();
-            }
-            catch (Exception e) {
-                throw new CPMException(e);
-            }
-        }
-
-        @Override
-        public CPMConsumer createConsumerSession(CPMConsumerConfig config) throws CPMException {
-            try {
-                ClientSession clientSession = config.isTransactional() ?
-                    this.sessionFactory.createTransactedSession() :
-                    this.sessionFactory.createSession();
-
-                String filter = config.getMessageFilter();
-
-                ClientConsumer consumer = (filter != null && !filter.isEmpty()) ?
-                    clientSession.createConsumer(config.getQueue(), filter) :
-                    clientSession.createConsumer(config.getQueue());
-
-                ArtemisSession session = new ArtemisSession(clientSession);
-                // sessions.put(config, session);
-
-                return new ArtemisConsumer(session, consumer);
+                return session;
             }
             catch (Exception e) {
                 throw new CPMException(e);
@@ -95,8 +75,8 @@ public class ArtemisSessionManager implements CPMSessionManager, CloseListener {
         @Override
         public void connectionClosed() {
             log.info("Closing all sessions for Artemis connection");
-            for (Entry<CPMConsumerConfig, ArtemisSession> entry : consumerSessions.entrySet()) {
-                ArtemisSession session = entry.getValue();
+
+            for (CPMSession session : sessions) {
                 if (session == null) {
                     continue;
                 }
@@ -105,24 +85,9 @@ public class ArtemisSessionManager implements CPMSessionManager, CloseListener {
                     session.close();
                 }
                 catch (CPMException e) {
-                    log.error("Unable to close consumer session", e);
+                    log.error("Unable to close session", e);
                 }
             }
-
-            for (Entry<CPMProducerConfig, ArtemisSession> entry : producerSessions.entrySet()) {
-                ArtemisSession session = entry.getValue();
-                if (session == null) {
-                    continue;
-                }
-
-                try {
-                    session.close();
-                }
-                catch (CPMException e) {
-                    log.error("Unable to close consumer session", e);
-                }
-            }
-
         }
 
 }
