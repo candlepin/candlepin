@@ -59,6 +59,13 @@ public class Event {
         BULK_DELETION,
 
         /**
+         * Represents a modification event for multiple entities of the given target. Certain
+         * event fields such as targetName or entityId should remain unset because this type represents
+         * a collection of entities.
+         */
+        BULK_MODIFICATION,
+
+        /**
          * Represents the migration of multiple entities to a target entity. Note that because this event type
          * represents many entities, certain event fields *should not* be populated, such as: targetName or
          * entityId.

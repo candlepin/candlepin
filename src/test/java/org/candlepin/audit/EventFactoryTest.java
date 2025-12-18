@@ -48,6 +48,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -313,6 +314,78 @@ public class EventFactoryTest {
 
         assertThrows(IllegalArgumentException.class,
             () -> this.eventFactory.bulkConsumerDeletion(ownerKey, false, null));
+    }
+
+    @Test
+    public void testBulkConsumerModifiedEventGeneration() {
+        boolean anonymous = false;
+        Owner owner = new Owner()
+            .setKey(TestUtil.randomString())
+            .setAnonymous(anonymous);
+
+        List<String> consumerUuids = Stream.generate(Util::generateUUID)
+            .limit(3)
+            .toList();
+
+        Event event = this.eventFactory.bulkConsumerModified(owner, consumerUuids);
+
+        assertThat(event)
+            .isNotNull()
+            .returns(Event.Target.CONSUMER, Event::getTarget)
+            .returns(Type.BULK_MODIFICATION, Event::getType)
+            .returns(owner.getKey(), Event::getOwnerKey)
+            .returns(anonymous, Event::isOwnerAnonymous);
+
+        Map<String, Object> eventData = event.getEventData();
+        assertNotNull(eventData);
+
+        List<String> eventConsumerUuids = (List<String>) eventData.get("consumerUuids");
+        assertThat(eventConsumerUuids)
+            .isNotNull()
+            .containsExactlyElementsOf(consumerUuids);
+    }
+
+    @Test
+    public void testBulkConsumerModifiedRequiresOwner() {
+        List<String> consumerUuids = Stream.generate(Util::generateUUID)
+            .limit(2)
+            .toList();
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerModified((Owner) null, consumerUuids));
+    }
+
+    @Test
+    public void testBulkConsumerModifiedRequiresConsumerUuidsOwnerOverload() {
+        Owner owner = new Owner()
+            .setKey(TestUtil.randomString())
+            .setAnonymous(false);
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerModified(owner, null));
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerModified(owner, Collections.emptyList()));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testBulkConsumerModifiedRequiresOwnerKey(String ownerKey) {
+        List<String> consumerUuids = Stream.generate(Util::generateUUID)
+            .limit(2)
+            .toList();
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerModified(ownerKey, false, consumerUuids));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testBulkConsumerModifiedRequiresConsumerUuids(List<String> consumerUuids) {
+        String ownerKey = TestUtil.randomString();
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.eventFactory.bulkConsumerModified(ownerKey, false, consumerUuids));
     }
 
     @Test
