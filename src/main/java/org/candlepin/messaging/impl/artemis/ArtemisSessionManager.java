@@ -26,18 +26,22 @@ import com.google.inject.Singleton;
 
 @Singleton
 public class ArtemisSessionManager implements CPMSessionManager, CloseListener {
-        private static Logger log = LoggerFactory.getLogger(ArtemisSessionManager.class);
+    private static Logger log = LoggerFactory.getLogger(ArtemisSessionManager.class);
 
-        private Configuration config;
-        private ServerLocator locator;
+    private Configuration config;
+    private ServerLocator locator;
 
-        private ClientSessionFactory sessionFactory;
-        private Set<CPMSession> sessions = new HashSet<>();
+    private ClientSessionFactory sessionFactory;
+    private Set<CPMSession> sessions = new HashSet<>();
 
-        @Inject
-        public ArtemisSessionManager(Configuration config) throws Exception {
-            this.config = Objects.requireNonNull(config);
+    @Inject
+    public ArtemisSessionManager(Configuration config) throws Exception {
+        this.config = Objects.requireNonNull(config);
+    }
 
+    @Override
+    public void initialize() throws CPMException {
+        try {
             String brokerUrl = this.config.getString(ConfigProperties.ACTIVEMQ_BROKER_URL);
             log.info("Connecting to Artemis server at {}", brokerUrl);
 
@@ -49,50 +53,53 @@ public class ArtemisSessionManager implements CPMSessionManager, CloseListener {
             this.sessionFactory = this.locator.createSessionFactory();
             this.sessionFactory.getConnection().addCloseListener(this);
         }
+        catch (Exception e) {
+            throw new CPMException(e);
+        }
+    }
 
+    @Override
+    public CPMSession createSession(boolean transactional) throws CPMException {
+        try {
+            ClientSession clientSession = transactional ?
+                this.sessionFactory.createTransactedSession() :
+                this.sessionFactory.createSession();
 
-        @Override
-        public CPMSession createSession(boolean transactional) throws CPMException {
+            ArtemisSession session = new ArtemisSession(clientSession);
+            sessions.add(session);
+
+            return session;
+        }
+        catch (Exception e) {
+            throw new CPMException(e);
+        }
+    }
+
+    @Override
+    public void connectionClosed() {
+        this.closeAllSessions();
+    }
+
+    @Override
+    public boolean closeAllSessions() {
+        log.info("Closing all sessions for Artemis connection");
+
+        boolean successful = true;
+        for (CPMSession session : sessions) {
+            if (session == null) {
+                continue;
+            }
+
             try {
-                ClientSession clientSession = transactional ?
-                    this.sessionFactory.createTransactedSession() :
-                    this.sessionFactory.createSession();
-
-                ArtemisSession session = new ArtemisSession(clientSession);
-                sessions.add(session);
-
-                return session;
+                session.close();
             }
-            catch (Exception e) {
-                throw new CPMException(e);
+            catch (CPMException e) {
+                log.error("Unable to close session", e);
+                successful = false;
             }
         }
 
-        @Override
-        public void connectionClosed() {
-            this.closeAllSessions();
-        }
-
-        @Override
-        public boolean closeAllSessions() {
-            log.info("Closing all sessions for Artemis connection");
-
-            boolean successful = true;
-            for (CPMSession session : sessions) {
-                if (session == null) {
-                    continue;
-                }
-
-                try {
-                    session.close();
-                }
-                catch (CPMException e) {
-                    log.error("Unable to close session", e);
-                    successful = false;
-                }
-            }
-
-            return successful;
-        }
+        return successful;
+    }
 
 }

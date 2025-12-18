@@ -20,6 +20,8 @@ import org.candlepin.messaging.CPMSessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -32,9 +34,12 @@ import javax.inject.Singleton;
 public class ArtemisMessageSource implements MessageSource {
     private static Logger log = LoggerFactory.getLogger(ArtemisMessageSource.class);
 
+    private Collection<MessageReceiver> messageReceivers;
+
     @Inject
     public ArtemisMessageSource(CPMSessionManager manager, MessageSourceReceiverFactory receiverFactory) {
         receiverFactory.get(manager);
+         this.messageReceivers = receiverFactory.get(manager);
     }
 
     @Override
@@ -51,7 +56,27 @@ public class ArtemisMessageSource implements MessageSource {
      */
     @Override
     public void onStatusUpdate(ActiveMQStatus oldStatus, ActiveMQStatus newStatus) {
-        log.info("onStatusUpdate");
+        log.info("ActiveMQ status has been updated: {}:{}", oldStatus, newStatus);
+        if (ActiveMQStatus.DOWN.equals(newStatus) && !ActiveMQStatus.DOWN.equals(oldStatus)) {
+            log.info("Shutting down all message receivers because the broker went down.");
+            shutDown();
+        }
+        else if (ActiveMQStatus.CONNECTED.equals(newStatus) && !ActiveMQStatus.CONNECTED.equals(oldStatus)) {
+            log.info("Connecting to message broker and initializing all message listeners.");
+
+            // Attempt a shutdown to be sure that all resources are cleared.
+            shutDown();
+
+            this.messageReceivers.forEach(receiver -> {
+                try {
+                    receiver.connect();
+                }
+                catch (Exception e) {
+                    log.warn("Unable to reconnect message listeners. Messages will not be received: {}",
+                        receiver.getQueueAddress(), e);
+                }
+            });
+        }
     }
 
     // TODO: Is this a breaking change?
