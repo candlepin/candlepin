@@ -455,6 +455,15 @@ war {
         include "openapi.json"
         into("WEB-INF/classes")
     }
+
+    doLast {
+        copy {
+            from archiveFile
+            into archiveFile.get().asFile.parent
+            rename { "candlepin.war" }
+        }
+    }
+
 }
 
 publishing {
