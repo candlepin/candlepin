@@ -20,8 +20,11 @@ import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.dto.api.server.v1.QueueStatus;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.guice.CandlepinRequestScoped;
+import org.candlepin.messaging.CPMException;
+import org.candlepin.messaging.CPMMessage;
 import org.candlepin.messaging.CPMProducer;
 import org.candlepin.messaging.CPMProducerConfig;
+import org.candlepin.messaging.CPMSession;
 import org.candlepin.messaging.CPMSessionManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
@@ -33,11 +36,6 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.activemq.artemis.api.core.ActiveMQException;
-import org.apache.activemq.artemis.api.core.SimpleString;
-import org.apache.activemq.artemis.api.core.client.ClientMessage;
-import org.apache.activemq.artemis.api.core.client.ClientProducer;
-import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,8 +64,7 @@ public class EventSinkImpl implements EventSink {
     private Configuration config;
 
     private CPMSessionManager sessionManager;
-    private CPMProducer session;
-    // private EventMessageSender messageSender;
+    private EventMessageSender messageSender;
 
     @Inject
     public EventSinkImpl(EventFilter eventFilter, EventFactory eventFactory,
@@ -88,20 +85,22 @@ public class EventSinkImpl implements EventSink {
     public List<QueueStatus> getQueueInfo() {
         List<QueueStatus> results = new LinkedList<>();
 
-        try (ClientSession session = this.sessionManager.getEgressSession(false)) {
-            session.start();
-            for (String listenerClassName : ActiveMQContextListener.getActiveMQListeners(config)) {
-                String queueName = "event." + listenerClassName;
-                long msgCount = session.queueQuery(SimpleString.of(queueName)).getMessageCount();
-                results.add(new QueueStatus()
-                    .queueName(queueName)
-                    .pendingMessageCount(msgCount)
-                );
-            }
-        }
-        catch (Exception e) {
-            log.error("Error looking up ActiveMQ queue info: ", e);
-        }
+        // TODO: Need to handle this
+
+        // try (CPMSession session = this.sessionManager.createSession(false)) {
+        //     session.start();
+        //     for (String listenerClassName : ActiveMQContextListener.getActiveMQListeners(config)) {
+        //         String queueName = "event." + listenerClassName;
+        //         long msgCount = session.queueQuery(SimpleString.of(queueName)).getMessageCount();
+        //         results.add(new QueueStatus()
+        //             .queueName(queueName)
+        //             .pendingMessageCount(msgCount)
+        //         );
+        //     }
+        // }
+        // catch (Exception e) {
+        //     log.error("Error looking up ActiveMQ queue info: ", e);
+        // }
 
         return results;
     }
@@ -131,10 +130,10 @@ public class EventSinkImpl implements EventSink {
         log.debug("Queuing event: {}", event);
 
         try {
-
-            if (session == null) {
-                CPMProducerConfig config = new CPMProducerConfig()
-                    .setTransactional();
+            // Lazily initialize the message sender when the first
+            // message gets queued.
+            if (messageSender == null) {
+                messageSender = new EventMessageSender(this.sessionManager);
             }
 
             messageSender.queueMessage(mapper.writeValueAsString(event), event.getType(), event.getTarget());
@@ -155,8 +154,7 @@ public class EventSinkImpl implements EventSink {
             log.debug("No events to send.");
             return;
         }
-
-        session;
+        messageSender.sendMessages();
     }
 
     @Override
@@ -165,11 +163,11 @@ public class EventSinkImpl implements EventSink {
             log.debug("No events to roll back.");
             return;
         }
-        session.cancelMessages();
+        messageSender.cancelMessages();
     }
 
     private boolean hasQueuedMessages() {
-        return session != null;
+        return messageSender != null;
     }
 
     public void emitConsumerCreated(Consumer newConsumer) {
@@ -244,20 +242,24 @@ public class EventSinkImpl implements EventSink {
     private class EventMessageSender {
 
         private CPMSessionManager sessionManager;
-        private ClientSession session;
-        private ClientProducer producer;
+        private CPMSession session;
+        private CPMProducer producer;
 
-        public EventMessageSender(ActiveMQSessionFactory sessionFactory) {
+        public EventMessageSender(CPMSessionManager sessionManager) {
             try {
                 /*
-                 * Uses a transacted ActiveMQ session, events will not be dispatched until
+                 * Uses a transacted session, events will not be dispatched until
                  * commit() is called on it, and a call to rollback() will revert any queued
                  * messages safely and the session is then ready to start over the next time
                  * the thread is used.
                  */
-                this.sessionManager = sessionFactory;
-                session = sessionFactory.getEgressSession(true);
-                producer = session.createProducer(MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS);
+                this.sessionManager = sessionManager;
+                this.session = this.sessionManager.createSession(true);
+
+                CPMProducerConfig config = new CPMProducerConfig()
+                    .setTransactional(true);
+
+                this.producer = this.session.createProducer(config);
             }
             catch (Exception e) {
                 throw new RuntimeException(e);
@@ -266,56 +268,49 @@ public class EventSinkImpl implements EventSink {
         }
 
         public void queueMessage(String eventString, Event.Type type, Event.Target target)
-            throws ActiveMQException {
+            throws CPMException {
             if (session.isClosed()) {
-                try {
-                    session = sessionManager.getEgressSession(true);
-                    producer = session.createProducer(MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS);
-                }
-                catch (Exception e) {
-                    log.error("Unable to open session while queuing messages", e);
-                    throw new RuntimeException(e);
-                }
+                throw new IllegalStateException("Session is closed");
             }
 
-            ClientMessage message = session.createMessage(ClientMessage.TEXT_TYPE, true);
-            message.getBodyBuffer().writeNullableSimpleString(SimpleString.of(eventString));
+            CPMMessage message = session.createMessage()
+                .setBody(eventString);
 
             // Set the event type and target if provided
             if (type != null) {
-                message.putStringProperty(EVENT_TYPE_KEY, type.name());
+                message.setProperty(EVENT_TYPE_KEY, type.name());
             }
 
             if (target != null) {
-                message.putStringProperty(EVENT_TARGET_KEY, target.name());
+                message.setProperty(EVENT_TARGET_KEY, target.name());
             }
 
             // NOTE: not actually sent until we commit the session.
-            producer.send(message);
+            producer.send(MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS, message);
         }
 
         public void sendMessages() {
-            log.debug("Committing ActiveMQ transaction.");
+            log.debug("Committing transaction.");
             if (!session.isClosed()) {
-                try (ClientSession toClose = session) {
+                try (CPMSession toClose = session) {
                     toClose.commit();
                 }
-                catch (Exception e) {
+                catch (CPMException e) {
                     // This would be pretty bad, but we always try not to let event errors
                     // interfere with the operation of the overall application.
-                    log.error("Error committing ActiveMQ transaction", e);
+                    log.error("Error committing transaction", e);
                 }
             }
         }
 
         public void cancelMessages() {
-            log.warn("Rolling back ActiveMQ transaction.");
+            log.warn("Rolling back transaction.");
             if (!session.isClosed()) {
-                try (ClientSession toClose = session) {
+                try (CPMSession toClose = session) {
                     toClose.rollback();
                 }
-                catch (ActiveMQException e) {
-                    log.error("Error rolling back ActiveMQ transaction", e);
+                catch (CPMException e) {
+                    log.error("Error rolling back transaction", e);
                 }
             }
         }

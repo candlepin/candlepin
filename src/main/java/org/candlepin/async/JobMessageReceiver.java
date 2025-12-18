@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -24,7 +24,6 @@ import org.candlepin.messaging.CPMMessage;
 import org.candlepin.messaging.CPMMessageListener;
 import org.candlepin.messaging.CPMSession;
 import org.candlepin.messaging.CPMSessionManager;
-import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,7 +32,9 @@ import com.google.inject.persist.UnitOfWork;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -47,14 +48,16 @@ public class JobMessageReceiver {
     private static Logger log = LoggerFactory.getLogger(JobMessageReceiver.class);
 
     private final Configuration config;
-    private final ObjectMapper mapper;
     private final CPMSessionManager sessionManager;
+    private final ObjectMapper mapper;
 
     private boolean initialized;
+    private boolean suspended;
 
     private MessageListener listener;
     private String receiveAddress;
     private String receiveFilter;
+    private Set<CPMSession> sessions = new HashSet<>();
     private UnitOfWork unitOfWork;
 
 
@@ -69,41 +72,23 @@ public class JobMessageReceiver {
      *
      * @param mapper
      *  the object mapper to use to deserialize job messages
+     *
+     * @throws IllegalStateException
+     *  if the session retry configurations are invalid
      */
     @Inject
     public JobMessageReceiver(Configuration config, CPMSessionManager sessionManager,
         ObjectMapper mapper, UnitOfWork unitOfWork) throws ConfigurationException {
 
         this.config = Objects.requireNonNull(config);
-        this.mapper = Objects.requireNonNull(mapper);
         this.sessionManager = Objects.requireNonNull(sessionManager);
+        this.mapper = Objects.requireNonNull(mapper);
         this.unitOfWork = Objects.requireNonNull(unitOfWork);
 
         this.initialized = false;
+        this.suspended = false;
 
         this.configure(this.config);
-    }
-
-    /**
-     * Creates and configures a new session and consumer
-     *
-     * @return
-     *  The newly created CPM session
-     */
-    private CPMSession createSession() throws CPMException {
-        CPMSession session = this.sessionManager.createSession(true);
-
-        CPMConsumerConfig cconfig = session.createConsumerConfig()
-            .setQueue(this.receiveAddress)
-            .setMessageFilter(this.receiveFilter);
-
-        session.createConsumer(cconfig)
-            .setMessageListener(this.listener);
-
-        // Once the consumer is configured, we no longer need to propagate it, as it'll be managed
-        // indirectly through the session, and passed into the message listener as needed
-
-        return session;
     }
 
     /**
@@ -122,6 +107,76 @@ public class JobMessageReceiver {
         }
 
         this.receiveFilter = config.getString(ConfigProperties.ASYNC_JOBS_RECEIVE_FILTER);
+    }
+
+    /**
+     * Creates and configures a new session and consumer
+     *
+     * @return
+     *  The newly created CPM session
+     */
+    private CPMSession createSession() throws CPMException {
+        CPMSession session = this.sessionManager.createSession(true);
+        CPMConsumerConfig cconfig = session.createConsumerConfig()
+            .setQueue(this.receiveAddress)
+            .setMessageFilter(this.receiveFilter);
+
+        session.createConsumer(cconfig)
+            .setMessageListener(this.listener);
+
+        // Once the consumer is configured, we no longer need to propagate it, as it'll be managed
+        // indirectly through the session, and passed into the message listener as needed
+
+        return session;
+    }
+
+    /**
+     * Starts all of the managed sessions. If a given session has died or been closed, this method
+     * will recreate it.
+     *
+     * @throws CPMException
+     *  if there is a session that cannot be recreated or started
+     */
+    private void startSessions() throws CPMException {
+        CPMException bufferedException = null;
+        int openSessionCount = 0;
+        for (CPMSession session : this.sessions) {
+            try {
+                if (bufferedException != null) {
+                    continue;
+                }
+
+                if (session == null) {
+                    log.info("Session is null");
+                    continue;
+                }
+
+                if (session.isClosed()) {
+                    continue;
+                }
+
+                ++openSessionCount;
+                session.start();
+            }
+            catch (CPMException exception) {
+                bufferedException = exception;
+            }
+        }
+
+        log.info("Open sessions updated to {} out of {}", openSessionCount, this.sessions.size());
+
+        if (bufferedException != null) {
+            throw bufferedException;
+        }
+    }
+
+    /**
+     * Close all known sessions.
+     */
+    private void closeSessions() throws CPMException {
+        for (CPMSession session : this.sessions) {
+            session.close();
+        }
     }
 
     /**
@@ -160,6 +215,22 @@ public class JobMessageReceiver {
             }
 
             this.initialized = true;
+
+            // We're not technically suspended, but we're not started, either. This avoids
+            // needing an additional state
+            this.suspended = true;
+        }
+        catch (CPMException e) {
+            throw new JobException(e);
+        }
+    }
+
+    /**
+     * Shuts down this job message receiver, closing any sessions it may have opened
+     */
+    public synchronized void shutdown() throws JobException {
+        try {
+            this.closeSessions();
         }
         catch (CPMException e) {
             throw new JobException(e);
@@ -174,6 +245,60 @@ public class JobMessageReceiver {
      */
     public synchronized boolean isInitialized() {
         return this.initialized;
+    }
+
+    /**
+     * Starts the operations of this message receiver. If this receiver has already been started,
+     * this method returns silently.
+     */
+    public synchronized void start() throws JobException {
+        try {
+            if (this.suspended) {
+                this.startSessions();
+
+                log.debug("Job message processing started");
+                this.suspended = false;
+            }
+        }
+        catch (CPMException e) {
+            throw new JobException(e);
+        }
+    }
+
+    /**
+     * Suspends the operations of this message receiver. If this receiver is already suspended, this
+     * method returns silently.
+     */
+    public synchronized void suspend() throws JobException {
+        try {
+            if (!this.suspended) {
+                this.closeSessions();
+
+                log.debug("Job message processing suspended");
+                this.suspended = true;
+            }
+        }
+        catch (CPMException e) {
+            throw new JobException(e);
+        }
+    }
+
+    /**
+     * Resume the operations of this message receiver. If this receiver is not suspended, this
+     * method returns silently.
+     */
+    public void resume() throws JobException {
+        this.start();
+    }
+
+    /**
+     * Checks if this message receiver is currently suspended.
+     *
+     * @return
+     *  true if this message receiver is currently suspended; false otherwise
+     */
+    public synchronized boolean isSuspended() {
+        return this.suspended;
     }
 
     /**

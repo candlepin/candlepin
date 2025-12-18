@@ -101,8 +101,6 @@ public class JobManager implements ModeChangeListener {
     private static final String UNKNOWN_OWNER_KEY = "-UNKNOWN-";
 
     private static final String QRTZ_GROUP_CONFIG = "cp_async_config";
-    private static final String QRTZ_GROUP_MANUAL = "cp_async_manual";
-    private static final String QRTZ_GROUP_PINSETTER = "cron group";
 
     private static final Object SUSPEND_KEY_DEFAULT = "default_suspend_key";
     private static final Object SUSPEND_KEY_TRIGGERED = "triggered_suspend_key";

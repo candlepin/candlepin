@@ -15,11 +15,7 @@ import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.core.remoting.CloseListener;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.messaging.CPMConsumer;
-import org.candlepin.messaging.CPMConsumerConfig;
 import org.candlepin.messaging.CPMException;
-import org.candlepin.messaging.CPMProducer;
-import org.candlepin.messaging.CPMProducerConfig;
 import org.candlepin.messaging.CPMSession;
 import org.candlepin.messaging.CPMSessionManager;
 import org.slf4j.Logger;
@@ -74,8 +70,14 @@ public class ArtemisSessionManager implements CPMSessionManager, CloseListener {
 
         @Override
         public void connectionClosed() {
+            this.closeAllSessions();
+        }
+
+        @Override
+        public boolean closeAllSessions() {
             log.info("Closing all sessions for Artemis connection");
 
+            boolean successful = true;
             for (CPMSession session : sessions) {
                 if (session == null) {
                     continue;
@@ -86,8 +88,11 @@ public class ArtemisSessionManager implements CPMSessionManager, CloseListener {
                 }
                 catch (CPMException e) {
                     log.error("Unable to close session", e);
+                    successful = false;
                 }
             }
+
+            return successful;
         }
 
 }

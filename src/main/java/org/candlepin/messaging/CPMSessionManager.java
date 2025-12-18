@@ -8,4 +8,6 @@ public interface CPMSessionManager {
 
     CPMSession createSession(boolean transactional) throws CPMException;
 
+    boolean closeAllSessions();
+
 }
