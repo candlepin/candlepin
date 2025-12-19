@@ -19,16 +19,16 @@ import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.exceptions.SuspendedException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.xnap.commons.i18n.I18n;
+
+import tools.jackson.databind.ObjectMapper;
 
 import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.ext.Provider;
+
 
 /**
  * Filter which check if Candlepin is currently in SUSPEND mode,
@@ -55,8 +55,7 @@ public class CandlepinSuspendModeFilter implements ContainerRequestFilter {
      * Part of status resource is still accessible, regardless of mode.
      */
     @Override
-    public void filter(ContainerRequestContext requestContext)
-        throws JsonProcessingException {
+    public void filter(ContainerRequestContext requestContext) {
 
         // Allow status every time
         if (requestContext.getUriInfo().getPath().startsWith("/status")) {

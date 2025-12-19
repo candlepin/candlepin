@@ -19,14 +19,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERUTF8String;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
@@ -39,6 +38,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
+
 
 public final class CertificateUtil {
 
@@ -153,20 +153,16 @@ public final class CertificateUtil {
         Inflater decompressor = new Inflater();
         decompressor.setInput(compressedBody);
         byte[] decompressedBody = new byte[48000];
+        int decompressedSize;
         try {
-            decompressor.inflate(decompressedBody);
+            decompressedSize = decompressor.inflate(decompressedBody);
         }
         catch (DataFormatException e) {
             throw new RuntimeException(e);
         }
         decompressor.end();
 
-        try {
-            return mapper.readTree(new String(decompressedBody));
-        }
-        catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        return mapper.readTree(new String(decompressedBody, 0, decompressedSize));
     }
 
     private static byte[] fromBase64(byte[] data) {

@@ -35,10 +35,10 @@ import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import tools.jackson.databind.JsonNode;
 
 import java.util.Map;
 import java.util.Set;

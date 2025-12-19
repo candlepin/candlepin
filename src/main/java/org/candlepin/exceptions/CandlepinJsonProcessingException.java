@@ -14,15 +14,14 @@
  */
 package org.candlepin.exceptions;
 
-import com.fasterxml.jackson.core.JsonLocation;
-import com.fasterxml.jackson.core.JsonProcessingException;
-
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.TokenStreamLocation;
 
 
 /**
  * Thrown when an exception occurs while deserializing or processing JSON.
  */
-public class CandlepinJsonProcessingException extends JsonProcessingException {
+public class CandlepinJsonProcessingException extends JacksonException {
 
     /**
      * Creates a new CandlepinJsonProcessingException instance with the given exception message.
@@ -44,7 +43,7 @@ public class CandlepinJsonProcessingException extends JsonProcessingException {
      * @param location
      *  The location where the exception occurred
      */
-    public CandlepinJsonProcessingException(String message, JsonLocation location) {
-        super(message, location);
+    public CandlepinJsonProcessingException(String message, TokenStreamLocation location) {
+        super(message + " at " + location);
     }
 }

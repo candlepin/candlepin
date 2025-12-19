@@ -17,17 +17,18 @@ package org.candlepin.auth;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.util.Util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.core.JacksonException;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+
 
 /**
  * An entity interacting with Candlepin
@@ -127,7 +128,7 @@ public abstract class Principal implements Serializable, java.security.Principal
         try {
             return Util.toJson(this.getData());
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             log.error("Error while building JSON for principal.", e);
             return "";
         }

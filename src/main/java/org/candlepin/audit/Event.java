@@ -19,10 +19,11 @@ import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.core.JacksonException;
 
 import java.util.Date;
 import java.util.Map;
@@ -34,6 +35,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
 
 /**
  * Event - Base class for Candlepin events. Serves as an integral part of the event queue.
@@ -135,7 +137,7 @@ public class Event {
         try {
             this.principalStore = Util.toJson(principalData);
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             log.error("Error while building JSON for event.", e);
             this.principalStore = "";
         }
@@ -218,7 +220,7 @@ public class Event {
         try {
             this.principalStore = Util.toJson(principalData);
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             log.error("Error while building JSON for principal.", e);
             this.principalStore = "";
         }

@@ -16,10 +16,9 @@ package org.candlepin.hibernate;
 
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import javax.persistence.AttributeConverter;
-
 
 
 /**

@@ -14,11 +14,10 @@
  */
 package org.candlepin.jackson;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueSerializer;
 
-import java.io.IOException;
 
 /**
  * The SingleValueWrapSerializer handles the serialization of wrapping a single field
@@ -28,7 +27,7 @@ import java.io.IOException;
  * Classes that extend this class should pass the name of the field they need to wrap
  * as an argument to the super constructor.
  */
-public abstract class SingleValueWrapSerializer extends JsonSerializer<String> {
+public abstract class SingleValueWrapSerializer extends ValueSerializer<String> {
 
     private String fieldName;
 
@@ -37,11 +36,10 @@ public abstract class SingleValueWrapSerializer extends JsonSerializer<String> {
     }
 
     @Override
-    public void serialize(String fieldValue, JsonGenerator generator, SerializerProvider provider)
-        throws IOException {
+    public void serialize(String fieldValue, JsonGenerator generator, SerializationContext provider) {
 
         generator.writeStartObject();
-        generator.writeObjectField(fieldName, fieldValue);
+        generator.writeStringProperty(fieldName, fieldValue);
         generator.writeEndObject();
     }
 }

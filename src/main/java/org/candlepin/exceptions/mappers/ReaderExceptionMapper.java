@@ -14,14 +14,15 @@
  */
 package org.candlepin.exceptions.mappers;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
-
 import org.jboss.resteasy.spi.ReaderException;
+
+import tools.jackson.databind.DatabindException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+
 
 /**
  * ReaderExceptionMapper maps the RESTEasy ReaderException into JSON and allows
@@ -46,7 +47,7 @@ public class ReaderExceptionMapper extends CandlepinExceptionMapper
         // mapping exception (should be at the first iteration). If not, we'll just use our
         // default below.
         for (Throwable cause = exception.getCause(); cause != null; cause = cause.getCause()) {
-            if (cause instanceof JsonMappingException) {
+            if (cause instanceof DatabindException) {
                 status = Response.Status.BAD_REQUEST;
                 break;
             }

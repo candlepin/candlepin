@@ -38,20 +38,19 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Locale;
 import java.util.Map;
-
 
 
 public class ConsumerImporterTest {
@@ -105,7 +104,7 @@ public class ConsumerImporterTest {
         this.mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         String json = "{\"uuid\":\"test-uuid\", \"unknown\":\"notreal\"}";
-        assertThrows(JsonMappingException.class,
+        assertThrows(DatabindException.class,
             () -> importer.createObject(mapper, new StringReader(json)));
     }
 
