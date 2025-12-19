@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.7.2
+Version: 4.7.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,80 @@ fi
 
 #raw
 %changelog
+* Fri Dec 19 2025 candlepin-bot 4.7.3-1
+- Add new translations using Weblate (hosted@weblate.org)
+- Bump org.mariadb.jdbc:mariadb-java-client from 3.5.6 to 3.5.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1096: Emit event when bulk consumers are set to environments
+  (sbakaj@redhat.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.21 to 1.5.22
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1116: Updated startSessions to not lose sessions
+  (joshmalbrecht@gmail.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.20.0 to 5.21.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Extra logging during anonymous org claim/migration (nmoumoul@redhat.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 11.0.14 to 11.0.15
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mozilla:rhino from 1.8.0 to 1.8.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.bouncycastle:bcprov-jdk18on from 1.82 to 1.83
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.owasp.dependencycheck from 12.1.8 to 12.1.9
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.sonarqube from 7.0.1.6134 to 7.1.0.6387
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1108: Improved functionality & handling of deleted consumers
+  (crog@redhat.com)
+- Bump okhttp3 from 5.3.1 to 5.3.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump okhttp3 from 5.3.0 to 5.3.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1109: Updated anonymous consumer certificate expiration
+  (joshmalbrecht@gmail.com)
+- CHAINSAW-639: Added maven publication for BOM (thsimmon@redhat.com)
+- CANDLEPIN-812: Removed PR check against Bugzilla (sbakaj@redhat.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 11.0.13 to 11.0.14
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.20 to 1.5.21
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Downgraded Quartz scheduler to 2.5.0 (crog@redhat.com)
+- Bump commons-io:commons-io from 2.20.0 to 2.21.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump commons-codec:commons-codec from 1.19.0 to 1.20.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump okhttp3 from 5.2.1 to 5.3.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump artemis from 2.43.0 to 2.44.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.junit:junit-bom from 6.0.0 to 6.0.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson from 2.20.0 to 2.20.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.ben-manes.caffeine:caffeine from 3.2.2 to 3.2.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump net.logstash.logback:logstash-logback-encoder from 8.1 to 9.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.quartz-scheduler:quartz from 2.5.0 to 2.5.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.openapitools:jackson-databind-nullable from 0.2.7 to 0.2.8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.sonarqube from 7.0.0.6105 to 7.0.1.6134
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.19 to 1.5.20
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.spotbugs:spotbugs-annotations from 4.9.7 to 4.9.8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump artemis from 2.42.0 to 2.43.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+
 * Thu Oct 16 2025 candlepin-bot 4.7.2-1
 - Add new translations using Weblate (noreply@weblate.org)
 - CHAINSAW-474: Updated Refresher to use a single transaction
