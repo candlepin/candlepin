@@ -49,7 +49,6 @@ import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -86,7 +85,7 @@ public class EntitlementCertificateSpecTest {
     }
 
     @BeforeEach
-    public void beforeEach() throws ApiException, JsonProcessingException {
+    public void beforeEach() throws ApiException {
         owner = ownerApi.createOwner(Owners.random());
         monitoring = Products.randomEng();
         monitoring = ownerProductApi.createProduct(owner.getKey(), monitoring);
@@ -321,7 +320,7 @@ public class EntitlementCertificateSpecTest {
     @OnlyInHosted
     public class EntitlementCertificateHostedSpecTest {
         @BeforeEach
-        public void beforeEach() throws ApiException, JsonProcessingException {
+        public void beforeEach() throws ApiException {
             owner = ownerApi.createOwner(Owners.random());
             monitoring = Products.randomEng();
             hostedTestApi = client.hosted();

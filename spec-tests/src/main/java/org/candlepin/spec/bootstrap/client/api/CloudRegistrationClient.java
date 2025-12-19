@@ -19,9 +19,8 @@ import org.candlepin.dto.api.client.v1.CloudRegistrationDTO;
 import org.candlepin.invoker.client.ApiClient;
 import org.candlepin.resource.client.v1.CloudRegistrationApi;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.util.Base64;
 
@@ -86,12 +85,7 @@ public class CloudRegistrationClient extends CloudRegistrationApi {
             return null;
         }
 
-        try {
-            return mapper.readValue(jsonString, CloudAuthenticationResultDTO.class);
-        }
-        catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        return mapper.readValue(jsonString, CloudAuthenticationResultDTO.class);
     }
 
     private String buildMetadataJson(String accountId, String instanceId, String offeringId) {

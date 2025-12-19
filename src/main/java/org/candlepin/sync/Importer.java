@@ -46,7 +46,6 @@ import org.candlepin.sync.file.ManifestFile;
 import org.candlepin.sync.file.ManifestFileService;
 import org.candlepin.sync.file.ManifestFileServiceException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.io.FileUtils;
@@ -55,6 +54,8 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -79,7 +80,6 @@ import java.util.zip.ZipInputStream;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.persistence.PersistenceException;
-
 
 
 public class Importer {

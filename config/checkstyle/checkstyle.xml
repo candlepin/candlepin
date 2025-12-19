@@ -182,7 +182,7 @@
             <!-- Static imports should go at the top of the import list -->
             <property name="option" value="top"/>
             <property name="ordered" value="true"/>
-            <property name="groups" value="org.candlepin,com.redhat.rhn,ch,com,io,liquibase,net,org,java,javax"/>
+            <property name="groups" value="org.candlepin,ch,com,io,liquibase,net,org,tools,java,javax"/>
             <property name="separated" value="true"/>
             <property name="sortStaticImportsAlphabetically" value="true" />
         </module>

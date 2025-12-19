@@ -58,8 +58,6 @@ import org.candlepin.service.model.CloudAuthenticationResult;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -73,6 +71,7 @@ import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -82,7 +81,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.core.Response;
-
 
 
 @ExtendWith(MockitoExtension.class)
@@ -688,7 +686,7 @@ public class CloudRegistrationResourceTest {
     }
 
     @Test
-    void testCancelCloudAccountJobsValidAccountId() throws JsonProcessingException {
+    void testCancelCloudAccountJobsValidAccountId() {
         String cloudAccountId = TestUtil.randomString("validCloudAccountId-");
         String jobId1 = TestUtil.randomString("jobId-");
         String jobId2 = TestUtil.randomString("jobId-");
@@ -744,7 +742,7 @@ public class CloudRegistrationResourceTest {
     }
 
     @Test
-    void testCancelingJobInTerminalState() throws JsonProcessingException {
+    void testCancelingJobInTerminalState() {
         String cloudAccountId = TestUtil.randomString("validCloudAccountId-");
         String jobId = TestUtil.randomString("jobId-");
         List<AsyncJobStatus> jobs = List.of(createMockJob(jobId, cloudAccountId));
@@ -796,7 +794,7 @@ public class CloudRegistrationResourceTest {
         return mockResult;
     }
 
-    private AsyncJobStatus createMockJob(String jobId, String cloudAccountId) throws JsonProcessingException {
+    private AsyncJobStatus createMockJob(String jobId, String cloudAccountId) {
         AsyncJobStatus job = Mockito.mock(AsyncJobStatus.class);
         Mockito.when(job.getId()).thenReturn(jobId);
 

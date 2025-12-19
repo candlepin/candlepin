@@ -40,12 +40,12 @@ import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.util.DateSource;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+
+import tools.jackson.core.type.TypeReference;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -64,7 +64,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
-
 
 
 /**

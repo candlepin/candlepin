@@ -60,11 +60,12 @@ import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 import org.candlepin.spec.bootstrap.data.util.ExportUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.internal.LinkedTreeMap;
 
 import org.junit.jupiter.api.Test;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -83,7 +84,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
 
 
 @SpecTest
@@ -697,7 +697,7 @@ public class ContentAccessSpecTest {
         JsonNode contentAccessBody = consumerClient.consumers()
             .getContentAccessBodyJson(consumer.getUuid(), null);
         JsonNode contentListing = contentAccessBody.get("contentListing");
-        JsonNode listings = contentListing.elements().next();
+        JsonNode listings = contentListing.values().iterator().next();
 
         JsonNode cert = CertificateUtil.decodeAndUncompressCertificate(listings.get(1).toString(),
             ApiClient.MAPPER);
@@ -728,7 +728,7 @@ public class ContentAccessSpecTest {
         JsonNode contentAccessBody = consumerClient.consumers()
             .getContentAccessBodyJson(consumer.getUuid(), null);
         JsonNode contentListing = contentAccessBody.get("contentListing");
-        JsonNode listings = contentListing.elements().next();
+        JsonNode listings = contentListing.values().iterator().next();
         String originalX509 = listings.get(0).asText();
         String originalContent = listings.get(1).asText();
         String originalLastUpdate = contentAccessBody.get("lastUpdate").asText();
@@ -741,7 +741,7 @@ public class ContentAccessSpecTest {
 
         contentAccessBody = consumerClient.consumers().getContentAccessBodyJson(consumer.getUuid(), null);
         contentListing = contentAccessBody.get("contentListing");
-        listings = contentListing.elements().next();
+        listings = contentListing.values().iterator().next();
         String updatedX509 = listings.get(0).asText();
         String updatedContent = listings.get(1).asText();
         String updatedLastUpdate = contentAccessBody.get("lastUpdate").asText();
@@ -772,7 +772,7 @@ public class ContentAccessSpecTest {
         JsonNode contentAccessBody = consumerClient.consumers()
             .getContentAccessBodyJson(consumer.getUuid(), null);
         JsonNode contentListing = contentAccessBody.get("contentListing");
-        JsonNode listings = contentListing.elements().next();
+        JsonNode listings = contentListing.values().iterator().next();
         String originalX509 = listings.get(0).asText();
         String originalContent = listings.get(1).asText();
         String originalLastUpdate = contentAccessBody.get("lastUpdate").asText();
@@ -785,7 +785,7 @@ public class ContentAccessSpecTest {
 
         contentAccessBody = consumerClient.consumers().getContentAccessBodyJson(consumer.getUuid(), null);
         contentListing = contentAccessBody.get("contentListing");
-        listings = contentListing.elements().next();
+        listings = contentListing.values().iterator().next();
         String updatedX509 = listings.get(0).asText();
         String updatedContent = listings.get(1).asText();
         String updatedLastUpdate = contentAccessBody.get("lastUpdate").asText();
@@ -944,7 +944,8 @@ public class ContentAccessSpecTest {
             for (Future<JsonNode> future : futures) {
                 String contentAccessPayload = future.get()
                     .get("contentListing")
-                    .elements()
+                    .values()
+                    .iterator()
                     .next()
                     .get(1)
                     .toString();

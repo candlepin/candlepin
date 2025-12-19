@@ -23,11 +23,11 @@ import org.candlepin.model.dto.TinySubscription;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509Util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

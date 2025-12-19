@@ -28,11 +28,12 @@ import org.candlepin.messaging.CPMSessionFactory;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.persist.UnitOfWork;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -40,7 +41,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
-
 
 
 /**
