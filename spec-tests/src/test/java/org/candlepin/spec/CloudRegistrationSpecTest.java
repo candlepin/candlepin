@@ -56,10 +56,6 @@ import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
@@ -72,6 +68,9 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+
 import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.HashMap;
@@ -81,7 +80,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 
 
 @SpecTest
@@ -933,12 +931,7 @@ class CloudRegistrationSpecTest {
         Base64.Decoder decoder = Base64.getUrlDecoder();
         String body = new String(decoder.decode(chunks[1]));
         Map<String, String> bodyMap = null;
-        try {
-            bodyMap = mapper.readValue(body, HashMap.class);
-        }
-        catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        bodyMap = mapper.readValue(body, HashMap.class);
 
         assertEquals(expectedTokenType, bodyMap.get("typ"));
     }

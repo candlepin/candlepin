@@ -44,11 +44,11 @@ import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import org.assertj.core.api.ListAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import tools.jackson.databind.JsonNode;
 
 import java.util.Arrays;
 import java.util.Collections;

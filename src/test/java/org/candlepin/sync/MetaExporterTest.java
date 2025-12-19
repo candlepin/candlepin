@@ -22,15 +22,14 @@ import org.candlepin.config.TestConfig;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.Test;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Date;
 import java.util.Map;
-
 
 
 public class MetaExporterTest {

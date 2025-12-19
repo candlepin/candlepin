@@ -26,18 +26,16 @@ import org.candlepin.jackson.DynamicFilterData;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationConfig;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
 import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -70,19 +68,9 @@ public class JsonProviderTest {
         ResteasyContext.clearContextData();
     }
 
-    // This is kind of silly - basically just testing an initial setting...
-    @Test
-    public void dateFormat() {
-        JsonProvider provider = new JsonProvider(config);
-
-        boolean datesAsTimestamps = isEnabled(provider, SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
-        assertFalse(datesAsTimestamps);
-    }
-
     // This tests to see that the ObjectMapper serializes Date objects to the proper format
     @Test
-    public void serializedDateDoesNotIncludeMilliseconds() throws JsonProcessingException {
+    public void serializedDateDoesNotIncludeMilliseconds() {
         Date now = new Date(); // will be initialized to when it was allocated with millisecond precision
         SimpleDateFormat iso8601WithoutMilliseconds = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
         iso8601WithoutMilliseconds.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -122,7 +110,7 @@ public class JsonProviderTest {
                         comparisonFailure.set(true);
                     }
                 }
-                catch (JsonProcessingException e) {
+                catch (JacksonException e) {
                     e.printStackTrace();
                     processingFailure.set(true);
                 }
@@ -130,7 +118,7 @@ public class JsonProviderTest {
         }
 
         if (processingFailure.get()) {
-            fail("A JsonProcessingException was thrown during concurrent Date serialization.");
+            fail("A JacksonException was thrown during concurrent Date serialization.");
         }
 
         if (comparisonFailure.get()) {
@@ -146,11 +134,13 @@ public class JsonProviderTest {
         return x + ((long) (r.nextDouble() * (y - x)));
     }
 
-    private boolean isEnabled(JsonProvider provider, SerializationFeature feature) {
-        ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
-        SerializationConfig sConfig = mapper.getSerializationConfig();
-        return sConfig.isEnabled(feature);
-    }
+    // NOTE: This helper method was used for Jackson 2.x API
+    // Commented out as getSerializationConfig() no longer exists in Jackson 3.0
+    // private boolean isEnabled(JsonProvider provider, SerializationFeature feature) {
+    //     ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
+    //     SerializationConfig sConfig = mapper.getSerializationConfig();
+    //     return sConfig.isEnabled(feature);
+    // }
 
     @Test
     public void testDynamicPropertyFilterExcludeSingleProperty() {
@@ -163,7 +153,7 @@ public class JsonProviderTest {
         try {
             serializedKey = ourMapper.writeValueAsString(keyDTO);
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             fail("Serializing ActivationKeyDTO failed!");
         }
 
@@ -171,7 +161,7 @@ public class JsonProviderTest {
         try {
             akNode = ObjectMapperFactory.getObjectMapper().readTree(serializedKey);
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             fail("Parsing serialized ActivationKeyDTO failed!");
         }
 
@@ -194,7 +184,7 @@ public class JsonProviderTest {
         try {
             serializedKey = ourMapper.writeValueAsString(keyDTO);
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             fail("Serializing ActivationKeyDTO failed!");
         }
 
@@ -202,7 +192,7 @@ public class JsonProviderTest {
         try {
             akNode = ObjectMapperFactory.getObjectMapper().readTree(serializedKey);
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             fail("Parsing serialized ActivationKeyDTO failed!");
         }
 
@@ -226,7 +216,7 @@ public class JsonProviderTest {
         try {
             serializedKey = ourMapper.writeValueAsString(keyDTO);
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             fail("Serializing ActivationKeyDTO failed!");
         }
 
@@ -234,7 +224,7 @@ public class JsonProviderTest {
         try {
             akNode = ObjectMapperFactory.getObjectMapper().readTree(serializedKey);
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             fail("Parsing serialized ActivationKeyDTO failed!");
         }
         assertEquals(1, akNode.size());
@@ -255,7 +245,7 @@ public class JsonProviderTest {
         try {
             serializedKey = ourMapper.writeValueAsString(keyDTO);
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             fail("Serializing ActivationKeyDTO failed!");
         }
 
@@ -263,7 +253,7 @@ public class JsonProviderTest {
         try {
             akNode = ObjectMapperFactory.getObjectMapper().readTree(serializedKey);
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             fail("Parsing serialized ActivationKeyDTO failed!");
         }
         assertEquals(3, akNode.size());
@@ -289,7 +279,7 @@ public class JsonProviderTest {
         try {
             serializedKey = ourMapper.writeValueAsString(keyDTO);
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             fail("Serializing ActivationKeyDTO failed!");
         }
 
@@ -297,7 +287,7 @@ public class JsonProviderTest {
         try {
             akNode = ObjectMapperFactory.getObjectMapper().readTree(serializedKey);
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             fail("Parsing serialized ActivationKeyDTO failed!");
         }
         assertEquals(1, akNode.size());
@@ -329,7 +319,7 @@ public class JsonProviderTest {
             serializedKeys = ourMapper.writeValueAsString(activationKeys);
             System.out.println(serializedKeys);
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             fail("Serializing a list ActivationKeyDTOs failed!");
         }
 
@@ -337,7 +327,7 @@ public class JsonProviderTest {
         try {
             akNode = ObjectMapperFactory.getObjectMapper().readTree(serializedKeys);
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             fail("Parsing serialized ActivationKeyDTO list failed!");
         }
         assertEquals(2, akNode.size());

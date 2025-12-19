@@ -55,9 +55,6 @@ import org.candlepin.test.X509HuffmanDecodeUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.DEROctetString;
@@ -71,6 +68,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -1078,15 +1078,16 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
         Inflater decompressor = new Inflater();
         decompressor.setInput(compressedBody);
         byte[] decompressedBody = new byte[48000];
+        int resultLength;
         try {
-            decompressor.inflate(decompressedBody);
+            resultLength = decompressor.inflate(decompressedBody);
         }
         catch (DataFormatException e) {
             throw new RuntimeException(e);
         }
         decompressor.end();
 
-        return new String(decompressedBody);
+        return new String(decompressedBody, 0, resultLength);
     }
 
 }

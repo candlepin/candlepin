@@ -29,8 +29,8 @@ import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Base64;
 import java.util.Collection;
@@ -42,7 +42,6 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
 
 
 /**
@@ -115,7 +114,7 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
             String decoded = new String(Base64.getDecoder().decode(cloudRegInfo.getMetadata()));
             metadata = OBJ_MAPPER.readValue(decoded, Map.class);
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             throw new CloudRegistrationMalformedDataException(
                 "unable to parse cloud registration information metadata");
         }

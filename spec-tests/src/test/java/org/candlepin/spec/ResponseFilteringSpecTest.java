@@ -26,14 +26,13 @@ import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import tools.jackson.databind.JsonNode;
 
 import java.util.stream.Stream;
 
@@ -175,12 +174,7 @@ public class ResponseFilteringSpecTest {
     }
 
     private ConsumerDTO toConsumerDto(JsonNode consumerFull) {
-        try {
-            return ApiClient.MAPPER.treeToValue(consumerFull, ConsumerDTO.class);
-        }
-        catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        return ApiClient.MAPPER.treeToValue(consumerFull, ConsumerDTO.class);
     }
 
 }

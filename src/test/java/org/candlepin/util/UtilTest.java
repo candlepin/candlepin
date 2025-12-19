@@ -30,8 +30,6 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.Appender;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import org.apache.commons.codec.binary.Base64;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
+
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -222,7 +221,7 @@ public class UtilTest {
     }
 
     @Test
-    public void json() throws JsonProcessingException {
+    public void json() {
         String test = "I Love JSON";
         String json = Util.toJson(test);
         String result = Util.fromJson(json, String.class);

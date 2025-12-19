@@ -17,45 +17,43 @@ package org.candlepin.jackson;
 import org.candlepin.dto.api.server.v1.GuestIdDTO;
 import org.candlepin.exceptions.CandlepinJsonProcessingException;
 
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectReader;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ValueDeserializer;
+
 
 /**
  * Handles the deserialization of the {@link GuestIdDTO} object by handling either a guest id string
  * or { "id":"value", "guestId":"value", "attributes":{"att":"val"} }.
  */
-public class GuestIdDeserializer extends JsonDeserializer<GuestIdDTO> {
+public class GuestIdDeserializer extends ValueDeserializer<GuestIdDTO> {
     private static final Logger log = LoggerFactory.getLogger(GuestIdDeserializer.class);
 
-    private ObjectReader reader;
+    private final ObjectMapper defaultMapper;
 
     /**
-     * Creates a new GuestIdDeserializer using the specified reader as the
-     * default/base reader for processing guest IDs received in object form.
+     * Creates a new GuestIdDeserializer using the specified mapper for deserializing
+     * guest IDs received in object form. This mapper should NOT have GuestIdDeserializer
+     * registered to avoid infinite recursion.
      *
-     * @param reader
-     *  base reader for processing guest Ids recieved in object form
+     * @param defaultMapper
+     *  mapper for processing guest Ids received in object form (without GuestIdDeserializer)
      */
-    public GuestIdDeserializer(ObjectReader reader) {
-        if (reader == null) {
-            throw new IllegalArgumentException("reader is null");
+    public GuestIdDeserializer(ObjectMapper defaultMapper) {
+        if (defaultMapper == null) {
+            throw new IllegalArgumentException("defaultMapper is null");
         }
 
-        this.reader = reader;
+        this.defaultMapper = defaultMapper;
     }
 
     @Override
-    public GuestIdDTO deserialize(JsonParser parser, DeserializationContext context)
-        throws IOException, JacksonException {
+    public GuestIdDTO deserialize(JsonParser parser, DeserializationContext context) {
         JsonNode node = context.readTree(parser);
         if (node.isTextual()) {
             log.debug("Processing node as a guest ID string: {}", node);
@@ -66,12 +64,13 @@ public class GuestIdDeserializer extends JsonDeserializer<GuestIdDTO> {
         else if (node.isObject()) {
             log.debug("Processing node as a GuestIdDTO instance: {}", node);
 
-            return reader.readValue(node, GuestIdDTO.class);
+            // Use the default mapper (without GuestIdDeserializer) to avoid recursion
+            return defaultMapper.treeToValue(node, GuestIdDTO.class);
         }
 
         throw new CandlepinJsonProcessingException(
             "Unexpected guest ID value type: " + node.asToken(),
-            parser.getCurrentLocation()
+            parser.currentLocation()
         );
     }
 }

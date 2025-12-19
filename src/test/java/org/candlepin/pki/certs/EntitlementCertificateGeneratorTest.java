@@ -66,8 +66,6 @@ import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.util.X509V3ExtensionUtil;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.assertj.core.api.ListAssert;
 import org.assertj.core.api.ObjectAssert;
 import org.bouncycastle.asn1.ASN1Primitive;
@@ -83,6 +81,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

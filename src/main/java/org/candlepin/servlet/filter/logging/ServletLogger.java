@@ -16,12 +16,12 @@ package org.candlepin.servlet.filter.logging;
 
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.IOException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectWriter;
+
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +29,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 
 
 /**
@@ -111,7 +110,7 @@ public class ServletLogger {
                 Object jobj = mapper.readValue(content, Object.class);
                 content = writer.writeValueAsString(jobj);
             }
-            catch (IOException e) {
+            catch (JacksonException e) {
                 // This may happen if the JSON is malformed. We'll just leave the content alone in
                 // such a case.
             }

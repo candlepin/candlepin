@@ -14,11 +14,10 @@
  */
 package org.candlepin.jackson;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueSerializer;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -27,13 +26,14 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
+
 /**
  * DateSerializer
  * This serializer removes milliseconds from Date objects in order to be more
  * compatible with MySql.
  * The format used is ISO 8601
  */
-public class DateSerializer extends JsonSerializer<Date> {
+public class DateSerializer extends ValueSerializer<Date> {
     private final DateTimeFormatter dateFormat;
 
     public DateSerializer() {
@@ -42,8 +42,7 @@ public class DateSerializer extends JsonSerializer<Date> {
     }
 
     @Override
-    public void serialize(Date date, JsonGenerator jgen, SerializerProvider serializerProvider)
-        throws IOException {
+    public void serialize(Date date, JsonGenerator jgen, SerializationContext serializerProvider) {
         Instant instant = date.toInstant();
         LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
         jgen.writeString(this.dateFormat.format(ZonedDateTime.of(localDateTime, ZoneId.of("UTC"))));

@@ -16,15 +16,16 @@ package org.candlepin.audit;
 
 import org.candlepin.async.impl.ActiveMQSessionFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Collection;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
 
 /**
  * An implementation of a MessageSource backed by Artemis. This message source manages

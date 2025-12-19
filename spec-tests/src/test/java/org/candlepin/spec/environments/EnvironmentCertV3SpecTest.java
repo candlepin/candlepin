@@ -41,13 +41,14 @@ import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import org.junit.jupiter.api.Test;
+
+import tools.jackson.databind.JsonNode;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 
 @SpecTest
 public class EnvironmentCertV3SpecTest {

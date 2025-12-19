@@ -44,13 +44,14 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.resource.server.v1.HypervisorsApi;
 import org.candlepin.resource.util.GuestMigration;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.HashSet;
 import java.util.List;
@@ -60,7 +61,6 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
-
 
 
 public class HypervisorResource implements HypervisorsApi {
@@ -215,7 +215,7 @@ public class HypervisorResource implements HypervisorsApi {
                     i18n.tr("Invalid host to guest mapping was provided for hypervisor update."));
             }
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             log.error("Failed to parse Host/Guest mapping provided during hypervisor update.", e);
             throw new BadRequestException(
                 i18n.tr("Invalid host to guest mapping was provided for hypervisor update."));

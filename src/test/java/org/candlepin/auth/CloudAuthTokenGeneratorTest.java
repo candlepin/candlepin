@@ -24,20 +24,17 @@ import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.util.Util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import tools.jackson.databind.ObjectMapper;
+
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-
 
 
 public class CloudAuthTokenGeneratorTest {
@@ -87,7 +84,7 @@ public class CloudAuthTokenGeneratorTest {
     }
 
     @Test
-    public void testBuildStandardRegistrationToken() throws Exception {
+    public void testBuildStandardRegistrationToken() {
         String expectedOwnerKey = "owner-key";
         String username = "test-user";
         Principal principal = new UserPrincipal(username, null, false);
@@ -98,7 +95,7 @@ public class CloudAuthTokenGeneratorTest {
     }
 
     @Test
-    public void testBuildStandardRegistrationTokenWithNullPrincipalUsername() throws Exception {
+    public void testBuildStandardRegistrationTokenWithNullPrincipalUsername() {
         String expectedOwnerKey = "owner-key";
         Principal principal = new UserPrincipal(null, null, false);
 
@@ -124,7 +121,7 @@ public class CloudAuthTokenGeneratorTest {
     }
 
     @Test
-    public void testBuildAnonymousRegistrationToken() throws Exception {
+    public void testBuildAnonymousRegistrationToken() {
         String consumerUuid = Util.generateUUID();
         String username = "test-user";
         Principal principal = new UserPrincipal(username, null, false);
@@ -135,7 +132,7 @@ public class CloudAuthTokenGeneratorTest {
     }
 
     @Test
-    public void testBuildAnonymousRegistrationTokenWithNullPrincipalUsername() throws Exception {
+    public void testBuildAnonymousRegistrationTokenWithNullPrincipalUsername() {
         String expectedOwnerKey = "owner-key";
         Principal principal = new UserPrincipal(null, null, false);
 
@@ -144,8 +141,7 @@ public class CloudAuthTokenGeneratorTest {
         assertToken(CloudAuthTokenType.ANONYMOUS.toString(), expectedOwnerKey, TOKEN_SUBJECT_DEFAULT, token);
     }
 
-    private void assertToken(String expectedType, String expectedAudience, String subject, String token)
-        throws JsonMappingException, JsonProcessingException {
+    private void assertToken(String expectedType, String expectedAudience, String subject, String token) {
         if (token == null || token.isBlank()) {
             throw new IllegalArgumentException("token type is null or blank");
         }

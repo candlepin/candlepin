@@ -53,10 +53,10 @@ import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import tools.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -727,7 +727,7 @@ public class DerivedProductSpecTest {
 
     private List<JsonNode> getContentNodes(JsonNode product) {
         List<JsonNode> contents = new ArrayList<>();
-        product.get("content").elements().forEachRemaining(contents::add);
+        product.get("content").valueStream().forEach(contents::add);
         return contents;
     }
 }

@@ -19,6 +19,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -30,9 +31,6 @@ import org.candlepin.audit.Event.Type;
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.ActiveMQStatusMonitor;
-
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
 import org.apache.activemq.artemis.api.core.ActiveMQBuffers;
@@ -55,9 +53,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.ObjectMapper;
+
 import java.io.StringWriter;
 import java.util.stream.Stream;
-
 
 
 /**
@@ -133,7 +133,7 @@ public class DefaultEventMessageReceiverTest {
 
         this.primeBuffer(msgType, "test123");
 
-        doThrow(new JsonMappingException("Induced exception"))
+        doThrow(mock(DatabindException.class))
             .when(mapper).readValue(anyString(), eq(Event.class));
         receiver.onMessage(clientMessage);
         verify(clientMessage).acknowledge();

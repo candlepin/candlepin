@@ -39,11 +39,10 @@ import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import tools.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -1092,11 +1091,6 @@ public class AutobindSpecTest {
 
 
     private JsonNode getJsonNode(String consumerUuid) {
-        try {
-            return ApiClient.MAPPER.readTree(consumerUuid);
-        }
-        catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        return ApiClient.MAPPER.readTree(consumerUuid);
     }
 }

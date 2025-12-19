@@ -41,7 +41,6 @@ import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -59,7 +58,7 @@ public class EntitlementResourceFilteringSpecTest {
     private static ProductDTO monitoring;
 
     @BeforeAll
-    public static void beforeAll() throws ApiException, JsonProcessingException {
+    public static void beforeAll() throws ApiException {
         ApiClient client = ApiClients.admin();
         OwnerClient ownerClient = client.owners();
         OwnerProductApi ownerProductApi = client.ownerProducts();

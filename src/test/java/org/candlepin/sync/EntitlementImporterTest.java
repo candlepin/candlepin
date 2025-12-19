@@ -45,8 +45,6 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.test.TestUtil;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,6 +54,8 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.Reader;
 import java.util.Collection;
@@ -67,7 +67,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 
 
 @ExtendWith(MockitoExtension.class)

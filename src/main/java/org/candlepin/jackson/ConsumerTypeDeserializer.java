@@ -17,37 +17,35 @@ package org.candlepin.jackson;
 import org.candlepin.dto.api.server.v1.ConsumerTypeDTO;
 import org.candlepin.exceptions.CandlepinJsonProcessingException;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.TreeNode;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.TreeNode;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
+
 
 /**
  * Handles the deserialization of the "label" field by wrapping it in a {@link ConsumerTypeDTO} object,
  * by handling both of the following formats: <pre> {@code "type":"value" } </pre> and
  * <pre> {@code "type":{"label ":"value", "manifest":"value"} } </pre>.
  */
-public class ConsumerTypeDeserializer extends JsonDeserializer<ConsumerTypeDTO> {
+public class ConsumerTypeDeserializer extends ValueDeserializer<ConsumerTypeDTO> {
 
     private static Logger log = LoggerFactory.getLogger(ConsumerTypeDeserializer.class);
 
     private static String fieldName = "label";
 
     @Override
-    public ConsumerTypeDTO deserialize(JsonParser parser, DeserializationContext context)
-        throws IOException {
+    public ConsumerTypeDTO deserialize(JsonParser parser, DeserializationContext context) {
 
         TreeNode node = parser.readValueAsTree();
 
         if (node.isValueNode()) {
             log.debug("Processing {} as a value node.", fieldName);
 
-            return parseValueNode(node);
+            return parseValueNode(node, context);
         }
         else if (node.isObject()) {
             log.debug("Processing {} as a containing object node.", fieldName);
@@ -55,20 +53,20 @@ public class ConsumerTypeDeserializer extends JsonDeserializer<ConsumerTypeDTO> 
             TreeNode valueNode = node.path(fieldName);
             if (valueNode.isMissingNode()) {
                 throw new CandlepinJsonProcessingException("Unexpected consumer type format: " +
-                    node.asToken(), parser.getCurrentLocation());
+                    node.asToken(), parser.currentLocation());
             }
 
-            return parseValueNode(valueNode);
+            return parseValueNode(valueNode, context);
         }
         else {
             // Uh oh.
             throw new CandlepinJsonProcessingException("Unexpected consumer type format: " +
-                node.asToken(), parser.getCurrentLocation());
+                node.asToken(), parser.currentLocation());
         }
     }
 
-    private ConsumerTypeDTO parseValueNode(TreeNode valueNode) throws IOException {
-        JsonParser subParser = valueNode.traverse();
+    private ConsumerTypeDTO parseValueNode(TreeNode valueNode, DeserializationContext context) {
+        JsonParser subParser = valueNode.traverse(context);
         subParser.nextValue();
         String value = subParser.getValueAsString();
         subParser.close();

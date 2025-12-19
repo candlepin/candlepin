@@ -26,19 +26,19 @@ import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.assertj.core.util.Files;
 import org.jetbrains.annotations.NotNull;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 
 /**
  * Extension of generated {@link ConsumerApi} to provide more convenient overrides of generated methods.
@@ -125,21 +125,11 @@ public class ConsumerClient extends ConsumerApi {
     }
 
     private JsonNode getJsonNode(String consumerUuid) {
-        try {
-            return mapper.readTree(consumerUuid);
-        }
-        catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        return mapper.readTree(consumerUuid);
     }
 
     private List<EntitlementDTO> parseEntitlements(String json) {
-        try {
-            return this.mapper.readValue(json, new TypeReference<>() {});
-        }
-        catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        return this.mapper.readValue(json, new TypeReference<>() {});
     }
 
     public JsonNode bindProduct(String consumerUuid, @NotNull String productId) {
@@ -178,13 +168,8 @@ public class ConsumerClient extends ConsumerApi {
     }
 
     public JsonNode getContentAccessBodyJson(String consumerUuid, String ifModifiedSince) {
-        try {
-            String contentAccessBody = super.getContentAccessBody(consumerUuid, ifModifiedSince);
-            return mapper.readTree(contentAccessBody);
-        }
-        catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        String contentAccessBody = super.getContentAccessBody(consumerUuid, ifModifiedSince);
+        return mapper.readTree(contentAccessBody);
     }
 
     public List<EntitlementDTO> listEntitlements(String consumerUuid) {

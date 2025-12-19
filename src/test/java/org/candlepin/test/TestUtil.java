@@ -59,8 +59,8 @@ import org.candlepin.util.Util;
 import org.candlepin.util.function.CheckedRunnable;
 import org.candlepin.util.function.CheckedSupplier;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -81,7 +81,6 @@ import java.util.function.Supplier;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
-
 
 
 /**

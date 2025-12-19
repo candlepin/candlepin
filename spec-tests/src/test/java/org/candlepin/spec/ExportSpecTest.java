@@ -70,15 +70,14 @@ import org.candlepin.spec.bootstrap.data.util.ExportUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-
 import org.apache.commons.codec.binary.Base64;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import tools.jackson.databind.JsonNode;
 
 import java.io.File;
 import java.io.IOException;
@@ -96,6 +95,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
 
 @SpecTest
 @OnlyInHosted
@@ -754,7 +754,7 @@ class ExportSpecTest {
     }
 
     private List<JsonNode> bindPoolsToConsumer(ConsumerClient consumerApi, String consumerUuid,
-        Collection<String> poolIds) throws ApiException, JsonProcessingException {
+        Collection<String> poolIds) throws ApiException {
         List<JsonNode> poolNodes = new ArrayList<>();
         for (String poolId : poolIds) {
             poolNodes.add(consumerApi.bindPool(consumerUuid, poolId, 1));

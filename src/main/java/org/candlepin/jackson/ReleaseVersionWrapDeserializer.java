@@ -17,15 +17,13 @@ package org.candlepin.jackson;
 import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
 import org.candlepin.exceptions.CandlepinJsonProcessingException;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.TreeNode;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.TreeNode;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
 
 
 /**
@@ -33,22 +31,21 @@ import java.io.IOException;
  * by handling both of the following formats: <pre> {@code "releaseVer":"value" } </pre> and
  * <pre> {@code "releaseVer":{"releaseVer ":"value"} } </pre>.
  */
-public class ReleaseVersionWrapDeserializer extends JsonDeserializer<ReleaseVerDTO> {
+public class ReleaseVersionWrapDeserializer extends ValueDeserializer<ReleaseVerDTO> {
 
     private static Logger log = LoggerFactory.getLogger(ReleaseVersionWrapDeserializer.class);
 
     private static String fieldName = "releaseVer";
 
     @Override
-    public ReleaseVerDTO deserialize(JsonParser parser, DeserializationContext context)
-        throws IOException {
+    public ReleaseVerDTO deserialize(JsonParser parser, DeserializationContext context) {
 
         TreeNode node = parser.readValueAsTree();
 
         if (node.isValueNode()) {
             log.debug("Processing {} as a value node.", fieldName);
 
-            return parseValueNode(node);
+            return parseValueNode(node, context);
         }
         else if (node.isObject()) {
             log.debug("Processing {} as a containing object node.", fieldName);
@@ -57,23 +54,23 @@ public class ReleaseVersionWrapDeserializer extends JsonDeserializer<ReleaseVerD
             if (valueNode.isMissingNode()) {
                 throw new CandlepinJsonProcessingException(
                     "The field " + fieldName + " is missing from: " + node.asToken(),
-                    parser.getCurrentLocation()
+                    parser.currentLocation()
                 );
             }
 
-            return parseValueNode(valueNode);
+            return parseValueNode(valueNode, context);
         }
         else {
             // Uh oh.
             throw new CandlepinJsonProcessingException(
                 "Unexpected " + fieldName + " node type: " + node.asToken(),
-                parser.getCurrentLocation()
+                parser.currentLocation()
             );
         }
     }
 
-    private ReleaseVerDTO parseValueNode(TreeNode valueNode) throws IOException {
-        JsonParser subParser = valueNode.traverse();
+    private ReleaseVerDTO parseValueNode(TreeNode valueNode, DeserializationContext context) {
+        JsonParser subParser = valueNode.traverse(context);
         subParser.nextValue();
         String value = subParser.getValueAsString();
         subParser.close();

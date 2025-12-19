@@ -63,8 +63,6 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.version.VersionUtil;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,6 +71,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -94,6 +94,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
 
 // TODO: FIXME: Rewrite this test to not be so reliant upon mocks. It's making things incredibly brittle and
 // wasting dev time tracking down non-issues when a mock silently fails because the implementation changes.

@@ -14,10 +14,11 @@
  */
 package org.candlepin.jackson;
 
-import com.fasterxml.jackson.databind.util.StdConverter;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.databind.util.StdConverter;
+
 
 /**
  * This class trims strings that are being deserialized by Jackson.  It is primarily

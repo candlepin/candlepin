@@ -17,12 +17,12 @@ package org.candlepin.util;
 import org.candlepin.dto.api.server.v1.AttributeDTO;
 import org.candlepin.model.CuratorException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -59,7 +59,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
-
 
 
 /**
@@ -261,7 +260,7 @@ public class Util {
         return builder.toString();
     }
 
-    public static String toJson(Object anObject) throws JsonProcessingException {
+    public static String toJson(Object anObject) throws JacksonException {
         return MAPPER.writeValueAsString(anObject);
     }
 
