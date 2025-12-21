@@ -30,12 +30,12 @@ import org.candlepin.dto.manifest.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -49,7 +49,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 
 
 public class ProductImporterTest {

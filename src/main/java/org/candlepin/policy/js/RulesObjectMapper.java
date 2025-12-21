@@ -16,20 +16,19 @@ package org.candlepin.policy.js;
 
 import org.candlepin.exceptions.IseException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 
 import javax.inject.Inject;
-
 
 
 /**
@@ -95,7 +94,7 @@ public class RulesObjectMapper {
         }
     }
 
-    public String toJsonString(Object entity) throws JsonProcessingException {
+    public String toJsonString(Object entity) throws JacksonException {
         return mapper.writeValueAsString(entity);
     }
 }

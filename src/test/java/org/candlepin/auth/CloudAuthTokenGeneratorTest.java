@@ -24,20 +24,19 @@ import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.util.Util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.ObjectMapper;
+
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-
 
 
 public class CloudAuthTokenGeneratorTest {
@@ -145,7 +144,7 @@ public class CloudAuthTokenGeneratorTest {
     }
 
     private void assertToken(String expectedType, String expectedAudience, String subject, String token)
-        throws JsonMappingException, JsonProcessingException {
+        throws DatabindException, JacksonException {
         if (token == null || token.isBlank()) {
             throw new IllegalArgumentException("token type is null or blank");
         }

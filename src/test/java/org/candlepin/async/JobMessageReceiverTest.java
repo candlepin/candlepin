@@ -44,13 +44,13 @@ import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.persist.UnitOfWork;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import tools.jackson.databind.ObjectMapper;
 
 
 public class JobMessageReceiverTest {

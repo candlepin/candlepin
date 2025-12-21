@@ -20,21 +20,17 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.api.server.v1.AttributeDTO;
-import org.candlepin.util.ObjectMapperFactory;
-
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
 
+import java.io.IOException;
+import java.util.List;
 
 
 class AttributeDeserializerTest {
@@ -52,7 +48,14 @@ class AttributeDeserializerTest {
     @BeforeEach
     public void setup() {
         this.deserializer = new AttributeDeserializer();
-        this.mapper = ObjectMapperFactory.getObjectMapper();
+
+        // Create a mapper with the deserializer registered
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(List.class, deserializer);
+
+        this.mapper = JsonMapper.builder()
+            .addModule(module)
+            .build();
     }
 
     @Test
@@ -112,10 +115,7 @@ class AttributeDeserializerTest {
     }
 
     private List<AttributeDTO> deserialize(String json) throws IOException {
-        InputStream stream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
-        JsonParser parser = mapper.getFactory().createParser(stream);
-        DeserializationContext ctxt = mapper.getDeserializationContext();
-        return deserializer.deserialize(parser, ctxt);
+        return mapper.readValue(json, new TypeReference<List<AttributeDTO>>() {});
     }
 
     private String mapAttributes() {

@@ -16,11 +16,10 @@ package org.candlepin.jackson;
 
 import org.candlepin.util.Util;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
 
-import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -41,7 +40,7 @@ import java.time.format.DateTimeFormatterBuilder;
  * </ul>
  *
  */
-public class OffsetDateTimeDeserializer extends JsonDeserializer<OffsetDateTime> {
+public class OffsetDateTimeDeserializer extends ValueDeserializer<OffsetDateTime> {
 
     private final DateTimeFormatter formatter;
 
@@ -68,8 +67,7 @@ public class OffsetDateTimeDeserializer extends JsonDeserializer<OffsetDateTime>
      * {@inheritDoc}
      */
     @Override
-    public OffsetDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-        throws IOException {
+    public OffsetDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) {
 
         return deserialize(jsonParser.getText());
     }

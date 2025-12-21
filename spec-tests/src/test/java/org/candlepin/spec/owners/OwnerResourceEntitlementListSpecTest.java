@@ -37,12 +37,12 @@ import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+
 
 @SpecTest
 public class OwnerResourceEntitlementListSpecTest {
@@ -51,7 +51,7 @@ public class OwnerResourceEntitlementListSpecTest {
     private static ConsumerDTO consumer;
 
     @BeforeAll
-    public static void setUp() throws ApiException, JsonProcessingException {
+    public static void setUp() throws ApiException {
         adminClient = ApiClients.admin();
 
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());

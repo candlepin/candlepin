@@ -22,10 +22,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonStreamContext;
-import com.fasterxml.jackson.databind.ser.PropertyWriter;
-
 import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +29,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.TokenStreamContext;
+import tools.jackson.databind.ser.PropertyWriter;
+
 import java.util.Arrays;
+
 
 @ExtendWith(MockitoExtension.class)
 public class DynamicPropertyFilterTest {
@@ -48,7 +49,7 @@ public class DynamicPropertyFilterTest {
     private JsonGenerator jsonGenerator;
 
     @Mock
-    private JsonStreamContext context;
+    private TokenStreamContext context;
 
     @BeforeEach
     public void prepareMocks() {
@@ -71,32 +72,32 @@ public class DynamicPropertyFilterTest {
             .thenReturn(true);
         when(dynamicFilterData.isAttributeExcluded(Arrays.asList("CONTEXT_NAME_1", "WRITER_NAME")))
             .thenReturn(false);
-        when(jsonGenerator.getOutputContext()).thenReturn(context);
+        when(jsonGenerator.streamWriteContext()).thenReturn(context);
         when(context.getParent()).thenReturn(context).thenReturn(null);
-        when(context.getCurrentName()).thenReturn("CONTEXT_NAME_1");
+        when(context.currentName()).thenReturn("CONTEXT_NAME_1");
         when(writer.getName()).thenReturn("WRITER_NAME");
         ResteasyContext.pushContext(DynamicFilterData.class, dynamicFilterData);
         DynamicPropertyFilter propertyFilter = new DynamicPropertyFilter();
         assertTrue(propertyFilter.isSerializable(null, jsonGenerator, null, writer));
-        verify(jsonGenerator).getOutputContext();
+        verify(jsonGenerator).streamWriteContext();
         verify(context, times(2)).getParent();
-        verify(context).getCurrentName();
+        verify(context).currentName();
     }
 
     @Test
     public void nonEmptyIsNotSerializable() {
         when(dynamicFilterData.isAttributeExcluded(Arrays.asList("CONTEXT_NAME_1", "WRITER_NAME")))
             .thenReturn(true);
-        when(jsonGenerator.getOutputContext()).thenReturn(context);
+        when(jsonGenerator.streamWriteContext()).thenReturn(context);
         when(context.getParent()).thenReturn(context).thenReturn(null);
-        when(context.getCurrentName()).thenReturn("CONTEXT_NAME_1");
+        when(context.currentName()).thenReturn("CONTEXT_NAME_1");
         when(writer.getName()).thenReturn("WRITER_NAME");
         ResteasyContext.pushContext(DynamicFilterData.class, dynamicFilterData);
         DynamicPropertyFilter propertyFilter = new DynamicPropertyFilter();
         assertFalse(propertyFilter.isSerializable(null, jsonGenerator, null, writer));
-        verify(jsonGenerator).getOutputContext();
+        verify(jsonGenerator).streamWriteContext();
         verify(context, times(2)).getParent();
-        verify(context).getCurrentName();
+        verify(context).currentName();
     }
 
 }

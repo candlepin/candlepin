@@ -36,11 +36,10 @@ import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import tools.jackson.databind.JsonNode;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -359,11 +358,6 @@ public class HealingSpecTest {
     }
 
     private JsonNode getJsonNode(String jsonString) {
-        try {
-            return ApiClient.MAPPER.readTree(jsonString);
-        }
-        catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        return ApiClient.MAPPER.readTree(jsonString);
     }
 }

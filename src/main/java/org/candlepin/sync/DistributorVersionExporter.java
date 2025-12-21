@@ -18,12 +18,13 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.manifest.v1.DistributorVersionDTO;
 import org.candlepin.model.DistributorVersion;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.Writer;
 
 import javax.inject.Inject;
+
 
 /**
  * DistributorVersionExporter

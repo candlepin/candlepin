@@ -26,11 +26,12 @@ import org.candlepin.service.EventAdapter;
 import org.candlepin.service.model.CloudCheckInEvent;
 import org.candlepin.util.NonNullLinkedHashSet;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Collection;
 import java.util.Date;
@@ -42,6 +43,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
+
 
 /**
  * The ConsumerManager class is responsible for managing operations related
