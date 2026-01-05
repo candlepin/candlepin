@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -13,7 +13,7 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.pki.certs;
+package org.candlepin.pki.certs.bouncycastle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -24,8 +24,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.OID;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509Extension;
+import org.candlepin.pki.certs.X509ByteExtension;
+import org.candlepin.pki.certs.X509StringExtension;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.test.CertificateReaderForTesting;
@@ -66,16 +69,20 @@ import javax.security.auth.x500.X500Principal;
 
 
 
-class X509CertificateBuilderTest {
+public class BCX509CertificateBuilderTest {
+    private static final String SIGNATURE_SCHEME_NAME = "rsa";
+    private static final String KEY_ALGORITHM = "rsa";
+    private static final String SIGNATURE_ALGORITHM = "SHA256WithRSA";
+
     private CertificateReaderForTesting certificateAuthority;
-    private X509CertificateBuilder builder;
+    private BCX509CertificateBuilder builder;
 
     @BeforeEach
     void setUp() throws CertificateException, IOException {
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
         SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
         this.certificateAuthority = new CertificateReaderForTesting();
-        this.builder = new X509CertificateBuilder(
+        this.builder = new BCX509CertificateBuilder(
             this.certificateAuthority, securityProvider, subjectKeyIdentifierWriter);
     }
 
@@ -311,6 +318,18 @@ class X509CertificateBuilderTest {
             .hasSize(2)
             .contains(expectedDN)
             .contains(expectedSAN);
+    }
+
+    @Test
+    public void testGetSignatureScheme() {
+        Scheme actual = this.builder.getSignatureScheme();
+
+        assertThat(actual)
+            .isNotNull()
+            .returns(SIGNATURE_SCHEME_NAME, Scheme::name)
+            .returns(KEY_ALGORITHM, Scheme::keyAlgorithm)
+            .returns(SIGNATURE_ALGORITHM, Scheme::signatureAlgorithm)
+            .returns(this.certificateAuthority.getCACert(), Scheme::caCert);
     }
 
     private KeyPair createKeyPair() {

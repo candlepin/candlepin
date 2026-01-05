@@ -35,6 +35,8 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
+import org.candlepin.pki.X509CertificateBuilder;
+import org.candlepin.pki.certs.bouncycastle.BCX509CertificateBuilder;
 import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
@@ -75,7 +77,7 @@ class UeberCertificateGeneratorTest {
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
         CertificateReaderForTesting certificateAuthority = new CertificateReaderForTesting();
         SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
-        X509CertificateBuilder certificateBuilder = new X509CertificateBuilder(
+        X509CertificateBuilder certificateBuilder = new BCX509CertificateBuilder(
             certificateAuthority, securityProvider, subjectKeyIdentifierWriter);
 
         this.generator = new UeberCertificateGenerator(
