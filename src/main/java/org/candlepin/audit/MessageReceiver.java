@@ -22,10 +22,6 @@ import org.candlepin.messaging.CPMSessionManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.activemq.artemis.api.core.ActiveMQException;
-import org.apache.activemq.artemis.api.core.client.ClientConsumer;
-import org.apache.activemq.artemis.api.core.client.ClientSession;
-import org.apache.activemq.artemis.api.core.client.MessageHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

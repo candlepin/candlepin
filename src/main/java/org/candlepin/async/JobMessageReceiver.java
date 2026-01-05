@@ -151,10 +151,6 @@ public class JobMessageReceiver {
                     continue;
                 }
 
-                if (session.isClosed()) {
-                    continue;
-                }
-
                 ++openSessionCount;
                 session.start();
             }
@@ -211,7 +207,8 @@ public class JobMessageReceiver {
             for (int i = 0; i < listenerThreads; ++i) {
                 // Each session+consumer gives us an implicit thread for async job processing, so
                 // we don't need to do any additional thread creation/management ourselves.
-                this.createSession();
+                CPMSession session = this.createSession();
+                sessions.add(session);
             }
 
             this.initialized = true;

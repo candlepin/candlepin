@@ -16,7 +16,14 @@ package org.candlepin.audit;
 
 import ch.qos.logback.classic.Logger;
 
+import org.candlepin.messaging.CPMConsumer;
+import org.candlepin.messaging.CPMMessage;
+import org.candlepin.messaging.CPMMessageListener;
+import org.candlepin.messaging.CPMSession;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.inject.Inject;
 
@@ -28,7 +35,8 @@ import javax.inject.Inject;
  *
  * See http://slf4j.org/faq.html#when
  */
-public class LoggingListener implements EventListener {
+public class LoggingListener implements CPMMessageListener {
+    private static org.slf4j.Logger LOG = LoggerFactory.getLogger(LoggingListener.class);
 
     private static Logger auditLog;
 
@@ -39,17 +47,27 @@ public class LoggingListener implements EventListener {
     }
 
     @Override
-    public void onEvent(Event e) {
-        String message = "principalType={} principal={} target={} entityId={} type={} owner={} " +
+    public void handleMessage(CPMSession session, CPMConsumer consumer, CPMMessage message) {
+        // We shouldn't do this in practice, just testing here
+        ObjectMapper mapper = new ObjectMapper();
+        Event event = null;
+        try {
+            event = mapper.readValue(message.getBody(), Event.class);
+        }
+        catch (JsonProcessingException  e) {
+            LOG.error("Unable to deserialize", e);
+        }
+
+        String logMessage = "principalType={} principal={} target={} entityId={} type={} owner={} " +
             "anonymousOwner={} eventData={}\n";
-        auditLog.info(message,
-            e.getPrincipalData().getType(),
-            e.getPrincipalData().getName(),
-            e.getTarget(),
-            e.getEntityId(),
-            e.getType(),
-            e.getOwnerKey(),
-            e.isOwnerAnonymous(),
-            e.getEventData());
+        auditLog.info(logMessage,
+            event.getPrincipalData().getType(),
+            event.getPrincipalData().getName(),
+            event.getTarget(),
+            event.getEntityId(),
+            event.getType(),
+            event.getOwnerKey(),
+            event.isOwnerAnonymous(),
+            event.getEventData());
     }
 }

@@ -1,14 +1,10 @@
 package org.candlepin.messaging.impl.artemis;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
-import org.apache.activemq.artemis.api.core.client.ClientConsumer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
@@ -33,6 +29,7 @@ public class ArtemisSessionManager implements CPMSessionManager, CloseListener {
 
     private ClientSessionFactory sessionFactory;
     private Set<CPMSession> sessions = new HashSet<>();
+    private boolean initialized = false;
 
     @Inject
     public ArtemisSessionManager(Configuration config) throws Exception {
@@ -41,6 +38,10 @@ public class ArtemisSessionManager implements CPMSessionManager, CloseListener {
 
     @Override
     public void initialize() throws CPMException {
+        if (initialized) {
+            return;
+        }
+
         try {
             String brokerUrl = this.config.getString(ConfigProperties.ACTIVEMQ_BROKER_URL);
             log.info("Connecting to Artemis server at {}", brokerUrl);
@@ -52,6 +53,8 @@ public class ArtemisSessionManager implements CPMSessionManager, CloseListener {
 
             this.sessionFactory = this.locator.createSessionFactory();
             this.sessionFactory.getConnection().addCloseListener(this);
+
+            initialized = true;
         }
         catch (Exception e) {
             throw new CPMException(e);
@@ -60,6 +63,10 @@ public class ArtemisSessionManager implements CPMSessionManager, CloseListener {
 
     @Override
     public CPMSession createSession(boolean transactional) throws CPMException {
+        if (!initialized) {
+            throw new IllegalStateException("Artemis session manager is not initialized");
+        }
+
         try {
             ClientSession clientSession = transactional ?
                 this.sessionFactory.createTransactedSession() :
@@ -77,13 +84,21 @@ public class ArtemisSessionManager implements CPMSessionManager, CloseListener {
 
     @Override
     public void connectionClosed() {
+        if (!initialized) {
+            throw new IllegalStateException("Artemis session manager is not initialized");
+        }
+
+
         this.closeAllSessions();
     }
 
     @Override
     public boolean closeAllSessions() {
-        log.info("Closing all sessions for Artemis connection");
+        if (!initialized) {
+            throw new IllegalStateException("Artemis session manager is not initialized");
+        }
 
+        log.info("Closing all sessions for Artemis connection");
         boolean successful = true;
         for (CPMSession session : sessions) {
             if (session == null) {
