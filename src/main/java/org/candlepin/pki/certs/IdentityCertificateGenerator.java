@@ -24,6 +24,7 @@ import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
+import org.candlepin.pki.X509CertificateBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
