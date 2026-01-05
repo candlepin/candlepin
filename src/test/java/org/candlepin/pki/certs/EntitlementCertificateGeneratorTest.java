@@ -54,6 +54,8 @@ import org.candlepin.pki.OID;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.RepoType;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
+import org.candlepin.pki.X509CertificateBuilder;
+import org.candlepin.pki.certs.bouncycastle.BCX509CertificateBuilder;
 import org.candlepin.pki.huffman.Huffman;
 import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
@@ -178,7 +180,7 @@ public class EntitlementCertificateGeneratorTest {
         CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
         Signer signer = new Signer(certificateReader);
         SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
-        X509CertificateBuilder certificateBuilder = new X509CertificateBuilder(
+        X509CertificateBuilder certificateBuilder = new BCX509CertificateBuilder(
             certificateReader, securityProvider, subjectKeyIdentifierWriter);
         this.generator = new EntitlementCertificateGenerator(
             x509ExtensionUtil,

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2025 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -13,12 +13,15 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.pki.certs;
+package org.candlepin.pki.certs.bouncycastle;
 
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.DistinguishedName;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
+import org.candlepin.pki.X509CertificateBuilder;
 import org.candlepin.pki.X509Extension;
+import org.candlepin.pki.certs.CertificateCreationException;
 
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
@@ -71,7 +74,9 @@ import javax.inject.Provider;
 /**
  * Builder for the construction of {@link X509Certificate}s.
  */
-public class X509CertificateBuilder {
+public class BCX509CertificateBuilder implements X509CertificateBuilder {
+    private static final String SIGNATURE_SCHEME_NAME = "rsa";
+    private static final String KEY_ALGORITHM = "rsa";
     private static final String SIGNATURE_ALGORITHM = "SHA256WithRSA";
     private static final Pattern X500_SPECIAL_SYMBOL_REGEX = Pattern.compile("\\A([,=+<>#;\"])");
 
@@ -79,6 +84,7 @@ public class X509CertificateBuilder {
     private final CertificateReader certificateAuthority;
     private final SubjectKeyIdentifierWriter subjectKeyIdentifierWriter;
     private final List<X509Extension> certExtensions;
+    private final Scheme signatureScheme;
 
     private DistinguishedName distinguishedName;
     private DistinguishedName subjectAltName;
@@ -88,7 +94,7 @@ public class X509CertificateBuilder {
     private BigInteger certSerial;
 
     @Inject
-    public X509CertificateBuilder(CertificateReader certificateAuthority,
+    public BCX509CertificateBuilder(CertificateReader certificateAuthority,
         Provider<BouncyCastleProvider> securityProvider,
         SubjectKeyIdentifierWriter subjectKeyIdentifierWriter) {
         this.certificateAuthority = Objects.requireNonNull(certificateAuthority);
@@ -96,38 +102,55 @@ public class X509CertificateBuilder {
         this.subjectKeyIdentifierWriter = Objects.requireNonNull(subjectKeyIdentifierWriter);
 
         this.certExtensions = new ArrayList<>();
+
+        this.signatureScheme = new Scheme(SIGNATURE_SCHEME_NAME,
+            this.certificateAuthority.getCACert(),
+            SIGNATURE_ALGORITHM,
+            KEY_ALGORITHM);
     }
 
+    @Override
+    public Scheme getSignatureScheme() {
+        return this.signatureScheme;
+    }
+
+    @Override
     public X509CertificateBuilder withDN(DistinguishedName dn) {
         this.distinguishedName = dn;
         return this;
     }
 
+    @Override
     public X509CertificateBuilder withSubjectAltName(String subjectAltName) {
         this.subjectAltName = new DistinguishedName(subjectAltName);
         return this;
     }
 
+    @Override
     public X509CertificateBuilder withValidity(Instant from, Instant to) {
         this.validAfter = from;
         this.validUntil = to;
         return this;
     }
 
+    @Override
     public X509CertificateBuilder withKeyPair(KeyPair keyPair) {
         this.keyPair = keyPair;
         return this;
     }
 
+    @Override
     public X509CertificateBuilder withSerial(BigInteger serial) {
         this.certSerial = serial;
         return this;
     }
 
+    @Override
     public X509CertificateBuilder withSerial(long serial) {
         return this.withSerial(BigInteger.valueOf(serial));
     }
 
+    @Override
     public X509CertificateBuilder withRandomSerial() {
         long serial;
 
@@ -141,6 +164,7 @@ public class X509CertificateBuilder {
         return this.withSerial(serial);
     }
 
+    @Override
     public X509CertificateBuilder withExtensions(Collection<X509Extension> extensions) {
         if (extensions != null && !extensions.isEmpty()) {
             this.certExtensions.addAll(extensions);
@@ -149,14 +173,16 @@ public class X509CertificateBuilder {
         return this;
     }
 
+    @Override
     public X509CertificateBuilder withExtensions(X509Extension... extensions) {
         return this.withExtensions(extensions != null ? Arrays.asList(extensions) : null);
     }
 
+    @Override
     public X509Certificate build() {
         this.checkMandatoryFields();
 
-        X509Certificate caCertificate = this.certificateAuthority.getCACert();
+        X509Certificate caCertificate = this.signatureScheme.caCert();
         PublicKey clientPubKey = this.keyPair.getPublic();
 
         X509v3CertificateBuilder builder = new X509v3CertificateBuilder(
@@ -320,7 +346,7 @@ public class X509CertificateBuilder {
 
     private ContentSigner signer() {
         try {
-            return new JcaContentSignerBuilder(SIGNATURE_ALGORITHM)
+            return new JcaContentSignerBuilder(this.signatureScheme.signatureAlgorithm())
                 .setProvider(this.securityProvider.get())
                 .build(this.certificateAuthority.getCaKey());
         }

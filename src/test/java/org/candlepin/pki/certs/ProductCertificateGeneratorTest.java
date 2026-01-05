@@ -29,6 +29,8 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
+import org.candlepin.pki.X509CertificateBuilder;
+import org.candlepin.pki.certs.bouncycastle.BCX509CertificateBuilder;
 import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
@@ -55,7 +57,7 @@ class ProductCertificateGeneratorTest {
             securityProvider, mock(KeyPairDataCurator.class));
         PemEncoder pemEncoder = new BouncyCastlePemEncoder();
         this.productCertificateCurator = mock(ProductCertificateCurator.class);
-        this.certificateBuilder = new X509CertificateBuilder(new CertificateReaderForTesting(),
+        this.certificateBuilder = new BCX509CertificateBuilder(new CertificateReaderForTesting(),
             securityProvider, new BouncyCastleSubjectKeyIdentifierWriter());
         this.productCertificateGenerator = new ProductCertificateGenerator(
             this.productCertificateCurator,

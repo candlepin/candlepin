@@ -20,7 +20,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.certs.X509CertificateBuilder;
+import org.candlepin.pki.X509CertificateBuilder;
+import org.candlepin.pki.certs.bouncycastle.BCX509CertificateBuilder;
 import org.candlepin.test.CertificateReaderForTesting;
 
 import org.junit.jupiter.api.Test;
@@ -103,7 +104,7 @@ class BouncyCastlePemEncoderTest {
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
         CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
         SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
-        X509CertificateBuilder certificateBuilder = new X509CertificateBuilder(
+        X509CertificateBuilder certificateBuilder = new BCX509CertificateBuilder(
             certificateReader, securityProvider, subjectKeyIdentifierWriter);
 
         return certificateBuilder

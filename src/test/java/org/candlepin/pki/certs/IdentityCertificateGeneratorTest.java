@@ -32,6 +32,8 @@ import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
+import org.candlepin.pki.X509CertificateBuilder;
+import org.candlepin.pki.certs.bouncycastle.BCX509CertificateBuilder;
 import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
@@ -59,7 +61,7 @@ class IdentityCertificateGeneratorTest {
         PemEncoder pemEncoder = new BouncyCastlePemEncoder();
         this.identityCertificateCurator = mock(IdentityCertificateCurator.class);
         this.serialCurator = mock(CertificateSerialCurator.class);
-        this.certificateBuilder = new X509CertificateBuilder(
+        this.certificateBuilder = new BCX509CertificateBuilder(
             new CertificateReaderForTesting(), securityProvider,
             new BouncyCastleSubjectKeyIdentifierWriter());
         this.identityCertificateGenerator = new IdentityCertificateGenerator(
