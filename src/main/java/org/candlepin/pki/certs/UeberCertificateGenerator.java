@@ -34,6 +34,7 @@ import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
+import org.candlepin.pki.X509CertificateBuilder;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.X509ExtensionUtil;
