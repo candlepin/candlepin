@@ -51,6 +51,7 @@ import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
+import org.candlepin.pki.Signer;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509CertificateBuilder;
 import org.candlepin.pki.certs.bouncycastle.BCX509CertificateBuilder;
@@ -58,6 +59,7 @@ import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.jca.JcaSigner;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.RulesObjectMapper;
@@ -302,6 +304,7 @@ public class TestingModules {
             bind(CertificateReader.class).to(CertificateReaderForTesting.class).asEagerSingleton();
             bind(KeyPairGenerator.class).to(BouncyCastleKeyPairGenerator.class).asEagerSingleton();
             bind(X509CertificateBuilder.class).to(BCX509CertificateBuilder.class);
+            bind(Signer.class).to(JcaSigner.class);
 
             bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
             bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);

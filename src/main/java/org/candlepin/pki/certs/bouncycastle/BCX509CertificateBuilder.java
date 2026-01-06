@@ -77,7 +77,7 @@ import javax.inject.Provider;
 public class BCX509CertificateBuilder implements X509CertificateBuilder {
     private static final String SIGNATURE_SCHEME_NAME = "rsa";
     private static final String KEY_ALGORITHM = "rsa";
-    private static final String SIGNATURE_ALGORITHM = "SHA256WithRSA";
+    private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
     private static final Pattern X500_SPECIAL_SYMBOL_REGEX = Pattern.compile("\\A([,=+<>#;\"])");
 
     private final Provider<BouncyCastleProvider> securityProvider;
