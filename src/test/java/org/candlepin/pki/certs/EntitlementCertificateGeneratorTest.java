@@ -61,7 +61,7 @@ import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
-import org.candlepin.pki.impl.Signer;
+import org.candlepin.pki.impl.jca.JcaSigner;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.CertificateSizeException;
@@ -178,7 +178,7 @@ public class EntitlementCertificateGeneratorTest {
             config, entitlementCurator, new Huffman());
         PemEncoder pemEncoder = new BouncyCastlePemEncoder();
         CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
-        Signer signer = new Signer(certificateReader);
+        JcaSigner signer = new JcaSigner(certificateReader);
         SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
         X509CertificateBuilder certificateBuilder = new BCX509CertificateBuilder(
             certificateReader, securityProvider, subjectKeyIdentifierWriter);

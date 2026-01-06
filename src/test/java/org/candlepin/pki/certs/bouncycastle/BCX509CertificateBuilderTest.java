@@ -72,7 +72,7 @@ import javax.security.auth.x500.X500Principal;
 public class BCX509CertificateBuilderTest {
     private static final String SIGNATURE_SCHEME_NAME = "rsa";
     private static final String KEY_ALGORITHM = "rsa";
-    private static final String SIGNATURE_ALGORITHM = "SHA256WithRSA";
+    private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
 
     private CertificateReaderForTesting certificateAuthority;
     private BCX509CertificateBuilder builder;
