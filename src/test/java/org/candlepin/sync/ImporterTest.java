@@ -67,7 +67,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.pki.impl.Signer;
+import org.candlepin.pki.impl.jca.JcaSigner;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.Importer.ImportFile;
 import org.candlepin.util.ObjectMapperFactory;
@@ -142,7 +142,7 @@ public class ImporterTest {
     @Mock
     private RulesImporter mockRulesImporter;
     @Mock
-    private Signer signer;
+    private JcaSigner signer;
     @Mock
     private EventSink mockEventSink;
     @Mock

@@ -12,10 +12,12 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.pki.impl;
+package org.candlepin.pki.impl.jca;
 
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.SignatureFailedException;
+import org.candlepin.pki.Signer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +38,30 @@ import javax.inject.Inject;
 /**
  * Class meant for signing payloads and verification these signatures.
  */
-public class Signer {
-    private static final Logger log = LoggerFactory.getLogger(Signer.class);
+public class JcaSigner implements Signer {
+    private static final Logger log = LoggerFactory.getLogger(JcaSigner.class);
+    private static final String SIGNATURE_SCHEME_NAME = "rsa";
+    private static final String KEY_ALGORITHM = "rsa";
+    private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
 
     private final CertificateReader certificateAuthority;
+    private final Scheme signatureScheme;
+
+    // TODO: This constructor will be replaced when the CertificateAuthority is implemented
 
     @Inject
-    public Signer(CertificateReader reader) {
+    public JcaSigner(CertificateReader reader) {
         this.certificateAuthority = Objects.requireNonNull(reader);
+
+        this.signatureScheme = new Scheme(SIGNATURE_SCHEME_NAME,
+            this.certificateAuthority.getCACert(),
+            SIGNATURE_ALGORITHM,
+            KEY_ALGORITHM);
+    }
+
+    @Override
+    public Scheme getSignatureScheme() {
+        return this.signatureScheme;
     }
 
     /**
@@ -53,9 +71,10 @@ public class Signer {
      * @param input an input stream to sign
      * @return a byte array of the SHA256withRSA digital signature
      */
+    @Override
     public byte[] sign(InputStream input) {
         try {
-            Signature signature = Signature.getInstance("SHA256withRSA");
+            Signature signature = Signature.getInstance(this.signatureScheme.signatureAlgorithm());
             signature.initSign(this.certificateAuthority.getCaKey());
 
             updateSignature(input, signature);
@@ -65,6 +84,22 @@ public class Signer {
             throw new SignatureFailedException("Failed to create signature!", e);
         }
     }
+
+    @Override
+    public byte[] sign(byte[] data) {
+        try {
+            Signature signature = Signature.getInstance(this.signatureScheme.signatureAlgorithm());
+            signature.initSign(this.certificateAuthority.getCaKey());
+            signature.update(data, 0, data.length);
+
+            return signature.sign();
+        }
+        catch (Exception e) {
+            throw new SignatureFailedException("Failed to create signature!", e);
+        }
+    }
+
+    // TODO: This method should be removed when the SignatureValidator is implemented
 
     public boolean verifySignature(File input, byte[] signedHash) throws IOException {
         log.debug("Verify against: {}", certificateAuthority.getCACert().getSerialNumber());
@@ -98,7 +133,7 @@ public class Signer {
      */
     private boolean verifySHA256WithRSAHash(InputStream input, byte[] signedHash, Certificate certificate) {
         try {
-            Signature signature = Signature.getInstance("SHA256withRSA");
+            Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
             signature.initVerify(certificate);
 
             updateSignature(input, signature);

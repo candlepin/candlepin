@@ -13,15 +13,18 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.pki.impl;
+package org.candlepin.pki.impl.jca;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.SignatureFailedException;
 import org.candlepin.test.CertificateReaderForTesting;
+import org.candlepin.test.TestUtil;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,19 +38,38 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.cert.CertificateException;
 
-class SignerTest {
+class JcaSignerTest {
+    private static final String SIGNATURE_SCHEME_NAME = "rsa";
+    private static final String KEY_ALGORITHM = "rsa";
+    private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
+
     private byte[] expectedSignature;
-    private Signer signer;
+    private JcaSigner signer;
+    private CertificateReaderForTesting certificateAuthority;
 
     @BeforeEach
-    void setUp() throws CertificateException, IOException {
+    public void setUp() throws CertificateException, IOException {
         this.expectedSignature = IOUtils.toByteArray(
             this.getClass().getClassLoader().getResourceAsStream("certs/signature"));
-        this.signer = new Signer(new CertificateReaderForTesting());
+
+        this.certificateAuthority = new CertificateReaderForTesting();
+        this.signer = new JcaSigner(certificateAuthority);
     }
 
     @Test
-    void shouldCalculateSignature() {
+    public void testGetSignatureScheme() {
+        Scheme actual = this.signer.getSignatureScheme();
+
+        assertThat(actual)
+            .isNotNull()
+            .returns(SIGNATURE_SCHEME_NAME, Scheme::name)
+            .returns(KEY_ALGORITHM, Scheme::keyAlgorithm)
+            .returns(SIGNATURE_ALGORITHM, Scheme::signatureAlgorithm)
+            .returns(this.certificateAuthority.getCACert(), Scheme::caCert);
+    }
+
+    @Test
+    public void shouldCalculateSignature() {
         ByteArrayInputStream input = new ByteArrayInputStream(
             "Hello, World!".getBytes(StandardCharsets.UTF_8));
 
@@ -57,10 +79,10 @@ class SignerTest {
     }
 
     @Test
-    void shouldFailCertOperationsFail() {
+    public void shouldFailCertOperationsFail() {
         CertificateReader certificateReader = Mockito.mock(CertificateReader.class);
         Mockito.when(certificateReader.getCaKey()).thenThrow(RuntimeException.class);
-        Signer signer = new Signer(certificateReader);
+        JcaSigner signer = new JcaSigner(certificateReader);
         ByteArrayInputStream input = new ByteArrayInputStream(
             "Hello, World!".getBytes(StandardCharsets.UTF_8));
 
@@ -69,10 +91,21 @@ class SignerTest {
     }
 
     @Test
-    void shouldVerifySignature() throws IOException {
+    public void shouldVerifySignature() throws IOException {
         Path tempFile = Files.createTempFile("input", "txt");
         Files.writeString(tempFile, "Hello, World!");
 
         assertTrue(this.signer.verifySignature(tempFile.toFile(), this.expectedSignature));
+    }
+
+    @Test
+    public void shouldVerifySignedData() throws Exception {
+        String data = TestUtil.randomString();
+
+        byte[] signedData = this.signer.sign(data.getBytes());
+
+        assertThat(signedData)
+            .isNotNull()
+            .isNotEqualTo(data);
     }
 }
