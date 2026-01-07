@@ -121,8 +121,8 @@ public class ConsumerMigration {
         if (failed) {
             log.info("Successfully migrated {} consumers, but failed to migrate {} consumers.",
                 totalMigrated,  totalFailedToMigrate);
-            throw new ConsumerMigrationFailedException(i18n.tr("Failed to migrate " +
-                totalFailedToMigrate + " consumers"));
+            throw new ConsumerMigrationFailedException(i18n.tr("Failed to migrate {0} consumers",
+                totalFailedToMigrate));
         }
         log.info("Successfully migrated {} consumers.", totalMigrated);
     }
