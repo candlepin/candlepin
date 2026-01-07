@@ -98,6 +98,7 @@ import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
+import org.candlepin.pki.Signer;
 import org.candlepin.pki.X509CertificateBuilder;
 import org.candlepin.pki.certs.AnonymousCertificateGenerator;
 import org.candlepin.pki.certs.EntitlementCertificateGenerator;
@@ -111,6 +112,7 @@ import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
+import org.candlepin.pki.impl.jca.JcaSigner;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
@@ -313,6 +315,7 @@ public class CandlepinModule extends AbstractModule {
         bind(PemEncoder.class).to(BouncyCastlePemEncoder.class);
         bind(X509CertificateBuilderProvider.class);
         bind(X509CertificateBuilder.class).toProvider(X509CertificateBuilderProvider.class);
+        bind(Signer.class).to(JcaSigner.class);
 
         bind(AnonymousCertificateGenerator.class);
         bind(EntitlementCertificateGenerator.class);
