@@ -172,7 +172,8 @@ public class ExporterTest {
         // for the purposes of these tests; everything is mocked out.
         return new KeyPairData()
             .setPublicKeyData(pubKeyBytes)
-            .setPrivateKeyData(privKeyBytes);
+            .setPrivateKeyData(privKeyBytes)
+            .setAlgorithm("RSA");
     }
 
     @SuppressWarnings("unchecked")
