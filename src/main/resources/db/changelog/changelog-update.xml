@@ -208,4 +208,5 @@
     <include file="db/changelog/20250325000000-update-env-priority-column-type.xml" />
     <include file="db/changelog/20250722140921-fix_consumer_environment_priority_column_type.xml" />
     <include file="db/changelog/20251111143000-drop_deleted_consumer_unique_uuid.xml" />
+    <include file="db/changelog/202601081203540-add-key-pair-algorithm.xml" />
 </databaseChangeLog>

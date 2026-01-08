@@ -47,6 +47,9 @@ public class KeyPairData extends AbstractHibernateObject<KeyPairData> {
     @NotNull
     private String id;
 
+    @Column(length = 64)
+    private String algorithm;
+
     private byte[] privateKey;
     private byte[] publicKey;
 
@@ -60,6 +63,30 @@ public class KeyPairData extends AbstractHibernateObject<KeyPairData> {
 
     public KeyPairData setId(String id) {
         this.id = id;
+        return this;
+    }
+
+    /**
+     * Gets the algorithm used to generate the key pair.
+     *
+     * @return
+     *  the algorithm name
+     */
+    public String getAlgorithm() {
+        return algorithm;
+    }
+
+    /**
+     * Sets the algorithm used to generate the key pair.
+     *
+     * @param algorithm
+     *  the algorithm name
+     *
+     * @return
+     *  a reference to this KeyPairData instance
+     */
+    public KeyPairData setAlgorithm(String algorithm) {
+        this.algorithm = algorithm;
         return this;
     }
 
