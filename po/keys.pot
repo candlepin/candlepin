@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-21 07:11+0000\n"
+"POT-Creation-Date: 2026-01-08 07:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -267,7 +267,8 @@ msgid "Subscription pool(s) {0} do not exist."
 msgstr ""
 
 #: src/main/java/org/candlepin/controller/ConsumerMigration.java:124
-msgid "Failed to migrate "
+#, java-format
+msgid "Failed to migrate {0} consumers"
 msgstr ""
 
 #: src/main/java/org/candlepin/controller/ContentAccessManager.java:194
