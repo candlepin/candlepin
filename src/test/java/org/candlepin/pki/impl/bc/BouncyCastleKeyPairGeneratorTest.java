@@ -15,6 +15,7 @@
 package org.candlepin.pki.impl.bc;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
@@ -152,6 +153,7 @@ class BouncyCastleKeyPairGeneratorTest {
         // but the keys themselves should remain unchanged
         kpdata = consumer.getKeyPairData();
         assertNotNull(kpdata);
+        assertEquals("RSA:4096", kpdata.getAlgorithm());
         assertFalse(Arrays.equals(serializedPublicKey, kpdata.getPublicKeyData()));
         assertFalse(Arrays.equals(serializedPrivateKey, kpdata.getPrivateKeyData()));
         assertArrayEquals(keypair.getPublic().getEncoded(), converted.getPublic().getEncoded());
@@ -185,6 +187,7 @@ class BouncyCastleKeyPairGeneratorTest {
         // generated key pair
         kpdata = consumer.getKeyPairData();
         assertNotNull(kpdata);
+        assertEquals("RSA:4096", kpdata.getAlgorithm());
         assertFalse(Arrays.equals(publicKeyBytes, kpdata.getPublicKeyData()));
         assertFalse(Arrays.equals(privateKeyBytes, kpdata.getPrivateKeyData()));
 
