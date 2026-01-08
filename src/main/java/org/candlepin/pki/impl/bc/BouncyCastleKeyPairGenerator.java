@@ -78,6 +78,16 @@ public class BouncyCastleKeyPairGenerator implements KeyPairGenerator {
                 .setPublicKeyData(keypair.getPublic().getEncoded())
                 .setPrivateKeyData(keypair.getPrivate().getEncoded());
 
+            // TODO: This should be updated once PQC configuration is implemented.
+            // The value should be determined from the configuration, using
+            // 'signature_algorithm', and if it is 'rsa', concatenated with 'key_size'.
+            if (KEY_ALGORITHM.toLowerCase().startsWith("rsa")) {
+                kpdata.setAlgorithm(String.format("%s:%s", KEY_ALGORITHM, KEY_SIZE));
+            }
+            else {
+                kpdata.setAlgorithm(KEY_ALGORITHM);
+            }
+
             kpdata = this.keypairDataCurator.create(kpdata, false);
             consumer.setKeyPairData(kpdata);
         }
@@ -102,6 +112,16 @@ public class BouncyCastleKeyPairGenerator implements KeyPairGenerator {
                 // consumer, so we can avoid this conversion in the future.
                 kpdata.setPublicKeyData(keypair.getPublic().getEncoded());
                 kpdata.setPrivateKeyData(keypair.getPrivate().getEncoded());
+
+                // TODO: This should be updated once PQC configuration is implemented.
+                // The value should be determined from the configuration, using
+                // 'signature_algorithm', and if it is 'rsa', concatenated with 'key_size'.
+                if (KEY_ALGORITHM.toLowerCase().startsWith("rsa")) {
+                    kpdata.setAlgorithm(String.format("%s:%s", KEY_ALGORITHM, KEY_SIZE));
+                }
+                else {
+                    kpdata.setAlgorithm(KEY_ALGORITHM);
+                }
 
                 kpdata = this.keypairDataCurator.merge(kpdata);
                 consumer.setKeyPairData(kpdata);
