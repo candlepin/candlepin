@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-11 07:16+0000\n"
+"POT-Creation-Date: 2026-01-08 07:16+0000\n"
 "PO-Revision-Date: 2022-07-08 10:19+0000\n"
 "Last-Translator: Didik Supriadi <didiksupriadi41@gmail.com>\n"
 "Language-Team: Indonesian <https://translate.fedoraproject.org/projects/"
@@ -60,132 +60,137 @@ msgstr "{0} menghapus unit {1}"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
 #, java-format
+msgid "{0} updated multiple consumers"
+msgstr ""
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
+#, java-format
 msgid "{0} created new owner {1}"
 msgstr "{0} membuat pemilik baru {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
 #, java-format
 msgid "{0} modified the owner {1}"
 msgstr "{0} memodifikasi pemilik {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
 #, java-format
 msgid "{0} deleted the owner {1}"
 msgstr "{0} menghapus pemilik {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
 #, java-format
 msgid "{0} attached a subscription for product {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
 #, java-format
 msgid "{0} modified a subscription for product {1}"
 msgstr "{0} memodifikasi langganan untuk produk {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:131
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
 #, java-format
 msgid "{0} returned the subscription for {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
 #, java-format
 msgid "{0} created a pool for product {1}"
 msgstr "{0} membuat pool untuk produk {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
 #, java-format
 msgid "{0} modified a pool for product {1}"
 msgstr "{0} memodifikasi pool untuk produk {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
 #, java-format
 msgid "{0} deleted a pool for product {1}"
 msgstr "{0} menghapus pool untuk produk {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
 #, java-format
 msgid "{0} created an export for unit {1}"
 msgstr "{0} membuat ekspor untuk unit {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
 #, java-format
 msgid "{0} imported a manifest for owner {1}"
 msgstr "{0} mengimpor manifes untuk pemilik {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
 #, java-format
 msgid "{0} created new user {1}"
 msgstr "{0} membuat pengguna baru {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
 #, java-format
 msgid "{0} modified the user {1}"
 msgstr "{0} memodifikasi pengguna {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:140
 #, java-format
 msgid "{0} deleted the user {1}"
 msgstr "{0} menghapus pengguna {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:140
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
 #, java-format
 msgid "{0} created new role {1}"
 msgstr "{0} membuat peran baru {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
 #, java-format
 msgid "{0} modified the role {1}"
 msgstr "{0} memodifikasi peran {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
 #, java-format
 msgid "{0} deleted the role {1}"
 msgstr "{0} menghapus peran {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
 #, java-format
 msgid "{0} created new subscription for product {1}"
 msgstr "{0} membuat langganan baru untuk produk {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
 #, java-format
 msgid "{0} deleted a subscription for product {1}"
 msgstr "{0} menghapus langganan untuk produk {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
 #, java-format
 msgid "{0} created the activation key {1}"
 msgstr "{0} membuat kunci aktivasi {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
 #, java-format
 msgid "{0} deleted the activation key {1}"
 msgstr "{0} menghapus kunci aktivasi {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
 #, java-format
 msgid "{0} created the guest id {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
 #, java-format
 msgid "{0} deleted the guest id {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
 #, java-format
 msgid "{0} updated the rules in the database to version {1}"
 msgstr "{0} memperbarui aturan dalam database ke versi {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
 #, java-format
 msgid "{0} removed the rules from the database"
 msgstr "{0} menghapus aturan dari database"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:153
 #, java-format
 msgid "Compliance recalculated for consumer {1}"
 msgstr ""
@@ -263,7 +268,8 @@ msgid "Subscription pool(s) {0} do not exist."
 msgstr "Pool langganan {0} tidak ada."
 
 #: src/main/java/org/candlepin/controller/ConsumerMigration.java:124
-msgid "Failed to migrate "
+#, java-format
+msgid "Failed to migrate {0} consumers"
 msgstr ""
 
 #: src/main/java/org/candlepin/controller/ContentAccessManager.java:194
