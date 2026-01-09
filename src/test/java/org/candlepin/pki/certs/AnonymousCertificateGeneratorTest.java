@@ -42,12 +42,12 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.dto.Content;
-import org.candlepin.pki.certs.bouncycastle.BCX509CertificateBuilder;
+import org.candlepin.pki.certs.bc.BouncyCastleX509CertificateBuilder;
 import org.candlepin.pki.huffman.Huffman;
-import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
-import org.candlepin.pki.impl.BouncyCastlePemEncoder;
-import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
-import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
+import org.candlepin.pki.impl.bc.BouncyCastlePemEncoder;
+import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
+import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.jca.JcaSigner;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
@@ -121,7 +121,7 @@ class AnonymousCertificateGeneratorTest {
             new BouncyCastlePemEncoder(),
             keyPairGenerator,
             new JcaSigner(certificateReader),
-            () -> new BCX509CertificateBuilder(
+            () -> new BouncyCastleX509CertificateBuilder(
                 certificateReader, securityProvider, new BouncyCastleSubjectKeyIdentifierWriter())
         );
     }

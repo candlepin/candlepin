@@ -36,11 +36,11 @@ import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509CertificateBuilder;
-import org.candlepin.pki.certs.bouncycastle.BCX509CertificateBuilder;
-import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
-import org.candlepin.pki.impl.BouncyCastlePemEncoder;
-import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
-import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
+import org.candlepin.pki.certs.bc.BouncyCastleX509CertificateBuilder;
+import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
+import org.candlepin.pki.impl.bc.BouncyCastlePemEncoder;
+import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
+import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.TestUtil;
@@ -77,7 +77,7 @@ class UeberCertificateGeneratorTest {
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
         CertificateReaderForTesting certificateAuthority = new CertificateReaderForTesting();
         SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
-        X509CertificateBuilder certificateBuilder = new BCX509CertificateBuilder(
+        X509CertificateBuilder certificateBuilder = new BouncyCastleX509CertificateBuilder(
             certificateAuthority, securityProvider, subjectKeyIdentifierWriter);
 
         this.generator = new UeberCertificateGenerator(

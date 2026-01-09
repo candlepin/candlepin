@@ -21,7 +21,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
+import org.candlepin.pki.impl.bc.BouncyCastlePrivateKeyReader;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
