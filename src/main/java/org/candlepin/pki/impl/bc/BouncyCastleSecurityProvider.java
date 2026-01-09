@@ -12,11 +12,20 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
+package org.candlepin.pki.impl.bc;
 
-package org.candlepin.pki;
 
-public class SignatureFailedException extends RuntimeException {
-    public SignatureFailedException(String message, Throwable cause) {
-        super(message, cause);
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
+/**
+ * Class serves as a {@link javax.inject.Provider} of {@link BouncyCastleProvider}.
+ */
+public class BouncyCastleSecurityProvider implements javax.inject.Provider<BouncyCastleProvider> {
+
+    private static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
+
+    @Override
+    public BouncyCastleProvider get() {
+        return BC_PROVIDER;
     }
 }

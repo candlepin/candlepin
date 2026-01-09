@@ -15,7 +15,7 @@
 package org.candlepin.guice;
 
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.EventAdapter;
