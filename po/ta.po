@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-11 07:16+0000\n"
+"POT-Creation-Date: 2026-01-08 07:16+0000\n"
 "PO-Revision-Date: 2017-10-18 11:49-0400\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Tamil <kde-i18n-doc@kde.org>\n"
@@ -59,176 +59,181 @@ msgstr "{0} {1} என்ற அலகில் மாற்றம் செய�
 msgid "{0} deleted the unit {1}"
 msgstr "{0} {1} என்ற அலகை அழித்துள்ளார்"
 
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
+#, java-format
+msgid "{0} updated multiple consumers"
+msgstr ""
+
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
 #, java-format
 msgid "{0} created new owner {1}"
 msgstr "{0} புதிய உரிமையாளரை {1} உருவாக்கியது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
 #, java-format
 msgid "{0} modified the owner {1}"
 msgstr "{0} புதிய உரிமையாளரை {1} மாற்றியமைத்தது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
 #, java-format
 msgid "{0} deleted the owner {1}"
 msgstr "{0} புதிய உரிமையாளரை {1} அழித்தது"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
 #, java-format
 msgid "{0} attached a subscription for product {1}"
 msgstr "{0} தயாரிப்பு {1} க்கு ஒரு சந்தாவை இணைத்தது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
 #, java-format
 msgid "{0} modified a subscription for product {1}"
 msgstr "{0} ஒரு சந்தாவை தாயாரிப்பு {1} க்காக மாற்றியமைத்தது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:131
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
 #, java-format
 msgid "{0} returned the subscription for {1}"
 msgstr "{0} ஆனது {1} க்காக சந்தாவை திரும்பியது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
 #, java-format
 msgid "{0} created a pool for product {1}"
 msgstr "{0} தயாரிப்பு {1} க்காக ஒரு பூலை உருவாக்கியது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
 #, java-format
 msgid "{0} modified a pool for product {1}"
 msgstr "{0} தயாரிப்பு {1} க்காக ஒரு பூலை மாற்றியமைத்தது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
 #, java-format
 msgid "{0} deleted a pool for product {1}"
 msgstr "{0} தயாரிப்பு {1} க்காக ஒரு பூலை அழித்தது"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
 #, java-format
 msgid "{0} created an export for unit {1}"
 msgstr "{0} {1} என்ற அலகுக்கான ஏற்றுமதியை உருவாக்கியுள்ளார்"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
 #, java-format
 msgid "{0} imported a manifest for owner {1}"
 msgstr "{0} உரிமையாளருக்காக ஒரு வெளிப்படுத்தலை {1} இறக்குமதி செய்தது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
 #, java-format
 msgid "{0} created new user {1}"
 msgstr "{0} புதிய பயனரை {1} உருவாக்கியது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
 #, java-format
 msgid "{0} modified the user {1}"
 msgstr "{0} புதிய பயனரை {1} மாற்றியமைத்தது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:140
 #, java-format
 msgid "{0} deleted the user {1}"
 msgstr "{0} பயனரை {1} அழித்தது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:140
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
 #, java-format
 msgid "{0} created new role {1}"
 msgstr "{0} புதிய பங்கை  {1} உருவாக்கியது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
 #, java-format
 msgid "{0} modified the role {1}"
 msgstr "{0} புதிய பங்கை {1} மாற்றியமைத்தது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
 #, java-format
 msgid "{0} deleted the role {1}"
 msgstr "{0} பங்கை {1} அழித்தது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
 #, java-format
 msgid "{0} created new subscription for product {1}"
 msgstr "{0} புதிய சந்தாவை தயாரிப்பிற்காக {1} உருவாக்கியது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
 #, java-format
 msgid "{0} deleted a subscription for product {1}"
 msgstr "{0} ஒரு சந்தாவை தயாரிப்பிற்காக {1} அழித்தது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
 #, java-format
 msgid "{0} created the activation key {1}"
 msgstr "{0} செயல்பாட்டு விசையை {1} உருவாக்கியது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
 #, java-format
 msgid "{0} deleted the activation key {1}"
 msgstr "{0} செயல்பாட்டு விசையை {1} அழித்தது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
 #, java-format
 msgid "{0} created the guest id {1}"
 msgstr "{0} விருந்தினர் id ஐ உருவாக்கியது {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
 #, java-format
 msgid "{0} deleted the guest id {1}"
 msgstr "{0} விருந்தினர் id ஐ நீக்கியது {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
 #, java-format
 msgid "{0} updated the rules in the database to version {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
 #, java-format
 msgid "{0} removed the rules from the database"
 msgstr "{0} தரவுத்தளத்திலிருந்து விதிகளை நீக்கியது"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:153
 #, java-format
 msgid "Compliance recalculated for consumer {1}"
 msgstr "{1} எனும் நுகர்வோருக்கு மீண்டும் கணக்கிடப்பட்டது இணக்கம்"
@@ -324,9 +329,9 @@ msgstr ""
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
 #: src/main/java/org/candlepin/controller/ConsumerMigration.java:124
-#, fuzzy
+#, fuzzy, java-format
 #| msgid "Failed to import archive"
-msgid "Failed to migrate "
+msgid "Failed to migrate {0} consumers"
 msgstr "காப்பக இறக்குமதி தோல்வியடைந்தது"
 
 #: src/main/java/org/candlepin/controller/ContentAccessManager.java:194
