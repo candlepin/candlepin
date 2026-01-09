@@ -127,8 +127,6 @@ public class ArtemisSessionFactory implements CPMSessionFactory {
 
     private Configuration config;
 
-    private CPMSessionConfig defaultSessionConfig;
-
     private boolean initialized;
     private ServerLocator locator;
     private SessionManager sessionManager;
@@ -170,6 +168,10 @@ public class ArtemisSessionFactory implements CPMSessionFactory {
             log.info("Connecting to Artemis server at {}", brokerUrl);
 
             this.locator = ActiveMQClient.createServerLocator(brokerUrl);
+
+            // Set to 0 to disable the buffering of messages which may cause long running threads to block
+            // the consumption of other messages
+            this.locator.setConsumerWindowSize(0);
             this.sessionManager = new SessionManager(this.locator);
 
             this.initialized = true;
