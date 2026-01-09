@@ -18,13 +18,11 @@ package org.candlepin.pki.impl.jca;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.Scheme;
-import org.candlepin.pki.SignatureFailedException;
+import org.candlepin.pki.SignatureException;
 import org.candlepin.test.CertificateReaderForTesting;
-import org.candlepin.test.TestUtil;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,9 +32,9 @@ import org.mockito.Mockito;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.cert.CertificateException;
+
+
 
 class JcaSignerTest {
     private static final String SIGNATURE_SCHEME_NAME = "rsa";
@@ -65,7 +63,7 @@ class JcaSignerTest {
             .returns(SIGNATURE_SCHEME_NAME, Scheme::name)
             .returns(KEY_ALGORITHM, Scheme::keyAlgorithm)
             .returns(SIGNATURE_ALGORITHM, Scheme::signatureAlgorithm)
-            .returns(this.certificateAuthority.getCACert(), Scheme::caCert);
+            .returns(this.certificateAuthority.getCACert(), Scheme::certificate);
     }
 
     @Test
@@ -80,32 +78,15 @@ class JcaSignerTest {
 
     @Test
     public void shouldFailCertOperationsFail() {
-        CertificateReader certificateReader = Mockito.mock(CertificateReader.class);
+        CertificateReader certificateReader = Mockito.spy(this.certificateAuthority);
         Mockito.when(certificateReader.getCaKey()).thenThrow(RuntimeException.class);
+
         JcaSigner signer = new JcaSigner(certificateReader);
+
         ByteArrayInputStream input = new ByteArrayInputStream(
             "Hello, World!".getBytes(StandardCharsets.UTF_8));
 
-        assertThatThrownBy(() -> signer.sign(input))
-            .isInstanceOf(SignatureFailedException.class);
+        assertThatThrownBy(() -> signer.sign(input)).isInstanceOf(SignatureException.class);
     }
 
-    @Test
-    public void shouldVerifySignature() throws IOException {
-        Path tempFile = Files.createTempFile("input", "txt");
-        Files.writeString(tempFile, "Hello, World!");
-
-        assertTrue(this.signer.verifySignature(tempFile.toFile(), this.expectedSignature));
-    }
-
-    @Test
-    public void shouldVerifySignedData() throws Exception {
-        String data = TestUtil.randomString();
-
-        byte[] signedData = this.signer.sign(data.getBytes());
-
-        assertThat(signedData)
-            .isNotNull()
-            .isNotEqualTo(data);
-    }
 }

@@ -43,12 +43,12 @@ import org.candlepin.model.SCACertificate;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509CertificateBuilder;
-import org.candlepin.pki.certs.bouncycastle.BCX509CertificateBuilder;
+import org.candlepin.pki.certs.bc.BouncyCastleX509CertificateBuilder;
 import org.candlepin.pki.huffman.Huffman;
-import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
-import org.candlepin.pki.impl.BouncyCastlePemEncoder;
-import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
-import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
+import org.candlepin.pki.impl.bc.BouncyCastlePemEncoder;
+import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
+import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.jca.JcaSigner;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.DatabaseTestFixture;
@@ -127,9 +127,9 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             config, this.entitlementCurator, new Huffman()));
         SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
 
-        X509CertificateBuilder builder =
-            new BCX509CertificateBuilder(certificateReader, securityProvider, subjectKeyIdentifierWriter);
-        x509CertificateBuilderProvider = () -> builder;
+        X509CertificateBuilder builder = new BouncyCastleX509CertificateBuilder(certificateReader,
+            securityProvider, subjectKeyIdentifierWriter);
+        this.x509CertificateBuilderProvider = () -> builder;
 
         return new SCACertificateGenerator(
             this.extensionUtil,

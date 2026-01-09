@@ -16,20 +16,14 @@ package org.candlepin.pki.impl.jca;
 
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.Scheme;
-import org.candlepin.pki.SignatureFailedException;
+import org.candlepin.pki.SignatureException;
 import org.candlepin.pki.Signer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.security.Signature;
-import java.security.SignatureException;
-import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -40,6 +34,10 @@ import javax.inject.Inject;
  */
 public class JcaSigner implements Signer {
     private static final Logger log = LoggerFactory.getLogger(JcaSigner.class);
+
+    // Size of the byte buffer to use to consume blocks of data from input streams
+    private static final int BUFFER_SIZE = 4096;
+
     private static final String SIGNATURE_SCHEME_NAME = "rsa";
     private static final String KEY_ALGORITHM = "rsa";
     private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
@@ -77,11 +75,17 @@ public class JcaSigner implements Signer {
             Signature signature = Signature.getInstance(this.signatureScheme.signatureAlgorithm());
             signature.initSign(this.certificateAuthority.getCaKey());
 
-            updateSignature(input, signature);
+            byte[] bytes = new byte[BUFFER_SIZE];
+            int read;
+
+            while ((read = input.read(bytes)) != -1) {
+                signature.update(bytes, 0, read);
+            }
+
             return signature.sign();
         }
         catch (Exception e) {
-            throw new SignatureFailedException("Failed to create signature!", e);
+            throw new SignatureException(e);
         }
     }
 
@@ -90,71 +94,12 @@ public class JcaSigner implements Signer {
         try {
             Signature signature = Signature.getInstance(this.signatureScheme.signatureAlgorithm());
             signature.initSign(this.certificateAuthority.getCaKey());
-            signature.update(data, 0, data.length);
+            signature.update(data);
 
             return signature.sign();
         }
         catch (Exception e) {
-            throw new SignatureFailedException("Failed to create signature!", e);
-        }
-    }
-
-    // TODO: This method should be removed when the SignatureValidator is implemented
-
-    public boolean verifySignature(File input, byte[] signedHash) throws IOException {
-        log.debug("Verify against: {}", certificateAuthority.getCACert().getSerialNumber());
-
-        try (InputStream inputStream = new FileInputStream(input)) {
-            if (verifySHA256WithRSAHash(inputStream, signedHash, certificateAuthority.getCACert())) {
-                return true;
-            }
-        }
-        for (X509Certificate cert : certificateAuthority.getUpstreamCACerts()) {
-            log.debug("Verify against: {}", cert.getSerialNumber());
-
-            try (InputStream inputStream = new FileInputStream(input)) {
-                if (verifySHA256WithRSAHash(inputStream, signedHash, cert)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Verify a digital signature.  The method calculates a digital signature using the SHA256withRSA
-     * algorithm (and the public key from the certificate parameter) and then compares it with the signature
-     * passed in through the signedHas parameter.
-     * @param input input to verify
-     * @param signedHash an existing signature to verify
-     * @param certificate a certificate with the public key to use for verification
-     * @return if the calculated signature matches the provided signature
-     */
-    private boolean verifySHA256WithRSAHash(InputStream input, byte[] signedHash, Certificate certificate) {
-        try {
-            Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
-            signature.initVerify(certificate);
-
-            updateSignature(input, signature);
-            return signature.verify(signedHash);
-        }
-        catch (SignatureException se) {
-            return false;
-        }
-        catch (Exception e) {
-            throw new SignatureFailedException("Failed to verify signature!", e);
-        }
-    }
-
-    private void updateSignature(InputStream input, Signature signature)
-        throws IOException, SignatureException {
-
-        byte[] dataBytes = new byte[4096];
-        int nread = 0;
-
-        while ((nread = input.read(dataBytes)) != -1) {
-            signature.update(dataBytes, 0, nread);
+            throw new SignatureException(e);
         }
     }
 
