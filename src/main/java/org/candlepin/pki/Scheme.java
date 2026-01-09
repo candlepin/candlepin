@@ -22,18 +22,37 @@ import java.security.cert.X509Certificate;
  * @param name
  *  the name of the signature scheme
  *
- * @param caCert
- *  Certificate Authority certificate used for signature operations
+ * @param certificate
+ *  the certificate to use for cryptographic operations
  *
  * @param signatureAlgorithm
- *  cryptographic algorithm used for signature operations
+ *  the signature algorithm to use for cryptographic signing operations
  *
  * @param keyAlgorithm
- *  cryptographic algorithm used to generate key pairs under this scheme
+ *  the algorithm used to generate key pairs under this scheme
  */
 public record Scheme(
     String name,
-    X509Certificate caCert,
+    X509Certificate certificate,
     String signatureAlgorithm,
     String keyAlgorithm
-) {}
+) {
+    public Scheme {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("name is null or empty");
+        }
+
+        if (certificate == null) {
+            throw new IllegalArgumentException("certificate is null");
+        }
+
+        if (signatureAlgorithm == null || signatureAlgorithm.isBlank()) {
+            throw new IllegalArgumentException("signatureAlgorithm is null or empty");
+        }
+
+        if (keyAlgorithm == null || keyAlgorithm.isBlank()) {
+            throw new IllegalArgumentException("keyAlgorithm is null or empty");
+        }
+    }
+
+}
