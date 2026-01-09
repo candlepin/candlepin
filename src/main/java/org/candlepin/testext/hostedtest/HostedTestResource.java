@@ -33,16 +33,15 @@ import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,7 +72,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 
 
 /**
@@ -757,7 +755,7 @@ public class HostedTestResource {
     @Path("cloud/offers")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public void addCloudOfferToProductMapping(String json) throws JsonProcessingException {
+    public void addCloudOfferToProductMapping(String json) {
         JsonNode root = this.mapper.readTree(json);
         String offerId = root.get("cloudOfferId").asText();
         if (offerId == null) {
@@ -775,7 +773,7 @@ public class HostedTestResource {
         }
 
         List<String> productIds = new ArrayList<>();
-        productIdsNode.elements().forEachRemaining(prod -> productIds.add(prod.asText()));
+        productIdsNode.valueStream().forEach(prod -> productIds.add(prod.asText()));
 
         this.datastore.setProductIdsForCloudOfferId(offerId, productIds);
         this.datastore.setOfferTypeForCloudOfferId(offerId, cloudOfferType);
@@ -785,7 +783,7 @@ public class HostedTestResource {
     @Path("cloud/accounts")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public void addCloudAccountToOwnerMapping(String json) throws JsonProcessingException {
+    public void addCloudAccountToOwnerMapping(String json) {
         JsonNode root = this.mapper.readTree(json);
         String cloudAccountId = root.get("cloudAccountId").asText();
         if (cloudAccountId == null) {

@@ -29,16 +29,16 @@ import org.candlepin.model.Content;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.service.model.BrandingInfo;
-import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ser.std.SimpleFilterProvider;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -67,11 +67,12 @@ public class ProductDataTest {
 
     @BeforeEach
     public void createObjects() {
-        this.mapper = ObjectMapperFactory.getObjectMapper();
-
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
         filterProvider.setDefaultFilter(new DynamicPropertyFilter());
-        this.mapper.setFilters(filterProvider);
+
+        this.mapper = JsonMapper.builder()
+            .filterProvider(filterProvider)
+            .build();
     }
 
     protected static Stream<Object> getBadStringValues() {

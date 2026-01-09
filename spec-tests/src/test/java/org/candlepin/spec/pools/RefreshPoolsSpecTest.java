@@ -55,10 +55,10 @@ import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import tools.jackson.databind.JsonNode;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -69,6 +69,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 
 @SpecTest
 public class RefreshPoolsSpecTest {
@@ -1896,7 +1897,11 @@ public class RefreshPoolsSpecTest {
 
         String owner1SCALastUpdate1 = owner1SCAContentBody1.get("lastUpdate").asText();
         String owner1SCAContent1 = owner1SCAContentBody1.get("contentListing")
-            .elements().next().get(1).asText(); // :/
+            .valueStream()
+            .findFirst()
+            .orElseThrow()
+            .get(1)
+            .asText();
 
         List<PoolDTO> owner2Pools = adminClient.pools().listPoolsByOwner(owner2.getId());
         assertThat(owner2Pools).hasSize(1);
@@ -1906,7 +1911,11 @@ public class RefreshPoolsSpecTest {
 
         String owner2SCALastUpdate1 = owner2SCAContentBody1.get("lastUpdate").asText();
         String owner2SCAContent1 = owner2SCAContentBody1.get("contentListing")
-            .elements().next().get(1).asText(); // :/
+            .valueStream()
+            .findFirst()
+            .orElseThrow()
+            .get(1)
+            .asText();
 
         // Update the product with new content
         ContentDTO content = adminClient.hosted().createContent(Contents.random());
@@ -1921,7 +1930,11 @@ public class RefreshPoolsSpecTest {
 
         String owner1SCALastUpdate2 = owner1SCAContentBody2.get("lastUpdate").asText();
         String owner1SCAContent2 = owner1SCAContentBody2.get("contentListing")
-            .elements().next().get(1).asText(); // :/
+            .valueStream()
+            .findFirst()
+            .orElseThrow()
+            .get(1)
+            .asText();
 
         assertNotEquals(owner1SCAContent1, owner1SCAContent2);
         assertNotEquals(owner1SCALastUpdate1, owner1SCALastUpdate2);
@@ -1933,7 +1946,11 @@ public class RefreshPoolsSpecTest {
 
         String owner2SCALastUpdate2 = owner2SCAContentBody2.get("lastUpdate").asText();
         String owner2SCAContent2 = owner2SCAContentBody2.get("contentListing")
-            .elements().next().get(1).asText(); // :/
+            .valueStream()
+            .findFirst()
+            .orElseThrow()
+            .get(1)
+            .asText();
 
         assertNotEquals(owner2SCAContent1, owner2SCAContent2);
         assertNotEquals(owner2SCALastUpdate1, owner2SCALastUpdate2);
@@ -1949,7 +1966,11 @@ public class RefreshPoolsSpecTest {
 
         String owner2SCALastUpdate3 = owner2SCAContentBody3.get("lastUpdate").asText();
         String owner2SCAContent3 = owner2SCAContentBody3.get("contentListing")
-            .elements().next().get(1).asText(); // :/
+            .valueStream()
+            .findFirst()
+            .orElseThrow()
+            .get(1)
+            .asText();
 
         assertNotEquals(owner2SCAContent1, owner2SCAContent2);
         assertNotEquals(owner2SCALastUpdate1, owner2SCALastUpdate2);

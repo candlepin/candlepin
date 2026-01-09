@@ -16,8 +16,7 @@ package org.candlepin.audit;
 
 import org.candlepin.async.impl.ActiveMQSessionFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import tools.jackson.databind.ObjectMapper;
 
 
 /**

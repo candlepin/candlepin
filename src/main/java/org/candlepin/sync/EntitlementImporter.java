@@ -29,12 +29,12 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.util.Util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -44,6 +44,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 
 // TODO: Refactor this class (and the entire importer) to better isolate the various responsibilities
 // these objects could and *should* have.

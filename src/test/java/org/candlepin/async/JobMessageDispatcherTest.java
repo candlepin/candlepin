@@ -38,8 +38,6 @@ import org.candlepin.messaging.CPMSessionFactory;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,9 +45,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import tools.jackson.databind.ObjectMapper;
+
 import java.lang.ref.PhantomReference;
 import java.lang.ref.ReferenceQueue;
-
 
 
 /**

@@ -103,7 +103,6 @@ import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.validation.CandlepinMessageInterpolator;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.matcher.Matchers;
@@ -123,6 +122,8 @@ import org.quartz.SchedulerFactory;
 import org.quartz.impl.StdSchedulerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import tools.jackson.databind.ObjectMapper;
+
 import java.io.InputStream;
 import java.util.Date;
 import java.util.Properties;
@@ -137,7 +138,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
-
 
 
 /**

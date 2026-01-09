@@ -17,18 +17,18 @@ package org.candlepin.audit;
 import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.config.Configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
-
 
 
 /**

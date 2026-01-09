@@ -14,25 +14,21 @@
  */
 package org.candlepin.jackson;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueSerializer;
 
-import java.io.IOException;
 import java.util.Map;
-
 
 
 /**
  * The CandlepinLegacyAttributeSerializer handles the serialization of attribute maps, writing them
  * in the legacy attribute format of [{"key1":"value1"}, ... ,{"keyN":"valueN"}].
  */
-public class CandlepinLegacyAttributeSerializer extends JsonSerializer<Map<String, String>> {
+public class CandlepinLegacyAttributeSerializer extends ValueSerializer<Map<String, String>> {
 
     @Override
-    public void serialize(Map<String, String> map, JsonGenerator generator, SerializerProvider provider)
-        throws IOException, JsonProcessingException {
+    public void serialize(Map<String, String> map, JsonGenerator generator, SerializationContext provider) {
 
         generator.writeStartArray();
 
@@ -43,8 +39,8 @@ public class CandlepinLegacyAttributeSerializer extends JsonSerializer<Map<Strin
 
                 if (key != null && !key.isEmpty()) {
                     generator.writeStartObject();
-                    generator.writeObjectField("name", key);
-                    generator.writeObjectField("value", value);
+                    generator.writeStringProperty("name", key);
+                    generator.writeStringProperty("value", value);
                     generator.writeEndObject();
                 }
             }

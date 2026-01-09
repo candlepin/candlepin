@@ -14,15 +14,13 @@
  */
 package org.candlepin.jackson;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueSerializer;
 
-import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-
 
 
 /**
@@ -31,7 +29,7 @@ import java.time.format.DateTimeFormatter;
  * compatible with MySql.
  * The format used is ISO 8601
  */
-public class OffsetDateTimeSerializer extends JsonSerializer<OffsetDateTime> {
+public class OffsetDateTimeSerializer extends ValueSerializer<OffsetDateTime> {
 
     private final DateTimeFormatter dateFormat;
 
@@ -42,7 +40,7 @@ public class OffsetDateTimeSerializer extends JsonSerializer<OffsetDateTime> {
 
     @Override
     public void serialize(OffsetDateTime offsetDateTime, JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider) throws IOException {
+        SerializationContext serializerProvider) {
         ZonedDateTime localDateTime = offsetDateTime.toZonedDateTime();
         jsonGenerator.writeString(this.dateFormat.format(localDateTime));
     }
