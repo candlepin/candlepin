@@ -55,12 +55,12 @@ import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.RepoType;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509CertificateBuilder;
-import org.candlepin.pki.certs.bouncycastle.BCX509CertificateBuilder;
+import org.candlepin.pki.certs.bc.BouncyCastleX509CertificateBuilder;
 import org.candlepin.pki.huffman.Huffman;
-import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
-import org.candlepin.pki.impl.BouncyCastlePemEncoder;
-import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
-import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
+import org.candlepin.pki.impl.bc.BouncyCastlePemEncoder;
+import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
+import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.jca.JcaSigner;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.TestUtil;
@@ -180,7 +180,7 @@ public class EntitlementCertificateGeneratorTest {
         CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
         JcaSigner signer = new JcaSigner(certificateReader);
         SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
-        X509CertificateBuilder certificateBuilder = new BCX509CertificateBuilder(
+        X509CertificateBuilder certificateBuilder = new BouncyCastleX509CertificateBuilder(
             certificateReader, securityProvider, subjectKeyIdentifierWriter);
         this.generator = new EntitlementCertificateGenerator(
             x509ExtensionUtil,

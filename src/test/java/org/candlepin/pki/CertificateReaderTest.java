@@ -17,7 +17,7 @@ package org.candlepin.pki;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.TestConfig;
-import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
+import org.candlepin.pki.impl.bc.BouncyCastlePrivateKeyReader;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
