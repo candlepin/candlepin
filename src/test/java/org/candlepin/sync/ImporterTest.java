@@ -67,7 +67,8 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.pki.impl.jca.JcaSigner;
+import org.candlepin.pki.SignatureValidator;
+import org.candlepin.pki.Signer;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.Importer.ImportFile;
 import org.candlepin.util.ObjectMapperFactory;
@@ -80,6 +81,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -142,7 +144,9 @@ public class ImporterTest {
     @Mock
     private RulesImporter mockRulesImporter;
     @Mock
-    private JcaSigner signer;
+    private Signer signer;
+    @Mock(answer = Answers.RETURNS_SELF)
+    private SignatureValidator signatureValidator;
     @Mock
     private EventSink mockEventSink;
     @Mock
@@ -190,7 +194,7 @@ public class ImporterTest {
     private Importer buildImporter() {
         return new Importer(this.mockConsumerTypeCurator, this.mockRulesImporter,
             this.mockOwnerCurator, this.mockIdentityCertCurator, this.refresherFactory,
-            this.signer, this.mockExporterMetadataCurator,
+            this.signer, this.signatureValidator, this.mockExporterMetadataCurator,
             this.mockCertSerialCurator, this.mockEventSink, this.i18n, this.mockDistributorVersionCurator,
             this.mockCdnCurator, this.syncUtils, this.mapper, this.mockImportRecordCurator,
             this.mockSubscriptionReconciler, this.modelTranslator);
@@ -536,7 +540,7 @@ public class ImporterTest {
     @Test
     public void testImportBadConsumerZip() throws Exception {
         // Mock a passed signature check:
-        when(this.signer.verifySignature(any(File.class), any(byte[].class))).thenReturn(true);
+        when(this.signatureValidator.validate(any(File.class))).thenReturn(true);
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
@@ -565,7 +569,7 @@ public class ImporterTest {
     @Test
     public void testImportZipSigAndEmptyConsumerZip() throws Exception {
         // Mock a passed signature check:
-        when(this.signer.verifySignature(any(File.class), any(byte[].class))).thenReturn(true);
+        when(this.signatureValidator.validate(any(File.class))).thenReturn(true);
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);

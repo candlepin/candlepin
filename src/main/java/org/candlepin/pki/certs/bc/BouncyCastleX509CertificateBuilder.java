@@ -13,7 +13,7 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.pki.certs.bouncycastle;
+package org.candlepin.pki.certs.bc;
 
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.DistinguishedName;
@@ -74,7 +74,7 @@ import javax.inject.Provider;
 /**
  * Builder for the construction of {@link X509Certificate}s.
  */
-public class BCX509CertificateBuilder implements X509CertificateBuilder {
+public class BouncyCastleX509CertificateBuilder implements X509CertificateBuilder {
     private static final String SIGNATURE_SCHEME_NAME = "rsa";
     private static final String KEY_ALGORITHM = "rsa";
     private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
@@ -94,7 +94,7 @@ public class BCX509CertificateBuilder implements X509CertificateBuilder {
     private BigInteger certSerial;
 
     @Inject
-    public BCX509CertificateBuilder(CertificateReader certificateAuthority,
+    public BouncyCastleX509CertificateBuilder(CertificateReader certificateAuthority,
         Provider<BouncyCastleProvider> securityProvider,
         SubjectKeyIdentifierWriter subjectKeyIdentifierWriter) {
         this.certificateAuthority = Objects.requireNonNull(certificateAuthority);
@@ -182,7 +182,7 @@ public class BCX509CertificateBuilder implements X509CertificateBuilder {
     public X509Certificate build() {
         this.checkMandatoryFields();
 
-        X509Certificate caCertificate = this.signatureScheme.caCert();
+        X509Certificate caCertificate = this.signatureScheme.certificate();
         PublicKey clientPubKey = this.keyPair.getPublic();
 
         X509v3CertificateBuilder builder = new X509v3CertificateBuilder(

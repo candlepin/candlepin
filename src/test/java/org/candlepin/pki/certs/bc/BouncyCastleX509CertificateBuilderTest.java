@@ -13,7 +13,7 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.pki.certs.bouncycastle;
+package org.candlepin.pki.certs.bc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -29,8 +29,8 @@ import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.pki.certs.X509ByteExtension;
 import org.candlepin.pki.certs.X509StringExtension;
-import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
-import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
+import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.test.CertificateReaderForTesting;
 
 import org.bouncycastle.asn1.ASN1OctetString;
@@ -69,20 +69,20 @@ import javax.security.auth.x500.X500Principal;
 
 
 
-public class BCX509CertificateBuilderTest {
+public class BouncyCastleX509CertificateBuilderTest {
     private static final String SIGNATURE_SCHEME_NAME = "rsa";
     private static final String KEY_ALGORITHM = "rsa";
     private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
 
     private CertificateReaderForTesting certificateAuthority;
-    private BCX509CertificateBuilder builder;
+    private BouncyCastleX509CertificateBuilder builder;
 
     @BeforeEach
     void setUp() throws CertificateException, IOException {
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
         SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
         this.certificateAuthority = new CertificateReaderForTesting();
-        this.builder = new BCX509CertificateBuilder(
+        this.builder = new BouncyCastleX509CertificateBuilder(
             this.certificateAuthority, securityProvider, subjectKeyIdentifierWriter);
     }
 
@@ -329,7 +329,7 @@ public class BCX509CertificateBuilderTest {
             .returns(SIGNATURE_SCHEME_NAME, Scheme::name)
             .returns(KEY_ALGORITHM, Scheme::keyAlgorithm)
             .returns(SIGNATURE_ALGORITHM, Scheme::signatureAlgorithm)
-            .returns(this.certificateAuthority.getCACert(), Scheme::caCert);
+            .returns(this.certificateAuthority.getCACert(), Scheme::certificate);
     }
 
     private KeyPair createKeyPair() {

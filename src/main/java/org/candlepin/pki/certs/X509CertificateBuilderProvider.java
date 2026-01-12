@@ -18,7 +18,7 @@ package org.candlepin.pki.certs;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509CertificateBuilder;
-import org.candlepin.pki.certs.bouncycastle.BCX509CertificateBuilder;
+import org.candlepin.pki.certs.bc.BouncyCastleX509CertificateBuilder;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -42,7 +42,7 @@ public class X509CertificateBuilderProvider implements Provider<X509CertificateB
 
     @Override
     public X509CertificateBuilder get() {
-        return new BCX509CertificateBuilder(
+        return new BouncyCastleX509CertificateBuilder(
             this.certificateAuthority, this.securityProvider, this.subjectKeyIdentifierWriter);
     }
 
