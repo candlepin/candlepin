@@ -10,10 +10,11 @@ RUN dnf -y --setopt install_weak_deps=False update && \
     dnf clean all
 
 # Prepare Tomcat
-COPY apache-tomcat-9.0.76.tar.gz /tmp/
-RUN tar xzf /tmp/apache-tomcat-9.0.76.tar.gz -C /tmp && \
+ARG TOMCAT_VERSION=9.0.87
+COPY apache-tomcat-${TOMCAT_VERSION}.tar.gz /tmp/
+RUN tar xzf /tmp/apache-tomcat-${TOMCAT_VERSION}.tar.gz -C /tmp && \
     mkdir /opt/tomcat && \
-    mv /tmp/apache-tomcat-9.0.76/* /opt/tomcat/
+    mv /tmp/apache-tomcat-${TOMCAT_VERSION}/* /opt/tomcat/
 
 # Prepare Candlepin
 RUN mkdir -p /app/build

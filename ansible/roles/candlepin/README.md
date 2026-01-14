@@ -141,7 +141,7 @@ pip3 install molecule molecule[podman] molecule-containers
 
 You might also want ansible-lint with `pip3 install ansible-lint` or `yum install python3-ansible-lint`.
 To run unit tests simply run `molecule test`.  By default this will test on `fedora35`, or you can
-`export MOLECULE_DISTRO='centos8'` (or `centos7`) to change the test target.
+`export MOLECULE_DISTRO='centos9'` to change the test target.
 
 License
 -------

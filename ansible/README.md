@@ -24,21 +24,21 @@ On Fedora installations, the following command can be run to install the necessa
 
 ## Getting Started
 Once the prerequisites are installed, the Vagrant image can be brought up with the `vagrant up`
-command. By default this will bring up the el8 box, but the el7 box can be brought up by specifying
-it during the `up` operation:
+command. By default this will bring up the el9 box, or you can specify it
+during the `up` operation:
 
-`vagrant up el7`.
+`vagrant up el9`
 
 After the box is brought up, you can connect to it with the `vagrant ssh` command. If no box is
-specified, it will default to the el8 box:
+specified, it will default to the el9 box:
 
-`vagrant ssh el8`
+`vagrant ssh el9`
 
 When the box is no longer needed, it can be destroyed with the `vagrant destroy` command. If no
 box is specified, all Candlepin Vagrant boxes will be destroyed, so it's probably best to specify
 exactly which box to destroy when doing so:
 
-`vagrant destroy el8`
+`vagrant destroy el9`
 
 This is the basic lifecycle of a Vagrant box. For more details on managing boxes, see the Vagrant
 CLI documentation linked below [1].
@@ -71,13 +71,13 @@ regenerate the database schema, regenerate the default candlepin.conf configurat
 test data. This can be done by either exporting the environment variable and setting it to true, or
 assigning it temporarily on the command line while bringing up or provisioning the target box:
 
-`cp_deploy=true vagrant up el8`
+`cp_deploy=true vagrant up el9`
 
 Candlepin's default configuration assumes PostgreSQL will be used as its database, so
 if it was not configured during the provisioning step, the deploy arguments will need to be adjusted
 accordingly:
 
-`cp_deploy=true cp_deploy_args="-gtma" vagrant up el8`
+`cp_deploy=true cp_deploy_args="-gtma" vagrant up el9`
 
 
 
@@ -95,7 +95,7 @@ variable isn't readable as a file, YourKit configuration will be skipped. To ens
 properly for a given system, these can be explicitly set on the command line while a Vagrant box
 is being brought up or provisioned:
 
-`cp_configure_debugging=true cp_yourkit_library="/path/to/linux-x86-64/libyjpagent.so" vagrant up el8`
+`cp_configure_debugging=true cp_yourkit_library="/path/to/linux-x86-64/libyjpagent.so" vagrant up el9`
 
 Note that regardless of the host system being used to bring up the Vagrant boxes, the YourKit
 library provided *must* be the Linux-compatible x86-64 variant.
@@ -118,7 +118,7 @@ following details:
 - Locate the private key Vagrant generates for the SSH connections to the desired box, located at
   `{candlepin_repo}/.vagrant/machines/{box_name}/libvirt/private_key`, where `{candlepin_repo}` is
   the directory on the host system where the Candlepin repo has been checked out, and `{box_name}`
-  is the name of the desired Vagrant box (i.e. el7 or el8).
+  is the name of the desired Vagrant box (i.e. el9).
 - Leave the passphrase field empty
 
 At this point, the connection should be usable for profiling.
@@ -151,7 +151,7 @@ Next, open the `main.yml` file and add your desired Ansible tasks:
 
 Then, reprovision (or destroy and re-create) the box to execute the tasks in the role:
 
-`vagrant provision el8`
+`vagrant provision el9`
 
 The tasks can get as complicated as permitted by Ansible, however that is beyond the scope of this
 document. For further details on creating an Ansible role, see the details at the document linked
