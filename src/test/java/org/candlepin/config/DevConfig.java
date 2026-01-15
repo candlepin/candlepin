@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
@@ -73,24 +74,56 @@ public class DevConfig implements Configuration {
 
     @Override
     public boolean getBoolean(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        if (!this.config.containsKey(key)) {
+            throw new NoSuchElementException("key not found: " + key);
+        }
+
         String value = this.config.get(key);
         return Boolean.parseBoolean(value);
     }
 
     @Override
     public int getInt(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        if (!this.config.containsKey(key)) {
+            throw new NoSuchElementException("key not found: " + key);
+        }
+
         String value = this.config.get(key);
         return Integer.parseInt(value);
     }
 
     @Override
     public long getLong(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        if (!this.config.containsKey(key)) {
+            throw new NoSuchElementException("key not found: " + key);
+        }
+
         String value = this.config.get(key);
         return Long.parseLong(value);
     }
 
     @Override
     public String getString(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        if (!this.config.containsKey(key)) {
+            throw new NoSuchElementException("key not found: " + key);
+        }
+
         String value = this.config.get(key);
         if (value != null) {
             return value.trim();
@@ -98,23 +131,40 @@ public class DevConfig implements Configuration {
         return null;
     }
 
-    @Override
-    public List<String> getList(String key) {
-        String value = this.config.get(key);
-        if (value == null || StringUtils.isEmpty(value)) {
-            return new ArrayList<>();
-        }
-        return parseList(value);
-    }
-
-    public List<String> parseList(String value) {
+    private List<String> parseList(String value) {
         return Arrays.stream(value.split(","))
             .map(String::trim)
             .toList();
     }
 
     @Override
+    public List<String> getList(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        if (!this.config.containsKey(key)) {
+            throw new NoSuchElementException("key not found: " + key);
+        }
+
+        String value = this.config.get(key);
+        if (value == null || StringUtils.isEmpty(value)) {
+            return new ArrayList<>();
+        }
+
+        return parseList(value);
+    }
+
+    @Override
     public Set<String> getSet(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        if (!this.config.containsKey(key)) {
+            throw new NoSuchElementException("key not found: " + key);
+        }
+
         return new HashSet<>(getList(key));
     }
 
