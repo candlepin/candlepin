@@ -392,8 +392,8 @@ public class JobManager implements ModeChangeListener {
      *  the name of this Candlepin node
      */
     private String getNodeName() {
-        String name = this.configuration.getString(ConfigProperties.ASYNC_JOBS_NODE_NAME);
-        return name != null ? name : Util.getHostname();
+        return this.configuration.getOptionalString(ConfigProperties.ASYNC_JOBS_NODE_NAME)
+            .orElse(Util.getHostname());
     }
 
     /**
