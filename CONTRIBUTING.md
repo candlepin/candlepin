@@ -72,18 +72,182 @@ CANDLEPIN-1234: short summary
 ```
 
 ### Continuous Integration
-TODO
+
+We use [GitHub Actions](https://github.com/features/actions) for Continuous Integration.
+The workflows are defined in `.github/workflows`.
+
+The following checks are run on every Pull Request:
+
+* **Unit Tests**: Runs the unit test suite (`./gradlew test`) and generates coverage reports.
+* **Spec Tests**: Runs the specification tests against different database backends (PostgreSQL, MariaDB) and modes (Standalone, Hosted). This involves spinning up the necessary containers (Candlepin, Database) and executing the tests.
+* **Checkstyle**: Enforces code style guidelines using Checkstyle (`./gradlew checkstyle`).
+* **Woke**: Detects non-inclusive language in the source code.
+* **Validate Translations**: Validates translation files (`./gradlew validate_translation`).
+* **Jira Check**: Validates that the Jira ticket associated with the PR has a valid Target Version.
+
+Other workflows include:
+* **Sonar Analysis**: Runs SonarQube analysis for code coverage and security on long-lived branches.
+* **I18n**: Periodically runs internationalization scripts to sync translations.
+
+You can view the status of these checks at the bottom of your Pull Request.
 
 ### Testing and documentation
-TODO
+#### Javadoc
+
+##### Formatting
+
+###### General form
+
+The basic formatting of Javadoc blocks is as seen in this example:
+
+```java
+/**
+ * Multiple lines of Javadoc text are written here,
+ * wrapped normally...
+ */
+public int method(String p1) { ... }
+```
+
+... or in this single-line example:
+
+```java
+/** An especially short bit of Javadoc. */
+```
+
+The basic form is always acceptable. The single-line form may be substituted when the entirety of the Javadoc block (including comment markers) can fit on a single line. Note that this only applies when there are no block tags such as `@param`.
+
+###### Paragraphs
+
+Javadoc paragraphs should be separated by a single line containing only an unclosed paragraph tag (`<p>`) at the same indentation of the section in which it occurs. Each subsequent paragraph in a given section should use the same level of indentation. Lines containing only a paragraph tag should not be preceded or followed by a blank line.
+
+When additional HTML is used in a Javadoc block, logical paragraphs beginning with, or immediately following, block-level HTML elements, such as `<ul>` or `<table>`, are not preceded with a paragraph tag.
+
+Example:
+
+```java
+/**
+ * A Javadoc block with many paragraphs
+ * <p>
+ * Although it may violate HTML best practices, the paragraph tag
+ * should not be closed in either form (<p/> or <p></p>).
+ *
+ * <ul>
+ *   <li>lists, tables, and block-level elements or structures need
+ *   not be separated with paragraph tags.</li>
+ * </ul>
+ *
+ * The paragraph following a block-level HTML element should not be
+ * explicitly separated by paragraph tags. Blank lines are optional
+ * if it improves readability.
+ * <p>
+ * <strong>Note that</strong> paragraphs beginning with inline
+ * elements should still be preceded by a paragraph tag.
+ */
+```
+
+###### HTML
+
+HTML within Javadoc should attempt to follow conventions for well-formed HTML. This is largely outside the scope of this style guide, but some common basics will be covered here. In cases where HTML best practices are at odds with the style defined by this document, those defined in this document take precedence.
+
+Unfortunately, Javadoc's format imposes a three-character prefix (space-asterisk-space) on each line of its content, which makes aligning with the normal tab stops defined in code difficult, unwieldy, and/or inconsistent. As such, block-level indentation in Javadoc will deviate from the indentation rules established for Java code.
+
+When nesting tags, such as when building a table or a list, each set of block-level tags should add an additional level of indentation of +2 spaces from the containing paragraph or block.
+
+Example:
+
+```java
+/**
+ * Javadoc using HTML tags should attempt to keep them well-formed
+ * by following block-level indentation rules for block tags.
+ * <p>
+ * This is a list of things:
+ * <ul>
+ *   <li>item 1</li>
+ *   <li>item 2</li>
+ *   <li>
+ *     a list item, but one with enough stuff in it to justify
+ *     treating it as a <em>new</em> block.
+ *   </li>
+ *   <li>inline list items with enough content to require continuation
+ *   are also acceptable, and do not require additional indentation</li>
+ * </ul>
+ */
+```
+
+###### Block tags
+
+Any of the standard "block tags" that are used appear in the order `@deprecated`, `@param`, `@throws`, `@return`, and these four types never appear with an empty description.
+
+Block tags with a parameter, such as `@param` and `@throws`, should define the parameter on the same line as the tag itself, followed by a line break before the description.
+
+The description accompanying all block tags should begin on the following line, indented four spaces from the indentation of the Javadoc block (not the tag declaration). If the description does not fit on a single line, following the column length limits, it should be separated with a line break, and the continuation line should be indented at the same level as the previous line of the description.
+
+Example:
+
+```java
+/**
+ * A well-formed Javadoc description. Long lines should be wrapped
+ * following normal column length limits; but continuations should
+ * not have additional indentation.
+ *
+ * @deprecated
+ *  An explanation as to why the method is deprecated
+ *
+ * @param myParam
+ *  A description of myParam and any additional context. If
+ *  the description spans multiple lines, the lines should be
+ *  indented at the same level.
+ *
+ * @throws IllegalArgumentException
+ *  when an argument is illegal
+ *
+ * @throws AnotherException
+ *  when some other thing goes horribly wrong
+ *
+ * @return
+ *  a description of the value returned by this method
+ */
+```
+
+##### The summary fragment
+
+Each Javadoc block begins with a brief summary fragment. This fragment is very important: it is the only part of the text that appears in certain contexts such as class and method indexes.
+
+This is a fragment—a noun phrase or verb phrase, not a complete sentence. It does not begin with `A {@code Foo} is a...`, or `This method returns...`, nor does it form a complete imperative sentence like `Save the record.`. However, the fragment is capitalized and punctuated as if it were a complete sentence.
+
+Tip: A common mistake is to write simple Javadoc in the form `/** @return the customer ID */`. This is incorrect, and should be changed to `/** Returns the customer ID */` or `/** {@return the customer ID} */`.
+
+##### Where Javadoc is used
+
+At a minimum, Javadoc is present for every visible class, member, or record component, with a few exceptions noted below. A top-level class is visible if it is public; a member is visible if it is public or protected and its containing class is visible; and a record component is visible if its containing record is visible.
+
+Additional Javadoc content may also be present, as explained in the [Non-required Javadoc](#non-required-javadoc) section.
+
+###### Exception: self-explanatory members
+
+Javadoc is optional for "simple, obvious" members and record components, such as a `getFoo()` method, if there really and truly is nothing else worthwhile to say but "the foo".
+
+It is important to note that this rule should not be used as justification for omitting documentation in cases where the method or its value contain information or require additional context that a typical reader may not have. Some examples:
+
+A record component named `canonicalName` should be documented if a typical reader may not know what the term "canonical name" means.
+
+A method named `getCanonicalName` should be documented if its output could deviate with changes to the object's state (e.g. the default state is null, an empty string, or some sentinel value)
+
+###### Exception: overrides
+
+Javadoc is not required on a method that overrides a supertype method, unless its implementation adds additional edge cases, details, or restrictions on the method's original contract.
+
+###### Non-required Javadoc
+
+Other classes, members, and record components have Javadoc as needed or desired.
+
+Whenever an implementation comment would be used to define the overall purpose or behavior of a class or member, that comment is written as Javadoc instead (using `/**`).
+
+Note that non-required Javadoc is still required to follow the formatting rules of [Formatting](#formatting) and [The summary fragment](#the-summary-fragment).
 
 ## Setup
-If you have not done so on this machine, you need to:
-
-- Install Git and configure your GitHub access
-- Install Java SDK 8 or 11+ (OpenJDK recommended)
-
-Docker is not strictly necessary: it is used to run the MariaDB and PostgreSQL tests which are not enabled by default.
+For full developer deployment instructions, see
+https://www.candlepinproject.org/docs/candlepin/developer_deployment.html#developer-deployment.
 
 ### IDE Config and Code Style
 TODO
