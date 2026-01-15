@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 public class EnvironmentContentOverrideTest extends ContentOverrideTest<EnvironmentContentOverride> {
 
     /**
-     * @{inheritDoc}
+     * {@inheritDoc}
      */
     @Override
     protected EnvironmentContentOverride getTestInstance() {

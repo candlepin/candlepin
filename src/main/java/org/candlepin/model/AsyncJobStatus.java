@@ -773,7 +773,7 @@ public class AsyncJobStatus extends AbstractHibernateObject {
     }
 
     /**
-     * @{inheritDoc}
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

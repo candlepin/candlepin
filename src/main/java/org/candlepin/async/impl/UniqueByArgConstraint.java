@@ -78,7 +78,7 @@ public class UniqueByArgConstraint implements JobConstraint {
     }
 
     /**
-     * @{inheritDoc}
+     * {@inheritDoc}
      */
     @Override
     public Collection<String> test(AsyncJobStatusCurator jobCurator, AsyncJobStatus inbound) {
