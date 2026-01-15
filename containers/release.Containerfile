@@ -9,10 +9,11 @@ RUN microdnf -y update && \
 USER root
 
 # Prepare Tomcat
-RUN wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.76/bin/apache-tomcat-9.0.76.tar.gz; \
-    tar xzf apache-tomcat-9.0.76.tar.gz; \
+ARG TOMCAT_VERSION=9.0.87
+RUN wget https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz; \
+    tar xzf apache-tomcat-${TOMCAT_VERSION}.tar.gz; \
     mkdir /opt/tomcat; \
-    mv apache-tomcat-9.0.76/* /opt/tomcat/
+    mv apache-tomcat-${TOMCAT_VERSION}/* /opt/tomcat/
 
 # Prepare Candlepin
 RUN mkdir -p /app/build/candlepin

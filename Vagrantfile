@@ -18,6 +18,22 @@ ANSIBLE_VARS = {
   :cp_deploy => false
 }
 
+# Commands that must always specify a target name
+commands_requiring_target = %w[up halt resume ssh provision destroy]
+
+cmd = ARGV[0]
+
+if commands_requiring_target.include?(cmd)
+  # Any argument that is not a flag is considered a target machine
+  targets = ARGV.drop(1).reject { |arg| arg.start_with?("-") }
+
+  if targets.empty?
+    abort <<~MSG
+      'vagrant #{cmd}' requires a machine name (e.g. vagrant #{cmd} el9)
+    MSG
+  end
+end
+
 def configure_ansible_provisioning(vm_config)
   vm_config.vm.provision "ansible" do |ansible|
     # ansible.verbose = "vvv"
@@ -76,25 +92,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     provider.graphics_type = "spice"
     provider.video_type = "qxl"
     provider.machine_virtual_size = 30
-  end
-
-  config.vm.define("el8", primary: true) do |vm_config|
-    vm_config.vm.box = "almalinux/8"
-    vm_config.vm.host_name = "candlepin-el8.example.com"
-
-    # Increase box disk size and resize partitions accordingly
-    vm_config.vm.disk :disk, size: "30GB", primary: true
-    vm_config.vm.provision "shell", inline: "echo '- +' | sfdisk --no-reread -N 4 /dev/vda && partprobe && xfs_growfs /dev/vda4"
-
-    # Vagrant allows to create a forwarded port mapping which allows access to a specific port
-    # within the guest machine from a port on the host machine.
-    #
-    # Uncomment these lines to forward the Candlepin standard dev ports to this guest machine.
-    # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8080, host: 8080
-    # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8443, host: 8443
-    vm_config.vm.provision "shell", inline: "dnf update -y dnf ca-certificates"
-
-    configure_ansible_provisioning(vm_config)
   end
 
   config.vm.define("el9", autostart: false) do |vm_config|

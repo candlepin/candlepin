@@ -5,15 +5,6 @@
   tags:
     - always
 
-- name: "Include EL8 tasks"
-  ansible.builtin.include_tasks:
-    file: el8/el8_tasks.yml
-  when:
-    - ansible_distribution in ["CentOS", "AlmaLinux", "RedHat"]
-    - ansible_distribution_major_version == "8"
-  tags:
-    - always
-
 - name: "Include EL9 tasks"
   ansible.builtin.include_tasks:
     file: el9/el9_tasks.yml
