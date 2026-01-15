@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2009 - 2023 Red Hat, Inc.
+ *  Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  *  This software is licensed to you under the GNU General Public License,
  *  version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -13,16 +13,26 @@
  *  in this software or its documentation.
  */
 
-
+import javax.inject.Inject
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.process.ExecOperations
+import groovy.ant.FileNameFinder
 
 class GettextExtension {
     String keys_project_dir
 }
 
 class Gettext implements Plugin<Project> {
+
+    private final ExecOperations execOperations
+
+    @Inject
+    Gettext(ExecOperations execOperations) {
+        this.execOperations = execOperations
+    }
+
     void apply(Project project) {
         def extension = project.extensions.create('gettext', GettextExtension)
 
@@ -73,7 +83,7 @@ class Gettext implements Plugin<Project> {
                 logger.lifecycle("Building keys file: ${keys_file}")
                 logger.debug("Executing command: xgettext ${gettext_args.join(" ")}")
 
-                project.exec {
+                execOperations.exec {
                     executable "xgettext"
                     args gettext_args
                     workingDir project.getRootDir()
@@ -89,7 +99,7 @@ class Gettext implements Plugin<Project> {
                 File keys_file = new File("${extension.keys_project_dir}/po/keys.pot")
                 po_files.each {
                     def msgmerge_args = ['-N','--backup', 'none', '-U', it, "${extension.keys_project_dir}/po/keys.pot"]
-                    project.exec {
+                    execOperations.exec {
                         executable "msgmerge"
                         args msgmerge_args
                         workingDir project.getRootDir()
@@ -105,7 +115,7 @@ class Gettext implements Plugin<Project> {
                 def po_files = new FileNameFinder().getFileNames("${extension.keys_project_dir}/po/", '*.po')
                 po_files.each {
                     def msgfmt_args = ['-o', '/dev/null', '-c', it]
-                    project.exec {
+                    execOperations.exec {
                         executable "msgfmt"
                         args msgfmt_args
                         workingDir project.getRootDir()
@@ -121,13 +131,14 @@ class Gettext implements Plugin<Project> {
                 def po_files = new FileNameFinder().getFileNames("${extension.keys_project_dir}/po/", '*.po')
                 po_files.each {
                     def msgattrib_args = ['--set-obsolete', '--ignore-file=po/keys.pot','-o', it, it]
-                    project.exec {
+                    execOperations.exec {
                         executable "msgattrib"
                         args msgattrib_args
                         workingDir project.getRootDir()
                     }
+
                     msgattrib_args = ['--no-obsolete', '-o', it, it]
-                    project.exec {
+                    execOperations.exec {
                         executable "msgattrib"
                         args msgattrib_args
                         workingDir project.getRootDir()
