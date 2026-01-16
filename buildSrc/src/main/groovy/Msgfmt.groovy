@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2009 - 2023 Red Hat, Inc.
+ *  Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  *  This software is licensed to you under the GNU General Public License,
  *  version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,6 +14,7 @@
  */
 
 import java.nio.file.Files
+import javax.inject.Inject
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -24,6 +25,7 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
+import org.gradle.process.ExecOperations
 
 
 
@@ -31,13 +33,16 @@ class MsgfmtExtension {
     String resource = "foo"
 }
 
-class MsgfmtTask extends DefaultTask {
+abstract class MsgfmtTask extends DefaultTask {
 
     private DirectoryProperty po_directory = project.objects.directoryProperty()
         .convention(project.layout.projectDirectory.dir("po"))
 
     private DirectoryProperty output_directory = project.objects.directoryProperty()
         .convention(project.layout.buildDirectory.dir("msgfmt/generated_source"))
+
+    @Inject
+    abstract ExecOperations getExecOperations()
 
     @InputDirectory
     public DirectoryProperty getInputDirectory() {
@@ -113,7 +118,7 @@ class MsgfmtTask extends DefaultTask {
 
                 logger.debug("Executing command: msgfmt ${msgfmt_args.join(" ")}")
 
-                project.exec {
+                getExecOperations().exec {
                     executable "msgfmt"
                     args msgfmt_args
                 }
