@@ -29,10 +29,10 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.impl.HypervisorUpdateAction;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -47,6 +47,7 @@ import java.util.zip.InflaterInputStream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+
 
 /**
  * Asynchronous job for update and creation of hypervisors for specific

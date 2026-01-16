@@ -18,10 +18,10 @@ import org.candlepin.async.JobArguments;
 import org.candlepin.async.ResultSerializationException;
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.hibernate.annotations.GenericGenerator;
 import org.slf4j.event.Level;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Collections;
 import java.util.Date;
@@ -41,7 +41,6 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 import javax.persistence.Version;
 import javax.validation.constraints.NotNull;
-
 
 
 /**

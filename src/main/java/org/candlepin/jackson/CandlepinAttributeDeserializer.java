@@ -16,20 +16,17 @@ package org.candlepin.jackson;
 
 import org.candlepin.exceptions.CandlepinJsonProcessingException;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.TreeNode;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.TreeNode;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.deser.std.StdDeserializer;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 
 
 /**
@@ -40,16 +37,11 @@ public class CandlepinAttributeDeserializer extends StdDeserializer<Map<String, 
     private static Logger log = LoggerFactory.getLogger(CandlepinAttributeDeserializer.class);
 
     public CandlepinAttributeDeserializer() {
-        this(null);
-    }
-
-    public CandlepinAttributeDeserializer(Class<?> valueClass) {
-        super(valueClass);
+        super(Map.class);
     }
 
     @Override
-    public Map<String, String> deserialize(JsonParser parser, DeserializationContext context)
-        throws IOException, JsonProcessingException {
+    public Map<String, String> deserialize(JsonParser parser, DeserializationContext context) {
 
         Map<String, String> output = new HashMap<>();
         TreeNode node = parser.readValueAsTree();
@@ -58,18 +50,18 @@ public class CandlepinAttributeDeserializer extends StdDeserializer<Map<String, 
             log.debug("Processing attributes as a mapping of key/value pairs");
 
             // This is what we want, key/value pairs (hopefully).
-            for (Iterator<String> fieldNames = node.fieldNames(); fieldNames.hasNext();) {
+            for (Iterator<String> fieldNames = node.propertyNames().iterator(); fieldNames.hasNext();) {
                 String field = fieldNames.next();
                 TreeNode valueNode = node.get(field);
 
                 if (!valueNode.isValueNode()) {
                     throw new CandlepinJsonProcessingException(
                         "Unexpected value type in map: " + valueNode.asToken(),
-                        parser.getCurrentLocation()
+                        parser.currentLocation()
                     );
                 }
 
-                JsonParser subparser = valueNode.traverse();
+                JsonParser subparser = valueNode.traverse(context);
                 subparser.nextValue();
                 String value = subparser.getValueAsString();
                 subparser.close();
@@ -90,7 +82,7 @@ public class CandlepinAttributeDeserializer extends StdDeserializer<Map<String, 
                 if (!obj.isObject()) {
                     throw new CandlepinJsonProcessingException(
                         "Unexpected value type in array: " + obj.asToken(),
-                        parser.getCurrentLocation()
+                        parser.currentLocation()
                     );
                 }
 
@@ -99,18 +91,18 @@ public class CandlepinAttributeDeserializer extends StdDeserializer<Map<String, 
                 if (fieldNode == null) {
                     throw new CandlepinJsonProcessingException(
                         "No attribute name defined in attribute object",
-                        parser.getCurrentLocation()
+                        parser.currentLocation()
                     );
                 }
 
                 if (!fieldNode.isValueNode()) {
                     throw new CandlepinJsonProcessingException(
                         "Unexpected value type for attribute name: " + fieldNode.asToken(),
-                        parser.getCurrentLocation()
+                        parser.currentLocation()
                     );
                 }
 
-                JsonParser subparser = fieldNode.traverse();
+                JsonParser subparser = fieldNode.traverse(context);
                 subparser.nextValue();
                 String field = subparser.getValueAsString();
                 subparser.close();
@@ -121,11 +113,11 @@ public class CandlepinAttributeDeserializer extends StdDeserializer<Map<String, 
                     if (!valueNode.isValueNode()) {
                         throw new CandlepinJsonProcessingException(
                             "Unexpected value type for attribute value: " + valueNode.asToken(),
-                            parser.getCurrentLocation()
+                            parser.currentLocation()
                         );
                     }
 
-                    subparser = valueNode.traverse();
+                    subparser = valueNode.traverse(context);
                     subparser.nextValue();
                     String value = subparser.getValueAsString();
                     subparser.close();
@@ -145,7 +137,7 @@ public class CandlepinAttributeDeserializer extends StdDeserializer<Map<String, 
             // Uh oh.
             throw new CandlepinJsonProcessingException(
                 "Unexpected attribute value type: " + node.asToken(),
-                parser.getCurrentLocation()
+                parser.currentLocation()
             );
         }
 

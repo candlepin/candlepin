@@ -14,11 +14,12 @@
  */
 package org.candlepin.jackson;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
-import com.fasterxml.jackson.databind.ser.PropertyWriter;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ser.BeanPropertyWriter;
+import tools.jackson.databind.ser.PropertyWriter;
+import tools.jackson.databind.ser.std.SimpleBeanPropertyFilter;
+
 
 /**
  * CheckableBeanPropertyFilter
@@ -31,32 +32,32 @@ public abstract class CheckableBeanPropertyFilter extends SimpleBeanPropertyFilt
 
     /**
      * Lets us know if the filter can allow the current attribute
-     * to be serialized.  It takes the same input args as serializeAsField
+     * to be serialized.  It takes the same input args as serializeAsProperty/serializeAsElement
      * but should NEVER actually do serialization.  This allows us to use
      * multiple CheckableBeanPropertyFilter objects.
      *
-     * @param obj from serializeAsField
-     * @param jsonGenerator from serializeAsField
-     * @param serializerProvider from serializeAsField
-     * @param writer from serializeAsField
+     * @param obj from serializeAsProperty/serializeAsElement
+     * @param jsonGenerator from serializeAsProperty/serializeAsElement
+     * @param serializationContext from serializeAsProperty/serializeAsElement
+     * @param writer from serializeAsProperty/serializeAsElement
      * @return whether or not the object can be serialized
      */
     public abstract boolean isSerializable(Object obj, JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider, PropertyWriter writer);
+        SerializationContext serializationContext, PropertyWriter writer);
 
     @Override
-    public void serializeAsField(Object obj, JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider, PropertyWriter writer) throws Exception {
-        if (isSerializable(obj, jsonGenerator, serializerProvider, writer)) {
-            writer.serializeAsField(obj, jsonGenerator, serializerProvider);
+    public void serializeAsProperty(Object obj, JsonGenerator jsonGenerator,
+        SerializationContext serializationContext, PropertyWriter writer) throws Exception {
+        if (isSerializable(obj, jsonGenerator, serializationContext, writer)) {
+            writer.serializeAsProperty(obj, jsonGenerator, serializationContext);
         }
     }
 
     @Override
     public void serializeAsElement(Object obj, JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider, PropertyWriter writer) throws Exception {
-        if (isSerializable(obj, jsonGenerator, serializerProvider, writer)) {
-            writer.serializeAsElement(obj, jsonGenerator, serializerProvider);
+        SerializationContext serializationContext, PropertyWriter writer) throws Exception {
+        if (isSerializable(obj, jsonGenerator, serializationContext, writer)) {
+            writer.serializeAsElement(obj, jsonGenerator, serializationContext);
         }
     }
 

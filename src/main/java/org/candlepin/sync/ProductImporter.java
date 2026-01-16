@@ -17,12 +17,12 @@ package org.candlepin.sync;
 import org.candlepin.dto.manifest.v1.ContentDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.FileReader;
@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 
 
 /**

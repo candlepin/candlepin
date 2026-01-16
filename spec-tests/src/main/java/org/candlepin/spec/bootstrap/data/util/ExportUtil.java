@@ -16,7 +16,7 @@ package org.candlepin.spec.bootstrap.data.util;
 
 import org.candlepin.spec.bootstrap.client.ApiClient;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
 
 /**
  * Utility methods for managing manifest exports.

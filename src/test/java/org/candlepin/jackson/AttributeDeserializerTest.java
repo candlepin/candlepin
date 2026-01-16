@@ -17,24 +17,22 @@ package org.candlepin.jackson;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.api.server.v1.AttributeDTO;
-import org.candlepin.util.ObjectMapperFactory;
-
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.candlepin.exceptions.CandlepinJsonProcessingException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
 
+import java.io.IOException;
+import java.util.List;
 
 
 class AttributeDeserializerTest {
@@ -52,7 +50,14 @@ class AttributeDeserializerTest {
     @BeforeEach
     public void setup() {
         this.deserializer = new AttributeDeserializer();
-        this.mapper = ObjectMapperFactory.getObjectMapper();
+
+        // Create a mapper with the deserializer registered
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(List.class, deserializer);
+
+        this.mapper = JsonMapper.builder()
+            .addModule(module)
+            .build();
     }
 
     @Test
@@ -111,11 +116,48 @@ class AttributeDeserializerTest {
         assertNull(findByName(attributes, RAM_KEY).getValue());
     }
 
-    private List<AttributeDTO> deserialize(String json) throws IOException {
-        InputStream stream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
-        JsonParser parser = mapper.getFactory().createParser(stream);
-        DeserializationContext ctxt = mapper.getDeserializationContext();
-        return deserializer.deserialize(parser, ctxt);
+    @Test
+    public void shouldThrowExceptionWithInvalidJson() {
+        String json = invalidJson();
+        CandlepinJsonProcessingException exception = assertThrows(CandlepinJsonProcessingException.class,
+            () -> deserialize(json));
+        assertTrue(exception.getMessage().startsWith("Unexpected error while parsing the root node:"));
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenListContainsMapWithItemValueThatContainsAnotherList() {
+        String json = listValueWithinMapWithinList();
+        CandlepinJsonProcessingException exception = assertThrows(CandlepinJsonProcessingException.class,
+            () -> deserialize(json));
+        assertTrue(exception.getMessage().startsWith("Unexpected value type for attribute value:"));
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenJsonIsJustAPrimitiveType() {
+        String json = "\"just a string\"";
+        CandlepinJsonProcessingException exception = assertThrows(CandlepinJsonProcessingException.class,
+            () -> deserialize(json));
+        assertTrue(exception.getMessage().startsWith("Unexpected attribute value type:"));
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenJsonIsAnArrayThatContainsPrimitiveValues() {
+        String json = "[\"abc\", \"def\", \"123\"]";
+        CandlepinJsonProcessingException exception = assertThrows(CandlepinJsonProcessingException.class,
+            () -> deserialize(json));
+        assertTrue(exception.getMessage().startsWith("Unexpected value type in array:"));
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenArrayContainsAfieldWithKeyNamedNameAndValueIsNotPrimitive() {
+        String json = "[{\"name\": {\"nested\": \"object\"}, \"value\": \"somevalue\"}]";
+        CandlepinJsonProcessingException exception = assertThrows(CandlepinJsonProcessingException.class,
+            () -> deserialize(json));
+        assertTrue(exception.getMessage().startsWith("Unexpected value type for attribute name:"));
+    }
+
+    private List<AttributeDTO> deserialize(String json) {
+        return mapper.readValue(json, new TypeReference<List<AttributeDTO>>() {});
     }
 
     private String mapAttributes() {
@@ -128,6 +170,20 @@ class AttributeDeserializerTest {
     private String listOfMapsAttributes() {
         return String.format("[{\"%s\":\"%s\"},{\"%s\":\"%s\"},{\"%s\":\"%s\"}]",
             ARCH_KEY, ARCH_VALUE,
+            SOCKETS_KEY, SOCKETS_VALUE,
+            RAM_KEY, RAM_VALUE);
+    }
+
+    private String invalidJson() {
+        return String.format("[{\"%s\":[\"%s\":\"%s\"]},{\"%s\":\"%s\"},{\"%s\":\"%s\"}]",
+            ARCH_KEY, "arch_val_1", "arch_val_2",
+            SOCKETS_KEY, SOCKETS_VALUE,
+            RAM_KEY, RAM_VALUE);
+    }
+
+    private String listValueWithinMapWithinList() {
+        return String.format("[{\"%s\":[\"%s\",\"%s\"]},{\"%s\":\"%s\"},{\"%s\":\"%s\"}]",
+            ARCH_KEY, "arch_val_1", "arch_val_2",
             SOCKETS_KEY, SOCKETS_VALUE,
             RAM_KEY, RAM_VALUE);
     }

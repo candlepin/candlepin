@@ -17,11 +17,11 @@ package org.candlepin.spec.bootstrap.client.cert;
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.EntitlementDTO;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERUTF8String;
+
+import tools.jackson.databind.JsonNode;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 
 /**
  * A wrapper providing means for parsing and accessing components of {@link X509Certificate}

@@ -16,15 +16,14 @@ package org.candlepin.jackson;
 
 import org.candlepin.exceptions.CandlepinJsonProcessingException;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.TreeNode;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.TreeNode;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
+
 
 /**
  * The SingleValueWrapDeserializer handles the deserialization of single fields that are
@@ -35,7 +34,7 @@ import java.io.IOException;
  * Classes that extend this class should pass the name of the field they need to unwrap
  * as an argument to the super constructor.
  */
-public abstract class SingleValueWrapDeserializer extends JsonDeserializer<String> {
+public abstract class SingleValueWrapDeserializer extends ValueDeserializer<String> {
 
     private static Logger log = LoggerFactory.getLogger(SingleValueWrapDeserializer.class);
 
@@ -46,8 +45,7 @@ public abstract class SingleValueWrapDeserializer extends JsonDeserializer<Strin
     }
 
     @Override
-    public String deserialize(JsonParser parser, DeserializationContext context)
-        throws IOException {
+    public String deserialize(JsonParser parser, DeserializationContext context) {
 
         TreeNode node = parser.readValueAsTree();
 
@@ -58,28 +56,28 @@ public abstract class SingleValueWrapDeserializer extends JsonDeserializer<Strin
             if (valueNode.isMissingNode()) {
                 throw new CandlepinJsonProcessingException(
                         "The field " + this.fieldName + " is missing from: " + node.asToken(),
-                        parser.getCurrentLocation()
+                        parser.currentLocation()
                 );
             }
 
-            return parseValueNode(valueNode);
+            return parseValueNode(valueNode, context);
         }
         else if (node.isValueNode()) {
             log.debug("Processing {} as a value node.", this.fieldName);
 
-            return parseValueNode(node);
+            return parseValueNode(node, context);
         }
         else {
             // Uh oh.
             throw new CandlepinJsonProcessingException(
                 "Unexpected " + this.fieldName + " node type: " + node.asToken(),
-                parser.getCurrentLocation()
+                parser.currentLocation()
             );
         }
     }
 
-    private String parseValueNode(TreeNode valueNode) throws IOException {
-        JsonParser subParser = valueNode.traverse();
+    private String parseValueNode(TreeNode valueNode, DeserializationContext context) {
+        JsonParser subParser = valueNode.traverse(context);
         subParser.nextValue();
         String value = subParser.getValueAsString();
         subParser.close();

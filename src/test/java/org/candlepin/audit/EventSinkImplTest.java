@@ -47,9 +47,6 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
 import org.apache.activemq.artemis.api.core.ActiveMQBuffers;
 import org.apache.activemq.artemis.api.core.SimpleString;
@@ -67,8 +64,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.util.List;
+import tools.jackson.core.exc.StreamWriteException;
+import tools.jackson.databind.ObjectMapper;
 
+import java.util.List;
 
 
 /**
@@ -170,7 +169,7 @@ public class EventSinkImplTest {
 
     @Test
     public void sendEventShouldNotFailWhenObjectMapperThrowsException() throws Exception {
-        doThrow(new JsonGenerationException("Nothing serious!"))
+        doThrow(mock(StreamWriteException.class))
             .when(mapper).writeValueAsString(any());
         Event event = mock(Event.class);
 

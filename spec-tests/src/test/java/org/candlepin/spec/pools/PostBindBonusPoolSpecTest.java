@@ -42,16 +42,16 @@ import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import tools.jackson.databind.JsonNode;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 
 @SpecTest
 class PostBindBonusPoolSpecTest {
@@ -1017,7 +1017,7 @@ class PostBindBonusPoolSpecTest {
     }
 
     private void verifyBindTimePoolCreation(ApiClient client, OwnerDTO owner, PoolDTO pool,
-        ConsumerDTO consumer, boolean shouldCreate) throws ApiException, JsonProcessingException {
+        ConsumerDTO consumer, boolean shouldCreate) throws ApiException {
         List<String> poolIdsBefore = client.owners().listOwnerPools(owner.getKey())
             .stream().map(ownerPool -> ownerPool.getId())
             .collect(Collectors.toList());

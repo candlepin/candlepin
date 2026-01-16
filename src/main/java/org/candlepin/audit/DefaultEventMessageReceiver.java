@@ -16,13 +16,14 @@ package org.candlepin.audit;
 
 import org.candlepin.async.impl.ActiveMQSessionFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.databind.ObjectMapper;
+
 
 /**
  * A MessageReceiver implementation that on failure to handle an event, will put the message

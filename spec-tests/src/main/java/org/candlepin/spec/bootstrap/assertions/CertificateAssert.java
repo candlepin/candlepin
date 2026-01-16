@@ -22,16 +22,17 @@ import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 import org.candlepin.spec.bootstrap.data.builder.OID;
 import org.candlepin.spec.bootstrap.data.util.X509HuffmanDecodeUtil;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.ListAssert;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERUTF8String;
 
+import tools.jackson.databind.JsonNode;
+
 import java.io.IOException;
 import java.util.List;
+
 
 public class CertificateAssert extends AbstractAssert<CertificateAssert, X509Cert> {
 

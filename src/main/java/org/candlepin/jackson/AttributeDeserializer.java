@@ -17,17 +17,16 @@ package org.candlepin.jackson;
 import org.candlepin.dto.api.server.v1.AttributeDTO;
 import org.candlepin.exceptions.CandlepinJsonProcessingException;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.TreeNode;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.TreeNode;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.deser.std.StdDeserializer;
+
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 
@@ -39,11 +38,7 @@ public class AttributeDeserializer extends StdDeserializer<List<AttributeDTO>> {
     private static Logger log = LoggerFactory.getLogger(AttributeDeserializer.class);
 
     public AttributeDeserializer() {
-        this(null);
-    }
-
-    public AttributeDeserializer(Class<?> valueClass) {
-        super(valueClass);
+        super(List.class);
     }
 
     @Override
@@ -55,7 +50,7 @@ public class AttributeDeserializer extends StdDeserializer<List<AttributeDTO>> {
 
         if (node.isObject()) {
             log.debug("Processing attributes as a mapping of key/value pairs");
-            parseMap(output, node);
+            parseMap(output, node, context);
         }
         else if (node.isArray()) {
             log.debug("Processing attributes as an array of attribute objects");
@@ -69,30 +64,30 @@ public class AttributeDeserializer extends StdDeserializer<List<AttributeDTO>> {
                 if (!obj.isObject()) {
                     throw new CandlepinJsonProcessingException(
                         "Unexpected value type in array: " + obj.asToken(),
-                        parser.getCurrentLocation()
+                        parser.currentLocation()
                     );
                 }
 
                 TreeNode fieldNode = obj.get("name");
 
                 if (fieldNode == null) {
-                    parseMap(output, obj);
+                    parseMap(output, obj, context);
                     continue;
                 }
 
                 if (!fieldNode.isValueNode()) {
                     throw new CandlepinJsonProcessingException(
                         "Unexpected value type for attribute name: " + fieldNode.asToken(),
-                        parser.getCurrentLocation()
+                        parser.currentLocation()
                     );
                 }
 
-                String field = parseNode(fieldNode);
+                String field = parseNode(fieldNode, context);
 
                 TreeNode valueNode = obj.get("value");
 
                 if (valueNode != null) {
-                    String value = parseValue(valueNode);
+                    String value = parseValue(valueNode, context);
                     log.debug("Found key/value pair: {} = {}", field, value);
                     output.add(createAttribute(field, value));
                 }
@@ -108,7 +103,7 @@ public class AttributeDeserializer extends StdDeserializer<List<AttributeDTO>> {
             // Uh oh.
             throw new CandlepinJsonProcessingException(
                 "Unexpected attribute value type: " + node.asToken(),
-                parser.getCurrentLocation()
+                parser.currentLocation()
             );
         }
 
@@ -119,45 +114,46 @@ public class AttributeDeserializer extends StdDeserializer<List<AttributeDTO>> {
         try {
             return parser.readValueAsTree();
         }
-        catch (IOException e) {
+        catch (JacksonException e) {
             throw new CandlepinJsonProcessingException(
-                "Unexpected error while parsing the root node.",
-                parser.getCurrentLocation()
+                "Unexpected error while parsing the root node: " + e.getMessage(),
+                parser.currentLocation()
             );
         }
     }
 
-    private void parseMap(List<AttributeDTO> output, TreeNode obj) throws CandlepinJsonProcessingException {
-        Iterator<String> fieldNames = obj.fieldNames();
-        while (fieldNames.hasNext()) {
-            String field = fieldNames.next();
-            String value = parseValue(obj.get(field));
+    private void parseMap(List<AttributeDTO> output, TreeNode obj, DeserializationContext context)
+        throws CandlepinJsonProcessingException {
+        obj.propertyNames().stream().forEach(field -> {
+            String value = parseValue(obj.get(field), context);
             log.debug("Found key/value pair: {} = {}", field, value);
             output.add(createAttribute(field, value));
-        }
+        });
     }
 
     private AttributeDTO createAttribute(String field, String value) {
         return new AttributeDTO().name(field).value(value);
     }
 
-    private String parseValue(TreeNode node) throws CandlepinJsonProcessingException {
+    private String parseValue(TreeNode node, DeserializationContext context)
+        throws CandlepinJsonProcessingException {
         if (!node.isValueNode()) {
             throw new CandlepinJsonProcessingException(
                 "Unexpected value type for attribute value: " + node.asToken());
         }
 
-        return parseNode(node);
+        return parseNode(node, context);
     }
 
-    private String parseNode(TreeNode node) throws CandlepinJsonProcessingException {
-        JsonParser subparser = node.traverse();
+    private String parseNode(TreeNode node, DeserializationContext context)
+        throws CandlepinJsonProcessingException {
+        JsonParser subparser = node.traverse(context);
         String value;
         try {
             subparser.nextValue();
             value = subparser.getValueAsString();
         }
-        catch (IOException e) {
+        catch (JacksonException e) {
             throw new CandlepinJsonProcessingException(
                 "Unexpected eeror while parsing the value of: " + node.asToken());
         }
@@ -172,7 +168,7 @@ public class AttributeDeserializer extends StdDeserializer<List<AttributeDTO>> {
         try {
             parser.close();
         }
-        catch (IOException e) {
+        catch (JacksonException e) {
             throw new CandlepinJsonProcessingException(
                 "Unexpected error while closing the parser.");
         }

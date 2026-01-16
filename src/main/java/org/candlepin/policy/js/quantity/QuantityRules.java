@@ -29,10 +29,10 @@ import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.RulesObjectMapper;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.core.type.TypeReference;
 
 import java.util.Date;
 import java.util.List;
@@ -40,7 +40,6 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
-
 
 
 /**
