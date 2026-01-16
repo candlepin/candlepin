@@ -98,7 +98,7 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
 
     /**
      * Initializes a new ProductData instance with the specified Red Hat ID and name.
-     * <p/></p>
+     * <p></p>
      * <strong>Note</strong>: This constructor passes the provided values to their respective
      * mutator methods, and does not capture any exceptions they may throw as due to malformed
      * values.

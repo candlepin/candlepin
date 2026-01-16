@@ -940,7 +940,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
     /**
      * Deletes the given collection of entitlements.
-     * <p/></p>
+     * <p></p>
      * Note: Unlike the standard delete method, this method does not perform a lookup on an entity
      * before deleting it.
      *

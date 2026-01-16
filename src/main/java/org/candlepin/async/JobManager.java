@@ -1778,7 +1778,7 @@ public class JobManager implements ModeChangeListener {
     }
 
     /**
-     * @{inheritDoc}
+     * {@inheritDoc}
      */
     @Override
     public void handleModeChange(CandlepinModeManager modeManager, Mode previousMode, Mode currentMode) {

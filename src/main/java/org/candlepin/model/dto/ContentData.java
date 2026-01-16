@@ -93,7 +93,7 @@ public class ContentData extends CandlepinDTO implements ContentInfo {
 
     /**
      * Initializes a new ContentData instance with the specified values.
-     * <p/></p>
+     * <p></p>
      * <strong>Note</strong>: This constructor passes the provided values to their respective
      * mutator methods, and does not capture any exceptions they may throw due to malformed
      * values.

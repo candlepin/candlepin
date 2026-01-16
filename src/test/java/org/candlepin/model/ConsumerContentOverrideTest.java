@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 public class ConsumerContentOverrideTest extends ContentOverrideTest<ConsumerContentOverride> {
 
     /**
-     * @{inheritDoc}
+     * {@inheritDoc}
      */
     @Override
     protected ConsumerContentOverride getTestInstance() {

@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 public class ActivationKeyContentOverrideTest extends ContentOverrideTest<ActivationKeyContentOverride> {
 
     /**
-     * @{inheritDoc}
+     * {@inheritDoc}
      */
     @Override
     protected ActivationKeyContentOverride getTestInstance() {
