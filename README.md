@@ -14,3 +14,6 @@ Candlepin server exposes functionality over a REST API, and stores data in a bac
   
 # How to build Candlepin  
 The build instructions are available in the [contribution guide](CONTRIBUTING.md).
+
+# Issue tracker
+Candlepin issues are tracked at: https://issues.redhat.com/projects/CANDLEPIN/issues.
