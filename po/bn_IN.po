@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-11 07:16+0000\n"
+"POT-Creation-Date: 2026-01-08 07:16+0000\n"
 "PO-Revision-Date: 2023-01-25 19:52+0000\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Bengali (India) <https://translate.fedoraproject.org/projects/"
@@ -61,176 +61,181 @@ msgstr "{0} দ্বারা {1} একক সংশোধিত করা হ
 msgid "{0} deleted the unit {1}"
 msgstr "{0} দ্বারা {1} একক মোছা হয়েছে"
 
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
+#, java-format
+msgid "{0} updated multiple consumers"
+msgstr ""
+
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
 #, java-format
 msgid "{0} created new owner {1}"
 msgstr "{0} দ্বারা নতুন মালিক {1} তৈরি করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
 #, java-format
 msgid "{0} modified the owner {1}"
 msgstr "{0} দ্বারা {1} মালিকের তথ্য পরিবর্তন করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
 #, java-format
 msgid "{0} deleted the owner {1}"
 msgstr "{0} দ্বারা {1} মালিকের তথ্য মুছে ফেলা হয়েছে"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
 #, java-format
 msgid "{0} attached a subscription for product {1}"
 msgstr "{0} দ্বারা {1} প্রোডাক্টের জন্য একটি সাবস্ক্রিপশন যোগ করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
 #, java-format
 msgid "{0} modified a subscription for product {1}"
 msgstr "{0} দ্বারা {1} উৎপাদনের জন্য সাবস্ক্রিপশন পরিবর্তন করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:131
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
 #, java-format
 msgid "{0} returned the subscription for {1}"
 msgstr "{0} দ্বারা {1}-র জন্য সাবস্ক্রিপশন ফেরৎ দেওয়া হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
 #, java-format
 msgid "{0} created a pool for product {1}"
 msgstr "{0} দ্বারা {1} উৎপাদনের জন্য একটি পুল নির্মিত হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
 #, java-format
 msgid "{0} modified a pool for product {1}"
 msgstr "{0} দ্বারা {1} উৎপাদনের জন্য একটি পুল পরিবর্তিত হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
 #, java-format
 msgid "{0} deleted a pool for product {1}"
 msgstr "{0} দ্বারা {1} উৎপাদনের জন্য একটি পুল মুছে ফেলা হয়েছে"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
 #, java-format
 msgid "{0} created an export for unit {1}"
 msgstr "{0} দ্বারা {1} এককের একটি রপ্তানি তৈরি করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
 #, java-format
 msgid "{0} imported a manifest for owner {1}"
 msgstr "{0} দ্বারা {1} মালিকের জন্য একটি তালিকা অর্থাৎ ম্যানিফেস্ট ইম্পোর্ট করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
 #, java-format
 msgid "{0} created new user {1}"
 msgstr "{0} দ্বারা নতুন ব্যবহারকারী {1} তৈরি করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
 #, java-format
 msgid "{0} modified the user {1}"
 msgstr "{0} দ্বারা {1} ব্যবহারকারীর তথ্য পরিবর্তন করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:140
 #, java-format
 msgid "{0} deleted the user {1}"
 msgstr "{0} দ্বারা {1} ব্যবহারকারীর তথ্য পরিবর্তন করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:140
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
 #, java-format
 msgid "{0} created new role {1}"
 msgstr "{0} দ্বারা একটি নতুন ভূমিকা {1} তৈরি করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
 #, java-format
 msgid "{0} modified the role {1}"
 msgstr "{0} দ্বারা {1} ভূমিকা পরিবর্তন করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
 #, java-format
 msgid "{0} deleted the role {1}"
 msgstr "{0} দ্বারা {1} ভূমিকা মুছে ফেলা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
 #, java-format
 msgid "{0} created new subscription for product {1}"
 msgstr "{0} দ্বারা {1} উৎপাদনের জন্য নতুন সাবস্ক্রিপশন তৈরি করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
 #, java-format
 msgid "{0} deleted a subscription for product {1}"
 msgstr "{0} দ্বারা {1} উৎপাদনের জন্য সাবস্ক্রিপশন মুছে ফেলা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
 #, java-format
 msgid "{0} created the activation key {1}"
 msgstr "{0} দ্বারা নতুন অ্যাক্টিভেশন-কি {1} প্রস্তুত করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
 #, java-format
 msgid "{0} deleted the activation key {1}"
 msgstr "{0} দ্বারা অ্যাক্টিভেশন-কি {1} মুছে ফেলা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
 #, java-format
 msgid "{0} created the guest id {1}"
 msgstr "{0} দ্বারা নতুন গেস্ট id {1} তৈরি করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
 #, java-format
 msgid "{0} deleted the guest id {1}"
 msgstr "{0} দ্বারা গেস্ট id {1} মুছে ফেলা হয়েছে"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
 #, java-format
 msgid "{0} updated the rules in the database to version {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
 #, java-format
 msgid "{0} removed the rules from the database"
 msgstr "ডেটাবেস থেকে {0} নিয়ম সরানো হয়েছে"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:153
 #, java-format
 msgid "Compliance recalculated for consumer {1}"
 msgstr "{1} উপভোক্তার জন্য সম্মতি পুনঃগণনা করা হয়েছে"
@@ -326,9 +331,9 @@ msgstr ""
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
 #: src/main/java/org/candlepin/controller/ConsumerMigration.java:124
-#, fuzzy
+#, fuzzy, java-format
 #| msgid "Failed to import archive"
-msgid "Failed to migrate "
+msgid "Failed to migrate {0} consumers"
 msgstr "আর্কাইভ ইম্পোর্ট করতে ব্যর্থ"
 
 #: src/main/java/org/candlepin/controller/ContentAccessManager.java:194
