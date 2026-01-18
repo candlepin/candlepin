@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-15 07:10+0000\n"
+"POT-Creation-Date: 2025-09-11 07:11+0000\n"
 "PO-Revision-Date: 2022-11-28 11:19+0000\n"
 "Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
 "Language-Team: Japanese <https://translate.fedoraproject.org/projects/"
@@ -19,18 +19,18 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Weblate 4.14.2\n"
 
-#: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
+#: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
 msgstr "存在しない組織キー \"{}\" に対してヒーリングが試行されました"
 
-#: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:92
+#: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:90
 #: src/main/java/org/candlepin/controller/Entitler.java:211
 #, fuzzy, java-format
 #| msgid "Auto-attach is disabled for owner \"{0}\"."
 msgid "Auto-attach is disabled for owner {0}"
 msgstr "所有者 \"{0}\" の自動アタッチは無効です。"
 
-#: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:97
+#: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:95
 #, fuzzy, java-format
 #| msgid "Auto-attach is disabled for owner \"{0}\"."
 msgid "Auto-attach is disabled for owner {0} while using simple content access"
@@ -240,7 +240,7 @@ msgstr "コンシューマー {1} のコンプライアンスが再計算され�
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
 #: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:70
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1497
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1503
 #, java-format
 msgid "Organization {0} does not exist."
 msgstr "組織 {0} は存在しません。"
@@ -250,14 +250,14 @@ msgid "None of the activation keys specified exist for this org."
 msgstr "指定したアクティベーションキーのいずれもこの組織用には存在しません。"
 
 #: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:93
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1246
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1252
 msgid "Org required to register with activation keys."
 msgstr "組織は、アクティベーションキーで登録する必要があります。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
 #: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:97
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1250
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1256
 msgid "Cannot specify username with activation keys."
 msgstr "アクティベーションキーでユーザー名は指定できません。"
 
@@ -309,7 +309,7 @@ msgid "Invalid Certificate Type"
 msgstr "無効な証明書タイプ"
 
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1422
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1428
 #: src/main/java/org/candlepin/resource/RoleResource.java:115
 #: src/main/java/org/candlepin/resource/UserResource.java:92
 #, java-format
@@ -323,7 +323,7 @@ msgstr "サブスクリプションプール {0} は存在しません。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author noriko
-#: src/main/java/org/candlepin/controller/ConsumerMigration.java:95
+#: src/main/java/org/candlepin/controller/ConsumerMigration.java:92
 #, fuzzy
 #| msgid "Failed to import archive"
 msgid "Failed to migrate consumers"
@@ -375,16 +375,16 @@ msgstr ""
 msgid "A CDN with label {0} does not exist on this system."
 msgstr "ラベルが {0} の CDN はこのシステムには存在しません。"
 
-#: src/main/java/org/candlepin/controller/PoolManager.java:311
+#: src/main/java/org/candlepin/controller/PoolManager.java:314
 msgid "No owner specified, or owner lacks identifying information"
 msgstr "所有者が指定されていないか、所有者に識別情報がありません"
 
-#: src/main/java/org/candlepin/controller/PoolManager.java:320
+#: src/main/java/org/candlepin/controller/PoolManager.java:323
 #, java-format
 msgid "Unable to find an owner with the key \"{0}\""
 msgstr "キー \"{0}\" を持つ所有者が見つかりません"
 
-#: src/main/java/org/candlepin/controller/PoolManager.java:328
+#: src/main/java/org/candlepin/controller/PoolManager.java:331
 #, java-format
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr "ID \"{0}\" を持つ所有者が見つかりません"
@@ -510,17 +510,17 @@ msgstr ""
 msgid "{0} is not a valid value for {1}"
 msgstr "{0} は {1} に対して無効な値です"
 
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:729
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:805
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "変更が同時に行われたため要求は失敗しました、やり直してください。"
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:802
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:803
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr "UUID {0} のシステムは仮想ゲストです。ゲストはありません。"
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1253
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1263
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1325
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1335
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:166
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."
@@ -967,9 +967,9 @@ msgid "Cloud account ID is null or empty"
 msgstr "ジョブ ID は null または空です"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:258
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2613
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2965
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:663
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2676
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3028
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:681
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:127
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:157
 #: src/main/java/org/candlepin/resource/JobResource.java:365
@@ -1013,28 +1013,28 @@ msgstr "ID が \"{0}\" の製品は見つかりませんでした。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:384
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:390
 #, java-format
 msgid "Organization {0} does not exist"
 msgstr "組織 {0} は存在しません"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:509
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:515
 msgid "Insufficient permissions"
 msgstr "十分な権限がありません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:636
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:642
 msgid ""
 "The 'environmentId' query parameter cannot be used without also specifying "
 "the 'owner' query parameter."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:648
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:654
 msgid "Must specify at least one search criteria."
 msgstr "検索基準を少なくとも 1 つ指定してください。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:693
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:699
 #: src/main/java/org/candlepin/resource/DeletedConsumerResource.java:89
 #: src/main/java/org/candlepin/resource/JobResource.java:200
 #: src/main/java/org/candlepin/resource/OwnerResource.java:814
@@ -1047,43 +1047,43 @@ msgid ""
 msgstr ""
 "このエンドポイントは、一度に{0} 件以上の結果を返すことに対応していません。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:712
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:718
 #, java-format
 msgid "Consumer with id {0} could not be found."
 msgstr "ID が {0} のコンシューマーは見つかりませんでした。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:732
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:738
 msgid "No UUIDs provided."
 msgstr "UUID がありません。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1012
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1018
 msgid "Unit type must be specified."
 msgstr "ユニットタイプを指定してください。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1017
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1023
 #, java-format
 msgid "Invalid unit type: {0}"
 msgstr "無効なユニットタイプ: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1148
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1154
 #, java-format
 msgid "Problem creating unit {0}"
 msgstr "ユニット {0} の作成に問題があります"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1229
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1235
 msgid "The consumer cannot use the supplied content access mode."
 msgstr "コンシューマーは、指定されたコンテンツアクセスモードを使用できません。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1238
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1244
 msgid "The consumer cannot be assigned a content access mode."
 msgstr ""
 "コンシューマーには、コンテンツアクセスモードを割り当てることができません。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1260
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1266
 msgid "A unit type of \"person\" cannot be used with activation keys"
 msgstr "\"person\" のユニットタイプは、アクティベーションキーで使用できません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1272
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1278
 msgid "You may not create a manifest consumer via Subscription Manager."
 msgstr ""
 "サブスクリプションマネージャーでは、マニフェストのコンシューマーを作成できま"
@@ -1091,118 +1091,132 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1373
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1379
 msgid "System name cannot begin with # character"
 msgstr "システム名は # 文字で開始できません"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1384
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1388
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1390
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1394
 msgid "System name cannot contain most special characters."
 msgstr "システム名にはほとんどの特殊記号を含めることができません。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1428
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1434
 #, java-format
 msgid "User \"{0}\" has no roles for organization \"{1}\""
 msgstr "ユーザー \"{0}\" は組織 \"{1}\" 用のロールを持っていません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1441
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1447
 #, java-format
 msgid "User \"{0}\" has already registered a personal consumer"
 msgstr "ユーザー \"{0}\" はすでにパーソナルコンシューマーを登録済みです"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1471
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1477
 msgid "You must specify an organization for new units."
 msgstr "新しいユニット用の組織を指定してください。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1488
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1494
 msgid "Client is not authorized to register with any organization"
 msgstr "クライアントには、どの組織にも登録する権限がありません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1518
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1524
 #, java-format
 msgid "{0} is not authorized to register with organization {1}"
 msgstr "{0} は、組織 {1} への登録を承認されていません"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1522
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1528
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:171
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1425
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "キー: {0} を持つ所有者は見つかりません。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1603
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1609
 #, fuzzy, java-format
 #| msgid "An unexpected exception occurred while scheduling job \"{0}\""
 msgid "Error occurred while queueing job: {0}"
 msgstr "ジョブ \"{0}\" のスケジュール中に予期しない例外が発生しました"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1654
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1660
 #, java-format
 msgid "Problem updating unit {0}"
 msgstr "ユニット {0} の更新に問題があります"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1742
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1748
 msgid "This consumer cannot be assigned a content access mode"
 msgstr ""
 "このコンシューマーには、コンテンツアクセスモードを割り当てることができません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1748
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1754
 #, java-format
 msgid "This consumer cannot use the supplied content access mode: {0}"
 msgstr ""
 "このコンシューマーは、指定されたコンテンツアクセスモードを使用できません: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1837
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1843
 #, java-format
 msgid "Environment with ID \"{0}\" could not be found."
 msgstr "ID が \"{0}\" の環境は見つかりませんでした。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1846
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1852
 #, java-format
 msgid "Environment with name \"{0}\" could not be found."
 msgstr "\"{0}\" という名前の環境が見つかりませんでした。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1850
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1856
 msgid "Environment could not be found using provided details."
 msgstr "提供された詳細を使用して環境を見つけることができませんでした。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1855
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1861
 #, java-format
 msgid "Environment \"{0}\" specified more than once."
 msgstr "環境 \"{0}\" が複数回指定されています。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1960
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1966
 #, java-format
 msgid "Problem updating unit {0}. Hypervisor id: {1} is already used."
 msgstr ""
 "ユニット {0} の更新に問題があります。ハイパーバイザー id: {1} は既に使用中で"
 "す。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2172
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2183
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2178
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2189
 #, java-format
 msgid "Consumer with UUID {0} was already deleted."
 msgstr "UUID が {0} のコンシューマーはすでに削除されました。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2199
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2205
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:224
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
 msgstr "次の理由で {0} {1} を登録解除できません: {2}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2238
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2374
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2437
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2242
+msgid ""
+"Invalid certificate serial; serials may only contain numeric characters: {}"
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2291
+msgid "Content access mode does not allow this request."
+msgstr "コンテンツアクセスモードは、この要求を許可しません。"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2298
+#, fuzzy, java-format
+#| msgid "Cannot retrieve content access certificate"
+msgid "Cannot retrieve content access certificate for consumer: {0}"
+msgstr "コンテンツアクセス証明書を取得できません"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2341
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2513
 #, fuzzy
 #| msgid "Unable to create entitlement certificate archive"
 msgid "Unable to create content access payload"
 msgstr "エンタイトルメント証明書アーカイブを作成できません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2277
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2391
 #, fuzzy
 #| msgid "Cannot retrieve content access certificate"
 msgid ""
@@ -1210,56 +1224,46 @@ msgid ""
 "consumer"
 msgstr "コンテンツアクセス証明書を取得できません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2329
-msgid "Content access mode does not allow this request."
-msgstr "コンテンツアクセスモードは、この要求を許可しません。"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2337
-#, fuzzy, java-format
-#| msgid "Cannot retrieve content access certificate"
-msgid "Cannot retrieve content access certificate for consumer: {0}"
-msgstr "コンテンツアクセス証明書を取得できません"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2410
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2450
 msgid "Cannot create export for anonymous cloud consumer"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2434
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2467
 msgid "Unable to create entitlement certificate archive"
 msgstr "エンタイトルメント証明書アーカイブを作成できません"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2503
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2566
 msgid "Cannot bind by multiple parameters."
 msgstr "複数のパラメーターでバインドできません。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2507
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2570
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "自動バインド時に数量を指定できません。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2543
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2606
 #, fuzzy
 #| msgid "Auto-attach is disabled for owner \"{0}\"."
 msgid ""
 "Attach operations are ignored in organizations using simple content access"
 msgstr "所有者 \"{0}\" の自動アタッチは無効です。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2563
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2626
 #, java-format
 msgid "You must first accept Red Hat''s Terms and conditions. Please visit {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2652
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2715
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 "自動添付のリクエストを無視します。これは、組織 \"{0}\" に対して無効となってい"
 "ます。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2657
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2720
 #, java-format
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
@@ -1268,13 +1272,13 @@ msgstr ""
 "自動割り当ての要求を無視します。これは、ハイパーバイザーの自動バインド設定に"
 "より、組織 \"{0}\" に対して無効となっています。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2699
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2762
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr "組織 \"{0}\" は atuo-attach を無効化しました。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2827
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2866
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2890
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2929
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:191
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:209
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:239
@@ -1284,13 +1288,13 @@ msgstr "組織 \"{0}\" は atuo-attach を無効化しました。"
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr "ID \"{0}\" のエンタイトルメントは見つかりませんでした。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2842
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2905
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 "シリアル番号が \"{0}\" のエンタイトルメント証明書は見つかりませんでした。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2859
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2922
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
@@ -1298,22 +1302,22 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2931
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2994
 msgid "Unable to create export archive"
 msgstr "エクスポートアーカイブを作成できません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3073
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3078
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3136
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3141
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "ユニット {0} の ID 証明書の再生成に問題があります"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3114
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3177
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "UUID {0} のシステムは仮想ゲストではありません。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3193
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3256
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "ハイパーバイザー \"{0}\" の削除記録は見つかりませんでした。"
@@ -1423,75 +1427,75 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author noriko
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:180
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:190
 #, java-format
 msgid "No such environment: {0}"
 msgstr "そのような環境はありません: {0}"
 
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:198
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:208
 msgid "no environment update data provided"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:210
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:220
 msgid "environment name must be a non-empty value"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:214
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:224
 #, fuzzy, java-format
 #| msgid "System name cannot begin with # character"
 msgid "environment name cannot exceed {0} characters"
 msgstr "システム名は # 文字で開始できません"
 
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:222
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:232
 #, java-format
 msgid "environment type cannot exceed {0} characters"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:230
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:240
 #, java-format
 msgid "environment description cannot exceed {0} characters"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:240
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:250
 #, java-format
 msgid "environment content prefix cannot exceed {0} characters"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:394
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:412
 #, java-format
 msgid "The content with id {0} has already been promoted in this environment."
 msgstr "ID {0} のコンテンツは、すでにこの環境ではプロモートされています。"
 
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:408
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:426
 #, java-format
 msgid "Some of the content is already associated with Environment: {0}"
 msgstr "一部のコンテンツは、次の環境にすでに関連付けられています: {0}"
 
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:434
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:452
 #, java-format
 msgid "Content does not exist in environment: {0}"
 msgstr "環境にコンテンツがありません: {0}"
 
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:447
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:465
 #, java-format
 msgid "One of the content does not exist in the environment anymore: {0}"
 msgstr "コンテンツの一部が、この環境にありません: {0}"
 
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:483
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:501
 msgid "Two or more environments belong to different organizations"
 msgstr "2 つ以上の環境が異なる組織に属しています"
 
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:631
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:649
 msgid "No environment specified, or environment lacks owner information"
 msgstr "環境が指定されていないか、環境に所有者情報がありません"
 
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:635
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:653
 msgid "No content ID specified"
 msgstr "コンテンツ ID が指定されていません"
 
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:642
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:660
 #, fuzzy, java-format
 #| msgid "Unable to find content with the ID \"{0}\"."
 msgid "Unable to find a content with the ID \"{0}\""
