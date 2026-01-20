@@ -87,11 +87,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   config.vm.provider :libvirt do |provider|
-    provider.cpus = 2
-    provider.memory = 4096
+    provider.cpus = 4
+    provider.memory = 8192
     provider.graphics_type = "spice"
     provider.video_type = "qxl"
-    provider.machine_virtual_size = 30
+    provider.machine_virtual_size = 100
   end
 
   config.vm.define("el9", autostart: false) do |vm_config|
@@ -100,7 +100,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     vm_config.vm.host_name = "candlepin-el9.example.com"
 
     # Increase box disk size and resize partitions accordingly
-    vm_config.vm.disk :disk, size: "30GB", primary: true
+    vm_config.vm.disk :disk, size: "100GB", primary: true
     vm_config.vm.provision "shell", inline: "echo '- +' | sfdisk --no-reread -N 1 /dev/vda && partprobe && resize2fs /dev/vda1"
 
     # Update DNF CA certs
