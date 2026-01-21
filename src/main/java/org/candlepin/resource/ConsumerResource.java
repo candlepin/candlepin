@@ -76,6 +76,7 @@ import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.exceptions.NotImplementedException;
 import org.candlepin.exceptions.TooManyRequestsException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
@@ -404,6 +405,21 @@ public class ConsumerResource implements ConsumerApi {
         return this.ccoCurator.getLayeredContentOverrides(consumer.getId())
             .stream()
             .map(this.translator.getStreamMapper(ContentOverride.class, ContentOverrideDTO.class));
+    }
+
+    /**
+     * Placeholder endpoint to expose packages link on the root resource.
+     *
+     * @param consumerUuid the UUID of the consumer
+     *
+     * @throws NotImplementedException always, as this feature is not implemented
+     */
+    @Override
+    @Transactional
+    @RootResource.LinkedResource
+    public org.candlepin.dto.api.server.v1.ExceptionMessage getConsumerPackages(String consumerUuid) {
+        throw new NotImplementedException(
+            this.i18n.tr("Consumer package profile uploads are not implemented"));
     }
 
     @Override

@@ -59,6 +59,7 @@ public class RootResource implements RootApi {
 
 
     private static final Logger log = LoggerFactory.getLogger(RootResource.class);
+    private static final String PACKAGES_REL = "packages";
     public static final Map<Object, String> RESOURCE_CLASSES;
     private Configuration config;
     private static Iterable<Link> links = null;
@@ -114,10 +115,16 @@ public class RootResource implements RootApi {
         // Hidden resources will be omitted from the supported list we send to
         // the clients:
         Set<String> hideResources = Set.of(config.getString(ConfigProperties.HIDDEN_RESOURCES).split(" "));
+        boolean combinedReportingEnabled = config.getBoolean(ConfigProperties.COMBINED_REPORTING_ENABLED);
         Map<String, Link> links = new HashMap<>();
 
         for (Map.Entry<Object, String> entry : RESOURCE_CLASSES.entrySet()) {
             Link link = this.resourceLink(entry.getKey(), entry.getValue());
+
+            if (PACKAGES_REL.equals(link.getRel()) && !combinedReportingEnabled) {
+                log.debug("Hiding supported resource: {}", link.getRel());
+                continue;
+            }
 
             if (hideResources.contains(link.getRel())) {
                 log.debug("Hiding supported resource: {}", link.getRel());

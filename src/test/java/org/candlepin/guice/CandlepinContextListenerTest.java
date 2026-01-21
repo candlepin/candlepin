@@ -14,9 +14,7 @@
  */
 package org.candlepin.guice;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.mock;
@@ -97,12 +95,10 @@ public class CandlepinContextListenerTest {
         listener.contextInitialized(evt);
         verify(hqlistener).contextInitialized(any(Injector.class));
         verify(ctx).setAttribute(CandlepinContextListener.CONFIGURATION_NAME, config);
-        assertTrue(configRead);
+        assertThat(configRead).isTrue();
 
-        CandlepinCapabilities expected = new CandlepinCapabilities();
-        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
-
-        assertEquals(expected, actual);
+        assertThat(CandlepinCapabilities.getCapabilities())
+            .containsExactlyInAnyOrderElementsOf(new CandlepinCapabilities());
     }
 
     @Test
@@ -116,9 +112,8 @@ public class CandlepinContextListenerTest {
         CandlepinCapabilities expected = new CandlepinCapabilities();
         expected.removeAll(hiddenSet);
 
-        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
-
-        assertEquals(expected, actual);
+        assertThat(CandlepinCapabilities.getCapabilities())
+            .containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
@@ -128,13 +123,9 @@ public class CandlepinContextListenerTest {
         prepareForInitialization();
         listener.contextInitialized(evt);
 
-        CandlepinCapabilities expected = new CandlepinCapabilities();
-        expected.add(CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY);
-        expected.add(CandlepinCapabilities.DEVICE_AUTH_CAPABILITY);
-
-        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
-
-        assertEquals(expected, actual);
+        assertThat(CandlepinCapabilities.getCapabilities())
+            .contains(
+                CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY, CandlepinCapabilities.DEVICE_AUTH_CAPABILITY);
     }
 
     @Test
@@ -144,13 +135,9 @@ public class CandlepinContextListenerTest {
         prepareForInitialization();
         listener.contextInitialized(evt);
 
-        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
-
-        assertFalse(actual.contains(CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY),
-            "keycloak_auth present but not expected");
-
-        assertFalse(actual.contains(CandlepinCapabilities.DEVICE_AUTH_CAPABILITY),
-            "device_auth present but not expected");
+        assertThat(CandlepinCapabilities.getCapabilities())
+            .doesNotContain(
+                CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY, CandlepinCapabilities.DEVICE_AUTH_CAPABILITY);
     }
 
     @Test
@@ -160,12 +147,8 @@ public class CandlepinContextListenerTest {
         prepareForInitialization();
         listener.contextInitialized(evt);
 
-        CandlepinCapabilities expected = new CandlepinCapabilities();
-        expected.add(CandlepinCapabilities.SSL_VERIFY_CAPABILITY);
-
-        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
-
-        assertEquals(expected, actual);
+        assertThat(CandlepinCapabilities.getCapabilities())
+            .contains(CandlepinCapabilities.SSL_VERIFY_CAPABILITY);
     }
 
     @Test
@@ -175,12 +158,9 @@ public class CandlepinContextListenerTest {
         prepareForInitialization();
         listener.contextInitialized(evt);
 
-        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
-
-        assertFalse(actual.contains(CandlepinCapabilities.SSL_VERIFY_CAPABILITY),
-            "ssl_verify_status present but not expected");
+        assertThat(CandlepinCapabilities.getCapabilities())
+            .doesNotContain(CandlepinCapabilities.SSL_VERIFY_CAPABILITY);
     }
-
 
     @Test
     void cloudregCapabilityPresentWhenCloudRegistrationEnabled() {
@@ -189,12 +169,8 @@ public class CandlepinContextListenerTest {
         prepareForInitialization();
         listener.contextInitialized(evt);
 
-        CandlepinCapabilities expected = new CandlepinCapabilities();
-        expected.add(CandlepinCapabilities.CLOUD_REGISTRATION_CAPABILITY);
-
-        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
-
-        assertEquals(expected, actual);
+        assertThat(CandlepinCapabilities.getCapabilities())
+            .contains(CandlepinCapabilities.CLOUD_REGISTRATION_CAPABILITY);
     }
 
     @Test
@@ -204,10 +180,8 @@ public class CandlepinContextListenerTest {
         prepareForInitialization();
         listener.contextInitialized(evt);
 
-        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
-
-        assertFalse(actual.contains(CandlepinCapabilities.CLOUD_REGISTRATION_CAPABILITY),
-            "keycloak_auth present but not expected");
+        assertThat(CandlepinCapabilities.getCapabilities())
+            .doesNotContain(CandlepinCapabilities.CLOUD_REGISTRATION_CAPABILITY);
     }
 
     @Test
@@ -293,7 +267,30 @@ public class CandlepinContextListenerTest {
 
     @Test
     public void exitStageLeft() {
-        assertEquals(Stage.PRODUCTION, listener.getStage(ctx));
+        assertThat(listener.getStage(ctx))
+            .isEqualTo(Stage.PRODUCTION);
+    }
+
+    @Test
+    public void testCombinedReportingCapabilityPresentWhenEnabled() {
+        this.config.setProperty(ConfigProperties.COMBINED_REPORTING_ENABLED, "true");
+
+        prepareForInitialization();
+        listener.contextInitialized(evt);
+
+        assertThat(CandlepinCapabilities.getCapabilities())
+            .contains(CandlepinCapabilities.COMBINED_REPORTING_CAPABILITY);
+    }
+
+    @Test
+    public void testCombinedReportingCapabilityAbsentWhenDisabled() {
+        this.config.setProperty(ConfigProperties.COMBINED_REPORTING_ENABLED, "false");
+
+        prepareForInitialization();
+        listener.contextInitialized(evt);
+
+        assertThat(CandlepinCapabilities.getCapabilities())
+            .doesNotContain(CandlepinCapabilities.COMBINED_REPORTING_CAPABILITY);
     }
 
     private void prepareForInitialization() {

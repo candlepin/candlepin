@@ -333,6 +333,12 @@ public class ConfigProperties {
         ".bulk_set_consumer_env.max_environments";
 
     /**
+     * Configures Candlepin to signal its capability of receiving package profile uploads to Errata,
+     * so that subscription-manager clients can perform package profile uploads.
+     */
+    public static final String COMBINED_REPORTING_ENABLED = "candlepin.combined.reporting.enabled";
+
+    /**
      * Fetches a string representing the prefix for all per-job configuration for the specified job.
      * The job key or class name may be used, but the usage must be consistent.
      *
@@ -591,6 +597,8 @@ public class ConfigProperties {
 
             this.put(BULK_SET_CONSUMER_ENV_MAX_CONSUMER_LIMIT, "1000");
             this.put(BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT, "10");
+
+            this.put(COMBINED_REPORTING_ENABLED, "false");
         }
     };
 
