@@ -3,13 +3,14 @@
 # John Sefler <jsefler@redhat.com>, 2023.
 # Salvatore Cocuzza <info@salvatorecocuzza.it>, 2025.
 # Nikos Moumoulidis <nmoumoul@redhat.com>, 2025.
+# Nathan <nathan95@live.it>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-11 07:16+0000\n"
-"PO-Revision-Date: 2025-10-08 19:54+0000\n"
-"Last-Translator: Salvatore Cocuzza <info@salvatorecocuzza.it>\n"
+"POT-Creation-Date: 2026-01-08 07:16+0000\n"
+"PO-Revision-Date: 2026-01-20 12:58+0000\n"
+"Last-Translator: Nathan <nathan95@live.it>\n"
 "Language-Team: Italian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/it/>\n"
 "Language: it\n"
@@ -17,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.13.3\n"
+"X-Generator: Weblate 5.15.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -65,176 +66,181 @@ msgstr "{0} ha modificato l''unità {1}"
 msgid "{0} deleted the unit {1}"
 msgstr "{0} ha cancellato l''unità {1}"
 
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
+#, java-format
+msgid "{0} updated multiple consumers"
+msgstr "{0} ha aggiornato più consumatori"
+
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
 #, java-format
 msgid "{0} created new owner {1}"
 msgstr "{0} ha creato un nuovo proprietario {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
 #, java-format
 msgid "{0} modified the owner {1}"
 msgstr "{0} ha modificato il proprietario {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
 #, java-format
 msgid "{0} deleted the owner {1}"
 msgstr "{0} ha cancellato il proprietario {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
 #, java-format
 msgid "{0} attached a subscription for product {1}"
 msgstr "{0} ha associato una sottoscrizione per il prodotto {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
 #, java-format
 msgid "{0} modified a subscription for product {1}"
 msgstr "{0} ha modificato una sottoscrizione per il prodotto {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:131
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
 #, java-format
 msgid "{0} returned the subscription for {1}"
 msgstr "{0} ha ritornato la sottoscrizione per {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
 #, java-format
 msgid "{0} created a pool for product {1}"
 msgstr "{0} ha creato un pool per il prodotto {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
 #, java-format
 msgid "{0} modified a pool for product {1}"
 msgstr "{0} ha modificato un pool per il prodotto {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
 #, java-format
 msgid "{0} deleted a pool for product {1}"
 msgstr "{0} ha cancellato un pool per il prodotto {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
 #, java-format
 msgid "{0} created an export for unit {1}"
 msgstr "{0} ha creato una esportazione per l''unità {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
 #, java-format
 msgid "{0} imported a manifest for owner {1}"
 msgstr "{0} ha importato un manifest per il proprietario {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
 #, java-format
 msgid "{0} created new user {1}"
 msgstr "{0} ha creato un nuovo utente {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mospina
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
 #, java-format
 msgid "{0} modified the user {1}"
 msgstr "{0} ha modificato l''utente {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mospina
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:140
 #, java-format
 msgid "{0} deleted the user {1}"
 msgstr "{0} ha cancellato l''utente {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:140
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
 #, java-format
 msgid "{0} created new role {1}"
 msgstr "{0} ha creato un nuovo ruolo {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
 #, java-format
 msgid "{0} modified the role {1}"
 msgstr "{0} ha modificato il ruolo {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
 #, java-format
 msgid "{0} deleted the role {1}"
 msgstr "{0} ha cancellato il ruolo {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
 #, java-format
 msgid "{0} created new subscription for product {1}"
 msgstr "{0} ha creato una nuova sottoscrizione per il prodotto {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
 #, java-format
 msgid "{0} deleted a subscription for product {1}"
 msgstr "{0} ha cancellato una sottoscrizione per il prodotto {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
 #, java-format
 msgid "{0} created the activation key {1}"
 msgstr "{0} ha creato la chiave di attivazione {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
 #, java-format
 msgid "{0} deleted the activation key {1}"
 msgstr "{0} ha cancellato la chiave di attivazione {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
 #, java-format
 msgid "{0} created the guest id {1}"
 msgstr "{0} ha creato il guest id {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
 #, java-format
 msgid "{0} deleted the guest id {1}"
 msgstr "{0} ha rimosso il guest id {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
 #, java-format
 msgid "{0} updated the rules in the database to version {1}"
 msgstr "{0} ha aggiornato le regole nel database alla versione {1}"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
 #, java-format
 msgid "{0} removed the rules from the database"
 msgstr "{0} rimosso le regole dal database"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:153
 #, java-format
 msgid "Compliance recalculated for consumer {1}"
 msgstr "Conformità ricalcolata per l''utenza {1}"
@@ -332,10 +338,9 @@ msgstr "Pool di sottoscrizioni {0} non esistente/i."
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
 #: src/main/java/org/candlepin/controller/ConsumerMigration.java:124
-#, fuzzy
-#| msgid "Failed to migrate consumers"
-msgid "Failed to migrate "
-msgstr "Impossibile eseguire la migrazione dei consumatori"
+#, java-format
+msgid "Failed to migrate {0} consumers"
+msgstr "Impossibile eseguire la migrazione {0} dei consumatori"
 
 #: src/main/java/org/candlepin/controller/ContentAccessManager.java:194
 msgid "Unable to create revoke entitlements job"

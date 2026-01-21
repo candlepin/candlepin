@@ -1,14 +1,15 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# Temuri Doghonadze <temuri.doghonadze@gmail.com>, 2024, 2025.
+# Temuri Doghonadze <temuri.doghonadze@gmail.com>, 2024, 2025, 2026.
 # Weblate Translation Memory <noreply-mt-weblate-translation-memory@weblate.org>, 2024.
+# Weblate <noreply-mt-weblate@weblate.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-11 07:16+0000\n"
-"PO-Revision-Date: 2025-02-04 05:38+0000\n"
+"POT-Creation-Date: 2026-01-08 07:16+0000\n"
+"PO-Revision-Date: 2026-01-17 11:58+0000\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ka/>\n"
@@ -17,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.9.2\n"
+"X-Generator: Weblate 5.15.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -61,132 +62,137 @@ msgstr ""
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
 #, java-format
-msgid "{0} created new owner {1}"
+msgid "{0} updated multiple consumers"
 msgstr ""
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
 #, java-format
-msgid "{0} modified the owner {1}"
+msgid "{0} created new owner {1}"
 msgstr ""
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
 #, java-format
-msgid "{0} deleted the owner {1}"
+msgid "{0} modified the owner {1}"
 msgstr ""
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
 #, java-format
-msgid "{0} attached a subscription for product {1}"
+msgid "{0} deleted the owner {1}"
 msgstr ""
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
+#, java-format
+msgid "{0} attached a subscription for product {1}"
+msgstr ""
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
 #, java-format
 msgid "{0} modified a subscription for product {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:131
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
 #, java-format
 msgid "{0} returned the subscription for {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
 #, java-format
 msgid "{0} created a pool for product {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
 #, java-format
 msgid "{0} modified a pool for product {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
 #, java-format
 msgid "{0} deleted a pool for product {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
 #, java-format
 msgid "{0} created an export for unit {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
 #, java-format
 msgid "{0} imported a manifest for owner {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
 #, java-format
 msgid "{0} created new user {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
 #, java-format
 msgid "{0} modified the user {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:140
 #, java-format
 msgid "{0} deleted the user {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:140
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
 #, java-format
 msgid "{0} created new role {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
 #, java-format
 msgid "{0} modified the role {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
 #, java-format
 msgid "{0} deleted the role {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
 #, java-format
 msgid "{0} created new subscription for product {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
 #, java-format
 msgid "{0} deleted a subscription for product {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
 #, java-format
 msgid "{0} created the activation key {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
 #, java-format
 msgid "{0} deleted the activation key {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
 #, java-format
 msgid "{0} created the guest id {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
 #, java-format
 msgid "{0} deleted the guest id {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
 #, java-format
 msgid "{0} updated the rules in the database to version {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
 #, java-format
 msgid "{0} removed the rules from the database"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:153
 #, java-format
 msgid "Compliance recalculated for consumer {1}"
 msgstr ""
@@ -264,7 +270,8 @@ msgid "Subscription pool(s) {0} do not exist."
 msgstr ""
 
 #: src/main/java/org/candlepin/controller/ConsumerMigration.java:124
-msgid "Failed to migrate "
+#, java-format
+msgid "Failed to migrate {0} consumers"
 msgstr ""
 
 #: src/main/java/org/candlepin/controller/ContentAccessManager.java:194
@@ -1068,7 +1075,7 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2470
 msgid "Unable to create entitlement certificate archive"
-msgstr ""
+msgstr "როლების მინიჭების სერტიფიკატების არქივის შექმნა შეუძლებელია"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2569
 msgid "Cannot bind by multiple parameters."
@@ -1178,19 +1185,17 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:364
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:566
 #: src/main/java/org/candlepin/resource/ProductResource.java:150
-#, fuzzy, java-format
-#| msgid "Invalid Content-Type {0}"
+#, java-format
 msgid "Invalid active inclusion type: {0}"
-msgstr "არასწორი თავსართი Content-Type {0}"
+msgstr "არასწორი აქტიური ჩასმის ტიპი: {0}"
 
 #: src/main/java/org/candlepin/resource/ContentResource.java:193
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:367
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:570
 #: src/main/java/org/candlepin/resource/ProductResource.java:154
-#, fuzzy, java-format
-#| msgid "Invalid Content-Type {0}"
+#, java-format
 msgid "Invalid custom inclusion type: {0}"
-msgstr "არასწორი თავსართი Content-Type {0}"
+msgstr "არასწორი მომხმარებლის ჩასმის ტიპი: {0}"
 
 #: src/main/java/org/candlepin/resource/ContentResource.java:215
 #, java-format
@@ -1249,7 +1254,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:190
 #, java-format
 msgid "No such environment: {0}"
-msgstr ""
+msgstr "ასეთი გარემო არ არსებობს: {0}"
 
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:208
 msgid "no environment update data provided"
@@ -1495,7 +1500,7 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:611
 msgid "No content IDs provided"
-msgstr ""
+msgstr "შემცველობის ID-ები მოწოდებული არაა"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:663
 msgid "No content IDs provided, or provided content ID list contains null IDs"
@@ -1595,13 +1600,13 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1163
 #, java-format
 msgid "{0} is not a valid log level"
-msgstr ""
+msgstr "{0} სწორი ჟურნალის დონე არაა"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1292
 #: src/main/java/org/candlepin/resource/PoolResource.java:132
 #, java-format
 msgid "Unit: {0} not found"
-msgstr ""
+msgstr "ერთეული: {0} აღმოჩენილი არაა"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1302
 #: src/main/java/org/candlepin/resource/PoolResource.java:220
@@ -1813,7 +1818,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/RoleResource.java:86
 #, java-format
 msgid "Role not found: {0}"
-msgstr ""
+msgstr "როლი აღმოჩენილი არაა: {0}"
 
 #: src/main/java/org/candlepin/resource/RoleResource.java:110
 #: src/main/java/org/candlepin/resource/UserResource.java:87
@@ -1826,7 +1831,7 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/RoleResource.java:132
 msgid "role name not specified"
-msgstr ""
+msgstr "როლის სახელი მითითებული არაა"
 
 #: src/main/java/org/candlepin/resource/RoleResource.java:136
 #, java-format
@@ -1938,7 +1943,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:67
 #, java-format
 msgid "param \"{0}\" must be a positive integer"
-msgstr ""
+msgstr "პარამეტრი \"{0}\" დადებითი მთელი რიცხვი უნდა იყოს"
 
 #: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:123
 msgid "the order parameter must be either \"ascending\" or \"descending\""
@@ -2002,7 +2007,7 @@ msgstr ""
 #: src/main/java/org/candlepin/sync/Importer.java:235
 #, java-format
 msgid "{0} file imported successfully."
-msgstr ""
+msgstr "{0} ფაილის შემოტანა წარმატებულია."
 
 #: src/main/java/org/candlepin/sync/Importer.java:237
 #, java-format
@@ -2211,7 +2216,7 @@ msgstr ""
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:78
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:80
 msgid "may not be empty"
-msgstr ""
+msgstr "არ შეიძლება, ცარიელი იყოს"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:82
 msgid "must be between {min} and {max}"
