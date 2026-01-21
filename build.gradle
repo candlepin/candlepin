@@ -165,6 +165,9 @@ dependencies {
     implementation(libs.smallrye.config)
     implementation(libs.tomcat.annotations)
 
+    // Openapi
+    implementation(libs.openapi.databind.nullable)
+
     // OTEL
     implementation(libs.otel.annotation)
 
