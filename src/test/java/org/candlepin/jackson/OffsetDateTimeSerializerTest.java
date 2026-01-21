@@ -16,15 +16,14 @@ package org.candlepin.jackson;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-
 import org.junit.jupiter.api.Test;
+
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.time.OffsetDateTime;
-
 
 
 /**
@@ -36,7 +35,8 @@ public class OffsetDateTimeSerializerTest {
     public void testOffsetDateTimeSerializer() throws IOException {
         OffsetDateTimeSerializer serializer = new OffsetDateTimeSerializer();
         StringWriter stringWriter = new StringWriter();
-        JsonGenerator jsonGenerator = new JsonFactory().createGenerator(stringWriter);
+        JsonMapper mapper = JsonMapper.builder().build();
+        JsonGenerator jsonGenerator = mapper.tokenStreamFactory().createGenerator(stringWriter);
 
         OffsetDateTime dateTime = OffsetDateTime.parse("2021-01-24T13:30:30.382+01:00");
         serializer.serialize(dateTime, jsonGenerator, null);

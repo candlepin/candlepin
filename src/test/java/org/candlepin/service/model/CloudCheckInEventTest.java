@@ -24,17 +24,17 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCloudData;
 import org.candlepin.test.TestUtil;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
+
 import java.util.Date;
 import java.util.List;
+
 
 public class CloudCheckInEventTest {
 
@@ -362,7 +362,7 @@ public class CloudCheckInEventTest {
             .setCreated(new Date());
     }
 
-    private String getBody(CloudCheckInEvent event) throws JsonProcessingException {
+    private String getBody(CloudCheckInEvent event) {
         ObjectMapper mapper = new ObjectMapper();
 
         ArrayNode arrayNode = mapper.createArrayNode();

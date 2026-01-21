@@ -18,13 +18,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
-
 import org.jboss.resteasy.spi.ReaderException;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.core.Response;
+import tools.jackson.databind.DatabindException;
 
+import javax.ws.rs.core.Response;
 
 
 /**
@@ -56,7 +55,7 @@ public class ReaderExceptionMapperTest extends TestExceptionMapperBase {
     public void handleJsonMappingExceptionWithResponse() {
         Response mockr = mock(Response.class);
         when(mockr.getStatus()).thenReturn(400);
-        ReaderException nfe = new ReaderException("kaboom", new JsonMappingException("nope"));
+        ReaderException nfe = new ReaderException("kaboom", mock(DatabindException.class));
         ReaderExceptionMapper nfem = injector.getInstance(ReaderExceptionMapper.class);
         Response r = nfem.toResponse(nfe);
         assertEquals(400, r.getStatus());

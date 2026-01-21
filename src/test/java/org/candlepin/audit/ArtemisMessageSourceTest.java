@@ -26,8 +26,6 @@ import static org.mockito.Mockito.when;
 import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
@@ -40,10 +38,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import tools.jackson.databind.ObjectMapper;
+
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-
 
 
 /**

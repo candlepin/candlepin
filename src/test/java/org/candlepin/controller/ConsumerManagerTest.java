@@ -35,8 +35,6 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.NonNullLinkedHashSet;
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,6 +43,8 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import tools.jackson.databind.ObjectMapper;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -52,6 +52,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 
 @ExtendWith(MockitoExtension.class)
 public class ConsumerManagerTest {

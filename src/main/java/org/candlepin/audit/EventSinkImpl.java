@@ -29,8 +29,6 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
@@ -39,10 +37,13 @@ import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import tools.jackson.databind.ObjectMapper;
+
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
+
 
 /**
  * EventSink - Queues events to be sent after request/job completes, and handles actual

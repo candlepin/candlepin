@@ -16,9 +16,10 @@ package org.candlepin.jackson;
 
 import org.candlepin.dto.api.server.v1.AttributeDTO;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.List;
+
 
 public abstract class PoolAnnotationMixIn extends DynamicPropertyFilterMixIn {
 

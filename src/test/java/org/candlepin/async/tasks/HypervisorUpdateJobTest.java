@@ -59,11 +59,11 @@ import org.candlepin.service.impl.HypervisorUpdateAction;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Date;
 

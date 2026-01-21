@@ -16,8 +16,8 @@ package org.candlepin.spec.bootstrap.client.request;
 
 import org.candlepin.spec.bootstrap.client.ApiClient;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 import okhttp3.ResponseBody;
-
 
 
 /**
@@ -156,12 +155,7 @@ public class Response {
      *  this response
      */
     public <T> T deserialize(Class<T> type) {
-        try {
-            return ApiClient.MAPPER.readValue(this.getBody(), type);
-        }
-        catch (IOException e) { // Impl note: JsonProcessingException *is* an IOException
-            throw new JsonDeserializationException(e);
-        }
+        return ApiClient.MAPPER.readValue(this.getBody(), type);
     }
 
     /**
@@ -180,12 +174,7 @@ public class Response {
      *  this response
      */
     public <T> T deserialize(TypeReference<T> typeref) {
-        try {
-            return ApiClient.MAPPER.readValue(this.getBody(), typeref);
-        }
-        catch (IOException e) { // Impl note: JsonProcessingException *is* an IOException
-            throw new JsonDeserializationException(e);
-        }
+        return ApiClient.MAPPER.readValue(this.getBody(), typeref);
     }
 
     /**
@@ -201,12 +190,7 @@ public class Response {
      *  this response
      */
     public JsonNode deserialize() {
-        try {
-            return ApiClient.MAPPER.readTree(this.getBody());
-        }
-        catch (IOException e) { // Impl note: JsonProcessingException *is* an IOException
-            throw new JsonDeserializationException(e);
-        }
+        return ApiClient.MAPPER.readTree(this.getBody());
     }
 
     /**

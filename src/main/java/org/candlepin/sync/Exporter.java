@@ -40,11 +40,11 @@ import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.version.VersionUtil;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -65,7 +65,6 @@ import java.util.zip.ZipOutputStream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-
 
 
 /**

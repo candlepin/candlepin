@@ -91,16 +91,12 @@ dependencies {
 
     // Jackson
     implementation(libs.jackson.hibernate)
+    implementation(libs.jackson.jaxb)
     implementation(libs.jackson.jaxrs)
-    implementation(libs.jackson.jdk8)
-    implementation(libs.jackson.json.schema)
-    implementation(libs.jackson.jsr310)
     implementation(libs.jackson.xml)
     implementation(libs.jackson.yaml)
 
-    // Bean validation API is explicitly added to this version
-    // This is a transitive dependency of
-    // com.fasterxml.jackson.module:jackson-module-jsonSchema
+    // Bean validation API
     implementation(libs.javax.validation)
 
     // Javax

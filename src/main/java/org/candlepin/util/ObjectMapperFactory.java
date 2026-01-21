@@ -20,20 +20,18 @@ import org.candlepin.policy.js.RulesObjectMapper;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.AnnotationIntrospector;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.inject.Provider;
 
+import tools.jackson.databind.AnnotationIntrospector;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.cfg.MapperBuilder;
+import tools.jackson.databind.introspect.AnnotationIntrospectorPair;
+import tools.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ser.std.SimpleFilterProvider;
+import tools.jackson.datatype.hibernate5.Hibernate5Module;
+import tools.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
 
 /**
@@ -55,49 +53,65 @@ public class ObjectMapperFactory implements Provider<ObjectMapper> {
      *  a new ObjectMapper instance
      */
     public static ObjectMapper getObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        // Note: Jdk8Module and JavaTimeModule are no longer needed in Jackson 3.x
+        // as their functionality is built into jackson-databind
 
         Hibernate5Module hbm = new Hibernate5Module();
         hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
-        mapper.registerModule(hbm);
-        mapper.registerModule(new Jdk8Module());
-        mapper.registerModule(new JavaTimeModule());
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
         AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
-        mapper.setAnnotationIntrospector(pair);
 
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-
         // We're not going to want any of the JSON filters like DynamicPropertyFilter that we apply elsewhere
         filterProvider.setFailOnUnknownId(false);
-        mapper.setFilterProvider(filterProvider);
 
-        return mapper;
+        return JsonMapper.builder()
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .addModule(hbm)
+            .annotationIntrospector(pair)
+            .filterProvider(filterProvider)
+            .build();
     }
 
     public static ObjectMapper getX509V3ExtensionUtilObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        return mapper;
+        return JsonMapper.builder()
+            .changeDefaultVisibility(vc -> vc.withFieldVisibility(JsonAutoDetect.Visibility.ANY))
+            .changeDefaultPropertyInclusion(value -> value.withValueInclusion(JsonInclude.Include.NON_NULL))
+            .build();
     }
 
     public static ObjectMapper getHypervisorUpdateJobObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return mapper;
+        return JsonMapper.builder()
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
     }
 
     public static ObjectMapper getSyncObjectMapper(Configuration config) {
-        ObjectMapper mapper = getObjectMapper();
-        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-            config.getBoolean(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES));
-        return mapper;
+        Hibernate5Module hbm = new Hibernate5Module();
+        hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
+
+        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
+        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
+
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider.setFailOnUnknownId(false);
+
+        MapperBuilder<?, ?> builder = JsonMapper.builder()
+            .addModule(hbm)
+            .annotationIntrospector(pair)
+            .filterProvider(filterProvider);
+
+        if (config.getBoolean(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES)) {
+            builder.enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        }
+        else {
+            builder.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        }
+
+        return builder.build();
     }
 
     public static RulesObjectMapper getRulesObjectMapper() {

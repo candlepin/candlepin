@@ -17,16 +17,16 @@ package org.candlepin.service.model;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCloudData;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
+
 import java.util.Date;
 import java.util.List;
+
 
 /**
  * An event where a cloud consumer has updated their last check-in time stamp.
@@ -101,12 +101,7 @@ public final class CloudCheckInEvent implements AdapterEvent {
         this.cloudAccountId = cloudData.getCloudAccountId();
         this.cloudOfferingIds = cloudData.getCloudOfferingIds();
 
-        try {
-            eventBody = getSerializedBody(mapper);
-        }
-        catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        eventBody = getSerializedBody(mapper);
     }
 
     /**
@@ -200,7 +195,7 @@ public final class CloudCheckInEvent implements AdapterEvent {
         return builder.toHashCode();
     }
 
-    private String getSerializedBody(ObjectMapper mapper) throws JsonProcessingException {
+    private String getSerializedBody(ObjectMapper mapper) {
         ArrayNode arrayNode = mapper.createArrayNode();
         for (String offer : cloudOfferingIds) {
             arrayNode.add(offer);

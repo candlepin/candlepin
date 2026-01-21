@@ -16,10 +16,11 @@ package org.candlepin.jackson;
 
 import org.candlepin.dto.api.server.v1.AttributeDTO;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.List;
+
 
 /**
  * This is a placeholder class for applying the {@link JsonDeserialize} annotation (indirectly)

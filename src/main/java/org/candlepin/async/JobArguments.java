@@ -16,13 +16,12 @@ package org.candlepin.async;
 
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-
 
 
 /**
@@ -190,7 +189,7 @@ public class JobArguments {
                 String json = this.data.get(key);
                 return json != null ? mapper.readValue(json, type) : null;
             }
-            catch (IOException e) {
+            catch (JacksonException e) {
                 String errmsg = String.format("Unable to deserialize key \"%s\" as type: %s", key, type);
                 throw new ArgumentConversionException(errmsg, e);
             }

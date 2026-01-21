@@ -19,14 +19,15 @@ import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Set;
+
 
 /**
  * CdnImporter reads Cdn objects from a manifest and creates/updates them on the system as needed.

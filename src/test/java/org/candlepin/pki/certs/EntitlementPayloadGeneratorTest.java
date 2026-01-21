@@ -29,10 +29,10 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.zip.InflaterOutputStream;
+
 
 public class EntitlementPayloadGeneratorTest {
 

@@ -25,10 +25,10 @@ import org.candlepin.messaging.CPMSession;
 import org.candlepin.messaging.CPMSessionConfig;
 import org.candlepin.messaging.CPMSessionFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import javax.inject.Inject;
-
 
 
 /**

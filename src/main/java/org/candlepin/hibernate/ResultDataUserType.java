@@ -16,13 +16,6 @@ package org.candlepin.hibernate;
 
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.StandardBasicTypes;
@@ -30,6 +23,13 @@ import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.core.JsonEncoding;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -43,7 +43,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Objects;
 import java.util.Properties;
-
 
 
 /**
@@ -111,7 +110,7 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
         try {
             result = deserializeJson(data);
         }
-        catch (JsonParseException e) {
+        catch (StreamReadException e) {
             /* If we can't deserialize the result data, try to deserialize it as a Java object since that
              * is the legacy format.
              */
@@ -130,11 +129,11 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
 
     @SuppressWarnings("unchecked")
     private <T> T deserializeJson(byte[] data) throws IOException {
-        try (JsonParser parser = mapper.getFactory().createParser(data)) {
+        try (JsonParser parser = mapper.tokenStreamFactory().createParser(data)) {
             try {
                 return (T) mapper.readValue(parser, jsonClass);
             }
-            catch (JsonMappingException e) {
+            catch (DatabindException e) {
                 log.warn("Could not deserialize into {}. Trying Object.", jsonClass.getName(), e);
                 return (T) mapper.readValue(parser, Object.class);
             }
@@ -160,7 +159,8 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
         }
         else {
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                JsonGenerator generator = mapper.getFactory().createGenerator(baos, JsonEncoding.UTF8)) {
+                JsonGenerator generator = mapper.tokenStreamFactory()
+                    .createGenerator(baos, JsonEncoding.UTF8)) {
 
                 mapper.writeValue(generator, value);
                 data = baos.toByteArray();

@@ -57,8 +57,6 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,9 +67,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import tools.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.util.List;
+
 
 @ExtendWith(MockitoExtension.class)
 class AnonymousCertificateGeneratorTest {

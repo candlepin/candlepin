@@ -35,21 +35,19 @@ import org.candlepin.jackson.PoolAnnotationMixIn;
 import org.candlepin.jackson.ProductAttributesMixIn;
 import org.candlepin.jackson.ReleaseVersionWrapDeserializer;
 
-import com.fasterxml.jackson.core.Version;
-import com.fasterxml.jackson.databind.AnnotationIntrospector;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.jaxrs.cfg.Annotations;
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
+import tools.jackson.core.Version;
+import tools.jackson.databind.AnnotationIntrospector;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.introspect.AnnotationIntrospectorPair;
+import tools.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
+import tools.jackson.databind.ser.std.SimpleFilterProvider;
+import tools.jackson.datatype.hibernate5.Hibernate5Module;
+import tools.jackson.jaxrs.json.JacksonJsonProvider;
+import tools.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -58,6 +56,7 @@ import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.ext.Provider;
+
 
 /**
  * JsonProvider
@@ -77,71 +76,69 @@ public class JsonProvider extends JacksonJsonProvider {
 
     public JsonProvider(boolean indentJson) {
         // Prefer jackson annotations, but use jaxb if no jackson.
-        super(Annotations.JACKSON, Annotations.JAXB);
+        // Note: In Jackson 3.0, Annotations enum was removed; annotation introspectors
+        // are now configured via the ObjectMapper builder
+        super();
 
-        ObjectMapper mapper = _mapperConfig.getDefaultMapper();
-
-        // Add the JDK8 module to support new goodies, like streams
-        mapper.registerModule(new Jdk8Module());
-
-        // Add the new JDK8 date/time module, with custom de/serializers
-        JavaTimeModule timeModule = new JavaTimeModule();
-        timeModule.addDeserializer(OffsetDateTime.class, new OffsetDateTimeDeserializer());
-        timeModule.addSerializer(OffsetDateTime.class, new OffsetDateTimeSerializer());
-        mapper.registerModule(timeModule);
+        // Note: Jdk8Module and JavaTimeModule are no longer needed in Jackson 3.x
+        // as their functionality is built into jackson-databind
 
         Hibernate5Module hbm = new Hibernate5Module();
         hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
-        mapper.registerModule(hbm);
 
         SimpleModule customModule = new SimpleModule("CustomModule", new Version(1, 0, 0, null, null,
             null));
         // Ensure our DateSerializer is used for all Date objects
         customModule.addSerializer(Date.class, new DateSerializer());
-
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        configureHateoasObjectMapper(mapper, indentJson);
-
+        // Add custom de/serializers for OffsetDateTime
+        customModule.addDeserializer(OffsetDateTime.class, new OffsetDateTimeDeserializer());
+        customModule.addSerializer(OffsetDateTime.class, new OffsetDateTimeSerializer());
         // Ensure we handle releaseVer fields properly
         customModule.addDeserializer(ReleaseVerDTO.class, new ReleaseVersionWrapDeserializer());
         customModule.addDeserializer(ConsumerTypeDTO.class, new ConsumerTypeDeserializer());
-        customModule.addDeserializer(GuestIdDTO.class, new GuestIdDeserializer(mapper.reader()));
-        mapper.registerModule(customModule);
 
-        setMapper(mapper);
-    }
-
-    private void configureHateoasObjectMapper(ObjectMapper mapper, boolean indentJson) {
-        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-
-        if (indentJson) {
-            mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-        }
+        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
+        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
 
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
         filterProvider = filterProvider.addFilter("DTOFilter", new DynamicPropertyFilter());
-
         filterProvider.setDefaultFilter(new DynamicPropertyFilter());
         filterProvider.setFailOnUnknownId(false);
-        mapper.setFilterProvider(filterProvider);
-        addMixInAnnotationsForDTOs(mapper);
 
-        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
-        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
-        mapper.setAnnotationIntrospector(pair);
-    }
+        // Build a mapper WITHOUT GuestIdDeserializer for use by GuestIdDeserializer itself
+        // This avoids infinite recursion
+        ObjectMapper mapperWithoutGuestIdDeserializer = JsonMapper.builder()
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .addModule(hbm)
+            .addModule(customModule)
+            .annotationIntrospector(pair)
+            .filterProvider(filterProvider)
+            .configure(SerializationFeature.INDENT_OUTPUT, indentJson)
+            .build();
 
-    /**
-     * Allows us to add annotations to the DTO classes whose source code we don't control (autogenerated from
-     * openapi spec).
-     */
-    private void addMixInAnnotationsForDTOs(ObjectMapper mapper) {
-        // All DTOs will inherit the Object's annotation
-        mapper.addMixIn(Object.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(AsyncJobStatusDTO.class, AsyncJobStatusAnnotationMixin.class);
-        mapper.addMixIn(PoolDTO.class, PoolAnnotationMixIn.class);
-        mapper.addMixIn(PoolQuantityDTO.class, PoolAnnotationMixIn.class);
-        mapper.addMixIn(ProductDTO.class, ProductAttributesMixIn.class);
+        // Now add GuestIdDeserializer to a separate module, passing the mapper without it
+        SimpleModule guestIdModule = new SimpleModule("GuestIdModule", new Version(1, 0, 0, null, null,
+            null));
+        guestIdModule.addDeserializer(GuestIdDTO.class,
+            new GuestIdDeserializer(mapperWithoutGuestIdDeserializer));
+
+        // Build the final mapper with all modules including GuestIdDeserializer
+        JsonMapper jsonMapper = JsonMapper.builder()
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .addModule(hbm)
+            .addModule(customModule)
+            .addModule(guestIdModule)
+            .annotationIntrospector(pair)
+            .filterProvider(filterProvider)
+            .configure(SerializationFeature.INDENT_OUTPUT, indentJson)
+            .addMixIn(Object.class, DynamicPropertyFilterMixIn.class)
+            .addMixIn(AsyncJobStatusDTO.class, AsyncJobStatusAnnotationMixin.class)
+            .addMixIn(PoolDTO.class, PoolAnnotationMixIn.class)
+            .addMixIn(PoolQuantityDTO.class, PoolAnnotationMixIn.class)
+            .addMixIn(ProductDTO.class, ProductAttributesMixIn.class)
+            .build();
+
+        setMapper(jsonMapper);
     }
 }
