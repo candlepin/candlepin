@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-11 07:16+0000\n"
+"POT-Creation-Date: 2026-01-08 07:16+0000\n"
 "PO-Revision-Date: 2016-03-02 04:22-0500\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Kannada\n"
@@ -60,176 +60,181 @@ msgstr "{0} ಅನ್ನು {1} ಎಂಬ ಘಟಕವು ಮಾರ್ಪಡಿ�
 msgid "{0} deleted the unit {1}"
 msgstr "{0} ಅನ್ನು {1} ಎಂಬ ಘಟಕವು ಅಳಿಸಿದೆ"
 
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
+#, java-format
+msgid "{0} updated multiple consumers"
+msgstr ""
+
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
 #, java-format
 msgid "{0} created new owner {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಹೊಸ ಮಾಲಿಕನನ್ನು ರಚಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
 #, java-format
 msgid "{0} modified the owner {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಮಾಲಿಕನನ್ನು ಮಾರ್ಪಡಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
 #, java-format
 msgid "{0} deleted the owner {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಮಾಲಿಕನನ್ನು ಅಳಿಸಿದೆ"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
 #, java-format
 msgid "{0} attached a subscription for product {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಉತ್ಪನ್ನಕ್ಕಾಗಿನ ಒಂದು ಚಂದಾದಾರಿಕೆಯನ್ನು ಲಗತ್ತಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
 #, java-format
 msgid "{0} modified a subscription for product {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಉತ್ಪನ್ನಕ್ಕಾಗಿನ ಒಂದು ಚಂದಾದಾರಿಕೆಯನ್ನು ಮಾರ್ಪಡಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:131
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
 #, java-format
 msgid "{0} returned the subscription for {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಉತ್ಪನ್ನಕ್ಕಾಗಿನ ಚಂದಾದಾರಿಕೆಯನ್ನು ಮರಳಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
 #, java-format
 msgid "{0} created a pool for product {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಉತ್ಪನ್ನಕ್ಕಾಗಿನ ಒಂದು ಪೂಲ್ ಅನ್ನು ರಚಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
 #, java-format
 msgid "{0} modified a pool for product {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಉತ್ಪನ್ನಕ್ಕಾಗಿನ ಒಂದು ಪೂಲ್ ಅನ್ನು ಮಾರ್ಪಡಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
 #, java-format
 msgid "{0} deleted a pool for product {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಉತ್ಪನ್ನಕ್ಕಾಗಿನ ಒಂದು ಪೂಲ್ ಅನ್ನು ಅಳಿಸಿದೆ"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
 #, java-format
 msgid "{0} created an export for unit {1}"
 msgstr "{0} ಗಾಗಿ {1} ಒಂದು ರಫ್ತನ್ನು ರಚಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
 #, java-format
 msgid "{0} imported a manifest for owner {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಮಾಲಿಕನಿಗಾಗಿನ ಒಂದು ಮ್ಯಾನಿಫೆಸ್ಟ್‍ ಅನ್ನು ಆಮದು ಮಾಡಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
 #, java-format
 msgid "{0} created new user {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಹೊಸ ಬಳಕೆದಾರರನ್ನು ರಚಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
 #, java-format
 msgid "{0} modified the user {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಬಳಕೆದಾರರನ್ನು ಮಾರ್ಪಡಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:140
 #, java-format
 msgid "{0} deleted the user {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಬಳಕೆದಾರರನ್ನು ಅಳಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:140
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
 #, java-format
 msgid "{0} created new role {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಹೊಸ ಪಾತ್ರವನ್ನು ರಚಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
 #, java-format
 msgid "{0} modified the role {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಪಾತ್ರವನ್ನು ಮಾರ್ಪಡಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
 #, java-format
 msgid "{0} deleted the role {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಪಾತ್ರವನ್ನು ಅಳಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
 #, java-format
 msgid "{0} created new subscription for product {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಉತ್ಪನ್ನಕ್ಕಾಗಿ ಹೊಸ ಚಂದಾವನ್ನು ರಚಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
 #, java-format
 msgid "{0} deleted a subscription for product {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಉತ್ಪನ್ನಕ್ಕಾಗಿನ ಚಂದಾವನ್ನು ಅಳಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
 #, java-format
 msgid "{0} created the activation key {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಸಕ್ರಿಯಗೊಳಿಕೆಯ ಕೀಲಿಯನ್ನು ರಚಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
 #, java-format
 msgid "{0} deleted the activation key {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಸಕ್ರಿಯಗೊಳಿಕೆಯ ಕೀಲಿಯನ್ನು ಅಳಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
 #, java-format
 msgid "{0} created the guest id {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಅತಿಥಿ idಯನ್ನು ರಚಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
 #, java-format
 msgid "{0} deleted the guest id {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಅತಿಥಿ idಯನ್ನು ಅಳಿಸಿದೆ"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
 #, java-format
 msgid "{0} updated the rules in the database to version {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
 #, java-format
 msgid "{0} removed the rules from the database"
 msgstr "ದತ್ತಸಂಚಯದಿಂದ {0} ನಿಯಮಗಳನ್ನು ತೆಗೆದುಹಾಕಿದೆ"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:153
 #, java-format
 msgid "Compliance recalculated for consumer {1}"
 msgstr "ಗ್ರಾಹಕ {1} ಗಾಗಿ ಅನುಸರಣೆಯನ್ನು ಮರಳಿ ಲೆಕ್ಕಹಾಕಲಾಗಿದೆ"
@@ -325,9 +330,9 @@ msgstr ""
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
 #: src/main/java/org/candlepin/controller/ConsumerMigration.java:124
-#, fuzzy
+#, fuzzy, java-format
 #| msgid "Failed to import archive"
-msgid "Failed to migrate "
+msgid "Failed to migrate {0} consumers"
 msgstr "ಆರ್ಕೈವ್‌ ಅನ್ನು ಆಮದು ಮಾಡಿಕೊಳ್ಳಲು ವಿಫಲಗೊಂಡಿದೆ"
 
 #: src/main/java/org/candlepin/controller/ContentAccessManager.java:194
