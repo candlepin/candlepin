@@ -53,6 +53,9 @@ tasks.register('spec', Test) {
     group = 'Verification'
     outputs.upToDateWhen { false }
 
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
     debugOptions {
         host = '*'
     }

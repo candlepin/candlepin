@@ -229,8 +229,10 @@ tasks.withType(JavaCompile).configureEach {
 repositories {
     mavenCentral()
 
-    maven { url "https://repo.jenkins-ci.org/public/" }
-    maven { url "https://repository.jboss.org/nexus/content/groups/public/" }
+    maven {
+        url = "https://repo.jenkins-ci.org/public/"
+        url = "https://repository.jboss.org/nexus/content/groups/public/"
+    }
 }
 
 openApiGenerate {
@@ -281,7 +283,7 @@ gettext {
 }
 
 msgfmt {
-    resource "org.candlepin.common.i18n.Messages"
+    resource = "org.candlepin.common.i18n.Messages"
 }
 
 test {
@@ -471,8 +473,8 @@ publishing {
         warArtifact(MavenPublication) {
             from components.web
 
-            groupId 'org.candlepin'
-            artifactId 'candlepin'
+            groupId = 'org.candlepin'
+            artifactId = 'candlepin'
         }
 
         // Publish the candlepin-api jar
