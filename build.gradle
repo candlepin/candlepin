@@ -213,6 +213,7 @@ java {
 
 gradleLint {
     rules = ["dependency-parentheses"]
+    alwaysRun = false  // Disable automatic linting - run manually with ./gradlew lintGradle
     // Turn these on selectively.  They are a little too sensitive to leave on all the time,
     // but they provide useful information when run occasionally.
     // rules = ["dependency-parentheses", "unused-exclude-by-dep"]
