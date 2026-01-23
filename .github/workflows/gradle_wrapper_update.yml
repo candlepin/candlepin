@@ -15,4 +15,4 @@ jobs:
       - name: Update Gradle Wrapper
         uses: gradle-update/update-gradle-wrapper-action@v2
         with:
-          repo-token: ${{ secrets.AUTOASSIGNREVIEWERSECRET }}
+          repo-token: ${{ secrets.UPGRADE_GRADLE_TOKEN }}
