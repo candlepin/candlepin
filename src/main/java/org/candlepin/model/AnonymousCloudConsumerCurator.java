@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -23,6 +24,7 @@ import java.util.List;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
@@ -196,4 +198,58 @@ public class AnonymousCloudConsumerCurator extends AbstractHibernateCurator<Anon
 
         return updated;
     }
+
+    /**
+     * Retrieves the IDs for all inactive {@link AnonymousCloudConsumer}s. An anonymous cloud consumer is
+     * considered inactive if the updated date is before the provided retention date and the anonymous cloud
+     * consumer does not have a content access certificate.
+     *
+     * @param retentionDate
+     *     the date where any anonymous cloud consumers whose updated date precedes this time is considered
+     *     inactive
+     *
+     * @throws IllegalArgumentException
+     *     if the provided retention date is null
+     *
+     * @return the IDs for all of the inactive anonymous cloud consumers. This method does not return null.
+     */
+    public List<String> getInactiveAnonymousCloudConsumerIds(Instant retentionDate) {
+        if (retentionDate == null) {
+            throw new IllegalArgumentException("retention date is null");
+        }
+
+        String query = "SELECT id " +
+            "FROM AnonymousCloudConsumer c " +
+            "WHERE c.updated < :retention AND c.contentAccessCert IS NULL";
+
+        return this.getEntityManager().createQuery(query, String.class)
+            .setParameter("retention",  Date.from(retentionDate))
+            .getResultList();
+    }
+
+    /**
+     * Deletes {@link AnonymousCloudConsumer}s based on the provided IDs.
+     *
+     * @param ids
+     *     the IDs of the anonymous cloud consumers to delete
+     *
+     * @return the number of anonymous cloud consumers that were deleted
+     */
+    public int deleteAnonymousCloudConsumers(Collection<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+
+        Query query = this.getEntityManager()
+            .createQuery("DELETE FROM AnonymousCloudConsumer c WHERE c.id IN (:ids)");
+
+        int deleted = 0;
+        for (List<String> block : this.partition(ids)) {
+            deleted += query.setParameter("ids", block)
+                .executeUpdate();
+        }
+
+        return deleted;
+    }
+
 }
