@@ -22,6 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.config.Configuration;
 import org.candlepin.config.TestConfig;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
@@ -34,15 +35,11 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateCurator;
-import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.X509CertificateBuilder;
-import org.candlepin.pki.certs.bc.BouncyCastleX509CertificateBuilder;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
-import org.candlepin.pki.impl.bc.BouncyCastlePemEncoder;
-import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
-import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
-import org.candlepin.test.CertificateReaderForTesting;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.X509ExtensionUtil;
 
@@ -55,9 +52,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.security.KeyException;
-import java.security.cert.CertificateException;
 import java.util.Locale;
+
+
 
 @ExtendWith(MockitoExtension.class)
 class UeberCertificateGeneratorTest {
@@ -72,26 +69,24 @@ class UeberCertificateGeneratorTest {
     private UeberCertificateGenerator generator;
 
     @BeforeEach
-    void setUp() throws CertificateException, KeyException {
+    void setUp() {
         I18n i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
-        BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
-        CertificateReaderForTesting certificateAuthority = new CertificateReaderForTesting();
-        SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
-        X509CertificateBuilder certificateBuilder = new BouncyCastleX509CertificateBuilder(
-            certificateAuthority, securityProvider, subjectKeyIdentifierWriter);
+        Configuration config = TestConfig.defaults();
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(config);
+        KeyPairGenerator kpGen = new BouncyCastleKeyPairGenerator(cryptoManager,
+            mock(KeyPairDataCurator.class));
 
         this.generator = new UeberCertificateGenerator(
             new DefaultUniqueIdGenerator(),
-            new X509ExtensionUtil(TestConfig.defaults()),
             this.serialCurator,
             this.ownerCurator,
             this.ueberCertificateCurator,
             this.consumerTypeCurator,
-            new BouncyCastleKeyPairGenerator(securityProvider, mock(KeyPairDataCurator.class)),
-            new BouncyCastlePemEncoder(),
             i18n,
-            () -> certificateBuilder
-        );
+            cryptoManager,
+            kpGen,
+            new X509ExtensionUtil(config),
+            CryptoUtil.getPemEncoder());
     }
 
     @Test

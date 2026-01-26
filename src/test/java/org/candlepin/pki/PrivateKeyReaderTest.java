@@ -107,11 +107,11 @@ public abstract class PrivateKeyReaderTest {
     public void testReadUnencryptedPrivateKeyFromInputStreamNullPW(Scheme scheme) throws Exception {
         PrivateKeyReader pkreader = this.buildPrivateKeyReader();
 
-        File file = writeKeyToFile(scheme.privateKey(), null);
+        File file = writeKeyToFile(scheme.privateKey().get(), null);
         InputStream istream = new FileInputStream(file);
 
         PrivateKey output = pkreader.read(istream, null);
-        assertEquals(scheme.privateKey(), output);
+        assertEquals(scheme.privateKey().get(), output);
     }
 
     @ParameterizedTest
@@ -119,11 +119,11 @@ public abstract class PrivateKeyReaderTest {
     public void testReadUnencryptedPrivateKeyFromInputStreamEmptyPW(Scheme scheme) throws Exception {
         PrivateKeyReader pkreader = this.buildPrivateKeyReader();
 
-        File file = writeKeyToFile(scheme.privateKey(), null);
+        File file = writeKeyToFile(scheme.privateKey().get(), null);
         InputStream istream = new FileInputStream(file);
 
         PrivateKey output = pkreader.read(istream, "");
-        assertEquals(scheme.privateKey(), output);
+        assertEquals(scheme.privateKey().get(), output);
     }
 
     @ParameterizedTest
@@ -131,10 +131,10 @@ public abstract class PrivateKeyReaderTest {
     public void testReadUnencryptedPrivateKeyFromFileNullPW(Scheme scheme) throws Exception {
         PrivateKeyReader pkreader = this.buildPrivateKeyReader();
 
-        File file = writeKeyToFile(scheme.privateKey(), null);
+        File file = writeKeyToFile(scheme.privateKey().get(), null);
 
         PrivateKey output = pkreader.read(file, null);
-        assertEquals(scheme.privateKey(), output);
+        assertEquals(scheme.privateKey().get(), output);
     }
 
     @ParameterizedTest
@@ -142,10 +142,10 @@ public abstract class PrivateKeyReaderTest {
     public void testReadUnencryptedPrivateKeyFromFileEmptyPW(Scheme scheme) throws Exception {
         PrivateKeyReader pkreader = this.buildPrivateKeyReader();
 
-        File file = writeKeyToFile(scheme.privateKey(), null);
+        File file = writeKeyToFile(scheme.privateKey().get(), null);
 
         PrivateKey output = pkreader.read(file, "");
-        assertEquals(scheme.privateKey(), output);
+        assertEquals(scheme.privateKey().get(), output);
     }
 
     @ParameterizedTest
@@ -153,10 +153,10 @@ public abstract class PrivateKeyReaderTest {
     public void testReadUnencryptedPrivateKeyFromPathNullPW(Scheme scheme) throws Exception {
         PrivateKeyReader pkreader = this.buildPrivateKeyReader();
 
-        File file = writeKeyToFile(scheme.privateKey(), null);
+        File file = writeKeyToFile(scheme.privateKey().get(), null);
 
         PrivateKey output = pkreader.read(file.getAbsolutePath(), null);
-        assertEquals(scheme.privateKey(), output);
+        assertEquals(scheme.privateKey().get(), output);
     }
 
     @ParameterizedTest
@@ -164,10 +164,10 @@ public abstract class PrivateKeyReaderTest {
     public void testReadUnencryptedPrivateKeyFromPathEmptyPW(Scheme scheme) throws Exception {
         PrivateKeyReader pkreader = this.buildPrivateKeyReader();
 
-        File file = writeKeyToFile(scheme.privateKey(), null);
+        File file = writeKeyToFile(scheme.privateKey().get(), null);
 
         PrivateKey output = pkreader.read(file.getAbsolutePath(), "");
-        assertEquals(scheme.privateKey(), output);
+        assertEquals(scheme.privateKey().get(), output);
     }
 
 
@@ -177,11 +177,11 @@ public abstract class PrivateKeyReaderTest {
         PrivateKeyReader pkreader = this.buildPrivateKeyReader();
 
         String password = TestUtil.randomString(32, TestUtil.CHARSET_ALPHANUMERIC);
-        File file = writeKeyToFile(scheme.privateKey(), password);
+        File file = writeKeyToFile(scheme.privateKey().get(), password);
         InputStream istream = new FileInputStream(file);
 
         PrivateKey output = pkreader.read(istream, password);
-        assertEquals(scheme.privateKey(), output);
+        assertEquals(scheme.privateKey().get(), output);
     }
 
     @ParameterizedTest
@@ -190,10 +190,10 @@ public abstract class PrivateKeyReaderTest {
         PrivateKeyReader pkreader = this.buildPrivateKeyReader();
 
         String password = TestUtil.randomString(32, TestUtil.CHARSET_ALPHANUMERIC);
-        File file = writeKeyToFile(scheme.privateKey(), password);
+        File file = writeKeyToFile(scheme.privateKey().get(), password);
 
         PrivateKey output = pkreader.read(file, password);
-        assertEquals(scheme.privateKey(), output);
+        assertEquals(scheme.privateKey().get(), output);
     }
 
     @ParameterizedTest
@@ -202,10 +202,10 @@ public abstract class PrivateKeyReaderTest {
         PrivateKeyReader pkreader = this.buildPrivateKeyReader();
 
         String password = TestUtil.randomString(32, TestUtil.CHARSET_ALPHANUMERIC);
-        File file = writeKeyToFile(scheme.privateKey(), password);
+        File file = writeKeyToFile(scheme.privateKey().get(), password);
 
         PrivateKey output = pkreader.read(file.getAbsolutePath(), password);
-        assertEquals(scheme.privateKey(), output);
+        assertEquals(scheme.privateKey().get(), output);
     }
 
     @ParameterizedTest
@@ -214,7 +214,7 @@ public abstract class PrivateKeyReaderTest {
         PrivateKeyReader pkreader = this.buildPrivateKeyReader();
 
         String password = TestUtil.randomString(32, TestUtil.CHARSET_ALPHANUMERIC);
-        File file = writeKeyToFile(scheme.privateKey(), password);
+        File file = writeKeyToFile(scheme.privateKey().get(), password);
 
         assertThatThrownBy(() -> pkreader.read(new FileInputStream(file), null))
             .isInstanceOf(KeyException.class)
@@ -233,7 +233,7 @@ public abstract class PrivateKeyReaderTest {
         PrivateKeyReader pkreader = this.buildPrivateKeyReader();
 
         String password = TestUtil.randomString(32, TestUtil.CHARSET_ALPHANUMERIC);
-        File file = writeKeyToFile(scheme.privateKey(), password);
+        File file = writeKeyToFile(scheme.privateKey().get(), password);
 
         assertThatThrownBy(() -> pkreader.read(file, null))
             .isInstanceOf(KeyException.class)
@@ -252,7 +252,7 @@ public abstract class PrivateKeyReaderTest {
         PrivateKeyReader pkreader = this.buildPrivateKeyReader();
 
         String password = TestUtil.randomString(32, TestUtil.CHARSET_ALPHANUMERIC);
-        File file = writeKeyToFile(scheme.privateKey(), password);
+        File file = writeKeyToFile(scheme.privateKey().get(), password);
 
         assertThatThrownBy(() -> pkreader.read(file.getAbsolutePath(), null))
             .isInstanceOf(KeyException.class)
@@ -416,7 +416,7 @@ public abstract class PrivateKeyReaderTest {
             PrivateKey actualKey = this.buildPrivateKeyReader().read(keyStream, null);
             PrivateKeyInfo expected = (PrivateKeyInfo) new PEMParser(expectedReader).readObject();
             PrivateKey expectedKey = new JcaPEMKeyConverter()
-                .setProvider(CryptoUtil.getSecurityProvider().get())
+                .setProvider(CryptoUtil.getSecurityProvider())
                 .getPrivateKey(expected);
             assertEquals(actualKey, expectedKey);
         }
@@ -436,11 +436,11 @@ public abstract class PrivateKeyReaderTest {
 
             // the PBE in JcePKCSPBEInputDecryptorProviderBuilder stands for "password based encryption"
             InputDecryptorProvider provider = new JcePKCSPBEInputDecryptorProviderBuilder()
-                .setProvider(CryptoUtil.getSecurityProvider().get())
+                .setProvider(CryptoUtil.getSecurityProvider())
                 .build(PASSWORD);
             PrivateKeyInfo decryptedInfo = expected.decryptPrivateKeyInfo(provider);
             PrivateKey expectedKey = new JcaPEMKeyConverter()
-                .setProvider(CryptoUtil.getSecurityProvider().get())
+                .setProvider(CryptoUtil.getSecurityProvider())
                 .getPrivateKey(decryptedInfo);
             assertEquals(actualKey, expectedKey);
         }
@@ -456,7 +456,7 @@ public abstract class PrivateKeyReaderTest {
             PrivateKey actualKey = this.buildPrivateKeyReader().read(keyStream, null);
             PEMKeyPair expected = (PEMKeyPair) new PEMParser(expectedReader).readObject();
             PrivateKey expectedKey = new JcaPEMKeyConverter()
-                .setProvider(CryptoUtil.getSecurityProvider().get())
+                .setProvider(CryptoUtil.getSecurityProvider())
                 .getKeyPair(expected)
                 .getPrivate();
             assertEquals(actualKey, expectedKey);
@@ -482,12 +482,12 @@ public abstract class PrivateKeyReaderTest {
             PEMEncryptedKeyPair expected = (PEMEncryptedKeyPair) new PEMParser(expectedReader).readObject();
 
             PEMDecryptorProvider provider = new JcePEMDecryptorProviderBuilder()
-                .setProvider(CryptoUtil.getSecurityProvider().get())
+                .setProvider(CryptoUtil.getSecurityProvider())
                 .build(PASSWORD);
 
             PEMKeyPair decryptedInfo = expected.decryptKeyPair(provider);
             PrivateKey expectedKey = new JcaPEMKeyConverter()
-                .setProvider(CryptoUtil.getSecurityProvider().get())
+                .setProvider(CryptoUtil.getSecurityProvider())
                 .getKeyPair(decryptedInfo)
                 .getPrivate();
             assertEquals(actualKey, expectedKey);

@@ -49,20 +49,13 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
-import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.RepoType;
-import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.X509CertificateBuilder;
-import org.candlepin.pki.certs.bc.BouncyCastleX509CertificateBuilder;
 import org.candlepin.pki.huffman.Huffman;
 import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
-import org.candlepin.pki.impl.bc.BouncyCastlePemEncoder;
-import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
-import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
-import org.candlepin.pki.impl.jca.JcaSigner;
-import org.candlepin.test.CertificateReaderForTesting;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.X509ExtensionUtil;
@@ -158,9 +151,7 @@ public class EntitlementCertificateGeneratorTest {
     public void setUp() throws CertificateException, KeyException {
         this.owner = createOwner();
         when(this.ownerCurator.findOwnerById(owner.getOwnerId())).thenReturn(this.owner);
-        BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
-        this.keyPairGenerator = new BouncyCastleKeyPairGenerator(
-            securityProvider, mock(KeyPairDataCurator.class));
+
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         when(this.serialCurator.saveOrUpdateAll(anyIterable(), anyBoolean(), anyBoolean()))
@@ -173,33 +164,30 @@ public class EntitlementCertificateGeneratorTest {
             });
 
         DevConfig config = TestConfig.defaults();
-        X509ExtensionUtil x509ExtensionUtil = new X509ExtensionUtil(config);
         ObjectMapper mapper = new ObjectMapper();
-        X509V3ExtensionUtil x509V3ExtensionUtil = new X509V3ExtensionUtil(
-            config, entitlementCurator, new Huffman());
-        PemEncoder pemEncoder = new BouncyCastlePemEncoder();
-        CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
-        JcaSigner signer = new JcaSigner(certificateReader);
-        SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
-        X509CertificateBuilder certificateBuilder = new BouncyCastleX509CertificateBuilder(
-            certificateReader, securityProvider, subjectKeyIdentifierWriter);
+
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(config);
+        this.keyPairGenerator = new BouncyCastleKeyPairGenerator(cryptoManager,
+            mock(KeyPairDataCurator.class));
+        X509ExtensionUtil x509ExtensionUtil = new X509ExtensionUtil(config);
+        X509V3ExtensionUtil x509V3ExtensionUtil = new X509V3ExtensionUtil(config, entitlementCurator,
+            new Huffman());
+
         this.generator = new EntitlementCertificateGenerator(
             x509ExtensionUtil,
             x509V3ExtensionUtil,
             new EntitlementPayloadGenerator(mapper),
-            entitlementCertificateCurator,
-            serialCurator,
-            ownerCurator,
-            entitlementCurator,
-            i18n,
+            this.entitlementCertificateCurator,
+            this.serialCurator,
+            this.ownerCurator,
+            this.entitlementCurator,
+            this.i18n,
             config,
-            consumerTypeCurator,
-            environmentCurator,
-            keyPairGenerator,
-            pemEncoder,
-            signer,
-            () -> certificateBuilder
-        );
+            this.consumerTypeCurator,
+            this.environmentCurator,
+            this.keyPairGenerator,
+            CryptoUtil.getPemEncoder(),
+            cryptoManager);
     }
 
     @Test

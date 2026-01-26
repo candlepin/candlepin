@@ -17,27 +17,25 @@ package org.candlepin.pki.impl.bc;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.candlepin.pki.DistinguishedName;
-import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.X509CertificateBuilder;
-import org.candlepin.pki.certs.bc.BouncyCastleX509CertificateBuilder;
-import org.candlepin.test.CertificateReaderForTesting;
+import org.candlepin.pki.Scheme;
+import org.candlepin.test.CryptoUtil;
 
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
+import java.security.KeyException;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.time.Instant;
+
+// TODO: This test should be made generic and not written targeting a specific provider. Instead, the tests
+// should be only targeting the base interface (PemEncoder), with the provider-specific subclasses of the
+// test suite providing the provider-specific PemEncoder implementation opaquely.
 
 class BouncyCastlePemEncoderTest {
 
     @Test
-    void shouldEncodeKeyAsBytes() throws NoSuchAlgorithmException {
+    void shouldEncodeKeyAsBytes() throws Exception {
         BouncyCastlePemEncoder encoder = new BouncyCastlePemEncoder();
         KeyPair keyPair = createKeyPair();
 
@@ -49,7 +47,7 @@ class BouncyCastlePemEncoderTest {
     }
 
     @Test
-    void shouldEncodeKeyAsString() throws NoSuchAlgorithmException {
+    void shouldEncodeKeyAsString() throws Exception {
         BouncyCastlePemEncoder encoder = new BouncyCastlePemEncoder();
         KeyPair keyPair = createKeyPair();
 
@@ -61,10 +59,12 @@ class BouncyCastlePemEncoderTest {
     }
 
     @Test
-    void shouldEncodeCertAsBytes() throws IOException, GeneralSecurityException {
+    void shouldEncodeCertAsBytes() throws Exception {
         BouncyCastlePemEncoder encoder = new BouncyCastlePemEncoder();
         X509Certificate certificate = createCertificate();
 
+        // FIXME: This test is not validating correct certificate encoding. It should be updated to not rely
+        // on the UUT for its authoritative/expected result.
         String encoded = encoder.encodeAsString(certificate);
         byte[] encodedBytes = encoder.encodeAsBytes(certificate);
 
@@ -73,9 +73,13 @@ class BouncyCastlePemEncoderTest {
     }
 
     @Test
-    void shouldEncodeCertAsString() throws GeneralSecurityException, IOException {
+    void shouldEncodeCertAsString() throws Exception {
         BouncyCastlePemEncoder encoder = new BouncyCastlePemEncoder();
         X509Certificate certificate = createCertificate();
+
+        // FIXME: This test does not validate the encoding at all, only that it has a header and footer that
+        // a PEM-encoded object would have. The test should also verify that we can support encoding the
+        // cert regardless of the crypto scheme used to generate it.
 
         String result = encoder.encodeAsString(certificate);
 
@@ -88,6 +92,8 @@ class BouncyCastlePemEncoderTest {
     void shouldFailForInvalidNulls() {
         BouncyCastlePemEncoder encoder = new BouncyCastlePemEncoder();
 
+        // FIXME: Break these tests up into individual tests so their spec is properly captured
+
         assertThatThrownBy(() -> encoder.encodeAsBytes((X509Certificate) null))
             .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> encoder.encodeAsBytes((PrivateKey) null))
@@ -98,27 +104,13 @@ class BouncyCastlePemEncoderTest {
             .isInstanceOf(IllegalArgumentException.class);
     }
 
-    private X509Certificate createCertificate() throws GeneralSecurityException, IOException {
-        KeyPair keyPair = createKeyPair();
-        BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
-        CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
-        SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
-        X509CertificateBuilder certificateBuilder = new BouncyCastleX509CertificateBuilder(
-            certificateReader, securityProvider, subjectKeyIdentifierWriter);
-
-        return certificateBuilder
-            .withDN(new DistinguishedName("test_name"))
-            .withRandomSerial()
-            .withValidity(Instant.now(), Instant.now())
-            .withKeyPair(keyPair)
-            .withSubjectAltName("altName")
-            .build();
+    private X509Certificate createCertificate() throws KeyException, CertificateException {
+        Scheme scheme = CryptoUtil.generateRsaScheme();
+        return CryptoUtil.generateX509Certificate(scheme);
     }
 
-    private KeyPair createKeyPair() throws NoSuchAlgorithmException {
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-        generator.initialize(4096);
-        return generator.generateKeyPair();
+    private KeyPair createKeyPair() throws KeyException {
+        return CryptoUtil.generateKeyPair("RSA", 4096);
     }
 
 }

@@ -26,12 +26,12 @@ import java.util.Collection;
 public interface X509CertificateBuilder {
 
     /**
-     * Returns the signature scheme used for signing X509 certificates.
+     * Returns the cryptographic scheme used for signing X509 certificates.
      * This method should never return null.
      *
-     * @return the signature scheme used for signing certificates
+     * @return the cryptographic scheme used for signing certificates
      */
-    Scheme getSignatureScheme();
+    Scheme getCryptoScheme();
 
     /**
      * Sets the distinguished name used to construct a X509 certificate.

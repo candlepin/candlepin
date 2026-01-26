@@ -26,7 +26,8 @@ import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
-import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.model.CloudRegistrationInfo;
 import org.candlepin.test.CryptoUtil;
@@ -49,9 +50,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.cert.X509Certificate;
 import java.util.List;
 
 
@@ -60,14 +58,14 @@ import java.util.List;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class AnonymousCloudRegistrationAuthTest {
     private DevConfig config;
-    private CertificateReader certificateReader;
+    private CryptoManager cryptoManager;
     private CloudRegistrationAdapter mockCloudRegistrationAdapter;
     private AnonymousCloudConsumerCurator anonymousCloudConsumerCurator;
 
     @BeforeEach
     public void init() {
         this.config = TestConfig.defaults();
-        this.certificateReader = this.setupCertificateReader();
+        this.cryptoManager = CryptoUtil.getCryptoManager(this.config);
 
         this.mockCloudRegistrationAdapter = mock(CloudRegistrationAdapter.class);
         this.anonymousCloudConsumerCurator = mock(AnonymousCloudConsumerCurator.class);
@@ -82,26 +80,9 @@ public class AnonymousCloudRegistrationAuthTest {
         this.config.setProperty(ConfigProperties.CLOUD_AUTHENTICATION, "true");
     }
 
-    private CertificateReader setupCertificateReader() {
-        try {
-            ClassLoader loader = getClass().getClassLoader();
-            String caCert = loader.getResource("test-ca.crt").toURI().getPath();
-            String caKey = loader.getResource("test-ca.key").toURI().getPath();
-
-            this.config.setProperty(ConfigProperties.LEGACY_CA_CERT, caCert);
-            this.config.setProperty(ConfigProperties.LEGACY_CA_KEY, caKey);
-            this.config.setProperty(ConfigProperties.LEGACY_CA_KEY_PASSWORD, "password");
-
-            return new CertificateReader(config, CryptoUtil.getPrivateKeyReader());
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private AnonymousCloudRegistrationAuth buildAuthProvider() {
-        return new AnonymousCloudRegistrationAuth(this.config, this.anonymousCloudConsumerCurator,
-            this.certificateReader);
+        return new AnonymousCloudRegistrationAuth(this.config, this.cryptoManager,
+            this.anonymousCloudConsumerCurator);
     }
 
     private MockHttpRequest buildHttpRequest() {
@@ -117,29 +98,19 @@ public class AnonymousCloudRegistrationAuthTest {
         return (int) (System.currentTimeMillis() / 1000);
     }
 
-    private String buildMalformedToken(JsonWebToken token) {
-        X509Certificate certificate;
-        PublicKey publicKey;
-        PrivateKey privateKey;
+    private String buildToken(JsonWebToken token) {
+        // Get the scheme we believe the auth layer will be using. This needs to align with the internal
+        // logic of the auth impl under test.
+        Scheme scheme = this.cryptoManager.getDefaultCryptoScheme();
 
-        // Fetch our keys
-        try {
-            certificate = this.certificateReader.getCACert();
-            publicKey = certificate.getPublicKey();
-            privateKey = this.certificateReader.getCaKey();
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Unable to load public and private keys", e);
-        }
-
-        String keyId = KeyUtils.createKeyId(publicKey);
+        String keyId = KeyUtils.createKeyId(scheme.certificate().getPublicKey());
 
         KeyWrapper wrapper = new KeyWrapper();
         wrapper.setAlgorithm(Algorithm.RS512);
-        wrapper.setCertificate(certificate);
+        wrapper.setCertificate(scheme.certificate());
         wrapper.setKid(keyId);
-        wrapper.setPrivateKey(privateKey);
-        wrapper.setPublicKey(publicKey);
+        wrapper.setPrivateKey(scheme.privateKey().get());
+        wrapper.setPublicKey(scheme.certificate().getPublicKey());
         wrapper.setUse(KeyUse.SIG);
         wrapper.setType(KeyType.RSA);
 
@@ -177,7 +148,7 @@ public class AnonymousCloudRegistrationAuthTest {
     public void testGetPrincipalIgnoresTokensWithWrongType() {
         int ctSeconds = this.getCurrentSeconds() - 5;
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .type("invalid-token-type")
             .subject("test-subject")
             .audience("test-org")
@@ -198,7 +169,7 @@ public class AnonymousCloudRegistrationAuthTest {
     public void testGetPrincipalIgnoresTokensLackingType() {
         int ctSeconds = this.getCurrentSeconds() - 5;
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .subject("test-subject")
             .audience("test-org")
             .issuedAt(ctSeconds)
@@ -218,7 +189,7 @@ public class AnonymousCloudRegistrationAuthTest {
     public void testGetPrincipalIgnoresTokensLackingSubject() {
         int ctSeconds = this.getCurrentSeconds() - 5;
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .audience("test-audience")
             .issuedAt(ctSeconds)
@@ -238,7 +209,7 @@ public class AnonymousCloudRegistrationAuthTest {
     public void testGetPrincipalIgnoresTokensLackingAudience() {
         int ctSeconds = this.getCurrentSeconds() - 5;
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .subject("test-subject")
             .issuedAt(ctSeconds)
@@ -258,7 +229,7 @@ public class AnonymousCloudRegistrationAuthTest {
     public void testGetPrincipalIgnoresExpiredTokens() {
         int ctSeconds = this.getCurrentSeconds();
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .subject("test-subject")
             .audience("test-audience")
@@ -279,7 +250,7 @@ public class AnonymousCloudRegistrationAuthTest {
     public void testGetPrincipalIgnoresInactiveTokens() {
         int ctSeconds = this.getCurrentSeconds();
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .subject("test-subject")
             .audience("test-audience")
@@ -311,7 +282,7 @@ public class AnonymousCloudRegistrationAuthTest {
 
         doReturn(consumer).when(anonymousCloudConsumerCurator).getByUuid(anonymousConsumerUuid);
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .subject("test-subject")
             .audience(anonymousConsumerUuid)
@@ -334,7 +305,7 @@ public class AnonymousCloudRegistrationAuthTest {
     public void testGetPrincipalWithNonExistingAnonymousCloudConsumer() {
         int ctSeconds = this.getCurrentSeconds() - 5;
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .subject("test-subject")
             .audience("anon-consumer-uuid")

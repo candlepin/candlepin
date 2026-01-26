@@ -31,10 +31,11 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateCurator;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
-import org.candlepin.pki.X509CertificateBuilder;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.X509ExtensionUtil;
@@ -58,8 +59,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
+
 
 
 /**
@@ -75,39 +76,46 @@ public class UeberCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(UeberCertificateGenerator.class);
 
     private final UniqueIdGenerator idGenerator;
-    private final KeyPairGenerator keyPairGenerator;
     private final CertificateSerialCurator serialCurator;
-    private final X509ExtensionUtil extensionUtil;
     private final OwnerCurator ownerCurator;
     private final UeberCertificateCurator ueberCertCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
     private final I18n i18n;
+    private final CryptoManager cryptoManager;
+    private final KeyPairGenerator keyPairGenerator;
+    private final X509ExtensionUtil extensionUtil;
     private final PemEncoder pemEncoder;
-    private final Provider<X509CertificateBuilder> certificateBuilder;
+
+    // TODO: Temporary, should not be universal
+    private final Scheme scheme;
 
     @Inject
     public UeberCertificateGenerator(
         UniqueIdGenerator idGenerator,
-        X509ExtensionUtil extensionUtil,
         CertificateSerialCurator serialCurator,
         OwnerCurator ownerCurator,
         UeberCertificateCurator ueberCertCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        KeyPairGenerator keyPairGenerator,
-        PemEncoder pemEncoder,
         I18n i18n,
-        Provider<X509CertificateBuilder> certificateBuilder) {
+        CryptoManager cryptoManager,
+        KeyPairGenerator keyPairGenerator, // temporary -- this should come from the crypt manager
+        X509ExtensionUtil extensionUtil,
+        PemEncoder pemEncoder) {
 
         this.idGenerator = Objects.requireNonNull(idGenerator);
         this.serialCurator = Objects.requireNonNull(serialCurator);
-        this.extensionUtil = Objects.requireNonNull(extensionUtil);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.ueberCertCurator = Objects.requireNonNull(ueberCertCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.i18n = Objects.requireNonNull(i18n);
+        this.cryptoManager = Objects.requireNonNull(cryptoManager);
         this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
+        this.extensionUtil = Objects.requireNonNull(extensionUtil);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
-        this.certificateBuilder = Objects.requireNonNull(certificateBuilder);
+
+        // FIXME: Temporary; select the default scheme and run with it for testing. Replace this with per-op
+        // scheme selection
+        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
     }
 
     @Transactional
@@ -156,8 +164,9 @@ public class UeberCertificateGenerator {
         return ueberCert;
     }
 
-    private X509Certificate createX509Certificate(UeberCertData data,
-        BigInteger serialNumber, KeyPair keyPair) {
+    private X509Certificate createX509Certificate(UeberCertData data, BigInteger serialNumber,
+        KeyPair keyPair) {
+
         ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(null, List.of());
         Set<X509Extension> extensions = new LinkedHashSet<>(
             extensionUtil.productExtensions(data.getProduct()));
@@ -175,7 +184,7 @@ public class UeberCertificateGenerator {
         }
 
         DistinguishedName dn = new DistinguishedName(null, data.getOwner());
-        return this.certificateBuilder.get()
+        return this.cryptoManager.getCertificateBuilder(this.scheme)
             .withDN(dn)
             .withSerial(serialNumber)
             .withValidity(data.startDate.toInstant(), data.endDate.toInstant())

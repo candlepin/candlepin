@@ -16,8 +16,8 @@ package org.candlepin.auth;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.config.ConversionException;
-import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
 import org.candlepin.util.Util;
 
 import org.keycloak.common.util.KeyUtils;
@@ -29,9 +29,7 @@ import org.keycloak.crypto.KeyWrapper;
 import org.keycloak.jose.jws.JWSBuilder;
 import org.keycloak.representations.JsonWebToken;
 
-import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.cert.X509Certificate;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -42,44 +40,35 @@ import javax.inject.Inject;
  * A class for generating cloud authentication tokens
  */
 public class CloudAuthTokenGenerator {
-
     private static final String TOKEN_ALGORITHM = Algorithm.RS512;
     private static final String TOKEN_SUBJECT_DEFAULT = "cloud_auth";
 
     private final Configuration config;
-    private final CertificateReader certificateReader;
+    private final CryptoManager cryptoManager;
 
     private final String jwtIssuer;
     private final int jwtTokenTTL; // seconds
     private final int anonJwtTokenTTL; // seconds
 
-    private final X509Certificate certificate;
+    private final Scheme scheme;
     private final PublicKey publicKey;
-    private final PrivateKey privateKey;
 
     @Inject
-    public CloudAuthTokenGenerator(Configuration config, CertificateReader certificateReader) {
-
+    public CloudAuthTokenGenerator(Configuration config, CryptoManager cryptoManager) {
         this.config = Objects.requireNonNull(config);
-        this.certificateReader = Objects.requireNonNull(certificateReader);
+        this.cryptoManager = Objects.requireNonNull(cryptoManager);
 
-        try {
-            this.jwtIssuer = this.config.getString(ConfigProperties.JWT_ISSUER);
-            this.jwtTokenTTL = this.config.getInt(ConfigProperties.JWT_TOKEN_TTL);
-            this.anonJwtTokenTTL = this.config.getInt(ConfigProperties.ANON_JWT_TOKEN_TTL);
-        }
-        catch (ConversionException e) {
-            // Try to pretty up the exception for easy debugging
-            throw new RuntimeException("Invalid value(s) found while parsing JWT configuration", e);
-        }
+        this.jwtIssuer = this.config.getString(ConfigProperties.JWT_ISSUER);
+        this.jwtTokenTTL = this.config.getInt(ConfigProperties.JWT_TOKEN_TTL);
+        this.anonJwtTokenTTL = this.config.getInt(ConfigProperties.ANON_JWT_TOKEN_TTL);
 
-        try {
-            this.certificate = this.certificateReader.getCACert();
-            this.publicKey = certificate.getPublicKey();
-            this.privateKey = this.certificateReader.getCaKey();
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Unable to load public and private keys", e);
+        // TODO: FIXME: This needs to be updated to be more scheme-aware. This will come in later work, but
+        // for now we'll just use the default/legacy scheme.
+        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
+        this.publicKey = this.scheme.certificate().getPublicKey();
+
+        if (this.scheme.privateKey().isEmpty()) {
+            throw new IllegalStateException("scheme does not include a private key");
         }
     }
 
@@ -118,9 +107,9 @@ public class CloudAuthTokenGenerator {
 
         KeyWrapper wrapper = new KeyWrapper();
         wrapper.setAlgorithm(TOKEN_ALGORITHM);
-        wrapper.setCertificate(this.certificate);
+        wrapper.setCertificate(this.scheme.certificate());
         wrapper.setKid(keyId);
-        wrapper.setPrivateKey(this.privateKey);
+        wrapper.setPrivateKey(this.scheme.privateKey().get());
         wrapper.setPublicKey(this.publicKey);
         wrapper.setUse(KeyUse.SIG);
         wrapper.setType(KeyType.RSA);
@@ -178,9 +167,9 @@ public class CloudAuthTokenGenerator {
 
         KeyWrapper wrapper = new KeyWrapper();
         wrapper.setAlgorithm(TOKEN_ALGORITHM);
-        wrapper.setCertificate(this.certificate);
+        wrapper.setCertificate(this.scheme.certificate());
         wrapper.setKid(keyId);
-        wrapper.setPrivateKey(this.privateKey);
+        wrapper.setPrivateKey(this.scheme.privateKey().get());
         wrapper.setPublicKey(this.publicKey);
         wrapper.setUse(KeyUse.SIG);
         wrapper.setType(KeyType.RSA);

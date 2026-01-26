@@ -17,10 +17,11 @@ package org.candlepin.pki.certs;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
-import org.candlepin.pki.X509CertificateBuilder;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.util.X509ExtensionUtil;
 
@@ -37,7 +38,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 
@@ -48,21 +48,30 @@ import javax.inject.Singleton;
 public class ProductCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(ProductCertificateGenerator.class);
 
-    private final ProductCertificateCurator productCertificateCurator;
+    private final CryptoManager cryptoManager;
     private final X509ExtensionUtil extensionUtil;
     private final KeyPairGenerator keyPairGenerator;
     private final PemEncoder pemEncoder;
-    private final Provider<X509CertificateBuilder> certificateBuilder;
+
+    private final ProductCertificateCurator productCertificateCurator;
+
+    // TODO: Temporary, should not be universal
+    private final Scheme scheme;
 
     @Inject
-    public ProductCertificateGenerator(ProductCertificateCurator productCertificateCurator,
-        X509ExtensionUtil extensionUtil, KeyPairGenerator keyPairGenerator, PemEncoder pemEncoder,
-        Provider<X509CertificateBuilder> certificateBuilder) {
+    public ProductCertificateGenerator(CryptoManager cryptoManager, X509ExtensionUtil extensionUtil,
+        KeyPairGenerator keyPairGenerator, PemEncoder pemEncoder,
+        ProductCertificateCurator productCertificateCurator) {
+
+        this.cryptoManager = Objects.requireNonNull(cryptoManager);
         this.extensionUtil = Objects.requireNonNull(extensionUtil);
         this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
         this.productCertificateCurator = Objects.requireNonNull(productCertificateCurator);
-        this.certificateBuilder = Objects.requireNonNull(certificateBuilder);
+
+        // FIXME: Temporary; select the default scheme and run with it for testing. Replace this with per-op
+        // scheme selection
+        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
     }
 
     /**
@@ -118,7 +127,7 @@ public class ProductCertificateGenerator {
         Instant to = OffsetDateTime.now(ZoneOffset.UTC).plusYears(10).toInstant();
 
         DistinguishedName dn = new DistinguishedName(product.getId());
-        X509Certificate x509Cert = this.certificateBuilder.get()
+        X509Certificate x509Cert = this.cryptoManager.getCertificateBuilder(this.scheme)
             .withDN(dn)
             .withSerial(serial)
             .withValidity(from, to)

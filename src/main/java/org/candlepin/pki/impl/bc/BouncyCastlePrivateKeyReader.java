@@ -48,7 +48,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 
 
@@ -64,10 +63,10 @@ public class BouncyCastlePrivateKeyReader extends AbstractPrivateKeyReader {
     private static final int REGEX_GROUP_DEK_ALGO = 1;
     private static final int REGEX_GROUP_DEK_IV = 2;
 
-    private final Provider<BouncyCastleProvider> securityProvider;
+    private final BouncyCastleProvider securityProvider;
 
     @Inject
-    public BouncyCastlePrivateKeyReader(Provider<BouncyCastleProvider> securityProvider) {
+    public BouncyCastlePrivateKeyReader(BouncyCastleProvider securityProvider) {
         this.securityProvider = Objects.requireNonNull(securityProvider);
     }
 
@@ -93,7 +92,7 @@ public class BouncyCastlePrivateKeyReader extends AbstractPrivateKeyReader {
             byte[] initvec = Hex.decodeHex(matcher.group(REGEX_GROUP_DEK_IV).toCharArray());
 
             PEMDecryptorProvider decryptorProvider = new JcePEMDecryptorProviderBuilder()
-                .setProvider(this.securityProvider.get())
+                .setProvider(this.securityProvider)
                 .build(password.toCharArray());
 
             return decryptorProvider.get(algorithm)
@@ -156,7 +155,7 @@ public class BouncyCastlePrivateKeyReader extends AbstractPrivateKeyReader {
             RSAPrivateCrtKeySpec spec = new RSAPrivateCrtKeySpec(modulus, publicExponent, privateExponent,
                 primeP, primeQ, primeExponentP, primeExponentQ, coefficient);
 
-            return KeyFactory.getInstance("RSA", this.securityProvider.get())
+            return KeyFactory.getInstance("RSA", this.securityProvider)
                 .generatePrivate(spec);
         }
         catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
@@ -178,7 +177,7 @@ public class BouncyCastlePrivateKeyReader extends AbstractPrivateKeyReader {
                 }
 
                 InputDecryptorProvider decryptor = new JcePKCSPBEInputDecryptorProviderBuilder()
-                    .setProvider(this.securityProvider.get())
+                    .setProvider(this.securityProvider)
                     .build(password.toCharArray());
 
                 pkinfo = new PKCS8EncryptedPrivateKeyInfo(buffer)
@@ -189,7 +188,7 @@ public class BouncyCastlePrivateKeyReader extends AbstractPrivateKeyReader {
             }
 
             return new JcaPEMKeyConverter()
-                .setProvider(this.securityProvider.get())
+                .setProvider(this.securityProvider)
                 .getPrivateKey(pkinfo);
         }
         catch (IOException | PKCSException e) {

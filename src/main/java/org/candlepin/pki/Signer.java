@@ -22,12 +22,12 @@ import java.io.InputStream;
 public interface Signer {
 
     /**
-     * Returns the signature scheme used by this signer. This method should never return null.
+     * Returns the cryptographic scheme used by this signer. This method should never return null.
      *
      * @return the {@link Scheme} representing the cryptographic algorithm and parameters used for signing
      *  operations
      */
-    Scheme getSignatureScheme();
+    Scheme getCryptoScheme();
 
     /**
      * Signs the data read from the provided input stream using the signing algorithm based on this signer's
@@ -36,7 +36,7 @@ public interface Signer {
      * @param istream
      *  the input stream containing the data to be signed
      *
-     * @throws SignatureFailedException
+     * @throws SignatureException
      *  if unable to sign the data provided by the input stream
      *
      * @return a byte array containing the cryptographic signature
@@ -50,7 +50,7 @@ public interface Signer {
      * @param data
      *  the byte array containing the data to be signed
      *
-     * @throws SignatureFailedException
+     * @throws SignatureException
      *  if unable to sign the data provided by the byte array
      *
      * @return a byte array containing the cryptographic signature
