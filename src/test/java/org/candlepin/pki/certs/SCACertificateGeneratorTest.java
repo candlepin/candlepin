@@ -79,6 +79,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -109,7 +110,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
     private ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
-    void setUp() throws CertificateException, IOException {
+    void setUp() throws CertificateException, KeyException {
         this.config = TestConfig.defaults();
         this.extensionUtil = spy(new X509V3ExtensionUtil(
             this.config, this.entitlementCurator, new Huffman()));
@@ -117,7 +118,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
         this.generator = getNewGenerator();
     }
 
-    private SCACertificateGenerator getNewGenerator() throws CertificateException, IOException {
+    private SCACertificateGenerator getNewGenerator() throws CertificateException, KeyException {
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
         keyPairGenerator = new BouncyCastleKeyPairGenerator(
             securityProvider, mock(KeyPairDataCurator.class));

@@ -51,10 +51,14 @@ public class JcaSigner implements Signer {
     public JcaSigner(CertificateReader reader) {
         this.certificateAuthority = Objects.requireNonNull(reader);
 
-        this.signatureScheme = new Scheme(SIGNATURE_SCHEME_NAME,
-            this.certificateAuthority.getCACert(),
-            SIGNATURE_ALGORITHM,
-            KEY_ALGORITHM);
+        this.signatureScheme = new Scheme.Builder()
+            .setName(SIGNATURE_SCHEME_NAME)
+            .setPrivateKey(this.certificateAuthority.getCaKey())
+            .setCertificate(this.certificateAuthority.getCACert())
+            .setSignatureAlgorithm(SIGNATURE_ALGORITHM)
+            .setKeyAlgorithm(KEY_ALGORITHM)
+            .setKeySize(4096)
+            .build();
     }
 
     @Override

@@ -33,16 +33,24 @@ import javax.inject.Singleton;
 public class SignatureValidatorProvider implements Provider<SignatureValidator> {
 
     private final CertificateReader certReader;
+    private final Scheme scheme;
 
     @Inject
     public SignatureValidatorProvider(CertificateReader certReader) {
         this.certReader = Objects.requireNonNull(certReader);
+        this.scheme = new Scheme.Builder()
+            .setName("rsa")
+            .setPrivateKey(this.certReader.getCaKey())
+            .setCertificate(this.certReader.getCACert())
+            .setSignatureAlgorithm("SHA256withRSA")
+            .setKeyAlgorithm("RSA")
+            .setKeySize(4096)
+            .build();
     }
 
     @Override
     public SignatureValidator get() {
-        Scheme scheme = new Scheme("rsa", this.certReader.getCACert(), "SHA256withRSA", "rsa");
-        return new JcaSignatureValidator(scheme);
+        return new JcaSignatureValidator(this.scheme);
     }
 }
 

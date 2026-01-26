@@ -14,44 +14,108 @@
  */
 package org.candlepin.pki;
 
-import org.apache.commons.codec.binary.Base64InputStream;
-import org.apache.commons.io.IOUtils;
-
-import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.security.KeyException;
 import java.security.PrivateKey;
-import java.util.Map;
+
+
 
 /**
- * Interface defining methods to read a private key from a PEM file.
+ * Interface defining methods to read a PEM-encoded private key from an input stream or file. Implementations
+ * may choose whether or not to support a given format or encoding, such as PKCS1 or PKCS8 keys.
  */
 public interface PrivateKeyReader {
 
-    PrivateKey read(String caKeyPath, String caKeyPassword) throws IOException;
-
-    PrivateKey read(InputStream keyStream, String password) throws IOException;
+    /**
+     * Attempts to read the data from the given input stream as a PEM-encoded private key. If the password
+     * argument is non-null, and non-empty, this method will attempt decryption or decoding with the password
+     * using standard password-based encoding (PBE) algorithms. This method never returns null.
+     * <p>
+     * Note that callers are responsible for maintaining the lifecycle of the given input stream. That is, the
+     * stream will be consumed by this method, but it will not be marked, rewound, nor closed.
+     *
+     * @param istream
+     *  the stream from which to read a PEM-encoded private key
+     *
+     * @param password
+     *  the password or passphrase to use while reading the key. If null or empty, no decryption step will be
+     *  performed.
+     *
+     * @throws IllegalArgumentException
+     *  if the provided InputStream is null
+     *
+     * @throws KeyException
+     *  if an exception occurs while reading the key
+     *
+     * @return
+     *  the PrivateKey read from the provided input stream.
+     */
+    PrivateKey read(InputStream istream, String password) throws KeyException;
 
     /**
-     * Interface for various private key encoding types
+     * Attempts to read the data from the given file as a PEM-encoded private key. If the password argument is
+     * non-null, and non-empty, this method will attempt decryption or decoding with the password using
+     * standard password-based encoding (PBE) algorithms. This method never returns null.
+     *
+     * @param file
+     *  the file from which to read a PEM-encoded private key
+     *
+     * @param password
+     *  the password or passphrase to use while reading the key. If null or empty, no decryption step will be
+     *  performed.
+     *
+     * @throws IllegalArgumentException
+     *  if the provided file is null
+     *
+     * @throws KeyException
+     *  if an exception occurs while reading the key
+     *
+     * @return
+     *  the PrivateKey read from the provided file
      */
-    interface PrivateKeyPemParser {
-        default PrivateKey decode(String pem, String password, Map<String, String> headers)
-            throws IOException {
-            try (
-                InputStream derStream = new Base64InputStream(
-                    new ByteArrayInputStream(pem.getBytes(StandardCharsets.UTF_8)));
-            ) {
-                byte[] der = IOUtils.toByteArray(derStream);
-                return decode(der, password, headers);
-            }
+    default PrivateKey read(File file, String password) throws KeyException {
+        if (file == null) {
+            throw new IllegalArgumentException("file is null");
         }
 
-        PrivateKey decode(byte[] der, String password, Map<String, String> headers) throws IOException;
-
-        default char[] getPassword(String password) {
-            return (password != null) ? password.toCharArray() : null;
+        try (FileInputStream istream = new FileInputStream(file)) {
+            return this.read(istream, password);
+        }
+        catch (IOException e) {
+            throw new KeyException(e);
         }
     }
+
+    /**
+     * Attempts to read the data from the given file path as a PEM-encoded private key. If the password
+     * argument is non-null, and non-empty, this method will attempt decryption or decoding with the password
+     * using standard password-based encoding (PBE) algorithms. This method never returns null.
+     *
+     * @param path
+     *  the file path from which to read a PEM-encoded private key
+     *
+     * @param password
+     *  the password or passphrase to use while reading the key. If null or empty, no decryption step will be
+     *  performed.
+     *
+     * @throws IllegalArgumentException
+     *  if the provided path is null
+     *
+     * @throws KeyException
+     *  if an exception occurs while reading the key
+     *
+     * @return
+     *  the PrivateKey read from the provided file path
+     */
+    default PrivateKey read(String path, String password) throws KeyException {
+        if (path == null) {
+            throw new IllegalArgumentException("path is null");
+        }
+
+        return this.read(new File(path), password);
+    }
+
 }

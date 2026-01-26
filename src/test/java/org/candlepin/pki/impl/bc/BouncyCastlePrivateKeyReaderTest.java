@@ -14,20 +14,21 @@
  */
 package org.candlepin.pki.impl.bc;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
-import javax.inject.Provider;
+import org.candlepin.pki.PrivateKeyReader;
+import org.candlepin.pki.PrivateKeyReaderTest;
 
 
 
 /**
- * Bouncy Castle implementation of the SecurityProvider interface
+ * PKR test suite for the Bouncy Castle security provider
  */
-public class BouncyCastleSecurityProvider implements Provider<BouncyCastleProvider> {
-    private static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
+public class BouncyCastlePrivateKeyReaderTest extends PrivateKeyReaderTest {
+
+    private static final BouncyCastleSecurityProvider SECURITY_PROVIDER = new BouncyCastleSecurityProvider();
 
     @Override
-    public BouncyCastleProvider get() {
-        return BC_PROVIDER;
+    protected PrivateKeyReader buildPrivateKeyReader() {
+        return new BouncyCastlePrivateKeyReader(SECURITY_PROVIDER);
     }
+
 }

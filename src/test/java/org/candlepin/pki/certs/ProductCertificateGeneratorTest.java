@@ -41,7 +41,7 @@ import org.candlepin.util.X509ExtensionUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import java.security.KeyException;
 import java.security.cert.CertificateException;
 
 class ProductCertificateGeneratorTest {
@@ -50,7 +50,7 @@ class ProductCertificateGeneratorTest {
     private ProductCertificateGenerator productCertificateGenerator;
 
     @BeforeEach
-    public void init() throws CertificateException, IOException {
+    public void init() throws CertificateException, KeyException {
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
         X509ExtensionUtil extensionUtil = mock(X509ExtensionUtil.class);
         KeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(

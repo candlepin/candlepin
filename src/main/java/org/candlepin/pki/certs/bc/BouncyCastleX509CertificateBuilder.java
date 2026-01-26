@@ -97,16 +97,21 @@ public class BouncyCastleX509CertificateBuilder implements X509CertificateBuilde
     public BouncyCastleX509CertificateBuilder(CertificateReader certificateAuthority,
         Provider<BouncyCastleProvider> securityProvider,
         SubjectKeyIdentifierWriter subjectKeyIdentifierWriter) {
+
         this.certificateAuthority = Objects.requireNonNull(certificateAuthority);
         this.securityProvider = Objects.requireNonNull(securityProvider);
         this.subjectKeyIdentifierWriter = Objects.requireNonNull(subjectKeyIdentifierWriter);
 
         this.certExtensions = new ArrayList<>();
 
-        this.signatureScheme = new Scheme(SIGNATURE_SCHEME_NAME,
-            this.certificateAuthority.getCACert(),
-            SIGNATURE_ALGORITHM,
-            KEY_ALGORITHM);
+        this.signatureScheme = new Scheme.Builder()
+            .setName(SIGNATURE_SCHEME_NAME)
+            .setPrivateKey(this.certificateAuthority.getCaKey())
+            .setCertificate(this.certificateAuthority.getCACert())
+            .setSignatureAlgorithm(SIGNATURE_ALGORITHM)
+            .setKeyAlgorithm(KEY_ALGORITHM)
+            .setKeySize(4096)
+            .build();
     }
 
     @Override
