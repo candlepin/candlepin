@@ -27,9 +27,9 @@ import org.candlepin.config.TestConfig;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.impl.bc.BouncyCastlePrivateKeyReader;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.model.CloudRegistrationInfo;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
@@ -92,7 +92,7 @@ public class AnonymousCloudRegistrationAuthTest {
             this.config.setProperty(ConfigProperties.CA_KEY, caKey);
             this.config.setProperty(ConfigProperties.CA_KEY_PASSWORD, "password");
 
-            return new CertificateReader(config, new BouncyCastlePrivateKeyReader());
+            return new CertificateReader(config, CryptoUtil.getPrivateKeyReader());
         }
         catch (Exception e) {
             throw new RuntimeException(e);

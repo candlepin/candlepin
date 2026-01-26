@@ -70,7 +70,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.IOException;
+import java.security.KeyException;
 import java.security.cert.CertificateException;
 import java.util.List;
 
@@ -92,14 +92,14 @@ class AnonymousCertificateGeneratorTest {
     private AnonymousCertificateGenerator generator;
 
     @BeforeEach
-    void setUp() throws CertificateException, IOException {
+    void setUp() throws CertificateException, KeyException {
         this.config = TestConfig.defaults();
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         this.generator = this.createGenerator();
     }
 
-    private AnonymousCertificateGenerator createGenerator() throws CertificateException, IOException {
+    private AnonymousCertificateGenerator createGenerator() throws CertificateException, KeyException {
         X509V3ExtensionUtil extensionUtil = spy(new X509V3ExtensionUtil(
             config, this.entitlementCurator, new Huffman()));
 

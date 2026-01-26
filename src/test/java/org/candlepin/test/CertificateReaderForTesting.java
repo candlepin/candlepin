@@ -18,12 +18,12 @@ import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PrivateKeyReader;
-import org.candlepin.pki.impl.bc.BouncyCastlePrivateKeyReader;
 
 import org.junit.jupiter.api.Assertions;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -36,8 +36,8 @@ import javax.inject.Inject;
 public class CertificateReaderForTesting extends CertificateReader {
 
     @Inject
-    public CertificateReaderForTesting() throws CertificateException, IOException {
-        super(new DevConfig(), new BouncyCastlePrivateKeyReader());
+    public CertificateReaderForTesting() throws CertificateException, KeyException {
+        super(new DevConfig(), CryptoUtil.getPrivateKeyReader());
     }
 
     @Override
@@ -51,7 +51,7 @@ public class CertificateReaderForTesting extends CertificateReader {
     }
 
     @Override
-    protected PrivateKey readPrivateKey(PrivateKeyReader reader) throws IOException {
+    protected PrivateKey readPrivateKey(PrivateKeyReader reader) throws KeyException {
         InputStream keyStream = this.getClass().getClassLoader().getResourceAsStream(getKeyFileName());
         return reader.read(keyStream, null);
     }

@@ -14,129 +14,187 @@
  */
 package org.candlepin.pki.impl.bc;
 
-import org.candlepin.pki.impl.jca.ProviderBasedPrivateKeyReader;
+import org.candlepin.pki.impl.AbstractPrivateKeyReader;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMDecryptor;
 import org.bouncycastle.openssl.PEMDecryptorProvider;
+import org.bouncycastle.openssl.PEMException;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
+import org.bouncycastle.operator.InputDecryptorProvider;
 import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
+import org.bouncycastle.pkcs.PKCSException;
+import org.bouncycastle.pkcs.jcajce.JcePKCSPBEInputDecryptorProviderBuilder;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.KeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPrivateCrtKeySpec;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+
+
 
 /**
- * Implementation of ProviderBasedPrivateKeyReader using BouncyCastle as the crypto provider.
+ * Bouncy Castle implementation of the abstract private key reader; supporting both PKCS1 and PKCS8 key
+ * formats.
  */
-public class BouncyCastlePrivateKeyReader extends ProviderBasedPrivateKeyReader {
-    @Override
-    protected PrivateKeyPemParser pkcs1EncryptedPrivateKeyPemParser() {
-        return new PKCS1EncryptedPrivateKeyPemParser();
+public class BouncyCastlePrivateKeyReader extends AbstractPrivateKeyReader {
+
+    private static final String HEADER_DEK_INFO = "DEK-Info";
+
+    private static final Pattern REGEX_DEK_INFO = Pattern.compile("^(.+?)\\s*,\\s*([a-fA-F0-9]+)$");
+    private static final int REGEX_GROUP_DEK_ALGO = 1;
+    private static final int REGEX_GROUP_DEK_IV = 2;
+
+    private final Provider<BouncyCastleProvider> securityProvider;
+
+    @Inject
+    public BouncyCastlePrivateKeyReader(Provider<BouncyCastleProvider> securityProvider) {
+        this.securityProvider = Objects.requireNonNull(securityProvider);
+    }
+
+    private byte[] decryptPkcs1(byte[] buffer, Map<String, String> headers, String password)
+        throws KeyException {
+
+        if (headers == null || headers.isEmpty() || !headers.containsKey(HEADER_DEK_INFO)) {
+            return buffer;
+        }
+
+        String dekinfo = headers.get(HEADER_DEK_INFO);
+        Matcher matcher = REGEX_DEK_INFO.matcher(dekinfo);
+        if (!matcher.matches()) {
+            throw new KeyException("malformed data encryption key in private key headers: " + dekinfo);
+        }
+
+        if (password == null || password.isEmpty()) {
+            throw new KeyException("Cannot read private key: no passphrase provided for encrypted key");
+        }
+
+        try {
+            String algorithm = matcher.group(REGEX_GROUP_DEK_ALGO);
+            byte[] initvec = Hex.decodeHex(matcher.group(REGEX_GROUP_DEK_IV).toCharArray());
+
+            PEMDecryptorProvider decryptorProvider = new JcePEMDecryptorProviderBuilder()
+                .setProvider(this.securityProvider.get())
+                .build(password.toCharArray());
+
+            return decryptorProvider.get(algorithm)
+                .decrypt(buffer, initvec);
+        }
+        catch (DecoderException e) {
+            throw new KeyException("Cannot read private key: unable to decode initialization vector", e);
+        }
+        catch (OperatorCreationException e) {
+            throw new KeyException("Cannot read private key: no provider for decryption algorithm", e);
+        }
+        catch (PEMException e) {
+            throw new KeyException(e);
+        }
     }
 
     @Override
-    protected PrivateKeyPemParser pkcs1PrivateKeyPemParser() {
-        return new PKCS1PrivateKeyPemParser();
-    }
+    protected PrivateKey decodePkcs1(byte[] buffer, Map<String, String> headers, String password)
+        throws KeyException {
 
+        // Check if we need to decrypt the buffer first
+        buffer = decryptPkcs1(buffer, headers, password);
 
-    /**
-     * Read an OpenSSL created RSA key.  For unencrypted RSA keys, OpenSSL uses the PKCS1 format defined in
-     * RFC 8017.  Currently this uses BouncyCastle to parse the ASN1, but if we switch providers, using their
-     * ASN1 parsing classes should be straight-forward.
-     */
-    private static class PKCS1PrivateKeyPemParser implements PrivateKeyPemParser {
-        @Override
-        public RSAPrivateKey decode(byte[] der, String password, Map<String, String> headers)
-            throws IOException {
-            ASN1Sequence seq = ASN1Sequence.getInstance(der);
-            Enumeration asn1 = seq.getObjects();
+        ASN1Sequence seq = ASN1Sequence.getInstance(buffer);
+        Enumeration asn1 = seq.getObjects();
 
-            BigInteger version = ((ASN1Integer) asn1.nextElement()).getValue();
-            if (version.intValue() != 0 && version.intValue() != 1) {
-                throw new IllegalArgumentException("wrong version for RSA private key");
-            }
+        BigInteger version = ((ASN1Integer) asn1.nextElement()).getValue();
+        if (version.intValue() != 0 && version.intValue() != 1) {
+            throw new KeyException("Cannot read private key: wrong version for RSA private key: " + version);
+        }
 
-            // See RFC 8017 Appendix A.1.2
-            BigInteger modulus = ((ASN1Integer) asn1.nextElement()).getValue();
-            BigInteger publicExponent = ((ASN1Integer) asn1.nextElement()).getValue();
-            BigInteger privateExponent = ((ASN1Integer) asn1.nextElement()).getValue();
-            BigInteger primeP = ((ASN1Integer) asn1.nextElement()).getValue();
-            BigInteger primeQ = ((ASN1Integer) asn1.nextElement()).getValue();
-            BigInteger primeExponentP = ((ASN1Integer) asn1.nextElement()).getValue();
-            BigInteger primeExponentQ = ((ASN1Integer) asn1.nextElement()).getValue();
-            BigInteger coefficient = ((ASN1Integer) asn1.nextElement()).getValue();
+        // See RFC 8017 Appendix A.1.2
+        BigInteger modulus = ((ASN1Integer) asn1.nextElement()).getValue();
+        BigInteger publicExponent = ((ASN1Integer) asn1.nextElement()).getValue();
+        BigInteger privateExponent = ((ASN1Integer) asn1.nextElement()).getValue();
+        BigInteger primeP = ((ASN1Integer) asn1.nextElement()).getValue();
+        BigInteger primeQ = ((ASN1Integer) asn1.nextElement()).getValue();
+        BigInteger primeExponentP = ((ASN1Integer) asn1.nextElement()).getValue();
+        BigInteger primeExponentQ = ((ASN1Integer) asn1.nextElement()).getValue();
+        BigInteger coefficient = ((ASN1Integer) asn1.nextElement()).getValue();
 
-            if (asn1.hasMoreElements()) {
-                /* Near as I can tell, multi-prime RSA keys are uncommon.  I can't even figure out how to
-                 * generate them via the OpenSSL CLI.  If we did want to support them, we'd need to do
-                 * something like:
-                 *
-                 * ASN1Sequence otherPrimeInfos = (ASN1Sequence) asn1.nextElement();
-                 * RSAOtherPrimeInfo[] otherPrimes = new RSAOtherPrimeInfo[otherPrimeInfos.size()];
-                 * for (ASN1Encodable e : otherPrimeInfos.toArray()) {
-                 * // Create RSAOtherPrimeInfo object here
-                 *  }
-                 * RSAMultiPrimePrivateCrtKeySpec spec = new RSAMultiPrimePrivateCrtKeySpec(modulus,
-                 *  publicExponent, privateExponent, primeP, primeQ, primeExponentP, primeExponentQ,
-                 *  coefficient, otherPrimeInfos.);
-                 */
-                throw new IOException("RSA multi-prime keys are not supported");
-            }
+        if (asn1.hasMoreElements()) {
+            /* Near as I can tell, multi-prime RSA keys are uncommon.  I can't even figure out how to
+             * generate them via the OpenSSL CLI.  If we did want to support them, we'd need to do
+             * something like:
+             *
+             * ASN1Sequence otherPrimeInfos = (ASN1Sequence) asn1.nextElement();
+             * RSAOtherPrimeInfo[] otherPrimes = new RSAOtherPrimeInfo[otherPrimeInfos.size()];
+             * for (ASN1Encodable e : otherPrimeInfos.toArray()) {
+             * // Create RSAOtherPrimeInfo object here
+             *  }
+             * RSAMultiPrimePrivateCrtKeySpec spec = new RSAMultiPrimePrivateCrtKeySpec(modulus,
+             *  publicExponent, privateExponent, primeP, primeQ, primeExponentP, primeExponentQ,
+             *  coefficient, otherPrimeInfos.);
+             */
+            throw new KeyException("Cannot read private key: RSA multi-prime keys are not supported");
+        }
 
+        try {
             RSAPrivateCrtKeySpec spec = new RSAPrivateCrtKeySpec(modulus, publicExponent, privateExponent,
                 primeP, primeQ, primeExponentP, primeExponentQ, coefficient);
-            try {
-                KeyFactory kf = KeyFactory.getInstance("RSA");
-                return (RSAPrivateKey) kf.generatePrivate(spec);
-            }
-            catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-                throw new IOException("Could not read key", e);
-            }
+
+            return KeyFactory.getInstance("RSA", this.securityProvider.get())
+                .generatePrivate(spec);
+        }
+        catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new KeyException("Cannot read private key", e);
         }
     }
 
-    /**
-     * Read an OpenSSL created and encrypted private key.  OpenSSL encrypts RSA keys in a non-standard
-     * format that uses plaintext headers to define the encryption algorithm and the initialization vector
-     * for that algorithm.  This class parses those headers, decrypts the base64 encoded data (which is not
-     * in an ASN1 format) and then sends it on to PKCS1PrivateKeyPemParser.
-     *
-     * Note this class uses BouncyCastle to do the decryption and should be replaced if we switch crypto
-     * providers.
-     */
-    private static class PKCS1EncryptedPrivateKeyPemParser extends
-        AbstractPKCS1EncryptedPrivateKeyPemParser {
-        @Override
-        public RSAPrivateKey decode(byte[] data, String password, Map<String, String> headers)
-            throws IOException {
-            readHeaders(headers);  // prime the algoName and iv class fields
+    @Override
+    protected PrivateKey decodePkcs8(byte[] buffer, Optional<Modifiers> modifier, String password)
+        throws KeyException {
 
-            if (algoName == null || iv == null) {
-                throw new IOException("Could not read key headers");
+        try {
+            PrivateKeyInfo pkinfo;
+
+            if (modifier.orElse(null) == Modifiers.ENCRYPTED) {
+                if (password == null || password.isEmpty()) {
+                    throw new KeyException(
+                        "Cannot read private key: no passphrase provided for encrypted key");
+                }
+
+                InputDecryptorProvider decryptor = new JcePKCSPBEInputDecryptorProviderBuilder()
+                    .setProvider(this.securityProvider.get())
+                    .build(password.toCharArray());
+
+                pkinfo = new PKCS8EncryptedPrivateKeyInfo(buffer)
+                    .decryptPrivateKeyInfo(decryptor);
+            }
+            else {
+                pkinfo = PrivateKeyInfo.getInstance(buffer);
             }
 
-            PEMDecryptorProvider provider = new JcePEMDecryptorProviderBuilder()
-                .setProvider(new BouncyCastleProvider())
-                .build(getPassword(password));
-
-            try {
-                PEMDecryptor keyDecryptor = provider.get(algoName);
-                byte[] decrypted = keyDecryptor.decrypt(data, iv);
-                return new PKCS1PrivateKeyPemParser().decode(decrypted, null, null);
-            }
-            catch (OperatorCreationException e) {
-                throw new IOException("Could not read key", e);
-            }
+            return new JcaPEMKeyConverter()
+                .setProvider(this.securityProvider.get())
+                .getPrivateKey(pkinfo);
+        }
+        catch (IOException | PKCSException e) {
+            throw new KeyException(e);
         }
     }
+
 }
