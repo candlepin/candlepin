@@ -130,18 +130,18 @@ public class ContentAccessSpecTest {
             .containsExactlyInAnyOrder(content1.getId(), content3.getId());
 
         JsonNode content = certs.get(0).get("products").get(0).get("content");
-        String certContentName = content.get(0).get("name").asText();
+        String certContentName = content.get(0).get("name").asString();
         assertNotNull(certContentName);
         JsonNode certContent1 = certContentName.equals(content1.getName()) ? content.get(0) : content.get(1);
         JsonNode certContent3 = certContentName.equals(content3.getName()) ? content.get(0) : content.get(1);
 
         compareCertContent(content1, certContent1);
         verifyCertContentPath(owner.getContentPrefix(), content1.getContentUrl(), null,
-            certContent1.get("path").asText());
+            certContent1.get("path").asString());
 
         compareCertContent(content3, certContent3);
         verifyCertContentPath(owner.getContentPrefix(), content3.getContentUrl(), null,
-            certContent3.get("path").asText());
+            certContent3.get("path").asString());
     }
 
     @Test
@@ -279,7 +279,7 @@ public class ContentAccessSpecTest {
         JsonNode certContent = certs.get(0).get("products").get(0).get("content").get(0);
         compareCertContent(content, certContent);
         verifyCertContentPath(owner.getContentPrefix(), content.getContentUrl(), null,
-            certContent.get("path").asText());
+            certContent.get("path").asString());
 
         List<String> payloadCerts = extractCertsFromPayload(export);
         assertThat(payloadCerts).singleElement();
@@ -346,9 +346,9 @@ public class ContentAccessSpecTest {
             .containsExactly(content.getId());
 
         JsonNode certContent = certs.get(0).get("products").get(0).get("content").get(0);
-        assertEquals("false", certContent.get("enabled").asText());
+        assertEquals("false", certContent.get("enabled").asString());
         verifyCertContentPath(owner.getContentPrefix(), content.getContentUrl(), env,
-            certContent.get("path").asText());
+            certContent.get("path").asString());
 
         List<String> payloadCerts = extractCertsFromPayload(export);
         assertThat(payloadCerts).singleElement();
@@ -390,9 +390,9 @@ public class ContentAccessSpecTest {
             .containsExactly(content.getId());
 
         JsonNode certContent = certs.get(0).get("products").get(0).get("content").get(0);
-        assertEquals("false", certContent.get("enabled").asText());
+        assertEquals("false", certContent.get("enabled").asString());
         verifyCertContentPath(owner.getContentPrefix(), content.getContentUrl(), env,
-            certContent.get("path").asText());
+            certContent.get("path").asString());
 
         List<String> payloadCerts = extractCertsFromPayload(export);
         assertThat(payloadCerts).singleElement();
@@ -438,7 +438,7 @@ public class ContentAccessSpecTest {
             .containsExactlyInAnyOrder(content.getId(), content2.getId());
 
         JsonNode certContentNode = certs.get(0).get("products").get(0).get("content");
-        String certContentName = certContentNode.get(0).get("name").asText();
+        String certContentName = certContentNode.get(0).get("name").asString();
         assertNotNull(certContentName);
         JsonNode certContent1 = certContentName.equals(content.getName()) ? certContentNode.get(0) :
             certContentNode.get(1);
@@ -446,9 +446,9 @@ public class ContentAccessSpecTest {
             certContentNode.get(1);
 
         verifyCertContentPath(owner.getContentPrefix(), content.getContentUrl(), env1,
-            certContent1.get("path").asText());
+            certContent1.get("path").asString());
         verifyCertContentPath(owner.getContentPrefix(), content2.getContentUrl(), env2,
-            certContent2.get("path").asText());
+            certContent2.get("path").asString());
 
         List<String> payloadCerts = extractCertsFromPayload(export);
         assertThat(payloadCerts).singleElement();
@@ -705,9 +705,9 @@ public class ContentAccessSpecTest {
             ApiClient.MAPPER);
         JsonNode certContent = cert.get("products").get(0).get("content").get(0);
         verifyCertContentPath(owner.getContentPrefix(), content.getContentUrl(), null,
-            certContent.get("path").asText());
+            certContent.get("path").asString());
 
-        assertThatCert(listings.get(0).asText())
+        assertThatCert(listings.get(0).asString())
             .extractingEntitlementPayload()
             .containsOnly(
                 contentUrl(ownerKey)
@@ -733,24 +733,24 @@ public class ContentAccessSpecTest {
         JsonNode listings = contentListing.valueStream()
             .findFirst()
             .orElseThrow();
-        String originalX509 = listings.get(0).asText();
-        String originalContent = listings.get(1).asText();
-        String originalLastUpdate = contentAccessBody.get("lastUpdate").asText();
-
-        content.setName(StringUtil.random("name-"));
-        adminClient.ownerContent().updateContent(ownerKey, content.getId(), content);
+        String originalX509 = listings.get(0).asString();
+        String originalContent = listings.get(1).asString();
+        String originalLastUpdate = contentAccessBody.get("lastUpdate").asString();
 
         // Sleep a bit to make sure the 'lastUpdate' has more than a second change
         Thread.sleep(1000);
+
+        content.setName(StringUtil.random("name-"));
+        adminClient.ownerContent().updateContent(ownerKey, content.getId(), content);
 
         contentAccessBody = consumerClient.consumers().getContentAccessBodyJson(consumer.getUuid(), null);
         contentListing = contentAccessBody.get("contentListing");
         listings = contentListing.valueStream()
             .findFirst()
             .orElseThrow();
-        String updatedX509 = listings.get(0).asText();
-        String updatedContent = listings.get(1).asText();
-        String updatedLastUpdate = contentAccessBody.get("lastUpdate").asText();
+        String updatedX509 = listings.get(0).asString();
+        String updatedContent = listings.get(1).asString();
+        String updatedLastUpdate = contentAccessBody.get("lastUpdate").asString();
 
         assertEquals(originalX509, updatedX509);
         assertNotEquals(originalContent, updatedContent);
@@ -781,24 +781,24 @@ public class ContentAccessSpecTest {
         JsonNode listings = contentListing.valueStream()
             .findFirst()
             .orElseThrow();
-        String originalX509 = listings.get(0).asText();
-        String originalContent = listings.get(1).asText();
-        String originalLastUpdate = contentAccessBody.get("lastUpdate").asText();
-
-        content.setName(StringUtil.random("name-"));
-        adminClient.ownerContent().updateContent(ownerKey, content.getId(), content);
+        String originalX509 = listings.get(0).asString();
+        String originalContent = listings.get(1).asString();
+        String originalLastUpdate = contentAccessBody.get("lastUpdate").asString();
 
         // Sleep a bit to make sure the 'lastUpdate' has more than a second change
         Thread.sleep(1000);
+
+        content.setName(StringUtil.random("name-"));
+        adminClient.ownerContent().updateContent(ownerKey, content.getId(), content);
 
         contentAccessBody = consumerClient.consumers().getContentAccessBodyJson(consumer.getUuid(), null);
         contentListing = contentAccessBody.get("contentListing");
         listings = contentListing.valueStream()
             .findFirst()
             .orElseThrow();
-        String updatedX509 = listings.get(0).asText();
-        String updatedContent = listings.get(1).asText();
-        String updatedLastUpdate = contentAccessBody.get("lastUpdate").asText();
+        String updatedX509 = listings.get(0).asString();
+        String updatedContent = listings.get(1).asString();
+        String updatedLastUpdate = contentAccessBody.get("lastUpdate").asString();
 
         assertEquals(originalX509, updatedX509);
         assertNotEquals(originalContent, updatedContent);
@@ -1057,7 +1057,7 @@ public class ContentAccessSpecTest {
             .containsExactly(content.getId());
 
         JsonNode certContent = certs.get(0).get("products").get(0).get("content").get(0);
-        assertEquals(content.getName(), certContent.get("name").asText());
+        assertEquals(content.getName(), certContent.get("name").asString());
     }
 
     @Test
@@ -1107,7 +1107,7 @@ public class ContentAccessSpecTest {
 
         assertThat(consumer2Certs).singleElement();
         JsonNode consumer2ActualContent = consumer2Certs.get(0).get("products").get(0).get("content").get(0);
-        assertThat(consumer2ActualContent.get("name").asText())
+        assertThat(consumer2ActualContent.get("name").asString())
             .isNotNull()
             .isEqualTo(updatedName);
     }
@@ -1142,7 +1142,7 @@ public class ContentAccessSpecTest {
             .containsExactly(content.getId());
 
         JsonNode certContent = certs.get(0).get("products").get(0).get("content").get(0);
-        assertThat(certContent.get("path").asText())
+        assertThat(certContent.get("path").asString())
             .contains(owner.getContentPrefix());
     }
 
@@ -1339,7 +1339,7 @@ public class ContentAccessSpecTest {
         assertThat(certContent).singleElement();
         compareCertContent(content, certContent.get(0));
         verifyCertContentPath(owner.getContentPrefix(), content.getContentUrl(), null,
-            certContent.get(0).get("path").asText());
+            certContent.get(0).get("path").asString());
     }
 
     @Test
@@ -1404,9 +1404,9 @@ public class ContentAccessSpecTest {
             .containsExactlyInAnyOrder(enabledContent.getId(), disabledContent.getId());
 
         JsonNode content = entCerts.get(0).get("products").get(0).get("content");
-        JsonNode certEnabledContent = enabledContent.getId().equals(content.get(0).get("id").asText()) ?
+        JsonNode certEnabledContent = enabledContent.getId().equals(content.get(0).get("id").asString()) ?
             content.get(0) : content.get(1);
-        JsonNode certDisabledContent = disabledContent.getId().equals(content.get(0).get("id").asText()) ?
+        JsonNode certDisabledContent = disabledContent.getId().equals(content.get(0).get("id").asString()) ?
             content.get(0) : content.get(1);
 
         assertNull(certEnabledContent.get("enabled"));
@@ -1448,7 +1448,7 @@ public class ContentAccessSpecTest {
             .containsExactlyInAnyOrder(promotedContent.getId());
 
         JsonNode actual = certs.get(0).get("products").get(0).get("content").get(0);
-        assertThat(actual.get("id").asText()).isEqualTo(promotedContent.getId());
+        assertThat(actual.get("id").asString()).isEqualTo(promotedContent.getId());
         assertFalse(actual.get("enabled").asBoolean());
 
         List<String> payloadCerts = extractCertsFromPayload(export);
@@ -1497,15 +1497,15 @@ public class ContentAccessSpecTest {
 
         JsonNode content = entCerts.get(0).get("products").get(0).get("content");
         content.iterator().forEachRemaining(cont -> {
-            if (cont1.getId().equals(cont.get("id").asText())) {
+            if (cont1.getId().equals(cont.get("id").asString())) {
                 assertNull(cont.get("enabled"));
             }
 
-            if (cont2.getId().equals(cont.get("id").asText())) {
+            if (cont2.getId().equals(cont.get("id").asString())) {
                 assertNull(cont.get("enabled"));
             }
 
-            if (cont3.getId().equals(cont.get("id").asText())) {
+            if (cont3.getId().equals(cont.get("id").asString())) {
                 assertFalse(cont.get("enabled").asBoolean());
             }
         });
@@ -1783,15 +1783,15 @@ public class ContentAccessSpecTest {
     }
 
     private void compareCertContent(ContentDTO expectedContent, JsonNode certContent) {
-        assertEquals(expectedContent.getType(), certContent.get("type").asText());
-        assertEquals(expectedContent.getName(), certContent.get("name").asText());
-        assertEquals(expectedContent.getLabel(), certContent.get("label").asText());
-        assertEquals(expectedContent.getVendor(), certContent.get("vendor").asText());
+        assertEquals(expectedContent.getType(), certContent.get("type").asString());
+        assertEquals(expectedContent.getName(), certContent.get("name").asString());
+        assertEquals(expectedContent.getLabel(), certContent.get("label").asString());
+        assertEquals(expectedContent.getVendor(), certContent.get("vendor").asString());
         if (expectedContent.getArches() == null || expectedContent.getArches().isEmpty()) {
             assertEquals(0, certContent.get("arches").size());
         }
         else {
-            assertEquals(expectedContent.getArches(), certContent.get("arches").get(0).asText());
+            assertEquals(expectedContent.getArches(), certContent.get("arches").get(0).asString());
         }
     }
 
