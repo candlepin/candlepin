@@ -21,7 +21,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.impl.bc.BouncyCastlePrivateKeyReader;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -58,7 +58,7 @@ public class CloudAuthTokenGeneratorTest {
             this.config.setProperty(ConfigProperties.CA_KEY, caKey);
             this.config.setProperty(ConfigProperties.CA_KEY_PASSWORD, "password");
 
-            certificateReader = new CertificateReader(config, new BouncyCastlePrivateKeyReader());
+            certificateReader = new CertificateReader(config, CryptoUtil.getPrivateKeyReader());
         }
         catch (Exception e) {
             throw new RuntimeException(e);

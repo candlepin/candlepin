@@ -31,9 +31,9 @@ import org.candlepin.config.TestConfig;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.impl.bc.BouncyCastlePrivateKeyReader;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.model.CloudRegistrationInfo;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.util.Util;
 
 import org.jboss.resteasy.mock.MockHttpRequest;
@@ -109,7 +109,7 @@ public class CloudRegistrationAuthTest {
             this.config.setProperty(ConfigProperties.CA_KEY, caKey);
             this.config.setProperty(ConfigProperties.CA_KEY_PASSWORD, "password");
 
-            return new CertificateReader(config, new BouncyCastlePrivateKeyReader());
+            return new CertificateReader(config, CryptoUtil.getPrivateKeyReader());
         }
         catch (Exception e) {
             throw new RuntimeException(e);

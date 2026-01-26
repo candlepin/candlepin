@@ -98,10 +98,12 @@ public class JcaSignatureValidatorTest {
     }
 
     private static Scheme toStandardScheme(ExtScheme scheme) {
-        return new Scheme(scheme.name(),
-            scheme.certificate(),
-            scheme.signatureAlgorithm(),
-            scheme.keyAlgorithm());
+        return new Scheme.Builder()
+            .setName(scheme.name())
+            .setCertificate(scheme.certificate())
+            .setSignatureAlgorithm(scheme.signatureAlgorithm())
+            .setKeyAlgorithm(scheme.keyAlgorithm())
+            .build();
     }
 
     @BeforeAll
