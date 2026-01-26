@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2025 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,8 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
-package org.candlepin.pki.certs.bc;
+package org.candlepin.pki.impl.bc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -29,9 +28,7 @@ import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.pki.certs.X509ByteExtension;
 import org.candlepin.pki.certs.X509StringExtension;
-import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
-import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
-import org.candlepin.test.CertificateReaderForTesting;
+import org.candlepin.test.CryptoUtil;
 
 import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1UTF8String;
@@ -68,27 +65,32 @@ import java.util.Set;
 import javax.security.auth.x500.X500Principal;
 
 
+// TODO: FIXME: this test suite needs a lot of work:
+// - there aren't many tests here; we need more testing around signing to ensure multi-scheme support and
+//   all public-facing methods are working properly
+// - the test should be made generic, moved to an abstract test suite, with this class simply providing the
+//   BC implementation to test without providing any additional tests for the interface methods
+
 
 public class BouncyCastleX509CertificateBuilderTest {
-    private static final String SIGNATURE_SCHEME_NAME = "rsa";
-    private static final String KEY_ALGORITHM = "rsa";
-    private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
 
-    private CertificateReaderForTesting certificateAuthority;
+    private Scheme rsaScheme; // TODO: we need to test more schemes!
     private BouncyCastleX509CertificateBuilder builder;
 
     @BeforeEach
     void setUp() throws CertificateException, KeyException {
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
         SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
-        this.certificateAuthority = new CertificateReaderForTesting();
-        this.builder = new BouncyCastleX509CertificateBuilder(
-            this.certificateAuthority, securityProvider, subjectKeyIdentifierWriter);
+
+        this.rsaScheme = CryptoUtil.generateRsaScheme();
+
+        this.builder = new BouncyCastleX509CertificateBuilder(securityProvider.get(),
+            subjectKeyIdentifierWriter, this.rsaScheme);
     }
 
     @Test
     public void testCreateX509Certificate() throws Exception {
-        X509Certificate caCert = this.certificateAuthority.getCACert();
+        X509Certificate caCert = this.rsaScheme.certificate();
 
         Instant start = Instant.now();
         Instant end = LocalDate.now().plusDays(365).atStartOfDay(ZoneId.systemDefault()).toInstant();
@@ -321,15 +323,17 @@ public class BouncyCastleX509CertificateBuilderTest {
     }
 
     @Test
-    public void testGetSignatureScheme() {
-        Scheme actual = this.builder.getSignatureScheme();
+    public void testGetCryptoScheme() {
+        Scheme actual = this.builder.getCryptoScheme();
+        Scheme expected = this.rsaScheme;
 
         assertThat(actual)
-            .isNotNull()
-            .returns(SIGNATURE_SCHEME_NAME, Scheme::name)
-            .returns(KEY_ALGORITHM, Scheme::keyAlgorithm)
-            .returns(SIGNATURE_ALGORITHM, Scheme::signatureAlgorithm)
-            .returns(this.certificateAuthority.getCACert(), Scheme::certificate);
+            .returns(expected.name(), Scheme::name)
+            .returns(expected.privateKey(), Scheme::privateKey)
+            .returns(expected.certificate(), Scheme::certificate)
+            .returns(expected.signatureAlgorithm(), Scheme::signatureAlgorithm)
+            .returns(expected.keyAlgorithm(), Scheme::keyAlgorithm)
+            .returns(expected.keySize(), Scheme::keySize);
     }
 
     private KeyPair createKeyPair() {

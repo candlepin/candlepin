@@ -27,45 +27,37 @@ import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.KeyPairGenerator;
-import org.candlepin.pki.PemEncoder;
-import org.candlepin.pki.X509CertificateBuilder;
-import org.candlepin.pki.certs.bc.BouncyCastleX509CertificateBuilder;
 import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
-import org.candlepin.pki.impl.bc.BouncyCastlePemEncoder;
-import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
-import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
-import org.candlepin.test.CertificateReaderForTesting;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.util.X509ExtensionUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.security.KeyException;
-import java.security.cert.CertificateException;
+
 
 class ProductCertificateGeneratorTest {
     private ProductCertificateCurator productCertificateCurator;
-    private X509CertificateBuilder certificateBuilder;
     private ProductCertificateGenerator productCertificateGenerator;
 
     @BeforeEach
-    public void init() throws CertificateException, KeyException {
-        BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
+    public void init() {
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager();
         X509ExtensionUtil extensionUtil = mock(X509ExtensionUtil.class);
-        KeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(
-            securityProvider, mock(KeyPairDataCurator.class));
-        PemEncoder pemEncoder = new BouncyCastlePemEncoder();
+
+        KeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(cryptoManager,
+            mock(KeyPairDataCurator.class));
+
         this.productCertificateCurator = mock(ProductCertificateCurator.class);
-        this.certificateBuilder = new BouncyCastleX509CertificateBuilder(new CertificateReaderForTesting(),
-            securityProvider, new BouncyCastleSubjectKeyIdentifierWriter());
+
         this.productCertificateGenerator = new ProductCertificateGenerator(
-            this.productCertificateCurator,
+            cryptoManager,
             extensionUtil,
             keyPairGenerator,
-            pemEncoder,
-            () -> this.certificateBuilder
-        );
+            CryptoUtil.getPemEncoder(),
+            this.productCertificateCurator);
     }
 
     @Test

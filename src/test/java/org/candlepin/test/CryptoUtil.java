@@ -14,10 +14,23 @@
  */
 package org.candlepin.test;
 
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
+import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.Scheme;
+import org.candlepin.pki.SchemeReader;
+import org.candlepin.pki.SubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.bc.BouncyCastleCryptoManager;
+import org.candlepin.pki.impl.bc.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.bc.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
+import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.jca.JcaCertificateReader;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -46,11 +59,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.KeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.AlgorithmParameterSpec;
@@ -58,8 +74,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.stream.Stream;
-
-import javax.inject.Provider;
 
 
 
@@ -72,7 +86,8 @@ import javax.inject.Provider;
  * production code.
  */
 public class CryptoUtil {
-    private static final BouncyCastleSecurityProvider SECURITY_PROVIDER = new BouncyCastleSecurityProvider();
+    private static final BouncyCastleSecurityProvider SECURITY_PROVIDER_PROVIDER =
+        new BouncyCastleSecurityProvider();
 
     private static final String RSA_SIGNATURE_ALGORITHM = "SHA256WithRSA";
     private static final String RSA_KEY_ALGORITHM = "RSA";
@@ -86,13 +101,13 @@ public class CryptoUtil {
     }
 
     /**
-     * Fetches the security provider provider backing the operations in this util class.
+     * Fetches the security provider backing the operations and objects provided by this util class.
      *
      * @return
-     *  a SecurityProvider instance
+     *  the security provider backing this util class
      */
-    public static Provider<? extends java.security.Provider> getSecurityProvider() {
-        return SECURITY_PROVIDER;
+    public static java.security.Provider getSecurityProvider() {
+        return SECURITY_PROVIDER_PROVIDER.get();
     }
 
     /**
@@ -106,10 +121,79 @@ public class CryptoUtil {
      *  a PrivateKeyReader implementation
      */
     public static PrivateKeyReader getPrivateKeyReader() {
-        // TODO: FIXME: This is likely temporary. I imagine a certificate authority would be able to provide
-        // such a thing. Or maybe it should be injected. idk
+        return new BouncyCastlePrivateKeyReader(SECURITY_PROVIDER_PROVIDER.get());
+    }
 
-        return new BouncyCastlePrivateKeyReader(SECURITY_PROVIDER);
+    /**
+     * Fetches a certificate reader implemented using a supported crypto security provider. Each call to this
+     * method may return a new instance, but it will never return null.
+     * <p>
+     * This method exists to fetch a certificate reader without needing an entire injection ecosystem in the
+     * calling test methods, and all the configuration that requires.
+     *
+     * @return
+     *  a CertificateReader implementation
+     */
+    public static CertificateReader getCertificateReader() {
+        return new JcaCertificateReader(getSecurityProvider());
+    }
+
+    /**
+     * Fetches a PemEncoder implemented using a supported crypto security provider. Each call to this method
+     * may return a new instance, but it will never return null.
+     * <p>
+     * This method exists to fetch a PEM encoder without needing an entire injection ecosystem in the calling
+     * test methods, and all the configuration that requires.
+     *
+     * @return
+     *  a PemEncoder implementation
+     */
+    public static PemEncoder getPemEncoder() {
+        return new BouncyCastlePemEncoder();
+    }
+
+    /**
+     * Fetches a crypto manager using the specified configuration as the basis for it and its dependencies. If
+     * the configuration is null, or is not fully configured, this function throws an exception.
+     *
+     * @param config
+     *  the configuration to use for configuring the crypto manager and its dependencies; cannot be null
+     *
+     * @throws IllegalArgumentException
+     *  if config is null
+     *
+     * @throws ConfigurationException
+     *  if the crypto manager or its dependencies cannot be built due to incomplete or malformed configuration
+     *
+     * @return
+     *  a new CryptoManager instance configured using the given config
+     */
+    public static CryptoManager getCryptoManager(Configuration config) {
+        if (config == null) {
+            throw new IllegalArgumentException("config is null");
+        }
+
+        // Build dependencies
+        PrivateKeyReader keyReader = getPrivateKeyReader();
+        CertificateReader certReader = getCertificateReader();
+        SubjectKeyIdentifierWriter skiWriter = new BouncyCastleSubjectKeyIdentifierWriter();
+
+        SchemeReader schemeReader = new SchemeReader(config, keyReader, certReader);
+
+        // Build & return crypto manager
+        return new BouncyCastleCryptoManager(config, SECURITY_PROVIDER_PROVIDER.get(), schemeReader,
+            certReader, skiWriter);
+    }
+
+    /**
+     * Fetches a crypto manager configured with the "supported" schemes and crypto configuration as the basis
+     * for it and its dependencies.
+     *
+     * @return
+     *  a new CryptoManager instance configured using the standard configuration
+     */
+    public static CryptoManager getCryptoManager() {
+        return getCryptoManager(TestConfig.defaults());
     }
 
     /**
@@ -121,12 +205,15 @@ public class CryptoUtil {
      * @param keySize
      *  the size or length of the key(s) to generate
      *
+     * @throws KeyException
+     *  if an exception occurs while generating the key pair
+     *
      * @return
      *  the generated key pair
      */
     public static KeyPair generateKeyPair(String algorithm, int keySize) throws KeyException {
         try {
-            KeyPairGenerator keygen = KeyPairGenerator.getInstance(algorithm, SECURITY_PROVIDER.get());
+            KeyPairGenerator keygen = KeyPairGenerator.getInstance(algorithm, getSecurityProvider());
             keygen.initialize(keySize);
 
             return keygen.generateKeyPair();
@@ -147,6 +234,9 @@ public class CryptoUtil {
      *  An AlgorithmParameterSpec to pass through to the underlying security provider to influence key
      *  generation
      *
+     * @throws KeyException
+     *  if an exception occurs while generating the key pair
+     *
      * @return
      *  the generated key pair
      */
@@ -154,7 +244,7 @@ public class CryptoUtil {
         throws KeyException {
 
         try {
-            KeyPairGenerator keygen = KeyPairGenerator.getInstance(algorithm, SECURITY_PROVIDER.get());
+            KeyPairGenerator keygen = KeyPairGenerator.getInstance(algorithm, getSecurityProvider());
             if (params != null) {
                 keygen.initialize(params);
             }
@@ -163,6 +253,67 @@ public class CryptoUtil {
         }
         catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException e) {
             throw new KeyException(e);
+        }
+    }
+
+    /**
+     * Generates a key pair using the algorithm and key size defined in the given scheme.
+     *
+     * @param scheme
+     *  a scheme defining the key algorithm and optional key size to use to generate a key pair; cannot be
+     *  null
+     *
+     * @throws KeyException
+     *  if an exception occurs while generating the key pair
+     *
+     * @return
+     *  the generated key pair
+     */
+    public static KeyPair generateKeyPair(Scheme scheme) throws KeyException {
+        if (scheme == null) {
+            throw new IllegalArgumentException("scheme is null");
+        }
+
+        return scheme.keySize().isPresent() ?
+            generateKeyPair(scheme.keyAlgorithm(), scheme.keySize().get()) :
+            generateKeyPair(scheme.keyAlgorithm(), null);
+    }
+
+    /**
+     * Signs an arbitrary array of data using the given crypto scheme. This function can be used to generate
+     * signatures for validating various crypto operations.
+     *
+     * @param data
+     *  the data to sign; cannot be null
+     *
+     * @param scheme
+     *  the scheme to use to sign the data; cannot be null, must include a private key
+     *
+     * @return
+     *  a byte array containing the signature of the given data
+     */
+    public static byte[] sign(byte[] data, Scheme scheme) throws SignatureException {
+        if (data == null) {
+            throw new IllegalArgumentException("data array is null");
+        }
+
+        if (scheme == null) {
+            throw new IllegalArgumentException("scheme is null");
+        }
+
+        if (scheme.privateKey().isEmpty()) {
+            throw new IllegalArgumentException("scheme lacks a private key");
+        }
+
+        try {
+            Signature signature = Signature.getInstance(scheme.signatureAlgorithm(), getSecurityProvider());
+            signature.initSign(scheme.privateKey().get());
+            signature.update(data);
+
+            return signature.sign();
+        }
+        catch (InvalidKeyException | NoSuchAlgorithmException e) {
+            throw new SignatureException(e);
         }
     }
 
@@ -185,7 +336,7 @@ public class CryptoUtil {
      *  a self-signed X509 certificate
      */
     public static X509Certificate generateX509Certificate(KeyPair keypair, String signatureAlgorithm)
-        throws CertificateException {
+        throws CertificateException, KeyException {
 
         try {
             // DN
@@ -227,11 +378,137 @@ public class CryptoUtil {
 
             // Signer and converter
             ContentSigner signer = new JcaContentSignerBuilder(signatureAlgorithm)
-                .setProvider(SECURITY_PROVIDER.get())
+                .setProvider(getSecurityProvider())
                 .build(keypair.getPrivate());
 
             return new JcaX509CertificateConverter()
-                .setProvider(SECURITY_PROVIDER.get())
+                .setProvider(getSecurityProvider())
+                .getCertificate(certBuilder.build(signer));
+        }
+        catch (CertIOException | NoSuchAlgorithmException | OperatorCreationException e) {
+            throw new CertificateException(e);
+        }
+    }
+
+    /**
+     * Generates a self-signed X509 certificate with the following properties:
+     *
+     * - Distinguished name: CN: cp.test_cert
+     * - Serial number derived from milliseconds of generation time
+     * - Valid from a week prior to generation
+     * - Valid until a week after generation
+     * - Usage: digital signature, key encipherment, data encipherment
+     *
+     * @param scheme
+     *  the scheme to use to generate the certificate; cannot be null, and must contain a private key
+     *
+     * @throws IllegalArgumentException
+     *  if scheme is null or lacks a private key
+     *
+     * @throws CertificateException
+     *  if an exception occurs while generating the certificate
+     *
+     * @return
+     *  a self-signed X509 certificate
+     */
+    public static X509Certificate generateX509Certificate(Scheme scheme)
+        throws CertificateException, KeyException {
+
+        if (scheme == null) {
+            throw new IllegalArgumentException("scheme is null");
+        }
+
+        if (scheme.privateKey().isEmpty()) {
+            throw new IllegalStateException("scheme lacks a private key");
+        }
+
+        KeyPair keypair = new KeyPair(scheme.certificate().getPublicKey(), scheme.privateKey().get());
+        return generateX509Certificate(keypair, scheme.signatureAlgorithm());
+    }
+
+    /**
+     * Generates a X509 certificate, signed by the certificate within the given scheme, having the following
+     * properties:
+     *
+     * - Distinguished name: CN: cp.signed_test_cert
+     * - Serial number derived from milliseconds of generation time
+     * - Valid from a week prior to generation
+     * - Valid until a week after generation
+     * - Usage: digital signature, key encipherment, data encipherment
+     *
+     * @param scheme
+     *  the scheme to use to generate the certificate; cannot be null, and must contain a private key
+     *
+     * @throws IllegalArgumentException
+     *  if scheme is null or lacks a private key
+     *
+     * @throws CertificateException
+     *  if an exception occurs while generating the certificate
+     *
+     * @return
+     *  a self-signed X509 certificate
+     */
+    public static X509Certificate generateSignedX509Certificate(Scheme scheme)
+        throws CertificateException, KeyException {
+
+        if (scheme == null) {
+            throw new IllegalArgumentException("scheme is null");
+        }
+
+        if (scheme.privateKey().isEmpty()) {
+            throw new IllegalStateException("scheme lacks a private key");
+        }
+
+        try {
+            X509Certificate parentCert = scheme.certificate();
+
+            // Client keypair
+            KeyPair keypair = generateKeyPair(scheme);
+
+            // DN
+            X500Name distinguishedName = new X500NameBuilder()
+                .addRDN(BCStyle.CN, "cp.signed_test_cert")
+                .build();
+
+            // Validity
+            Instant now = Instant.now();
+            Instant validAfter = now.minus(168, ChronoUnit.HOURS); // 1 week; WEEKS unit isn't supported here
+            Instant validUntil = now.plus(168, ChronoUnit.HOURS);
+
+            // Serial
+            BigInteger serial = BigInteger.valueOf(now.toEpochMilli());
+
+            // Key usage
+            KeyUsage usage = new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment |
+                KeyUsage.dataEncipherment);
+
+            // aki/ski
+            JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
+            AuthorityKeyIdentifier aki = extUtils.createAuthorityKeyIdentifier(parentCert.getPublicKey());
+            SubjectKeyIdentifier ski = extUtils.createSubjectKeyIdentifier(keypair.getPublic());
+
+            // assembly!
+            X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(
+                X500Name.getInstance(parentCert.getSubjectX500Principal().getEncoded()),
+                serial,
+                Date.from(validAfter),
+                Date.from(validUntil),
+                distinguishedName,
+                SubjectPublicKeyInfo.getInstance(keypair.getPublic().getEncoded()));
+
+            // Add extensions
+            certBuilder.addExtension(Extension.keyUsage, true, usage)
+                .addExtension(Extension.authorityKeyIdentifier, false, aki)
+                .addExtension(Extension.subjectKeyIdentifier, false, ski)
+                .addExtension(Extension.basicConstraints, true, new BasicConstraints(true));
+
+            // Signer and converter
+            ContentSigner signer = new JcaContentSignerBuilder(scheme.signatureAlgorithm())
+                .setProvider(getSecurityProvider())
+                .build(scheme.privateKey().get());
+
+            return new JcaX509CertificateConverter()
+                .setProvider(getSecurityProvider())
                 .getCertificate(certBuilder.build(signer));
         }
         catch (CertIOException | NoSuchAlgorithmException | OperatorCreationException e) {
@@ -263,6 +540,35 @@ public class CryptoUtil {
         try (JcaPEMWriter writer = new JcaPEMWriter(new FileWriter(file))) {
             writer.writeObject(certificate);
         }
+    }
+
+    /**
+     * Writes the specified certificate to a temporary file. The file will be flagged to be deleted on
+     * termination of the JVM, and will be generated even if the given certificate has already been written to
+     * a file previously. If the certificate is null, this method throws an exception.
+     *
+     * @param certificate
+     *  the certificate to write to a temporary file
+     *
+     * @throws IllegalArgumentException
+     *  if the certificate is null
+     *
+     * @throws IOException
+     *  if an error occurs while writing the certificate file
+     *
+     * @return
+     *  a reference to the temporary file to which the certificate was written
+     */
+    public static File writeCertificateToFile(X509Certificate certificate) throws IOException {
+        if (certificate == null) {
+            throw new IllegalArgumentException("certificate is null");
+        }
+
+        File certFile = File.createTempFile("cp_test_cert", ".pem");
+        certFile.deleteOnExit();
+
+        writeCertificateToFile(certificate, certFile);
+        return certFile;
     }
 
     /**
@@ -299,7 +605,7 @@ public class CryptoUtil {
                 ASN1ObjectIdentifier algorithm = JcaPKCS8Generator.AES_256_CBC;
 
                 OutputEncryptor encryptor = new JceOpenSSLPKCS8EncryptorBuilder(algorithm)
-                    .setProvider(SECURITY_PROVIDER.get())
+                    .setProvider(getSecurityProvider())
                     .setPassword(password.toCharArray())
                     .setIterationCount(1024) // not very strong, but this is testing so whatever.
                     .build();
@@ -319,8 +625,142 @@ public class CryptoUtil {
     }
 
     /**
+     * Writes the specified private key to a temporary file. The file will be flagged to be deleted on
+     * termination of the JVM, and will be generated even if the given private key has already been written to
+     * a file previously. If the private key is null, this method throws an exception.
+     *
+     * @param key
+     *  the private key to write to a temporary file; cannot be null
+     *
+     * @param password
+     *  a password or passphrase to use to encrypt the key, or null if the key is not to be encrypted
+     *
+     * @throws IllegalArgumentException
+     *  if the private key is null
+     *
+     * @throws KeyException
+     *  if an error occurs while encoding the key
+     *
+     * @throws IOException
+     *  if an error occurs while writing the key file
+     *
+     * @return
+     *  a reference to the temporary file to which the private key was written
+     */
+    public static File writePrivateKeyToFile(PrivateKey key, String password)
+        throws KeyException, IOException {
+
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        File keyFile = File.createTempFile("cp_test_key", ".pem");
+        keyFile.deleteOnExit();
+
+        writePrivateKeyToFile(key, keyFile, password);
+        return keyFile;
+    }
+
+    /**
+     * Writes the specified scheme to the given configuration such that it should be well-formed and readable
+     * by any production-ready logic that loads schemes from the Candlepin configuration. This function will
+     * generate new temporary files for both the key and certificate used in the scheme, even if that scheme
+     * instance has already been written to a configuration object previously. If the config or scheme are
+     * null, or the scheme lacks a private key, this function throws an exception.
+     *
+     * @param config
+     *  the config instance to modify with the scheme configuration; cannot be null
+     *
+     * @param scheme
+     *  the scheme to write to the configuration; cannot be null, and must contain a private key
+     *
+     * @param keyPassword
+     *  the password or passphrase to use to encrypt the private key in the file
+     *
+     * @throws IllegalArgumentException
+     *  if config or scheme are null, or if the scheme lacks a private key
+     *
+     * @throws KeyException
+     *  if an exception occurs while encoding the scheme's private key
+     *
+     * @throws IOException
+     *  if an exception occurs while writing the key or certificate to temporary files
+     */
+    public static void generateSchemeConfiguration(DevConfig config, Scheme scheme, String keyPassword)
+        throws KeyException, IOException {
+
+        if (config == null) {
+            throw new IllegalArgumentException("config is null");
+        }
+
+        if (scheme == null) {
+            throw new IllegalArgumentException("scheme is null");
+        }
+
+        if (scheme.privateKey().isEmpty()) {
+            throw new IllegalArgumentException("scheme lacks a private key");
+        }
+
+        String prefix = ConfigProperties.schemePrefix(scheme.name());
+
+        File keyFile = writePrivateKeyToFile(scheme.privateKey().get(), keyPassword);
+        File certFile = writeCertificateToFile(scheme.certificate());
+
+        config.setProperty(prefix + ConfigProperties.CRYPTO_SCHEME_CERT, certFile.getCanonicalPath());
+        config.setProperty(prefix + ConfigProperties.CRYPTO_SCHEME_KEY, keyFile.getCanonicalPath());
+
+        if (keyPassword != null) {
+            config.setProperty(prefix + ConfigProperties.CRYPTO_SCHEME_KEY_PASSWORD, keyPassword);
+        }
+
+        config.setProperty(prefix + ConfigProperties.CRYPTO_SCHEME_SIGNATURE_ALGORITHM,
+            scheme.signatureAlgorithm());
+        config.setProperty(prefix + ConfigProperties.CRYPTO_SCHEME_KEY_ALGORITHM, scheme.keyAlgorithm());
+
+        scheme.keySize().ifPresent(keySize ->
+            config.setProperty(prefix + ConfigProperties.CRYPTO_SCHEME_KEY_SIZE, keySize.toString()));
+    }
+
+    /**
      * Generates a scheme configured with Candlepin's legacy RSA algorithms with generated keys and
      * certificates using them.
+     *
+     * @param name
+     *  the name to assigned to the generated scheme
+     *
+     * @throws IllegalArgumentException
+     *  if the scheme name is null or empty
+     *
+     * @throws KeyException
+     *  if an exception occurs while generating the key pair
+     *
+     * @throws CertificateException
+     *  if an exception occurs while generating the certificate
+     *
+     * @return
+     *  a scheme with generated keys and certs using the Candlepin legacy RSA scheme
+     */
+    public static Scheme generateRsaScheme(String name) throws KeyException, CertificateException {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("name is null or empty");
+        }
+
+        KeyPair keypair = generateKeyPair(RSA_KEY_ALGORITHM, RSA_KEY_SIZE);
+        X509Certificate certificate = generateX509Certificate(keypair, RSA_SIGNATURE_ALGORITHM);
+
+        return new Scheme.Builder()
+            .setName(name)
+            .setPrivateKey(keypair.getPrivate())
+            .setCertificate(certificate)
+            .setSignatureAlgorithm(RSA_SIGNATURE_ALGORITHM)
+            .setKeyAlgorithm(RSA_KEY_ALGORITHM)
+            .setKeySize(RSA_KEY_SIZE)
+            .build();
+    }
+
+    /**
+     * Generates a scheme configured with Candlepin's legacy RSA algorithms with generated keys and
+     * certificates using them. The scheme will be generated with a name of "rsa".
      *
      * @throws KeyException
      *  if an exception occurs while generating the key pair
@@ -332,23 +772,51 @@ public class CryptoUtil {
      *  a scheme with generated keys and certs using the Candlepin legacy RSA scheme
      */
     public static Scheme generateRsaScheme() throws KeyException, CertificateException {
-        KeyPair keypair = generateKeyPair(RSA_KEY_ALGORITHM, RSA_KEY_SIZE);
-        X509Certificate certificate = generateX509Certificate(keypair, RSA_SIGNATURE_ALGORITHM);
-
-        return new Scheme.Builder()
-            .setName("rsa")
-            .setPrivateKey(keypair.getPrivate())
-            .setCertificate(certificate)
-            .setSignatureAlgorithm(RSA_SIGNATURE_ALGORITHM)
-            .setKeyAlgorithm(RSA_KEY_ALGORITHM)
-            .setKeySize(RSA_KEY_SIZE)
-            .build();
+        return generateRsaScheme("rsa");
     }
 
     /**
      * Generates a scheme configured to use ML-DSA for the key and signature algorithms with generated keys
      * and certificates using them. The scheme generated defines generic "ML-DSA" with no sizing specified
      * (e.g. ML-DSA-87).
+     *
+     * @param name
+     *  the name to assigned to the generated scheme
+     *
+     * @throws IllegalArgumentException
+     *  if the scheme name is null or empty
+     *
+     * @throws KeyException
+     *  if an exception occurs while generating the key pair
+     *
+     * @throws CertificateException
+     *  if an exception occurs while generating the certificate
+     *
+     * @return
+     *  a scheme with generated keys and certs using ML-DSA
+     */
+    public static Scheme generateMldsaScheme(String name) throws KeyException, CertificateException {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("name is null or empty");
+        }
+
+        KeyPair keypair = generateKeyPair(MLDSA_KEY_ALGORITHM, null);
+        X509Certificate certificate = generateX509Certificate(keypair, MLDSA_SIGNATURE_ALGORITHM);
+
+        return new Scheme.Builder()
+            .setName(name)
+            .setPrivateKey(keypair.getPrivate())
+            .setCertificate(certificate)
+            .setSignatureAlgorithm(MLDSA_SIGNATURE_ALGORITHM)
+            .setKeyAlgorithm(MLDSA_KEY_ALGORITHM)
+            .setKeySize(null)
+            .build();
+    }
+
+    /**
+     * Generates a scheme configured to use ML-DSA for the key and signature algorithms with generated keys
+     * and certificates using them. The scheme generated defines generic "ML-DSA" with no sizing specified
+     * (e.g. ML-DSA-87), and will be generated with a name of "ml-dsa".
      *
      * @throws KeyException
      *  if an exception occurs while generating the key pair
@@ -360,17 +828,7 @@ public class CryptoUtil {
      *  a scheme with generated keys and certs using ML-DSA
      */
     public static Scheme generateMldsaScheme() throws KeyException, CertificateException {
-        KeyPair keypair = generateKeyPair(MLDSA_KEY_ALGORITHM, null);
-        X509Certificate certificate = generateX509Certificate(keypair, MLDSA_SIGNATURE_ALGORITHM);
-
-        return new Scheme.Builder()
-            .setName("ml-dsa")
-            .setPrivateKey(keypair.getPrivate())
-            .setCertificate(certificate)
-            .setSignatureAlgorithm(MLDSA_SIGNATURE_ALGORITHM)
-            .setKeyAlgorithm(MLDSA_KEY_ALGORITHM)
-            .setKeySize(null)
-            .build();
+        return generateMldsaScheme("ml-dsa");
     }
 
     /**
@@ -413,7 +871,7 @@ public class CryptoUtil {
     public static Scheme generateSchemeFromScheme(Scheme scheme) throws KeyException, CertificateException {
         String signatureAlgorithm = scheme.signatureAlgorithm();
         String keyAlgorithm = scheme.keyAlgorithm();
-        Integer keySize = scheme.keySize();
+        Integer keySize = scheme.keySize().orElse(null);
 
         KeyPair keypair = keySize != null ?
             generateKeyPair(keyAlgorithm, keySize) :

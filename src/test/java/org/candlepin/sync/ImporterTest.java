@@ -28,6 +28,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -67,10 +68,12 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.SignatureValidator;
-import org.candlepin.pki.Signer;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.Importer.ImportFile;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.util.ObjectMapperFactory;
 
 import org.hamcrest.core.StringContains;
@@ -143,10 +146,6 @@ public class ImporterTest {
     @Mock
     private RulesImporter mockRulesImporter;
     @Mock
-    private Signer signer;
-    @Mock(answer = Answers.RETURNS_SELF)
-    private SignatureValidator signatureValidator;
-    @Mock
     private EventSink mockEventSink;
     @Mock
     private DistributorVersionCurator mockDistributorVersionCurator;
@@ -156,6 +155,9 @@ public class ImporterTest {
     private ObjectMapper mapper;
     private ClassLoader classLoader = getClass().getClassLoader();
     private String mockJsPath;
+
+    private CryptoManager cryptoManager;
+
 
     @BeforeEach
     public void init() throws Exception {
@@ -171,6 +173,8 @@ public class ImporterTest {
         this.mockJsPath = new File(this.tmpFolder, "empty.js").getPath();
 
         this.updateReleaseVersion("0.0.3", "1");
+
+        this.cryptoManager = spy(CryptoUtil.getCryptoManager(this.config));
     }
 
     @AfterEach
@@ -191,12 +195,11 @@ public class ImporterTest {
     }
 
     private Importer buildImporter() {
-        return new Importer(this.mockConsumerTypeCurator, this.mockRulesImporter,
-            this.mockOwnerCurator, this.mockIdentityCertCurator, this.refresherFactory,
-            this.signer, this.signatureValidator, this.mockExporterMetadataCurator,
-            this.mockCertSerialCurator, this.mockEventSink, this.i18n, this.mockDistributorVersionCurator,
-            this.mockCdnCurator, this.syncUtils, this.mapper, this.mockImportRecordCurator,
-            this.mockSubscriptionReconciler, this.modelTranslator);
+        return new Importer(this.mockConsumerTypeCurator, this.mockRulesImporter, this.mockOwnerCurator,
+            this.mockIdentityCertCurator, this.refresherFactory, this.cryptoManager,
+            this.mockExporterMetadataCurator, this.mockCertSerialCurator, this.mockEventSink, this.i18n,
+            this.mockDistributorVersionCurator, this.mockCdnCurator, this.syncUtils, this.mapper,
+            this.mockImportRecordCurator, this.mockSubscriptionReconciler, this.modelTranslator);
     }
 
     private File createTempDirectory(String prefix) throws IOException {
@@ -539,7 +542,9 @@ public class ImporterTest {
     @Test
     public void testImportBadConsumerZip() throws Exception {
         // Mock a passed signature check:
-        when(this.signatureValidator.validate(any(File.class))).thenReturn(true);
+        SignatureValidator mockSignatureValidator = mock(SignatureValidator.class, Answers.RETURNS_SELF);
+        doReturn(true).when(mockSignatureValidator).validate(any(File.class));
+        doReturn(mockSignatureValidator).when(this.cryptoManager).getSignatureValidator(any(Scheme.class));
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
@@ -568,7 +573,9 @@ public class ImporterTest {
     @Test
     public void testImportZipSigAndEmptyConsumerZip() throws Exception {
         // Mock a passed signature check:
-        when(this.signatureValidator.validate(any(File.class))).thenReturn(true);
+        SignatureValidator mockSignatureValidator = mock(SignatureValidator.class, Answers.RETURNS_SELF);
+        doReturn(true).when(mockSignatureValidator).validate(any(File.class));
+        doReturn(mockSignatureValidator).when(this.cryptoManager).getSignatureValidator(any(Scheme.class));
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);

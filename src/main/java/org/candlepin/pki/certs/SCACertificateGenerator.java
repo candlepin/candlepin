@@ -35,12 +35,12 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.SCACertificate;
 import org.candlepin.model.dto.Content;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.PemEncoder;
-import org.candlepin.pki.Signer;
-import org.candlepin.pki.X509CertificateBuilder;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
@@ -68,7 +68,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.persistence.PersistenceException;
 
@@ -82,25 +81,33 @@ public class SCACertificateGenerator {
 
     private static final String SCA_ENTITLEMENT_TYPE = "OrgLevel";
 
+    private final Configuration configuration;
+
+    private final CryptoManager cryptoManager;
+    private final PemEncoder pemEncoder;
+    private final KeyPairGenerator keyPairGenerator;
+    private final X509V3ExtensionUtil v3ExtensionUtil;
     private final V3CapabilityCheck v3CapabilityCheck;
+    private final EntitlementPayloadGenerator payloadGenerator;
+
     private final CertificateSerialCurator serialCurator;
     private final ContentCurator contentCurator;
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
     private final ContentAccessPayloadCurator contentAccessPayloadCurator;
-    private final X509V3ExtensionUtil v3extensionUtil;
-    private final EntitlementPayloadGenerator payloadGenerator;
     private final EnvironmentCurator environmentCurator;
-    private final PemEncoder pemEncoder;
-    private final KeyPairGenerator keyPairGenerator;
-    private final Signer signer;
-    private final Provider<X509CertificateBuilder> certificateBuilder;
-    private final Configuration configuration;
 
     private final int x509CertExpirationThreshold;
 
+    // TODO: Temporary, should not be universal
+    private final Scheme scheme;
+
     @Inject
     public SCACertificateGenerator(
-        X509V3ExtensionUtil v3extensionUtil,
+        Configuration configuration,
+        CryptoManager cryptoManager,
+        PemEncoder pemEncoder,
+        KeyPairGenerator keyPairGenerator,
+        X509V3ExtensionUtil v3ExtensionUtil,
         V3CapabilityCheck v3CapabilityCheck,
         EntitlementPayloadGenerator payloadGenerator,
         ContentAccessCertificateCurator contentAccessCertificateCurator,
@@ -108,29 +115,29 @@ public class SCACertificateGenerator {
         CertificateSerialCurator serialCurator,
         ContentCurator contentCurator,
         ConsumerCurator consumerCurator,
-        EnvironmentCurator environmentCurator,
-        PemEncoder pemEncoder,
-        KeyPairGenerator keyPairGenerator,
-        Signer signer,
-        Provider<X509CertificateBuilder> certificateBuilder,
-        Configuration configuration) {
+        EnvironmentCurator environmentCurator) {
 
+        this.configuration = Objects.requireNonNull(configuration);
+
+        this.cryptoManager = Objects.requireNonNull(cryptoManager);
+        this.pemEncoder = Objects.requireNonNull(pemEncoder);
+        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator); // temporary
+        this.v3ExtensionUtil = Objects.requireNonNull(v3ExtensionUtil);
         this.v3CapabilityCheck = Objects.requireNonNull(v3CapabilityCheck);
+        this.payloadGenerator = Objects.requireNonNull(payloadGenerator);
+
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
         this.contentAccessPayloadCurator = Objects.requireNonNull(contentAccessPayloadCurator);
         this.serialCurator = Objects.requireNonNull(serialCurator);
-        this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
-        this.payloadGenerator = Objects.requireNonNull(payloadGenerator);
         this.contentCurator = Objects.requireNonNull(contentCurator);
         this.environmentCurator = Objects.requireNonNull(environmentCurator);
-        this.pemEncoder = Objects.requireNonNull(pemEncoder);
-        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
-        this.signer = Objects.requireNonNull(signer);
-        this.certificateBuilder = Objects.requireNonNull(certificateBuilder);
-        this.configuration = Objects.requireNonNull(configuration);
 
-        x509CertExpirationThreshold = this.configuration
+        this.x509CertExpirationThreshold = this.configuration
             .getInt(ConfigProperties.SCA_X509_CERT_EXPIRY_THRESHOLD);
+
+        // FIXME: Temporary; select the default scheme and run with it for testing. Replace this with per-op
+        // scheme selection
+        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
     }
 
     /**
@@ -420,7 +427,7 @@ public class SCACertificateGenerator {
         extensions.addAll(prepareV3ByteExtensions(product));
         DistinguishedName dn = new DistinguishedName(consumerUuid, owner);
 
-        return this.certificateBuilder.get()
+        return this.cryptoManager.getCertificateBuilder(this.scheme)
             .withDN(dn)
             .withSerial(serial.getSerial())
             .withValidity(start.toInstant(), end.toInstant())
@@ -458,7 +465,9 @@ public class SCACertificateGenerator {
         payload += Util.toBase64(payloadBytes);
         payload += "-----END ENTITLEMENT DATA-----\n";
 
-        byte[] bytes = this.signer.sign(new ByteArrayInputStream(payloadBytes));
+        byte[] bytes = this.cryptoManager.getSigner(this.scheme)
+            .sign(new ByteArrayInputStream(payloadBytes));
+
         String signature = "-----BEGIN RSA SIGNATURE-----\n";
         signature += Util.toBase64(bytes);
         signature += "-----END RSA SIGNATURE-----\n";
@@ -466,7 +475,7 @@ public class SCACertificateGenerator {
     }
 
     private Set<X509Extension> prepareV3Extensions(String entType) {
-        Set<X509Extension> extensions = new HashSet<>(v3extensionUtil.getExtensions());
+        Set<X509Extension> extensions = new HashSet<>(v3ExtensionUtil.getExtensions());
         extensions.add(new X509StringExtension(
             OID.EntitlementType.namespace(), entType));
         return extensions;
@@ -476,7 +485,7 @@ public class SCACertificateGenerator {
         List<org.candlepin.model.dto.Product> products = new ArrayList<>();
         products.add(container);
         try {
-            return v3extensionUtil.getByteExtensions(products);
+            return v3ExtensionUtil.getByteExtensions(products);
         }
         catch (IOException e) {
             throw new CertificateCreationException("Failed to prepare extensions", e);
@@ -510,7 +519,7 @@ public class SCACertificateGenerator {
         Set<String> entitledProductIds = new HashSet<>();
         entitledProductIds.add("content-access");
 
-        org.candlepin.model.dto.Product productModel = v3extensionUtil.mapProduct(engProduct, skuProduct,
+        org.candlepin.model.dto.Product productModel = v3ExtensionUtil.mapProduct(engProduct, skuProduct,
             promotedContent, consumer, emptyPool, entitledProductIds);
 
         List<org.candlepin.model.dto.Product> productModels = new ArrayList<>();

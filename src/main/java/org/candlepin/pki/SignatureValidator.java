@@ -44,9 +44,9 @@ public interface SignatureValidator {
      * given validator instance.
      *
      * @return
-     *  the signature scheme used by this signature validator.
+     *  the cryptographic scheme used by this signature validator
      */
-    Scheme getSignatureScheme();
+    Scheme getCryptoScheme();
 
     /**
      * Adds one or more additional certificates (and their associated public key) to be used to validate

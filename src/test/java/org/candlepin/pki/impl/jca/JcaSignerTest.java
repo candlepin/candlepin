@@ -19,58 +19,54 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 import org.candlepin.pki.Scheme;
-import org.candlepin.test.CertificateReaderForTesting;
+import org.candlepin.test.CryptoUtil;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyException;
 import java.security.cert.CertificateException;
 
+// TODO: FIXME: this test suite needs a lot of work:
+// - there aren't many tests here; we need more testing around signing to ensure multi-scheme support and
+//   all public-facing methods are working properly
+// - the test should be made generic, moved to an abstract test suite, with this class simply providing the
+//   BC implementation to test without providing any additional tests for the interface methods
 
-
-class JcaSignerTest {
-    private static final String SIGNATURE_SCHEME_NAME = "rsa";
-    private static final String KEY_ALGORITHM = "rsa";
-    private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
-
-    private byte[] expectedSignature;
+public class JcaSignerTest {
+    private Scheme scheme;
     private JcaSigner signer;
-    private CertificateReaderForTesting certificateAuthority;
 
     @BeforeEach
-    public void setUp() throws CertificateException, IOException, KeyException {
-        this.expectedSignature = IOUtils.toByteArray(
-            this.getClass().getClassLoader().getResourceAsStream("certs/signature"));
-
-        this.certificateAuthority = new CertificateReaderForTesting();
-        this.signer = new JcaSigner(certificateAuthority);
+    public void setUp() throws CertificateException, KeyException {
+        // Temporary. We need to be testing all supported schemes, not just RSA.
+        this.scheme = CryptoUtil.generateRsaScheme();
+        this.signer = new JcaSigner(CryptoUtil.getSecurityProvider(), scheme);
     }
 
     @Test
-    public void testGetSignatureScheme() {
-        Scheme actual = this.signer.getSignatureScheme();
+    public void testGetCryptoScheme() {
+        Scheme actual = this.signer.getCryptoScheme();
+        Scheme expected = this.scheme;
 
         assertThat(actual)
-            .isNotNull()
-            .returns(SIGNATURE_SCHEME_NAME, Scheme::name)
-            .returns(KEY_ALGORITHM, Scheme::keyAlgorithm)
-            .returns(SIGNATURE_ALGORITHM, Scheme::signatureAlgorithm)
-            .returns(this.certificateAuthority.getCACert(), Scheme::certificate);
+            .returns(expected.name(), Scheme::name)
+            .returns(expected.privateKey(), Scheme::privateKey)
+            .returns(expected.certificate(), Scheme::certificate)
+            .returns(expected.signatureAlgorithm(), Scheme::signatureAlgorithm)
+            .returns(expected.keyAlgorithm(), Scheme::keyAlgorithm)
+            .returns(expected.keySize(), Scheme::keySize);
     }
 
     @Test
-    public void shouldCalculateSignature() {
-        ByteArrayInputStream input = new ByteArrayInputStream(
-            "Hello, World!".getBytes(StandardCharsets.UTF_8));
+    public void shouldCalculateSignature() throws Exception {
+        byte[] data = "Hello, World!".getBytes(StandardCharsets.UTF_8);
+        byte[] expected = CryptoUtil.sign(data, this.scheme);
 
-        byte[] signature = this.signer.sign(input);
-
-        assertArrayEquals(this.expectedSignature, signature);
+        byte[] signature = this.signer.sign(new ByteArrayInputStream(data));
+        assertArrayEquals(expected, signature);
     }
 
 }

@@ -30,7 +30,8 @@ import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.model.CloudRegistrationInfo;
 import org.candlepin.test.CryptoUtil;
@@ -52,9 +53,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,14 +63,14 @@ import java.util.Map;
 public class CloudRegistrationAuthTest {
     private static final String CLAIMANT_KEY = "claimant_key";
     private DevConfig config;
-    private CertificateReader certificateReader;
+    private CryptoManager cryptoManager;
     private CloudRegistrationAdapter mockCloudRegistrationAdapter;
     private OwnerCurator mockOwnerCurator;
 
     @BeforeEach
     public void init() {
         this.config = TestConfig.defaults();
-        this.certificateReader = this.setupCertificateReader();
+        this.cryptoManager = CryptoUtil.getCryptoManager(this.config);
 
         this.mockCloudRegistrationAdapter = mock(CloudRegistrationAdapter.class);
         this.mockOwnerCurator = mock(OwnerCurator.class);
@@ -99,25 +97,8 @@ public class CloudRegistrationAuthTest {
         this.config.setProperty(ConfigProperties.CLOUD_AUTHENTICATION, "true");
     }
 
-    private CertificateReader setupCertificateReader() {
-        try {
-            ClassLoader loader = getClass().getClassLoader();
-            String caCert = loader.getResource("test-ca.crt").toURI().getPath();
-            String caKey = loader.getResource("test-ca.key").toURI().getPath();
-
-            this.config.setProperty(ConfigProperties.LEGACY_CA_CERT, caCert);
-            this.config.setProperty(ConfigProperties.LEGACY_CA_KEY, caKey);
-            this.config.setProperty(ConfigProperties.LEGACY_CA_KEY_PASSWORD, "password");
-
-            return new CertificateReader(config, CryptoUtil.getPrivateKeyReader());
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private CloudRegistrationAuth buildAuthProvider() {
-        return new CloudRegistrationAuth(this.config, this.mockOwnerCurator, this.certificateReader);
+        return new CloudRegistrationAuth(this.config, this.cryptoManager, this.mockOwnerCurator);
     }
 
     private MockHttpRequest buildHttpRequest() {
@@ -133,29 +114,19 @@ public class CloudRegistrationAuthTest {
         return (int) (System.currentTimeMillis() / 1000);
     }
 
-    private String buildMalformedToken(JsonWebToken token) {
-        X509Certificate certificate;
-        PublicKey publicKey;
-        PrivateKey privateKey;
+    private String buildToken(JsonWebToken token) {
+        // Get the scheme we believe the auth layer will be using. This needs to align with the internal
+        // logic of the auth impl under test.
+        Scheme scheme = this.cryptoManager.getDefaultCryptoScheme();
 
-        // Fetch our keys
-        try {
-            certificate = this.certificateReader.getCACert();
-            publicKey = certificate.getPublicKey();
-            privateKey = this.certificateReader.getCaKey();
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Unable to load public and private keys", e);
-        }
-
-        String keyId = KeyUtils.createKeyId(publicKey);
+        String keyId = KeyUtils.createKeyId(scheme.certificate().getPublicKey());
 
         KeyWrapper wrapper = new KeyWrapper();
         wrapper.setAlgorithm(Algorithm.RS512);
-        wrapper.setCertificate(certificate);
+        wrapper.setCertificate(scheme.certificate());
         wrapper.setKid(keyId);
-        wrapper.setPrivateKey(privateKey);
-        wrapper.setPublicKey(publicKey);
+        wrapper.setPrivateKey(scheme.privateKey().get());
+        wrapper.setPublicKey(scheme.certificate().getPublicKey());
         wrapper.setUse(KeyUse.SIG);
         wrapper.setType(KeyType.RSA);
 
@@ -199,7 +170,7 @@ public class CloudRegistrationAuthTest {
         String ownerKey = "test_org";
         int ctSeconds = this.getCurrentSeconds() - 5;
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.STANDARD.toString())
             .subject("test_subject")
             .audience(ownerKey)
@@ -230,7 +201,7 @@ public class CloudRegistrationAuthTest {
         String ownerKey = "test_org";
         int ctSeconds = this.getCurrentSeconds() - 5;
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.STANDARD.toString())
             .subject("test_subject")
             .audience(ownerKey)
@@ -258,7 +229,7 @@ public class CloudRegistrationAuthTest {
         when(this.mockOwnerCurator.getByKey(anyString())).thenReturn(null);
         int ctSeconds = this.getCurrentSeconds() - 5;
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.STANDARD.toString())
             .subject("test_subject")
             .audience(ownerKey)
@@ -279,7 +250,7 @@ public class CloudRegistrationAuthTest {
     public void testGetPrincipalIgnoresTokensWithWrongType() {
         int ctSeconds = this.getCurrentSeconds() - 5;
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .type("invalid_token_type")
             .subject("test_subject")
             .audience("test_org")
@@ -300,7 +271,7 @@ public class CloudRegistrationAuthTest {
     public void testGetPrincipalIgnoresTokensLackingType() {
         int ctSeconds = this.getCurrentSeconds() - 5;
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .subject("test_subject")
             .audience("test_org")
             .issuedAt(ctSeconds)
@@ -320,7 +291,7 @@ public class CloudRegistrationAuthTest {
     public void testGetPrincipalIgnoresTokensLackingSubject() {
         int ctSeconds = this.getCurrentSeconds() - 5;
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.STANDARD.toString())
             .audience("test_org")
             .issuedAt(ctSeconds)
@@ -340,7 +311,7 @@ public class CloudRegistrationAuthTest {
     public void testGetPrincipalIgnoresTokensLackingAudience() {
         int ctSeconds = this.getCurrentSeconds() - 5;
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.STANDARD.toString())
             .subject("test_subject")
             .issuedAt(ctSeconds)
@@ -360,7 +331,7 @@ public class CloudRegistrationAuthTest {
     public void testGetPrincipalIgnoresExpiredTokens() {
         int ctSeconds = this.getCurrentSeconds();
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.STANDARD.toString())
             .subject("test_subject")
             .audience("test_org")
@@ -381,7 +352,7 @@ public class CloudRegistrationAuthTest {
     public void testGetPrincipalIgnoresInactiveTokens() {
         int ctSeconds = this.getCurrentSeconds();
 
-        String token = this.buildMalformedToken(new JsonWebToken()
+        String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.STANDARD.toString())
             .subject("test_subject")
             .audience("test_org")

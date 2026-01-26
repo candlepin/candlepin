@@ -21,10 +21,11 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
-import org.candlepin.pki.X509CertificateBuilder;
+import org.candlepin.pki.Scheme;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +39,6 @@ import java.util.Date;
 import java.util.Objects;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 
@@ -48,27 +48,41 @@ import javax.inject.Singleton;
 @Singleton
 public class IdentityCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(IdentityCertificateGenerator.class);
+
+    private final CryptoManager cryptoManager;
     private final KeyPairGenerator keyPairGenerator;
     private final PemEncoder pemEncoder;
     private final IdentityCertificateCurator idCertCurator;
     private final CertificateSerialCurator serialCurator;
-    private final Provider<X509CertificateBuilder> certBuilder;
+
     private final int yearAddendum;
+
+    // Temporary
+    private final Scheme scheme;
 
     @Inject
     public IdentityCertificateGenerator(
         Configuration config,
+        CryptoManager cryptoManager,
         PemEncoder pemEncoder,
         KeyPairGenerator keyPairGenerator,
         IdentityCertificateCurator identityCertCurator,
-        CertificateSerialCurator serialCurator,
-        Provider<X509CertificateBuilder> certBuilder) {
-        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
+        CertificateSerialCurator serialCurator) {
+
+        Objects.requireNonNull(config);
+
+        this.cryptoManager = Objects.requireNonNull(cryptoManager);
+        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator); //temporary
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
+
         this.idCertCurator = Objects.requireNonNull(identityCertCurator);
         this.serialCurator = Objects.requireNonNull(serialCurator);
-        this.certBuilder = Objects.requireNonNull(certBuilder);
+
         this.yearAddendum = config.getInt(ConfigProperties.IDENTITY_CERT_YEAR_ADDENDUM);
+
+        // FIXME: Temporary; select the default scheme and run with it for testing. Replace this with per-op
+        // scheme selection
+        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
     }
 
     /**
@@ -118,6 +132,7 @@ public class IdentityCertificateGenerator {
 
     private IdentityCertificate createCertificate(Consumer consumer) {
         log.debug("Generating identity cert for consumer: {}", consumer.getUuid());
+
         ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
         Instant from = now.minusHours(1).toInstant();
         Instant to = now.plusYears(this.yearAddendum).toInstant();
@@ -126,9 +141,10 @@ public class IdentityCertificateGenerator {
         // We need the sequence generated id before we create the EntitlementCertificate,
         // otherwise we could have used cascading create
         this.serialCurator.create(serial);
+
         KeyPair keyPair = this.keyPairGenerator.getKeyPair(consumer);
 
-        X509Certificate certificate = this.certBuilder.get()
+        X509Certificate certificate = this.cryptoManager.getCertificateBuilder(this.scheme)
             .withDN(dn)
             .withValidity(from, to)
             .withSerial(serial.getSerial())

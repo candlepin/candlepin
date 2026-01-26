@@ -48,32 +48,31 @@ public class JcaSignatureValidator implements SignatureValidator {
     // Size of the byte buffer to use to consume blocks of data from input streams
     private static final int BUFFER_SIZE = 4096;
 
+    private final java.security.Provider securityProvider;
     private final Scheme scheme;
+
     private byte[] signature;
     private Set<X509Certificate> additionalCerts;
 
     /**
-     * Creates a new signature validator for the given signature scheme. If the given scheme is null, this
-     * constructor throws an exception
+     * Creates a new signature validator for the given cryptographic scheme.
+     *
+     * @param securityProvider
+     *  the security provider to use for all crypto operations; cannot be null
      *
      * @param scheme
      *  the scheme to use for validating signatures; cannot be null
-     *
-     * @throws IllegalArgumentException
-     *  if the given scheme is null
      */
-    public JcaSignatureValidator(Scheme scheme) {
-        if (scheme == null) {
-            throw new IllegalArgumentException("scheme is null");
-        }
+    public JcaSignatureValidator(java.security.Provider securityProvider, Scheme scheme) {
+        this.securityProvider = Objects.requireNonNull(securityProvider);
+        this.scheme = Objects.requireNonNull(scheme);
 
-        this.scheme = scheme;
         this.signature = null;
         this.additionalCerts = new HashSet<>();
     }
 
     @Override
-    public Scheme getSignatureScheme() {
+    public Scheme getCryptoScheme() {
         return this.scheme;
     }
 
@@ -112,7 +111,8 @@ public class JcaSignatureValidator implements SignatureValidator {
 
         CheckedPredicate<X509Certificate, IOException> predicate = certificate -> {
             try (InputStream istream = new FileInputStream(file)) {
-                Signature jcaSignature = Signature.getInstance(this.scheme.signatureAlgorithm());
+                Signature jcaSignature = Signature.getInstance(this.scheme.signatureAlgorithm(),
+                    this.securityProvider);
                 jcaSignature.initVerify(certificate);
 
                 byte[] buffer = new byte[BUFFER_SIZE];
@@ -144,7 +144,8 @@ public class JcaSignatureValidator implements SignatureValidator {
 
         Predicate<X509Certificate> predicate = certificate -> {
             try {
-                Signature jcaSignature = Signature.getInstance(this.scheme.signatureAlgorithm());
+                Signature jcaSignature = Signature.getInstance(this.scheme.signatureAlgorithm(),
+                    this.securityProvider);
                 jcaSignature.initVerify(certificate);
 
                 if (data != null) {
