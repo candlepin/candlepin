@@ -14,6 +14,7 @@
  */
 package org.candlepin.pki;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -26,6 +27,7 @@ import org.candlepin.config.DevConfig;
 import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.TestUtil;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -49,22 +51,12 @@ import java.util.stream.Stream;
 
 public class SchemeReaderTest {
 
-    // A list of known, supported schemese
+    // A list of known, supported schemes
     private static final List<Scheme> SUPPORTED_SCHEMES = CryptoUtil.generateSupportedSchemes().toList();
 
     private static Stream<Arguments> schemeSource() {
         return SUPPORTED_SCHEMES.stream()
             .map(Arguments::of);
-    }
-
-    private static Scheme.Builder toBuilder(Scheme source) {
-        return new Scheme.Builder()
-            .setName(source.name())
-            .setPrivateKey(source.privateKey())
-            .setCertificate(source.certificate())
-            .setSignatureAlgorithm(source.signatureAlgorithm())
-            .setKeyAlgorithm(source.keyAlgorithm())
-            .setKeySize(source.keySize());
     }
 
     private static File writeKeyToFile(PrivateKey key, String password) throws KeyException, IOException {
@@ -88,7 +80,7 @@ public class SchemeReaderTest {
 
         String prefix = ConfigProperties.schemePrefix(schemeName);
 
-        File keyFile = writeKeyToFile(scheme.privateKey(), keyPassword);
+        File keyFile = writeKeyToFile(scheme.privateKey().get(), keyPassword);
         File certFile = writeCertToFile(scheme.certificate());
 
         config.setProperty(prefix + ConfigProperties.CRYPTO_SCHEME_CERT, certFile.getCanonicalPath());
@@ -102,9 +94,8 @@ public class SchemeReaderTest {
             scheme.signatureAlgorithm());
         config.setProperty(prefix + ConfigProperties.CRYPTO_SCHEME_KEY_ALGORITHM, scheme.keyAlgorithm());
 
-        if (scheme.keySize() != null) {
-            config.setProperty(prefix + ConfigProperties.CRYPTO_SCHEME_KEY_SIZE, scheme.keySize().toString());
-        }
+        scheme.keySize().ifPresent(keySize ->
+            config.setProperty(prefix + ConfigProperties.CRYPTO_SCHEME_KEY_SIZE, keySize.toString()));
     }
 
     private static void writeSchemeConfig(DevConfig config, Scheme scheme, String keyPassword)
@@ -129,7 +120,7 @@ public class SchemeReaderTest {
     }
 
     private SchemeReader buildSchemeReader(Configuration config) throws CertificateException {
-        return new SchemeReader(config, CryptoUtil.getPrivateKeyReader());
+        return new SchemeReader(config, CryptoUtil.getPrivateKeyReader(), CryptoUtil.getCertificateReader());
     }
 
 
@@ -248,7 +239,7 @@ public class SchemeReaderTest {
 
         assertThatThrownBy(() -> reader.readSchemes())
             .isInstanceOf(ConfigurationException.class)
-            .hasMessageContaining("Unable to load scheme");
+            .hasMessageContaining("Unable to read scheme");
     }
 
     @ParameterizedTest
@@ -267,7 +258,7 @@ public class SchemeReaderTest {
 
         assertThatThrownBy(() -> reader.readSchemes())
             .isInstanceOf(ConfigurationException.class)
-            .hasMessageContaining("Unable to load private key");
+            .hasMessageContaining("Unable to read private key");
     }
 
     @ParameterizedTest
@@ -284,7 +275,7 @@ public class SchemeReaderTest {
 
         assertThatThrownBy(() -> reader.readSchemes())
             .isInstanceOf(ConfigurationException.class)
-            .hasMessageContaining("Unable to load private key");
+            .hasMessageContaining("Unable to read private key");
     }
 
     @ParameterizedTest
@@ -301,7 +292,7 @@ public class SchemeReaderTest {
 
         assertThatThrownBy(() -> reader.readSchemes())
             .isInstanceOf(ConfigurationException.class)
-            .hasMessageContaining("Unable to load private key");
+            .hasMessageContaining("Unable to read private key");
     }
 
     @ParameterizedTest
@@ -320,7 +311,7 @@ public class SchemeReaderTest {
 
         assertThatThrownBy(() -> reader.readSchemes())
             .isInstanceOf(ConfigurationException.class)
-            .hasMessageContaining("Unable to load certificate");
+            .hasMessageContaining("Unable to read certificate");
     }
 
     @ParameterizedTest
@@ -384,7 +375,7 @@ public class SchemeReaderTest {
 
         assertThatThrownBy(() -> reader.readDefaultScheme())
             .isInstanceOf(ConfigurationException.class)
-            .hasMessageContaining("Unable to load scheme");
+            .hasMessageContaining("Unable to read scheme");
     }
 
     @ParameterizedTest
@@ -417,7 +408,7 @@ public class SchemeReaderTest {
 
         assertThatThrownBy(() -> reader.readDefaultScheme())
             .isInstanceOf(ConfigurationException.class)
-            .hasMessageContaining("Unable to load private key");
+            .hasMessageContaining("Unable to read private key");
     }
 
     @ParameterizedTest
@@ -436,7 +427,7 @@ public class SchemeReaderTest {
 
         assertThatThrownBy(() -> reader.readDefaultScheme())
             .isInstanceOf(ConfigurationException.class)
-            .hasMessageContaining("Unable to load private key");
+            .hasMessageContaining("Unable to read private key");
     }
 
     @ParameterizedTest
@@ -455,7 +446,7 @@ public class SchemeReaderTest {
 
         assertThatThrownBy(() -> reader.readDefaultScheme())
             .isInstanceOf(ConfigurationException.class)
-            .hasMessageContaining("Unable to load private key");
+            .hasMessageContaining("Unable to read private key");
     }
 
     @ParameterizedTest
@@ -474,7 +465,7 @@ public class SchemeReaderTest {
 
         assertThatThrownBy(() -> reader.readDefaultScheme())
             .isInstanceOf(ConfigurationException.class)
-            .hasMessageContaining("Unable to load certificate");
+            .hasMessageContaining("Unable to read certificate");
     }
 
     @Test
@@ -518,7 +509,8 @@ public class SchemeReaderTest {
             .returns(scheme.privateKey(), Scheme::privateKey)
             .returns(scheme.certificate(), Scheme::certificate)
             .returns(keyAlgorithm, Scheme::keyAlgorithm)
-            .returns(null, Scheme::keySize);
+            .extracting(Scheme::keySize, as(InstanceOfAssertFactories.OPTIONAL))
+            .isEmpty();
     }
 
     @Test
@@ -544,7 +536,8 @@ public class SchemeReaderTest {
             .returns(scheme.privateKey(), Scheme::privateKey)
             .returns(scheme.certificate(), Scheme::certificate)
             .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_ALGORITHM, Scheme::keyAlgorithm)
-            .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_SIZE, Scheme::keySize);
+            .extracting(Scheme::keySize, as(InstanceOfAssertFactories.OPTIONAL))
+            .hasValue(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_SIZE);
     }
 
     @Test
@@ -569,7 +562,8 @@ public class SchemeReaderTest {
             .returns(scheme.privateKey(), Scheme::privateKey)
             .returns(scheme.certificate(), Scheme::certificate)
             .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_ALGORITHM, Scheme::keyAlgorithm)
-            .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_SIZE, Scheme::keySize);
+            .extracting(Scheme::keySize, as(InstanceOfAssertFactories.OPTIONAL))
+            .hasValue(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_SIZE);
     }
 
 }

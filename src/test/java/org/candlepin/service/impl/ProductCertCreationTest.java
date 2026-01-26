@@ -20,14 +20,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
-import org.candlepin.pki.CertificateReader;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,11 +35,6 @@ import org.junit.jupiter.api.Test;
  */
 public class ProductCertCreationTest extends DatabaseTestFixture {
     private ProductServiceAdapter productAdapter;
-
-    @Override
-    protected Module getGuiceOverrideModule() {
-        return new ProductCertCreationModule();
-    }
 
     @BeforeEach
     @Override
@@ -119,13 +110,6 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
         product.setAttribute(Product.Attributes.ARCHITECTURE, arch);
 
         return product;
-    }
-
-    private static class ProductCertCreationModule extends AbstractModule {
-        @Override
-        protected void configure() {
-            bind(CertificateReader.class).asEagerSingleton();
-        }
     }
 
 }

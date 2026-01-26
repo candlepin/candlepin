@@ -39,8 +39,8 @@ import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
-import org.candlepin.pki.SignatureValidator;
-import org.candlepin.pki.Signer;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.sync.file.ManifestFile;
@@ -65,6 +65,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -126,8 +127,7 @@ public class Importer {
     private final OwnerCurator ownerCurator;
     private final IdentityCertificateCurator idCertCurator;
     private final RefresherFactory refresherFactory;
-    private final Signer signer;
-    private final SignatureValidator signatureValidator;
+    private final CryptoManager cryptoManager;
     private final ExporterMetadataCurator expMetaCurator;
     private final CertificateSerialCurator csCurator;
     private final CdnCurator cdnCurator;
@@ -139,6 +139,9 @@ public class Importer {
     private final SubscriptionReconciler subscriptionReconciler;
     private final ModelTranslator translator;
 
+    // Temporary
+    private final Scheme scheme;
+
     @Inject
     public Importer(
         ConsumerTypeCurator consumerTypeCurator,
@@ -146,8 +149,7 @@ public class Importer {
         OwnerCurator ownerCurator,
         IdentityCertificateCurator idCertCurator,
         RefresherFactory refresherFactory,
-        Signer signer,
-        SignatureValidator signatureValidator,
+        CryptoManager cryptoManager,
         ExporterMetadataCurator emc,
         CertificateSerialCurator csc,
         EventSink sink,
@@ -177,9 +179,10 @@ public class Importer {
         this.subscriptionReconciler = Objects.requireNonNull(subscriptionReconciler);
         this.translator = Objects.requireNonNull(translator);
 
-        // TODO: FIXME: Replace both of these with the CertificateAuthority interface
-        this.signer = Objects.requireNonNull(signer);
-        this.signatureValidator = Objects.requireNonNull(signatureValidator);
+        this.cryptoManager = Objects.requireNonNull(cryptoManager);
+
+        // Temporary measure to get a scheme; this should be determined on a per-op basis
+        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
     }
 
     public ImportRecord loadExport(Owner owner, File archive, ConflictOverrides overrides,
@@ -390,9 +393,8 @@ public class Importer {
                     i18n.tr("The archive does not contain the required signature file"));
             }
 
-            boolean verifiedSignature = this.signatureValidator
-                // TODO: FIXME: Enable once we have the CA available
-                // .withAdditionalCertificates(this.certificateAuthority.getUpstreamCertificates())
+            boolean verifiedSignature = this.cryptoManager.getSignatureValidator(this.scheme)
+                .withAdditionalCertificates(this.cryptoManager.getUpstreamCertificates())
                 .forSignature(this.loadSignature(new File(exportDir, "signature")))
                 .validate(new File(exportDir, "consumer_export.zip"));
 
@@ -453,6 +455,11 @@ public class Importer {
             log.error("Archive file does not contain consumer_export.zip", fnfe);
             throw new ImportExtractionException(i18n.tr("The archive does not contain " +
                 "the required consumer_export.zip file"));
+        }
+        catch (CertificateException e) {
+            log.error("Unable to load upstream certificates to validate manifest", e);
+            throw new ImporterException(i18n.tr("Unable to read certificates to validate manifest"),
+                e, result);
         }
         catch (ConstraintViolationException cve) {
             log.error("Failed to import archive", cve);

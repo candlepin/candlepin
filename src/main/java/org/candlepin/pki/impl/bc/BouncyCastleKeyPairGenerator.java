@@ -17,12 +17,11 @@ package org.candlepin.pki.impl.bc;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.KeyPairData;
 import org.candlepin.model.KeyPairDataCurator;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.KeyPairCreationException;
 import org.candlepin.pki.KeyPairGenerator;
+import org.candlepin.pki.Scheme;
 
-import com.google.inject.Inject;
-
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,9 +40,9 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Objects;
 
-import javax.inject.Provider;
+import javax.inject.Inject;
 
-
+// TODO: FIXME: This class is not Bouncy Castle specific, it can be moved to the JCA package instead.
 
 /**
  * Class handles creation of {@link KeyPair}.
@@ -51,18 +50,27 @@ import javax.inject.Provider;
 public class BouncyCastleKeyPairGenerator implements KeyPairGenerator {
     private static final Logger log = LoggerFactory.getLogger(BouncyCastleKeyPairGenerator.class);
 
-    private static final String KEY_ALGORITHM = "RSA";
-    private static final int KEY_SIZE = 4096;
+    private static final String LEGACY_KEY_ALGORITHM = "RSA";
 
-    private final Provider<BouncyCastleProvider> securityProvider;
+    private final java.security.Provider securityProvider;
     private final KeyPairDataCurator keypairDataCurator;
+    private final Scheme scheme;
+
+    // TODO: The keypair generator needs a major refactor: the model layer and crypto layer need to be pulled
+    // apart and decoupled. Any logic reliant on both should exist in a class that depends on both rather than
+    // coupling the two together as was done in the past.
+    // For now, this class will be updated to be injectable, but it should not be long-term. Once this class
+    // is refactored, it should be provided by the crypto manager with scheme selection.
 
     @Inject
-    public BouncyCastleKeyPairGenerator(Provider<BouncyCastleProvider> securityProvider,
-        KeyPairDataCurator keypairDataCurator) {
+    public BouncyCastleKeyPairGenerator(CryptoManager cryptoManager, KeyPairDataCurator keypairDataCurator) {
+        Objects.requireNonNull(cryptoManager);
+        this.securityProvider = cryptoManager.getSecurityProvider();
 
-        this.securityProvider = Objects.requireNonNull(securityProvider);
         this.keypairDataCurator = Objects.requireNonNull(keypairDataCurator);
+
+        // Temporary measure to get a scheme; this should be passed in directly instead
+        this.scheme = cryptoManager.getDefaultCryptoScheme();
     }
 
     @Override
@@ -80,17 +88,8 @@ public class BouncyCastleKeyPairGenerator implements KeyPairGenerator {
 
             kpdata = new KeyPairData()
                 .setPublicKeyData(keypair.getPublic().getEncoded())
-                .setPrivateKeyData(keypair.getPrivate().getEncoded());
-
-            // TODO: This should be updated once PQC configuration is implemented.
-            // The value should be determined from the configuration, using
-            // 'signature_algorithm', and if it is 'rsa', concatenated with 'key_size'.
-            if (KEY_ALGORITHM.toLowerCase().startsWith("rsa")) {
-                kpdata.setAlgorithm(String.format("%s:%s", KEY_ALGORITHM, KEY_SIZE));
-            }
-            else {
-                kpdata.setAlgorithm(KEY_ALGORITHM);
-            }
+                .setPrivateKeyData(keypair.getPrivate().getEncoded())
+                .setAlgorithm(this.scheme.keyAlgorithm());
 
             kpdata = this.keypairDataCurator.create(kpdata, false);
             consumer.setKeyPairData(kpdata);
@@ -104,28 +103,22 @@ public class BouncyCastleKeyPairGenerator implements KeyPairGenerator {
                 log.info("Key pair does not appear to be PKCS8 data; attempting Java deserialization...");
                 keypair = this.processAsJSO(kpdata);
 
-                // If output is still null here, the key is malformed, so we should generate
-                // a new one
+                // If output is still null here, the key is malformed, so we should generate a new one
                 if (keypair == null) {
                     log.warn("Malformed key data found for consumer {}, generating new key pair",
                         consumer.getUuid());
                     keypair = this.generateKeyPair();
+
+                    kpdata.setAlgorithm(this.scheme.keyAlgorithm());
+                }
+                else {
+                    kpdata.setAlgorithm(LEGACY_KEY_ALGORITHM);
                 }
 
                 // In either case, we need to update the key pair data associated with the
                 // consumer, so we can avoid this conversion in the future.
-                kpdata.setPublicKeyData(keypair.getPublic().getEncoded());
-                kpdata.setPrivateKeyData(keypair.getPrivate().getEncoded());
-
-                // TODO: This should be updated once PQC configuration is implemented.
-                // The value should be determined from the configuration, using
-                // 'signature_algorithm', and if it is 'rsa', concatenated with 'key_size'.
-                if (KEY_ALGORITHM.toLowerCase().startsWith("rsa")) {
-                    kpdata.setAlgorithm(String.format("%s:%s", KEY_ALGORITHM, KEY_SIZE));
-                }
-                else {
-                    kpdata.setAlgorithm(KEY_ALGORITHM);
-                }
+                kpdata.setPublicKeyData(keypair.getPublic().getEncoded())
+                    .setPrivateKeyData(keypair.getPrivate().getEncoded());
 
                 kpdata = this.keypairDataCurator.merge(kpdata);
                 consumer.setKeyPairData(kpdata);
@@ -138,9 +131,12 @@ public class BouncyCastleKeyPairGenerator implements KeyPairGenerator {
     @Override
     public KeyPair generateKeyPair() {
         try {
-            java.security.KeyPairGenerator keyGen = java.security.KeyPairGenerator.getInstance(KEY_ALGORITHM);
-            keyGen.initialize(KEY_SIZE);
-            return keyGen.generateKeyPair();
+            java.security.KeyPairGenerator generator = java.security.KeyPairGenerator.getInstance(
+                this.scheme.keyAlgorithm(), this.securityProvider);
+
+            this.scheme.keySize().ifPresent(generator::initialize);
+
+            return generator.generateKeyPair();
         }
         catch (NoSuchAlgorithmException e) {
             throw new KeyPairCreationException("Failed to generate a new key pair!", e);
@@ -160,8 +156,12 @@ public class BouncyCastleKeyPairGenerator implements KeyPairGenerator {
      */
     private KeyPair processAsPKCS8(KeyPairData keyPairData) {
         try {
-            PublicKey publicKey = this.generatePublicKey(keyPairData.getPublicKeyData(), KEY_ALGORITHM);
-            PrivateKey privateKey = this.generatePrivateKey(keyPairData.getPrivateKeyData(), KEY_ALGORITHM);
+            String algorithm = keyPairData.getAlgorithm() != null ?
+                keyPairData.getAlgorithm() :
+                this.scheme.keyAlgorithm();
+
+            PublicKey publicKey = this.generatePublicKey(keyPairData.getPublicKeyData(), algorithm);
+            PrivateKey privateKey = this.generatePrivateKey(keyPairData.getPrivateKeyData(), algorithm);
 
             return new KeyPair(publicKey, privateKey);
         }
@@ -252,7 +252,7 @@ public class BouncyCastleKeyPairGenerator implements KeyPairGenerator {
     private PublicKey generatePublicKey(byte[] keydata, String algorithm)
         throws NoSuchAlgorithmException, InvalidKeySpecException {
 
-        KeyFactory factory = KeyFactory.getInstance(algorithm, this.securityProvider.get());
+        KeyFactory factory = KeyFactory.getInstance(algorithm, this.securityProvider);
         X509EncodedKeySpec spec = new X509EncodedKeySpec(keydata, algorithm);
 
         return factory.generatePublic(spec);
@@ -273,7 +273,7 @@ public class BouncyCastleKeyPairGenerator implements KeyPairGenerator {
     private PrivateKey generatePrivateKey(byte[] keydata, String algorithm)
         throws NoSuchAlgorithmException, InvalidKeySpecException {
 
-        KeyFactory factory = KeyFactory.getInstance(algorithm, this.securityProvider.get());
+        KeyFactory factory = KeyFactory.getInstance(algorithm, this.securityProvider);
         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keydata, algorithm);
 
         return factory.generatePrivate(spec);

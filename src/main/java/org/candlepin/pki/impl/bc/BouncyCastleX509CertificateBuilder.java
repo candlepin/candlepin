@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2025 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,10 +12,8 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
+package org.candlepin.pki.impl.bc;
 
-package org.candlepin.pki.certs.bc;
-
-import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.Scheme;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
@@ -66,25 +64,17 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
 
 
 /**
  * Builder for the construction of {@link X509Certificate}s.
  */
 public class BouncyCastleX509CertificateBuilder implements X509CertificateBuilder {
-    private static final String SIGNATURE_SCHEME_NAME = "rsa";
-    private static final String KEY_ALGORITHM = "rsa";
-    private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
     private static final Pattern X500_SPECIAL_SYMBOL_REGEX = Pattern.compile("\\A([,=+<>#;\"])");
 
-    private final Provider<BouncyCastleProvider> securityProvider;
-    private final CertificateReader certificateAuthority;
+    private final BouncyCastleProvider securityProvider;
     private final SubjectKeyIdentifierWriter subjectKeyIdentifierWriter;
-    private final List<X509Extension> certExtensions;
-    private final Scheme signatureScheme;
+    private final Scheme scheme;
 
     private DistinguishedName distinguishedName;
     private DistinguishedName subjectAltName;
@@ -92,31 +82,25 @@ public class BouncyCastleX509CertificateBuilder implements X509CertificateBuilde
     private Instant validUntil;
     private KeyPair keyPair;
     private BigInteger certSerial;
+    private final List<X509Extension> certExtensions;
 
-    @Inject
-    public BouncyCastleX509CertificateBuilder(CertificateReader certificateAuthority,
-        Provider<BouncyCastleProvider> securityProvider,
-        SubjectKeyIdentifierWriter subjectKeyIdentifierWriter) {
+    public BouncyCastleX509CertificateBuilder(BouncyCastleProvider securityProvider,
+        SubjectKeyIdentifierWriter subjectKeyIdentifierWriter, Scheme scheme) {
 
-        this.certificateAuthority = Objects.requireNonNull(certificateAuthority);
         this.securityProvider = Objects.requireNonNull(securityProvider);
         this.subjectKeyIdentifierWriter = Objects.requireNonNull(subjectKeyIdentifierWriter);
+        this.scheme = Objects.requireNonNull(scheme);
 
         this.certExtensions = new ArrayList<>();
 
-        this.signatureScheme = new Scheme.Builder()
-            .setName(SIGNATURE_SCHEME_NAME)
-            .setPrivateKey(this.certificateAuthority.getCaKey())
-            .setCertificate(this.certificateAuthority.getCACert())
-            .setSignatureAlgorithm(SIGNATURE_ALGORITHM)
-            .setKeyAlgorithm(KEY_ALGORITHM)
-            .setKeySize(4096)
-            .build();
+        if (this.scheme.privateKey().isEmpty()) {
+            throw new IllegalStateException("scheme does not include a private key");
+        }
     }
 
     @Override
-    public Scheme getSignatureScheme() {
-        return this.signatureScheme;
+    public Scheme getCryptoScheme() {
+        return this.scheme;
     }
 
     @Override
@@ -157,12 +141,13 @@ public class BouncyCastleX509CertificateBuilder implements X509CertificateBuilde
 
     @Override
     public X509CertificateBuilder withRandomSerial() {
+        SecureRandom rand = new SecureRandom();
         long serial;
 
         // Impl note:
         // Math.abs cannot negate MIN_VALUE, so we'll generate a new value when that happens.
         do {
-            serial = new SecureRandom().nextLong();
+            serial = rand.nextLong();
         }
         while (serial == Long.MIN_VALUE);
 
@@ -187,7 +172,7 @@ public class BouncyCastleX509CertificateBuilder implements X509CertificateBuilde
     public X509Certificate build() {
         this.checkMandatoryFields();
 
-        X509Certificate caCertificate = this.signatureScheme.certificate();
+        X509Certificate caCertificate = this.scheme.certificate();
         PublicKey clientPubKey = this.keyPair.getPublic();
 
         X509v3CertificateBuilder builder = new X509v3CertificateBuilder(
@@ -351,9 +336,9 @@ public class BouncyCastleX509CertificateBuilder implements X509CertificateBuilde
 
     private ContentSigner signer() {
         try {
-            return new JcaContentSignerBuilder(this.signatureScheme.signatureAlgorithm())
-                .setProvider(this.securityProvider.get())
-                .build(this.certificateAuthority.getCaKey());
+            return new JcaContentSignerBuilder(this.scheme.signatureAlgorithm())
+                .setProvider(this.securityProvider)
+                .build(this.scheme.privateKey().get());
         }
         catch (OperatorCreationException e) {
             throw new CertificateCreationException("Failed to create certificate signer.", e);
@@ -369,8 +354,9 @@ public class BouncyCastleX509CertificateBuilder implements X509CertificateBuilde
         }
     }
 
-    private void addExtension(X509v3CertificateBuilder builder,
-        ASN1ObjectIdentifier oid, boolean critical, ASN1Encodable value) {
+    private void addExtension(X509v3CertificateBuilder builder, ASN1ObjectIdentifier oid, boolean critical,
+        ASN1Encodable value) {
+
         try {
             builder.addExtension(oid, critical, value);
         }

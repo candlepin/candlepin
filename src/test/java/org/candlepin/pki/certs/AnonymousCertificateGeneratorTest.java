@@ -31,6 +31,7 @@ import static org.mockito.Mockito.when;
 import org.candlepin.cache.AnonymousCertContent;
 import org.candlepin.cache.AnonymousCertContentCache;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.ConfigurationException;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.model.AnonymousCloudConsumer;
@@ -42,18 +43,14 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.dto.Content;
-import org.candlepin.pki.certs.bc.BouncyCastleX509CertificateBuilder;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.huffman.Huffman;
 import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
-import org.candlepin.pki.impl.bc.BouncyCastlePemEncoder;
-import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
-import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
-import org.candlepin.pki.impl.jca.JcaSigner;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
-import org.candlepin.test.CertificateReaderForTesting;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
@@ -103,27 +100,23 @@ class AnonymousCertificateGeneratorTest {
         X509V3ExtensionUtil extensionUtil = spy(new X509V3ExtensionUtil(
             config, this.entitlementCurator, new Huffman()));
 
-        BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
-        BouncyCastleKeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(
-            securityProvider, mock(KeyPairDataCurator.class));
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(this.config);
 
-        CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
+        BouncyCastleKeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(cryptoManager,
+            mock(KeyPairDataCurator.class));
 
         return new AnonymousCertificateGenerator(
-            config,
+            this.config,
             extensionUtil,
             new EntitlementPayloadGenerator(new ObjectMapper()),
             this.serialCurator,
             this.anonConsumerCurator,
             this.anonymousCertificateCurator,
             this.productAdapter,
-            contentCache,
-            new BouncyCastlePemEncoder(),
+            this.contentCache,
+            CryptoUtil.getPemEncoder(),
             keyPairGenerator,
-            new JcaSigner(certificateReader),
-            () -> new BouncyCastleX509CertificateBuilder(
-                certificateReader, securityProvider, new BouncyCastleSubjectKeyIdentifierWriter())
-        );
+            cryptoManager);
     }
 
     @Test
@@ -194,29 +187,29 @@ class AnonymousCertificateGeneratorTest {
 
     @ParameterizedTest
     @ValueSource(ints = { -1, 0 })
-    public void shouldThrowIllegalStateExceptionWithInvalidCertDurationConfig(int certDuration) {
+    public void shouldThrowConfigurationExceptionWithInvalidCertDurationConfig(int certDuration) {
         this.config.setProperty(ConfigProperties.ANON_CERT_DURATION, String.valueOf(certDuration));
 
-        assertThrows(IllegalStateException.class, () -> {
+        assertThrows(ConfigurationException.class, () -> {
             this.createGenerator();
         });
     }
 
     @Test
-    public void shouldThrowIllegalStateExceptionWithNonNumberCertDurationConfig() {
+    public void shouldThrowConfigurationExceptionWithNonNumberCertDurationConfig() {
         this.config.setProperty(ConfigProperties.ANON_CERT_DURATION, "bad config");
 
-        assertThrows(IllegalStateException.class, () -> {
+        assertThrows(ConfigurationException.class, () -> {
             this.createGenerator();
         });
     }
 
     @Test
-    public void shouldThrowIllegalStateExceptionWithCertDurationConfigLargerThanMax() throws Exception {
+    public void shouldThrowConfigurationExceptionWithCertDurationConfigLargerThanMax() throws Exception {
         String duration = String.valueOf(ConfigProperties.CERT_MAX_DURATION + 1);
         this.config.setProperty(ConfigProperties.ANON_CERT_DURATION, duration);
 
-        assertThrows(IllegalStateException.class, () -> {
+        assertThrows(ConfigurationException.class, () -> {
             this.createGenerator();
         });
     }

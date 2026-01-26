@@ -14,16 +14,90 @@
  */
 package org.candlepin.config;
 
+import org.candlepin.pki.Scheme;
+import org.candlepin.test.CryptoUtil;
+
+import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.HashMap;
+import java.security.KeyException;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-
+// TODO: FIXME: This sucks. A lot. TestConfig, DevConfig, and all the other nonsense we do to have mutable
+// test configuration are about as poorly implemented as can possibly be. It's resulted in tons of duplicate
+// code and even more goofy hacks and workarounds as a result. None of this should exist and, at most,
+// DevConfig should be an extension of Configuration that defines the mutability functionality, and then
+// TestConfig (or whatever) becomes little more than a map subclass that implements DevConfig. Even if we were
+// to keep this general layout, why are DevConfig and the defaults provided here separate? What value is being
+// added by further separating TestConfig and DevConfig? It makes no sense.
+//
+// At some point the entire configuration package should be overhauled to be less *this* and more usable in a
+// way that isn't clunky and constantly in the way. As it is, it's rubbish and a maintenance disaster.
 
 public final class TestConfig {
 
     public static final int BULK_SET_CONSUMER_ENV_MAX_CONSUMER_LIMIT = 100;
     public static final int BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT = 10;
+
+    private static final DevConfig DEFAULT_CONFIG;
+    private static final String LEGACY_CA_KEY_PASSWORD = "password";
+
+    static {
+        try {
+            DevConfig config = new DevConfig(ConfigProperties.DEFAULT_PROPERTIES);
+
+            Map<String, Scheme> schemes = CryptoUtil.generateSupportedSchemes()
+                .collect(Collectors.toMap(Scheme::name, Function.identity()));
+
+            String upstreamCertRepo = TestConfig.class.getClassLoader().getResource("certs/upstream")
+                .toURI().getPath();
+
+            // Generate configuration for each scheme
+            for (Scheme scheme : schemes.values()) {
+                CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+            }
+
+            // Write the standard crypto config
+            config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(", ", schemes.keySet()));
+            config.setProperty(ConfigProperties.CRYPTO_UPSTREAM_CERT_REPO, upstreamCertRepo);
+
+            // Write legacy configuration to ensure we don't break tests that are looking specifically for it
+            // before we have a chance to update them.
+            String legacyCertPath = TestConfig.class.getResource("candlepin-ca.crt").toURI().getPath();
+            String legacyKeyPath = TestConfig.class.getResource("candlepin-ca.key").toURI().getPath();
+
+            config.setProperty(ConfigProperties.LEGACY_CA_CERT, legacyCertPath);
+            config.setProperty(ConfigProperties.LEGACY_CA_KEY, legacyKeyPath);
+            config.setProperty(ConfigProperties.LEGACY_CA_KEY_PASSWORD, LEGACY_CA_KEY_PASSWORD);
+            config.setProperty(ConfigProperties.LEGACY_CA_CERT_UPSTREAM, upstreamCertRepo);
+
+            // Write other misc configurations...
+            config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp");
+            config.setProperty(ConfigProperties.ACTIVEMQ_LARGE_MSG_SIZE, "0");
+            config.setProperty(ConfigProperties.HIDDEN_RESOURCES, "");
+            config.setProperty(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE, "10");
+            config.setProperty(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE, "10");
+            config.setProperty(DatabaseConfigFactory.BATCH_BLOCK_SIZE, "10");
+            config.setProperty(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT, "32000");
+            config.setProperty(ConfigProperties.CACHE_ANON_CERT_CONTENT_TTL, "120000");
+            config.setProperty(ConfigProperties.CACHE_ANON_CERT_CONTENT_MAX_ENTRIES, "10000");
+            config.setProperty(ConfigProperties.PAGING_DEFAULT_PAGE_SIZE, "100");
+            config.setProperty(ConfigProperties.PAGING_MAX_PAGE_SIZE, "10000");
+            config.setProperty(ConfigProperties.BULK_SET_CONSUMER_ENV_MAX_CONSUMER_LIMIT,
+                String.valueOf(BULK_SET_CONSUMER_ENV_MAX_CONSUMER_LIMIT));
+            config.setProperty(ConfigProperties.BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT,
+                String.valueOf(BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT));
+            config.setProperty(ConfigProperties.SCA_X509_CERT_EXPIRY_THRESHOLD, "5");
+
+            // Assign the default config. This is somewhat pointless because we can't make this immutable, but
+            // whatever.
+            DEFAULT_CONFIG = config;
+        }
+        catch (KeyException | IOException | URISyntaxException e) {
+            throw new RuntimeException("Unable to generate standardized test crypto configuration", e);
+        }
+    }
 
     private TestConfig() {
         throw new UnsupportedOperationException();
@@ -34,46 +108,8 @@ public final class TestConfig {
     }
 
     public static DevConfig defaults() {
-        return new DevConfig(loadProperties());
-    }
-
-    private static HashMap<String, String> loadProperties() {
-        // set ssl cert/key path for testing
-        HashMap<String, String> defaults = new HashMap<>(ConfigProperties.DEFAULT_PROPERTIES);
-
-        try {
-            String cert = TestConfig.class.getResource("candlepin-ca.crt").toURI().getPath();
-            String key = TestConfig.class.getResource("candlepin-ca.key").toURI().getPath();
-            String certUpstream = TestConfig.class.getClassLoader()
-                .getResource("certs/upstream").toURI().getPath();
-
-            defaults.put(ConfigProperties.LEGACY_CA_CERT, cert);
-            defaults.put(ConfigProperties.LEGACY_CA_CERT_UPSTREAM, certUpstream);
-            defaults.put(ConfigProperties.LEGACY_CA_KEY, key);
-        }
-        catch (URISyntaxException e) {
-            throw new RuntimeException("Error loading cert/key resources!", e);
-        }
-
-        defaults.put(ConfigProperties.LEGACY_CA_KEY_PASSWORD, "password");
-        defaults.put(ConfigProperties.SYNC_WORK_DIR, "/tmp");
-        defaults.put(ConfigProperties.ACTIVEMQ_LARGE_MSG_SIZE, "0");
-        defaults.put(ConfigProperties.HIDDEN_RESOURCES, "");
-        defaults.put(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE, "10");
-        defaults.put(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE, "10");
-        defaults.put(DatabaseConfigFactory.BATCH_BLOCK_SIZE, "10");
-        defaults.put(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT, "32000");
-        defaults.put(ConfigProperties.CACHE_ANON_CERT_CONTENT_TTL, "120000");
-        defaults.put(ConfigProperties.CACHE_ANON_CERT_CONTENT_MAX_ENTRIES, "10000");
-        defaults.put(ConfigProperties.PAGING_DEFAULT_PAGE_SIZE, "100");
-        defaults.put(ConfigProperties.PAGING_MAX_PAGE_SIZE, "10000");
-        defaults.put(ConfigProperties.BULK_SET_CONSUMER_ENV_MAX_CONSUMER_LIMIT,
-            String.valueOf(BULK_SET_CONSUMER_ENV_MAX_CONSUMER_LIMIT));
-        defaults.put(ConfigProperties.BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT,
-            String.valueOf(BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT));
-        defaults.put(ConfigProperties.SCA_X509_CERT_EXPIRY_THRESHOLD, "5");
-
-        return defaults;
+        return new DevConfig()
+            .setPropertiesFrom(DEFAULT_CONFIG);
     }
 
 }

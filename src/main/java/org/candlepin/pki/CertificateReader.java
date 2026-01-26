@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,128 +14,92 @@
  */
 package org.candlepin.pki;
 
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
-
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.security.KeyException;
-import java.security.PrivateKey;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.HashSet;
-import java.util.Set;
 
-import javax.inject.Inject;
+
 
 /**
- * A generic mechanism for reading CA certificates from an underlying datastore.
+ * Interface defining methods to read a X.509 from an input stream or file.
  */
-public class CertificateReader {
-    private CertificateFactory certFactory;
-    private String caCertPath;
-    private String upstreamCaCertPath;
-    private String caKeyPath;
-    private String caKeyPassword;
-    private final X509Certificate x509Certificate;
-    private final Set<X509Certificate> upstreamX509Certificates;
-    private final PrivateKey privateKey;
+public interface CertificateReader {
 
-    @Inject
-    public CertificateReader(Configuration config, PrivateKeyReader reader)
-        throws CertificateException, KeyException {
+    /**
+     * Attempts to read the data from the given input stream as an X.509 certificate. If a valid certificate
+     * cannot be read from the stream, this method throws an exception. This method never returns null.
+     * <p>
+     * Note that callers are responsible for maintaining the lifecycle of the given input stream. That is, the
+     * stream will be consumed by this method, but it will not be marked, rewound, nor closed.
+     *
+     * @param istream
+     *  the stream from which to read a X.509 certificate
+     *
+     * @throws IllegalArgumentException
+     *  if the provided InputStream is null
+     *
+     * @throws CertificateException
+     *  if an exception occurs while reading the certificate
+     *
+     * @return
+     *  the X509Certificate read from the specified input stream.
+     */
+    X509Certificate read(InputStream istream) throws CertificateException;
 
-        certFactory = CertificateFactory.getInstance("X.509");
-
-        readConfig(config);
-        validateArguments();
-
-        this.x509Certificate = loadCACertificate(this.caCertPath);
-        this.upstreamX509Certificates = loadUpstreamCACertificates(upstreamCaCertPath);
-        this.privateKey = readPrivateKey(reader);
-    }
-
-    protected void readConfig(Configuration config) {
-        this.caCertPath = config.getString(ConfigProperties.LEGACY_CA_CERT);
-        this.upstreamCaCertPath = config.getString(ConfigProperties.LEGACY_CA_CERT_UPSTREAM);
-        this.caKeyPath = config.getString(ConfigProperties.LEGACY_CA_KEY);
-        this.caKeyPassword = config.getOptionalString(ConfigProperties.LEGACY_CA_KEY_PASSWORD)
-            .orElse("");
-    }
-
-    protected void validateArguments() {
-        if (this.caCertPath == null) {
-            throw new IllegalArgumentException("caCertPath cannot be null. Unable to load CA Certificate");
+    /**
+     * Attempts to read the data from the given file as an X.509 certificate. If a valid certificate cannot be
+     * read from the stream, this method throws an exception. This method never returns null.
+     *
+     * @param file
+     *  the file from which to read a X.509 certificate
+     *
+     * @throws IllegalArgumentException
+     *  if the provided file is null
+     *
+     * @throws CertificateException
+     *  if an exception occurs while reading the certificate
+     *
+     * @return
+     *  the X509Certificate read from the specified file.
+     */
+    default X509Certificate read(File file) throws CertificateException {
+        if (file == null) {
+            throw new IllegalArgumentException("file is null");
         }
-        if (this.caKeyPath == null) {
-            throw new IllegalArgumentException("caKeyPath cannot be null. Unable to load PrivateKey");
-        }
-    }
 
-    protected PrivateKey readPrivateKey(PrivateKeyReader reader) throws KeyException {
-        return reader.read(caKeyPath, caKeyPassword);
+        try (FileInputStream istream = new FileInputStream(file)) {
+            return this.read(istream);
+        }
+        catch (IOException e) {
+            throw new CertificateException(e);
+        }
     }
 
     /**
-     * Supplies the CA's {@link X509Certificate}.
+     * Attempts to read the data from the given file path as an X.509 certificate. If a valid certificate
+     * cannot be  read from the stream, this method throws an exception. This method never returns null.
      *
-     * @return a new Cert
-     */
-    public X509Certificate getCACert() {
-        return this.x509Certificate;
-    }
-
-    public Set<X509Certificate> getUpstreamCACerts() {
-        return this.upstreamX509Certificates;
-    }
-
-    /**
-     * Supplies the CA's {@link PrivateKey}.
+     * @param path
+     *  a path to the file from which to read a X.509 certificate
      *
-     * @return a new PrivateKey
+     * @throws IllegalArgumentException
+     *  if the provided file path is null
+     *
+     * @throws CertificateException
+     *  if an exception occurs while reading the certificate
+     *
+     * @return
+     *  the X509Certificate read from the specified path.
      */
-    public PrivateKey getCaKey() {
-        return this.privateKey;
-    }
-
-    protected X509Certificate loadCACertificate(String path) {
-        try (
-            InputStream inStream = new FileInputStream(path);
-        ) {
-            return (X509Certificate) this.certFactory.generateCertificate(inStream);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    protected Set<X509Certificate> loadUpstreamCACertificates(String path) {
-        Set<X509Certificate> result = new HashSet<>();
-        File dir = new File(path);
-        if (!dir.exists()) {
-            return result;
+    default X509Certificate read(String path) throws CertificateException {
+        if (path == null) {
+            throw new IllegalArgumentException("path is null");
         }
 
-        File[] files = dir.listFiles();
-        if (files == null) {
-            throw new RuntimeException("Could not read files in " + path);
-        }
-
-        for (File file : files) {
-            try (
-                InputStream inStream = new FileInputStream(file.getAbsolutePath());
-            ) {
-
-                X509Certificate cert = (X509Certificate) this.certFactory.generateCertificate(inStream);
-                result.add(cert);
-            }
-            catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return result;
+        return this.read(new File(path));
     }
 
 }

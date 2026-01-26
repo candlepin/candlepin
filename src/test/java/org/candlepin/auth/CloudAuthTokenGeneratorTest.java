@@ -17,10 +17,9 @@ package org.candlepin.auth;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
-import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.test.CryptoUtil;
 import org.candlepin.util.Util;
 
@@ -44,30 +43,14 @@ public class CloudAuthTokenGeneratorTest {
     private static final String TOKEN_SUBJECT_DEFAULT = "cloud_auth";
 
     private DevConfig config;
-    private CertificateReader certificateReader;
-
+    private CryptoManager cryptoManager;
     private CloudAuthTokenGenerator tokenGenerator;
 
     @BeforeEach
     public void beforeEach() {
         this.config = TestConfig.defaults();
-
-        try {
-            ClassLoader loader = getClass().getClassLoader();
-            String caCert = loader.getResource("test-ca.crt").toURI().getPath();
-            String caKey = loader.getResource("test-ca.key").toURI().getPath();
-
-            this.config.setProperty(ConfigProperties.LEGACY_CA_CERT, caCert);
-            this.config.setProperty(ConfigProperties.LEGACY_CA_KEY, caKey);
-            this.config.setProperty(ConfigProperties.LEGACY_CA_KEY_PASSWORD, "password");
-
-            certificateReader = new CertificateReader(config, CryptoUtil.getPrivateKeyReader());
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        tokenGenerator = new CloudAuthTokenGenerator(config, certificateReader);
+        this.cryptoManager = CryptoUtil.getCryptoManager(this.config);
+        this.tokenGenerator = new CloudAuthTokenGenerator(this.config, this.cryptoManager);
     }
 
     @Test

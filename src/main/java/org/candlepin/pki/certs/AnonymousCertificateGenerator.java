@@ -18,6 +18,7 @@ import org.candlepin.cache.AnonymousCertContent;
 import org.candlepin.cache.AnonymousCertContentCache;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.config.ConfigurationException;
 import org.candlepin.controller.util.ContentPathBuilder;
 import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.model.AnonymousCloudConsumer;
@@ -33,12 +34,12 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.dto.Content;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.PemEncoder;
-import org.candlepin.pki.Signer;
-import org.candlepin.pki.X509CertificateBuilder;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
@@ -68,7 +69,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 
@@ -80,6 +80,7 @@ public class AnonymousCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(AnonymousCertificateGenerator.class);
     private static final String BASIC_ENTITLEMENT_TYPE = "basic";
 
+    // TODO: reorder these
     private final Configuration config;
     private final CertificateSerialCurator serialCurator;
     private final X509V3ExtensionUtil v3extensionUtil;
@@ -90,13 +91,15 @@ public class AnonymousCertificateGenerator {
     private final AnonymousCertContentCache contentCache;
     private final PemEncoder pemEncoder;
     private final KeyPairGenerator keyPairGenerator;
-    private final Signer signer;
-    private final Provider<X509CertificateBuilder> certificateBuilder;
+    private final CryptoManager cryptoManager;
 
     private int certDuration;
 
+    private final Scheme scheme;
+
     @Inject
     public AnonymousCertificateGenerator(
+        // TODO: reorder these
         Configuration config,
         X509V3ExtensionUtil v3extensionUtil,
         EntitlementPayloadGenerator payloadGenerator,
@@ -107,9 +110,9 @@ public class AnonymousCertificateGenerator {
         AnonymousCertContentCache contentCache,
         PemEncoder pemEncoder,
         KeyPairGenerator keyPairGenerator,
-        Signer signer,
-        Provider<X509CertificateBuilder> certificateBuilder) {
+        CryptoManager cryptoManager) {
 
+        // TODO: reorder these
         this.serialCurator = Objects.requireNonNull(serialCurator);
         this.payloadGenerator = Objects.requireNonNull(payloadGenerator);
         this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
@@ -119,25 +122,27 @@ public class AnonymousCertificateGenerator {
         this.contentCache = Objects.requireNonNull(contentCache);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
         this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
-        this.signer = Objects.requireNonNull(signer);
-        this.certificateBuilder = Objects.requireNonNull(certificateBuilder);
         this.config = Objects.requireNonNull(config);
+        this.cryptoManager = Objects.requireNonNull(cryptoManager);
+
+        // FIXME: Temporary; use the default/legacy scheme and run with it for testing. Replace this with
+        // per-op scheme selection
+        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
 
         try {
             this.certDuration = this.config.getInt(ConfigProperties.ANON_CERT_DURATION);
             if (this.certDuration <= 0) {
-                throw new IllegalStateException("Anonymous certificate duration config is less than 1 day");
+                throw new ConfigurationException("Anonymous certificate duration config is less than 1 day");
             }
 
             if (this.certDuration > ConfigProperties.CERT_MAX_DURATION) {
                 String msg = String.format("Anonymous certificate duration config exceeds %d days",
                     ConfigProperties.CERT_MAX_DURATION);
-                throw new IllegalStateException(msg);
+                throw new ConfigurationException(msg);
             }
-
         }
         catch (NumberFormatException e) {
-            throw new IllegalStateException("Anonymous certificate duration config not a number");
+            throw new ConfigurationException("Invalid value for anonymous certificate duration", e);
         }
     }
 
@@ -292,7 +297,7 @@ public class AnonymousCertificateGenerator {
         extensions.addAll(prepareV3ByteExtensions(product));
         DistinguishedName dn = new DistinguishedName(consumerUuid, owner);
 
-        return this.certificateBuilder.get()
+        return this.cryptoManager.getCertificateBuilder(this.scheme)
             .withDN(dn)
             .withSerial(serial.getSerial())
             .withValidity(start.toInstant(), end.toInstant())
@@ -306,7 +311,9 @@ public class AnonymousCertificateGenerator {
         payload += Util.toBase64(payloadBytes);
         payload += "-----END ENTITLEMENT DATA-----\n";
 
-        byte[] bytes = this.signer.sign(new ByteArrayInputStream(payloadBytes));
+        byte[] bytes = this.cryptoManager.getSigner(this.scheme)
+            .sign(new ByteArrayInputStream(payloadBytes));
+
         String signature = "-----BEGIN RSA SIGNATURE-----\n";
         signature += Util.toBase64(bytes);
         signature += "-----END RSA SIGNATURE-----\n";

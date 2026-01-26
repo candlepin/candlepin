@@ -16,10 +16,10 @@ package org.candlepin.auth;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.config.ConversionException;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
-import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
 import org.candlepin.resteasy.filter.AuthUtil;
 
 import org.jboss.resteasy.spi.HttpRequest;
@@ -30,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.PublicKey;
-import java.security.cert.X509Certificate;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -42,42 +41,33 @@ import javax.inject.Inject;
  * CloudRegistration endpoint
  */
 public class AnonymousCloudRegistrationAuth implements AuthProvider {
-    private static Logger log = LoggerFactory.getLogger(AnonymousCloudRegistrationAuth.class);
+    private static final Logger log = LoggerFactory.getLogger(AnonymousCloudRegistrationAuth.class);
 
     private static final String AUTH_TYPE = "Bearer";
 
     private final Configuration config;
+    private final CryptoManager cryptoManager;
     private final AnonymousCloudConsumerCurator anonymousCloudConsumerCurator;
-    private final CertificateReader certificateReader;
 
     private final boolean enabled;
+    private final Scheme scheme;
     private final PublicKey publicKey;
 
+
     @Inject
-    public AnonymousCloudRegistrationAuth(Configuration config,
-        AnonymousCloudConsumerCurator anonymousCloudConsumerCurator,
-        CertificateReader certificateReader) {
+    public AnonymousCloudRegistrationAuth(Configuration config, CryptoManager cryptoManager,
+        AnonymousCloudConsumerCurator anonymousCloudConsumerCurator) {
+
         this.config = Objects.requireNonNull(config);
+        this.cryptoManager = Objects.requireNonNull(cryptoManager);
         this.anonymousCloudConsumerCurator = Objects.requireNonNull(anonymousCloudConsumerCurator);
-        this.certificateReader = Objects.requireNonNull(certificateReader);
 
-        // Pre-parse config values
-        try {
-            this.enabled = this.config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
-        }
-        catch (ConversionException e) {
-            // Try to pretty up the exception for easy debugging
-            throw new RuntimeException("Invalid value(s) found while parsing JWT configuration", e);
-        }
+        this.enabled = this.config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
 
-        // Fetch our keys
-        try {
-            X509Certificate certificate = this.certificateReader.getCACert();
-            this.publicKey = certificate.getPublicKey();
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Unable to load public and private keys", e);
-        }
+        // TODO: FIXME: This needs to be updated to be more scheme-aware. This will come in later work, but
+        // for now we'll just use the default/legacy scheme.
+        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
+        this.publicKey = this.scheme.certificate().getPublicKey();
     }
 
     @Override
@@ -102,7 +92,7 @@ public class AnonymousCloudRegistrationAuth implements AuthProvider {
 
         try {
             TokenVerifier<JsonWebToken> verifier = TokenVerifier.create(authChunks[1], JsonWebToken.class)
-                .publicKey(publicKey)
+                .publicKey(this.publicKey)
                 .verify();
 
             JsonWebToken token = verifier.getToken();

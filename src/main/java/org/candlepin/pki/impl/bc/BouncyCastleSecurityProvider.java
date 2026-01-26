@@ -21,13 +21,13 @@ import javax.inject.Provider;
 
 
 /**
- * Bouncy Castle implementation of the SecurityProvider interface
+ * Provider for the Bouncy Castle security provider
  */
 public class BouncyCastleSecurityProvider implements Provider<BouncyCastleProvider> {
-    private static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
+    private static final BouncyCastleProvider SECURITY_PROVIDER = new BouncyCastleProvider();
 
     @Override
     public BouncyCastleProvider get() {
-        return BC_PROVIDER;
+        return SECURITY_PROVIDER;
     }
 }

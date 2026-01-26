@@ -20,7 +20,7 @@ import org.candlepin.pki.PrivateKeyReaderTest;
 
 
 /**
- * PKR test suite for the Bouncy Castle security provider
+ * PrivateKeyReader test suite for the Bouncy Castle security provider
  */
 public class BouncyCastlePrivateKeyReaderTest extends PrivateKeyReaderTest {
 
@@ -28,7 +28,7 @@ public class BouncyCastlePrivateKeyReaderTest extends PrivateKeyReaderTest {
 
     @Override
     protected PrivateKeyReader buildPrivateKeyReader() {
-        return new BouncyCastlePrivateKeyReader(SECURITY_PROVIDER);
+        return new BouncyCastlePrivateKeyReader(SECURITY_PROVIDER.get());
     }
 
 }

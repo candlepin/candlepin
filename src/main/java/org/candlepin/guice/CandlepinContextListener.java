@@ -138,27 +138,35 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
             throw new IllegalStateException("context listener already initialized");
         }
 
-        log.info("Candlepin initializing context.");
+        try {
+            log.info("Candlepin initializing context.");
 
-        I18nManager.getInstance().setDefaultLocale(Locale.US);
-        servletContext = sce.getServletContext();
+            I18nManager.getInstance().setDefaultLocale(Locale.US);
+            servletContext = sce.getServletContext();
 
-        log.info("Candlepin reading configuration.");
-        config = readConfiguration();
+            log.info("Candlepin reading configuration.");
+            config = readConfiguration();
 
-        LoggingConfigurator.init(config);
+            LoggingConfigurator.init(config);
 
-        servletContext.setAttribute(CONFIGURATION_NAME, config);
-        setCapabilities(config);
-        log.debug("Candlepin stored config on context.");
+            servletContext.setAttribute(CONFIGURATION_NAME, config);
+            setCapabilities(config);
+            log.debug("Candlepin stored config on context.");
 
-        initializeDatabase();
+            initializeDatabase();
 
-        // set things up BEFORE calling the super class' initialize method.
-        super.contextInitialized(sce);
+            // set things up BEFORE calling the super class' initialize method.
+            super.contextInitialized(sce);
 
-        this.state = ListenerState.INITIALIZED;
-        log.info("Candlepin context initialized.");
+            this.state = ListenerState.INITIALIZED;
+            log.info("Candlepin context initialized.");
+        }
+        catch (RuntimeException e) {
+            log.error("Unexpected exception occurred during initialization", e);
+
+            // Rethrow so we don't swallow this error and run in a bad state
+            throw e;
+        }
     }
 
     @Override

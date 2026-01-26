@@ -16,10 +16,10 @@ package org.candlepin.auth;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.config.ConversionException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
 import org.candlepin.resteasy.filter.AuthUtil;
 
 import org.jboss.resteasy.spi.HttpRequest;
@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.PublicKey;
-import java.security.cert.X509Certificate;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -43,41 +42,32 @@ import javax.inject.Inject;
  * CloudRegistration authorize endpoint
  */
 public class CloudRegistrationAuth implements AuthProvider {
-    private static Logger log = LoggerFactory.getLogger(CloudRegistrationAuth.class);
+    private static final Logger log = LoggerFactory.getLogger(CloudRegistrationAuth.class);
 
     private static final String AUTH_TYPE = "Bearer";
 
     private final Configuration config;
+    private final CryptoManager cryptoManager;
     private final OwnerCurator ownerCurator;
-    private final CertificateReader certificateReader;
 
     private final boolean enabled;
+    private final Scheme scheme;
     private final PublicKey publicKey;
 
     @Inject
-    public CloudRegistrationAuth(Configuration config, OwnerCurator ownerCurator,
-        CertificateReader certificateReader) {
+    public CloudRegistrationAuth(Configuration config, CryptoManager cryptoManager,
+        OwnerCurator ownerCurator) {
+
         this.config = Objects.requireNonNull(config);
+        this.cryptoManager = Objects.requireNonNull(cryptoManager);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
-        this.certificateReader = Objects.requireNonNull(certificateReader);
 
-        // Pre-parse config values
-        try {
-            this.enabled = this.config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
-        }
-        catch (ConversionException e) {
-            // Try to pretty up the exception for easy debugging
-            throw new RuntimeException("Invalid value(s) found while parsing JWT configuration", e);
-        }
+        this.enabled = this.config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
 
-        // Fetch our keys
-        try {
-            X509Certificate certificate = this.certificateReader.getCACert();
-            this.publicKey = certificate.getPublicKey();
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Unable to load public and private keys", e);
-        }
+        // TODO: FIXME: This needs to be updated to be more scheme-aware. This will come in later work, but
+        // for now we'll just use the default/legacy scheme.
+        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
+        this.publicKey = this.scheme.certificate().getPublicKey();
     }
 
     /**

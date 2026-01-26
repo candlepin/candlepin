@@ -95,13 +95,10 @@ import org.candlepin.messaging.impl.artemis.ArtemisUtil;
 import org.candlepin.messaging.impl.noop.NoopContextListener;
 import org.candlepin.messaging.impl.noop.NoopSessionFactory;
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
-import org.candlepin.pki.SignatureValidator;
-import org.candlepin.pki.SignatureValidatorProvider;
-import org.candlepin.pki.Signer;
-import org.candlepin.pki.X509CertificateBuilder;
 import org.candlepin.pki.certs.AnonymousCertificateGenerator;
 import org.candlepin.pki.certs.EntitlementCertificateGenerator;
 import org.candlepin.pki.certs.EntitlementPayloadGenerator;
@@ -109,12 +106,12 @@ import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.pki.certs.ProductCertificateGenerator;
 import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.pki.certs.UeberCertificateGenerator;
-import org.candlepin.pki.certs.X509CertificateBuilderProvider;
+import org.candlepin.pki.impl.bc.BouncyCastleCryptoManager;
 import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.bc.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.bc.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
-import org.candlepin.pki.impl.jca.JcaSigner;
+import org.candlepin.pki.impl.jca.JcaCertificateReader;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
@@ -197,6 +194,7 @@ import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.persist.jpa.JpaPersistOptions;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
 import org.quartz.SchedulerFactory;
@@ -308,17 +306,23 @@ public class CandlepinModule extends AbstractModule {
     }
 
     private void bindPki() {
-        bind(CertificateReader.class).asEagerSingleton();
-        bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class);
-        bind(X509ExtensionUtil.class);
-
+        // Security provider binding
         bind(BouncyCastleSecurityProvider.class);
-        bind(KeyPairGenerator.class).to(BouncyCastleKeyPairGenerator.class);
-        bind(PemEncoder.class).to(BouncyCastlePemEncoder.class);
-        bind(X509CertificateBuilderProvider.class);
-        bind(X509CertificateBuilder.class).toProvider(X509CertificateBuilderProvider.class);
-        bind(Signer.class).to(JcaSigner.class);
-        bind(SignatureValidator.class).toProvider(SignatureValidatorProvider.class);
+        bind(java.security.Provider.class).toProvider(BouncyCastleSecurityProvider.class);
+        bind(BouncyCastleProvider.class).toProvider(BouncyCastleSecurityProvider.class);
+
+        // Generic crypto wrappers and CA dependencies
+        bind(KeyPairGenerator.class).to(BouncyCastleKeyPairGenerator.class).asEagerSingleton(); // temp
+
+        bind(CertificateReader.class).to(JcaCertificateReader.class).asEagerSingleton();
+        bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class).asEagerSingleton();
+        bind(PemEncoder.class).to(BouncyCastlePemEncoder.class).asEagerSingleton();
+
+        // Crypto Manager
+        bind(CryptoManager.class).to(BouncyCastleCryptoManager.class).asEagerSingleton();
+
+        // Tier-2 generators
+        bind(X509ExtensionUtil.class);
 
         bind(AnonymousCertificateGenerator.class);
         bind(EntitlementCertificateGenerator.class);

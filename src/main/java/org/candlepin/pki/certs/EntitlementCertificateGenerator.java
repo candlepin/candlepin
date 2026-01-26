@@ -37,12 +37,12 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.PemEncoder;
-import org.candlepin.pki.Signer;
-import org.candlepin.pki.X509CertificateBuilder;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
@@ -75,7 +75,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 
@@ -86,6 +85,7 @@ import javax.inject.Singleton;
 public class EntitlementCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(EntitlementCertificateGenerator.class);
 
+    // TODO: Rearrange
     private final EntitlementCertificateCurator entCertCurator;
     private final X509ExtensionUtil extensionUtil;
     private final X509V3ExtensionUtil v3extensionUtil;
@@ -99,25 +99,28 @@ public class EntitlementCertificateGenerator {
     private final EnvironmentCurator environmentCurator;
     private final KeyPairGenerator keyPairGenerator;
     private final PemEncoder pemEncoder;
-    private final Signer signer;
-    private final Provider<X509CertificateBuilder> certificateBuilder;
+    private final CryptoManager cryptoManager;
+
+    // Temporary
+    private final Scheme scheme;
 
     @Inject
     public EntitlementCertificateGenerator(
+        // TODO: Rearrange these to be in a more logical order
         X509ExtensionUtil extensionUtil,
         X509V3ExtensionUtil v3extensionUtil,
         EntitlementPayloadGenerator payloadGenerator,
         EntitlementCertificateCurator entCertCurator,
         CertificateSerialCurator serialCurator,
         OwnerCurator ownerCurator,
-        EntitlementCurator entCurator, I18n i18n,
+        EntitlementCurator entCurator,
+        I18n i18n,
         Configuration config,
         ConsumerTypeCurator consumerTypeCurator,
         EnvironmentCurator environmentCurator,
-        KeyPairGenerator keyPairGenerator,
+        KeyPairGenerator keyPairGenerator, // temporary
         PemEncoder pemEncoder,
-        Signer signer,
-        Provider<X509CertificateBuilder> certificateBuilder) {
+        CryptoManager cryptoManager) {
 
         this.extensionUtil = Objects.requireNonNull(extensionUtil);
         this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
@@ -132,8 +135,11 @@ public class EntitlementCertificateGenerator {
         this.environmentCurator = Objects.requireNonNull(environmentCurator);
         this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
-        this.signer = Objects.requireNonNull(signer);
-        this.certificateBuilder = Objects.requireNonNull(certificateBuilder);
+        this.cryptoManager = Objects.requireNonNull(cryptoManager);
+
+        // FIXME: Temporary; select the default scheme and run with it for testing. Replace this with per-op
+        // scheme selection
+        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
     }
 
     /**
@@ -292,7 +298,7 @@ public class EntitlementCertificateGenerator {
         }
         DistinguishedName dn = new DistinguishedName(ent.getId(), owner);
 
-        return this.certificateBuilder.get()
+        return this.cryptoManager.getCertificateBuilder(this.scheme)
             .withDN(dn)
             .withSerial(serialNumber)
             .withValidity(startDate.toInstant(), endDate.toInstant())
@@ -474,7 +480,9 @@ public class EntitlementCertificateGenerator {
         payload += Util.toBase64(payloadBytes);
         payload += "-----END ENTITLEMENT DATA-----\n";
 
-        byte[] bytes = this.signer.sign(new ByteArrayInputStream(payloadBytes));
+        byte[] bytes = this.cryptoManager.getSigner(this.scheme)
+            .sign(new ByteArrayInputStream(payloadBytes));
+
         String signature = "-----BEGIN RSA SIGNATURE-----\n";
         signature += Util.toBase64(bytes);
         signature += "-----END RSA SIGNATURE-----\n";

@@ -14,22 +14,25 @@
  */
 package org.candlepin.util.function;
 
-import java.util.function.Predicate;
+import java.util.function.Function;
 
 
 
 /**
- * The CheckedPredicate is a functional interface for a predicate that may throw a checked exception, which
+ * The CheckedFunction is a functional interface for a function that may throw a checked exception, which
  * is to be passed through to the caller.
  *
  * @param <T>
- *  the type of the input to the predicate
+ *  the type of the input to the function
+ *
+ * @param <R>
+ *  the type of the output of the function
  *
  * @param <E>
- *  the type of checked exception, or class of exceptions, the predicate may throw
+ *  the type of checked exception, or class of exceptions, the function may throw
  */
 @FunctionalInterface
-public interface CheckedPredicate<T, E extends Exception> {
+public interface CheckedFunction<T, R, E extends Exception> {
 
     @SuppressWarnings("unchecked")
     private static <E extends Exception> void rethrowException(Exception exception) throws E {
@@ -37,40 +40,41 @@ public interface CheckedPredicate<T, E extends Exception> {
     }
 
     /**
-     * Wraps a checked predicate for use in unchecked contexts without losing the error handling of the
+     * Wraps a checked function for use in unchecked contexts without losing the error handling of the
      * typed checked exception; effectively using type erasure to turn a given checked exception into a
      * runtime exception. Other exceptions, checked or otherwise, are passed through as normal.
      *
-     * @param predicate
-     *  the CheckedPredicate to wrap with exception rethrow logic. Cannot be null
+     * @param function
+     *  the CheckedFunction to wrap with exception rethrow logic; cannot be null
      *
      * @throws E
-     *  if an exception of the given type occurs during execution of the predicate
+     *  if an exception of the given type occurs during execution of the target function
      *
      * @return
-     *  a predicate wrapping the checked predicate with exception rethrowing logic
+     *  a function wrapping the checked function with exception rethrowing logic
      */
-    static <T, E extends Exception> Predicate<T> rethrow(CheckedPredicate<T, E> predicate) throws E {
-        return (input) -> {
+    static <T, R, E extends Exception> Function<T, R> rethrow(CheckedFunction<T, R, E> function) throws E {
+        return input -> {
             try {
-                return predicate.test(input);
+                return function.apply(input);
             }
             catch (Exception exception) {
                 rethrowException(exception);
             }
 
-            return false;
+            // This is safe -- we never actually get here
+            return null;
         };
     }
 
     /**
-     * Evaluates this predicate on the given argument.
+     * Applies this function to the given argument.
      *
      * @param value
-     *  the input argument
+     *  the function argument
      *
      * @return
-     *  true if the input argument matches the predicate, false otherwise
+     *  the function result
      */
-    boolean test(T value) throws E;
+    R apply(T value) throws E;
 }
