@@ -75,6 +75,7 @@ import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.exceptions.NotImplementedException;
 import org.candlepin.exceptions.TooManyRequestsException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
@@ -2474,6 +2475,17 @@ public class ConsumerResourceTest {
 
         // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
         // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @Test
+    public void testGetConsumerPackagesThrowsNotImplemented() {
+        String consumerUuid = "test-consumer-uuid";
+
+        NotImplementedException exception = assertThrows(NotImplementedException.class,
+            () -> consumerResource.getConsumerPackages(consumerUuid));
+
+        assertThat(exception.getMessage())
+            .isEqualTo("Consumer package profile uploads are not implemented");
     }
 
     private IdentityCertificate createIdCert() {

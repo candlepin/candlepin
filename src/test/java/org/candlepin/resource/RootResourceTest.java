@@ -14,8 +14,11 @@
  */
 package org.candlepin.resource;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.dto.api.server.v1.Link;
 
@@ -96,5 +99,29 @@ public class RootResourceTest {
         Link result = rootResource.methodLink("annotated_method", m);
         assertEquals("annotated_method", result.getRel());
         assertEquals("/foo/linked", result.getHref());
+    }
+
+    @Test
+    public void testIncludePackagesLinkWhenCombinedReportingEnabled() {
+        DevConfig config = TestConfig.defaults();
+        config.setProperty(ConfigProperties.COMBINED_REPORTING_ENABLED, "true");
+
+        RootResource resource = new RootResource(config);
+        assertThat(resource.createLinks())
+            .isNotNull()
+            .map(Link::getRel)
+            .contains("packages");
+    }
+
+    @Test
+    public void testExcludePackagesLinkWhenCombinedReportingDisabled() {
+        DevConfig config = TestConfig.defaults();
+        config.setProperty(ConfigProperties.COMBINED_REPORTING_ENABLED, "false");
+
+        RootResource resource = new RootResource(config);
+        assertThat(resource.createLinks())
+            .isNotNull()
+            .map(Link::getRel)
+            .doesNotContain("packages");
     }
 }

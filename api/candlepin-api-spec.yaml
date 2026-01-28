@@ -2149,6 +2149,34 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /consumers/{consumer_uuid}/packages:
+    put:
+      description: Placeholder endpoint to expose packages link on the root resource.
+        Consumer package profile uploads are not implemented.
+      tags:
+        - consumer
+      operationId: getConsumerPackages
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the consumer
+          required: true
+          schema:
+            type: string
+      responses:
+        501:
+          description: Consumer package profile uploads are not implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer package profile uploads are not implemented
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /consumers/{consumer_uuid}/export/async:
     get:
       description: Initiates an async generation of a Compressed File representation of a Consumer

@@ -15,10 +15,8 @@
 package org.candlepin.guice;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
-
-
+import java.util.Objects;
 
 /**
  * A class representing the capabilities of the Candlepin server.
@@ -47,7 +45,9 @@ public class CandlepinCapabilities extends HashSet<String> {
 
     public static final String SSL_VERIFY_CAPABILITY = "ssl_verify_status";
 
-    private static CandlepinCapabilities capabilities;
+    public static final String COMBINED_REPORTING_CAPABILITY = "combined_reporting";
+
+    private static final CandlepinCapabilities CAPABILITIES = new CandlepinCapabilities();
 
 
     /**
@@ -73,21 +73,6 @@ public class CandlepinCapabilities extends HashSet<String> {
     }
 
     /**
-     * Creates a new CandlepinCapabilities instance with the specified capabilities. If the given
-     * capabilities are null, no capabilities will be listed as available.
-     *
-     * @param capabilities
-     *  An collection of strings representing available Candlepin capabilities
-     */
-    public CandlepinCapabilities(Collection<String> capabilities) {
-        super(DEFAULT_CAPACITY);
-
-        if (capabilities != null) {
-            this.addAll(capabilities);
-        }
-    }
-
-    /**
      * Fetches the capabilities currently supported by the current Candlepin instance. The instance
      * returned is mutable, and changes made to it will be reflected by later calls to this method.
      *
@@ -95,23 +80,20 @@ public class CandlepinCapabilities extends HashSet<String> {
      *  A CandlepinCapabilities instance
      */
     public static CandlepinCapabilities getCapabilities() {
-        if (capabilities == null) {
-            capabilities = new CandlepinCapabilities();
-        }
-
-        return capabilities;
+        return CAPABILITIES;
     }
 
     /**
-     * Sets the capabilities of the current Candlepin instance. Later calls to getCapabilities
-     * will return the provided instance. If the provided capabilities instance is null, the
+     * Sets the capabilities of the current Candlepin instance. The provided capabilities will
+     * be copied into the existing instance. If the provided capabilities instance is null, the
      * capabilities will be reset to their defaults.
      *
      * @param caps
      *  A CandlepinCapabilities instance to set, or null to reset the capabilities
      */
     public static void setCapabilities(CandlepinCapabilities caps) {
-        capabilities = caps;
-    }
+        CAPABILITIES.clear();
 
+        CAPABILITIES.addAll(Objects.requireNonNullElseGet(caps, () -> Arrays.asList(DEFAULT_CAPABILITIES)));
+    }
 }
