@@ -12,7 +12,6 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.config;
 
 import org.apache.commons.lang3.StringUtils;
@@ -64,7 +63,7 @@ public class DevConfig implements Configuration {
     }
 
     public void clearProperty(String key) {
-        this.config.put(key, null);
+        this.config.remove(key);
     }
 
     @Override
