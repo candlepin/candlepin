@@ -57,9 +57,9 @@ public class CloudAuthTokenGeneratorTest {
             String caCert = loader.getResource("test-ca.crt").toURI().getPath();
             String caKey = loader.getResource("test-ca.key").toURI().getPath();
 
-            this.config.setProperty(ConfigProperties.CA_CERT, caCert);
-            this.config.setProperty(ConfigProperties.CA_KEY, caKey);
-            this.config.setProperty(ConfigProperties.CA_KEY_PASSWORD, "password");
+            this.config.setProperty(ConfigProperties.LEGACY_CA_CERT, caCert);
+            this.config.setProperty(ConfigProperties.LEGACY_CA_KEY, caKey);
+            this.config.setProperty(ConfigProperties.LEGACY_CA_KEY_PASSWORD, "password");
 
             certificateReader = new CertificateReader(config, CryptoUtil.getPrivateKeyReader());
         }

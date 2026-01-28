@@ -40,20 +40,22 @@ public final class TestConfig {
     private static HashMap<String, String> loadProperties() {
         // set ssl cert/key path for testing
         HashMap<String, String> defaults = new HashMap<>(ConfigProperties.DEFAULT_PROPERTIES);
+
         try {
             String cert = TestConfig.class.getResource("candlepin-ca.crt").toURI().getPath();
             String key = TestConfig.class.getResource("candlepin-ca.key").toURI().getPath();
             String certUpstream = TestConfig.class.getClassLoader()
                 .getResource("certs/upstream").toURI().getPath();
-            defaults.put(ConfigProperties.CA_CERT, cert);
-            defaults.put(ConfigProperties.CA_CERT_UPSTREAM, certUpstream);
-            defaults.put(ConfigProperties.CA_KEY, key);
+
+            defaults.put(ConfigProperties.LEGACY_CA_CERT, cert);
+            defaults.put(ConfigProperties.LEGACY_CA_CERT_UPSTREAM, certUpstream);
+            defaults.put(ConfigProperties.LEGACY_CA_KEY, key);
         }
         catch (URISyntaxException e) {
             throw new RuntimeException("Error loading cert/key resources!", e);
         }
 
-        defaults.put(ConfigProperties.CA_KEY_PASSWORD, "password");
+        defaults.put(ConfigProperties.LEGACY_CA_KEY_PASSWORD, "password");
         defaults.put(ConfigProperties.SYNC_WORK_DIR, "/tmp");
         defaults.put(ConfigProperties.ACTIVEMQ_LARGE_MSG_SIZE, "0");
         defaults.put(ConfigProperties.HIDDEN_RESOURCES, "");
