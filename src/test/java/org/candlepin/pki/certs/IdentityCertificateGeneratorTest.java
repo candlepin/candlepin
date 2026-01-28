@@ -44,7 +44,7 @@ import org.candlepin.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import java.security.KeyException;
 import java.security.cert.CertificateException;
 
 class IdentityCertificateGeneratorTest {
@@ -54,7 +54,7 @@ class IdentityCertificateGeneratorTest {
     private IdentityCertificateGenerator identityCertificateGenerator;
 
     @BeforeEach
-    public void setUp() throws CertificateException, IOException {
+    public void setUp() throws CertificateException, KeyException {
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
         KeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(
             securityProvider, mock(KeyPairDataCurator.class));

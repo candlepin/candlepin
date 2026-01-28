@@ -55,7 +55,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.io.IOException;
+import java.security.KeyException;
 import java.security.cert.CertificateException;
 import java.util.Locale;
 
@@ -72,7 +72,7 @@ class UeberCertificateGeneratorTest {
     private UeberCertificateGenerator generator;
 
     @BeforeEach
-    void setUp() throws CertificateException, IOException {
+    void setUp() throws CertificateException, KeyException {
         I18n i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
         CertificateReaderForTesting certificateAuthority = new CertificateReaderForTesting();

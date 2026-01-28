@@ -51,7 +51,7 @@ import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import java.security.KeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -78,7 +78,7 @@ public class BouncyCastleX509CertificateBuilderTest {
     private BouncyCastleX509CertificateBuilder builder;
 
     @BeforeEach
-    void setUp() throws CertificateException, IOException {
+    void setUp() throws CertificateException, KeyException {
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
         SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
         this.certificateAuthority = new CertificateReaderForTesting();

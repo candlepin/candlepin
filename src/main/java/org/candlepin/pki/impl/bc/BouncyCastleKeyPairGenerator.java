@@ -43,11 +43,14 @@ import java.util.Objects;
 
 import javax.inject.Provider;
 
+
+
 /**
  * Class handles creation of {@link KeyPair}.
  */
 public class BouncyCastleKeyPairGenerator implements KeyPairGenerator {
     private static final Logger log = LoggerFactory.getLogger(BouncyCastleKeyPairGenerator.class);
+
     private static final String KEY_ALGORITHM = "RSA";
     private static final int KEY_SIZE = 4096;
 
@@ -57,8 +60,9 @@ public class BouncyCastleKeyPairGenerator implements KeyPairGenerator {
     @Inject
     public BouncyCastleKeyPairGenerator(Provider<BouncyCastleProvider> securityProvider,
         KeyPairDataCurator keypairDataCurator) {
-        this.keypairDataCurator = Objects.requireNonNull(keypairDataCurator);
+
         this.securityProvider = Objects.requireNonNull(securityProvider);
+        this.keypairDataCurator = Objects.requireNonNull(keypairDataCurator);
     }
 
     @Override

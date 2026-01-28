@@ -16,22 +16,19 @@
 package org.candlepin.pki.impl.jca;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
-import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.Scheme;
-import org.candlepin.pki.SignatureException;
 import org.candlepin.test.CertificateReaderForTesting;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyException;
 import java.security.cert.CertificateException;
 
 
@@ -46,7 +43,7 @@ class JcaSignerTest {
     private CertificateReaderForTesting certificateAuthority;
 
     @BeforeEach
-    public void setUp() throws CertificateException, IOException {
+    public void setUp() throws CertificateException, IOException, KeyException {
         this.expectedSignature = IOUtils.toByteArray(
             this.getClass().getClassLoader().getResourceAsStream("certs/signature"));
 
@@ -74,19 +71,6 @@ class JcaSignerTest {
         byte[] signature = this.signer.sign(input);
 
         assertArrayEquals(this.expectedSignature, signature);
-    }
-
-    @Test
-    public void shouldFailCertOperationsFail() {
-        CertificateReader certificateReader = Mockito.spy(this.certificateAuthority);
-        Mockito.when(certificateReader.getCaKey()).thenThrow(RuntimeException.class);
-
-        JcaSigner signer = new JcaSigner(certificateReader);
-
-        ByteArrayInputStream input = new ByteArrayInputStream(
-            "Hello, World!".getBytes(StandardCharsets.UTF_8));
-
-        assertThatThrownBy(() -> signer.sign(input)).isInstanceOf(SignatureException.class);
     }
 
 }

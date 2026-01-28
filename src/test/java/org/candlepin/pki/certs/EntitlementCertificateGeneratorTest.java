@@ -89,6 +89,7 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateFactory;
@@ -154,7 +155,7 @@ public class EntitlementCertificateGeneratorTest {
     private EntitlementCertificateGenerator generator;
 
     @BeforeEach
-    public void setUp() throws CertificateException, IOException {
+    public void setUp() throws CertificateException, KeyException {
         this.owner = createOwner();
         when(this.ownerCurator.findOwnerById(owner.getOwnerId())).thenReturn(this.owner);
         BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();

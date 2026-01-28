@@ -19,8 +19,8 @@ import org.candlepin.config.Configuration;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -45,7 +45,8 @@ public class CertificateReader {
 
     @Inject
     public CertificateReader(Configuration config, PrivateKeyReader reader)
-        throws CertificateException, IOException {
+        throws CertificateException, KeyException {
+
         certFactory = CertificateFactory.getInstance("X.509");
 
         readConfig(config);
@@ -73,9 +74,10 @@ public class CertificateReader {
         }
     }
 
-    protected PrivateKey readPrivateKey(PrivateKeyReader reader) throws IOException {
+    protected PrivateKey readPrivateKey(PrivateKeyReader reader) throws KeyException {
         return reader.read(caKeyPath, caKeyPassword);
     }
+
     /**
      * Supplies the CA's {@link X509Certificate}.
      *
