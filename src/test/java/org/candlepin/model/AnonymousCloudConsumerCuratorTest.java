@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -29,9 +30,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
-
 
 public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
 
@@ -285,8 +287,8 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
             .setCloudProviderShortName("GCP")
             .setProductIds(Set.of("SKU2"));
 
-        AnonymousContentAccessCertificate caCert1 = createExpiredAnonymousContentAccessCert(consumer);
-        AnonymousContentAccessCertificate caCert2 = createExpiredAnonymousContentAccessCert(consumer2);
+        AnonymousContentAccessCertificate caCert1 = createExpiredAnonymousContentAccessCert();
+        AnonymousContentAccessCertificate caCert2 = createExpiredAnonymousContentAccessCert();
         consumer.setContentAccessCert(caCert1);
         consumer2.setContentAccessCert(caCert2);
         this.anonymousCloudConsumerCurator.create(consumer);
@@ -311,16 +313,131 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(0, anonymousCloudConsumerCurator.unlinkAnonymousCertificates(List.of("UnknownId")));
     }
 
-    private AnonymousContentAccessCertificate createExpiredAnonymousContentAccessCert(
-        AnonymousCloudConsumer consumer) {
+    @Test
+    public void testGetInactiveAnonymousCloudConsumerIdsWithNullRetentionDate() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            this.anonymousCloudConsumerCurator.getInactiveAnonymousCloudConsumerIds(null);
+        });
+    }
+
+    @Test
+    public void testGetInactiveAnonymousCloudConsumerIds() throws Exception {
+        AnonymousCloudConsumer inactive1 = new AnonymousCloudConsumer()
+            .setCloudAccountId(TestUtil.randomString())
+            .setCloudInstanceId(TestUtil.randomString())
+            .setCloudOfferingId(TestUtil.randomString())
+            .setProductIds(List.of(TestUtil.randomString()))
+            .setCloudProviderShortName("AWS");
+        inactive1 = this.anonymousCloudConsumerCurator.create(inactive1);
+
+        AnonymousCloudConsumer inactive2 = new AnonymousCloudConsumer()
+            .setCloudAccountId(TestUtil.randomString())
+            .setCloudInstanceId(TestUtil.randomString())
+            .setCloudOfferingId(TestUtil.randomString())
+            .setProductIds(List.of(TestUtil.randomString()))
+            .setCloudProviderShortName("AWS");
+        inactive2 = this.anonymousCloudConsumerCurator.create(inactive2);
+
+        // active1 has an updated date that is before the retention date, but has an active content access
+        // certificate and should not be considered inactive
+
+        AnonymousCloudConsumer active1 = new AnonymousCloudConsumer()
+            .setCloudAccountId(TestUtil.randomString())
+            .setCloudInstanceId(TestUtil.randomString())
+            .setCloudOfferingId(TestUtil.randomString())
+            .setProductIds(List.of(TestUtil.randomString()))
+            .setCloudProviderShortName("AWS")
+            .setContentAccessCert(createAnonymousContentAccessCert(Util.tomorrow()));
+        active1 = this.anonymousCloudConsumerCurator.create(active1);
+
+        Thread.sleep(1000);
+        Instant retentionDate = Instant.now();
+        Thread.sleep(1000);
+
+        // active2 has an updated date after the retention date and no content access certificate
+
+        AnonymousCloudConsumer active2 = new AnonymousCloudConsumer()
+            .setCloudAccountId(TestUtil.randomString())
+            .setCloudInstanceId(TestUtil.randomString())
+            .setCloudOfferingId(TestUtil.randomString())
+            .setProductIds(List.of(TestUtil.randomString()))
+            .setCloudProviderShortName("AWS");
+        active2 = this.anonymousCloudConsumerCurator.create(active2);
+
+        List<String> actual = this.anonymousCloudConsumerCurator
+            .getInactiveAnonymousCloudConsumerIds(retentionDate);
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrder(inactive1.getId(), inactive2.getId());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testDeleteAnonymousCloudConsumersWithNullAndEmptyIds(List<String> ids) {
+        int actual = this.anonymousCloudConsumerCurator.deleteAnonymousCloudConsumers(ids);
+
+        assertEquals(0, actual);
+    }
+
+    @Test
+    public void testDeleteAnonymousCloudConsumers() {
+        AnonymousCloudConsumer c1 = new AnonymousCloudConsumer()
+            .setCloudAccountId(TestUtil.randomString())
+            .setCloudInstanceId(TestUtil.randomString())
+            .setCloudOfferingId(TestUtil.randomString())
+            .setProductIds(List.of(TestUtil.randomString()))
+            .setCloudProviderShortName("AWS");
+        c1 = this.anonymousCloudConsumerCurator.create(c1);
+
+        AnonymousCloudConsumer c2 = new AnonymousCloudConsumer()
+            .setCloudAccountId(TestUtil.randomString())
+            .setCloudInstanceId(TestUtil.randomString())
+            .setCloudOfferingId(TestUtil.randomString())
+            .setProductIds(List.of(TestUtil.randomString()))
+            .setCloudProviderShortName("AWS");
+        c2 = this.anonymousCloudConsumerCurator.create(c2);
+
+        AnonymousCloudConsumer c3 = new AnonymousCloudConsumer()
+            .setCloudAccountId(TestUtil.randomString())
+            .setCloudInstanceId(TestUtil.randomString())
+            .setCloudOfferingId(TestUtil.randomString())
+            .setProductIds(List.of(TestUtil.randomString()))
+            .setCloudProviderShortName("AWS");
+        c3 = this.anonymousCloudConsumerCurator.create(c3);
+
+        int deleted = this.anonymousCloudConsumerCurator
+            .deleteAnonymousCloudConsumers(List.of(c1.getId(), c2.getId()));
+        assertEquals(2, deleted);
+
+        this.anonymousCloudConsumerCurator.flush();
+        this.anonymousCloudConsumerCurator.clear();
+
+        AnonymousCloudConsumer actual = this.anonymousCloudConsumerCurator.get(c1.getId());
+        assertNull(actual);
+
+        actual = this.anonymousCloudConsumerCurator.get(c2.getId());
+        assertNull(actual);
+
+        actual = this.anonymousCloudConsumerCurator.get(c3.getId());
+        assertThat(actual)
+            .isNotNull()
+            .isEqualTo(c3);
+    }
+
+    private AnonymousContentAccessCertificate createExpiredAnonymousContentAccessCert() {
+        return createAnonymousContentAccessCert(Util.yesterday());
+    }
+
+    private AnonymousContentAccessCertificate createAnonymousContentAccessCert(Date date) {
+        CertificateSerial serial = certSerialCurator.create(new CertificateSerial(date));
 
         AnonymousContentAccessCertificate certificate = new AnonymousContentAccessCertificate();
-        certificate.setKey("crt_key");
-        certificate.setSerial(new CertificateSerial(Util.yesterday()));
-        certificate.setCert("cert_1");
-        consumer.setContentAccessCert(certificate);
-        certificate.setId(null);
-        certSerialCurator.create(certificate.getSerial());
+        certificate.setKey(TestUtil.randomString("key-"));
+        certificate.setSerial(serial);
+        certificate.setCert(TestUtil.randomString("cert-"));
+
         return anonymousContentAccessCertCurator.create(certificate);
     }
+
 }
