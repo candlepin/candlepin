@@ -8,10 +8,13 @@ paths = [
   # Ignore legacy/removed directories
   '''^(?:certs|server|spec|compose.d|proxy)\/.*''',
 
-  # Ignore false-positives for ancient comments in UserResource.java
+  # Ignore false-positives in ancient comments in UserResource.java
   '''^src\/main\/java\/org\/candlepin\/resource\/UserResource\.java$''',
 
-  # Ignore false-positives for tests which verify the fetching of private keys
+  # Ignore false-positives in unit tests which verify reading private keys and other such crypto resources
+  '''^src\/test\/java\/org\/candlepin\/pki\/PrivateKeyReaderTest\.java$''',
+
+  # Ignore false-positives in spec tests which verify the fetching of private keys
   '''^spec-tests\/src\/test\/java\/org\/candlepin\/spec\/imports\/ImportSpecTest\.java$''',
   '''^spec-tests\/src\/test\/java\/org\/candlepin\/spec\/imports\/ImportSuccessSpecTest\.java$''',
 ]
