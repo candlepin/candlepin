@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 
@@ -104,12 +105,19 @@ public class JobMessageReceiver {
      *  if the necessary configuration cannot be read or is invalid
      */
     private void configure(Configuration config) throws ConfigurationException {
-        this.receiveAddress = config.getString(ConfigProperties.ASYNC_JOBS_RECEIVE_ADDRESS);
-        if (this.receiveAddress == null || this.receiveAddress.isEmpty()) {
-            throw new ConfigurationException("Invalid job receive address: address cannot be null or empty");
+        try {
+            this.receiveAddress = config.getString(ConfigProperties.ASYNC_JOBS_RECEIVE_ADDRESS);
+            if (this.receiveAddress.isBlank()) {
+                throw new ConfigurationException("Invalid job receive address: " +
+                    "address cannot be null or empty");
+            }
+        }
+        catch (NoSuchElementException e) {
+            throw new ConfigurationException("no job receive address defined", e);
         }
 
-        this.receiveFilter = config.getString(ConfigProperties.ASYNC_JOBS_RECEIVE_FILTER);
+        this.receiveFilter = config.getOptionalString(ConfigProperties.ASYNC_JOBS_RECEIVE_FILTER)
+            .orElse("");
     }
 
     /**

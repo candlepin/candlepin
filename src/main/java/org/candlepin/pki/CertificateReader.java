@@ -58,10 +58,10 @@ public class CertificateReader {
     }
 
     protected void readConfig(Configuration config) {
-        this.caCertPath = config.getString(ConfigProperties.CA_CERT);
-        this.upstreamCaCertPath = config.getString(ConfigProperties.CA_CERT_UPSTREAM);
-        this.caKeyPath = config.getString(ConfigProperties.CA_KEY);
-        this.caKeyPassword = config.getOptionalString(ConfigProperties.CA_KEY_PASSWORD)
+        this.caCertPath = config.getString(ConfigProperties.LEGACY_CA_CERT);
+        this.upstreamCaCertPath = config.getString(ConfigProperties.LEGACY_CA_CERT_UPSTREAM);
+        this.caKeyPath = config.getString(ConfigProperties.LEGACY_CA_KEY);
+        this.caKeyPassword = config.getOptionalString(ConfigProperties.LEGACY_CA_KEY_PASSWORD)
             .orElse("");
     }
 

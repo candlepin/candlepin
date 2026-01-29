@@ -56,11 +56,8 @@ public class ConfigProperties {
      * attempt to authenticate over insecure channel.
      */
     public static final String AUTH_OVER_HTTP = "candlepin.allow_auth_over_http";
-    public static final String CA_KEY = "candlepin.ca_key";
-    public static final String CA_CERT = "candlepin.ca_cert";
+
     public static final String FAIL_ON_UNKNOWN_IMPORT_PROPERTIES = "candlepin.importer.fail_on_unknown";
-    public static final String CA_CERT_UPSTREAM = "candlepin.upstream_ca_cert";
-    public static final String CA_KEY_PASSWORD = "candlepin.ca_key_password";
 
     /*
      * XXX The actual property key refers to HornetQ which was ActiveMQ's ancestor. We have to keep the
@@ -252,6 +249,61 @@ public class ConfigProperties {
     private static final String BOOLEAN_ATTRIBUTE_LIST = "management_enabled," +
         "virt_only";
 
+    // Scheme prefixing and declarations
+    public static final String CRYPTO_SCHEMES = "candlepin.crypto.schemes";
+    public static final String CRYPTO_DEFAULT_SCHEME = "candlepin.crypto.default_scheme";
+
+    public static final String CRYPTO_SCHEME_PREFIX = "candlepin.crypto.scheme.";
+    public static final String CRYPTO_SCHEME_CERT = "cert";
+    public static final String CRYPTO_SCHEME_KEY = "key";
+    public static final String CRYPTO_SCHEME_KEY_PASSWORD = "key_password";
+    public static final String CRYPTO_SCHEME_SIGNATURE_ALGORITHM = "signature_algorithm";
+    public static final String CRYPTO_SCHEME_KEY_ALGORITHM = "key_algorithm";
+    public static final String CRYPTO_SCHEME_KEY_SIZE = "key_size";
+
+    /**
+     * Fetches a string representing the prefix for all per-scheme configuration for the specified crypto
+     * scheme.
+     *
+     * @param scheme
+     *  the name of the crypto scheme for which to fetch the configuration prefix
+     *
+     * @return
+     *  the configuration prefix for the specified crypto scheme
+     */
+    public static String schemePrefix(String scheme) {
+        return new StringBuilder(CRYPTO_SCHEME_PREFIX)
+            .append(scheme)
+            .append('.')
+            .toString();
+    }
+
+    /**
+     * Builds a config property string for the given configuration for the specified crypto scheme.
+     *
+     * @param scheme
+     *  the name of the crypto scheme for which to build the configuration string
+     *
+     * @param config
+     *  the desired scheme configuration property
+     *
+     * @return
+     *  the config property string for the given option of the specified crypto scheme
+     */
+    public static String schemeConfig(String scheme, String config) {
+        return new StringBuilder(CRYPTO_SCHEME_PREFIX)
+            .append(scheme)
+            .append('.')
+            .append(config)
+            .toString();
+    }
+
+    // Legacy crypto configuration
+    public static final String LEGACY_CA_KEY = "candlepin.ca_key";
+    public static final String LEGACY_CA_CERT = "candlepin.ca_cert";
+    public static final String LEGACY_CA_CERT_UPSTREAM = "candlepin.upstream_ca_cert";
+    public static final String LEGACY_CA_KEY_PASSWORD = "candlepin.ca_key_password";
+
     public static final String IDENTITY_CERT_YEAR_ADDENDUM = "candlepin.identityCert.yr.addendum";
     /**
      * Identity certificate expiry threshold in days
@@ -333,11 +385,11 @@ public class ConfigProperties {
         ".bulk_set_consumer_env.max_environments";
 
     /**
-     * Fetches a string representing the prefix for all per-job configuration for the specified job.
+     * Builds a string representing the prefix for all per-job configuration for the specified job.
      * The job key or class name may be used, but the usage must be consistent.
      *
      * @param jobKey
-     *  the key or class name of the job for which to fetch build configuration prefix
+     *  the key or class name of the job for which to build the configuration prefix
      *
      * @return
      *  the configuration prefix for the given job
@@ -351,7 +403,7 @@ public class ConfigProperties {
     }
 
     /**
-     * Fetches a configuration string for the given configuration for the specified job. The job may
+     * Builds a configuration string for the given configuration for the specified job. The job may
      * be specified via job key or class name, but the usage must be consistent.
      *
      * @param jobKey
@@ -385,9 +437,9 @@ public class ConfigProperties {
             this.put(JWT_TOKEN_TTL, "600"); // seconds
             this.put(ANON_JWT_TOKEN_TTL, "172800"); // seconds
 
-            this.put(CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
-            this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
-            this.put(CA_CERT_UPSTREAM, "/etc/candlepin/certs/upstream");
+            this.put(LEGACY_CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
+            this.put(LEGACY_CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
+            this.put(LEGACY_CA_CERT_UPSTREAM, "/etc/candlepin/certs/upstream");
 
             this.put(ACTIVATION_DEBUG_PREFIX, "");
 
