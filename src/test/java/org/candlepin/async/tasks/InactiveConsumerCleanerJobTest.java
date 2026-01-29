@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -19,13 +19,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.DeletedConsumer;
@@ -40,6 +45,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +59,7 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
     private InactiveConsumerCleanerJob inactiveConsumerCleanerJob;
     private ConsumerType consumerType;
     private TestEventSink eventSink;
+    private EventFactory eventFactory;
 
     @Override
     @BeforeEach
@@ -62,10 +69,11 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
         this.consumerType = this.createConsumerType(false);
 
         this.eventSink = this.injector.getInstance(TestEventSink.class);
-        EventFactory eventFactory = this.injector.getInstance(EventFactory.class);
+        this.eventFactory = this.injector.getInstance(EventFactory.class);
 
         inactiveConsumerCleanerJob = new InactiveConsumerCleanerJob(this.config,
             this.consumerCurator,
+            this.anonymousCloudConsumerCurator,
             this.identityCertificateCurator,
             this.caCertCurator,
             this.certSerialCurator,
@@ -283,6 +291,64 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
         }
     }
 
+    @Test
+    public void testExecutionWithInactiveAnonymousCloudConsumers() throws Exception {
+        AnonymousCloudConsumerCurator mockedCurator = mock(AnonymousCloudConsumerCurator.class);
+
+        List<String> inactiveAnonymousCloudConsumerIds = List.of("id-1", "id-2", "id-3");
+        doReturn(inactiveAnonymousCloudConsumerIds)
+            .when(mockedCurator)
+            .getInactiveAnonymousCloudConsumerIds(any(Instant.class));
+        doReturn(this.anonymousCloudConsumerCurator.transactional())
+            .when(mockedCurator)
+            .transactional();
+
+        inactiveConsumerCleanerJob = new InactiveConsumerCleanerJob(this.config,
+            this.consumerCurator,
+            mockedCurator,
+            this.identityCertificateCurator,
+            this.caCertCurator,
+            this.certSerialCurator,
+            this.eventSink,
+            eventFactory);
+
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        inactiveConsumerCleanerJob.execute(context);
+
+        verify(mockedCurator).deleteAnonymousCloudConsumers(inactiveAnonymousCloudConsumerIds);
+    }
+
+    @Test
+    public void shouldDeleteInactiveAnonymousCloudConsumersInBatches() throws Exception {
+        AnonymousCloudConsumerCurator mockedCurator = mock(AnonymousCloudConsumerCurator.class);
+
+        int expectedNumberOfBatches = 3;
+        List<String> inactiveAnonymousCloudConsumerIds = Stream.generate(() -> TestUtil.randomString("id-"))
+            .limit(InactiveConsumerCleanerJob.DEFAULT_BATCH_SIZE * expectedNumberOfBatches)
+            .toList();
+        doReturn(inactiveAnonymousCloudConsumerIds)
+            .when(mockedCurator)
+            .getInactiveAnonymousCloudConsumerIds(any(Instant.class));
+        doReturn(this.anonymousCloudConsumerCurator.transactional())
+            .when(mockedCurator)
+            .transactional();
+
+        inactiveConsumerCleanerJob = new InactiveConsumerCleanerJob(this.config,
+            this.consumerCurator,
+            mockedCurator,
+            this.identityCertificateCurator,
+            this.caCertCurator,
+            this.certSerialCurator,
+            this.eventSink,
+            eventFactory);
+
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        inactiveConsumerCleanerJob.execute(context);
+
+        verify(mockedCurator, times(expectedNumberOfBatches))
+            .deleteAnonymousCloudConsumers(any(List.class));
+    }
+
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = { "0", "-50" })
     public void testExecutionWithInvalidCheckedInRetentionConfig(int rententionDays)
@@ -299,6 +365,16 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
     public void testExecutionWithInvalidLastUpdatedRetentionConfig(int rententionDays)
         throws JobExecutionException {
         setRetentionDaysConfiguration(InactiveConsumerCleanerJob.CFG_LAST_UPDATED_IN_RETENTION_IN_DAYS,
+            rententionDays);
+
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        assertThrows(JobExecutionException.class, () -> inactiveConsumerCleanerJob.execute(context));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = { "0", "-50" })
+    public void testExecutionWithInvalidAnonymousCloudConsumerRetentionConfig(int rententionDays) {
+        setRetentionDaysConfiguration(InactiveConsumerCleanerJob.CFG_ANON_CLOUD_CONSUMER_RETENTION,
             rententionDays);
 
         JobExecutionContext context = mock(JobExecutionContext.class);
