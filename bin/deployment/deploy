@@ -114,6 +114,13 @@ configure_tomcat() {
 
     $SUDO "${PROJECT_DIR}/bin/deployment/gen_certs.sh" --trust $GEN_CERTS_ARGS
 
+    # Generate a private key and certificate using the ml-dsa-65 algorithm
+    $SUDO "${PROJECT_DIR}/bin/deployment/gen_certs.sh" $GEN_CERTS_ARGS \
+        --trust \
+        --use-ml-dsa-65 \
+        --cert_out /etc/candlepin/certs/candlepin-mldsa-65-ca.crt \
+        --key_out /etc/candlepin/certs/candlepin-mldsa-65-ca.key
+
     # update server.xml
     $SUDO python $PROJECT_DIR/bin/deployment/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR
 

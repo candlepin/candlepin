@@ -18,6 +18,7 @@ KEY_OUT="${CP_CERT_HOME}/candlepin-ca.key"
 CERT_DAYS=1095
 KEY_BITS=4096
 SAN=("IP:127.0.0.1" "DNS:localhost")
+ALGORITHM="rsa"
 
 FORCE_REGEN=0
 TRUST=0
@@ -26,27 +27,29 @@ USAGE_TEXT="Candlepin development server certificate generator
 usage: ${SCRIPT_NAME} [options]
 
 OPTIONS:
-  --ca_cert <file>  The CA cert to use to sign the generated server cert. If not
-                    provided, the generated certificate will be self-signed.
-  --ca_key <file>   The key of the CA cert to use to sign the generated server
-                    certificate. If not provided, the generated certificate will
-                    be self-signed.
-  --cert_out <file> The output filename for the generated CA key; defaults to
-                    \"${CERT_OUT}\"
-  --key_out <file>  The output filename for the generated CA key; defaults to
-                    \"${KEY_OUT}\"
-  --days <days>     The number of days for which the generated cert will be
-                    valid; defaults to ${CERT_DAYS}
-  --bits <bits>     The size of the generated key in bits; defaults to ${KEY_BITS}
-  --hostname <host> An additional hostname to include in the generated cert's
-                    subjectAltName; may be specified multiple times
-  --hostaddr <addr> An additional IP address to include in the generated cert's
-                    subjectAltName; may be specified multiple times
-  -f | --force      Force regeneration and overwrite existing files when the
-                    cert or key already exists; defaults to false
-  -t | --trust      Add the generated cert to the local CA trust; defaults to
-                    false, requires root
-  -h | --help       Display command usage information
+  --ca_cert <file>    The CA cert to use to sign the generated server cert. If not
+                      provided, the generated certificate will be self-signed.
+  --ca_key <file>     The key of the CA cert to use to sign the generated server
+                      certificate. If not provided, the generated certificate will
+                      be self-signed.
+  --cert_out <file>   The output filename for the generated CA key; defaults to
+                      \"${CERT_OUT}\"
+  --key_out <file>    The output filename for the generated CA key; defaults to
+                      \"${KEY_OUT}\"
+  --days <days>       The number of days for which the generated cert will be
+                      valid; defaults to ${CERT_DAYS}
+  --bits <bits>       The size of the generated key in bits for the RSA algorithm;
+                      defaults to ${KEY_BITS}. This value is ignored for ML-DSA algorithms.
+  --hostname <host>   An additional hostname to include in the generated cert's
+                      subjectAltName; may be specified multiple times
+  --hostaddr <addr>   An additional IP address to include in the generated cert's
+                      subjectAltName; may be specified multiple times
+  -m |--use-ml-dsa-65 Use the ML-DSA-65 algorithm when generating the certificate and key
+  -f | --force        Force regeneration and overwrite existing files when the
+                      cert or key already exists; defaults to false
+  -t | --trust        Add the generated cert to the local CA trust; defaults to
+                      false, requires root
+  -h | --help         Display command usage information
 "
 
 while true; do
@@ -82,6 +85,10 @@ while true; do
         --hostaddr )
             SAN+=("IP:$2")
             shift 2 ;;
+
+        -m | --use-ml-dsa-65 )
+            ALGORITHM="ml-dsa-65"
+            shift ;;
 
         -f | --force )
             FORCE_REGEN=1
@@ -171,8 +178,16 @@ if [ -z $CA_CERT ]; then
     # No CA cert specified, generate a self-signed cert
     echo "Generating self-signed certificate: ${CERT_OUT}"
 
+    KEY_OPTS=""
+    if [ "$ALGORITHM" = "rsa" ]; then
+        KEY_OPTS="-pkeyopt rsa_keygen_bits:$KEY_BITS"
+    fi;
+
+    # Generate private key
+    openssl genpkey -algorithm $ALGORITHM $KEY_OPTS -out $KEY_OUT
+
     openssl req -new -x509 -days $CERT_DAYS -out $CERT_OUT \
-        -newkey rsa:$KEY_BITS -nodes -keyout $KEY_OUT \
+        -key $KEY_OUT \
         -config <(echo "${OPENSSL_CONF}")
 
     # Ensure the key and cert are readable
@@ -183,7 +198,7 @@ if [ -z $CA_CERT ]; then
         echo "Adding cert to CA trust bundle..."
 
         # Build the chain from the server CA and root CA
-        cat $CERT_OUT > $CA_CHAIN_BUNDLE
+        cat $CERT_OUT >> $CA_CHAIN_BUNDLE
 
         # Invoke the ca trust update
         update-ca-trust
@@ -195,9 +210,17 @@ else
 
     echo "Generating server certificate: ${CERT_OUT}"
 
+    KEY_OPTS=""
+    if [ "$ALGORITHM" = "rsa" ]; then
+        KEY_OPTS="-pkeyopt rsa_keygen_bits:$KEY_BITS"
+    fi;
+
+    # Generate private key
+    openssl genpkey -algorithm $ALGORITHM $KEY_OPTS -out $KEY_OUT
+
     # Generate the CSR for the server cert
     openssl req -new -sha256 -out $TMP_CSR_FILE \
-        -newkey rsa:$KEY_BITS -nodes -keyout $KEY_OUT \
+        -key $KEY_OUT \
         -config <(echo "${OPENSSL_CONF}")
 
     # Ensure we cleanup the CSR on exit
@@ -219,7 +242,7 @@ else
         echo "Adding cert chain to CA trust bundle..."
 
         # Build the chain from the server CA and root CA
-        cat $CERT_OUT > $CA_CHAIN_BUNDLE
+        cat $CERT_OUT >> $CA_CHAIN_BUNDLE
         cat $CA_CERT >> $CA_CHAIN_BUNDLE
 
         # Invoke the ca trust update

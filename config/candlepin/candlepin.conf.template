@@ -10,6 +10,21 @@ candlepin.auth.trusted.enable=true
 candlepin.auth.oauth.enable=true
 candlepin.auth.oauth.consumer.rspec.secret=rspec-oauth-secret
 
+candlepin.crypto.schemes=rsa,mldsa65
+candlepin.crypto.default_scheme=rsa
+
+candlepin.crypto.scheme.rsa.cert=/etc/candlepin/certs/candlepin-ca.crt
+candlepin.crypto.scheme.rsa.key=/etc/candlepin/certs/candlepin-ca.key
+candlepin.crypto.scheme.rsa.signature_algorithm=RSA
+candlepin.crypto.scheme.rsa.key_algorithm=RSA
+candlepin.crypto.scheme.rsa.key_size=4096
+
+candlepin.crypto.scheme.mldsa65.cert=/etc/candlepin/certs/candlepin-mldsa-65-ca.crt
+candlepin.crypto.scheme.mldsa65.key=/etc/candlepin/certs/candlepin-mldsa-65-ca.key
+candlepin.crypto.scheme.mldsa65.signature_algorithm=MLDSA65
+candlepin.crypto.scheme.mldsa65.key_algorithm=MLDSA65
+candlepin.crypto.scheme.mldsa65.key_size=4032
+
 # Turn down hibernate logging by default until we have a fix for HHH-12927
 log4j.logger.org.hibernate.internal.SessionImpl=ERROR
 # uncomment to enable debug logging in candlepin.log:
