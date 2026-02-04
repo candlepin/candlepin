@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -32,9 +33,14 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.CryptographyDTO;
+import org.candlepin.dto.api.server.v1.SchemeDTO;
 import org.candlepin.dto.api.server.v1.StatusDTO;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
 import org.candlepin.policy.js.JsRunnerProvider;
 
 import ch.qos.logback.classic.Level;
@@ -57,7 +63,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.security.cert.X509Certificate;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -72,6 +82,10 @@ public class StatusResourceTest {
     @Mock private CandlepinModeManager modeManager;
     @Mock private KeycloakConfiguration keycloakConfig;
     @Mock private AdapterConfig mockKeycloakAdapterConfig;
+    @Mock private CryptoManager mockCryptoManager;
+    @Mock private ModelTranslator mockModelTranslator;
+
+    private Scheme defaultScheme;
 
     @BeforeEach
     public void setUp() {
@@ -89,11 +103,31 @@ public class StatusResourceTest {
         when(mockKeycloakAdapterConfig.getRealm()).thenReturn("realm");
         when(mockKeycloakAdapterConfig.getAuthServerUrl()).thenReturn("https://example.com/auth");
         when(mockKeycloakAdapterConfig.getResource()).thenReturn("resource");
+
+        this.defaultScheme = createScheme("legacy", "SHA256withRSA", "RSA", 4096);
+        when(mockCryptoManager.getCryptoSchemes()).thenReturn(List.of(this.defaultScheme));
+        when(mockCryptoManager.getDefaultCryptoScheme()).thenReturn(this.defaultScheme);
+
+        SchemeDTO defaultDTO = new SchemeDTO()
+            .name("legacy")
+            .signatureAlgorithm("SHA256withRSA")
+            .keyAlgorithm("RSA")
+            .keySize(4096);
+
+        Function<Scheme, SchemeDTO> defaultMapper = mock(Function.class);
+        when(defaultMapper.apply(this.defaultScheme)).thenReturn(defaultDTO);
+        when(mockModelTranslator.getStreamMapper(Scheme.class, SchemeDTO.class))
+            .thenReturn(defaultMapper);
     }
 
     private StatusResource createResource() {
         return new StatusResource(this.rulesCurator, this.config, this.jsProvider, this.candlepinCache,
-            this.modeManager, this.keycloakConfig);
+            this.modeManager, this.keycloakConfig, this.mockCryptoManager, mockModelTranslator);
+    }
+
+    private Scheme createScheme(String name, String sigAlgo, String keyAlgo, Integer keySize) {
+        X509Certificate mockCert = mock(X509Certificate.class);
+        return new Scheme(name, mockCert, Optional.empty(), sigAlgo, keyAlgo, Optional.ofNullable(keySize));
     }
 
     @Test
@@ -202,5 +236,90 @@ public class StatusResourceTest {
         assertNull(statusDTO.getDeviceAuthUrl());
         assertNull(statusDTO.getDeviceAuthClientId());
         assertNull(statusDTO.getDeviceAuthScope());
+    }
+
+    @Test
+    public void testCryptographyFieldAlwaysPresent() {
+        StatusResource sr = this.createResource();
+        StatusDTO statusDTO = sr.status();
+
+        CryptographyDTO cryptography = statusDTO.getCryptography();
+        assertThat(cryptography)
+            .isNotNull()
+            .returns("legacy", CryptographyDTO::getDefaultScheme);
+
+        assertThat(cryptography.getSchemes())
+            .isNotNull()
+            .hasSize(1);
+    }
+
+    @Test
+    public void testCryptographyFieldWithMultipleSchemes() {
+        Scheme rsaScheme = createScheme("rsa", "SHA256withRSA", "RSA", 4096);
+        Scheme mldsaScheme = createScheme("mldsa", "ML-DSA-87", "ML-DSA", null);
+
+        when(mockCryptoManager.getCryptoSchemes()).thenReturn(List.of(mldsaScheme, rsaScheme));
+        when(mockCryptoManager.getDefaultCryptoScheme()).thenReturn(rsaScheme);
+
+        SchemeDTO rsaDTO = new SchemeDTO()
+            .name("rsa")
+            .signatureAlgorithm("SHA256withRSA")
+            .keyAlgorithm("RSA")
+            .keySize(4096);
+        SchemeDTO mldsaDTO = new SchemeDTO()
+            .name("mldsa")
+            .signatureAlgorithm("ML-DSA-87")
+            .keyAlgorithm("ML-DSA");
+
+        Function<Scheme, SchemeDTO> mockMapper = mock(Function.class);
+        when(mockMapper.apply(mldsaScheme)).thenReturn(mldsaDTO);
+        when(mockMapper.apply(rsaScheme)).thenReturn(rsaDTO);
+        when(mockModelTranslator.getStreamMapper(Scheme.class, SchemeDTO.class))
+            .thenReturn(mockMapper);
+
+        StatusResource sr = this.createResource();
+        StatusDTO statusDTO = sr.status();
+
+        CryptographyDTO cryptography = statusDTO.getCryptography();
+        assertThat(cryptography)
+            .isNotNull()
+            .returns("rsa", CryptographyDTO::getDefaultScheme);
+
+        assertThat(cryptography.getSchemes())
+            .isNotNull()
+            .extracting(SchemeDTO::getName)
+            .containsExactly("mldsa", "rsa");
+    }
+
+    @Test
+    public void testCryptographySchemeWithoutKeySize() {
+        Scheme mldsaScheme = createScheme("mldsa", "ML-DSA-87", "ML-DSA", null);
+
+        when(mockCryptoManager.getCryptoSchemes()).thenReturn(List.of(mldsaScheme));
+        when(mockCryptoManager.getDefaultCryptoScheme()).thenReturn(mldsaScheme);
+
+        SchemeDTO mldsaDTO = new SchemeDTO()
+            .name("mldsa")
+            .signatureAlgorithm("ML-DSA-87")
+            .keyAlgorithm("ML-DSA");
+
+        Function<Scheme, SchemeDTO> mockMapper = mock(Function.class);
+        when(mockMapper.apply(mldsaScheme)).thenReturn(mldsaDTO);
+        when(mockModelTranslator.getStreamMapper(Scheme.class, SchemeDTO.class))
+            .thenReturn(mockMapper);
+
+        StatusResource sr = this.createResource();
+        StatusDTO statusDTO = sr.status();
+
+        CryptographyDTO cryptography = statusDTO.getCryptography();
+        assertThat(cryptography)
+            .isNotNull();
+
+        assertThat(cryptography.getSchemes())
+            .singleElement()
+            .returns("mldsa", SchemeDTO::getName)
+            .returns("ML-DSA-87", SchemeDTO::getSignatureAlgorithm)
+            .returns("ML-DSA", SchemeDTO::getKeyAlgorithm)
+            .returns(null, SchemeDTO::getKeySize);
     }
 }

@@ -10056,6 +10056,61 @@ components:
           type: string
         deviceAuthScope:
           type: string
+        cryptography:
+          $ref: '#/components/schemas/CryptographyDTO'
+
+    CryptographyDTO:
+      description: DTO representing cryptography configuration information
+      properties:
+        schemes:
+          type: array
+          description: >-
+            An ordered list of server-supported cryptographic schemes. Schemes listed
+            earlier in the list (lower index) are more preferred by the Candlepin server.
+            This list will only contain schemes supported through negotiation or request,
+            and may not define the default or legacy scheme.
+          items:
+            $ref: '#/components/schemas/SchemeDTO'
+        defaultScheme:
+          type: string
+          description: >-
+            A string indicating the scheme that will be used for legacy clients and requests
+            which do not negotiate nor request a cryptographic scheme from the supported
+            schemes list. Note that this field may indicate a scheme that is not present
+            in the supported schemes list (such as "legacy" for indicating the legacy scheme).
+            This field is provided primarily for informational and debugging purposes,
+            and clients should not rely on it, nor use it to influence client behavior.
+          example: "rsa"
+
+    SchemeDTO:
+      description: DTO representing a cryptographic scheme configuration
+      properties:
+        name:
+          type: string
+          description: >-
+            The name of the cryptographic scheme. Clients intending to indicate support
+            for a given scheme should use the value of this field.
+          example: "rsa"
+        signatureAlgorithm:
+          type: string
+          description: >-
+            The algorithm used to sign certificates, payloads, and other such documents
+            under this scheme. Note that while this field is intended to signal a given
+            algorithm, the exact value may not be directly usable with every crypto provider.
+          example: "sha256withRSA"
+        keyAlgorithm:
+          type: string
+          description: >-
+            The algorithm used to generate key pairs under this scheme. Note that while
+            this field is intended to signal a given algorithm, the exact value may not
+            be directly usable with every crypto provider.
+          example: "rsa"
+        keySize:
+          type: integer
+          description: >-
+            The size of keys generated under this scheme. This field will only be present
+            when the key algorithm is one which uses variable key sizes.
+          example: 4096
 
     SubscriptionDTO:
       description: Represents the Subscription data exposed to the API
