@@ -26,6 +26,7 @@ import org.candlepin.dto.api.server.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.server.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
+import org.candlepin.dto.api.server.v1.CryptographicSchemeDTO;
 import org.candlepin.dto.api.server.v1.DeletedConsumerDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.dto.api.server.v1.GuestIdDTO;
@@ -58,6 +59,7 @@ import org.candlepin.dto.api.v1.ComplianceStatusTranslator;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductTranslator;
 import org.candlepin.dto.api.v1.ContentOverrideTranslator;
 import org.candlepin.dto.api.v1.ContentTranslator;
+import org.candlepin.dto.api.v1.CryptographicSchemeTranslator;
 import org.candlepin.dto.api.v1.DeletedConsumerTranslator;
 import org.candlepin.dto.api.v1.EnvironmentTranslator;
 import org.candlepin.dto.api.v1.GuestIdArrayElementTranslator;
@@ -125,6 +127,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.pki.CryptographyStatusProvider.SchemeMetadata;
 import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.CertificateSerialInfo;
@@ -185,6 +188,8 @@ public class StandardTranslator extends SimpleModelTranslator {
             new ContentTranslator(), Content.class, ContentDTO.class);
         this.registerTranslator(
             new ContentOverrideTranslator(), ContentOverride.class, ContentOverrideDTO.class);
+        this.registerTranslator(
+            new CryptographicSchemeTranslator(), SchemeMetadata.class, CryptographicSchemeDTO.class);
         this.registerTranslator(
             new DeletedConsumerTranslator(), DeletedConsumer.class, DeletedConsumerDTO.class);
         this.registerTranslator(
