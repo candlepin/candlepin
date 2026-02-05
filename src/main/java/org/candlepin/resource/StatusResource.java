@@ -23,10 +23,14 @@ import org.candlepin.config.Configuration;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.controller.mode.ModeChangeReason;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.CryptographicSchemeDTO;
+import org.candlepin.dto.api.server.v1.CryptographyDTO;
 import org.candlepin.dto.api.server.v1.StatusDTO;
 import org.candlepin.guice.CandlepinCapabilities;
 import org.candlepin.model.Rules.RulesSourceEnum;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.pki.CryptographyStatusProvider;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.resource.server.v1.StatusApi;
 import org.candlepin.util.Util;
@@ -39,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -68,17 +73,22 @@ public class StatusResource implements StatusApi {
     private CandlepinCache candlepinCache;
     private CandlepinModeManager modeManager;
     private KeycloakConfiguration keycloakConfig;
+    private CryptographyStatusProvider cryptoStatusProvider;
+    private ModelTranslator translator;
 
     @Inject
     public StatusResource(RulesCurator rulesCurator, Configuration config, JsRunnerProvider jsProvider,
         CandlepinCache candlepinCache, CandlepinModeManager modeManager,
-        KeycloakConfiguration keycloakConfig) {
+        KeycloakConfiguration keycloakConfig, CryptographyStatusProvider cryptoStatusProvider,
+        ModelTranslator translator) {
 
         this.rulesCurator = Objects.requireNonNull(rulesCurator);
         this.jsProvider = Objects.requireNonNull(jsProvider);
         this.candlepinCache = Objects.requireNonNull(candlepinCache);
         this.modeManager = Objects.requireNonNull(modeManager);
         this.keycloakConfig = Objects.requireNonNull(keycloakConfig);
+        this.cryptoStatusProvider = Objects.requireNonNull(cryptoStatusProvider);
+        this.translator = Objects.requireNonNull(translator);
 
         Map<String, String> map = VersionUtil.getVersionMap();
         version = map.get("version");
@@ -174,6 +184,12 @@ public class StatusResource implements StatusApi {
                 .deviceAuthScope(""); // Currently not applicable
         }
 
+        // Add cryptography information
+        CryptographyDTO cryptography = this.buildCryptographyDTO();
+        if (cryptography != null) {
+            status.cryptography(cryptography);
+        }
+
         statusCache.setStatus(status);
 
         return status;
@@ -200,5 +216,29 @@ public class StatusResource implements StatusApi {
         catch (NullPointerException e) {
             return null;
         }
+    }
+
+    /**
+     * Builds a CryptographyDTO containing the server's cryptographic configuration.
+     * Returns null if no cryptographic schemes are configured.
+     *
+     * @return
+     *  a CryptographyDTO containing the server's cryptographic configuration, or null if
+     *  no configuration is available
+     */
+    private CryptographyDTO buildCryptographyDTO() {
+        if (!this.cryptoStatusProvider.hasSchemes()) {
+            return null;
+        }
+
+        List<CryptographicSchemeDTO> schemeDTOs = this.cryptoStatusProvider.getSupportedSchemes()
+            .stream()
+            .map(this.translator.getStreamMapper(
+                CryptographyStatusProvider.SchemeMetadata.class, CryptographicSchemeDTO.class))
+            .toList();
+
+        return new CryptographyDTO()
+            .schemes(schemeDTOs)
+            .defaultScheme(this.cryptoStatusProvider.getDefaultSchemeName());
     }
 }
