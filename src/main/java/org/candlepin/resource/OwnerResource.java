@@ -20,7 +20,6 @@ import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.ConsumerMigrationJob;
-import org.candlepin.async.tasks.HealEntireOrgJob;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.async.tasks.UndoImportsJob;
 import org.candlepin.audit.Event;
@@ -1035,12 +1034,8 @@ public class OwnerResource implements OwnerApi {
     @Override
     @Transactional
     public AsyncJobStatusDTO healEntire(@Verify(Owner.class) String ownerKey) {
-        Owner owner = findOwnerByKey(ownerKey);
-        JobConfig config = HealEntireOrgJob.createJobConfig()
-            .setOwner(owner)
-            .setEntitleDate(new Date());
-
-        return queueJob(config);
+        // TODO: Is this a breaking change and should we just remove this whole endpoint?
+        return new AsyncJobStatusDTO();
     }
 
     @Override

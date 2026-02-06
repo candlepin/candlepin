@@ -115,7 +115,6 @@ import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Release;
 import org.candlepin.model.SCACertificate;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -133,7 +132,6 @@ import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.compliance.hash.ComplianceFacts;
 import org.candlepin.policy.js.consumer.ConsumerRules;
-import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.dto.ContentAccessListing;
 import org.candlepin.resource.server.v1.ConsumerApi;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
@@ -2145,28 +2143,6 @@ public class ConsumerResource implements ConsumerApi {
         // perform the entitlement revocation
         for (Entitlement entitlement : deletableGuestEntitlements) {
             this.poolService.revokeEntitlement(entitlement);
-        }
-
-        if (deletableGuestEntitlements.size() > 0) {
-            // auto heal guests after revocations
-            boolean hasInstalledProducts = guest.getInstalledProducts() != null &&
-                !guest.getInstalledProducts().isEmpty();
-
-            if (guest.isAutoheal() && !deletableGuestEntitlements.isEmpty() && hasInstalledProducts) {
-                Owner owner = this.ownerCurator.findOwnerById(guest.getOwnerId());
-                AutobindData autobindData = new AutobindData(guest, owner)
-                    .on(new Date());
-
-                // Autobind could be disabled for the owner. If it is, we simply don't
-                // perform the autobind for the guest.
-                try {
-                    List<Entitlement> ents = entitler.bindByProducts(autobindData);
-                    entitler.sendEvents(ents);
-                }
-                catch (AutobindDisabledForOwnerException | AutobindHypervisorDisabledException e) {
-                    log.warn("Guest auto-attach skipped. {}", e.getMessage(), e);
-                }
-            }
         }
     }
 

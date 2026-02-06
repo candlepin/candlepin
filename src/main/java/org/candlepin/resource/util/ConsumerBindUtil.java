@@ -23,8 +23,6 @@ import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerContentOverrideCurator;
-import org.candlepin.model.ConsumerInstalledProduct;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -35,9 +33,7 @@ import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.resource.ConsumerResource;
-import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.util.ServiceLevelValidator;
-import org.candlepin.version.CertVersionConflictException;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -121,34 +117,14 @@ public class ConsumerBindUtil {
             handleActivationKeyRole(consumer, key.getRole());
             handleActivationKeyAddons(consumer, key.getAddOns());
 
-            if (Boolean.TRUE.equals(key.isAutoAttach())) {
-                if (autoattachDisabledForOwner) {
-                    log.warn("Auto-attach disabled for owner; skipping auto-attach for consumer with " +
-                        "activation key: {}, {}", consumer.getUuid(), key.getName());
-                }
-                else if (scaEnabled) {
-                    log.warn("Owner is using simple content access; skipping auto-attach for consumer with " +
-                        "activation key: {}, {}", consumer.getUuid(), key.getName());
-                }
-                else if (!isAutoheal) {
-                    log.warn("Auto-heal disabled for consumer; skipping auto-attach for consumer with " +
-                        "activation key: {}, {}", consumer.getUuid(), key.getName());
-                }
-                else {
-                    // State checks passed, perform auto-attach
-                    this.handleActivationKeyAutoBind(consumer, key);
-                }
+            // In SCA mode, attaching specific pools is no longer supported for smoother transition.
+            // Instead, log an informational message and skip pool attachment.
+            if (scaEnabled) {
+                log.warn("Owner is using simple content access; skipping attaching pools for consumer " +
+                    "with activation key: {}, {}", consumer.getUuid(), key.getName());
             }
             else {
-                // In SCA mode, attaching specific pools is no longer supported for smoother transition.
-                // Instead, log an informational message and skip pool attachment.
-                if (scaEnabled) {
-                    log.warn("Owner is using simple content access; skipping attaching pools for consumer " +
-                        "with activation key: {}, {}", consumer.getUuid(), key.getName());
-                }
-                else {
-                    keySuccess &= handleActivationKeyPools(consumer, key);
-                }
+                keySuccess &= handleActivationKeyPools(consumer, key);
             }
 
             listSuccess |= keySuccess;
@@ -191,40 +167,6 @@ public class ConsumerBindUtil {
         }
 
         return onePassed;
-    }
-
-    private void handleActivationKeyAutoBind(Consumer consumer, ActivationKey key)
-        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
-
-        try {
-            Set<String> productIds = new HashSet<>();
-            Set<String> poolIds = key.getPools().stream()
-                .map(ActivationKeyPool::getPoolId)
-                .collect(Collectors.toSet());
-
-            if (key.getProductIds() != null) {
-                productIds.addAll(key.getProductIds());
-            }
-
-            for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
-                productIds.add(cip.getProductId());
-            }
-
-            Owner owner = this.ownerCurator.findOwnerById(consumer.getOwnerId());
-            AutobindData autobindData = new AutobindData(consumer, owner)
-                .forProducts(productIds)
-                .withPools(poolIds);
-
-            List<Entitlement> ents = entitler.bindByProducts(autobindData);
-            entitler.sendEvents(ents);
-        }
-        catch (ForbiddenException | CertVersionConflictException e) {
-            throw e;
-        }
-        catch (RuntimeException e) {
-            log.warn("Unable to attach a subscription for a product that " +
-                "has no pool: " + e.getMessage(), e);
-        }
     }
 
     private void handleActivationKeyOverrides(Consumer consumer,

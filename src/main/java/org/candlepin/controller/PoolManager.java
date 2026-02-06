@@ -23,7 +23,6 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.bind.BindChainFactory;
 import org.candlepin.bind.PoolOpProcessor;
 import org.candlepin.bind.PoolOperations;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.refresher.RefreshResult;
 import org.candlepin.controller.refresher.RefreshResult.EntityState;
@@ -45,7 +44,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.paging.Page;
 import org.candlepin.policy.EntitlementRefusedException;
-import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.autobind.AutobindRules;
@@ -55,7 +53,6 @@ import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
-import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.util.Traceable;
@@ -85,7 +82,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -94,8 +90,6 @@ import javax.inject.Provider;
 
 public class PoolManager {
     private static final Logger log = LoggerFactory.getLogger(PoolManager.class);
-
-    private static final int MAX_ENTITLE_RETRIES = 3;
 
     private final I18n i18n;
     private final PoolCurator poolCurator;
@@ -116,7 +110,6 @@ public class PoolManager {
     private final PoolOpProcessor poolOpProcessor;
     private final PoolConverter poolConverter;
     private final PoolService poolService;
-    private final boolean isStandalone;
 
     @Inject
     public PoolManager(
@@ -160,7 +153,6 @@ public class PoolManager {
         this.poolOpProcessor = Objects.requireNonNull(poolOpProcessor);
         this.poolConverter = Objects.requireNonNull(poolConverter);
         this.poolService = Objects.requireNonNull(poolService);
-        this.isStandalone = config.getBoolean(ConfigProperties.STANDALONE);
     }
 
     /**
@@ -804,82 +796,6 @@ public class PoolManager {
 
     public List<String> listEntitledConsumerUuids(String poolId) {
         return this.poolCurator.listEntitledConsumerUuids(poolId);
-    }
-
-    /**
-     * Request an entitlement by product. If the entitlement cannot be granted,
-     * null will be returned. TODO: Throw exception if entitlement not granted.
-     * Report why.
-     *
-     * @param data Autobind data containing consumer, date, etc..
-     * @return Entitlement
-     * @throws EntitlementRefusedException if entitlement is refused
-     */
-    //
-    // NOTE: after calling this method both entitlement pool and consumer
-    // parameters will most certainly be stale. beware!
-    public List<Entitlement> entitleByProducts(AutobindData data) throws EntitlementRefusedException {
-        int retries = MAX_ENTITLE_RETRIES;
-
-        while (true) {
-            try {
-                return this.entitleByProductsImpl(data);
-            }
-            catch (EntitlementRefusedException e) {
-                // if there are any pools that had only one error, and that was
-                // an availability error, try again
-                boolean retry = false;
-                if (retries > 0) {
-                    for (String poolId : e.getResults().keySet()) {
-                        List<ValidationError> errors = e.getResults().get(poolId).getErrors();
-                        if (errors.size() == 1 && errors.get(0).getResourceKey()
-                            .equals("rulefailed.no.entitlements.available")) {
-                            retry = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (retry) {
-                    log.info("Entitlements exhausted between select best pools and bind operations;" +
-                        " retrying");
-                    retries--;
-                    continue;
-                }
-
-                throw e;
-            }
-        }
-    }
-
-    /**
-     * Performs the work of the entitleByProducts method in its own transaction to help unlock
-     * pools which can no longer be bound.
-     * <p></p>
-     * This method should not be called directly, and is only declared protected to allow the
-     * @Transactional annotation to function.
-     *
-     * @param data
-     *  The autobind data to use for entitling a consumer
-     *
-     * @return
-     *  a list of entitlements created as for this autobind operation
-     */
-    @Transactional
-    protected List<Entitlement> entitleByProductsImpl(AutobindData data) throws EntitlementRefusedException {
-        Consumer consumer = data.getConsumer();
-        SortedSet<String> productIds = data.getProductIds();
-        Collection<String> fromPools = data.getPossiblePools();
-        Date entitleDate = data.getOnDate();
-        String ownerId = consumer.getOwnerId();
-
-        List<PoolQuantity> bestPools = getBestPools(consumer, productIds, entitleDate,
-            ownerId, null, fromPools);
-        if (bestPools == null) {
-            return null;
-        }
-
-        return entitleByPools(consumer, convertToMap(bestPools));
     }
 
     /**
