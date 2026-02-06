@@ -33,10 +33,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
-import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.EntitlementRefusedException;
-import org.candlepin.policy.ValidationError;
-import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
 
@@ -48,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -56,7 +52,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.SortedSet;
 
@@ -223,110 +218,9 @@ public class Entitler {
         if (owner.isUsingSimpleContentAccess()) {
             log.info("Auto-attach is disabled for owner {} while using simple content access",
                 owner.getKey());
-
-            // TODO: Investigate why this path doesn't fail, but the other disabled cases do
-            return Collections.EMPTY_LIST;
         }
 
-        // If the consumer is a guest, and has a host, try to heal the host first
-        if (consumer.hasFact(Consumer.Facts.VIRT_UUID)) {
-            String guestUuid = consumer.getFact(Consumer.Facts.VIRT_UUID);
-            // Remove any expired unmapped guest entitlements
-            revokeUnmappedGuestEntitlements(consumer);
-
-            Consumer host = consumerCurator.getHost(guestUuid, consumer.getOwnerId());
-            if (host != null && (force || host.isAutoheal())) {
-                log.info("Attempting to heal host machine with UUID \"{}\" for guest with UUID \"{}\"",
-                    host.getUuid(), consumer.getUuid());
-
-                if (!StringUtils.equals(host.getServiceLevel(), consumer.getServiceLevel())) {
-                    log.warn("Host with UUID \"{}\" has a service level \"{}\" that does not match" +
-                        " that of the guest with UUID \"{}\" and service level \"{}\"",
-                        host.getUuid(), host.getServiceLevel(),
-                        consumer.getUuid(), consumer.getServiceLevel());
-                }
-
-                try {
-                    List<Entitlement> hostEntitlements = poolManager.entitleByProductsForHost(
-                        consumer, host, data.getOnDate(), data.getPossiblePools());
-
-                    log.debug("Granted host {} entitlements", hostEntitlements.size());
-                    sendEvents(hostEntitlements);
-                }
-                catch (Exception e) {
-                    // log and continue, this should NEVER block
-                    log.debug("Healing failed for host UUID {} with message: {}",
-                        host.getUuid(), e.getMessage(), e);
-                }
-
-                /* Consumer is stale at this point.  Note that we use get() instead of
-                 * findByUuid() or getConsumer() since the latter two methods are secured
-                 * to a specific host principal and bindByProducts can get called when
-                 * a guest is switching hosts */
-                consumer = consumerCurator.get(consumer.getId());
-                data.setConsumer(consumer);
-            }
-            else {
-                // Revoke host specific entitlements
-                EntitlementFilterBuilder filter = new EntitlementFilterBuilder();
-                filter.addAttributeFilter(Pool.Attributes.REQUIRES_HOST);
-                this.poolService.revokeEntitlements(entitlementCurator.listByConsumer(consumer, filter));
-            }
-        }
-
-        // Attempt to create entitlements:
-        try {
-            // the pools are only used to bind the guest
-            List<Entitlement> entitlements = poolManager.entitleByProducts(data);
-            log.debug("Created entitlements: {}", entitlements);
-            return entitlements;
-        }
-        catch (EntitlementRefusedException e) {
-            // TODO: Could be multiple errors, but we'll just report the first one for now
-            SortedSet<String> productIds = data.getProductIds();
-            String productId = productIds != null && productIds.size() > 0 ?
-                productIds.first() :
-                "Unknown Product";
-
-            throw new ForbiddenException(messageTranslator.productErrorToMessage(
-                productId, e.getResults().values().iterator().next().getErrors().get(0)), e);
-        }
-    }
-
-    /**
-     * Entitles the given Consumer to the given Product. Will seek out pools
-     * which provide access to this product, either directly or as a child, and
-     * select the best one based on a call to the rules engine.
-     *
-     * @param consumer The consumer being entitled.
-     * @return List of Entitlements
-     */
-    public List<PoolQuantity> getDryRun(Consumer consumer, Owner owner,
-        String serviceLevelOverride) {
-
-        List<PoolQuantity> result = new ArrayList<>();
-        try {
-
-            result = poolManager.getBestPools(
-                consumer, null, null, owner.getId(), serviceLevelOverride, null);
-            log.debug("Created Pool Quantity list: {}", result);
-        }
-        catch (EntitlementRefusedException e) {
-            // If we catch an exception we will just return an empty list
-            // The dry run just reports that an autobind will have no pools
-            // We will debug log the message, but returning does not seem to add
-            // to the process
-            if (log.isDebugEnabled()) {
-                log.debug("consumer {} dry-run errors:", consumer.getUuid(), e);
-                for (Entry<String, ValidationResult> entry : e.getResults().entrySet()) {
-                    log.debug("errors for pool id: {}", entry.getKey());
-                    for (ValidationError error : entry.getValue().getErrors()) {
-                        log.debug(error.getResourceKey());
-                    }
-                }
-            }
-        }
-        return result;
+        return Collections.EMPTY_LIST;
     }
 
     public int revokeUnmappedGuestEntitlements(Consumer consumer) {

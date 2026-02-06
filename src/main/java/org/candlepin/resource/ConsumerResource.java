@@ -17,7 +17,6 @@ package org.candlepin.resource;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
-import org.candlepin.async.tasks.EntitleByProductsJob;
 import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.audit.Event;
@@ -2629,6 +2628,22 @@ public class ConsumerResource implements ConsumerApi {
                 .build();
         }
 
+        // Making the auto-attach a no-op
+        if (poolId == null || poolId.isEmpty()) {
+            Response.ResponseBuilder builder = Response.status(Response.Status.OK)
+                .type(MediaType.APPLICATION_JSON);
+
+            if (async) {
+                // TODO: Is this a breaking change?
+                builder.entity(new AsyncJobStatusDTO());
+            }
+            else {
+                builder.entity(List.of());
+            }
+
+            return builder.build();
+        }
+
         // Check that only one query param was set, and some other validations
         validateBindArguments(poolId, quantity, productIds, fromPools,
             entitleDate, consumer, async);
@@ -2656,34 +2671,20 @@ public class ConsumerResource implements ConsumerApi {
             throw e;
         }
 
-        if (poolId != null && quantity == null) {
-            Pool pool = poolService.get(poolId);
-            quantity = pool != null ? consumerBindUtil.getQuantityToBind(pool, consumer) : 1;
-        }
+        Pool pool = poolService.get(poolId);
+        quantity = pool != null ? consumerBindUtil.getQuantityToBind(pool, consumer) : 1;
 
         //
         // HANDLE ASYNC
         //
         if (async) {
-            JobConfig jobConfig;
+            String cfg = ConfigProperties.jobConfig(EntitlerJob.JOB_KEY, EntitlerJob.CFG_JOB_THROTTLE);
+            int throttle = config.getInt(cfg);
 
-            if (poolId != null) {
-                String cfg = ConfigProperties.jobConfig(EntitlerJob.JOB_KEY, EntitlerJob.CFG_JOB_THROTTLE);
-                int throttle = config.getInt(cfg);
-
-                jobConfig = EntitlerJob.createConfig(throttle)
-                    .setOwner(owner)
-                    .setConsumer(consumer)
-                    .setPoolQuantity(poolId, quantity);
-            }
-            else {
-                jobConfig = EntitleByProductsJob.createConfig()
-                    .setOwner(owner)
-                    .setConsumer(consumer)
-                    .setProductIds(productIds)
-                    .setEntitleDate(entitleDate)
-                    .setPools(fromPools);
-            }
+            JobConfig jobConfig = EntitlerJob.createConfig(throttle)
+                .setOwner(owner)
+                .setConsumer(consumer)
+                .setPoolQuantity(poolId, quantity);
 
             // events will be triggered by the job
             AsyncJobStatus status = null;
@@ -2708,39 +2709,7 @@ public class ConsumerResource implements ConsumerApi {
         //
         // otherwise we do what we do today.
         //
-        List<Entitlement> entitlements = null;
-
-        if (poolId != null) {
-            entitlements = entitler.bindByPoolQuantity(consumer, poolId,
-                quantity);
-        }
-        else {
-            try {
-                AutobindData autobindData = new AutobindData(consumer, owner)
-                    .on(entitleDate)
-                    .forProducts(productIds)
-                    .withPools(fromPools);
-
-                entitlements = entitler.bindByProducts(autobindData);
-            }
-            catch (AutobindDisabledForOwnerException e) {
-                if (owner.isUsingSimpleContentAccess()) {
-                    log.debug("Ignoring request to auto-attach. " +
-                        "Attaching subscriptions is disabled for org \"{}\" " +
-                        "because simple content access is enabled.", owner.getKey(), e);
-                    return Response.status(Response.Status.OK).build();
-                }
-                else {
-                    throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
-                        "It is disabled for org \"{0}\".", owner.getKey()), e);
-                }
-            }
-            catch (AutobindHypervisorDisabledException e) {
-                throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
-                    "It is disabled for org \"{0}\" because of the hypervisor autobind setting.",
-                    owner.getKey()), e);
-            }
-        }
+        List<Entitlement> entitlements = entitler.bindByPoolQuantity(consumer, poolId, quantity);
 
         List<EntitlementDTO> entitlementDTOs = null;
         if (entitlements != null) {
@@ -2783,35 +2752,7 @@ public class ConsumerResource implements ConsumerApi {
             }
         }
 
-        List<PoolQuantity> dryRunPools = new ArrayList<>();
-
-        try {
-            // BZ 1618398 Remove validation check on consumer service level
-            // consumerBindUtil.validateServiceLevel(consumer.getOwnerId(), serviceLevel);
-            dryRunPools = entitler.getDryRun(consumer, owner, serviceLevel);
-        }
-        catch (ForbiddenException e) {
-            return Collections.emptyList();
-        }
-        catch (BadRequestException e) {
-            throw e;
-        }
-        catch (RuntimeException e) {
-            log.debug("Unexpected exception occurred while performing dry-run:", e);
-            return Collections.emptyList();
-        }
-
-        if (dryRunPools != null) {
-            List<PoolQuantityDTO> dryRunPoolDtos = new ArrayList<>();
-            for (PoolQuantity pq : dryRunPools) {
-                dryRunPoolDtos.add(this.translator.translate(pq, PoolQuantityDTO.class));
-            }
-
-            return dryRunPoolDtos;
-        }
-        else {
-            return Collections.emptyList();
-        }
+        return new ArrayList<>();
     }
 
     @Override
