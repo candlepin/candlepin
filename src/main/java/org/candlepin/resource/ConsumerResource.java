@@ -38,6 +38,7 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.Verify;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.EntitlementCertificateService;
@@ -2607,6 +2608,17 @@ public class ConsumerResource implements ConsumerApi {
 
         // Making the auto-attach a no-op
         if (poolId == null || poolId.isEmpty()) {
+            if (owner.isAutobindDisabled()) {
+                throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
+                    "It is disabled for org \"{0}\".", owner.getKey()));
+            }
+
+            if (owner.isAutobindHypervisorDisabled() && ConsumerTypeEnum.HYPERVISOR.matches(ctype)) {
+                throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
+                    "It is disabled for org \"{0}\" because of the hypervisor autobind setting.",
+                    owner.getKey()));
+            }
+
             Response.ResponseBuilder builder = Response.status(Response.Status.OK)
                 .type(MediaType.APPLICATION_JSON);
 

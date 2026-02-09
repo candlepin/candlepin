@@ -117,14 +117,16 @@ public class ConsumerBindUtil {
             handleActivationKeyRole(consumer, key.getRole());
             handleActivationKeyAddons(consumer, key.getAddOns());
 
-            // In SCA mode, attaching specific pools is no longer supported for smoother transition.
-            // Instead, log an informational message and skip pool attachment.
-            if (scaEnabled) {
-                log.warn("Owner is using simple content access; skipping attaching pools for consumer " +
-                    "with activation key: {}, {}", consumer.getUuid(), key.getName());
-            }
-            else {
-                keySuccess &= handleActivationKeyPools(consumer, key);
+            if (Boolean.FALSE.equals(key.isAutoAttach())) {
+                // In SCA mode, attaching specific pools is no longer supported for smoother transition.
+                // Instead, log an informational message and skip pool attachment.
+                if (scaEnabled) {
+                    log.warn("Owner is using simple content access; skipping attaching pools for consumer " +
+                        "with activation key: {}, {}", consumer.getUuid(), key.getName());
+                }
+                else {
+                    keySuccess &= handleActivationKeyPools(consumer, key);
+                }
             }
 
             listSuccess |= keySuccess;
