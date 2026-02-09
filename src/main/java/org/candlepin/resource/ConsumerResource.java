@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.EntitleByProductsJob;
 import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.audit.Event;
@@ -37,8 +38,6 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.Verify;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.controller.AutobindDisabledForOwnerException;
-import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.EntitlementCertificateService;
@@ -2604,27 +2603,49 @@ public class ConsumerResource implements ConsumerApi {
                 .build();
         }
 
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+
         // Making the auto-attach a no-op
         if (poolId == null || poolId.isEmpty()) {
             Response.ResponseBuilder builder = Response.status(Response.Status.OK)
                 .type(MediaType.APPLICATION_JSON);
 
             if (async) {
-                // TODO: Is this a breaking change?
-                builder.entity(new AsyncJobStatusDTO());
+                JobConfig jobConfig = EntitleByProductsJob.createConfig()
+                    .setOwner(owner)
+                    .setConsumer(consumer)
+                    .setProductIds(productIds)
+                    .setEntitleDate(entitleDate)
+                    .setPools(fromPools);
+
+                // events will be triggered by the job
+                AsyncJobStatus status = null;
+
+                try {
+                    status = jobManager.queueJob(jobConfig);
+                }
+                catch (JobException e) {
+                    String errmsg = this.i18n.tr("An unexpected exception occurred " +
+                        "while scheduling job \"{0}\"", jobConfig.getJobKey());
+                    log.error(errmsg, e);
+                    throw new IseException(errmsg, e);
+                }
+
+                AsyncJobStatusDTO statusDTO = this.translator.translate(status, AsyncJobStatusDTO.class);
+                return Response.status(Response.Status.OK)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(statusDTO)
+                    .build();
             }
             else {
-                builder.entity(List.of());
+                return builder.entity(List.of())
+                    .build();
             }
-
-            return builder.build();
         }
 
         // Check that only one query param was set, and some other validations
         validateBindArguments(poolId, quantity, productIds, fromPools,
             entitleDate, consumer, async);
-
-        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
 
         try {
             // I hate double negatives, but if they have accepted all
