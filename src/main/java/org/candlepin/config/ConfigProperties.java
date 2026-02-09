@@ -30,6 +30,7 @@ import org.candlepin.config.validation.ConfigurationValidator;
 import org.candlepin.config.validation.IntegerConfigurationValidator;
 import org.candlepin.config.validation.StringConfigurationValidator;
 import org.candlepin.database.MigrationManagementLevel;
+import org.candlepin.model.AnonymousCloudConsumer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -553,6 +554,9 @@ public class ConfigProperties {
             this.put(jobConfig(InactiveConsumerCleanerJob.JOB_KEY,
                 InactiveConsumerCleanerJob.CFG_LAST_UPDATED_IN_RETENTION_IN_DAYS),
                 Integer.toString(InactiveConsumerCleanerJob.DEFAULT_LAST_UPDATED_IN_RETENTION_IN_DAYS));
+            this.put(jobConfig(InactiveConsumerCleanerJob.JOB_KEY,
+                InactiveConsumerCleanerJob.CFG_ANON_CLOUD_CONSUMER_RETENTION),
+                Integer.toString(InactiveConsumerCleanerJob.DEFAULT_ANON_CLOUD_CONSUMER_RETENTION));
 
             // JobCleaner
             this.put(jobConfig(JobCleaner.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
