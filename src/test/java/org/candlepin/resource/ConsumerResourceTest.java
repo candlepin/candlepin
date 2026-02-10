@@ -71,6 +71,7 @@ import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.server.v1.ContentAccessDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
+import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.GoneException;
@@ -107,6 +108,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.SCACertificate;
+import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.paging.PageRequest;
@@ -1994,5 +1996,63 @@ public class ConsumerResourceTest {
                 .usingRecursiveFieldByFieldElementComparatorIgnoringFields("created", "updated")
                 .containsExactlyInAnyOrderElementsOf(overridesToAdd);
         }
+    }
+
+    @Test
+    public void testGetOwnerByConsumerUuidExcludesUpstreamConsumer() {
+        Owner owner = createOwner();
+        Consumer consumer = createConsumer(owner);
+
+        // Set up an upstream consumer with an identity certificate on the owner
+        ConsumerType upstreamType = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        UpstreamConsumer upstream = new UpstreamConsumer(
+            "upstream-consumer", owner, upstreamType, "upstream-uuid");
+        IdentityCertificate idCert = createIdCert();
+        upstream.setIdCert(idCert);
+        owner.setUpstreamConsumer(upstream);
+
+        when(ownerCurator.findOwnerById(owner.getId())).thenReturn(owner);
+
+        OwnerDTO result = consumerResource.getOwnerByConsumerUuid(consumer.getUuid());
+
+        assertNotNull(result);
+        assertNull(result.getUpstreamConsumer());
+    }
+
+    @Test
+    public void testGetOwnerByConsumerUuidDoesNotModifyEntity() {
+        Owner owner = createOwner();
+        Consumer consumer = createConsumer(owner);
+
+        // Set up an upstream consumer with an identity certificate on the owner
+        ConsumerType upstreamType = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        UpstreamConsumer upstream = new UpstreamConsumer(
+            "upstream-consumer", owner, upstreamType, "upstream-uuid");
+        IdentityCertificate idCert = createIdCert();
+        upstream.setIdCert(idCert);
+        owner.setUpstreamConsumer(upstream);
+
+        when(ownerCurator.findOwnerById(owner.getId())).thenReturn(owner);
+
+        consumerResource.getOwnerByConsumerUuid(consumer.getUuid());
+
+        // Verify the entity was NOT modified (important for Hibernate dirty checking)
+        assertNotNull(owner.getUpstreamConsumer());
+        assertEquals("upstream-uuid", owner.getUpstreamConsumer().getUuid());
+        assertNotNull(owner.getUpstreamConsumer().getIdCert());
+    }
+
+    @Test
+    public void testGetOwnerByConsumerUuidWithNoUpstreamConsumer() {
+        Owner owner = createOwner();
+        Consumer consumer = createConsumer(owner);
+
+        when(ownerCurator.findOwnerById(owner.getId())).thenReturn(owner);
+
+        OwnerDTO result = consumerResource.getOwnerByConsumerUuid(consumer.getUuid());
+
+        assertNotNull(result);
+        assertNull(result.getUpstreamConsumer());
+        assertEquals(owner.getKey(), result.getKey());
     }
 }
