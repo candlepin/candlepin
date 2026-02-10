@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2025 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -22,6 +22,7 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
@@ -43,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 
@@ -64,6 +66,10 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
 
     public static final String CFG_LAST_UPDATED_IN_RETENTION_IN_DAYS = "last_updated_retention_in_days";
     public static final int DEFAULT_LAST_UPDATED_IN_RETENTION_IN_DAYS = 30;
+
+    public static final String CFG_ANON_CLOUD_CONSUMER_RETENTION = "anon_cloud_consumer_retention";
+    public static final int DEFAULT_ANON_CLOUD_CONSUMER_RETENTION = 15; // In days
+
     public static final String CFG_BATCH_SIZE = "batch_size";
 
     // Any higher than 1k runs the risk of hitting memory/heap limits and crashing with an OOM
@@ -71,6 +77,7 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
 
     private final Configuration config;
     private final ConsumerCurator consumerCurator;
+    private final AnonymousCloudConsumerCurator anonymousCloudConsumerCurator;
     private final IdentityCertificateCurator identityCertificateCurator;
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
     private final CertificateSerialCurator certificateSerialCurator;
@@ -81,6 +88,7 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
     @Inject
     public InactiveConsumerCleanerJob(Configuration config,
         ConsumerCurator consumerCurator,
+        AnonymousCloudConsumerCurator anonymousCloudConsumerCurator,
         IdentityCertificateCurator identityCertificateCurator,
         ContentAccessCertificateCurator contentAccessCertificateCurator,
         CertificateSerialCurator certificateSerialCurator,
@@ -89,12 +97,47 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
 
         this.config = Objects.requireNonNull(config);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.anonymousCloudConsumerCurator = Objects.requireNonNull(anonymousCloudConsumerCurator);
         this.identityCertificateCurator = Objects.requireNonNull(identityCertificateCurator);
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
         this.certificateSerialCurator = Objects.requireNonNull(certificateSerialCurator);
 
         this.eventSink = Objects.requireNonNull(eventSink);
         this.eventFactory = Objects.requireNonNull(eventFactory);
+    }
+
+    @Override
+    public void execute(JobExecutionContext context) throws JobExecutionException {
+        Instant lastCheckedInRetention = this.getRetentionDate(CFG_LAST_CHECKED_IN_RETENTION_IN_DAYS);
+        Instant nonCheckedInRetention = this.getRetentionDate(CFG_LAST_UPDATED_IN_RETENTION_IN_DAYS);
+        int batchSize = this.getBatchSize();
+
+        int deletedConsumers =
+            this.deleteInactiveConsumers(lastCheckedInRetention, nonCheckedInRetention, batchSize);
+
+        Instant anonymousConsumerRetention = this.getRetentionDate(CFG_ANON_CLOUD_CONSUMER_RETENTION);
+        int deletedAnonymousCloudConsumers =
+            this.deleteInactiveAnonymousCloudConsumers(anonymousConsumerRetention, batchSize);
+
+        String result = String.format(
+            "%s complete; %d consumers removed and %d anonymous cloud consumers removed",
+            JOB_NAME, deletedConsumers, deletedAnonymousCloudConsumers);
+
+        log.info(result);
+        context.setJobResult(result);
+    }
+
+    private int deleteInactiveConsumers(Instant lastCheckedInRetention, Instant nonCheckedInRetention,
+        int batchSize) {
+
+        log.info("Fetching inactive consumers using retention dates: last checkin: {}, last update: {}",
+            lastCheckedInRetention, nonCheckedInRetention);
+
+        List<InactiveConsumerRecord> inactiveConsumers = this.consumerCurator
+            .getInactiveConsumers(lastCheckedInRetention, nonCheckedInRetention);
+
+        return deleteInBatches(inactiveConsumers, batchSize, "inactive consumers",
+            this::deleteInactiveConsumers);
     }
 
     /**
@@ -159,40 +202,35 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
         return deletedConsumers;
     }
 
-    @Override
-    public void execute(JobExecutionContext context) throws JobExecutionException {
-        Instant lastCheckedInRetention = this.getRetentionDate(CFG_LAST_CHECKED_IN_RETENTION_IN_DAYS);
-        Instant nonCheckedInRetention = this.getRetentionDate(CFG_LAST_UPDATED_IN_RETENTION_IN_DAYS);
-        int batchSize = this.getBatchSize();
+    private int deleteInactiveAnonymousCloudConsumers(Instant retention, int batchSize) {
+        List<String> ids = this.anonymousCloudConsumerCurator.getInactiveAnonymousCloudConsumerIds(retention);
 
-        Transactional transaction = this.consumerCurator.transactional()
+        return deleteInBatches(ids, batchSize, "inactive anonymous cloud consumers",
+            this.anonymousCloudConsumerCurator::deleteAnonymousCloudConsumers);
+    }
+
+    private <T> int deleteInBatches(List<T> items, int batchSize, String entityDescription,
+        Function<List<T>, Integer> deletionFunction) {
+
+        log.info("Found {} {}", items.size(), entityDescription);
+        if (items.isEmpty()) {
+            return 0;
+        }
+
+        Transactional transaction = new Transactional(this.consumerCurator.getEntityManager())
             .onCommit(status -> this.eventSink.sendEvents())
             .onRollback(status -> this.eventSink.rollback());
 
-        log.info("Fetching inactive consumers using retention dates: last checkin: {}, last update: {}",
-            lastCheckedInRetention, nonCheckedInRetention);
-
-        List<InactiveConsumerRecord> inactiveConsumers = this.consumerCurator
-            .getInactiveConsumers(lastCheckedInRetention, nonCheckedInRetention);
-
-        log.info("Found {} inactive consumers", inactiveConsumers.size());
-
-        int batches = (inactiveConsumers.size() / batchSize) +
-            Math.min(inactiveConsumers.size() % batchSize, 1);
-
-        int bcount = 0;
+        int totalBatches = (items.size() / batchSize) + Math.min(items.size() % batchSize, 1);
+        int batchCount = 0;
         int deletedCount = 0;
-
-        for (List<InactiveConsumerRecord> batch : Iterables.partition(inactiveConsumers, batchSize)) {
-            log.info("Deleting {} inactive consumers (batch {} of {})", batch.size(), ++bcount, batches);
-            deletedCount += transaction.execute(() -> this.deleteInactiveConsumers(batch));
+        for (List<T> batch : Iterables.partition(items, batchSize)) {
+            log.info("Deleting {} {} (batch {} of {})",
+                batch.size(), entityDescription, ++batchCount, totalBatches);
+            deletedCount += transaction.execute(() -> deletionFunction.apply(batch));
         }
 
-        // Output result string
-        String result = String.format("%s complete; %d consumers removed", JOB_NAME, deletedCount);
-
-        log.info(result);
-        context.setJobResult(result);
+        return deletedCount;
     }
 
     /**

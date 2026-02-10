@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -19,13 +19,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.AbstractHibernateObject;
+import org.candlepin.model.AnonymousCloudConsumer;
+import org.candlepin.model.AnonymousCloudConsumerCurator;
+import org.candlepin.model.AnonymousContentAccessCertificate;
+import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.DeletedConsumer;
@@ -39,20 +47,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.stream.Stream;
 
-
 public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
 
     private InactiveConsumerCleanerJob inactiveConsumerCleanerJob;
     private ConsumerType consumerType;
     private TestEventSink eventSink;
+    private EventFactory eventFactory;
 
     @Override
     @BeforeEach
@@ -62,10 +73,11 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
         this.consumerType = this.createConsumerType(false);
 
         this.eventSink = this.injector.getInstance(TestEventSink.class);
-        EventFactory eventFactory = this.injector.getInstance(EventFactory.class);
+        this.eventFactory = this.injector.getInstance(EventFactory.class);
 
         inactiveConsumerCleanerJob = new InactiveConsumerCleanerJob(this.config,
             this.consumerCurator,
+            this.anonymousCloudConsumerCurator,
             this.identityCertificateCurator,
             this.caCertCurator,
             this.certSerialCurator,
@@ -283,6 +295,110 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
         }
     }
 
+    @Test
+    public void testExecutionWithInactiveAnonymousCloudConsumersBasedOnUpdatedDate() throws Exception {
+        int activeUpdatedDate = InactiveConsumerCleanerJob.DEFAULT_ANON_CLOUD_CONSUMER_RETENTION - 1;
+        int inactiveUpdatedDate = InactiveConsumerCleanerJob.DEFAULT_ANON_CLOUD_CONSUMER_RETENTION + 1;
+
+        List<AnonymousCloudConsumer> activeConsumers = new ArrayList<>();
+        List<AnonymousCloudConsumer> inactiveConsumers = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            Date activeDate = TestUtil.createDateOffset(0, 0, (activeUpdatedDate - i) * -1);
+            Date inactiveDate = TestUtil.createDateOffset(0, 0, (inactiveUpdatedDate + i) * -1);
+            activeConsumers.add(this.createAnonymousCloudConsumer(activeDate, null));
+            inactiveConsumers.add(this.createAnonymousCloudConsumer(inactiveDate, null));
+        }
+
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        inactiveConsumerCleanerJob.execute(context);
+
+        // Verify that the active anonymous cloud consumers were not deleted
+        for (AnonymousCloudConsumer consumer : activeConsumers) {
+            assertThat(this.anonymousCloudConsumerCurator.get(consumer.getId()))
+                .isNotNull()
+                .isEqualTo(consumer);
+        }
+
+        // Verify that the inactive anonymous cloud consumers were deleted
+        for (AnonymousCloudConsumer consumer : inactiveConsumers) {
+            assertNull(this.anonymousCloudConsumerCurator.get(consumer.getId()));
+        }
+    }
+
+    @Test
+    public void testExecutionWithInactiveAnonymousCloudConsumersBasedOnCACert() throws Exception {
+        int inactiveUpdatedDate = InactiveConsumerCleanerJob.DEFAULT_ANON_CLOUD_CONSUMER_RETENTION + 1;
+
+        List<AnonymousCloudConsumer> activeConsumers = new ArrayList<>();
+        List<AnonymousCloudConsumer> inactiveConsumers = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            Date inactiveDate = TestUtil.createDateOffset(0, 0, (inactiveUpdatedDate + i) * -1);
+            inactiveConsumers.add(this.createAnonymousCloudConsumer(inactiveDate, null));
+
+            CertificateSerial serial = new CertificateSerial();
+            serial.setExpiration(TestUtil.createDateOffset(0, 0, 7));
+            serial = certSerialCurator.create(serial);
+
+            AnonymousContentAccessCertificate cert = new AnonymousContentAccessCertificate();
+            cert.setKey(TestUtil.randomString("key-"));
+            cert.setCert(TestUtil.randomString("serial-"));
+            cert.setSerial(serial);
+            cert = anonymousContentAccessCertCurator.create(cert);
+
+            // These consumers have an inactive updated date, but they have a content access certificate
+            // and that qualifies them to be considered active.
+            activeConsumers.add(this.createAnonymousCloudConsumer(inactiveDate, cert));
+        }
+
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        inactiveConsumerCleanerJob.execute(context);
+
+        // Verify that the active anonymous cloud consumers were not deleted
+        for (AnonymousCloudConsumer consumer : activeConsumers) {
+            assertThat(this.anonymousCloudConsumerCurator.get(consumer.getId()))
+                .isNotNull()
+                .isEqualTo(consumer);
+        }
+
+        // Verify that the inactive anonymous cloud consumers were deleted
+        for (AnonymousCloudConsumer consumer : inactiveConsumers) {
+            assertNull(this.anonymousCloudConsumerCurator.get(consumer.getId()));
+        }
+    }
+
+    @Test
+    public void shouldDeleteInactiveAnonymousCloudConsumersInBatches() throws Exception {
+        AnonymousCloudConsumerCurator anonConsumerSpy = Mockito.spy(this.anonymousCloudConsumerCurator);
+        this.inactiveConsumerCleanerJob = new InactiveConsumerCleanerJob(this.config,
+            this.consumerCurator,
+            anonConsumerSpy,
+            this.identityCertificateCurator,
+            this.caCertCurator,
+            this.certSerialCurator,
+            this.eventSink,
+            eventFactory);
+
+        int expectedBatches = 3;
+        int numberOfConsumers = InactiveConsumerCleanerJob.DEFAULT_BATCH_SIZE * expectedBatches;
+        int inactiveUpdatedDate = InactiveConsumerCleanerJob.DEFAULT_ANON_CLOUD_CONSUMER_RETENTION + 1;
+
+        List<AnonymousCloudConsumer> inactiveConsumers = new ArrayList<>();
+        for (int i = 0; i < numberOfConsumers; i++) {
+            Date inactiveDate = TestUtil.createDateOffset(0, 0, (inactiveUpdatedDate + i) * -1);
+            inactiveConsumers.add(this.createAnonymousCloudConsumer(inactiveDate, null));
+        }
+
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        inactiveConsumerCleanerJob.execute(context);
+
+        // Verify that the inactive anonymous cloud consumers were deleted
+        for (AnonymousCloudConsumer consumer : inactiveConsumers) {
+            assertNull(this.anonymousCloudConsumerCurator.get(consumer.getId()));
+        }
+
+        verify(anonConsumerSpy, times(expectedBatches)).deleteAnonymousCloudConsumers(any(List.class));
+    }
+
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = { "0", "-50" })
     public void testExecutionWithInvalidCheckedInRetentionConfig(int rententionDays)
@@ -305,6 +421,16 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
         assertThrows(JobExecutionException.class, () -> inactiveConsumerCleanerJob.execute(context));
     }
 
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = { "0", "-50" })
+    public void testExecutionWithInvalidAnonymousCloudConsumerRetentionConfig(int rententionDays) {
+        setRetentionDaysConfiguration(InactiveConsumerCleanerJob.CFG_ANON_CLOUD_CONSUMER_RETENTION,
+            rententionDays);
+
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        assertThrows(JobExecutionException.class, () -> inactiveConsumerCleanerJob.execute(context));
+    }
+
     private Consumer createConsumer(Owner owner, Integer lastCheckedInDaysAgo) {
         Consumer newConsumer = new Consumer()
             .setOwner(owner)
@@ -316,6 +442,65 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
         }
 
         return this.consumerCurator.create(newConsumer);
+    }
+
+    /**
+     * Creates and persists an {@link AnonymousCloudConsumer} and directly updates the consumer's updated
+     * date if the provided updated date is not null. This is to overcome not being able to set the updated
+     * date on the anonymous cloud consumer due to {@link AbstractHibernateObject#onCreate} and
+     * {@link AbstractHibernateObject#onUpdate} overwritting the value.
+     *
+     * @param updatedDate
+     *  updated date to set on the anonymous cloud consumer,
+     *
+     * @return the created anonymous cloud consumer
+     */
+    private AnonymousCloudConsumer createAnonymousCloudConsumer(Date updatedDate,
+        AnonymousContentAccessCertificate cert) {
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setCloudAccountId(TestUtil.randomString())
+            .setCloudInstanceId(TestUtil.randomString())
+            .setCloudOfferingId(TestUtil.randomString())
+            .setProductIds(List.of(TestUtil.randomString()))
+            .setContentAccessCert(cert)
+            .setCloudProviderShortName("AWS");
+        consumer = this.anonymousCloudConsumerCurator.create(consumer);
+
+        if (updatedDate != null) {
+            this.setAnonConsumerUpdatedDateDirectly(consumer, updatedDate);
+            consumer.setUpdated(updatedDate);
+        }
+
+        return consumer;
+    }
+
+    /**
+     * Directly updates the {@link AnonymousCloudConsumer}'s updated date with the provided date.
+     *
+     * @param consumer
+     *  the consumer to set the updated date for
+     *
+     * @param date
+     *  the updated date to set
+     */
+    private void setAnonConsumerUpdatedDateDirectly(AnonymousCloudConsumer consumer, Date date) {
+        if (date == null || consumer == null) {
+            return;
+        }
+
+        String statement = "UPDATE AnonymousCloudConsumer SET updated = :updated WHERE id = :id";
+
+        this.anonymousCloudConsumerCurator.transactional().execute(() -> {
+            this.getEntityManager()
+                .createQuery(statement)
+                .setParameter("updated", date)
+                .setParameter("id", consumer.getId())
+                .executeUpdate();
+        });
+
+        this.anonymousCloudConsumerCurator.flush();
+        this.anonymousCloudConsumerCurator.clear();
     }
 
     private void setRetentionDaysConfiguration(String configurationName, int retentionDays) {
