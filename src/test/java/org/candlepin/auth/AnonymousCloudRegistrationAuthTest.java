@@ -100,8 +100,9 @@ public class AnonymousCloudRegistrationAuthTest {
     }
 
     private AnonymousCloudRegistrationAuth buildAuthProvider() {
-        return new AnonymousCloudRegistrationAuth(this.config, this.anonymousCloudConsumerCurator,
-            this.certificateReader);
+        CloudAuthTokenGenerator generator = new CloudAuthTokenGenerator(this.config, this.certificateReader);
+
+        return new AnonymousCloudRegistrationAuth(this.config, this.anonymousCloudConsumerCurator, generator);
     }
 
     private MockHttpRequest buildHttpRequest() {
@@ -111,10 +112,6 @@ public class AnonymousCloudRegistrationAuthTest {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private int getCurrentSeconds() {
-        return (int) (System.currentTimeMillis() / 1000);
     }
 
     private String buildMalformedToken(JsonWebToken token) {
@@ -175,15 +172,15 @@ public class AnonymousCloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalIgnoresTokensWithWrongType() {
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = (System.currentTimeMillis() / 1000) - 5;
 
         String token = this.buildMalformedToken(new JsonWebToken()
             .type("invalid-token-type")
             .subject("test-subject")
             .audience("test-org")
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -196,14 +193,14 @@ public class AnonymousCloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalIgnoresTokensLackingType() {
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = (System.currentTimeMillis() / 1000) - 5;
 
         String token = this.buildMalformedToken(new JsonWebToken()
             .subject("test-subject")
             .audience("test-org")
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -216,14 +213,14 @@ public class AnonymousCloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalIgnoresTokensLackingSubject() {
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = (System.currentTimeMillis() / 1000) - 5;
 
         String token = this.buildMalformedToken(new JsonWebToken()
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .audience("test-audience")
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -236,14 +233,14 @@ public class AnonymousCloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalIgnoresTokensLackingAudience() {
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = (System.currentTimeMillis() / 1000) - 5;
 
         String token = this.buildMalformedToken(new JsonWebToken()
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .subject("test-subject")
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -256,15 +253,15 @@ public class AnonymousCloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalIgnoresExpiredTokens() {
-        int ctSeconds = this.getCurrentSeconds();
+        long ctSeconds = System.currentTimeMillis() / 1000;
 
         String token = this.buildMalformedToken(new JsonWebToken()
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .subject("test-subject")
             .audience("test-audience")
-            .issuedAt(ctSeconds - 15)
-            .notBefore(ctSeconds - 15)
-            .expiration(ctSeconds - 10));
+            .iat(ctSeconds - 15)
+            .nbf(ctSeconds - 15)
+            .exp(ctSeconds - 10));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -277,15 +274,15 @@ public class AnonymousCloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalIgnoresInactiveTokens() {
-        int ctSeconds = this.getCurrentSeconds();
+        long ctSeconds = System.currentTimeMillis() / 1000;
 
         String token = this.buildMalformedToken(new JsonWebToken()
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .subject("test-subject")
             .audience("test-audience")
-            .issuedAt(ctSeconds + 15)
-            .notBefore(ctSeconds + 15)
-            .expiration(ctSeconds + 25));
+            .iat(ctSeconds + 15)
+            .nbf(ctSeconds + 15)
+            .exp(ctSeconds + 25));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -298,7 +295,7 @@ public class AnonymousCloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalWithExistingAnonymousCloudConsumer() {
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = (System.currentTimeMillis() / 1000) - 5;
 
         String anonymousConsumerUuid = "uuid";
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
@@ -315,9 +312,9 @@ public class AnonymousCloudRegistrationAuthTest {
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .subject("test-subject")
             .audience(anonymousConsumerUuid)
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -332,15 +329,15 @@ public class AnonymousCloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalWithNonExistingAnonymousCloudConsumer() {
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = (System.currentTimeMillis() / 1000) - 5;
 
         String token = this.buildMalformedToken(new JsonWebToken()
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .subject("test-subject")
             .audience("anon-consumer-uuid")
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);

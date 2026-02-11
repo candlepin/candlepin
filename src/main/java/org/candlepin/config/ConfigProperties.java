@@ -30,6 +30,9 @@ import org.candlepin.config.validation.ConfigurationValidator;
 import org.candlepin.config.validation.IntegerConfigurationValidator;
 import org.candlepin.config.validation.StringConfigurationValidator;
 import org.candlepin.database.MigrationManagementLevel;
+import org.candlepin.model.AnonymousCloudConsumer;
+
+import org.keycloak.crypto.Algorithm;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -298,6 +301,8 @@ public class ConfigProperties {
             .toString();
     }
 
+    public static final String JWT_CRYPTO_SCHEME = "candlepin.crypto.jwt.scheme";
+
     // Legacy crypto configuration
     public static final String LEGACY_CA_KEY = "candlepin.ca_key";
     public static final String LEGACY_CA_CERT = "candlepin.ca_cert";
@@ -434,6 +439,7 @@ public class ConfigProperties {
             this.put(DB_MAX_CONNECTION_ATTEMPTS, "3");
 
             this.put(JWT_ISSUER, "Candlepin");
+            this.put(JWT_CRYPTO_SCHEME, Algorithm.RS512);
             this.put(JWT_TOKEN_TTL, "600"); // seconds
             this.put(ANON_JWT_TOKEN_TTL, "172800"); // seconds
 

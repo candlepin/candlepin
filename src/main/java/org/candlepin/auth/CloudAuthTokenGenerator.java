@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -20,14 +20,17 @@ import org.candlepin.config.ConversionException;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.util.Util;
 
+import org.keycloak.TokenVerifier;
+import org.keycloak.common.VerificationException;
 import org.keycloak.common.util.KeyUtils;
-import org.keycloak.crypto.Algorithm;
 import org.keycloak.crypto.AsymmetricSignatureSignerContext;
 import org.keycloak.crypto.KeyType;
 import org.keycloak.crypto.KeyUse;
 import org.keycloak.crypto.KeyWrapper;
 import org.keycloak.jose.jws.JWSBuilder;
 import org.keycloak.representations.JsonWebToken;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -39,11 +42,11 @@ import javax.inject.Inject;
 
 
 /**
- * A class for generating cloud authentication tokens
+ * A class for generating and validating cloud authentication tokens
  */
 public class CloudAuthTokenGenerator {
+    private static Logger log = LoggerFactory.getLogger(CloudRegistrationAuth.class);
 
-    private static final String TOKEN_ALGORITHM = Algorithm.RS512;
     private static final String TOKEN_SUBJECT_DEFAULT = "cloud_auth";
 
     private final Configuration config;
@@ -52,6 +55,7 @@ public class CloudAuthTokenGenerator {
     private final String jwtIssuer;
     private final int jwtTokenTTL; // seconds
     private final int anonJwtTokenTTL; // seconds
+    private String algorithm;
 
     private final X509Certificate certificate;
     private final PublicKey publicKey;
@@ -81,6 +85,8 @@ public class CloudAuthTokenGenerator {
         catch (Exception e) {
             throw new RuntimeException("Unable to load public and private keys", e);
         }
+
+        this.algorithm = this.config.getString(ConfigProperties.JWT_CRYPTO_SCHEME);
     }
 
     /**
@@ -117,7 +123,7 @@ public class CloudAuthTokenGenerator {
         }
 
         KeyWrapper wrapper = new KeyWrapper();
-        wrapper.setAlgorithm(TOKEN_ALGORITHM);
+        wrapper.setAlgorithm(this.algorithm);
         wrapper.setCertificate(this.certificate);
         wrapper.setKid(keyId);
         wrapper.setPrivateKey(this.privateKey);
@@ -125,7 +131,7 @@ public class CloudAuthTokenGenerator {
         wrapper.setUse(KeyUse.SIG);
         wrapper.setType(KeyType.RSA);
 
-        int ctSeconds = (int) (System.currentTimeMillis() / 1000);
+        long ctSeconds = System.currentTimeMillis() / 1000;
 
         JsonWebToken token = new JsonWebToken()
             .id(Util.generateUUID())
@@ -133,9 +139,9 @@ public class CloudAuthTokenGenerator {
             .issuer(this.jwtIssuer)
             .subject(username)
             .audience(ownerKey)
-            .issuedAt(ctSeconds)
-            .expiration(ctSeconds + this.jwtTokenTTL)
-            .notBefore(ctSeconds);
+            .iat(ctSeconds)
+            .exp(ctSeconds + this.jwtTokenTTL)
+            .nbf(ctSeconds);
 
         return new JWSBuilder()
             .kid(keyId)
@@ -177,7 +183,7 @@ public class CloudAuthTokenGenerator {
         }
 
         KeyWrapper wrapper = new KeyWrapper();
-        wrapper.setAlgorithm(TOKEN_ALGORITHM);
+        wrapper.setAlgorithm(this.algorithm);
         wrapper.setCertificate(this.certificate);
         wrapper.setKid(keyId);
         wrapper.setPrivateKey(this.privateKey);
@@ -185,7 +191,7 @@ public class CloudAuthTokenGenerator {
         wrapper.setUse(KeyUse.SIG);
         wrapper.setType(KeyType.RSA);
 
-        int ctSeconds = (int) (System.currentTimeMillis() / 1000);
+        long ctSeconds = System.currentTimeMillis() / 1000;
 
         JsonWebToken token = new JsonWebToken()
             .id(Util.generateUUID())
@@ -193,9 +199,9 @@ public class CloudAuthTokenGenerator {
             .issuer(this.jwtIssuer)
             .subject(username)
             .audience(consumerUuid)
-            .issuedAt(ctSeconds)
-            .expiration(ctSeconds + this.anonJwtTokenTTL)
-            .notBefore(ctSeconds);
+            .iat(ctSeconds)
+            .exp(ctSeconds + this.anonJwtTokenTTL)
+            .nbf(ctSeconds);
 
         return new JWSBuilder()
             .kid(keyId)
@@ -203,5 +209,77 @@ public class CloudAuthTokenGenerator {
             .jsonContent(token)
             .sign(new AsymmetricSignatureSignerContext(wrapper));
     }
+
+    /**
+     * Validates the authenticity of the provided JWT token by verifying the signature. Expected fields such
+     * as the type, subject, and audience are also validated based on the provided {@link CloudAuthTokenType}.
+     *
+     * @param token
+     *  the JWT token the validate
+     *
+     * @param expectedType
+     *  the expected type of cloud auth token
+     *
+     * @throws IllegalArgumentException
+     *  if the provided token type is null
+     *
+     * @return the result of the validation
+     */
+    public ValidationResult validateToken(String token, CloudAuthTokenType expectedType) {
+        if (expectedType == null) {
+            throw new IllegalArgumentException("expected type is null");
+        }
+
+        if (token == null || token.isBlank()) {
+            log.debug("token is null or blank");
+            return new ValidationResult(false, null);
+        }
+
+        JsonWebToken webToken = null;
+        try {
+            TokenVerifier<JsonWebToken> verifier = TokenVerifier.create(token, JsonWebToken.class)
+                .publicKey(publicKey)
+                .verify();
+
+            webToken = verifier.getToken();
+        }
+        catch (VerificationException e) {
+            log.debug("Unable to verify token signature");
+            return new ValidationResult(false, null);
+        }
+
+        if (!webToken.isActive()) {
+            log.debug("Token is not active or has expired");
+            return new ValidationResult(false, null);
+        }
+
+        String actualType = webToken.getType();
+        if (!expectedType.equalsType(actualType)) {
+            log.debug("Invalid token type. Expected: {}, but was {}",  expectedType, actualType);
+            return new ValidationResult(false, null);
+        }
+
+        String subject = webToken.getSubject();
+        if (subject == null || subject.isBlank()) {
+            log.debug("Invalid token subject. The subject is either null or blank");
+            return new ValidationResult(false, null);
+        }
+
+        // Both the standard token and anonymous token expect the first audience to be populated
+
+        String[] audiences = webToken.getAudience();
+        String audience = audiences != null && audiences.length > 0 ? audiences[0] : null;
+        if (audience == null || audience.isEmpty()) {
+            log.debug("Token contains an invalid audience: {}", audience);
+            return new ValidationResult(false, null);
+        }
+
+        return new ValidationResult(true, audience);
+    }
+
+    public record ValidationResult(
+        boolean isValid,
+        String audienceValue
+    ) {}
 
 }

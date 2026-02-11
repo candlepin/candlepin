@@ -14,6 +14,8 @@
  */
 package org.candlepin.config;
 
+import org.keycloak.crypto.Algorithm;
+
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,6 +57,7 @@ public final class TestConfig {
             throw new RuntimeException("Error loading cert/key resources!", e);
         }
 
+        defaults.put(ConfigProperties.JWT_CRYPTO_SCHEME, Algorithm.RS512);
         defaults.put(ConfigProperties.LEGACY_CA_KEY_PASSWORD, "password");
         defaults.put(ConfigProperties.SYNC_WORK_DIR, "/tmp");
         defaults.put(ConfigProperties.ACTIVEMQ_LARGE_MSG_SIZE, "0");

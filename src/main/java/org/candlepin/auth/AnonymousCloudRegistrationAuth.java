@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,23 +14,18 @@
  */
 package org.candlepin.auth;
 
+import org.candlepin.auth.CloudAuthTokenGenerator.ValidationResult;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.ConversionException;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
-import org.candlepin.pki.CertificateReader;
 import org.candlepin.resteasy.filter.AuthUtil;
 
 import org.jboss.resteasy.spi.HttpRequest;
-import org.keycloak.TokenVerifier;
-import org.keycloak.common.VerificationException;
-import org.keycloak.representations.JsonWebToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.PublicKey;
-import java.security.cert.X509Certificate;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -48,18 +43,17 @@ public class AnonymousCloudRegistrationAuth implements AuthProvider {
 
     private final Configuration config;
     private final AnonymousCloudConsumerCurator anonymousCloudConsumerCurator;
-    private final CertificateReader certificateReader;
+    private final CloudAuthTokenGenerator cloudTokenGenerator;
 
     private final boolean enabled;
-    private final PublicKey publicKey;
 
     @Inject
     public AnonymousCloudRegistrationAuth(Configuration config,
         AnonymousCloudConsumerCurator anonymousCloudConsumerCurator,
-        CertificateReader certificateReader) {
+        CloudAuthTokenGenerator cloudTokenManager) {
         this.config = Objects.requireNonNull(config);
         this.anonymousCloudConsumerCurator = Objects.requireNonNull(anonymousCloudConsumerCurator);
-        this.certificateReader = Objects.requireNonNull(certificateReader);
+        this.cloudTokenGenerator = Objects.requireNonNull(cloudTokenManager);
 
         // Pre-parse config values
         try {
@@ -68,15 +62,6 @@ public class AnonymousCloudRegistrationAuth implements AuthProvider {
         catch (ConversionException e) {
             // Try to pretty up the exception for easy debugging
             throw new RuntimeException("Invalid value(s) found while parsing JWT configuration", e);
-        }
-
-        // Fetch our keys
-        try {
-            X509Certificate certificate = this.certificateReader.getCACert();
-            this.publicKey = certificate.getPublicKey();
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Unable to load public and private keys", e);
         }
     }
 
@@ -100,44 +85,16 @@ public class AnonymousCloudRegistrationAuth implements AuthProvider {
             return null;
         }
 
-        try {
-            TokenVerifier<JsonWebToken> verifier = TokenVerifier.create(authChunks[1], JsonWebToken.class)
-                .publicKey(publicKey)
-                .verify();
-
-            JsonWebToken token = verifier.getToken();
-            String[] audiences = token.getAudience();
-
-            // Verify that the token is active and hasn't expired
-            if (!token.isActive()) {
-                throw new VerificationException("Token is not active or has expired");
-            }
-
-            // Verify the token has the JWT type we're expecting
-            if (CloudAuthTokenType.ANONYMOUS.equalsType(token.getType())) {
-                String subject = token.getSubject();
-                if (subject == null || subject.isEmpty()) {
-                    throw new VerificationException("Token contains an invalid subject: " + subject);
-                }
-
-                String consumerUuid = audiences != null && audiences.length > 0 ? audiences[0] : null;
-                if (consumerUuid == null || consumerUuid.isEmpty()) {
-                    throw new VerificationException("Token contains an invalid audience: " + consumerUuid);
-                }
-
-                log.info("Token type used for authentication: {}", CloudAuthTokenType.ANONYMOUS);
-                return this.createCloudUserPrincipal(consumerUuid);
-            }
-        }
-        catch (VerificationException e) {
-            log.debug("Cloud registration token validation failed:", e);
-
-            // Impl note:
-            // Since we're using a common/standard auth type (bearer), we can't immediately fail
-            // out here, as it's possible the token will be verified by another provider
+        String token = authChunks[1];
+        ValidationResult result = this.cloudTokenGenerator.validateToken(token, CloudAuthTokenType.ANONYMOUS);
+        if (!result.isValid()) {
+            return null;
         }
 
-        return null;
+        String consumerUuid = result.audienceValue();
+
+        log.info("Token type used for authentication: {}", CloudAuthTokenType.ANONYMOUS);
+        return this.createCloudUserPrincipal(consumerUuid);
     }
 
     private AnonymousCloudConsumerPrincipal createCloudUserPrincipal(String consumerUuid) {
