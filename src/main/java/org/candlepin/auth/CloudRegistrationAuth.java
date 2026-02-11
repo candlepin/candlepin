@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,6 +14,7 @@
  */
 package org.candlepin.auth;
 
+import org.candlepin.auth.CloudAuthTokenGenerator.ValidationResult;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.model.Owner;
@@ -23,10 +24,7 @@ import org.candlepin.pki.Scheme;
 import org.candlepin.resteasy.filter.AuthUtil;
 
 import org.jboss.resteasy.spi.HttpRequest;
-import org.keycloak.TokenVerifier;
-import org.keycloak.common.VerificationException;
 import org.keycloak.representations.AccessToken;
-import org.keycloak.representations.JsonWebToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,18 +47,21 @@ public class CloudRegistrationAuth implements AuthProvider {
     private final Configuration config;
     private final CryptoManager cryptoManager;
     private final OwnerCurator ownerCurator;
+    private final CloudAuthTokenGenerator cloudTokenGenerator;
 
     private final boolean enabled;
     private final Scheme scheme;
     private final PublicKey publicKey;
 
     @Inject
-    public CloudRegistrationAuth(Configuration config, CryptoManager cryptoManager,
-        OwnerCurator ownerCurator) {
-
+    public CloudRegistrationAuth(Configuration config,
+        CryptoManager cryptoManager,
+        OwnerCurator ownerCurator,
+        CloudAuthTokenGenerator cloudTokenManager) {
         this.config = Objects.requireNonNull(config);
         this.cryptoManager = Objects.requireNonNull(cryptoManager);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.cloudTokenGenerator = Objects.requireNonNull(cloudTokenManager);
 
         this.enabled = this.config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
 
@@ -92,46 +93,16 @@ public class CloudRegistrationAuth implements AuthProvider {
             return null;
         }
 
-        try {
-            TokenVerifier<JsonWebToken> verifier = TokenVerifier.create(authChunks[1], JsonWebToken.class)
-                .publicKey(publicKey)
-                .verify();
-
-            JsonWebToken token = verifier.getToken();
-            String[] audiences = token.getAudience();
-
-            // Verify that the token is active and hasn't expired
-            if (!token.isActive()) {
-                throw new VerificationException("Token is not active or has expired");
-            }
-
-            // Verify the token has the JWT type we're expecting
-            if (CloudAuthTokenType.STANDARD.equalsType(token.getType())) {
-                // Pull the subject (username) and owner key(s) out of the token
-                String subject = token.getSubject();
-                String ownerKey = audiences != null && audiences.length > 0 ? audiences[0] : null;
-
-                if (subject == null || subject.isEmpty()) {
-                    throw new VerificationException("Token contains an invalid subject: " + subject);
-                }
-
-                if (ownerKey == null || ownerKey.isEmpty()) {
-                    throw new VerificationException("Token contains an invalid audience: " + ownerKey);
-                }
-
-                log.info("Token type used for authentication: {}", CloudAuthTokenType.STANDARD);
-                return this.createPrincipal(ownerKey);
-            }
-        }
-        catch (VerificationException e) {
-            log.debug("Cloud registration token validation failed:", e);
-
-            // Impl note:
-            // Since we're using a common/standard auth type (bearer), we can't immediately fail
-            // out here, as it's possible the token will be verified by another provider
+        String token = authChunks[1];
+        ValidationResult result = this.cloudTokenGenerator.validateToken(token, CloudAuthTokenType.STANDARD);
+        if (!result.isValid()) {
+            return null;
         }
 
-        return null;
+        String ownerKey = result.audienceValue();
+
+        log.info("Token type used for authentication: {}", CloudAuthTokenType.STANDARD);
+        return this.createPrincipal(ownerKey);
     }
 
     /**
