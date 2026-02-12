@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.7.3
+Version: 4.7.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,90 @@ fi
 
 #raw
 %changelog
+* Thu Feb 12 2026 candlepin-bot 4.7.4-1
+- Add new translations using Weblate (hosted@weblate.org)
+- Bump artemis from 2.50.0 to 2.51.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1136: Strip upstreamConsumer from consumer owner response
+  (sbakaj@redhat.com)
+- Bump ch.qos.logback:logback-classic from 1.5.28 to 1.5.29
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1024: Added cleanup for inactive anonymous cloud consumers
+  (joshmalbrecht@gmail.com)
+- Bump ch.qos.logback:logback-classic from 1.5.27 to 1.5.28
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.openapitools:jackson-databind-nullable from 0.2.8 to 0.2.9
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.26 to 1.5.27
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump gradle-wrapper from 9.3.0 to 9.3.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump commons-codec:commons-codec from 1.20.0 to 1.21.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.15.1 to 3.16.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Remove dedicated Gradle wrapper update action (sbakaj@redhat.com)
+- CANDLEPIN-1123: Added combined_reporting capability (sbakaj@redhat.com)
+- CANDLEPIN-1132: Fixed intermittently failing content access spec tests
+  (joshmalbrecht@gmail.com)
+- Bump ch.qos.logback:logback-classic from 1.5.25 to 1.5.26
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 11.0.15 to 11.0.18
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.assertj:assertj-core from 3.27.6 to 3.27.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump gradle-wrapper from 9.2.1 to 9.3.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump artemis from 2.44.0 to 2.50.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Add new token for upgrade gradle GH action (nmoumoul@redhat.com)
+- Bump jackson from 3.0.3 to 3.0.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Do not run nebula lint on every gradle command (nmoumoul@redhat.com)
+- Add new translations using Weblate (hosted@weblate.org)
+- Disabled JRE provisioning for Soanr action (sbakaj@redhat.com)
+- CANDLEPIN-1019: Upgraded openapi-generator to 7.19.0
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-1121: Update from Jackson 2 to Jackson 3 (nmoumoul@redhat.com)
+- Increase vagrant vm resources (nmoumoul@redhat.com)
+- CANDLEPIN-1115: Updated org.quartz-scheduler:quartz to version 2.5.2
+  (joshmalbrecht@gmail.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.15.0 to 3.15.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.24 to 1.5.25
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.postgresql:postgresql from 42.7.8 to 42.7.9
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Add link to the CANDLEPIN jira issue tracker (nmoumoul@redhat.com)
+- CANDLEPIN-1107: Updated checkstyle to 12.3.1 (joshmalbrecht@gmail.com)
+- CANDLEPIN-1046: Updated Gradle to 9.2.1 (joshmalbrecht@gmail.com)
+- CANDLEPIN-1101: Updated contributing guide with CI and Javadoc details
+  (sbakaj@redhat.com)
+- Remove EL8 support & upgrade tomcat (nmoumoul@redhat.com)
+- Bump org.owasp.dependencycheck from 12.1.9 to 12.2.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1113: Prevent ActiveMQ message buffering (joshmalbrecht@gmail.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Updated translated message to be parameterized (joshmalbrecht@gmail.com)
+- Bump org.junit:junit-bom from 6.0.1 to 6.0.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.23 to 1.5.24
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Change Java version to 17 in eclipse setting (sbakaj@redhat.com)
+- Removed database ports from CP container image (sbakaj@redhat.com)
+- Bump org.mozilla:rhino from 1.8.1 to 1.9.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.14.1 to 3.15.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.22 to 1.5.23
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Remove candlepin-4.3-HOTFIX branch from i18n job (nmoumoul@redhat.com)
+- Added remote debugging JVM args to dev container (joshmalbrecht@gmail.com)
+
 * Fri Dec 19 2025 candlepin-bot 4.7.3-1
 - Add new translations using Weblate (hosted@weblate.org)
 - Bump org.mariadb.jdbc:mariadb-java-client from 3.5.6 to 3.5.7
