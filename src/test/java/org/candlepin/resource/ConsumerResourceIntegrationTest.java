@@ -29,8 +29,6 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.config.Configuration;
-import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.PoolService;
 import org.candlepin.dto.api.server.v1.CertificateDTO;
@@ -59,14 +57,10 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
-import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
 
 import org.apache.commons.io.FileUtils;
 import org.jboss.resteasy.core.ResteasyContext;
@@ -126,11 +120,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     private User someuser;
 
     private static final String DEFAULT_SERVICE_LEVEL = "VIP";
-
-    @Override
-    protected Module getGuiceOverrideModule() {
-        return new ProductCertCreationModule();
-    }
 
     @BeforeEach
     @Override
@@ -825,14 +814,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void testInvalidProductId() {
         assertThrows(BadRequestException.class, () -> consumerResource.bind(consumer.getUuid(), "JarjarBinks",
             null, null, null, null, false, null, null));
-    }
-
-    private static class ProductCertCreationModule extends AbstractModule {
-        @Override
-        protected void configure() {
-            bind(Configuration.class).toInstance(TestConfig.defaults());
-            bind(CertificateReader.class).asEagerSingleton();
-        }
     }
 
     @Test

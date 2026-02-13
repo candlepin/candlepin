@@ -55,10 +55,11 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SCACertificate;
-import org.candlepin.pki.Signer;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.version.VersionUtil;
@@ -80,8 +81,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.KeyException;
+import java.security.KeyPair;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -90,7 +92,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -123,16 +124,18 @@ public class ExporterTest {
     @Mock
     private EnvironmentCurator mockEnvironmentCurator;
     @Mock
-    private Signer signer;
-    @Mock
     private ExportRules exportRules;
     @Mock
     private PrincipalProvider pprov;
     @Mock
     private SCACertificateGenerator scaCertificateGenerator;
+
+    private DevConfig config;
+    private CryptoManager cryptoManager;
+    private ObjectMapper mapper;
+
     private ModelTranslator translator;
     private SyncUtils su;
-    private DevConfig config;
     private MetaExporter me;
     private ConsumerExporter ce;
     private ConsumerTypeExporter cte;
@@ -142,8 +145,13 @@ public class ExporterTest {
     private DistributorVersionExporter dve;
     private EntitlementExporter ee;
 
+
     @BeforeEach
     public void setUp() {
+        this.config = TestConfig.defaults();
+        this.cryptoManager = CryptoUtil.getCryptoManager(this.config);
+        this.mapper = ObjectMapperFactory.getSyncObjectMapper(this.config);
+
         me = new MetaExporter();
         translator = new StandardTranslator(ctc, mockEnvironmentCurator, oc);
         ce = new ConsumerExporter(translator);
@@ -151,29 +159,27 @@ public class ExporterTest {
         re = new RulesExporter(rc);
         pe = new ProductExporter(translator);
         ee = new EntitlementExporter(translator);
-        config = TestConfig.defaults();
         dve = new DistributorVersionExporter(translator);
         cdne = new CdnExporter(translator);
         su = new SyncUtils(config);
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
     }
 
-    private KeyPairData buildConsumerKeyPairData() {
-        Random rnd = new Random();
-        final int keySize = 4096;
+    private KeyPairData generateConsumerKeyPairData() throws KeyException {
+        // TODO: FIXME: This should be scheme-aware. Will be fixed with the exporter overhaul
+        String algorithm = "RSA";
+        KeyPair keypair = CryptoUtil.generateKeyPair(algorithm, 4096);
 
-        byte[] pubKeyBytes = new byte[keySize];
-        byte[] privKeyBytes = new byte[keySize];
-
-        rnd.nextBytes(pubKeyBytes);
-        rnd.nextBytes(privKeyBytes);
-
-        // This isn't even remotely close to a valid pair of keys, but we don't need valid keys
-        // for the purposes of these tests; everything is mocked out.
         return new KeyPairData()
-            .setPublicKeyData(pubKeyBytes)
-            .setPrivateKeyData(privKeyBytes)
-            .setAlgorithm("RSA");
+            .setPublicKeyData(keypair.getPublic().getEncoded())
+            .setPrivateKeyData(keypair.getPrivate().getEncoded())
+            .setAlgorithm(algorithm);
+    }
+
+    private Exporter buildExporter() {
+        return new Exporter(this.ctc, this.me, this.ce, this.cte, this.re, this.ecsa, this.pe, this.ec,
+            this.ee, this.cryptoManager, this.config, this.exportRules, this.pprov, this.dvc, this.dve,
+            this.cdnc, this.cdne, this.su, this.mapper, this.translator, this.scaCertificateGenerator);
     }
 
     @SuppressWarnings("unchecked")
@@ -225,7 +231,6 @@ public class ExporterTest {
 
         when(ent.getPool()).thenReturn(pool);
         when(mrules.getRules()).thenReturn("foobar");
-        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(consumer.getEntitlements()).thenReturn(entitlements);
         when(pprov.get()).thenReturn(principal);
@@ -237,7 +242,7 @@ public class ExporterTest {
         idcert.setUpdated(new Date());
         when(consumer.getIdCert()).thenReturn(idcert);
 
-        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        KeyPairData keyPairData = this.generateConsumerKeyPairData();
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
 
         when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
@@ -247,14 +252,10 @@ public class ExporterTest {
 
         when(consumer.getOwnerId()).thenReturn(owner.getId());
         when(oc.findOwnerById(owner.getId())).thenReturn(owner);
-        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, scaCertificateGenerator);
-
-        File export = e.getFullExport(consumer, null, null, null);
+        Exporter exporter = this.buildExporter();
+        File export = exporter.getFullExport(consumer, null, null, null);
 
         // VERIFY
         assertNotNull(export);
@@ -273,7 +274,7 @@ public class ExporterTest {
     }
 
     @Test
-    public void doNotExportDirtyEntitlements() {
+    public void doNotExportDirtyEntitlements() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
         Consumer consumer = mock(Consumer.class);
         Entitlement ent = mock(Entitlement.class);
@@ -283,8 +284,6 @@ public class ExporterTest {
         List<Entitlement> entitlements = new ArrayList<>();
         entitlements.add(ent);
 
-        when(this.signer.sign(any(InputStream.class))).thenReturn(
-            "signature".getBytes());
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
 
@@ -297,21 +296,17 @@ public class ExporterTest {
         idcert.setUpdated(new Date());
         when(consumer.getIdCert()).thenReturn(idcert);
 
-        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        KeyPairData keyPairData = this.generateConsumerKeyPairData();
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
 
         when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
-        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, scaCertificateGenerator);
-
-        assertThrows(ExportCreationException.class, () -> e.getFullExport(consumer, null, null, null));
+        Exporter exporter = this.buildExporter();
+        assertThrows(ExportCreationException.class, () -> exporter.getFullExport(consumer, null, null, null));
     }
 
     @Test
-    public void exportMetadata() throws ExportCreationException, IOException {
+    public void exportMetadata() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
         Instant start = Instant.now().minusSeconds(1L);
         Rules mrules = mock(Rules.class);
@@ -320,7 +315,6 @@ public class ExporterTest {
         IdentityCertificate idcert = new IdentityCertificate();
 
         when(mrules.getRules()).thenReturn("foobar");
-        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
@@ -332,19 +326,16 @@ public class ExporterTest {
         idcert.setUpdated(new Date());
         when(consumer.getIdCert()).thenReturn(idcert);
 
-        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        KeyPairData keyPairData = this.generateConsumerKeyPairData();
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
 
         when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
 
         when(cdnc.listAll()).thenReturn(new LinkedList<>());
-        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, scaCertificateGenerator);
-        File export = e.getFullExport(consumer, null, null, null);
+        Exporter exporter = this.buildExporter();
+        File export = exporter.getFullExport(consumer, null, null, null);
 
         // VERIFY
         assertNotNull(export);
@@ -365,7 +356,6 @@ public class ExporterTest {
         Principal principal = mock(Principal.class);
 
         when(mrules.getRules()).thenReturn("foobar");
-        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
@@ -379,19 +369,16 @@ public class ExporterTest {
         idcert.setUpdated(new Date());
         when(consumer.getIdCert()).thenReturn(idcert);
 
-        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        KeyPairData keyPairData = this.generateConsumerKeyPairData();
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
 
         when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
 
         when(cdnc.listAll()).thenReturn(new LinkedList<>());
-        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, scaCertificateGenerator);
-        File export = e.getFullExport(consumer, null, null, null);
+        Exporter exporter = this.buildExporter();
+        File export = exporter.getFullExport(consumer, null, null, null);
 
         // VERIFY
         assertNotNull(export);
@@ -400,7 +387,7 @@ public class ExporterTest {
     }
 
     @Test
-    public void exportConsumer() throws ExportCreationException {
+    public void exportConsumer() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
         config.setProperty(ConfigProperties.PREFIX_WEBURL, "localhost:8443/weburl");
         config.setProperty(ConfigProperties.PREFIX_APIURL, "localhost:8443/apiurl");
@@ -409,7 +396,6 @@ public class ExporterTest {
         Principal principal = mock(Principal.class);
 
         when(mrules.getRules()).thenReturn("foobar");
-        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
@@ -426,7 +412,7 @@ public class ExporterTest {
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
 
-        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        KeyPairData keyPairData = this.generateConsumerKeyPairData();
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
         when(consumer.getUuid()).thenReturn("8auuid");
         when(consumer.getName()).thenReturn("consumer_name");
@@ -439,19 +425,16 @@ public class ExporterTest {
         when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
 
         when(cdnc.listAll()).thenReturn(new LinkedList<>());
-        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, scaCertificateGenerator);
-        File export = e.getFullExport(consumer, null, null, null);
+        Exporter exporter = this.buildExporter();
+        File export = exporter.getFullExport(consumer, null, null, null);
 
         verifyContent(export, "export/consumer.json", new VerifyConsumer("consumer.json"));
     }
 
     @Test
-    public void exportDistributorVersions() throws ExportCreationException {
+    public void exportDistributorVersions() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
         config.setProperty(ConfigProperties.PREFIX_WEBURL, "localhost:8443/weburl");
         config.setProperty(ConfigProperties.PREFIX_APIURL, "localhost:8443/apiurl");
@@ -460,7 +443,6 @@ public class ExporterTest {
         Principal principal = mock(Principal.class);
 
         when(mrules.getRules()).thenReturn("foobar");
-        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
@@ -476,7 +458,7 @@ public class ExporterTest {
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
 
-        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        KeyPairData keyPairData = this.generateConsumerKeyPairData();
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
         when(consumer.getUuid()).thenReturn("8auuid");
         when(consumer.getName()).thenReturn("consumer_name");
@@ -498,13 +480,10 @@ public class ExporterTest {
 
         when(cdnc.listAll()).thenReturn(new LinkedList<>());
         when(ctc.listAll()).thenReturn(new LinkedList<>());
-        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, scaCertificateGenerator);
-        File export = e.getFullExport(consumer, null, null, null);
+        Exporter exporter = this.buildExporter();
+        File export = exporter.getFullExport(consumer, null, null, null);
 
         verifyContent(export, "export/distributor_version/test-dist-ver.json",
             new VerifyDistributorVersion("test-dist-ver.json"));
@@ -518,15 +497,13 @@ public class ExporterTest {
         Consumer consumer = mock(Consumer.class);
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
-        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        KeyPairData keyPairData = this.generateConsumerKeyPairData();
         when(consumer.getKeyPairData()).thenReturn(keyPairData);
         when(consumer.getUuid()).thenReturn("consumer");
         when(consumer.getName()).thenReturn("consumer_name");
         when(consumer.getTypeId()).thenReturn(ctype.getId());
         when(ctc.getConsumerType(consumer)).thenReturn(ctype);
         when(ctc.get(ctype.getId())).thenReturn(ctype);
-
-        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
 
         // Setup principal
         Principal principal = mock(Principal.class);
@@ -551,12 +528,9 @@ public class ExporterTest {
 
         when(ecsa.listForConsumer(consumer)).thenReturn(List.of(entCert));
         when(scaCertificateGenerator.generate(consumer)).thenReturn(cac);
-        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, scaCertificateGenerator);
-        File export = e.getEntitlementExport(consumer, null);
+        Exporter exporter = this.buildExporter();
+        File export = exporter.getEntitlementExport(consumer, null);
 
         // Verify
         assertNotNull(export);
@@ -577,15 +551,13 @@ public class ExporterTest {
         Consumer consumer = mock(Consumer.class);
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
-        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        KeyPairData keyPairData = this.generateConsumerKeyPairData();
         doReturn(keyPairData).when(consumer).getKeyPairData();
         doReturn("consumer").when(consumer).getUuid();
         doReturn("consumer_name").when(consumer).getName();
         doReturn(ctype.getId()).when(consumer).getTypeId();
         doReturn(ctype).when(ctc).getConsumerType(consumer);
         doReturn(ctype).when(ctc).get(ctype.getId());
-
-        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
 
         // Setup principal
         Principal principal = mock(Principal.class);
@@ -610,14 +582,10 @@ public class ExporterTest {
 
         doReturn(List.of(entCert)).when(ecsa).listForConsumer(consumer);
         doReturn(cac).when(scaCertificateGenerator).generate(consumer);
-        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, scaCertificateGenerator);
-        Set<Long> serials = new HashSet<>();
-        serials.add(12345678910L);
-        File export = e.getEntitlementExport(consumer, serials);
+        Exporter exporter = this.buildExporter();
+        Set<Long> serials = Set.of(12345678910L);
+        File export = exporter.getEntitlementExport(consumer, serials);
 
         // Verify
         assertNotNull(export);
@@ -638,15 +606,13 @@ public class ExporterTest {
         Consumer consumer = mock(Consumer.class);
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
-        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        KeyPairData keyPairData = this.generateConsumerKeyPairData();
         doReturn(keyPairData).when(consumer).getKeyPairData();
         doReturn("consumer").when(consumer).getUuid();
         doReturn("consumer_name").when(consumer).getName();
         doReturn(ctype.getId()).when(consumer).getTypeId();
         doReturn(ctype).when(ctc).getConsumerType(consumer);
         doReturn(ctype).when(ctc).get(ctype.getId());
-
-        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
 
         // Setup principal
         Principal principal = mock(Principal.class);
@@ -671,14 +637,10 @@ public class ExporterTest {
 
         doReturn(List.of(entCert)).when(ecsa).listForConsumer(consumer);
         doReturn(cac).when(scaCertificateGenerator).generate(consumer);
-        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, scaCertificateGenerator);
-        Set<Long> serials = new HashSet<>();
-        serials.add(entSerial.getId());
-        File export = e.getEntitlementExport(consumer, serials);
+        Exporter exporter = this.buildExporter();
+        Set<Long> serials = Set.of(entSerial.getId());
+        File export = exporter.getEntitlementExport(consumer, serials);
 
         // Verify
         assertNotNull(export);
@@ -699,15 +661,13 @@ public class ExporterTest {
         Consumer consumer = mock(Consumer.class);
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
-        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        KeyPairData keyPairData = this.generateConsumerKeyPairData();
         doReturn(keyPairData).when(consumer).getKeyPairData();
         doReturn("consumer").when(consumer).getUuid();
         doReturn("consumer_name").when(consumer).getName();
         doReturn(ctype.getId()).when(consumer).getTypeId();
         doReturn(ctype).when(ctc).getConsumerType(consumer);
         doReturn(ctype).when(ctc).get(ctype.getId());
-
-        when(this.signer.sign(any(InputStream.class))).thenReturn("signature".getBytes());
 
         // Setup principal
         Principal principal = mock(Principal.class);
@@ -732,14 +692,10 @@ public class ExporterTest {
 
         doReturn(List.of(entCert)).when(ecsa).listForConsumer(consumer);
         doReturn(cac).when(scaCertificateGenerator).generate(consumer);
-        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ecsa, pe,
-            ec, ee, signer, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
-            translator, scaCertificateGenerator);
-        Set<Long> serials = new HashSet<>();
-        serials.add(cacSerial.getId());
-        File export = e.getEntitlementExport(consumer, serials);
+        Exporter exporter = this.buildExporter();
+        Set<Long> serials = Set.of(cacSerial.getId());
+        File export = exporter.getEntitlementExport(consumer, serials);
 
         // Verify
         assertNotNull(export);

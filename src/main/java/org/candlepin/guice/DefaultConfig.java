@@ -46,8 +46,8 @@ class DefaultConfig extends AbstractModule {
     public void configure() {
         bind(HttpServletDispatcher.class).asEagerSingleton();
         bind(ScriptEngineProvider.class);
+
         bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);
-        bind(SubjectKeyIdentifierWriter.class).to(BouncyCastleSubjectKeyIdentifierWriter.class);
         bind(EntitlementCertServiceAdapter.class).to(DefaultEntitlementCertServiceAdapter.class);
         bind(UserServiceAdapter.class).to(DefaultUserServiceAdapter.class);
         bind(ProductServiceAdapter.class).to(DefaultProductServiceAdapter.class);
@@ -55,5 +55,7 @@ class DefaultConfig extends AbstractModule {
         bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
         bind(CloudRegistrationAdapter.class).to(DefaultCloudRegistrationAdapter.class);
         bind(EventAdapter.class).to(DefaultEventAdapter.class);
+
+        bind(SubjectKeyIdentifierWriter.class).to(BouncyCastleSubjectKeyIdentifierWriter.class);
     }
 }

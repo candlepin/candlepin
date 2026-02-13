@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -35,22 +34,15 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessPayload;
 import org.candlepin.model.Environment;
-import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.SCACertificate;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.OID;
-import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.X509CertificateBuilder;
-import org.candlepin.pki.certs.bc.BouncyCastleX509CertificateBuilder;
 import org.candlepin.pki.huffman.Huffman;
 import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
-import org.candlepin.pki.impl.bc.BouncyCastlePemEncoder;
-import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
-import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
-import org.candlepin.pki.impl.jca.JcaSigner;
-import org.candlepin.test.CertificateReaderForTesting;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.test.X509HuffmanDecodeUtil;
@@ -79,7 +71,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -94,8 +85,9 @@ import java.util.stream.Stream;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
-import javax.inject.Provider;
-
+// TODO: REWRITE THIS TEST SUITE >:(
+// There are *SO MANY* comments calling out the need for a new instance of a UUT because the shared one would
+// be problematic. And if that's the case *DON'T WRITE THE TEST SUITE TO USE SHARED RESOURCES*.
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -103,37 +95,30 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
     @Mock
     private V3CapabilityCheck v3CapabilityCheck;
     private Configuration config;
-    private X509V3ExtensionUtil extensionUtil;
+    private CryptoManager cryptoManager;
+    private X509V3ExtensionUtil v3ExtensionUtil;
     private SCACertificateGenerator generator;
-    private Provider<X509CertificateBuilder> x509CertificateBuilderProvider;
     private BouncyCastleKeyPairGenerator keyPairGenerator;
     private ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
-    void setUp() throws CertificateException, KeyException {
+    void setUp() {
         this.config = TestConfig.defaults();
-        this.extensionUtil = spy(new X509V3ExtensionUtil(
-            this.config, this.entitlementCurator, new Huffman()));
+        this.cryptoManager = CryptoUtil.getCryptoManager(this.config);
+        this.keyPairGenerator = new BouncyCastleKeyPairGenerator(this.cryptoManager, this.keyPairDataCurator);
+        this.v3ExtensionUtil = spy(new X509V3ExtensionUtil(this.config, this.entitlementCurator,
+            new Huffman()));
 
         this.generator = getNewGenerator();
     }
 
-    private SCACertificateGenerator getNewGenerator() throws CertificateException, KeyException {
-        BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
-        keyPairGenerator = new BouncyCastleKeyPairGenerator(
-            securityProvider, mock(KeyPairDataCurator.class));
-
-        CertificateReaderForTesting certificateReader = new CertificateReaderForTesting();
-        this.extensionUtil = spy(new X509V3ExtensionUtil(
-            config, this.entitlementCurator, new Huffman()));
-        SubjectKeyIdentifierWriter subjectKeyIdentifierWriter = new BouncyCastleSubjectKeyIdentifierWriter();
-
-        X509CertificateBuilder builder = new BouncyCastleX509CertificateBuilder(certificateReader,
-            securityProvider, subjectKeyIdentifierWriter);
-        this.x509CertificateBuilderProvider = () -> builder;
-
+    private SCACertificateGenerator getNewGenerator() {
         return new SCACertificateGenerator(
-            this.extensionUtil,
+            this.config,
+            this.cryptoManager,
+            CryptoUtil.getPemEncoder(),
+            this.keyPairGenerator,
+            this.v3ExtensionUtil,
             this.v3CapabilityCheck,
             new EntitlementPayloadGenerator(new ObjectMapper()),
             this.caCertCurator,
@@ -141,13 +126,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             this.certSerialCurator,
             this.contentCurator,
             this.consumerCurator,
-            this.environmentCurator,
-            new BouncyCastlePemEncoder(),
-            keyPairGenerator,
-            new JcaSigner(certificateReader),
-            x509CertificateBuilderProvider,
-            this.config
-        );
+            this.environmentCurator);
     }
 
     private X509Certificate getX509Certificate(SCACertificate container) throws CertificateException {

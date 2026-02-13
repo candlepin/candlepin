@@ -30,6 +30,7 @@ import org.candlepin.config.validation.ConfigurationValidator;
 import org.candlepin.config.validation.IntegerConfigurationValidator;
 import org.candlepin.config.validation.StringConfigurationValidator;
 import org.candlepin.database.MigrationManagementLevel;
+import org.candlepin.pki.SchemeReader;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -252,6 +253,7 @@ public class ConfigProperties {
     // Scheme prefixing and declarations
     public static final String CRYPTO_SCHEMES = "candlepin.crypto.schemes";
     public static final String CRYPTO_DEFAULT_SCHEME = "candlepin.crypto.default_scheme";
+    public static final String CRYPTO_UPSTREAM_CERT_REPO = "candlepin.crypto.upstream_certificate_repo";
 
     public static final String CRYPTO_SCHEME_PREFIX = "candlepin.crypto.scheme.";
     public static final String CRYPTO_SCHEME_CERT = "cert";
@@ -436,6 +438,9 @@ public class ConfigProperties {
             this.put(JWT_ISSUER, "Candlepin");
             this.put(JWT_TOKEN_TTL, "600"); // seconds
             this.put(ANON_JWT_TOKEN_TTL, "172800"); // seconds
+
+            // Default to the legacy crypto scheme
+            this.put(CRYPTO_SCHEMES, SchemeReader.LEGACY_SCHEME);
 
             this.put(LEGACY_CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
             this.put(LEGACY_CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");

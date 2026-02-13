@@ -33,7 +33,8 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.SCACertificate;
-import org.candlepin.pki.Signer;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
 import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.policy.js.export.ExportRules;
@@ -88,7 +89,7 @@ public class Exporter {
     private final ConsumerTypeCurator consumerTypeCurator;
     private final EntitlementCertServiceAdapter entCertAdapter;
     private final EntitlementCurator entitlementCurator;
-    private final Signer signer;
+    private final CryptoManager cryptoManager;
     private final Configuration config;
     private final ExportRules exportRules;
     private final PrincipalProvider principalProvider;
@@ -96,13 +97,16 @@ public class Exporter {
     private final SCACertificateGenerator scaCertificateGenerator;
     private final SyncUtils syncUtils;
 
+    // Temporary
+    private final Scheme scheme;
+
     @Inject
     public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
         ConsumerExporter consumerExporter, ConsumerTypeExporter consumerType,
         RulesExporter rules,
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter,
-        Signer signer, Configuration config, ExportRules exportRules,
+        CryptoManager cryptoManager, Configuration config, ExportRules exportRules,
         PrincipalProvider principalProvider, DistributorVersionCurator distVerCurator,
         DistributorVersionExporter distVerExporter,
         CdnCurator cdnCurator,
@@ -121,7 +125,7 @@ public class Exporter {
         this.productExporter = Objects.requireNonNull(productExporter);
         this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
         this.entExporter = Objects.requireNonNull(entExporter);
-        this.signer = Objects.requireNonNull(signer);
+        this.cryptoManager = Objects.requireNonNull(cryptoManager);
         this.config = Objects.requireNonNull(config);
         this.exportRules = Objects.requireNonNull(exportRules);
         this.principalProvider = Objects.requireNonNull(principalProvider);
@@ -133,6 +137,9 @@ public class Exporter {
         this.mapper = Objects.requireNonNull(mapper);
         this.translator = Objects.requireNonNull(translator);
         this.scaCertificateGenerator = Objects.requireNonNull(scaCertificateGenerator);
+
+        // Temporary measure to get a scheme; this should be determined on a per-op basis
+        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
     }
 
     /**
@@ -204,9 +211,10 @@ public class Exporter {
             "Candlepin export for " + consumer.getUuid());
 
         try (InputStream archiveInputStream = new FileInputStream(archive)) {
-            File signedArchive = createSignedZipArchive(
-                tempDir, archive, exportFileName,
-                this.signer.sign(archiveInputStream),
+            byte[] signature = this.cryptoManager.getSigner(this.scheme)
+                .sign(archiveInputStream);
+
+            File signedArchive = this.createSignedZipArchive(tempDir, archive, exportFileName, signature,
                 "signed Candlepin export for " + consumer.getUuid());
 
             log.debug("Returning file: {}", archive.getAbsolutePath());

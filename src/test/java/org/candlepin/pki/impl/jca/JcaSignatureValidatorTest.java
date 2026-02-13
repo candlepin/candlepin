@@ -47,7 +47,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+// TODO: Make this test suite generic, and the specific implementation provider a subclass thing. Whatever.
+// Basically, like the PrivateKeyReaderTest.
 
+// TODO: Update this test suite to no longer use the ExtScheme wrapper. It was written before Scheme had the
+// private key field and is no longer necessary.
 
 public class JcaSignatureValidatorTest {
 
@@ -123,7 +127,7 @@ public class JcaSignatureValidatorTest {
     }
 
     private static JcaSignatureValidator buildValidator(ExtScheme scheme) {
-        return new JcaSignatureValidator(toStandardScheme(scheme));
+        return new JcaSignatureValidator(CryptoUtil.getSecurityProvider(), toStandardScheme(scheme));
     }
 
     private static File generateTempFile(String data) throws IOException {
@@ -163,14 +167,26 @@ public class JcaSignatureValidatorTest {
     @MethodSource("schemeSource")
     public void testConstructionRetainsScheme(ExtScheme scheme) throws Exception {
         Scheme expected = toStandardScheme(scheme);
-        SignatureValidator validator = new JcaSignatureValidator(expected);
+        SignatureValidator validator = new JcaSignatureValidator(CryptoUtil.getSecurityProvider(), expected);
 
-        assertEquals(validator.getSignatureScheme(), expected);
+        assertEquals(validator.getCryptoScheme(), expected);
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testConstructionRequiresSecurityProvider(ExtScheme extscheme) throws Exception {
+        Scheme scheme = toStandardScheme(extscheme);
+
+        // This could be a NPE or IllegalArgumentException depending on the underlying implementation.
+        assertThrows(NullPointerException.class, () -> new JcaSignatureValidator(null, scheme));
     }
 
     @Test
     public void testConstructionRequiresScheme() throws Exception {
-        assertThrows(IllegalArgumentException.class, () -> new JcaSignatureValidator(null));
+        java.security.Provider provider = CryptoUtil.getSecurityProvider();
+
+        // This could be a NPE or IllegalArgumentException depending on the underlying implementation.
+        assertThrows(NullPointerException.class, () -> new JcaSignatureValidator(provider, null));
     }
 
     @ParameterizedTest

@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.config.Configuration;
 import org.candlepin.config.TestConfig;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -30,15 +31,10 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.KeyPairGenerator;
-import org.candlepin.pki.PemEncoder;
-import org.candlepin.pki.X509CertificateBuilder;
-import org.candlepin.pki.certs.bc.BouncyCastleX509CertificateBuilder;
 import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
-import org.candlepin.pki.impl.bc.BouncyCastlePemEncoder;
-import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
-import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
-import org.candlepin.test.CertificateReaderForTesting;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -47,31 +43,31 @@ import org.junit.jupiter.api.Test;
 import java.security.KeyException;
 import java.security.cert.CertificateException;
 
+// TODO: Rewrite this test suite
+
 class IdentityCertificateGeneratorTest {
     private IdentityCertificateCurator identityCertificateCurator;
     private CertificateSerialCurator serialCurator;
-    private X509CertificateBuilder certificateBuilder;
     private IdentityCertificateGenerator identityCertificateGenerator;
 
     @BeforeEach
     public void setUp() throws CertificateException, KeyException {
-        BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
-        KeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(
-            securityProvider, mock(KeyPairDataCurator.class));
-        PemEncoder pemEncoder = new BouncyCastlePemEncoder();
+        Configuration config = TestConfig.defaults();
+
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(config);
+        KeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(cryptoManager,
+            mock(KeyPairDataCurator.class));
+
         this.identityCertificateCurator = mock(IdentityCertificateCurator.class);
         this.serialCurator = mock(CertificateSerialCurator.class);
-        this.certificateBuilder = new BouncyCastleX509CertificateBuilder(
-            new CertificateReaderForTesting(), securityProvider,
-            new BouncyCastleSubjectKeyIdentifierWriter());
+
         this.identityCertificateGenerator = new IdentityCertificateGenerator(
-            TestConfig.defaults(),
-            pemEncoder,
+            config,
+            cryptoManager,
+            CryptoUtil.getPemEncoder(),
             keyPairGenerator,
             this.identityCertificateCurator,
-            this.serialCurator,
-            () -> this.certificateBuilder
-        );
+            this.serialCurator);
     }
 
     @Test

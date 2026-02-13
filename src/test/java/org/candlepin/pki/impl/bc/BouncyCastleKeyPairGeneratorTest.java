@@ -28,7 +28,9 @@ import static org.mockito.Mockito.doAnswer;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.KeyPairData;
 import org.candlepin.model.KeyPairDataCurator;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.KeyPairGenerator;
+import org.candlepin.test.CryptoUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,23 +43,30 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
 
+// TODO: Rewrite this test suite >:(
+
 class BouncyCastleKeyPairGeneratorTest {
+    private CryptoManager cryptoManager;
     private KeyPairDataCurator keypairCurator;
-    private BouncyCastleSecurityProvider securityProvider;
 
     @BeforeEach
     void setUp() {
+        this.cryptoManager = CryptoUtil.getCryptoManager();
         this.keypairCurator = Mockito.mock(KeyPairDataCurator.class);
-        this.securityProvider = new BouncyCastleSecurityProvider();
+
         doAnswer(returnsFirstArg()).when(this.keypairCurator).merge(any());
         doAnswer(returnsFirstArg()).when(this.keypairCurator).create(any());
         doAnswer(returnsFirstArg()).when(this.keypairCurator).create(any(), anyBoolean());
     }
 
+    private KeyPairGenerator buildKeyPairGenerator() {
+        return new BouncyCastleKeyPairGenerator(this.cryptoManager, this.keypairCurator);
+    }
+
     @Test
     public void testGenerateKeyPair() {
-        KeyPairGenerator generator = new BouncyCastleKeyPairGenerator(
-            this.securityProvider, this.keypairCurator);
+        KeyPairGenerator generator = this.buildKeyPairGenerator();
+
         KeyPair keypair = generator.generateKeyPair();
         assertNotNull(keypair);
 
@@ -75,8 +84,8 @@ class BouncyCastleKeyPairGeneratorTest {
 
     @Test
     public void testGetConsumerKeyPair() {
-        KeyPairGenerator generator = new BouncyCastleKeyPairGenerator(
-            this.securityProvider, this.keypairCurator);
+        KeyPairGenerator generator = this.buildKeyPairGenerator();
+
         Consumer consumer = new Consumer();
         assertNull(consumer.getKeyPairData());
 
@@ -102,8 +111,8 @@ class BouncyCastleKeyPairGeneratorTest {
 
     @Test
     public void testGetConsumerKeyPairRepeatsOutputForConsumer() {
-        KeyPairGenerator generator = new BouncyCastleKeyPairGenerator(
-            this.securityProvider, this.keypairCurator);
+        KeyPairGenerator generator = this.buildKeyPairGenerator();
+
         Consumer consumer = new Consumer();
         assertNull(consumer.getKeyPairData());
 
@@ -133,8 +142,8 @@ class BouncyCastleKeyPairGeneratorTest {
 
     @Test
     public void testGetConsumerKeyPairConvertsLegacySerializedKeyPairs() throws Exception {
-        KeyPairGenerator generator = new BouncyCastleKeyPairGenerator(
-            this.securityProvider, this.keypairCurator);
+        KeyPairGenerator generator = this.buildKeyPairGenerator();
+
         KeyPair keypair = generator.generateKeyPair();
         byte[] serializedPublicKey = this.serializeObject(keypair.getPublic());
         byte[] serializedPrivateKey = this.serializeObject(keypair.getPrivate());
@@ -153,7 +162,7 @@ class BouncyCastleKeyPairGeneratorTest {
         // but the keys themselves should remain unchanged
         kpdata = consumer.getKeyPairData();
         assertNotNull(kpdata);
-        assertEquals("RSA:4096", kpdata.getAlgorithm());
+        assertEquals("RSA", kpdata.getAlgorithm());
         assertFalse(Arrays.equals(serializedPublicKey, kpdata.getPublicKeyData()));
         assertFalse(Arrays.equals(serializedPrivateKey, kpdata.getPrivateKeyData()));
         assertArrayEquals(keypair.getPublic().getEncoded(), converted.getPublic().getEncoded());
@@ -166,8 +175,8 @@ class BouncyCastleKeyPairGeneratorTest {
 
     @Test
     public void testGetConsumerKeyPairRegeneratesMalformedKeyPairs() {
-        KeyPairGenerator generator = new BouncyCastleKeyPairGenerator(
-            this.securityProvider, this.keypairCurator);
+        KeyPairGenerator generator = this.buildKeyPairGenerator();
+
         byte[] publicKeyBytes = "bad_public_key".getBytes();
         byte[] privateKeyBytes = "bad_private_key".getBytes();
 
@@ -187,7 +196,7 @@ class BouncyCastleKeyPairGeneratorTest {
         // generated key pair
         kpdata = consumer.getKeyPairData();
         assertNotNull(kpdata);
-        assertEquals("RSA:4096", kpdata.getAlgorithm());
+        assertEquals("RSA", kpdata.getAlgorithm());
         assertFalse(Arrays.equals(publicKeyBytes, kpdata.getPublicKeyData()));
         assertFalse(Arrays.equals(privateKeyBytes, kpdata.getPrivateKeyData()));
 

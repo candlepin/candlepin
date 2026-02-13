@@ -30,6 +30,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
+
 /**
  * Mutable implementation of configuration for easier testing without smallrye dependency.
  */
@@ -37,7 +38,7 @@ public class DevConfig implements Configuration {
     private final Map<String, String> config;
 
     public DevConfig() {
-        this(new HashMap<>());
+        this.config = new HashMap<>();
     }
 
     public DevConfig(Map<String, String> config) {
@@ -58,12 +59,32 @@ public class DevConfig implements Configuration {
         return result;
     }
 
-    public void setProperty(String key, String value) {
+    public DevConfig setProperty(String key, String value) {
         this.config.put(key, value);
+        return this;
     }
 
-    public void clearProperty(String key) {
+    public DevConfig setPropertiesFrom(Map<String, String> source) {
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
+
+        this.config.putAll(source);
+        return this;
+    }
+
+    public DevConfig setPropertiesFrom(DevConfig source) {
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
+
+        this.config.putAll(source.config);
+        return this;
+    }
+
+    public DevConfig clearProperty(String key) {
         this.config.remove(key);
+        return this;
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2025 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -16,6 +16,7 @@ package org.candlepin.pki;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.Optional;
 
 
 
@@ -23,7 +24,7 @@ import java.security.cert.X509Certificate;
  * A cryptographic algorithm scheme used for signature operations.
  *
  * @param name
- *  the name of the signature scheme
+ *  the name of the cryptographic scheme
  *
  * @param certificate
  *  the certificate to use for cryptographic operations
@@ -47,11 +48,11 @@ public record Scheme(
     String name,
 
     X509Certificate certificate,
-    PrivateKey privateKey,
+    Optional<PrivateKey> privateKey,
 
     String signatureAlgorithm,
     String keyAlgorithm,
-    Integer keySize
+    Optional<Integer> keySize
 ) {
     public Scheme {
         if (name == null || name.isBlank()) {
@@ -62,12 +63,20 @@ public record Scheme(
             throw new IllegalArgumentException("certificate is null");
         }
 
+        if (privateKey == null) {
+            throw new IllegalArgumentException("privateKey is null");
+        }
+
         if (signatureAlgorithm == null || signatureAlgorithm.isBlank()) {
             throw new IllegalArgumentException("signatureAlgorithm is null or empty");
         }
 
         if (keyAlgorithm == null || keyAlgorithm.isBlank()) {
             throw new IllegalArgumentException("keyAlgorithm is null or empty");
+        }
+
+        if (keySize == null) {
+            throw new IllegalArgumentException("keySize is null");
         }
     }
 
@@ -116,22 +125,24 @@ public record Scheme(
         }
 
         public Scheme build() {
-            return new Scheme(this.name, this.certificate, this.privateKey, this.signatureAlgorithm,
-                this.keyAlgorithm, this.keySize);
+            return new Scheme(this.name, this.certificate, Optional.ofNullable(this.privateKey),
+                this.signatureAlgorithm, this.keyAlgorithm, Optional.ofNullable(this.keySize));
         }
-
     }
 
     @Override
     public String toString() {
-        PrivateKey pkey = this.privateKey();
-        String keyInfo = pkey != null ? String.format("<%s key>", pkey.getAlgorithm()) : "-null-";
+        String pkeyInfo = this.privateKey()
+            .map(key -> String.format("<%s key>", key.getAlgorithm()))
+            .orElse("-null-");
 
-        X509Certificate cert = this.certificate();
-        String certInfo = cert != null ? cert.getSerialNumber().toString() : "-null-";
+        String keySize = this.keySize()
+            .map(Object::toString)
+            .orElse("-null-");
 
         return String.format("Scheme [name: %s, pkey: %s, cert: %s, sigAlgo: %s, keyAlgo: %s, keySize: %s]",
-            this.name(), keyInfo, certInfo, this.signatureAlgorithm(), this.keyAlgorithm(), this.keySize());
+            this.name(), pkeyInfo, this.certificate().getSerialNumber(), this.signatureAlgorithm(),
+            this.keyAlgorithm(), keySize);
     }
 
 }

@@ -14,7 +14,6 @@
  */
 package org.candlepin.pki.impl.jca;
 
-import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.Scheme;
 import org.candlepin.pki.SignatureException;
 import org.candlepin.pki.Signer;
@@ -26,7 +25,6 @@ import java.io.InputStream;
 import java.security.Signature;
 import java.util.Objects;
 
-import javax.inject.Inject;
 
 
 /**
@@ -38,46 +36,29 @@ public class JcaSigner implements Signer {
     // Size of the byte buffer to use to consume blocks of data from input streams
     private static final int BUFFER_SIZE = 4096;
 
-    private static final String SIGNATURE_SCHEME_NAME = "rsa";
-    private static final String KEY_ALGORITHM = "rsa";
-    private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
+    private final java.security.Provider securityProvider;
+    private final Scheme scheme;
 
-    private final CertificateReader certificateAuthority;
-    private final Scheme signatureScheme;
+    public JcaSigner(java.security.Provider securityProvider, Scheme scheme) {
+        this.securityProvider = Objects.requireNonNull(securityProvider);
+        this.scheme = Objects.requireNonNull(scheme);
 
-    // TODO: This constructor will be replaced when the CertificateAuthority is implemented
-
-    @Inject
-    public JcaSigner(CertificateReader reader) {
-        this.certificateAuthority = Objects.requireNonNull(reader);
-
-        this.signatureScheme = new Scheme.Builder()
-            .setName(SIGNATURE_SCHEME_NAME)
-            .setPrivateKey(this.certificateAuthority.getCaKey())
-            .setCertificate(this.certificateAuthority.getCACert())
-            .setSignatureAlgorithm(SIGNATURE_ALGORITHM)
-            .setKeyAlgorithm(KEY_ALGORITHM)
-            .setKeySize(4096)
-            .build();
+        if (this.scheme.privateKey().isEmpty()) {
+            throw new IllegalStateException("scheme does not include a private key");
+        }
     }
 
     @Override
-    public Scheme getSignatureScheme() {
-        return this.signatureScheme;
+    public Scheme getCryptoScheme() {
+        return this.scheme;
     }
 
-    /**
-     * Compute a SHA256withRSA digital signature on an inputStream.  The digest is signed
-     * with the CA key retrieved using CertificateReader.
-     *
-     * @param input an input stream to sign
-     * @return a byte array of the SHA256withRSA digital signature
-     */
     @Override
     public byte[] sign(InputStream input) {
         try {
-            Signature signature = Signature.getInstance(this.signatureScheme.signatureAlgorithm());
-            signature.initSign(this.certificateAuthority.getCaKey());
+            Signature signature = Signature.getInstance(this.scheme.signatureAlgorithm(),
+                this.securityProvider);
+            signature.initSign(this.scheme.privateKey().get());
 
             byte[] bytes = new byte[BUFFER_SIZE];
             int read;
@@ -96,8 +77,10 @@ public class JcaSigner implements Signer {
     @Override
     public byte[] sign(byte[] data) {
         try {
-            Signature signature = Signature.getInstance(this.signatureScheme.signatureAlgorithm());
-            signature.initSign(this.certificateAuthority.getCaKey());
+            Signature signature = Signature.getInstance(this.scheme.signatureAlgorithm(),
+                this.securityProvider);
+            signature.initSign(this.scheme.privateKey().get());
+
             signature.update(data);
 
             return signature.sign();

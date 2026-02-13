@@ -18,13 +18,9 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.ConfigurationException;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.security.KeyException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -64,16 +60,14 @@ public class SchemeReader {
     public static final String DEFAULT_DEFAULT_SCHEME = LEGACY_SCHEME;
 
     private final Configuration config;
-    private final PrivateKeyReader pkreader;
-
-    private final CertificateFactory certificateFactory;
+    private final PrivateKeyReader keyReader;
+    private final CertificateReader certReader;
 
     @Inject
-    public SchemeReader(Configuration config, PrivateKeyReader pkreader) throws CertificateException {
+    public SchemeReader(Configuration config, PrivateKeyReader keyReader, CertificateReader certReader) {
         this.config = Objects.requireNonNull(config);
-        this.pkreader = Objects.requireNonNull(pkreader);
-
-        this.certificateFactory = CertificateFactory.getInstance("X.509");
+        this.keyReader = Objects.requireNonNull(keyReader);
+        this.certReader = Objects.requireNonNull(certReader);
     }
 
     /**
@@ -89,12 +83,12 @@ public class SchemeReader {
      * @return
      *  an X509Certificate generated from the specified file path
      */
-    private X509Certificate loadCertificate(String path) {
-        try (InputStream istream = new FileInputStream(path)) {
-            return (X509Certificate) this.certificateFactory.generateCertificate(istream);
+    private X509Certificate readCertificate(String path) {
+        try {
+            return this.certReader.read(path);
         }
-        catch (CertificateException | IOException e) {
-            throw new ConfigurationException("Unable to load certificate at path: " + path, e);
+        catch (CertificateException e) {
+            throw new ConfigurationException("Unable to read certificate at path: " + path, e);
         }
     }
 
@@ -111,12 +105,12 @@ public class SchemeReader {
      * @return
      *  a PrivateKey generated from the specified file path
      */
-    private PrivateKey loadPrivateKey(String path, String password) {
+    private PrivateKey readPrivateKey(String path, String password) {
         try {
-            return this.pkreader.read(path, password);
+            return this.keyReader.read(path, password);
         }
         catch (KeyException e) {
-            throw new ConfigurationException("Unable to load private key at path: " + path, e);
+            throw new ConfigurationException("Unable to read private key at path: " + path, e);
         }
     }
 
@@ -124,7 +118,7 @@ public class SchemeReader {
         String path = this.config.getString(ConfigProperties.schemeConfig(schemeName,
             ConfigProperties.CRYPTO_SCHEME_CERT));
 
-        return this.loadCertificate(path);
+        return this.readCertificate(path);
     }
 
     private PrivateKey readSchemeKey(String schemeName) {
@@ -134,7 +128,7 @@ public class SchemeReader {
         Optional<String> password = this.config.getOptionalString(ConfigProperties.schemeConfig(schemeName,
             ConfigProperties.CRYPTO_SCHEME_KEY_PASSWORD));
 
-        return this.loadPrivateKey(path, password.orElse(null));
+        return this.readPrivateKey(path, password.orElse(null));
     }
 
     private String readSchemeSignatureAlgorithm(String schemeName) {
@@ -191,17 +185,38 @@ public class SchemeReader {
 
         return new Scheme.Builder()
             .setName(LEGACY_SCHEME)
-            .setCertificate(this.loadCertificate(certPath))
-            .setPrivateKey(this.loadPrivateKey(keyPath, keyPass.orElse(null)))
+            .setCertificate(this.readCertificate(certPath))
+            .setPrivateKey(this.readPrivateKey(keyPath, keyPass.orElse(null)))
             .setSignatureAlgorithm(signatureAlgorithm)
             .setKeyAlgorithm(keyAlgorithm)
             .setKeySize(keySize)
             .build();
     }
 
+    /**
+     * Reads a single scheme from the configuration by name. If the scheme is not defined in the
+     * configuration or otherwise cannot be loaded, this method throws an exception. This method never returns
+     * null.
+     *
+     * @param schemeName
+     *  the name of the scheme to read from the backing configuration; cannot be null or empty
+     *
+     * @throws IllegalArgumentException
+     *  if the given scheme name is null or empty
+     *
+     * @throws ConfigurationException
+     *  if the scheme cannot be read from the configuration
+     *
+     * @return
+     *  a scheme instance
+     */
     private Scheme readScheme(String schemeName) {
+        if (schemeName == null || schemeName.isBlank()) {
+            throw new IllegalArgumentException("schemeName is null or empty");
+        }
+
         try {
-            // If we're attempting to load the legacy scheme
+            // If we're attempting to load the legacy scheme, jump to the specialized legacy scheme loader
             if (LEGACY_SCHEME.equalsIgnoreCase(schemeName)) {
                 return this.readLegacyScheme();
             }
@@ -216,7 +231,7 @@ public class SchemeReader {
                 .build();
         }
         catch (NoSuchElementException e) {
-            throw new ConfigurationException("Unable to load scheme: " + schemeName, e);
+            throw new ConfigurationException("Unable to read scheme: " + schemeName, e);
         }
     }
 
