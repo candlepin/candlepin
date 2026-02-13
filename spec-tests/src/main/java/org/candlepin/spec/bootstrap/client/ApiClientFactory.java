@@ -53,6 +53,29 @@ import okhttp3.tls.HeldCertificate;
 public class ApiClientFactory {
     private static final Logger log = LoggerFactory.getLogger(ApiClientFactory.class);
 
+    static {
+        // Register BouncyCastle security providers for ML-DSA support
+        try {
+            // Enable ML-DSA signature schemes for TLS 1.3
+            // ML-DSA is disabled by default in BC JSSE, so we explicitly enable it
+            System.setProperty("jdk.tls.client.SignatureSchemes",
+                "mldsa65,mldsa87,mldsa44,ed25519,ed448," +
+                "ecdsa_secp256r1_sha256,ecdsa_secp384r1_sha384,ecdsa_secp521r1_sha512," +
+                "rsa_pss_rsae_sha256,rsa_pss_rsae_sha384,rsa_pss_rsae_sha512");
+
+            java.security.Security.addProvider(
+                new org.bouncycastle.jce.provider.BouncyCastleProvider());
+            java.security.Security.addProvider(
+                new org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider());
+            java.security.Security.addProvider(
+                new org.bouncycastle.jsse.provider.BouncyCastleJsseProvider());
+            log.info("BouncyCastle security providers registered for ML-DSA support");
+        }
+        catch (Exception e) {
+            log.error("Failed to register BouncyCastle providers", e);
+        }
+    }
+
     private static final TrustManager[] TRUST_ALL_CERTS = {new TrustAllManager()};
 
     private static PropertiesConfiguration properties;
@@ -195,7 +218,9 @@ public class ApiClientFactory {
 
     private SSLContext getSslContext(TrustManager[] trustAllCerts) {
         try {
-            final SSLContext sslContext = SSLContext.getInstance("TLSv1.3");
+            // Use BouncyCastle JSSE provider with TLS 1.3 for ML-DSA support
+            // ML-DSA signature schemes are only supported in TLS 1.3 (per draft-ietf-tls-mldsa-00)
+            final SSLContext sslContext = SSLContext.getInstance("TLSv1.3", "BCJSSE");
             sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
             return sslContext;
         }

@@ -16,6 +16,7 @@ dependencies {
     implementation(libs.assertj)
     implementation(libs.bouncycastle.prov)
     implementation(libs.bouncycastle.pkix)
+    implementation(libs.bouncycastle.tls)
     implementation(libs.commons.codec)
     implementation(libs.commons.io)
     implementation(libs.commons.lang)

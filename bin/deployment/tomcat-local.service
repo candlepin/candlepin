@@ -1,0 +1,25 @@
+[Unit]
+Description=Apache Tomcat 9 (Local Installation)
+After=network.target
+
+[Service]
+Type=forking
+
+User=tomcat
+Group=tomcat
+
+Environment="JAVA_HOME=/usr/lib/jvm/jre"
+Environment="CATALINA_BASE=/opt/tomcat"
+Environment="CATALINA_HOME=/opt/tomcat"
+Environment="CATALINA_PID=/opt/tomcat/temp/tomcat.pid"
+Environment="CATALINA_OPTS=-Xms512M -Xmx1024M -server -XX:+UseParallelGC"
+Environment="JAVA_OPTS=-Djava.security.egd=file:///dev/urandom -Djava.awt.headless=true -Xbootclasspath/a:/opt/tomcat/lib/bcprov-jdk18on-1.83.jar:/opt/tomcat/lib/bcpkix-jdk18on-1.83.jar:/opt/tomcat/lib/bcutil-jdk18on-1.83.jar -Djava.security.provider.3=org.bouncycastle.jce.provider.BouncyCastleProvider -Djava.security.provider.4=org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider"
+
+ExecStart=/opt/tomcat/bin/startup.sh
+ExecStop=/opt/tomcat/bin/shutdown.sh
+
+RestartSec=10
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
