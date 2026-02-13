@@ -304,6 +304,7 @@ public class ConfigProperties {
     }
 
     public static final String JWT_CRYPTO_SCHEME = "candlepin.crypto.jwt.scheme";
+    public static final String DEFAULT_JWT_CRYPTO_SCHEME = Algorithm.RS512;
 
     // Legacy crypto configuration
     public static final String LEGACY_CA_KEY = "candlepin.ca_key";
@@ -441,7 +442,7 @@ public class ConfigProperties {
             this.put(DB_MAX_CONNECTION_ATTEMPTS, "3");
 
             this.put(JWT_ISSUER, "Candlepin");
-            this.put(JWT_CRYPTO_SCHEME, Algorithm.RS512);
+            this.put(JWT_CRYPTO_SCHEME, DEFAULT_JWT_CRYPTO_SCHEME);
             this.put(JWT_TOKEN_TTL, "600"); // seconds
             this.put(ANON_JWT_TOKEN_TTL, "172800"); // seconds
 

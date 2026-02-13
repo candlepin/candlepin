@@ -55,7 +55,6 @@ public class CloudAuthTokenGenerator {
     private final String jwtIssuer;
     private final int jwtTokenTTL; // seconds
     private final int anonJwtTokenTTL; // seconds
-    private String algorithm;
 
     private final Scheme scheme;
     private final PublicKey publicKey;
@@ -69,16 +68,15 @@ public class CloudAuthTokenGenerator {
         this.jwtTokenTTL = this.config.getInt(ConfigProperties.JWT_TOKEN_TTL);
         this.anonJwtTokenTTL = this.config.getInt(ConfigProperties.ANON_JWT_TOKEN_TTL);
 
-        // TODO: FIXME: This needs to be updated to be more scheme-aware. This will come in later work, but
-        // for now we'll just use the default/legacy scheme.
-        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
-        this.publicKey = this.scheme.certificate().getPublicKey();
+        String schemeName = this.config.getString(ConfigProperties.JWT_CRYPTO_SCHEME);
+        this.scheme = this.cryptoManager.getCryptoScheme(schemeName)
+            .orElseThrow(() -> new IllegalStateException("unknown scheme name"));
 
+        this.publicKey = this.scheme.certificate().getPublicKey();
         if (this.scheme.privateKey().isEmpty()) {
             throw new IllegalStateException("scheme does not include a private key");
         }
 
-        this.algorithm = this.config.getString(ConfigProperties.JWT_CRYPTO_SCHEME);
     }
 
     /**

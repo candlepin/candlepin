@@ -53,8 +53,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -100,8 +98,8 @@ public class CloudRegistrationAuthTest {
     }
 
     private CloudRegistrationAuth buildAuthProvider() {
-        CloudAuthTokenGenerator generator = new CloudAuthTokenGenerator(this.config, this.certificateReader);
-        return new CloudRegistrationAuth(this.config, this.cryptoManager, this.mockOwnerCurator, generator);
+        CloudAuthTokenGenerator generator = new CloudAuthTokenGenerator(this.config, this.cryptoManager);
+        return new CloudRegistrationAuth(this.config, this.mockOwnerCurator, generator);
     }
 
     private MockHttpRequest buildHttpRequest() {
@@ -117,9 +115,6 @@ public class CloudRegistrationAuthTest {
         // Get the scheme we believe the auth layer will be using. This needs to align with the internal
         // logic of the auth impl under test.
         Scheme scheme = this.cryptoManager.getDefaultCryptoScheme();
-        X509Certificate certificate;
-        PublicKey publicKey;
-        PrivateKey privateKey;
 
         String keyId = KeyUtils.createKeyId(scheme.certificate().getPublicKey());
 

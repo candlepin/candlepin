@@ -23,6 +23,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
 import org.candlepin.test.CryptoUtil;
 import org.candlepin.util.Util;
 
@@ -62,7 +63,6 @@ public class CloudAuthTokenGeneratorTest {
 
     private DevConfig config;
     private CryptoManager cryptoManager;
-    private CertificateReader certificateReader;
     private CloudAuthTokenGenerator tokenGenerator;
     private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -93,7 +93,7 @@ public class CloudAuthTokenGeneratorTest {
     public void testBuildStandardRegistrationTokenWithNonDefaultAlgorithm() {
         String expectedAlgorithm = Algorithm.RS384;
         this.config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME, expectedAlgorithm);
-        CloudAuthTokenGenerator generator = new CloudAuthTokenGenerator(this.config, this.certificateReader);
+        CloudAuthTokenGenerator generator = new CloudAuthTokenGenerator(this.config, this.cryptoManager);
         Principal principal = new UserPrincipal("test_user", null, false);
 
         String token = generator.buildStandardRegistrationToken(principal, "owner-key");
@@ -203,8 +203,8 @@ public class CloudAuthTokenGeneratorTest {
         otherConfig.setProperty(ConfigProperties.LEGACY_CA_KEY, keyFile.getAbsolutePath());
         otherConfig.setProperty(ConfigProperties.LEGACY_CA_KEY_PASSWORD, "password");
 
-        CertificateReader otherReader = new CertificateReader(otherConfig, CryptoUtil.getPrivateKeyReader());
-        CloudAuthTokenGenerator otherTokenGenerator = new CloudAuthTokenGenerator(otherConfig, otherReader);
+        CryptoManager otherCryptoManager = CryptoUtil.getCryptoManager(otherConfig);
+        CloudAuthTokenGenerator otherTokenGenerator =new CloudAuthTokenGenerator(otherConfig, otherCryptoManager);
 
         Principal principal = new UserPrincipal("test-user", null, false);
         String token = otherTokenGenerator.buildStandardRegistrationToken(principal, "owner-key");
@@ -318,20 +318,13 @@ public class CloudAuthTokenGeneratorTest {
     }
 
     private String createTokenFromCACert(JsonWebToken token) {
-        X509Certificate certificate;
-        PublicKey publicKey;
-        PrivateKey privateKey;
+        Scheme scheme = this.cryptoManager.getCryptoScheme(ConfigProperties.DEFAULT_JWT_CRYPTO_SCHEME)
+            .orElseThrow(() -> new RuntimeException("unknown scheme name"));
+        PrivateKey privateKey = scheme.privateKey()
+            .orElseThrow(() -> new RuntimeException("missing private key"));
+        PublicKey publicKey = scheme.certificate().getPublicKey();
 
-        try {
-            certificate = this.certificateReader.getCACert();
-            publicKey = certificate.getPublicKey();
-            privateKey = this.certificateReader.getCaKey();
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Unable to load public and private keys", e);
-        }
-
-        return createToken(privateKey, publicKey, certificate, token);
+        return createToken(privateKey, publicKey, scheme.certificate(), token);
     }
 
     private String createToken(Key privateKey, Key publicKey, X509Certificate certificate,

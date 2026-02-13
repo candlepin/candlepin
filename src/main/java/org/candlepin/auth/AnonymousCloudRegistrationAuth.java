@@ -19,18 +19,12 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
-import org.candlepin.pki.CryptoManager;
-import org.candlepin.pki.Scheme;
 import org.candlepin.resteasy.filter.AuthUtil;
 
 import org.jboss.resteasy.spi.HttpRequest;
-import org.keycloak.TokenVerifier;
-import org.keycloak.common.VerificationException;
-import org.keycloak.representations.JsonWebToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.PublicKey;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -47,33 +41,23 @@ public class AnonymousCloudRegistrationAuth implements AuthProvider {
     private static final String AUTH_TYPE = "Bearer";
 
     private final Configuration config;
-    private final CryptoManager cryptoManager;
     private final AnonymousCloudConsumerCurator anonymousCloudConsumerCurator;
-
-    private final boolean enabled;
-    private final Scheme scheme;
-    private final PublicKey publicKey;
     private final CloudAuthTokenGenerator cloudTokenGenerator;
 
     private final boolean enabled;
 
 
     @Inject
-    public AnonymousCloudRegistrationAuth(Configuration config, CryptoManager cryptoManager,
-        AnonymousCloudConsumerCurator anonymousCloudConsumerCurator,
+    public AnonymousCloudRegistrationAuth(Configuration config,
+            AnonymousCloudConsumerCurator anonymousCloudConsumerCurator,
         CloudAuthTokenGenerator cloudTokenGenerator) {
 
         this.config = Objects.requireNonNull(config);
-        this.cryptoManager = Objects.requireNonNull(cryptoManager);
         this.anonymousCloudConsumerCurator = Objects.requireNonNull(anonymousCloudConsumerCurator);
         this.cloudTokenGenerator = Objects.requireNonNull(cloudTokenGenerator);
 
-        this.enabled = this.config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
-
-        // TODO: FIXME: This needs to be updated to be more scheme-aware. This will come in later work, but
-        // for now we'll just use the default/legacy scheme.
-        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
-        this.publicKey = this.scheme.certificate().getPublicKey();
+        this.enabled = this.config
+            .getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
     }
 
     @Override
