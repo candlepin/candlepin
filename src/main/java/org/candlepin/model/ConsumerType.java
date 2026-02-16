@@ -50,7 +50,8 @@ public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
         PERSON("person", false),
         DOMAIN("domain", false),
         CANDLEPIN("candlepin", true),
-        HYPERVISOR("hypervisor", false);
+        HYPERVISOR("hypervisor", false),
+        AAP("aap", false);
 
         private final String label;
         private final boolean manifest;

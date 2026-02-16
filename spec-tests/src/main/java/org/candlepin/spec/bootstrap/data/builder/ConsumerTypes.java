@@ -17,6 +17,7 @@ package org.candlepin.spec.bootstrap.data.builder;
 import org.candlepin.dto.api.client.v1.ConsumerTypeDTO;
 
 public enum ConsumerTypes {
+    Aap("aap"),
     Candlepin("candlepin"),
     Domain("domain"),
     Hypervisor("hypervisor"),
