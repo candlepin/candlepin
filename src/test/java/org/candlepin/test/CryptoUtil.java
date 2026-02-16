@@ -196,6 +196,27 @@ public class CryptoUtil {
         return getCryptoManager(TestConfig.defaults());
     }
 
+
+    /**
+     * Fetches a {@link SchemeReader} using the specified configuration. If the provided configuration is
+     * null, this function throws an exception;
+     *
+     * @param config
+     *  configuration to use when constructing a scheme reader
+     *
+     * @throws IllegalArgumentException
+     *  if the provided configuration is null
+     *
+     * @return a new scheme reader instance using the provided configurations
+     */
+    public static SchemeReader getSchemeReader(Configuration config) {
+        if (config == null) {
+            throw new IllegalArgumentException("config is null");
+        }
+
+        return new SchemeReader(config, getPrivateKeyReader(), getCertificateReader());
+    }
+
     /**
      * Generates a key pair using the given algorithm and key size
      *

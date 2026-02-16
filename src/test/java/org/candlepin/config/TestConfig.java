@@ -17,6 +17,8 @@ package org.candlepin.config;
 import org.candlepin.pki.Scheme;
 import org.candlepin.test.CryptoUtil;
 
+import org.keycloak.crypto.Algorithm;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.KeyException;
@@ -71,6 +73,11 @@ public final class TestConfig {
             config.setProperty(ConfigProperties.LEGACY_CA_KEY, legacyKeyPath);
             config.setProperty(ConfigProperties.LEGACY_CA_KEY_PASSWORD, LEGACY_CA_KEY_PASSWORD);
             config.setProperty(ConfigProperties.LEGACY_CA_CERT_UPSTREAM, upstreamCertRepo);
+
+            config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_CERT, legacyCertPath);
+            config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY, legacyKeyPath);
+            config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_SIGNATURE_ALGORITHM, "SHA256withRSA");
+            config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY_ALGORITHM, Algorithm.RS512);
 
             // Write other misc configurations...
             config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp");
