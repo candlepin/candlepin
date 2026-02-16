@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
@@ -122,7 +124,6 @@ public class SchemeReaderTest {
     private SchemeReader buildSchemeReader(Configuration config) throws CertificateException {
         return new SchemeReader(config, CryptoUtil.getPrivateKeyReader(), CryptoUtil.getCertificateReader());
     }
-
 
     @ParameterizedTest
     @MethodSource("schemeSource")
@@ -564,6 +565,199 @@ public class SchemeReaderTest {
             .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_ALGORITHM, Scheme::keyAlgorithm)
             .extracting(Scheme::keySize, as(InstanceOfAssertFactories.OPTIONAL))
             .hasValue(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_SIZE);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testReadSchemeWithInvalidConfigurationKeys(String invalidKey) throws Exception {
+        DevConfig config = new DevConfig();
+        SchemeReader reader = this.buildSchemeReader(config);
+
+        // Invalid schema name
+        assertThrows(IllegalArgumentException.class, () -> {
+            reader.readScheme(invalidKey, "cert", "pk", "password", "sig-algo", "key-algo", "key-size");
+        });
+
+        // Invalid configuration key for the certificate
+        assertThrows(IllegalArgumentException.class, () -> {
+            reader.readScheme("name", invalidKey, "pk", "password", "sig-algo", "key-algo", "key-size");
+        });
+
+        // Invalid configuration key for the private key
+        assertThrows(IllegalArgumentException.class, () -> {
+            reader.readScheme("name", "cert", invalidKey, "password", "sig-algo", "key-algo", "key-size");
+        });
+
+        // Invalid configuration key for the signature algorithm
+        assertThrows(IllegalArgumentException.class, () -> {
+            reader.readScheme("name", "cert", "pk", "password", invalidKey, "key-algo", "key-size");
+        });
+
+        // Invalid configuration key for the key algorithm
+        assertThrows(IllegalArgumentException.class, () -> {
+            reader.readScheme("name", "cert", "pk", "password", "sig-algo", invalidKey, "key-size");
+        });
+    }
+
+    @Test
+    public void testReadSchemeUsingConfigurationKeys() throws Exception {
+        DevConfig config = new DevConfig();
+        Scheme scheme = CryptoUtil.generateRsaScheme();
+        String expectedName = TestUtil.randomString("name-");
+        String expectedPassword = TestUtil.randomString("password-");
+
+        File certFile = writeCertToFile(scheme.certificate());
+        File keyFile = writeKeyToFile(scheme.privateKey().get(), expectedPassword);
+
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_CERT, certFile.getAbsolutePath());
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY, keyFile.getAbsolutePath());
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY_PASSWORD, expectedPassword);
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_SIGNATURE_ALGORITHM,
+            scheme.signatureAlgorithm());
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY_ALGORITHM, scheme.keyAlgorithm());
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY_SIZE,
+            String.valueOf(scheme.keySize().get()));
+
+        SchemeReader reader = this.buildSchemeReader(config);
+
+        Scheme actual = reader.readScheme(expectedName,
+            ConfigProperties.JWT_CRYPTO_SCHEME_CERT,
+            ConfigProperties.JWT_CRYPTO_SCHEME_KEY,
+            ConfigProperties.JWT_CRYPTO_SCHEME_KEY_PASSWORD,
+            ConfigProperties.JWT_CRYPTO_SCHEME_SIGNATURE_ALGORITHM,
+            ConfigProperties.JWT_CRYPTO_SCHEME_KEY_ALGORITHM,
+            ConfigProperties.JWT_CRYPTO_SCHEME_KEY_SIZE);
+
+        assertThat(actual)
+            .isNotNull()
+            .returns(expectedName, Scheme::name)
+            .returns(scheme.certificate(), Scheme::certificate)
+            .returns(scheme.privateKey(), Scheme::privateKey)
+            .returns(scheme.signatureAlgorithm(), Scheme::signatureAlgorithm)
+            .returns(scheme.keyAlgorithm(), Scheme::keyAlgorithm)
+            .returns(scheme.keySize(), Scheme::keySize);
+    }
+
+    @Test
+    public void testReadSchemeUsingConfigurationKeysWithNullPasswordKey() throws Exception {
+        DevConfig config = new DevConfig();
+        Scheme scheme = CryptoUtil.generateRsaScheme();
+        String expectedName = TestUtil.randomString("name-");
+
+        File certFile = writeCertToFile(scheme.certificate());
+        File keyFile = writeKeyToFile(scheme.privateKey().get(), null);
+
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_CERT, certFile.getAbsolutePath());
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY, keyFile.getAbsolutePath());
+        config.clearProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY_PASSWORD);
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_SIGNATURE_ALGORITHM,
+            scheme.signatureAlgorithm());
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY_ALGORITHM, scheme.keyAlgorithm());
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY_SIZE,
+            String.valueOf(scheme.keySize().get()));
+
+        SchemeReader reader = this.buildSchemeReader(config);
+
+        Scheme actual = reader.readScheme(expectedName,
+            ConfigProperties.JWT_CRYPTO_SCHEME_CERT,
+            ConfigProperties.JWT_CRYPTO_SCHEME_KEY,
+            null,
+            ConfigProperties.JWT_CRYPTO_SCHEME_SIGNATURE_ALGORITHM,
+            ConfigProperties.JWT_CRYPTO_SCHEME_KEY_ALGORITHM,
+            ConfigProperties.JWT_CRYPTO_SCHEME_KEY_SIZE);
+
+        assertThat(actual)
+            .isNotNull()
+            .returns(expectedName, Scheme::name)
+            .returns(scheme.certificate(), Scheme::certificate)
+            .returns(scheme.privateKey(), Scheme::privateKey)
+            .returns(scheme.signatureAlgorithm(), Scheme::signatureAlgorithm)
+            .returns(scheme.keyAlgorithm(), Scheme::keyAlgorithm)
+            .returns(scheme.keySize(), Scheme::keySize);
+    }
+
+    @Test
+    public void testReadSchemeUsingConfigurationKeysWithNullKeySizeKey() throws Exception {
+        DevConfig config = new DevConfig();
+        Scheme scheme = CryptoUtil.generateRsaScheme();
+        String expectedName = TestUtil.randomString("name-");
+        String expectedPassword = TestUtil.randomString("password-");
+
+        File certFile = writeCertToFile(scheme.certificate());
+        File keyFile = writeKeyToFile(scheme.privateKey().get(), expectedPassword);
+
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_CERT, certFile.getAbsolutePath());
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY, keyFile.getAbsolutePath());
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY_PASSWORD, expectedPassword);
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_SIGNATURE_ALGORITHM,
+            scheme.signatureAlgorithm());
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY_ALGORITHM, scheme.keyAlgorithm());
+        config.clearProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY_SIZE);
+
+        SchemeReader reader = this.buildSchemeReader(config);
+
+        Scheme actual = reader.readScheme(expectedName,
+            ConfigProperties.JWT_CRYPTO_SCHEME_CERT,
+            ConfigProperties.JWT_CRYPTO_SCHEME_KEY,
+            ConfigProperties.JWT_CRYPTO_SCHEME_KEY_PASSWORD,
+            ConfigProperties.JWT_CRYPTO_SCHEME_SIGNATURE_ALGORITHM,
+            ConfigProperties.JWT_CRYPTO_SCHEME_KEY_ALGORITHM,
+            null);
+
+        assertThat(actual)
+            .isNotNull()
+            .returns(expectedName, Scheme::name)
+            .returns(scheme.certificate(), Scheme::certificate)
+            .returns(scheme.privateKey(), Scheme::privateKey)
+            .returns(scheme.signatureAlgorithm(), Scheme::signatureAlgorithm)
+            .returns(scheme.keyAlgorithm(), Scheme::keyAlgorithm)
+            .extracting(Scheme::keySize, as(InstanceOfAssertFactories.OPTIONAL))
+            .isEmpty();
+    }
+
+    public static Stream<Arguments> requiredConfigurationKeysSource() {
+        return Stream.of(
+            Arguments.of(ConfigProperties.JWT_CRYPTO_SCHEME_CERT),
+            Arguments.of(ConfigProperties.JWT_CRYPTO_SCHEME_KEY),
+            Arguments.of(ConfigProperties.JWT_CRYPTO_SCHEME_SIGNATURE_ALGORITHM),
+            Arguments.of(ConfigProperties.JWT_CRYPTO_SCHEME_KEY_ALGORITHM)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("requiredConfigurationKeysSource")
+    public void testReadSchemeUsingConfigurationKeysWithMissingRequiredConfig(String key) throws Exception {
+        DevConfig config = new DevConfig();
+        Scheme scheme = CryptoUtil.generateRsaScheme();
+        String expectedName = TestUtil.randomString("name-");
+        String expectedPassword = TestUtil.randomString("password-");
+
+        File certFile = writeCertToFile(scheme.certificate());
+        File keyFile = writeKeyToFile(scheme.privateKey().get(), expectedPassword);
+
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_CERT, certFile.getAbsolutePath());
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY, keyFile.getAbsolutePath());
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY_PASSWORD, expectedPassword);
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_SIGNATURE_ALGORITHM,
+            scheme.signatureAlgorithm());
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY_ALGORITHM, scheme.keyAlgorithm());
+        config.setProperty(ConfigProperties.JWT_CRYPTO_SCHEME_KEY_SIZE,
+            String.valueOf(scheme.keySize().get()));
+
+        // Clear the required configuration property
+        config.clearProperty(key);
+
+        SchemeReader reader = this.buildSchemeReader(config);
+
+        assertThrows(ConfigurationException.class, () -> {
+            reader.readScheme(expectedName,
+                ConfigProperties.JWT_CRYPTO_SCHEME_CERT,
+                ConfigProperties.JWT_CRYPTO_SCHEME_KEY,
+                ConfigProperties.JWT_CRYPTO_SCHEME_KEY_PASSWORD,
+                ConfigProperties.JWT_CRYPTO_SCHEME_SIGNATURE_ALGORITHM,
+                ConfigProperties.JWT_CRYPTO_SCHEME_KEY_ALGORITHM,
+                ConfigProperties.JWT_CRYPTO_SCHEME_KEY_SIZE);
+        });
     }
 
 }

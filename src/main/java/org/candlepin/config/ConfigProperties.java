@@ -30,7 +30,10 @@ import org.candlepin.config.validation.ConfigurationValidator;
 import org.candlepin.config.validation.IntegerConfigurationValidator;
 import org.candlepin.config.validation.StringConfigurationValidator;
 import org.candlepin.database.MigrationManagementLevel;
+import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.pki.SchemeReader;
+
+import org.keycloak.crypto.Algorithm;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -300,6 +303,14 @@ public class ConfigProperties {
             .toString();
     }
 
+    public static final String JWT_CRYPTO_SCHEME_CERT = "candlepin.crypto.jwt.scheme.cert";
+    public static final String JWT_CRYPTO_SCHEME_KEY = "candlepin.crypto.jwt.scheme.key";
+    public static final String JWT_CRYPTO_SCHEME_KEY_PASSWORD = "candlepin.crypto.jwt.scheme.key_password";
+    public static final String JWT_CRYPTO_SCHEME_SIGNATURE_ALGORITHM =
+        "candlepin.crypto.jwt.scheme.signature_algorithm";
+    public static final String JWT_CRYPTO_SCHEME_KEY_ALGORITHM = "candlepin.crypto.jwt.scheme.key_algorithm";
+    public static final String JWT_CRYPTO_SCHEME_KEY_SIZE = "candlepin.crypto.jwt.scheme.key_size";
+
     // Legacy crypto configuration
     public static final String LEGACY_CA_KEY = "candlepin.ca_key";
     public static final String LEGACY_CA_CERT = "candlepin.ca_cert";
@@ -441,6 +452,11 @@ public class ConfigProperties {
 
             // Default to the legacy crypto scheme
             this.put(CRYPTO_SCHEMES, SchemeReader.LEGACY_SCHEME);
+
+            this.put(JWT_CRYPTO_SCHEME_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
+            this.put(JWT_CRYPTO_SCHEME_KEY, "/etc/candlepin/certs/candlepin-ca.key");
+            this.put(JWT_CRYPTO_SCHEME_SIGNATURE_ALGORITHM, "SHA256withRSA");
+            this.put(JWT_CRYPTO_SCHEME_KEY_ALGORITHM, Algorithm.RS512);
 
             this.put(LEGACY_CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
             this.put(LEGACY_CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");

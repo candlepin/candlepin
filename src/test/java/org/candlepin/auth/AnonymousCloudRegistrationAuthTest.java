@@ -26,8 +26,8 @@ import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
-import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.Scheme;
+import org.candlepin.pki.SchemeReader;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.model.CloudRegistrationInfo;
 import org.candlepin.test.CryptoUtil;
@@ -58,14 +58,14 @@ import java.util.List;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class AnonymousCloudRegistrationAuthTest {
     private DevConfig config;
-    private CryptoManager cryptoManager;
+    private SchemeReader schemeReader;
     private CloudRegistrationAdapter mockCloudRegistrationAdapter;
     private AnonymousCloudConsumerCurator anonymousCloudConsumerCurator;
 
     @BeforeEach
     public void init() {
         this.config = TestConfig.defaults();
-        this.cryptoManager = CryptoUtil.getCryptoManager(this.config);
+        this.schemeReader = CryptoUtil.getSchemeReader(this.config);
 
         this.mockCloudRegistrationAdapter = mock(CloudRegistrationAdapter.class);
         this.anonymousCloudConsumerCurator = mock(AnonymousCloudConsumerCurator.class);
@@ -81,8 +81,8 @@ public class AnonymousCloudRegistrationAuthTest {
     }
 
     private AnonymousCloudRegistrationAuth buildAuthProvider() {
-        return new AnonymousCloudRegistrationAuth(this.config, this.cryptoManager,
-            this.anonymousCloudConsumerCurator);
+        CloudAuthTokenGenerator generator = new CloudAuthTokenGenerator(this.config, this.schemeReader);
+        return new AnonymousCloudRegistrationAuth(this.config, this.anonymousCloudConsumerCurator, generator);
     }
 
     private MockHttpRequest buildHttpRequest() {
@@ -94,14 +94,16 @@ public class AnonymousCloudRegistrationAuthTest {
         }
     }
 
-    private int getCurrentSeconds() {
-        return (int) (System.currentTimeMillis() / 1000);
-    }
-
     private String buildToken(JsonWebToken token) {
         // Get the scheme we believe the auth layer will be using. This needs to align with the internal
         // logic of the auth impl under test.
-        Scheme scheme = this.cryptoManager.getDefaultCryptoScheme();
+        Scheme scheme = this.schemeReader.readScheme("jwt-scheme",
+            ConfigProperties.JWT_CRYPTO_SCHEME_CERT,
+            ConfigProperties.JWT_CRYPTO_SCHEME_KEY,
+            ConfigProperties.JWT_CRYPTO_SCHEME_KEY_PASSWORD,
+            ConfigProperties.JWT_CRYPTO_SCHEME_SIGNATURE_ALGORITHM,
+            ConfigProperties.JWT_CRYPTO_SCHEME_KEY_ALGORITHM,
+            ConfigProperties.JWT_CRYPTO_SCHEME_KEY_SIZE);
 
         String keyId = KeyUtils.createKeyId(scheme.certificate().getPublicKey());
 
@@ -146,15 +148,15 @@ public class AnonymousCloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalIgnoresTokensWithWrongType() {
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = (System.currentTimeMillis() / 1000) - 5;
 
         String token = this.buildToken(new JsonWebToken()
             .type("invalid-token-type")
             .subject("test-subject")
             .audience("test-org")
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -167,14 +169,14 @@ public class AnonymousCloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalIgnoresTokensLackingType() {
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = (System.currentTimeMillis() / 1000) - 5;
 
         String token = this.buildToken(new JsonWebToken()
             .subject("test-subject")
             .audience("test-org")
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -187,14 +189,14 @@ public class AnonymousCloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalIgnoresTokensLackingSubject() {
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = (System.currentTimeMillis() / 1000) - 5;
 
         String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .audience("test-audience")
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -207,14 +209,14 @@ public class AnonymousCloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalIgnoresTokensLackingAudience() {
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = (System.currentTimeMillis() / 1000) - 5;
 
         String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .subject("test-subject")
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -227,15 +229,15 @@ public class AnonymousCloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalIgnoresExpiredTokens() {
-        int ctSeconds = this.getCurrentSeconds();
+        long ctSeconds = System.currentTimeMillis() / 1000;
 
         String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .subject("test-subject")
             .audience("test-audience")
-            .issuedAt(ctSeconds - 15)
-            .notBefore(ctSeconds - 15)
-            .expiration(ctSeconds - 10));
+            .iat(ctSeconds - 15)
+            .nbf(ctSeconds - 15)
+            .exp(ctSeconds - 10));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -248,15 +250,15 @@ public class AnonymousCloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalIgnoresInactiveTokens() {
-        int ctSeconds = this.getCurrentSeconds();
+        long ctSeconds = System.currentTimeMillis() / 1000;
 
         String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .subject("test-subject")
             .audience("test-audience")
-            .issuedAt(ctSeconds + 15)
-            .notBefore(ctSeconds + 15)
-            .expiration(ctSeconds + 25));
+            .iat(ctSeconds + 15)
+            .nbf(ctSeconds + 15)
+            .exp(ctSeconds + 25));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -269,7 +271,7 @@ public class AnonymousCloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalWithExistingAnonymousCloudConsumer() {
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = (System.currentTimeMillis() / 1000) - 5;
 
         String anonymousConsumerUuid = "uuid";
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
@@ -286,9 +288,9 @@ public class AnonymousCloudRegistrationAuthTest {
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .subject("test-subject")
             .audience(anonymousConsumerUuid)
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -303,15 +305,15 @@ public class AnonymousCloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalWithNonExistingAnonymousCloudConsumer() {
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = (System.currentTimeMillis() / 1000) - 5;
 
         String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.ANONYMOUS.toString())
             .subject("test-subject")
             .audience("anon-consumer-uuid")
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);

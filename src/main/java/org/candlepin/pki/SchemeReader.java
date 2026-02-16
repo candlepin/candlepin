@@ -289,4 +289,89 @@ public class SchemeReader {
         return this.readScheme(scheme);
     }
 
+    /**
+     * Reads a single scheme from the configuration using the specified configuration keys. This method never
+     * returns null.
+     *
+     * @param schemeName
+     *  the name of the scheme used to populate {@link Scheme#name}; cannot be null or empty
+     *
+     * @param certKey
+     *  the key to the configuration that specifies the path to the certificate to load; cannot be null or
+     *  empty
+     *
+     * @param privateKeyKey
+     *  the key to the configuration that specifies the path to the private key to load; cannot be null or
+     *  empty.
+     *
+     * @param passwordKey
+     *  the key to the configuration that specifies the private key password. If there is no password, this
+     *  parameter can be set to null
+     *
+     * @param signatureAlgorithmKey
+     *  the key to the configuration that specifies the signature algorithm; cannot be null or empty
+     *
+     * @param keyAlgorithmKey
+     *  the key to the configuration that specifies the key algorithm; cannot be null or empty
+     *
+     * @param keySizeKey
+     *  the key to the configuration that specifies the size of the key; can be null
+     *
+     * @throws IllegalArgumentException
+     *  if the provided scheme name is null or empty, or if any required configuration key (certificate,
+     *  private key, signature algorithm, or key algorithm) is null or empty
+     *
+     * @throws ConfigurationException
+     *  if unable to read the scheme from the provided configuration keys
+     *
+     * @return a scheme that is read from the configurations using the provided configuration keys
+     */
+    public Scheme readScheme(String schemeName, String certKey, String privateKeyKey,
+        String passwordKey, String signatureAlgorithmKey, String keyAlgorithmKey, String keySizeKey) {
+
+        if (schemeName == null || schemeName.isBlank()) {
+            throw new IllegalArgumentException("scheme name is null or blank");
+        }
+
+        if (certKey == null || certKey.isBlank()) {
+            throw new IllegalArgumentException("certificate configuration key is null or blank");
+        }
+
+        if (privateKeyKey == null || privateKeyKey.isBlank()) {
+            throw new IllegalArgumentException("private key configuration key is null or blank");
+        }
+
+        if (signatureAlgorithmKey == null || signatureAlgorithmKey.isBlank()) {
+            throw new IllegalArgumentException("signature algorithm configuration key is null or blank");
+        }
+
+        if (keyAlgorithmKey == null || keyAlgorithmKey.isBlank()) {
+            throw new IllegalArgumentException("key algorithm configuration key is null or blank");
+        }
+
+        try {
+            String certPath = this.config.getString(certKey);
+            X509Certificate certificate =  this.readCertificate(certPath);
+            String privateKeyPath = this.config.getString(privateKeyKey);
+            Optional<String> password = passwordKey == null ? Optional.empty() :
+                this.config.getOptionalString(passwordKey);
+            PrivateKey privateKey = this.readPrivateKey(privateKeyPath, password.orElse(null));
+            Integer keySize = keySizeKey == null ? null :
+                this.config.getOptionalInt(keySizeKey)
+                    .orElse(null);
+
+            return new Scheme.Builder()
+                .setName(schemeName)
+                .setCertificate(certificate)
+                .setPrivateKey(privateKey)
+                .setSignatureAlgorithm(this.config.getString(signatureAlgorithmKey))
+                .setKeyAlgorithm(this.config.getString(keyAlgorithmKey))
+                .setKeySize(keySize)
+                .build();
+        }
+        catch (NoSuchElementException e) {
+            throw new ConfigurationException("Unable to read scheme: " + schemeName, e);
+        }
+    }
+
 }
