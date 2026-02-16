@@ -8,6 +8,11 @@
 
 
     <changeSet id="20260216130000" author="bthomasson" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*) from cp_consumer_type where label = 'aap'
+            </sqlCheck>
+        </preConditions>
         <comment>Insert the AAP (Ansible Automation Platform) consumer type.</comment>
         <insert tableName="cp_consumer_type">
             <column name="id" value="1008"/>
