@@ -114,12 +114,26 @@ configure_tomcat() {
 
     $SUDO "${PROJECT_DIR}/bin/deployment/gen_certs.sh" --trust $GEN_CERTS_ARGS
 
+    # Add BouncyCastle to Tomcat libs if using APR with ML-DSA
+    if [ "$USE_APR" == "1" ] && [ -d "/opt/tomcat" ]; then
+        info_msg "Add BouncyCastle jars to tomcat libs to use the BC security providers for ML-DSA support..."
+        "${PROJECT_DIR}/bin/deployment/add-bc-providers-tomcat.sh"
+    fi
+
     # update server.xml
-    $SUDO python $PROJECT_DIR/bin/deployment/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR
+    local SERVER_XML_ARGS="--tomcat-version $TC_VERSION"
+    if [ "$USE_APR" == "1" ]; then
+        info_msg "Configuring Tomcat with APR connector for ML-DSA certificates..."
+        SERVER_XML_ARGS="${SERVER_XML_ARGS} --use-apr"
+    fi
+    $SUDO python $PROJECT_DIR/bin/deployment/update-server-xml.py $SERVER_XML_ARGS $CONTAINER_CONF_DIR
 
     # create conf.d file to disable FIPS for our TC instance
     local CONTAINER_CONFD_DIR="${CONTAINER_CONF_DIR}/conf.d"
     local FIPS_CONF_FILE="${CONTAINER_CONFD_DIR}/candlepin_disable_fips.conf"
+
+    # Create conf.d directory if it doesn't exist (for manual Tomcat installations)
+    $SUDO mkdir -p "${CONTAINER_CONFD_DIR}"
 
     $SUDO sh -c "echo 'JAVA_OPTS=\"\$JAVA_OPTS -Dcom.redhat.fips=false\"' > $FIPS_CONF_FILE"
     $SUDO sh -c "echo >> $FIPS_CONF_FILE"
@@ -225,6 +239,7 @@ OPTIONS:
   -v          verbose output
   -d <name>   specify a database name to use when creating or updating the Candlepin database
   -b          deploy candlepin with an external Artemis message broker
+  -p          use APR connector with ML-DSA certificates (requires OpenSSL 3.5+)
 
 HELP
 }
@@ -269,7 +284,7 @@ init
 
 DBUSER="candlepin"
 
-while getopts ":fgtTrHMolmavbd:" opt; do
+while getopts ":fgtTrHMolmavbd:p" opt; do
     case $opt in
         f  ) FORCECERT="1" ;;
         g  ) GENDB="1";;
@@ -283,6 +298,7 @@ while getopts ":fgtTrHMolmavbd:" opt; do
         v  ) VERBOSE="1";;
         d  ) APP_DB_NAME="${OPTARG}";;
         b  ) EXTERNAL_BROKER="1";;
+        p  ) USE_APR="1";;
         ?  ) usage; exit;;
     esac
 done
@@ -297,39 +313,65 @@ if [ $(id -u) -ne 0 ]; then
     fi
 fi
 
-# use tomcat 6, unless it doesnt exist and tomcat does
-TC=tomcat6
-TC_VERSION=6
+# Check for local Tomcat installation if we're using APR (for ML-DSA support)
+if [ "$USE_APR" == "1" ] && [ -d "/opt/tomcat" ]; then
+    info_msg "Using local Tomcat installation at /opt/tomcat"
+    TC_HOME="/opt/tomcat"
+    TC="tomcat-local"
 
-if ( [ -f /usr/sbin/tomcat ] && (! [ -f /usr/sbin/tomcat6 ] ) );
-then
-    TC=tomcat
-    TC_PATH=/usr/sbin/tomcat
+    # Get version from local installation
+    if [ -x "$TC_HOME/bin/version.sh" ]; then
+        TC_VERSION=$($TC_HOME/bin/version.sh 2>/dev/null | grep "Server number" | cut -d':' -f2 | tr -d ' ')
+    fi
 
-    # Determine which Tomcat version we're using
-    TC_VERSION=$($TC_PATH version | grep -oP "(?<=Server number:  )([0-9]+\.[0-9]+)")
-fi
+    # Default to 9.0.110 if version detection fails
+    if [ -z "$TC_VERSION" ]; then
+        TC_VERSION="9.0.110"
+    fi
 
-if [ -z $TC_HOME ]; then
-    TC_HOME=/var/lib/$TC
+    if [ -f "/usr/bin/systemctl" ]; then
+        START="$SUDO /usr/bin/systemctl start $TC"
+        STOP="$SUDO /usr/bin/systemctl stop $TC"
+    else
+        START="$TC_HOME/bin/catalina.sh jpda start"
+        STOP="$TC_HOME/bin/catalina.sh stop"
+    fi
+    CONTAINER_CONF_DIR="$TC_HOME/conf"
+else
+    # Fall back to system RPM tomcat
+    TC=tomcat6
+    TC_VERSION=6
+
+    if ( [ -f /usr/sbin/tomcat ] && (! [ -f /usr/sbin/tomcat6 ] ) );
+    then
+        TC=tomcat
+        TC_PATH=/usr/sbin/tomcat
+
+        # Determine which Tomcat version we're using
+        TC_VERSION=$($TC_PATH version | grep -oP "(?<=Server number:  )([0-9]+\.[0-9]+)")
+    fi
+
+    if [ -z $TC_HOME ]; then
+        TC_HOME=/var/lib/$TC
+    fi
+
+    isrpm $TC_HOME
+    if [ "$?" -ne 0 ]; then
+        START="$TC_HOME/bin/catalina.sh jpda start"
+        STOP="$TC_HOME/bin/catalina.sh stop"
+        CONTAINER_CONF_DIR="$TC_HOME/conf"
+    elif [ -f "/usr/bin/systemctl" ]; then
+        START="$SUDO /usr/bin/systemctl start $TC"
+        STOP="$SUDO /usr/bin/systemctl stop $TC"
+        CONTAINER_CONF_DIR="/etc/$TC"
+    else
+        START="$SUDO /sbin/service $TC start"
+        STOP="$SUDO /sbin/service $TC stop"
+        CONTAINER_CONF_DIR="/etc/$TC"
+    fi
 fi
 
 info_msg "Configuring Tomcat $TC_VERSION found at $TC_HOME"
-
-isrpm $TC_HOME
-if [ "$?" -ne 0 ]; then
-    START="$TC_HOME/bin/catalina.sh jpda start"
-    STOP="$TC_HOME/bin/catalina.sh stop"
-    CONTAINER_CONF_DIR="$TC_HOME/conf"
-elif [ -f "/usr/bin/systemctl" ]; then
-    START="$SUDO /usr/bin/systemctl start $TC"
-    STOP="$SUDO /usr/bin/systemctl stop $TC"
-    CONTAINER_CONF_DIR="/etc/$TC"
-else
-    START="$SUDO /sbin/service $TC start"
-    STOP="$SUDO /sbin/service $TC stop"
-    CONTAINER_CONF_DIR="/etc/$TC"
-fi
 
 # Check if we're in a container using supervisord instead:
 if [ "$SUPERVISOR" == "1" ]; then

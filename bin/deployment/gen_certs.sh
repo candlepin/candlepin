@@ -172,11 +172,15 @@ if [ -z $CA_CERT ]; then
     echo "Generating self-signed certificate: ${CERT_OUT}"
 
     openssl req -new -x509 -days $CERT_DAYS -out $CERT_OUT \
-        -newkey rsa:$KEY_BITS -nodes -keyout $KEY_OUT \
+        -newkey mldsa65 -nodes -keyout $KEY_OUT \
         -config <(echo "${OPENSSL_CONF}")
 
     # Ensure the key and cert are readable
     chmod +r "${KEY_OUT}" "${CERT_OUT}"
+
+    echo "PEM files generated for use with Tomcat APR connector:"
+    echo "  Certificate: ${CERT_OUT}"
+    echo "  Private Key: ${KEY_OUT}"
 
     # Add new cert to CA trust
     if [ $TRUST -eq 1 ]; then
@@ -213,6 +217,11 @@ else
 
     # Ensure the key and cert are readable
     chmod +r "${KEY_OUT}" "${CERT_OUT}"
+
+    echo "PEM files generated for use with Tomcat APR connector:"
+    echo "  Certificate: ${CERT_OUT}"
+    echo "  Private Key: ${KEY_OUT}"
+    echo "  CA Certificate: ${CA_CERT}"
 
     # Add new cert to CA trust
     if [ $TRUST -eq 1 ]; then

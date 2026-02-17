@@ -1,0 +1,27 @@
+[Unit]
+Description=Apache Tomcat 9.0.110 (Non-RPM Installation)
+After=network.target
+s
+[Service]
+Type=forking
+
+User=tomcat
+Group=tomcat
+
+Environment="JAVA_HOME=/usr/lib/jvm/jre"
+Environment="CATALINA_BASE=/opt/tomcat"
+Environment="CATALINA_HOME=/opt/tomcat"
+Environment="CATALINA_PID=/opt/tomcat/temp/tomcat.pid"
+Environment="CATALINA_OPTS=-Xms512M -Xmx1024M -server -XX:+UseParallelGC"
+# We need to add BouncyCastle libraries to the classpath. That is where tomcat will use the bouncycastle security
+# providers from that are added in the java.security file.
+Environment="JAVA_OPTS=-Djava.security.egd=file:///dev/urandom -Djava.awt.headless=true -Xbootclasspath/a:/opt/tomcat/lib/bcprov-jdk18on-1.83.jar:/opt/tomcat/lib/bcpkix-jdk18on-1.83.jar:/opt/tomcat/lib/bcutil-jdk18on-1.83.jar"
+
+ExecStart=/opt/tomcat/bin/startup.sh
+ExecStop=/opt/tomcat/bin/shutdown.sh
+
+RestartSec=10
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

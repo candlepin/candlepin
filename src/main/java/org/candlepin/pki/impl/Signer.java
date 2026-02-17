@@ -47,15 +47,15 @@ public class Signer {
     }
 
     /**
-     * Compute a SHA256withRSA digital signature on an inputStream.  The digest is signed
+     * Compute a MLDSA digital signature on an inputStream.  The digest is signed
      * with the CA key retrieved using CertificateReader.
      *
      * @param input an input stream to sign
-     * @return a byte array of the SHA256withRSA digital signature
+     * @return a byte array of the MLDSA digital signature
      */
     public byte[] sign(InputStream input) {
         try {
-            Signature signature = Signature.getInstance("SHA256withRSA");
+            Signature signature = Signature.getInstance("MLDSA", "BC");
             signature.initSign(this.certificateAuthority.getCaKey());
 
             updateSignature(input, signature);
