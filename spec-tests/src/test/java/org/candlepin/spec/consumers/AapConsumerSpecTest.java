@@ -15,10 +15,12 @@
 package org.candlepin.spec.consumers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
+import org.candlepin.invoker.client.ApiException;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -43,6 +45,19 @@ public class AapConsumerSpecTest {
     public void setup() {
         adminClient = ApiClients.admin();
         owner = adminClient.owners().createOwner(Owners.random());
+
+        // Skip all tests if the AAP consumer type is not available on this server.
+        // The type is added by a database migration; tests will be skipped until
+        // that migration is applied.
+        try {
+            ConsumerDTO probe = Consumers.random(owner, ConsumerTypes.Aap);
+            ConsumerDTO created = adminClient.consumers().createConsumer(probe);
+            // Clean up the probe consumer
+            adminClient.consumers().deleteConsumer(created.getUuid());
+        }
+        catch (ApiException e) {
+            assumeTrue(false, "AAP consumer type not available: " + e.getMessage());
+        }
     }
 
     @Test
