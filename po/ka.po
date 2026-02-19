@@ -2,14 +2,15 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # Temuri Doghonadze <temuri.doghonadze@gmail.com>, 2024, 2025.
-# Weblate Translation Memory <noreply-mt-weblate-translation-memory@weblate.org>, 2024.
+# Weblate Translation Memory <noreply-mt-weblate-translation-memory@weblate.org>, 2024, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-12-15 07:09+0000\n"
-"PO-Revision-Date: 2025-12-20 11:58+0000\n"
-"Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
+"PO-Revision-Date: 2026-02-05 08:58+0000\n"
+"Last-Translator: Weblate Translation Memory <noreply-mt-weblate-translation-"
+"memory@weblate.org>\n"
 "Language-Team: Georgian <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-4-hotfix/ka/>\n"
 "Language: ka\n"
@@ -17,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.15.1\n"
+"X-Generator: Weblate 5.15.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -1480,7 +1481,7 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:611
 msgid "No content IDs provided"
-msgstr ""
+msgstr "შემცველობის ID-ები მოწოდებული არაა"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:663
 msgid "No content IDs provided, or provided content ID list contains null IDs"
@@ -1574,7 +1575,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1148
 #, java-format
 msgid "{0} is not a valid log level"
-msgstr ""
+msgstr "{0} სწორი ჟურნალის დონე არაა"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1277
 #: src/main/java/org/candlepin/resource/PoolResource.java:129
@@ -1873,7 +1874,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:67
 #, java-format
 msgid "param \"{0}\" must be a positive integer"
-msgstr ""
+msgstr "პარამეტრი \"{0}\" დადებითი მთელი რიცხვი უნდა იყოს"
 
 #: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:123
 msgid "the order parameter must be either \"ascending\" or \"descending\""
@@ -1921,7 +1922,7 @@ msgstr ""
 #: src/main/java/org/candlepin/sync/Importer.java:235
 #, java-format
 msgid "{0} file imported successfully."
-msgstr ""
+msgstr "{0} ფაილის შემოტანა წარმატებულია."
 
 #: src/main/java/org/candlepin/sync/Importer.java:237
 #, java-format
