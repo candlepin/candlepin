@@ -2793,7 +2793,12 @@ public class ConsumerResource implements ConsumerApi {
     public OwnerDTO getOwnerByConsumerUuid(@Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
-        return translator.translate(owner, OwnerDTO.class);
+
+        OwnerDTO dto = translator.translate(owner, OwnerDTO.class);
+        // Strip upstreamConsumer from the response to prevent leaking the manifest
+        // consumer's identity certificate and key to registered clients (SAT-42216).
+        dto.setUpstreamConsumer(null);
+        return dto;
     }
 
     @Override
