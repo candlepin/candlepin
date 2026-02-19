@@ -2,13 +2,13 @@
 # John Sefler <jsefler@redhat.com>, 2022.
 # Weblate Translation Memory <noreply-mt-weblate-translation-memory@weblate.org>, 2025.
 # Javier Francisco <fserrador@gmail.com>, 2025.
-# "Fco. Javier F. Serrador" <fserrador@gmail.com>, 2025.
+# "Fco. Javier F. Serrador" <fserrador@gmail.com>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-01-29 07:33+0000\n"
-"PO-Revision-Date: 2025-09-29 10:53+0000\n"
+"PO-Revision-Date: 2026-02-19 12:59+0000\n"
 "Last-Translator: \"Fco. Javier F. Serrador\" <fserrador@gmail.com>\n"
 "Language-Team: Spanish <https://translate.fedoraproject.org/projects/"
 "candlepin/master/es/>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.13.3\n"
+"X-Generator: Weblate 5.16\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -66,7 +66,7 @@ msgstr "{0} ha borrado la unidad {1}"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
 #, java-format
 msgid "{0} updated multiple consumers"
-msgstr ""
+msgstr "{0} múltiples consumidores actualizados"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -332,10 +332,9 @@ msgstr "Consorcio(s) de suscripción {0} no existen."
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gguerrer
 #: src/main/java/org/candlepin/controller/ConsumerMigration.java:124
-#, fuzzy, java-format
-#| msgid "Failed to migrate consumers"
+#, java-format
 msgid "Failed to migrate {0} consumers"
-msgstr "Ha fallado al migrar consumidores"
+msgstr "Ha fallado al migrar {0} consumidores"
 
 #: src/main/java/org/candlepin/controller/ContentAccessManager.java:194
 msgid "Unable to create revoke entitlements job"
@@ -1036,7 +1035,7 @@ msgstr "La organización de {0} no existe"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:422
 msgid "Consumer package profile uploads are not implemented"
-msgstr ""
+msgstr "Las subidas de perfil de paquete de consumido no están implementadas"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gguerrer
