@@ -3,7 +3,7 @@
 # simmon <simmon@nplob.com>, 2021, 2022.
 # Sundeep Anand <suanand@redhat.com>, 2021.
 # Kim InSoo <simmon@nplob.com>, 2022.
-# 김인수 <simmon@nplob.com>, 2022, 2023, 2024.
+# 김인수 <simmon@nplob.com>, 2022, 2023, 2024, 2026.
 # Pino Toscano <ptoscano@redhat.com>, 2022.
 # Jiri Hnidek <jiri.hnidek@gmail.com>, 2022.
 # John Sefler <jsefler@redhat.com>, 2022.
@@ -13,9 +13,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-12-15 07:09+0000\n"
-"PO-Revision-Date: 2024-12-15 13:26+0000\n"
-"Last-Translator: Weblate Translation Memory <noreply-mt-weblate-translation-"
-"memory@weblate.org>\n"
+"PO-Revision-Date: 2026-02-19 05:58+0000\n"
+"Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-4-hotfix/ko/>\n"
 "Language: ko\n"
@@ -23,7 +22,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.8.4\n"
+"X-Generator: Weblate 5.16\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -350,7 +349,7 @@ msgstr "요청된 매니페스트 파일을 찾을 수 없습니다: {0}"
 #: src/main/java/org/candlepin/controller/ManifestManager.java:274
 #, java-format
 msgid "Unable to find specified manifest by id: {0}"
-msgstr "다음 ID를 갖는 매니페스트를 찾을 수 없습니다: {0}"
+msgstr "다음 id를 갖는 매니페스트를 찾을 수 없습니다: {0}"
 
 #: src/main/java/org/candlepin/controller/ManifestManager.java:280
 #, java-format
@@ -378,7 +377,7 @@ msgstr "레이블 {0}인 CDN은 이 시스템에 존재하지 않습니다."
 
 #: src/main/java/org/candlepin/controller/PoolManager.java:311
 msgid "No owner specified, or owner lacks identifying information"
-msgstr "소유자가 지정되어 있지 않거나 소유자 ID 정보가 없습니다"
+msgstr "소유자가 지정되어 있지 않거나, 소유자 식별 정보가 부족합니다"
 
 #: src/main/java/org/candlepin/controller/PoolManager.java:320
 #, java-format
@@ -856,7 +855,7 @@ msgstr ""
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:215
 #, java-format
 msgid "Unable to adjust quantity for the entitlement with id \"{1}\": {0}"
-msgstr "ID ''{1}''인 인타이틀먼트의 수량을 조정할 수 없습니다: {0}"
+msgstr "id인 권한을 위한 수량을 조정 할 수 없습니다 ''{1}'': {0}"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:112
 msgid "Activation key ID is null or empty"
@@ -891,7 +890,7 @@ msgstr "제품 ID \"{0}\"가 이 활성키에 이미 등록되어 있습니다"
 #: src/main/java/org/candlepin/resource/OwnerResource.java:439
 #, java-format
 msgid "Pool with id {0} could not be found."
-msgstr "ID {0}을(를) 갖는 풀을 찾을 수 없습니다."
+msgstr "id {0} 를 갖는 풀을 찾을 수 없습니다."
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:434
 #, java-format
@@ -1145,7 +1144,7 @@ msgstr "환경 \"{0}\"는 두 번 이상 지정됩니다."
 #, java-format
 msgid "Problem updating unit {0}. Hypervisor id: {1} is already used."
 msgstr ""
-"장치 {0}을 최신화하는 도중 문제가 발생했습니다. 하이퍼바이저 ID: {1}은 이미 "
+"장치 {0}을 최신화하는 도중 문제가 발생했습니다. 하이퍼바이저 id: {1}은 이미 "
 "사용되고 있습니다."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2179
@@ -1242,7 +1241,7 @@ msgstr "시리얼 번호 ''{0}''인 인타이틀먼트 인증서를 찾을 수 �
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2865
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
-msgstr "풀 ID ''{1}''인 소비자 ''{0}''의 인타이틀먼트가 없습니다"
+msgstr "풀 id ''{1}''인 소비자 ''{0}''를 위한 권한이 없습니다"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1269,7 +1268,7 @@ msgstr "하이퍼바이저 ''{0}''의 삭제 기록을 찾을 수 없습니다."
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:105
 #, java-format
 msgid "Unit type with id \"{0}\" could not be found."
-msgstr "ID ''{0}''인 장치 유형을 찾을 수 없습니다."
+msgstr "id ''{0}''인 장치 유형을 찾을 수 없습니다."
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:127
 #, java-format
@@ -1284,7 +1283,7 @@ msgstr "레이블 {0}의 장치 유형을 찾을 수 없습니다."
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:159
 #, java-format
 msgid "Unit type with id {0} could not be found."
-msgstr "ID {0}의 장치 유형을 찾을 수 없습니다."
+msgstr "id {0}의 장치 유형을 찾을 수 없습니다."
 
 #: src/main/java/org/candlepin/resource/ContentResource.java:88
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:349
@@ -1404,7 +1403,7 @@ msgstr "환경 컨텐츠 접두사는 {0} 문자를 초과 할 수 없습니다"
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:394
 #, java-format
 msgid "The content with id {0} has already been promoted in this environment."
-msgstr "ID {0}인 컨텐츠는 이미 이 환경에 승격되어 있습니다."
+msgstr "id {0}인 내용은 이미 이 환경에서 승격되어 있습니다."
 
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:409
 #, java-format
@@ -1440,7 +1439,7 @@ msgstr "ID \"{0}\"인 컨텐츠를 찾을 수 없습니다"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:106
 msgid "Please supply a valid guest id"
-msgstr "유효한 게스트 ID를 입력하십시오"
+msgstr "유효한 게스트 id를 제공하세요"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:122
 #, java-format
@@ -1660,29 +1659,29 @@ msgstr "\"{0}\" 키의 소유자를 찾을 수 없습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:317
 msgid "Owner id is null or empty."
-msgstr "소유자 ID가 null이거나 비어있습니다."
+msgstr "소유자 id가 null이거나 비어있습니다."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:321
 #, java-format
 msgid "Owner with id \"{0}\" was not found"
-msgstr "ID \"{0}\"인 소유자를 찾을 수 없습니다"
+msgstr "id \"{0}\"인 소유자를 찾을 수 없습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:350
 msgid "Owner lookup failed because id and key were null or empty."
-msgstr "ID 및 키가 null이거나 비어있어 소유자 조회에 실패했습니다."
+msgstr "id 및 키가 null 이거나 비어 있어 소유자 조회에 실패했습니다."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:374
 msgid "Entitlement id is null or empty."
-msgstr "인타이틀먼트 ID가 null이거나 비어있습니다."
+msgstr "권한 id가 null 이거나 비어 있습니다."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:379
 #, java-format
 msgid "Entitlement with id {0} could not be found."
-msgstr "ID {0}인 인타이틀먼트를 찾을 수 없습니다."
+msgstr "id {0}인 권한을 찾을 수 없습니다."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:405
 msgid "Consumer id is null or empty."
-msgstr "소비자 ID가 null이거나 비어있습니다."
+msgstr "소비자 id가 null 이거나 비어 있습니다."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:409
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:111
@@ -1692,7 +1691,7 @@ msgstr "이러한 장치가 없음: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:435
 msgid "Pool id is null or empty."
-msgstr "풀 ID가 null이거나 비어있습니다."
+msgstr "풀 id가 null 이거나 비어 있습니다."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:530
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:208
@@ -1747,7 +1746,7 @@ msgstr "사용자 {0}은(는) 소비자 {1}에 액세스할 수 없음"
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1297
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
-msgstr "ID {0}을(를) 갖는 활성화 키를 찾을 수 없습니다."
+msgstr "id {0} 인 활성화 키를 찾을 수 없습니다."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1303
 msgid "The flags add_future and only_future cannot be used at the same time."

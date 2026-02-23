@@ -3,13 +3,14 @@
 # Javier Francisco <fserrador@gmail.com>, 2025.
 # Weblate Translation Memory <noreply-mt-weblate-translation-memory@weblate.org>, 2025.
 # Conan Edogawa <conan05@users.noreply.translate.fedoraproject.org>, 2025.
+# "Fco. Javier F. Serrador" <fserrador@gmail.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-12-15 07:09+0000\n"
-"PO-Revision-Date: 2025-04-13 15:53+0000\n"
-"Last-Translator: Javier Francisco <fserrador@gmail.com>\n"
+"PO-Revision-Date: 2026-02-19 12:58+0000\n"
+"Last-Translator: \"Fco. Javier F. Serrador\" <fserrador@gmail.com>\n"
 "Language-Team: Spanish <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-4-hotfix/es/>\n"
 "Language: es\n"
@@ -17,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.10.4\n"
+"X-Generator: Weblate 5.16\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -213,14 +214,14 @@ msgstr "{0} ha borrado la clave de activación {1}"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
 #, java-format
 msgid "{0} created the guest id {1}"
-msgstr "{0} ha creado el ID del invitado {1}"
+msgstr "{0} ha creado el id del invitado {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gguerrer
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
 #, java-format
 msgid "{0} deleted the guest id {1}"
-msgstr "{0} ha borrado el ID de invitado {1}"
+msgstr "{0} ha borrado el id {1} de invitado"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
 #, java-format
@@ -494,7 +495,8 @@ msgstr ""
 #: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:118
 #, java-format
 msgid "Invalid username or password. To create a login, please visit {0}"
-msgstr "ID de usuario o contraseña no válido. Para crear un acceso, visite {0}"
+msgstr ""
+"Nombre de usuario o contraseña no válido. Para crear un acceso, visite {0}"
 
 #: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:123
 #, java-format
@@ -929,12 +931,12 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/OwnerResource.java:439
 #, java-format
 msgid "Pool with id {0} could not be found."
-msgstr "No se encontró el grupo con ID {0}."
+msgstr "No se encontró el grupo con id {0}."
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:434
 #, java-format
 msgid "Product with id {0} could not be found."
-msgstr "No se encontró el producto con ID {0}."
+msgstr "No se encontró el producto con id {0}."
 
 #: src/main/java/org/candlepin/resource/CdnResource.java:83
 #, java-format
@@ -1062,7 +1064,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:698
 #, java-format
 msgid "Consumer with id {0} could not be found."
-msgstr "El consumidor con ID {0} no pudo ser encontrado."
+msgstr "No pudo ser encontrado el consumidor con id {0}."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:718
 msgid "No UUIDs provided."
@@ -1321,7 +1323,7 @@ msgstr "No se encontró el registro borrado para hipervisor «{0}»."
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:105
 #, java-format
 msgid "Unit type with id \"{0}\" could not be found."
-msgstr "No se pudo encontrar el tipo de unidad con ID «{0}»."
+msgstr "No pudo ser encontrado el tipo de unidad con id «{0}»."
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:127
 #, java-format
@@ -1336,7 +1338,7 @@ msgstr "No se pudo encontrar el tipo de unidad con etiqueta {0}."
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:159
 #, java-format
 msgid "Unit type with id {0} could not be found."
-msgstr "No se pudo encontrar el tipo de unidad con ID {0}."
+msgstr "No pudo ser encontrado el tipo de unidad con id {0}."
 
 #: src/main/java/org/candlepin/resource/ContentResource.java:88
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:349
@@ -1462,7 +1464,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:394
 #, java-format
 msgid "The content with id {0} has already been promoted in this environment."
-msgstr "El contenido con ID {0} ya ha sido promovido dentro de este entorno."
+msgstr "El contenido con id {0} ya ha sido promovido dentro de este entorno."
 
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:409
 #, java-format
@@ -1500,7 +1502,7 @@ msgstr "No es capaz de encontrar un contenido con el ID «{0}»"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:106
 msgid "Please supply a valid guest id"
-msgstr "Por favor proporcione un ID de huésped válido"
+msgstr "Por favor proporcione un id de invitado válido"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:122
 #, java-format
@@ -1747,22 +1749,22 @@ msgstr "No se encontró el propietario con llave «{0}»"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:317
 msgid "Owner id is null or empty."
-msgstr "ID de propietario es nulo o está vacío."
+msgstr "El id del propietario es nulo o está vacío."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:321
 #, java-format
 msgid "Owner with id \"{0}\" was not found"
-msgstr "El propietario con ID «{0}» no fue encontrado"
+msgstr "El propietario con id «{0}» no fue encontrado"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:350
 msgid "Owner lookup failed because id and key were null or empty."
 msgstr ""
-"La búsqueda del propietario ha fallado porque el ID y la llave eran nula o "
+"La búsqueda del propietario ha fallado porque el id y la llave eran nula o "
 "estaba vacía."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:374
 msgid "Entitlement id is null or empty."
-msgstr "El ID de autorización es nulo o está vacío."
+msgstr "El id de autorización es nulo o está vacío."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:379
 #, java-format
@@ -1771,7 +1773,7 @@ msgstr "La autorización con id {0} no pudo ser encontrada."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:405
 msgid "Consumer id is null or empty."
-msgstr "El ID del consumidor es nulo o está vacío."
+msgstr "El id del consumidor es nulo o está vacío."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:409
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:111
@@ -1781,7 +1783,7 @@ msgstr "No existe dicha unidad: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:435
 msgid "Pool id is null or empty."
-msgstr "ID de consorcio es nulo o está vacío."
+msgstr "El id de grupo es nulo o está vacío."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:530
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:208
@@ -1839,7 +1841,7 @@ msgstr "El usuario {0} no puede acceder a consumidor {1}"
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1297
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
-msgstr "No pudo encontrar la llave de activación con ID {0}."
+msgstr "No pudo encontrar la llave de activación con id {0}."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1303
 msgid "The flags add_future and only_future cannot be used at the same time."
@@ -2091,7 +2093,7 @@ msgstr "los datos del usuario son nulos o están vacíos"
 
 #: src/main/java/org/candlepin/resource/UserResource.java:146
 msgid "Username not specified"
-msgstr "ID de usuario no especificado"
+msgstr "Nombre de usuario no especificado"
 
 #: src/main/java/org/candlepin/resource/UserResource.java:150
 #, java-format
