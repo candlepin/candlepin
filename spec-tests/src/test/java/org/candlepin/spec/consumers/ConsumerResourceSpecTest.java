@@ -15,12 +15,16 @@
 package org.candlepin.spec.consumers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertGone;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
@@ -31,8 +35,11 @@ import org.candlepin.dto.api.client.v1.GuestIdDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.client.v1.RoleDTO;
+import org.candlepin.dto.api.client.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
 import org.candlepin.invoker.client.ApiException;
+import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
+import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
 import org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
@@ -43,8 +50,10 @@ import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Environments;
+import org.candlepin.spec.bootstrap.data.builder.ExportGenerator;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Permissions;
+import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.builder.Roles;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
@@ -61,6 +70,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.io.File;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -1151,6 +1161,38 @@ public class ConsumerResourceSpecTest {
         assertThat(consumerAfterCheckIn)
             .isNotNull()
             .doesNotReturn(before, ConsumerDTO::getLastCheckin);
+    }
+
+    @Test
+    @OnlyInStandalone
+    public void shouldExcludeUpstreamConsumerFromOwnerReturnedByConsumerEndpoint() throws Exception {
+        assumeTrue(CandlepinMode::hasManifestGenTestExtension);
+
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
+
+        AsyncJobStatusDTO importJob = adminClient.owners()
+            .importManifestAsync(owner.getKey(), List.of(), manifest);
+        importJob = adminClient.jobs().waitForJob(importJob);
+        assertThatJob(importJob)
+            .isFinished()
+            .contains("SUCCESS");
+
+        OwnerDTO ownerViaApi = adminClient.owners().getOwner(owner.getKey());
+        assertThat(ownerViaApi.getUpstreamConsumer())
+            .isNotNull()
+            .extracting(UpstreamConsumerDTO::getIdCert)
+            .isNotNull();
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+
+        OwnerDTO ownerViaConsumer = adminClient.consumers()
+            .getOwnerByConsumerUuid(consumer.getUuid());
+
+        assertNotNull(ownerViaConsumer);
+        assertEquals(owner.getKey(), ownerViaConsumer.getKey());
+        assertNull(ownerViaConsumer.getUpstreamConsumer());
     }
 
     private UserDTO createUserTypeAllAccess(ApiClient client, OwnerDTO owner) {
