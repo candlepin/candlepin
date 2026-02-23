@@ -22,8 +22,8 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.6.4
-Release: 2%{?dist}
+Version: 4.6.5
+Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -230,6 +230,13 @@ fi
 
 #raw
 %changelog
+* Mon Feb 23 2026 candlepin-bot 4.6.5-1
+- CANDLEPIN-1138: Strip upstreamConsumer from consumer owner response
+  (sbakaj@redhat.com)
+- Add new translations using Weblate (hosted@weblate.org)
+- CANDLEPIN-812: Removed PR check against Bugzilla (sbakaj@redhat.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+
 * Wed Sep 10 2025 candlepin-bot 4.6.4-2
 - CANDLEPIN-1059: Reduced 429s while fetching content access payloads
   (crog@redhat.com)
