@@ -4,6 +4,6 @@ import org.candlepin.service.model.ConsumerInfo;
 
 public interface ConsumerEventAdapter {
 
-    void createCheckInEvent(ConsumerInfo consumer);
+    void publishCheckInEvent(ConsumerInfo consumer);
 
 }

@@ -78,7 +78,7 @@ public class ConsumerManager {
 
         consumer.setLastCheckin(new Date());
         consumer = consumerCurator.merge(consumer);
-        consumerEventAdapter.createCheckInEvent(consumer);
+        consumerEventAdapter.publishCheckInEvent(consumer);
     }
 
     /**
