@@ -33,7 +33,6 @@ import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.DistinguishedName;
-import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.Scheme;
 import org.candlepin.pki.X509Extension;
@@ -47,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.math.BigInteger;
+import java.security.KeyException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.time.OffsetDateTime;
@@ -82,7 +82,6 @@ public class UeberCertificateGenerator {
     private final ConsumerTypeCurator consumerTypeCurator;
     private final I18n i18n;
     private final CryptoManager cryptoManager;
-    private final KeyPairGenerator keyPairGenerator;
     private final X509ExtensionUtil extensionUtil;
     private final PemEncoder pemEncoder;
 
@@ -98,7 +97,6 @@ public class UeberCertificateGenerator {
         ConsumerTypeCurator consumerTypeCurator,
         I18n i18n,
         CryptoManager cryptoManager,
-        KeyPairGenerator keyPairGenerator, // temporary -- this should come from the crypt manager
         X509ExtensionUtil extensionUtil,
         PemEncoder pemEncoder) {
 
@@ -109,7 +107,6 @@ public class UeberCertificateGenerator {
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.i18n = Objects.requireNonNull(i18n);
         this.cryptoManager = Objects.requireNonNull(cryptoManager);
-        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
         this.extensionUtil = Objects.requireNonNull(extensionUtil);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
 
@@ -133,21 +130,23 @@ public class UeberCertificateGenerator {
             return  this.generateUeberCert(owner, username);
         }
         catch (Exception e) {
+            // TODO: FIXME: This exception handler is (a) too general and (b) throws an API exception! >:(
             log.error("Problem generating ueber cert for owner: {}", ownerKey, e);
             throw new BadRequestException(i18n.tr(
                 "Problem generating ueber cert for owner {0}", ownerKey), e);
         }
     }
 
-    private UeberCertificate generateUeberCert(Owner owner, String generatedByUsername) {
+    private UeberCertificate generateUeberCert(Owner owner, String generatedByUsername) throws KeyException {
         ConsumerType ueberCertType = this.consumerTypeCurator.getByLabel(UEBER_CERT_CONSUMER_TYPE, true);
-
         UeberCertData ueberCertData = new UeberCertData(owner, generatedByUsername, ueberCertType);
 
         CertificateSerial serial = new CertificateSerial(ueberCertData.getEndDate());
         serial = serialCurator.create(serial);
 
-        KeyPair keyPair = this.keyPairGenerator.generateKeyPair();
+        KeyPair keyPair = this.cryptoManager.getKeyPairGenerator(this.scheme)
+            .generateKeyPair();
+
         byte[] pemEncodedKeyPair = this.pemEncoder.encodeAsBytes(keyPair.getPrivate());
         X509Certificate x509Cert =
             createX509Certificate(ueberCertData, BigInteger.valueOf(serial.getId()), keyPair);

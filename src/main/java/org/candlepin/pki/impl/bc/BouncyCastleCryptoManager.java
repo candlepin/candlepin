@@ -20,12 +20,14 @@ import org.candlepin.config.ConfigurationException;
 import org.candlepin.model.Consumer;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.Scheme;
 import org.candlepin.pki.SchemeReader;
 import org.candlepin.pki.SignatureValidator;
 import org.candlepin.pki.Signer;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509CertificateBuilder;
+import org.candlepin.pki.impl.jca.JcaKeyPairGenerator;
 import org.candlepin.pki.impl.jca.JcaSignatureValidator;
 import org.candlepin.pki.impl.jca.JcaSigner;
 import org.candlepin.util.function.CheckedFunction;
@@ -151,13 +153,21 @@ public class BouncyCastleCryptoManager implements CryptoManager {
             .findAny();
     }
 
-    // This may not even be needed. It was originally spec'd out to deal with the keygen stuff, but if that's
-    // getting refactored anyway, maybe this is extraneous.
-
     @Override
     public Optional<Scheme> getCryptoScheme(Consumer consumer) {
-        // TODO: FIXME: implement this once consumer has been updated to support scheme negotiation
-        throw new UnsupportedOperationException("Not yet implemented");
+        // This may not even be needed. It was originally spec'd out to deal with the keygen stuff, but if
+        // that's getting refactored anyway, maybe this is extraneous.
+
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        return consumer.getCryptoScheme()
+            .flatMap(this::getCryptoScheme);
+
+        // If at some point we want to allow consumers to specify *any* configured scheme, whether or not it's
+        // present in the broadcast schemes list, we can add a check to fetch the value from the scheme reader
+        // if it wasn't present in the scheme list.
     }
 
     @Override
@@ -293,13 +303,13 @@ public class BouncyCastleCryptoManager implements CryptoManager {
         return new BouncyCastleX509CertificateBuilder(this.securityProvider, this.skiWriter, scheme);
     }
 
-    // @Override
-    // public KeyPairGenerator getKeyPairGenerator(Scheme scheme) {
-    //     if (scheme == null) {
-    //         throw new IllegalArgumentException("scheme is null");
-    //     }
+    @Override
+    public KeyPairGenerator getKeyPairGenerator(Scheme scheme) {
+        if (scheme == null) {
+            throw new IllegalArgumentException("scheme is null");
+        }
 
-    //     return new BouncyCastleKeyPairGenerator(this.securityProvider, this.keypairDataCurator, scheme);
-    // }
+        return new JcaKeyPairGenerator(this.securityProvider, scheme);
+    }
 
 }

@@ -23,13 +23,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.pki.CryptoManager;
-import org.candlepin.pki.KeyPairGenerator;
-import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
 import org.candlepin.test.CryptoUtil;
 import org.candlepin.util.X509ExtensionUtil;
 
@@ -47,15 +44,11 @@ class ProductCertificateGeneratorTest {
         CryptoManager cryptoManager = CryptoUtil.getCryptoManager();
         X509ExtensionUtil extensionUtil = mock(X509ExtensionUtil.class);
 
-        KeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(cryptoManager,
-            mock(KeyPairDataCurator.class));
-
         this.productCertificateCurator = mock(ProductCertificateCurator.class);
 
         this.productCertificateGenerator = new ProductCertificateGenerator(
             cryptoManager,
             extensionUtil,
-            keyPairGenerator,
             CryptoUtil.getPemEncoder(),
             this.productCertificateCurator);
     }

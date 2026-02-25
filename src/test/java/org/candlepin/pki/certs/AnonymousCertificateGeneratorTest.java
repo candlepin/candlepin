@@ -22,9 +22,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -41,11 +45,11 @@ import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.dto.Content;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.KeyPairGenerator;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.huffman.Huffman;
-import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
@@ -85,6 +89,7 @@ class AnonymousCertificateGeneratorTest {
     private ProductServiceAdapter productAdapter;
     @Mock
     private AnonymousCertContentCache contentCache;
+
     private DevConfig config;
     private AnonymousCertificateGenerator generator;
 
@@ -96,14 +101,11 @@ class AnonymousCertificateGeneratorTest {
         this.generator = this.createGenerator();
     }
 
-    private AnonymousCertificateGenerator createGenerator() throws CertificateException, KeyException {
+    private AnonymousCertificateGenerator createGenerator(CryptoManager cryptoManager)
+        throws CertificateException, KeyException {
+
         X509V3ExtensionUtil extensionUtil = spy(new X509V3ExtensionUtil(
             config, this.entitlementCurator, new Huffman()));
-
-        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(this.config);
-
-        BouncyCastleKeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(cryptoManager,
-            mock(KeyPairDataCurator.class));
 
         return new AnonymousCertificateGenerator(
             this.config,
@@ -115,8 +117,12 @@ class AnonymousCertificateGeneratorTest {
             this.productAdapter,
             this.contentCache,
             CryptoUtil.getPemEncoder(),
-            keyPairGenerator,
             cryptoManager);
+    }
+
+    private AnonymousCertificateGenerator createGenerator() throws CertificateException, KeyException {
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(this.config);
+        return this.createGenerator(cryptoManager);
     }
 
     @Test
@@ -158,7 +164,7 @@ class AnonymousCertificateGeneratorTest {
     }
 
     @Test
-    void shouldReturnCachedCertIfPresent() {
+    public void shouldReturnCachedCertIfPresent() {
         when(this.anonymousCertificateCurator.create(any(AnonymousContentAccessCertificate.class)))
             .thenAnswer(returnsFirstArg());
         when(this.contentCache.get(anyCollection())).thenReturn(createCertContent());
@@ -177,7 +183,7 @@ class AnonymousCertificateGeneratorTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    void shouldFailToCreateCertWhenNoProductInfoAvailable(List<ProductInfo> productInfo) {
+    public void shouldFailToCreateCertWhenNoProductInfoAvailable(List<ProductInfo> productInfo) {
         when(this.productAdapter.getChildrenByProductIds(anyCollection())).thenReturn(productInfo);
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
 
@@ -271,6 +277,33 @@ class AnonymousCertificateGeneratorTest {
         AnonymousContentAccessCertificate result = this.generator.generate(consumer);
 
         assertNotNull(result);
+    }
+
+    @Test
+    public void testGenerateThrowsExceptionIfKeyPairCannotBeGenerated() throws Exception {
+        doReturn(List.of(this.createProductInfo()))
+            .when(this.productAdapter)
+            .getChildrenByProductIds(anyCollection());
+
+        doAnswer(iom -> {
+            CertificateSerial serial = iom.getArgument(0);
+            serial.setSerial(123L);
+            return serial;
+        }).when(this.serialCurator)
+            .create(any(CertificateSerial.class));
+
+        KeyPairGenerator mockKeyPairGenerator = mock(KeyPairGenerator.class);
+        doThrow(new KeyException("kaboom")).when(mockKeyPairGenerator).generateKeyPair();
+
+        CryptoManager mockCryptoManager = spy(CryptoUtil.getCryptoManager(this.config));
+        doReturn(mockKeyPairGenerator).when(mockCryptoManager).getKeyPairGenerator(any(Scheme.class));
+
+        AnonymousCloudConsumer consumer = this.createAnonConsumer();
+        AnonymousCertificateGenerator generator = this.createGenerator(mockCryptoManager);
+
+        assertThrows(CertificateCreationException.class, () -> generator.generate(consumer));
+
+        verify(mockKeyPairGenerator, times(1)).generateKeyPair();
     }
 
     private AnonymousCertContent createCertContent() {

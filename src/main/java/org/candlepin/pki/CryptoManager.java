@@ -173,19 +173,18 @@ public interface CryptoManager {
      */
     X509CertificateBuilder getCertificateBuilder(Scheme scheme);
 
-    // /**
-    //  * Fetches a key pair generator instance backed by the specified cryptographic scheme. If the given
-    //  * scheme is null or does not contain a private key, this method throws an exception. This method will
-    //  * never return null.
-    //  *
-    //  * @param scheme
-    //  *  the scheme for the resultant keypair generator to use
-    //  *
-    //  * @throws IllegalArgumentException
-    //  *  if the given scheme is null, or does not include a private key
-    //  *
-    //  * @return
-    //  *  a keypair generator using the specified cryptographic scheme
-    //  */
-    // KeyPairGenerator getKeyPairGenerator(Scheme scheme);
+    /**
+     * Fetches a key pair generator instance backed by the specified cryptographic scheme. If the given
+     * scheme is null, this method throws an exception. This method will never return null.
+     *
+     * @param scheme
+     *  the scheme for the resultant keypair generator to use
+     *
+     * @throws IllegalArgumentException
+     *  if the given scheme is null
+     *
+     * @return
+     *  a keypair generator using the specified cryptographic scheme
+     */
+    KeyPairGenerator getKeyPairGenerator(Scheme scheme);
 }

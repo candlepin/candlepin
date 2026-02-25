@@ -50,11 +50,10 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.CryptoManager;
-import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.RepoType;
 import org.candlepin.pki.huffman.Huffman;
-import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
+import org.candlepin.pki.util.ConsumerKeyPairGenerator;
 import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.CertificateSizeException;
@@ -143,8 +142,6 @@ public class EntitlementCertificateGeneratorTest {
     private EnvironmentCurator environmentCurator;
 
     private Owner owner;
-    private I18n i18n;
-    private KeyPairGenerator keyPairGenerator;
     private EntitlementCertificateGenerator generator;
 
     @BeforeEach
@@ -152,7 +149,7 @@ public class EntitlementCertificateGeneratorTest {
         this.owner = createOwner();
         when(this.ownerCurator.findOwnerById(owner.getOwnerId())).thenReturn(this.owner);
 
-        this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         when(this.serialCurator.saveOrUpdateAll(anyIterable(), anyBoolean(), anyBoolean()))
             .thenAnswer(invocation -> {
@@ -167,7 +164,7 @@ public class EntitlementCertificateGeneratorTest {
         ObjectMapper mapper = new ObjectMapper();
 
         CryptoManager cryptoManager = CryptoUtil.getCryptoManager(config);
-        this.keyPairGenerator = new BouncyCastleKeyPairGenerator(cryptoManager,
+        ConsumerKeyPairGenerator keyPairGenerator = new ConsumerKeyPairGenerator(cryptoManager,
             mock(KeyPairDataCurator.class));
         X509ExtensionUtil x509ExtensionUtil = new X509ExtensionUtil(config);
         X509V3ExtensionUtil x509V3ExtensionUtil = new X509V3ExtensionUtil(config, entitlementCurator,
@@ -181,11 +178,11 @@ public class EntitlementCertificateGeneratorTest {
             this.serialCurator,
             this.ownerCurator,
             this.entitlementCurator,
-            this.i18n,
+            i18n,
             config,
             this.consumerTypeCurator,
             this.environmentCurator,
-            this.keyPairGenerator,
+            keyPairGenerator,
             CryptoUtil.getPemEncoder(),
             cryptoManager);
     }
