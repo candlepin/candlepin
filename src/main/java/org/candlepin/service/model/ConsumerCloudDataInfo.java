@@ -2,7 +2,7 @@ package org.candlepin.service.model;
 
 import java.util.List;
 
-public interface CloudConsumerInfo {
+public interface ConsumerCloudDataInfo {
 
     String getCloudProviderShortName();
 

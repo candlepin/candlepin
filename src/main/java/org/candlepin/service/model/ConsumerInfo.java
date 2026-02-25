@@ -71,6 +71,6 @@ public interface ConsumerInfo extends ServiceAdapterModel {
      */
     Map<String, String> getFacts();
 
-    CloudConsumerInfo getConsumerCloudData();
+    ConsumerCloudDataInfo getConsumerCloudData();
 
 }

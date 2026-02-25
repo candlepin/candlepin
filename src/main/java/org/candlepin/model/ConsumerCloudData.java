@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.service.model.CloudConsumerInfo;
+import org.candlepin.service.model.ConsumerCloudDataInfo;
 import org.candlepin.util.Util;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -40,7 +40,7 @@ import javax.validation.constraints.NotNull;
 
 @Entity
 @Table(name = ConsumerCloudData.DB_TABLE)
-public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData> implements CloudConsumerInfo {
+public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData> implements ConsumerCloudDataInfo {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_consumer_cloud_data";
