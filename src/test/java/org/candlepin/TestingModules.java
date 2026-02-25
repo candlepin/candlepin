@@ -49,12 +49,10 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoManager;
-import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.bc.BouncyCastleCryptoManager;
-import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.bc.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.bc.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
@@ -321,9 +319,6 @@ public class TestingModules {
             bind(Enforcer.class).to(EnforcerForTesting.class); // .to(JavascriptEnforcer.class);
 
             this.bindPki();
-
-            // Temporary bindings that should go away once the PQC work completes
-            bind(KeyPairGenerator.class).to(BouncyCastleKeyPairGenerator.class).asEagerSingleton();
 
             bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
             bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);

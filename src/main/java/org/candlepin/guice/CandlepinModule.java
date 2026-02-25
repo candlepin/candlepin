@@ -96,7 +96,6 @@ import org.candlepin.messaging.impl.noop.NoopContextListener;
 import org.candlepin.messaging.impl.noop.NoopSessionFactory;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoManager;
-import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.certs.AnonymousCertificateGenerator;
@@ -107,7 +106,6 @@ import org.candlepin.pki.certs.ProductCertificateGenerator;
 import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.pki.certs.UeberCertificateGenerator;
 import org.candlepin.pki.impl.bc.BouncyCastleCryptoManager;
-import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
 import org.candlepin.pki.impl.bc.BouncyCastlePemEncoder;
 import org.candlepin.pki.impl.bc.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
@@ -313,8 +311,6 @@ public class CandlepinModule extends AbstractModule {
         bind(BouncyCastleProvider.class).toProvider(BouncyCastleSecurityProvider.class);
 
         // Generic crypto wrappers and CA dependencies
-        bind(KeyPairGenerator.class).to(BouncyCastleKeyPairGenerator.class).asEagerSingleton(); // temp
-
         bind(CertificateReader.class).to(JcaCertificateReader.class).asEagerSingleton();
         bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class).asEagerSingleton();
         bind(PemEncoder.class).to(BouncyCastlePemEncoder.class).asEagerSingleton();

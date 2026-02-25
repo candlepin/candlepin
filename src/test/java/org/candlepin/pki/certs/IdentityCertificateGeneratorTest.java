@@ -32,8 +32,7 @@ import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.pki.CryptoManager;
-import org.candlepin.pki.KeyPairGenerator;
-import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
+import org.candlepin.pki.util.ConsumerKeyPairGenerator;
 import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.TestUtil;
 
@@ -55,7 +54,7 @@ class IdentityCertificateGeneratorTest {
         Configuration config = TestConfig.defaults();
 
         CryptoManager cryptoManager = CryptoUtil.getCryptoManager(config);
-        KeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(cryptoManager,
+        ConsumerKeyPairGenerator keyPairGenerator = new ConsumerKeyPairGenerator(cryptoManager,
             mock(KeyPairDataCurator.class));
 
         this.identityCertificateCurator = mock(IdentityCertificateCurator.class);

@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -347,6 +348,10 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
         orphanRemoval = true, cascade = { CascadeType.ALL })
     private ConsumerCloudData consumerCloudData;
 
+    // Temporarily transient; remove once we fully implement this on the consumer.
+    @Transient
+    private String cryptoScheme;
+
     public Consumer() {
         this.addOns = new HashSet<>();
         this.entitlements = new HashSet<>();
@@ -641,6 +646,41 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     }
 
     /**
+     * Fetches the client-configured crypto scheme for this consumer. If the client has not defined the crypto
+     * scheme, this method returns an empty optional.
+     * <p>
+     * <strong>Warning:</strong> any scheme name returned by this method is not guaranteed to be a currently
+     * configured or even a valid scheme name. Receivers are responsible for validating or correcting the
+     * returned scheme name.
+     *
+     * @return
+     *  An optional containing the consumer's requested cryptographic scheme name, or an empty optional if
+     *  the consumer does not specify a scheme
+     */
+    public Optional<String> getCryptoScheme() {
+        return Optional.ofNullable(this.cryptoScheme);
+    }
+
+    /**
+     * Sets or clears the cryptographic scheme name for this consumer. If the provided cryptographic scheme is
+     * null or empty, any existing value will be cleared.
+     * <p>
+     * <strong>Warning:</strong> this method performs no validation on the scheme name. Even if the name of
+     * the scheme is invalid or otherwise does not map to a currently configured scheme, it will be stored as
+     * provided.
+     *
+     * @param schemeName
+     *  the name of the scheme to define for this consumer
+     *
+     * @return
+     *  a reference to this consumer instance
+     */
+    public Consumer setCryptoScheme(String schemeName) {
+        this.cryptoScheme = schemeName != null && !schemeName.isBlank() ? schemeName : null;
+        return this;
+    }
+
+    /**
      * Returns if the <code>otherFacts</code> are
      * the same as the facts of this consumer model entity.
      *
@@ -812,12 +852,25 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
         return this;
     }
 
-    public KeyPairData getKeyPairData() {
-        return keyPairData;
-    }
-
     public Date getLastCheckin() {
         return this.lastCheckin;
+    }
+
+    /**
+     * Fetches the most recently generated key pair for this consumer. If a key pair has not yet been
+     * generated or the previous key pair was removed, this method returns null.
+     * <p>
+     * <strong>Warning</strong>: Due to the long legacy this data has, it is possible the key algorithm or
+     * size has changed since this key pair was generated. Callers should not use this method to make
+     * authoritative decisions or operations with the key pair returned without first ensuring the key pair is
+     * still valid for the given context. In essence, this value should be treated as a cache.
+     *
+     * @return
+     *  the most recently generated key pair data for this consumer, or null if a key pair has not yet been
+     *  generated or the last key pair was removed
+     */
+    public KeyPairData getKeyPairData() {
+        return keyPairData;
     }
 
     public Consumer setKeyPairData(KeyPairData keyPairData) {
