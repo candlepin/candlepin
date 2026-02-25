@@ -26,6 +26,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
+import org.candlepin.model.Consumer;
 import org.candlepin.test.CryptoUtil;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -36,6 +37,7 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
@@ -226,11 +228,58 @@ public abstract class CryptoManagerTest {
         assertThrows(IllegalArgumentException.class, () -> cryptoManager.getCryptoScheme((String) null));
     }
 
-    // TODO: Add tests for getCryptoSchemes(Consumer) once it is implemented
-    // - fetches scheme defined in consumer object
-    // - returns empty optional if consumer does not define a scheme
-    // - returns empty optional if consumer defines scheme not present in scheme list
-    // - throws exception on null consumer
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetConsumerCryptoScheme(Scheme scheme) throws Exception {
+        Consumer consumer = new Consumer()
+            .setCryptoScheme(scheme.name());
+
+        // Build a configuration that definitely contains and lists the scheme under test
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(",", SUPPORTED_SCHEMES.keySet()));
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isNotNull()
+            .hasValue(scheme);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testGetConsumerCryptoSchemeReturnsEmptyWhenSchemeNotDefined(String schemeName) {
+        Consumer consumer = new Consumer()
+            .setCryptoScheme(schemeName);
+
+        CryptoManager cryptoManager = this.buildCryptoManager();
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"nonexistent_scheme_name", "!@#$invalid&*%)!(*%#", "0123456789", "\t", "   "})
+    public void testGetConsumerCryptoSchemeReturnsEmptyWhenSchemeNameDoesntExist(String schemeName)
+        throws Exception {
+
+        Consumer consumer = new Consumer()
+            .setCryptoScheme(schemeName);
+
+        CryptoManager cryptoManager = this.buildCryptoManager();
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetConsumerCryptoSchemeThrowsExceptionOnNullConsumer() throws Exception {
+        CryptoManager cryptoManager = this.buildCryptoManager();
+
+        assertThrows(IllegalArgumentException.class, () -> cryptoManager.getCryptoScheme((Consumer) null));
+    }
 
     @Test
     public void testGetDefaultCryptoScheme() throws Exception {
@@ -556,7 +605,7 @@ public abstract class CryptoManagerTest {
 
     @ParameterizedTest
     @MethodSource("schemeSource")
-    public void testGetSignatureValidatorAllowsSchemeWithPrivateKey(Scheme scheme) {
+    public void testGetSignatureValidatorAllowsSchemeWithoutPrivateKey(Scheme scheme) {
         CryptoManager cryptoManager = this.buildCryptoManager();
 
         Scheme keyless = new Scheme.Builder()
@@ -608,9 +657,36 @@ public abstract class CryptoManagerTest {
         assertThrows(IllegalArgumentException.class, () -> cryptoManager.getCertificateBuilder(null));
     }
 
-    // TODO: Add tests for getKeyPairGenerator(Scheme) once it is implemented
-    // - gets an object every time
-    // - requires a scheme (non-null input)
-    // - does not require a scheme with a private key
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetKeyPairGenerator(Scheme scheme) {
+        CryptoManager cryptoManager = this.buildCryptoManager();
+
+        KeyPairGenerator output = cryptoManager.getKeyPairGenerator(scheme);
+        assertNotNull(output);
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetKeyPairGeneratorAllowsSchemeWithoutPrivateKey(Scheme scheme) {
+        CryptoManager cryptoManager = this.buildCryptoManager();
+
+        Scheme keyless = new Scheme.Builder()
+            .setName(scheme.name())
+            .setCertificate(scheme.certificate())
+            .setSignatureAlgorithm(scheme.signatureAlgorithm())
+            .setKeyAlgorithm(scheme.keyAlgorithm())
+            .setKeySize(scheme.keySize().orElse(null))
+            .build();
+
+        KeyPairGenerator output = cryptoManager.getKeyPairGenerator(keyless);
+        assertNotNull(output);
+    }
+
+    @Test
+    public void testGetKeyPairGeneratorThrowsExceptionOnNullInput() {
+        CryptoManager cryptoManager = this.buildCryptoManager();
+        assertThrows(IllegalArgumentException.class, () -> cryptoManager.getKeyPairGenerator(null));
+    }
 
 }

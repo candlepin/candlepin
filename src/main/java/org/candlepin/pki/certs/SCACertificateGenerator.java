@@ -37,11 +37,11 @@ import org.candlepin.model.SCACertificate;
 import org.candlepin.model.dto.Content;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.DistinguishedName;
-import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.Scheme;
 import org.candlepin.pki.X509Extension;
+import org.candlepin.pki.util.ConsumerKeyPairGenerator;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
@@ -50,6 +50,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.security.KeyException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
@@ -85,7 +86,7 @@ public class SCACertificateGenerator {
 
     private final CryptoManager cryptoManager;
     private final PemEncoder pemEncoder;
-    private final KeyPairGenerator keyPairGenerator;
+    private final ConsumerKeyPairGenerator keyPairGenerator;
     private final X509V3ExtensionUtil v3ExtensionUtil;
     private final V3CapabilityCheck v3CapabilityCheck;
     private final EntitlementPayloadGenerator payloadGenerator;
@@ -106,7 +107,7 @@ public class SCACertificateGenerator {
         Configuration configuration,
         CryptoManager cryptoManager,
         PemEncoder pemEncoder,
-        KeyPairGenerator keyPairGenerator,
+        ConsumerKeyPairGenerator keyPairGenerator,
         X509V3ExtensionUtil v3ExtensionUtil,
         V3CapabilityCheck v3CapabilityCheck,
         EntitlementPayloadGenerator payloadGenerator,
@@ -180,9 +181,9 @@ public class SCACertificateGenerator {
         // Impl note:
         // These need to be ordered according to priority! At the time of writing, getConsumerEnvironments
         // does this, but if that ever changes, we absolutely need that sorting here.
-        List<Environment> environments = environmentCurator.getConsumerEnvironments(consumer);
+        List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
 
-        return getContentAccessPayload(owner, consumer, environments);
+        return this.getContentAccessPayload(owner, consumer, environments);
     }
 
     /**
@@ -218,9 +219,14 @@ public class SCACertificateGenerator {
             return null;
         }
 
-        List<Environment> environments = environmentCurator.getConsumerEnvironments(consumer);
+        List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
 
-        return getCertificate(owner, consumer, environments);
+        try {
+            return this.getCertificate(owner, consumer, environments);
+        }
+        catch (KeyException e) {
+            throw new CertificateCreationException("Exception occurred while building certificate", e);
+        }
     }
 
     /**
@@ -263,29 +269,39 @@ public class SCACertificateGenerator {
         // does this, but if that ever changes, we absolutely need that sorting here.
         List<Environment> environments = environmentCurator.getConsumerEnvironments(consumer);
 
-        SCACertificate cert = getCertificate(owner, consumer, environments);
-        ContentAccessPayload payload = getContentAccessPayload(owner, consumer, environments);
+        try {
+            SCACertificate cert = this.getCertificate(owner, consumer, environments);
+            ContentAccessPayload payload = this.getContentAccessPayload(owner, consumer, environments);
 
-        Date certUpdated = cert.getUpdated();
-        Date payloadUpdated = payload.getTimestamp();
+            Date certUpdated = cert.getUpdated();
+            Date payloadUpdated = payload.getTimestamp();
 
-        SCACertificate combined = new SCACertificate();
-        combined.setCert(cert.getCert() + payload.getPayload());
-        combined.setCreated(cert.getCreated());
-        combined.setUpdated(payloadUpdated.after(certUpdated) ? payloadUpdated : certUpdated);
-        combined.setId(cert.getId());
-        combined.setKey(cert.getKey());
-        combined.setSerial(cert.getSerial());
+            SCACertificate combined = new SCACertificate();
+            combined.setCert(cert.getCert() + payload.getPayload());
+            combined.setCreated(cert.getCreated());
+            combined.setUpdated(payloadUpdated.after(certUpdated) ? payloadUpdated : certUpdated);
+            combined.setId(cert.getId());
+            combined.setKey(cert.getKey());
+            combined.setSerial(cert.getSerial());
 
-        return combined;
+            return combined;
+        }
+        catch (KeyException e) {
+            throw new CertificateCreationException("Exception occurred while building certificate", e);
+        }
     }
 
-    private SCACertificate getCertificate(Owner owner, Consumer consumer, List<Environment> environments) {
+    private SCACertificate getCertificate(Owner owner, Consumer consumer, List<Environment> environments)
+        throws KeyException {
+
+        // TODO: FIXME: There appears to be some opportunities for key desync with the way these certificates
+        // are built/managed and the janky, stacked nature of SCACertificates
+
         SCACertificate scaCertificate = consumer.getContentAccessCert();
         if (scaCertificate == null) {
             log.info("Generating new SCA certificate key for consumer: \"{}\"", consumer.getUuid());
 
-            KeyPair keypair = keyPairGenerator.getKeyPair(consumer);
+            KeyPair keypair = keyPairGenerator.getConsumerKeyPair(consumer);
 
             scaCertificate = new SCACertificate();
             scaCertificate.setConsumer(consumer);
@@ -314,7 +330,7 @@ public class SCACertificateGenerator {
             OffsetDateTime end = start.plusYears(1L);
 
             serial = createSerial(end);
-            KeyPair keypair = keyPairGenerator.getKeyPair(consumer);
+            KeyPair keypair = keyPairGenerator.getConsumerKeyPair(consumer);
             org.candlepin.model.dto.Product container = createProductContainer(owner, environments);
 
             X509Certificate x509Cert = createX509Cert(consumer.getUuid(), owner, serial, keypair,

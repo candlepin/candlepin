@@ -36,7 +36,6 @@ import org.candlepin.model.ProductContent;
 import org.candlepin.model.dto.Content;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.DistinguishedName;
-import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.Scheme;
@@ -54,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.security.KeyException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.time.OffsetDateTime;
@@ -90,7 +90,6 @@ public class AnonymousCertificateGenerator {
     private final ProductServiceAdapter prodAdapter;
     private final AnonymousCertContentCache contentCache;
     private final PemEncoder pemEncoder;
-    private final KeyPairGenerator keyPairGenerator;
     private final CryptoManager cryptoManager;
 
     private int certDuration;
@@ -109,7 +108,6 @@ public class AnonymousCertificateGenerator {
         ProductServiceAdapter prodAdapter,
         AnonymousCertContentCache contentCache,
         PemEncoder pemEncoder,
-        KeyPairGenerator keyPairGenerator,
         CryptoManager cryptoManager) {
 
         // TODO: reorder these
@@ -121,7 +119,6 @@ public class AnonymousCertificateGenerator {
         this.prodAdapter = Objects.requireNonNull(prodAdapter);
         this.contentCache = Objects.requireNonNull(contentCache);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
-        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
         this.config = Objects.requireNonNull(config);
         this.cryptoManager = Objects.requireNonNull(cryptoManager);
 
@@ -230,11 +227,17 @@ public class AnonymousCertificateGenerator {
             this.contentCache.put(consumer.getProductIds(), new AnonymousCertContent(payload, content));
         }
 
-        return createAnonContentAccessCertificate(consumer, payload, content);
+        try {
+            return createAnonContentAccessCertificate(consumer, payload, content);
+        }
+        catch (KeyException e) {
+            throw new CertificateCreationException("Exception occurred while building certificate", e);
+        }
     }
 
     private AnonymousContentAccessCertificate createAnonContentAccessCertificate(
-        AnonymousCloudConsumer consumer, String payloadAndSignature, List<Content> certificateContent) {
+        AnonymousCloudConsumer consumer, String payloadAndSignature, List<Content> certificateContent)
+        throws KeyException {
 
         if (consumer == null) {
             throw new IllegalArgumentException("anonymous cloud consumer is null");
@@ -255,7 +258,8 @@ public class AnonymousCertificateGenerator {
         OffsetDateTime end = start.plusDays(this.certDuration);
 
         CertificateSerial serial = createSerial(end);
-        KeyPair keyPair = this.keyPairGenerator.generateKeyPair();
+        KeyPair keyPair = this.cryptoManager.getKeyPairGenerator(this.scheme)
+            .generateKeyPair();
 
         org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
         container.setContent(certificateContent);

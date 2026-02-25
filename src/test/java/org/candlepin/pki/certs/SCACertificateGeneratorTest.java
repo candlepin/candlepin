@@ -41,7 +41,7 @@ import org.candlepin.model.SCACertificate;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.huffman.Huffman;
-import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
+import org.candlepin.pki.util.ConsumerKeyPairGenerator;
 import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -98,14 +98,14 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
     private CryptoManager cryptoManager;
     private X509V3ExtensionUtil v3ExtensionUtil;
     private SCACertificateGenerator generator;
-    private BouncyCastleKeyPairGenerator keyPairGenerator;
+    private ConsumerKeyPairGenerator keyPairGenerator;
     private ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
         this.config = TestConfig.defaults();
         this.cryptoManager = CryptoUtil.getCryptoManager(this.config);
-        this.keyPairGenerator = new BouncyCastleKeyPairGenerator(this.cryptoManager, this.keyPairDataCurator);
+        this.keyPairGenerator = new ConsumerKeyPairGenerator(this.cryptoManager, this.keyPairDataCurator);
         this.v3ExtensionUtil = spy(new X509V3ExtensionUtil(this.config, this.entitlementCurator,
             new Huffman()));
 

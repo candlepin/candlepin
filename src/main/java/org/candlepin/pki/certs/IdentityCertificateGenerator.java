@@ -23,13 +23,14 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.DistinguishedName;
-import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.Scheme;
+import org.candlepin.pki.util.ConsumerKeyPairGenerator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.KeyException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
@@ -50,7 +51,7 @@ public class IdentityCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(IdentityCertificateGenerator.class);
 
     private final CryptoManager cryptoManager;
-    private final KeyPairGenerator keyPairGenerator;
+    private final ConsumerKeyPairGenerator keyPairGenerator;
     private final PemEncoder pemEncoder;
     private final IdentityCertificateCurator idCertCurator;
     private final CertificateSerialCurator serialCurator;
@@ -65,7 +66,7 @@ public class IdentityCertificateGenerator {
         Configuration config,
         CryptoManager cryptoManager,
         PemEncoder pemEncoder,
-        KeyPairGenerator keyPairGenerator,
+        ConsumerKeyPairGenerator keyPairGenerator,
         IdentityCertificateCurator identityCertCurator,
         CertificateSerialCurator serialCurator) {
 
@@ -124,13 +125,18 @@ public class IdentityCertificateGenerator {
             }
         }
 
-        IdentityCertificate newCertificate = this.createCertificate(consumer);
-        consumer.setIdCert(newCertificate);
+        try {
+            IdentityCertificate newCertificate = this.createCertificate(consumer);
+            consumer.setIdCert(newCertificate);
 
-        return newCertificate;
+            return newCertificate;
+        }
+        catch (KeyException e) {
+            throw new CertificateCreationException("Exception occurred while building certificate", e);
+        }
     }
 
-    private IdentityCertificate createCertificate(Consumer consumer) {
+    private IdentityCertificate createCertificate(Consumer consumer) throws KeyException {
         log.debug("Generating identity cert for consumer: {}", consumer.getUuid());
 
         ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
@@ -142,7 +148,7 @@ public class IdentityCertificateGenerator {
         // otherwise we could have used cascading create
         this.serialCurator.create(serial);
 
-        KeyPair keyPair = this.keyPairGenerator.getKeyPair(consumer);
+        KeyPair keyPair = this.keyPairGenerator.getConsumerKeyPair(consumer);
 
         X509Certificate certificate = this.cryptoManager.getCertificateBuilder(this.scheme)
             .withDN(dn)

@@ -19,7 +19,6 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.DistinguishedName;
-import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.Scheme;
 import org.candlepin.pki.X509Extension;
@@ -29,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
+import java.security.KeyException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
@@ -50,7 +50,6 @@ public class ProductCertificateGenerator {
 
     private final CryptoManager cryptoManager;
     private final X509ExtensionUtil extensionUtil;
-    private final KeyPairGenerator keyPairGenerator;
     private final PemEncoder pemEncoder;
 
     private final ProductCertificateCurator productCertificateCurator;
@@ -60,12 +59,10 @@ public class ProductCertificateGenerator {
 
     @Inject
     public ProductCertificateGenerator(CryptoManager cryptoManager, X509ExtensionUtil extensionUtil,
-        KeyPairGenerator keyPairGenerator, PemEncoder pemEncoder,
-        ProductCertificateCurator productCertificateCurator) {
+        PemEncoder pemEncoder, ProductCertificateCurator productCertificateCurator) {
 
         this.cryptoManager = Objects.requireNonNull(cryptoManager);
         this.extensionUtil = Objects.requireNonNull(extensionUtil);
-        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
         this.productCertificateCurator = Objects.requireNonNull(productCertificateCurator);
 
@@ -107,7 +104,7 @@ public class ProductCertificateGenerator {
                 log.warn("Attempted to create a product certificate for a non-engineering product: {}",
                     product, e);
             }
-            catch (Exception e) {
+            catch (KeyException e) {
                 throw new CertificateCreationException("Unable to generate product certificate", e);
             }
         }
@@ -115,10 +112,12 @@ public class ProductCertificateGenerator {
         return cert;
     }
 
-    private ProductCertificate createCertForProduct(Product product) {
+    private ProductCertificate createCertForProduct(Product product) throws KeyException {
         log.debug("Generating cert for product: {}", product);
 
-        KeyPair keyPair = this.keyPairGenerator.generateKeyPair();
+        KeyPair keyPair = this.cryptoManager.getKeyPairGenerator(this.scheme)
+            .generateKeyPair();
+
         Set<X509Extension> extensions = this.extensionUtil.productExtensions(product);
 
         BigInteger serial = BigInteger.valueOf(product.getId().hashCode()).abs();
