@@ -16,22 +16,18 @@
 package org.candlepin.controller;
 
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCloudData;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.service.EventAdapter;
-import org.candlepin.service.model.CloudCheckInEvent;
+import org.candlepin.service.ConsumerEventAdapter;
 import org.candlepin.util.NonNullLinkedHashSet;
 
 import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.Collection;
 import java.util.Date;
@@ -55,20 +51,17 @@ public class ConsumerManager {
     private final ConsumerCurator consumerCurator;
     private final ContentAccessCertificateCurator caCertificateCurator;
     private final EnvironmentCurator envCurator;
-    private final EventAdapter eventAdapter;
-    private final ObjectMapper objectMapper;
+    private final ConsumerEventAdapter consumerEventAdapter;
 
     @Inject
     public ConsumerManager(ConsumerCurator consumerCurator,
         ContentAccessCertificateCurator caCertificateCurator,
         EnvironmentCurator envCurator,
-        EventAdapter eventAdapter,
-        ObjectMapper objectMapper) {
+        ConsumerEventAdapter consumerEventAdapter) {
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.caCertificateCurator = Objects.requireNonNull(caCertificateCurator);
         this.envCurator = Objects.requireNonNull(envCurator);
-        this.eventAdapter = Objects.requireNonNull(eventAdapter);
-        this.objectMapper = Objects.requireNonNull(objectMapper);
+        this.consumerEventAdapter = Objects.requireNonNull(consumerEventAdapter);
     }
 
     /**
@@ -85,12 +78,7 @@ public class ConsumerManager {
 
         consumer.setLastCheckin(new Date());
         consumer = consumerCurator.merge(consumer);
-
-        ConsumerCloudData cloudData = consumer.getConsumerCloudData();
-        if (cloudData != null) {
-            CloudCheckInEvent cloudCheckInEvent = new CloudCheckInEvent(cloudData, objectMapper);
-            eventAdapter.publish(cloudCheckInEvent);
-        }
+        consumerEventAdapter.createCheckInEvent(consumer);
     }
 
     /**
