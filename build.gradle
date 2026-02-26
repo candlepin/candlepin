@@ -140,6 +140,15 @@ dependencies {
 
     // Hibernate
     implementation(libs.hibernate.c3p0)
+    configurations.all {
+        resolutionStrategy {
+            // mchange-c3p0 and mchange-commons-java are transitive dependencies but added here as
+            // force-upgraded security overrides to avoid earlier versions vulnerable to CVE-2026-27727
+            force libs.mchange.c3p0
+            force libs.mchange.commons.java
+        }
+    }
+
     // Ehcache (for use with hibernate primarily)
     implementation(libs.hibernate.jcache)
     implementation(libs.ehcache)

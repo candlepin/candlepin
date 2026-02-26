@@ -42,6 +42,10 @@ guice-persist = { module = "com.google.inject.extensions:guice-persist", version
 guice-servlet = { module = "com.google.inject.extensions:guice-servlet", version.ref = "guice" }
 hamcrest = { module = "org.hamcrest:hamcrest-library", version = "3.0" }
 hibernate = { module = "javax.persistence:javax.persistence-api", version = "2.2" }
+# mchange-c3p0 and mchange-commons-java are transitive dependencies but added here as
+# force-upgraded security overrides to avoid earlier versions vulnerable to CVE-2026-27727
+mchange-c3p0 = { module = "com.mchange:c3p0", version = "0.12.0" }
+mchange-commons-java = { module = "com.mchange:mchange-commons-java", version = "0.4.0" }
 hibernate-c3p0 = { module = "org.hibernate:hibernate-c3p0", version.ref = "hibernate" }
 hibernate-jcache = { module = "org.hibernate:hibernate-jcache", version.ref = "hibernate" }
 hibernate-jpamodelgen = { module = "org.hibernate:hibernate-jpamodelgen", version.ref = "hibernate" }
