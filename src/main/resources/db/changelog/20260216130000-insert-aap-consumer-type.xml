@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+
+    <changeSet id="20260216130000" author="bthomasson" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*) from cp_consumer_type where label = 'aap'
+            </sqlCheck>
+        </preConditions>
+        <comment>Insert the AAP (Ansible Automation Platform) consumer type.</comment>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1008"/>
+            <column name="label" value="aap"/>
+            <column name="manifest" value="N"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
