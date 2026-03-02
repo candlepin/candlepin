@@ -12,8 +12,9 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.pki.certs;
+
+// TODO: delete this exception and use java.security.CertificateExceptions instead
 
 /**
  * Exception thrown when there is a problem during certificate creation

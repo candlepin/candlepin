@@ -18,7 +18,6 @@ package org.candlepin.pki.certs;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -30,14 +29,11 @@ import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.pki.CryptoManager;
-import org.candlepin.pki.KeyPairGenerator;
-import org.candlepin.pki.impl.bc.BouncyCastleKeyPairGenerator;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.TestUtil;
@@ -73,8 +69,6 @@ class UeberCertificateGeneratorTest {
         I18n i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
         Configuration config = TestConfig.defaults();
         CryptoManager cryptoManager = CryptoUtil.getCryptoManager(config);
-        KeyPairGenerator kpGen = new BouncyCastleKeyPairGenerator(cryptoManager,
-            mock(KeyPairDataCurator.class));
 
         this.generator = new UeberCertificateGenerator(
             new DefaultUniqueIdGenerator(),
@@ -84,7 +78,6 @@ class UeberCertificateGeneratorTest {
             this.consumerTypeCurator,
             i18n,
             cryptoManager,
-            kpGen,
             new X509ExtensionUtil(config),
             CryptoUtil.getPemEncoder());
     }
