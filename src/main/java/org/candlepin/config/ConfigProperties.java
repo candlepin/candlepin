@@ -30,6 +30,7 @@ import org.candlepin.config.validation.ConfigurationValidator;
 import org.candlepin.config.validation.IntegerConfigurationValidator;
 import org.candlepin.config.validation.StringConfigurationValidator;
 import org.candlepin.database.MigrationManagementLevel;
+import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.pki.SchemeReader;
 
 import java.util.ArrayList;
@@ -299,6 +300,10 @@ public class ConfigProperties {
             .append(config)
             .toString();
     }
+
+    public static final String JWT_CRYPTO_CERT = "candlepin.crypto.jwt.cert";
+    public static final String JWT_CRYPTO_KEY = "candlepin.crypto.jwt.key";
+    public static final String JWT_CRYPTO_KEY_PASSWORD = "candlepin.crypto.jwt.key_password";
 
     // Legacy crypto configuration
     public static final String LEGACY_CA_KEY = "candlepin.ca_key";

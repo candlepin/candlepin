@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -103,6 +103,8 @@ public class CloudRegistrationResourceTest {
     private Principal principal;
 
     private CloudRegistrationResource cloudRegResource;
+    private int standardTokenTTL = 2000;
+    private int anonymousTokenTTL = 1000;
 
     @BeforeEach
     public void init() {
@@ -119,7 +121,10 @@ public class CloudRegistrationResourceTest {
         this.mockAnonCloudCertCurator = mock(AnonymousContentAccessCertificateCurator.class);
         this.principalProvider = mock(PrincipalProvider.class);
 
-        doReturn(true).when(mockConfig).getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
+        doReturn(true).when(this.mockConfig).getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
+        doReturn(this.standardTokenTTL).when(this.mockConfig).getInt(ConfigProperties.JWT_TOKEN_TTL);
+        doReturn(this.anonymousTokenTTL).when(this.mockConfig).getInt(ConfigProperties.ANON_JWT_TOKEN_TTL);
+
         this.principal = new UserPrincipal("test_user", null, false);
         doReturn(this.principal).when(principalProvider).get();
 
@@ -155,12 +160,14 @@ public class CloudRegistrationResourceTest {
             .metadata("test-metadata")
             .signature("test-signature");
 
+        String tokenType = CloudAuthTokenType.STANDARD.toString();
         String expectedOwnerKey = "owner-key";
         String expectedToken = "token";
         doReturn(expectedOwnerKey).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationData(getCloudRegistrationData(dto));
-        doReturn(expectedToken).when(mockTokenGenerator).buildStandardRegistrationToken(principal,
-            expectedOwnerKey);
+        doReturn(expectedToken)
+            .when(mockTokenGenerator)
+            .generateAuthToken(principal, expectedOwnerKey, tokenType, this.standardTokenTTL);
 
         Response response = cloudRegResource.cloudAuthorize(dto, 1);
 
@@ -295,9 +302,11 @@ public class CloudRegistrationResourceTest {
         doReturn(owner).when(mockOwnerCurator).getByKey(expectedOwnerKey);
         doReturn(true).when(mockPoolCurator).hasPoolsForProducts(owner.getKey(), Set.of(prodId));
 
+        String expectedTokenType = CloudAuthTokenType.STANDARD.toString();
         String expectedToken = "standard-token";
-        doReturn(expectedToken).when(mockTokenGenerator).buildStandardRegistrationToken(principal,
-            expectedOwnerKey);
+        doReturn(expectedToken)
+            .when(mockTokenGenerator)
+            .generateAuthToken(principal, expectedOwnerKey, expectedTokenType, this.standardTokenTTL);
 
         Response response = cloudRegResource.cloudAuthorize(dto, 2);
 
@@ -312,7 +321,7 @@ public class CloudRegistrationResourceTest {
             .returns(expectedOwnerKey, CloudAuthenticationResultDTO::getOwnerKey)
             .returns(null, CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
             .returns(expectedToken, CloudAuthenticationResultDTO::getToken)
-            .returns(CloudAuthTokenType.STANDARD.toString(), CloudAuthenticationResultDTO::getTokenType);
+            .returns(expectedTokenType, CloudAuthenticationResultDTO::getTokenType);
 
         verify(mockJobManager, never()).queueJob(any(CloudAccountOrgSetupJobConfig.class));
     }
@@ -339,9 +348,11 @@ public class CloudRegistrationResourceTest {
             .setProductIds(prodIds);
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).create(any(AnonymousCloudConsumer.class));
 
+        String expectedTokenType = CloudAuthTokenType.ANONYMOUS.toString();
         String expectedToken = "anon-token";
-        doReturn(expectedToken).when(mockTokenGenerator).buildAnonymousRegistrationToken(principal,
-            anonConsumer.getUuid());
+        doReturn(expectedToken)
+            .when(mockTokenGenerator)
+            .generateAuthToken(principal, anonConsumer.getUuid(), expectedTokenType, this.anonymousTokenTTL);
 
         Response response = cloudRegResource.cloudAuthorize(dto, 2);
 
@@ -356,7 +367,7 @@ public class CloudRegistrationResourceTest {
             .returns(null, CloudAuthenticationResultDTO::getOwnerKey)
             .returns(anonConsumer.getUuid(), CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
             .returns(expectedToken, CloudAuthenticationResultDTO::getToken)
-            .returns(CloudAuthTokenType.ANONYMOUS.toString(), CloudAuthenticationResultDTO::getTokenType);
+            .returns(expectedTokenType, CloudAuthenticationResultDTO::getTokenType);
 
         verify(mockJobManager).queueJob(any(CloudAccountOrgSetupJobConfig.class));
     }
@@ -386,9 +397,11 @@ public class CloudRegistrationResourceTest {
             .setProductIds(Set.of(prodId));
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).create(any(AnonymousCloudConsumer.class));
 
+        String expectedTokenType = CloudAuthTokenType.ANONYMOUS.toString();
         String expectedToken = "anon-token";
-        doReturn(expectedToken).when(mockTokenGenerator).buildAnonymousRegistrationToken(principal,
-            anonConsumer.getUuid());
+        doReturn(expectedToken)
+            .when(mockTokenGenerator)
+            .generateAuthToken(principal, anonConsumer.getUuid(), expectedTokenType, this.anonymousTokenTTL);
 
         Response response = cloudRegResource.cloudAuthorize(dto, 2);
 
@@ -403,7 +416,7 @@ public class CloudRegistrationResourceTest {
             .returns(expectedOwnerKey, CloudAuthenticationResultDTO::getOwnerKey)
             .returns(anonConsumer.getUuid(), CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
             .returns(expectedToken, CloudAuthenticationResultDTO::getToken)
-            .returns(CloudAuthTokenType.ANONYMOUS.toString(), CloudAuthenticationResultDTO::getTokenType);
+            .returns(expectedTokenType, CloudAuthenticationResultDTO::getTokenType);
 
         verify(mockJobManager).queueJob(any(CloudAccountOrgSetupJobConfig.class));
     }
@@ -430,9 +443,11 @@ public class CloudRegistrationResourceTest {
             .setProductIds(prodIds);
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).create(any(AnonymousCloudConsumer.class));
 
+        String expectedTokenType = CloudAuthTokenType.ANONYMOUS.toString();
         String expectedToken = "anon-token";
-        doReturn(expectedToken).when(mockTokenGenerator).buildAnonymousRegistrationToken(principal,
-            anonConsumer.getUuid());
+        doReturn(expectedToken)
+            .when(mockTokenGenerator)
+            .generateAuthToken(principal, anonConsumer.getUuid(), expectedTokenType, this.anonymousTokenTTL);
 
         Response response = cloudRegResource.cloudAuthorize(dto, 2);
 
@@ -447,7 +462,7 @@ public class CloudRegistrationResourceTest {
             .returns(expectedOwnerKey, CloudAuthenticationResultDTO::getOwnerKey)
             .returns(anonConsumer.getUuid(), CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
             .returns(expectedToken, CloudAuthenticationResultDTO::getToken)
-            .returns(CloudAuthTokenType.ANONYMOUS.toString(), CloudAuthenticationResultDTO::getTokenType);
+            .returns(expectedTokenType, CloudAuthenticationResultDTO::getTokenType);
 
         verify(mockJobManager, never()).queueJob(any(CloudAccountOrgSetupJobConfig.class));
     }
@@ -477,9 +492,11 @@ public class CloudRegistrationResourceTest {
             .setProductIds(Set.of(prodId));
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).create(any(AnonymousCloudConsumer.class));
 
+        String expectedTokenType = CloudAuthTokenType.ANONYMOUS.toString();
         String expectedToken = "anon-token";
-        doReturn(expectedToken).when(mockTokenGenerator).buildAnonymousRegistrationToken(principal,
-            anonConsumer.getUuid());
+        doReturn(expectedToken)
+            .when(mockTokenGenerator)
+            .generateAuthToken(principal, anonConsumer.getUuid(), expectedTokenType, this.anonymousTokenTTL);
 
         Response response = cloudRegResource.cloudAuthorize(dto, 2);
 
@@ -494,7 +511,7 @@ public class CloudRegistrationResourceTest {
             .returns(expectedOwnerKey, CloudAuthenticationResultDTO::getOwnerKey)
             .returns(anonConsumer.getUuid(), CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
             .returns(expectedToken, CloudAuthenticationResultDTO::getToken)
-            .returns(CloudAuthTokenType.ANONYMOUS.toString(), CloudAuthenticationResultDTO::getTokenType);
+            .returns(expectedTokenType, CloudAuthenticationResultDTO::getTokenType);
 
         verify(mockJobManager, never()).queueJob(any(CloudAccountOrgSetupJobConfig.class));
     }
@@ -525,9 +542,11 @@ public class CloudRegistrationResourceTest {
             .setProductIds(Set.of(prodId));
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).getByCloudInstanceId(instanceId);
 
+        String expectedTokenType = CloudAuthTokenType.ANONYMOUS.toString();
         String expectedToken = "anon-token";
-        doReturn(expectedToken).when(mockTokenGenerator).buildAnonymousRegistrationToken(principal,
-            anonConsumer.getUuid());
+        doReturn(expectedToken)
+            .when(mockTokenGenerator)
+            .generateAuthToken(principal, anonConsumer.getUuid(), expectedTokenType, this.anonymousTokenTTL);
 
         Response response = cloudRegResource.cloudAuthorize(dto, 2);
 
@@ -542,7 +561,7 @@ public class CloudRegistrationResourceTest {
             .returns(expectedOwnerKey, CloudAuthenticationResultDTO::getOwnerKey)
             .returns(anonConsumer.getUuid(), CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
             .returns(expectedToken, CloudAuthenticationResultDTO::getToken)
-            .returns(CloudAuthTokenType.ANONYMOUS.toString(), CloudAuthenticationResultDTO::getTokenType);
+            .returns(expectedTokenType, CloudAuthenticationResultDTO::getTokenType);
 
         verify(mockJobManager, never()).queueJob(any(CloudAccountOrgSetupJobConfig.class));
     }
@@ -569,9 +588,11 @@ public class CloudRegistrationResourceTest {
             .setProductIds(Set.of(prodId));
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).getByCloudInstanceId(instanceId);
 
+        String expectedTokenType = CloudAuthTokenType.ANONYMOUS.toString();
         String expectedToken = "anon-token";
-        doReturn(expectedToken).when(mockTokenGenerator).buildAnonymousRegistrationToken(principal,
-            anonConsumer.getUuid());
+        doReturn(expectedToken)
+            .when(mockTokenGenerator)
+            .generateAuthToken(principal, anonConsumer.getUuid(), expectedTokenType, this.anonymousTokenTTL);
 
         Response response = cloudRegResource.cloudAuthorize(dto, 2);
 
@@ -589,7 +610,7 @@ public class CloudRegistrationResourceTest {
             .returns(null, CloudAuthenticationResultDTO::getOwnerKey)
             .returns(anonConsumer.getUuid(), CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
             .returns(expectedToken, CloudAuthenticationResultDTO::getToken)
-            .returns(CloudAuthTokenType.ANONYMOUS.toString(), CloudAuthenticationResultDTO::getTokenType);
+            .returns(expectedTokenType, CloudAuthenticationResultDTO::getTokenType);
     }
 
     @Test
@@ -643,10 +664,11 @@ public class CloudRegistrationResourceTest {
             .when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
+        String tokenType = CloudAuthTokenType.STANDARD.toString();
         String expectedToken = TestUtil.randomString();
         doReturn(expectedToken)
             .when(mockTokenGenerator)
-            .buildStandardRegistrationToken(principal, expectedOwnerKey);
+            .generateAuthToken(principal, expectedOwnerKey, tokenType, this.standardTokenTTL);
 
         Response response = cloudRegResource.cloudAuthorize(dto, 2);
 
@@ -679,10 +701,10 @@ public class CloudRegistrationResourceTest {
             .when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
-        String expectedToken = TestUtil.randomString();
-        doReturn(expectedToken)
+        String tokenType = CloudAuthTokenType.STANDARD.toString();
+        doReturn(TestUtil.randomString())
             .when(mockTokenGenerator)
-            .buildStandardRegistrationToken(principal, expectedOwnerKey);
+            .generateAuthToken(principal, expectedOwnerKey, tokenType, this.standardTokenTTL);
 
         assertThrows(NotImplementedException.class, () -> cloudRegResource.cloudAuthorize(dto, 2));
     }

@@ -22,9 +22,20 @@ import java.util.Objects;
 public class CloudConsumerPrincipal extends Principal {
 
     private final Owner owner;
+    private final String username;
 
     public CloudConsumerPrincipal(Owner owner) {
+        this(owner, null);
+    }
+
+    public CloudConsumerPrincipal(Owner owner, String username) {
         this.owner = Objects.requireNonNull(owner);
+        this.username = username;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.username;
     }
 
     @Override
