@@ -27,9 +27,15 @@ import java.util.Objects;
 public class AnonymousCloudConsumerPrincipal extends Principal {
 
     private AnonymousCloudConsumer consumer;
+    private String username;
 
     public AnonymousCloudConsumerPrincipal(AnonymousCloudConsumer consumer) {
+        this(consumer, null);
+    }
+
+    public AnonymousCloudConsumerPrincipal(AnonymousCloudConsumer consumer, String username) {
         this.consumer = Objects.requireNonNull(consumer);
+        this.username = username;
 
         addPermission(new AnonymousCloudConsumerPermission(consumer));
     }
@@ -39,6 +45,11 @@ public class AnonymousCloudConsumerPrincipal extends Principal {
      */
     public AnonymousCloudConsumer getAnonymousCloudConsumer() {
         return this.consumer;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.username;
     }
 
     @Override

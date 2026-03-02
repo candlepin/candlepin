@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -22,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.candlepin.model.Owner;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 
 public class CloudConsumerPrincipalTest {
@@ -39,6 +42,18 @@ public class CloudConsumerPrincipalTest {
 
         assertThat(principal.permissions)
             .isEmpty();
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { "username" })
+    public void testGetUsername(String expectedUsername) {
+        Owner owner = createOwner();
+
+        CloudConsumerPrincipal principal = new CloudConsumerPrincipal(owner, expectedUsername);
+
+        assertThat(principal)
+            .returns(expectedUsername, Principal::getUsername);
     }
 
     @Test

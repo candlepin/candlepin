@@ -301,6 +301,10 @@ public class ConfigProperties {
             .toString();
     }
 
+    public static final String JWT_CRYPTO_CERT = "candlepin.crypto.jwt.cert";
+    public static final String JWT_CRYPTO_KEY = "candlepin.crypto.jwt.key";
+    public static final String JWT_CRYPTO_KEY_PASSWORD = "candlepin.crypto.jwt.key_password";
+
     // Legacy crypto configuration
     public static final String LEGACY_CA_KEY = "candlepin.ca_key";
     public static final String LEGACY_CA_CERT = "candlepin.ca_cert";
