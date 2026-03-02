@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -71,6 +71,10 @@ public final class TestConfig {
             config.setProperty(ConfigProperties.LEGACY_CA_KEY, legacyKeyPath);
             config.setProperty(ConfigProperties.LEGACY_CA_KEY_PASSWORD, LEGACY_CA_KEY_PASSWORD);
             config.setProperty(ConfigProperties.LEGACY_CA_CERT_UPSTREAM, upstreamCertRepo);
+
+            config.setProperty(ConfigProperties.JWT_CRYPTO_CERT, legacyCertPath);
+            config.setProperty(ConfigProperties.JWT_CRYPTO_KEY, legacyKeyPath);
+            config.setProperty(ConfigProperties.JWT_CRYPTO_KEY_PASSWORD, LEGACY_CA_KEY_PASSWORD);
 
             // Write other misc configurations...
             config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp");
