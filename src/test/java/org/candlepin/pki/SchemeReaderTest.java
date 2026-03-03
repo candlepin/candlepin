@@ -17,8 +17,14 @@ package org.candlepin.pki;
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
@@ -28,7 +34,6 @@ import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.TestUtil;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -37,6 +42,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.KeyException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
@@ -45,6 +51,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 
@@ -117,6 +124,44 @@ public class SchemeReaderTest {
             .returns(expected.signatureAlgorithm(), Scheme::signatureAlgorithm)
             .returns(expected.keyAlgorithm(), Scheme::keyAlgorithm)
             .returns(expected.keySize(), Scheme::keySize);
+    }
+
+    private CertificateReader mockCertificateReader(String path, X509Certificate certificate)
+        throws CertificateException {
+
+        CertificateReader mockCertificateReader = mock(CertificateReader.class);
+
+        doReturn(certificate)
+            .when(mockCertificateReader)
+            .read(any(InputStream.class));
+
+        doReturn(certificate)
+            .when(mockCertificateReader)
+            .read(eq(new File(path)));
+
+        doReturn(certificate)
+            .when(mockCertificateReader)
+            .read(eq(path));
+
+        return mockCertificateReader;
+    }
+
+    private PrivateKeyReader mockPrivateKeyReader(String path, PrivateKey privateKey) throws KeyException {
+        PrivateKeyReader mockPrivateKeyReader = mock(PrivateKeyReader.class);
+
+        doReturn(privateKey)
+            .when(mockPrivateKeyReader)
+            .read(any(InputStream.class), any());
+
+        doReturn(privateKey)
+            .when(mockPrivateKeyReader)
+            .read(eq(new File(path)), any());
+
+        doReturn(privateKey)
+            .when(mockPrivateKeyReader)
+            .read(eq(path), any());
+
+        return mockPrivateKeyReader;
     }
 
     private SchemeReader buildSchemeReader(Configuration config) throws CertificateException {
@@ -468,21 +513,219 @@ public class SchemeReaderTest {
             .hasMessageContaining("Unable to read certificate");
     }
 
-    @Test
-    @Disabled
-    public void testReadLegacySchemeDefaultsToLegacyValues() throws Exception {
-        // TODO: FIXME: CAN'T DO THIS PROPERLY UNTIL CERTIFICATE READER IS OVERHAULED AND MOCKABLE
-    }
+    // Impl note: currently the "read legacy" tests all use readDefaultScheme with a configuration that points
+    // the default scheme to the legacy scheme. In the future if readScheme is made public, these tests should
+    // be updated to directly target it instead of fetching it indirectly.
 
     @Test
-    @Disabled
     public void testReadLegacySchemeDefaultsToLegacyConfigEntries() throws Exception {
-        // TODO: FIXME: This cannot be done correctly until the certificate reader has been overhauled to
-        // look more like the private key reader (e.g. becomes mockable)
+        // At the time of writing, our legacy scheme is RSA
+        Scheme legacyScheme = CryptoUtil.generateRsaScheme();
+
+        // Write the cert and key so our readers can load them without needing mocks
+        File certificateFile = CryptoUtil.writeCertificateToFile(legacyScheme.certificate());
+        File privateKeyFile = CryptoUtil.writePrivateKeyToFile(legacyScheme.privateKey().get(), null);
+
+        // Intentionally define a mostly empty config so we're guaranteed to fall back to the legacy configs
+        // where they exist
+        DevConfig config = new DevConfig();
+        config.setProperty(ConfigProperties.LEGACY_CA_CERT, certificateFile.getCanonicalPath());
+        config.setProperty(ConfigProperties.LEGACY_CA_KEY, privateKeyFile.getCanonicalPath());
+
+        // Ensure we're only loading the legacy scheme
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, SchemeReader.LEGACY_SCHEME);
+        config.setProperty(ConfigProperties.CRYPTO_DEFAULT_SCHEME, SchemeReader.LEGACY_SCHEME);
+
+        SchemeReader schemeReader = this.buildSchemeReader(config);
+        Scheme defaultScheme = schemeReader.readDefaultScheme();
+
+        assertThat(defaultScheme)
+            .isNotNull()
+            .returns(legacyScheme.certificate(), Scheme::certificate)
+            .returns(legacyScheme.privateKey(), Scheme::privateKey)
+            .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_SIGNATURE_ALGORITHM, Scheme::signatureAlgorithm)
+            .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_ALGORITHM, Scheme::keyAlgorithm)
+            .returns(Optional.of(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_SIZE), Scheme::keySize);
     }
 
-    // TODO: Add validation that the legacy scheme can be overridden on a value-by-value basis, falling back
-    // to legacy defaults.
+    @Test
+    public void testReadLegacySchemeDefaultsToLegacyValues() throws Exception {
+        // At the time of writing, our legacy scheme is RSA
+        Scheme legacyScheme = CryptoUtil.generateRsaScheme();
+
+        // Intentionally define an empty config so we're guaranteed to fall back to the legacy defaults
+        DevConfig config = new DevConfig();
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, SchemeReader.LEGACY_SCHEME);
+        config.setProperty(ConfigProperties.CRYPTO_DEFAULT_SCHEME, SchemeReader.LEGACY_SCHEME);
+
+        // Impl note: We have to use mocks here so we can load our test assets from "real" filenames. This
+        // may requre updates later if the SchemeReader stops using the reader interfaces. :(
+        CertificateReader mockCertificateReader = mockCertificateReader(
+            SchemeReader.LEGACY_SCHEME_DEFAULT_CERT, legacyScheme.certificate());
+
+        PrivateKeyReader mockPrivateKeyReader = mockPrivateKeyReader(
+            SchemeReader.LEGACY_SCHEME_DEFAULT_KEY, legacyScheme.privateKey().get());
+
+        SchemeReader schemeReader = new SchemeReader(config, mockPrivateKeyReader, mockCertificateReader);
+        Scheme defaultScheme = schemeReader.readDefaultScheme();
+
+        assertThat(defaultScheme)
+            .isNotNull()
+            .returns(legacyScheme.certificate(), Scheme::certificate)
+            .returns(legacyScheme.privateKey(), Scheme::privateKey)
+            .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_SIGNATURE_ALGORITHM, Scheme::signatureAlgorithm)
+            .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_ALGORITHM, Scheme::keyAlgorithm)
+            .returns(Optional.of(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_SIZE), Scheme::keySize);
+
+        // We don't care *which* methods were called, just that we expect that our mocks were hit once each
+        assertEquals(1, mockingDetails(mockPrivateKeyReader).getInvocations().size());
+        assertEquals(1, mockingDetails(mockCertificateReader).getInvocations().size());
+    }
+
+    @Test
+    public void testReadLegacySchemeAllowsOverrideOfCertificate() throws Exception {
+        Scheme legacyScheme = CryptoUtil.generateRsaScheme();
+
+        File certificateFile = CryptoUtil.writeCertificateToFile(legacyScheme.certificate());
+
+        DevConfig config = new DevConfig();
+        String certConfigKey = ConfigProperties.schemeConfig(SchemeReader.LEGACY_SCHEME,
+            ConfigProperties.CRYPTO_SCHEME_CERT);
+
+        config.setProperty(certConfigKey, certificateFile.getCanonicalPath());
+
+        PrivateKeyReader mockPrivateKeyReader = mockPrivateKeyReader(
+            SchemeReader.LEGACY_SCHEME_DEFAULT_KEY, legacyScheme.privateKey().get());
+
+        SchemeReader schemeReader = new SchemeReader(config, mockPrivateKeyReader,
+            CryptoUtil.getCertificateReader());
+        Scheme defaultScheme = schemeReader.readDefaultScheme();
+
+        assertThat(defaultScheme)
+            .isNotNull()
+            .returns(legacyScheme.certificate(), Scheme::certificate)
+            .returns(legacyScheme.privateKey(), Scheme::privateKey)
+            .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_SIGNATURE_ALGORITHM, Scheme::signatureAlgorithm)
+            .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_ALGORITHM, Scheme::keyAlgorithm)
+            .returns(Optional.of(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_SIZE), Scheme::keySize);
+    }
+
+    @Test
+    public void testReadLegacySchemeAllowsOverrideOfPrivateKey() throws Exception {
+        Scheme legacyScheme = CryptoUtil.generateRsaScheme();
+
+        File privateKeyFile = CryptoUtil.writePrivateKeyToFile(legacyScheme.privateKey().get(), null);
+
+        DevConfig config = new DevConfig();
+        String privKeyConfigKey = ConfigProperties.schemeConfig(SchemeReader.LEGACY_SCHEME,
+            ConfigProperties.CRYPTO_SCHEME_KEY);
+
+        config.setProperty(privKeyConfigKey, privateKeyFile.getCanonicalPath());
+
+        CertificateReader mockCertificateReader = mockCertificateReader(
+            SchemeReader.LEGACY_SCHEME_DEFAULT_CERT, legacyScheme.certificate());
+
+        SchemeReader schemeReader = new SchemeReader(config, CryptoUtil.getPrivateKeyReader(),
+            mockCertificateReader);
+        Scheme defaultScheme = schemeReader.readDefaultScheme();
+
+        assertThat(defaultScheme)
+            .isNotNull()
+            .returns(legacyScheme.certificate(), Scheme::certificate)
+            .returns(legacyScheme.privateKey(), Scheme::privateKey)
+            .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_SIGNATURE_ALGORITHM, Scheme::signatureAlgorithm)
+            .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_ALGORITHM, Scheme::keyAlgorithm)
+            .returns(Optional.of(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_SIZE), Scheme::keySize);
+    }
+
+    @Test
+    public void testReadLegacySchemeAllowsOverrideOfSignatureAlgorithm() throws Exception {
+        Scheme legacyScheme = CryptoUtil.generateRsaScheme();
+
+        DevConfig config = new DevConfig();
+        String sigAlgoConfigKey = ConfigProperties.schemeConfig(SchemeReader.LEGACY_SCHEME,
+            ConfigProperties.CRYPTO_SCHEME_SIGNATURE_ALGORITHM);
+        String expectedValue = "test_sig_algorithm";
+
+        config.setProperty(sigAlgoConfigKey, expectedValue);
+
+        CertificateReader mockCertificateReader = mockCertificateReader(
+            SchemeReader.LEGACY_SCHEME_DEFAULT_CERT, legacyScheme.certificate());
+
+        PrivateKeyReader mockPrivateKeyReader = mockPrivateKeyReader(
+            SchemeReader.LEGACY_SCHEME_DEFAULT_KEY, legacyScheme.privateKey().get());
+
+        SchemeReader schemeReader = new SchemeReader(config, mockPrivateKeyReader, mockCertificateReader);
+        Scheme defaultScheme = schemeReader.readDefaultScheme();
+
+        assertThat(defaultScheme)
+            .isNotNull()
+            .returns(legacyScheme.certificate(), Scheme::certificate)
+            .returns(legacyScheme.privateKey(), Scheme::privateKey)
+            .returns(expectedValue, Scheme::signatureAlgorithm)
+            .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_ALGORITHM, Scheme::keyAlgorithm)
+            .returns(Optional.of(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_SIZE), Scheme::keySize);
+    }
+
+    @Test
+    public void testReadLegacySchemeAllowsOverrideOfKeyAlgorithm() throws Exception {
+        Scheme legacyScheme = CryptoUtil.generateRsaScheme();
+
+        DevConfig config = new DevConfig();
+        String keyAlgoConfigKey = ConfigProperties.schemeConfig(SchemeReader.LEGACY_SCHEME,
+            ConfigProperties.CRYPTO_SCHEME_KEY_ALGORITHM);
+        String expectedValue = "test_key_algorithm";
+
+        config.setProperty(keyAlgoConfigKey, expectedValue);
+
+        CertificateReader mockCertificateReader = mockCertificateReader(
+            SchemeReader.LEGACY_SCHEME_DEFAULT_CERT, legacyScheme.certificate());
+
+        PrivateKeyReader mockPrivateKeyReader = mockPrivateKeyReader(
+            SchemeReader.LEGACY_SCHEME_DEFAULT_KEY, legacyScheme.privateKey().get());
+
+        SchemeReader schemeReader = new SchemeReader(config, mockPrivateKeyReader, mockCertificateReader);
+        Scheme defaultScheme = schemeReader.readDefaultScheme();
+
+        assertThat(defaultScheme)
+            .isNotNull()
+            .returns(legacyScheme.certificate(), Scheme::certificate)
+            .returns(legacyScheme.privateKey(), Scheme::privateKey)
+            .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_SIGNATURE_ALGORITHM, Scheme::signatureAlgorithm)
+            .returns(expectedValue, Scheme::keyAlgorithm)
+            // If we have a different algorithm than the legacy algorithm, our default value for key size
+            // changes to none. This behavior is tested explicitly elsewhere.
+            .returns(Optional.empty(), Scheme::keySize);
+    }
+
+    @Test
+    public void testReadLegacySchemeAllowsOverrideOfKeySize() throws Exception {
+        Scheme legacyScheme = CryptoUtil.generateRsaScheme();
+
+        DevConfig config = new DevConfig();
+        String keySizeConfigKey = ConfigProperties.schemeConfig(SchemeReader.LEGACY_SCHEME,
+            ConfigProperties.CRYPTO_SCHEME_KEY_SIZE);
+        int expectedValue = 12345;
+
+        config.setProperty(keySizeConfigKey, String.valueOf(expectedValue));
+
+        CertificateReader mockCertificateReader = mockCertificateReader(
+            SchemeReader.LEGACY_SCHEME_DEFAULT_CERT, legacyScheme.certificate());
+
+        PrivateKeyReader mockPrivateKeyReader = mockPrivateKeyReader(
+            SchemeReader.LEGACY_SCHEME_DEFAULT_KEY, legacyScheme.privateKey().get());
+
+        SchemeReader schemeReader = new SchemeReader(config, mockPrivateKeyReader, mockCertificateReader);
+        Scheme defaultScheme = schemeReader.readDefaultScheme();
+
+        assertThat(defaultScheme)
+            .isNotNull()
+            .returns(legacyScheme.certificate(), Scheme::certificate)
+            .returns(legacyScheme.privateKey(), Scheme::privateKey)
+            .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_SIGNATURE_ALGORITHM, Scheme::signatureAlgorithm)
+            .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_ALGORITHM, Scheme::keyAlgorithm)
+            .returns(Optional.of(expectedValue), Scheme::keySize);
+    }
 
     @ParameterizedTest
     @ValueSource(strings = { "ec", "ml-ds", "random_key_algo" })
