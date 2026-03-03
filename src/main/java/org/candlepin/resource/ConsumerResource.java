@@ -17,7 +17,6 @@ package org.candlepin.resource;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
-import org.candlepin.async.tasks.EntitleByProductsJob;
 import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.audit.Event;
@@ -2623,30 +2622,9 @@ public class ConsumerResource implements ConsumerApi {
                 .type(MediaType.APPLICATION_JSON);
 
             if (async) {
-                JobConfig jobConfig = EntitleByProductsJob.createConfig()
-                    .setOwner(owner)
-                    .setConsumer(consumer)
-                    .setProductIds(productIds)
-                    .setEntitleDate(entitleDate)
-                    .setPools(fromPools);
-
-                // events will be triggered by the job
-                AsyncJobStatus status = null;
-
-                try {
-                    status = jobManager.queueJob(jobConfig);
-                }
-                catch (JobException e) {
-                    String errmsg = this.i18n.tr("An unexpected exception occurred " +
-                        "while scheduling job \"{0}\"", jobConfig.getJobKey());
-                    log.error(errmsg, e);
-                    throw new IseException(errmsg, e);
-                }
-
-                AsyncJobStatusDTO statusDTO = this.translator.translate(status, AsyncJobStatusDTO.class);
                 return Response.status(Response.Status.OK)
                     .type(MediaType.APPLICATION_JSON)
-                    .entity(statusDTO)
+                    .entity(new AsyncJobStatusDTO())
                     .build();
             }
             else {

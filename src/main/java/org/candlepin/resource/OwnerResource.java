@@ -20,7 +20,6 @@ import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.ConsumerMigrationJob;
-import org.candlepin.async.tasks.HealEntireOrgJob;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.async.tasks.UndoImportsJob;
 import org.candlepin.audit.Event;
@@ -66,6 +65,7 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.ForbiddenException;
+import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
@@ -1036,11 +1036,7 @@ public class OwnerResource implements OwnerApi {
     @Transactional
     public AsyncJobStatusDTO healEntire(@Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
-        JobConfig config = HealEntireOrgJob.createJobConfig()
-            .setOwner(owner)
-            .setEntitleDate(new Date());
-
-        return queueJob(config);
+        return new AsyncJobStatusDTO();
     }
 
     @Override
