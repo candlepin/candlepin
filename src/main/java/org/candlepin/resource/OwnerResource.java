@@ -1035,8 +1035,9 @@ public class OwnerResource implements OwnerApi {
     @Override
     @Transactional
     public AsyncJobStatusDTO healEntire(@Verify(Owner.class) String ownerKey) {
-        Owner owner = findOwnerByKey(ownerKey);
-        return new AsyncJobStatusDTO();
+        throw new GoneException("Testing");
+        // Owner owner = findOwnerByKey(ownerKey);
+        // return new AsyncJobStatusDTO();
     }
 
     @Override

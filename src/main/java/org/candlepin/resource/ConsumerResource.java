@@ -2607,30 +2607,32 @@ public class ConsumerResource implements ConsumerApi {
 
         // Making the auto-attach a no-op
         if (poolId == null || poolId.isEmpty()) {
-            if (owner.isAutobindDisabled()) {
-                throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
-                    "It is disabled for org \"{0}\".", owner.getKey()));
-            }
+            throw new GoneException("Testing");
 
-            if (owner.isAutobindHypervisorDisabled() && ConsumerTypeEnum.HYPERVISOR.matches(ctype)) {
-                throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
-                    "It is disabled for org \"{0}\" because of the hypervisor autobind setting.",
-                    owner.getKey()));
-            }
+            // if (owner.isAutobindDisabled()) {
+            //     throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
+            //         "It is disabled for org \"{0}\".", owner.getKey()));
+            // }
 
-            Response.ResponseBuilder builder = Response.status(Response.Status.OK)
-                .type(MediaType.APPLICATION_JSON);
+            // if (owner.isAutobindHypervisorDisabled() && ConsumerTypeEnum.HYPERVISOR.matches(ctype)) {
+            //     throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
+            //         "It is disabled for org \"{0}\" because of the hypervisor autobind setting.",
+            //         owner.getKey()));
+            // }
 
-            if (async) {
-                return Response.status(Response.Status.OK)
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity(new AsyncJobStatusDTO())
-                    .build();
-            }
-            else {
-                return builder.entity(List.of())
-                    .build();
-            }
+            // Response.ResponseBuilder builder = Response.status(Response.Status.OK)
+            //     .type(MediaType.APPLICATION_JSON);
+
+            // if (async) {
+            //     return Response.status(Response.Status.OK)
+            //         .type(MediaType.APPLICATION_JSON)
+            //         .entity(new AsyncJobStatusDTO())
+            //         .build();
+            // }
+            // else {
+            //     return builder.entity(List.of())
+            //         .build();
+            // }
         }
 
         // Check that only one query param was set, and some other validations
