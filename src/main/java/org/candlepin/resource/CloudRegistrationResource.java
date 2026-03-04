@@ -80,6 +80,9 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
     private final PrincipalProvider principalProvider;
 
     private final boolean enabled;
+    private final int jwtTokenTTL; // seconds
+    private final int anonJwtTokenTTL; // seconds
+
 
     @Inject
     public CloudRegistrationResource(Configuration config, I18n i18n,
@@ -101,6 +104,8 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
         this.principalProvider = Objects.requireNonNull(principalProvider);
 
         this.enabled = this.config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
+        this.jwtTokenTTL = this.config.getInt(ConfigProperties.JWT_TOKEN_TTL);
+        this.anonJwtTokenTTL = this.config.getInt(ConfigProperties.ANON_JWT_TOKEN_TTL);
     }
 
     @Override
@@ -134,7 +139,9 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
                     throw new NotAuthorizedException(errmsg);
                 }
 
-                String token = tokenGenerator.buildStandardRegistrationToken(principal, ownerKey);
+                String tokenType = CloudAuthTokenType.STANDARD.toString();
+                String token = this.tokenGenerator
+                    .generateAuthToken(principal, ownerKey, tokenType, this.jwtTokenTTL);
 
                 return Response.status(Response.Status.OK)
                     .type(MediaType.TEXT_PLAIN)
@@ -274,13 +281,14 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
 
         CloudAuthenticationResultDTO cloudAuthResultDTO;
         if (isOwnerReadyForRegistration) {
-            String token = tokenGenerator.buildStandardRegistrationToken(principal, ownerKey);
-            CloudAuthTokenType tokenType = CloudAuthTokenType.STANDARD;
+            String tokenType = CloudAuthTokenType.STANDARD.toString();
+            String token = this.tokenGenerator
+                .generateAuthToken(principal, ownerKey, tokenType, this.jwtTokenTTL);
 
             cloudAuthResultDTO = new CloudAuthenticationResultDTO()
                 .ownerKey(ownerKey)
                 .token(token)
-                .tokenType(tokenType.toString());
+                .tokenType(tokenType);
         }
         else {
             AnonymousCloudConsumer existingAnonConsumer = anonymousCloudConsumerCurator
@@ -309,13 +317,14 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
                     authResult.getCloudAccountId());
             }
 
-            String token = tokenGenerator.buildAnonymousRegistrationToken(principal, anonymousConsumerUuid);
-            CloudAuthTokenType tokenType = CloudAuthTokenType.ANONYMOUS;
+            String tokenType = CloudAuthTokenType.ANONYMOUS.toString();
+            String token = tokenGenerator
+                .generateAuthToken(principal, anonymousConsumerUuid, tokenType, this.anonJwtTokenTTL);
 
             cloudAuthResultDTO = new CloudAuthenticationResultDTO()
                 .ownerKey(ownerKey)
                 .token(token)
-                .tokenType(tokenType.toString())
+                .tokenType(tokenType)
                 .anonymousConsumerUuid(anonymousConsumerUuid);
         }
 

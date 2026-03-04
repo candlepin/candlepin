@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -26,6 +26,9 @@ import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 
@@ -69,6 +72,25 @@ public class AnonymousCloudConsumerPrincipalTest {
 
         assertThat(principal)
             .returns(consumer, AnonymousCloudConsumerPrincipal::getAnonymousCloudConsumer);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { "username" })
+    public void testGetUsername(String expectedUsername) {
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setId("id")
+            .setUuid("uuid")
+            .setCloudAccountId("cloudAccountId")
+            .setCloudInstanceId("instanceId")
+            .setProductIds(List.of("productId"))
+            .setCloudProviderShortName(TestUtil.randomString());
+
+        AnonymousCloudConsumerPrincipal principal =
+            new AnonymousCloudConsumerPrincipal(consumer, expectedUsername);
+
+        assertThat(principal)
+            .returns(expectedUsername, AnonymousCloudConsumerPrincipal::getUsername);
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -30,7 +30,9 @@ import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.Scheme;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.model.CloudRegistrationInfo;
@@ -41,6 +43,8 @@ import org.jboss.resteasy.mock.MockHttpRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.keycloak.common.util.KeyUtils;
 import org.keycloak.crypto.Algorithm;
 import org.keycloak.crypto.AsymmetricSignatureSignerContext;
@@ -53,6 +57,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.io.File;
+import java.security.KeyPair;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -71,7 +78,6 @@ public class CloudRegistrationAuthTest {
     public void init() {
         this.config = TestConfig.defaults();
         this.cryptoManager = CryptoUtil.getCryptoManager(this.config);
-
         this.mockCloudRegistrationAdapter = mock(CloudRegistrationAdapter.class);
         this.mockOwnerCurator = mock(OwnerCurator.class);
 
@@ -98,7 +104,11 @@ public class CloudRegistrationAuthTest {
     }
 
     private CloudRegistrationAuth buildAuthProvider() {
-        return new CloudRegistrationAuth(this.config, this.cryptoManager, this.mockOwnerCurator);
+        CertificateReader certReader = CryptoUtil.getCertificateReader();
+        PrivateKeyReader privateKeyReader = CryptoUtil.getPrivateKeyReader();
+        CloudAuthTokenGenerator generator =
+            new CloudAuthTokenGenerator(this.config, certReader, privateKeyReader);
+        return new CloudRegistrationAuth(this.config, this.mockOwnerCurator, generator);
     }
 
     private MockHttpRequest buildHttpRequest() {
@@ -108,10 +118,6 @@ public class CloudRegistrationAuthTest {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private int getCurrentSeconds() {
-        return (int) (System.currentTimeMillis() / 1000);
     }
 
     private String buildToken(JsonWebToken token) {
@@ -168,15 +174,15 @@ public class CloudRegistrationAuthTest {
     @Test
     public void testGetPrincipalAcceptsTestToken() {
         String ownerKey = "test_org";
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = System.currentTimeMillis() / 1000;
 
         String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.STANDARD.toString())
             .subject("test_subject")
             .audience(ownerKey)
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -199,15 +205,15 @@ public class CloudRegistrationAuthTest {
     @Test
     public void testGetPrincipalWithClaimantPermissions() {
         String ownerKey = "test_org";
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = System.currentTimeMillis() / 1000;
 
         String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.STANDARD.toString())
             .subject("test_subject")
             .audience(ownerKey)
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -227,15 +233,15 @@ public class CloudRegistrationAuthTest {
     public void testGetPrincipalRequiresOwnerToExist() {
         String ownerKey = "test_org";
         when(this.mockOwnerCurator.getByKey(anyString())).thenReturn(null);
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = System.currentTimeMillis() / 1000;
 
         String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.STANDARD.toString())
             .subject("test_subject")
             .audience(ownerKey)
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -248,15 +254,15 @@ public class CloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalIgnoresTokensWithWrongType() {
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = System.currentTimeMillis() / 1000;
 
         String token = this.buildToken(new JsonWebToken()
             .type("invalid_token_type")
             .subject("test_subject")
             .audience("test_org")
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -269,14 +275,14 @@ public class CloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalIgnoresTokensLackingType() {
-        int ctSeconds = this.getCurrentSeconds() - 5;
+        long ctSeconds = System.currentTimeMillis() / 1000;
 
         String token = this.buildToken(new JsonWebToken()
             .subject("test_subject")
             .audience("test_org")
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -287,16 +293,18 @@ public class CloudRegistrationAuthTest {
         assertNull(principal);
     }
 
-    @Test
-    public void testGetPrincipalIgnoresTokensLackingSubject() {
-        int ctSeconds = this.getCurrentSeconds() - 5;
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testGetPrincipalIgnoresTokensLackingSubject(String subject) {
+        long ctSeconds = System.currentTimeMillis() / 1000;
 
         String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.STANDARD.toString())
             .audience("test_org")
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .subject(subject)
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -307,16 +315,18 @@ public class CloudRegistrationAuthTest {
         assertNull(principal);
     }
 
-    @Test
-    public void testGetPrincipalIgnoresTokensLackingAudience() {
-        int ctSeconds = this.getCurrentSeconds() - 5;
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testGetPrincipalIgnoresTokensLackingAudience(String audience) {
+        long ctSeconds = System.currentTimeMillis() / 1000;
 
         String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.STANDARD.toString())
+            .audience(audience)
             .subject("test_subject")
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
+            .iat(ctSeconds)
+            .nbf(ctSeconds)
+            .exp(ctSeconds + 300));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -329,15 +339,15 @@ public class CloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalIgnoresExpiredTokens() {
-        int ctSeconds = this.getCurrentSeconds();
+        long ctSeconds = System.currentTimeMillis() / 1000;
 
         String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.STANDARD.toString())
             .subject("test_subject")
             .audience("test_org")
-            .issuedAt(ctSeconds - 15)
-            .notBefore(ctSeconds - 15)
-            .expiration(ctSeconds - 10));
+            .iat(ctSeconds - 15)
+            .nbf(ctSeconds - 15)
+            .exp(ctSeconds - 10));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -350,15 +360,15 @@ public class CloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalIgnoresInactiveTokens() {
-        int ctSeconds = this.getCurrentSeconds();
+        long ctSeconds = System.currentTimeMillis() / 1000;
 
         String token = this.buildToken(new JsonWebToken()
             .type(CloudAuthTokenType.STANDARD.toString())
             .subject("test_subject")
             .audience("test_org")
-            .issuedAt(ctSeconds + 15)
-            .notBefore(ctSeconds + 15)
-            .expiration(ctSeconds + 25));
+            .iat(ctSeconds + 15)
+            .nbf(ctSeconds + 15)
+            .exp(ctSeconds + 25));
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);
@@ -368,4 +378,59 @@ public class CloudRegistrationAuthTest {
 
         assertNull(principal);
     }
+
+    @Test
+    public void testGetPrincipalIgnoresMalformedToken() {
+        MockHttpRequest request = this.buildHttpRequest();
+        request.header("Authorization", "Bearer malformed-token");
+
+        Principal principal = this.buildAuthProvider()
+            .getPrincipal(request);
+
+        assertNull(principal);
+    }
+
+    @Test
+    public void testGetPrincipalIgnoresTokenWithInvalidSignature() throws Exception {
+        String signatureAlgorithm = "SHA256WithRSA";
+        String keyAlgorithm = "rsa";
+        int keySize = 4096;
+
+        // Generate a JWT token using a different certificate and private key than what the
+        // CloudAuthTokenGenerator is using to validate the token. This should result in a validation failure
+        // due to an invalid signature.
+
+        KeyPair keyPair = CryptoUtil.generateKeyPair(keyAlgorithm, keySize);
+        X509Certificate certificate = CryptoUtil.generateX509Certificate(keyPair, signatureAlgorithm);
+
+        File keyFile = File.createTempFile("cp_test_other_key", ".pem");
+        keyFile.deleteOnExit();
+        CryptoUtil.writePrivateKeyToFile(keyPair.getPrivate(), keyFile, null);
+
+        File certFile = File.createTempFile("cp_test_other_cert", ".pem");
+        certFile.deleteOnExit();
+        CryptoUtil.writeCertificateToFile(certificate, certFile);
+
+        DevConfig otherConfig  = TestConfig.defaults();
+        otherConfig.setProperty(ConfigProperties.JWT_CRYPTO_CERT, certFile.getAbsolutePath());
+        otherConfig.setProperty(ConfigProperties.JWT_CRYPTO_KEY, keyFile.getAbsolutePath());
+
+        CertificateReader certReader = CryptoUtil.getCertificateReader();
+        PrivateKeyReader privateKeyReader = CryptoUtil.getPrivateKeyReader();
+        CloudAuthTokenGenerator otherTokenGenerator =
+            new CloudAuthTokenGenerator(otherConfig, certReader, privateKeyReader);
+
+        Principal principal = new UserPrincipal("test-user", null, false);
+        String token = otherTokenGenerator
+            .generateAuthToken(principal, "owner", CloudAuthTokenType.STANDARD.toString(), 1000L);
+
+        MockHttpRequest request = this.buildHttpRequest();
+        request.header("Authorization", "Bearer " + token);
+
+        Principal actual = this.buildAuthProvider()
+            .getPrincipal(request);
+
+        assertNull(actual);
+    }
+
 }
