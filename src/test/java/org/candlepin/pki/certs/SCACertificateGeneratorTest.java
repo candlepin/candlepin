@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2025 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -99,6 +99,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
     private X509V3ExtensionUtil v3ExtensionUtil;
     private SCACertificateGenerator generator;
     private ConsumerKeyPairGenerator keyPairGenerator;
+    private ContentAccessPayloadFactory contentAccessPayloadFactory;
     private ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
@@ -108,6 +109,9 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
         this.keyPairGenerator = new ConsumerKeyPairGenerator(this.cryptoManager, this.keyPairDataCurator);
         this.v3ExtensionUtil = spy(new X509V3ExtensionUtil(this.config, this.entitlementCurator,
             new Huffman()));
+
+        EntitlementPayloadGenerator entPayloadGenerator = new EntitlementPayloadGenerator(new ObjectMapper());
+        this.contentAccessPayloadFactory = new ContentAccessPayloadFactory(entPayloadGenerator, this.v3ExtensionUtil);
 
         this.generator = getNewGenerator();
     }
@@ -120,13 +124,13 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             this.keyPairGenerator,
             this.v3ExtensionUtil,
             this.v3CapabilityCheck,
-            new EntitlementPayloadGenerator(new ObjectMapper()),
             this.caCertCurator,
             this.caPayloadCurator,
             this.certSerialCurator,
             this.contentCurator,
             this.consumerCurator,
-            this.environmentCurator);
+            this.environmentCurator, 
+            this.contentAccessPayloadFactory);
     }
 
     private X509Certificate getX509Certificate(SCACertificate container) throws CertificateException {
@@ -158,34 +162,34 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetSCAContentPayloadWithNullConsumer() {
+    public void testGetContentPayloadWithNullConsumer() {
         assertThrows(IllegalArgumentException.class, () ->  {
-            generator.getContentPayload(null);
+            this.generator.getContentPayload(null);
         });
     }
 
     @Test
-    public void testGetSCAContentPayloadWithNullOwner() throws Exception {
+    public void testGetContentPayloadWithNullOwner() throws Exception {
         Consumer consumer = new Consumer()
             .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
 
-        ContentAccessPayload actual = generator.getContentPayload(consumer);
+        ContentAccessPayload actual = this.generator.getContentPayload(consumer);
 
         assertNull(actual);
     }
 
     @Test
-    public void testGetSCAContentPayloadWithNonSCAOwner() throws Exception {
+    public void testGetContentPayloadWithNonSCAOwner() throws Exception {
         Owner owner = this.createNonSCAOwner(TestUtil.randomString("owner-"));
         Consumer consumer = this.createConsumer(owner);
 
-        ContentAccessPayload actual = generator.getContentPayload(consumer);
+        ContentAccessPayload actual = this.generator.getContentPayload(consumer);
 
         assertNull(actual);
     }
 
     @Test
-    public void testGetSCAContentPayloadWithNonV3CertCapableConsumer() throws Exception {
+    public void testGetContentPayloadWithNonV3CertCapableConsumer() throws Exception {
         Owner owner = this.createOwner(TestUtil.randomString("owner-"));
         Consumer consumer = this.createConsumer(owner)
             .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
@@ -193,7 +197,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
         doReturn(false).when(v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        ContentAccessPayload actual = generator.getContentPayload(consumer);
+        ContentAccessPayload actual = this.generator.getContentPayload(consumer);
 
         assertNull(actual);
     }
@@ -212,7 +216,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
 
     @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
     @MethodSource("arches")
-    public void testGetSCAContentPayloadWithArchesAndSupportedArches(List<String> arches,
+    public void testGetContentPayloadWithArchesAndSupportedArches(List<String> arches,
         String supportedArches) throws Exception {
 
         Owner owner = this.createOwner(TestUtil.randomString("owner-"));
@@ -233,7 +237,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             consumer.setFact(Consumer.Facts.ARCHITECTURE, arch);
         }
 
-        consumer = consumerCurator.create(consumer);
+        consumer = this.consumerCurator.create(consumer);
 
         // Combine both the arches and the support arches and convert to lower case to validate case
         // differences between the consumer facts
@@ -245,16 +249,16 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .map(String::toLowerCase)
             .map(arch -> allArches.add(arch));
 
-        List<Content> expectedContent = createContentWithArches(owner, allArches);
+        List<Content> expectedContent = this.createContentWithArches(owner, allArches);
 
         // Create some content with arches that should be filtered and not included in the content payload
-        createContentWithArches(owner, List.of("diff-arch-1", "diff-arch-2"));
+        this.createContentWithArches(owner, List.of("diff-arch-1", "diff-arch-2"));
 
         doReturn(true)
             .when(v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        ContentAccessPayload payload = generator.getContentPayload(consumer);
+        ContentAccessPayload payload = this.generator.getContentPayload(consumer);
 
         assertPayload(payload.getPayload(), consumer.getUuid(), expectedContent);
     }
@@ -275,7 +279,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetSCAContentPayload() throws Exception {
+    public void testGetContentPayload() throws Exception {
         Owner owner = this.createOwner(TestUtil.randomString("owner-"));
 
         ConsumerType consumerType = this.createConsumerType();
@@ -286,13 +290,13 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .setOwner(owner)
             .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
 
-        consumer = consumerCurator.create(consumer);
+        consumer = this.consumerCurator.create(consumer);
 
-        Product engProduct = createProduct();
+        Product engProduct = this.createProduct();
         this.createPool(owner, engProduct);
 
         Content content = this.createContent();
-        createProductContent(owner, true, content);
+        this.createProductContent(owner, true, content);
 
         Product skuProd = TestUtil.createProduct(TestUtil.randomString("sku-prod-id-"),
             TestUtil.randomString("sku-prod-name-"));
@@ -303,7 +307,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .when(v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        ContentAccessPayload actual = generator.getContentPayload(consumer);
+        ContentAccessPayload actual = this.generator.getContentPayload(consumer);
 
         assertThat(actual)
             .isNotNull()
@@ -316,7 +320,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetSCAContentPayloadWithMultipleProducts() throws Exception {
+    public void testGetContentPayloadWithMultipleProducts() throws Exception {
         Owner owner = this.createOwner(TestUtil.randomString("owner-"));
 
         ConsumerType consumerType = this.createConsumerType();
@@ -327,7 +331,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .setOwner(owner)
             .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
 
-        consumer = consumerCurator.create(consumer);
+        consumer = this.consumerCurator.create(consumer);
 
         Product engProduct1 = createProduct();
         Product engProduct2 = createProduct();
@@ -342,8 +346,8 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .setContentUrl("https://c2.test.com");
         content2 = this.contentCurator.create(content2);
 
-        createProductContent(owner, true, content1);
-        createProductContent(owner, true, content2);
+        this.createProductContent(owner, true, content1);
+        this.createProductContent(owner, true, content2);
 
         Product skuProd1 = TestUtil.createProduct(TestUtil.randomString("sku-prod-id-1-"),
             TestUtil.randomString("sku-prod-name-1-"));
@@ -359,7 +363,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .when(v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        ContentAccessPayload actual = generator.getContentPayload(consumer);
+        ContentAccessPayload actual = this.generator.getContentPayload(consumer);
 
         assertThat(actual)
             .isNotNull()
@@ -372,7 +376,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetSCAContentPayloadWithExistingNonExpiredPayload() throws Exception {
+    public void testGetContentPayloadWithExistingNonExpiredPayload() throws Exception {
         Owner owner = this.createOwner(TestUtil.randomString("owner-"));
 
         Consumer consumer = this.createConsumer(owner);
@@ -380,9 +384,9 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .when(v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        ContentAccessPayload expected = generator.getContentPayload(consumer);
+        ContentAccessPayload expected = this.generator.getContentPayload(consumer);
 
-        ContentAccessPayload actual = generator.getContentPayload(consumer);
+        ContentAccessPayload actual = this.generator.getContentPayload(consumer);
 
         assertThat(actual)
             .returns(expected.getId(), ContentAccessPayload::getId)
@@ -393,15 +397,15 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetSCAContentPayloadWithExpiredPayloadFromOwnerLastContentUpdate() throws Exception {
+    public void testGetContentPayloadWithExpiredPayloadFromOwnerLastContentUpdate() throws Exception {
         Owner owner = this.createOwner(TestUtil.randomString("owner-"));
         Consumer consumer = this.createConsumer(owner);
 
         doReturn(true)
-            .when(v3CapabilityCheck)
+            .when(this.v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        ContentAccessPayload initial = generator.getContentPayload(consumer);
+        ContentAccessPayload initial = this.generator.getContentPayload(consumer);
         Date initialTimestamp = initial.getTimestamp();
         String initialPayload = initial.getPayload();
         String initialPayloadKey = initial.getPayloadKey();
@@ -426,7 +430,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetSCAContentPayloadWithExpiredPayloadFromEnvironmentContentUpdate() throws Exception {
+    public void testGetContentPayloadWithExpiredPayloadFromEnvironmentContentUpdate() throws Exception {
         Owner owner = this.createOwner(TestUtil.randomString("owner-"));
         Consumer consumer = this.createConsumer(owner);
 
@@ -437,10 +441,10 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             TestUtil.randomString("name-"), null, List.of(consumer), List.of(envContent));
 
         doReturn(true)
-            .when(v3CapabilityCheck)
+            .when(this.v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        ContentAccessPayload initial = generator.getContentPayload(consumer);
+        ContentAccessPayload initial = this.generator.getContentPayload(consumer);
         Date initialTimestamp = initial.getTimestamp();
         String initialPayload = initial.getPayload();
         String initialPayloadKey = initial.getPayloadKey();
@@ -451,14 +455,14 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
         this.createProductContent(owner, true, envContent2);
         env.addContent(envContent2, true);
         env.setLastContentUpdate(TestUtil.createDateOffset(0, 0, 1));
-        environmentCurator.saveOrUpdate(env);
+        this.environmentCurator.saveOrUpdate(env);
 
         // Wait a second to gaurantee that the payload timestamps will be different
         Thread.sleep(1000);
 
         // Need a new SCACertificateGenerator so that the X509CertificateBuilder does not retain any
         // X509 extensions from the first 'generate' invocation.
-        ContentAccessPayload actual = getNewGenerator()
+        ContentAccessPayload actual = this.getNewGenerator()
             .getContentPayload(consumer);
 
         assertThat(actual)
@@ -474,7 +478,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
     @Test
     public void testGetSCAX509CertificateWithNullConsumer() {
         assertThrows(IllegalArgumentException.class, () ->  {
-            generator.getX509Certificate(null);
+            this.generator.getX509Certificate(null);
         });
     }
 
@@ -483,7 +487,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
         Consumer consumer = new Consumer()
             .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
 
-        SCACertificate actual = generator.getX509Certificate(consumer);
+        SCACertificate actual = this.generator.getX509Certificate(consumer);
 
         assertNull(actual);
     }
@@ -493,7 +497,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
         Owner owner = this.createNonSCAOwner(TestUtil.randomString());
         Consumer consumer = this.createConsumer(owner);
 
-        SCACertificate actual = generator.getX509Certificate(consumer);
+        SCACertificate actual = this.generator.getX509Certificate(consumer);
 
         assertNull(actual);
     }
@@ -505,10 +509,10 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
 
         doReturn(false)
-            .when(v3CapabilityCheck)
+            .when(this.v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        SCACertificate actual = generator.getX509Certificate(consumer);
+        SCACertificate actual = this.generator.getX509Certificate(consumer);
 
         assertNull(actual);
     }
@@ -527,9 +531,9 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue())
             .addEnvironment(env);
 
-        consumer = consumerCurator.create(consumer);
+        consumer = this.consumerCurator.create(consumer);
 
-        Product engProduct = createProduct();
+        Product engProduct = this.createProduct();
         this.createPool(owner, engProduct);
 
         Content content = this.createContent();
@@ -545,12 +549,12 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .when(v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        SCACertificate actual = generator.getX509Certificate(consumer);
+        SCACertificate actual = this.generator.getX509Certificate(consumer);
 
-        X509Certificate cert = getX509Certificate(actual);
+        X509Certificate cert = this.getX509Certificate(actual);
         assertNotNull(cert);
 
-        byte[] payload = extractEntitlementDataPayload(cert);
+        byte[] payload = this.extractEntitlementDataPayload(cert);
         assertNotNull(payload);
 
         List<String> expected = List.of("/" + owner.getKey() + "/" + env.getName());
@@ -571,9 +575,9 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .when(v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        SCACertificate expected = generator.getX509Certificate(consumer);
+        SCACertificate expected = this.generator.getX509Certificate(consumer);
 
-        SCACertificate actual = generator.getX509Certificate(consumer);
+        SCACertificate actual = this.generator.getX509Certificate(consumer);
 
         assertThat(actual)
             .returns(expected.getId(), SCACertificate::getId)
@@ -592,7 +596,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .when(v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        SCACertificate initialSCACertificate = generator.getX509Certificate(consumer);
+        SCACertificate initialSCACertificate = this.generator.getX509Certificate(consumer);
         String initialCert = initialSCACertificate.getCert();
         Date initialUpdated = initialSCACertificate.getUpdated();
 
@@ -606,7 +610,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
 
         // Need a new SCACertificateGenerator so that the X509CertificateBuilder does not retain any
         // X509 extensions from the first 'generate' invocation.
-        SCACertificate actual = getNewGenerator()
+        SCACertificate actual = this.getNewGenerator()
             .getX509Certificate(consumer);
 
         assertThat(actual)
@@ -627,7 +631,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .when(v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        SCACertificate initialCert = generator.getX509Certificate(consumer);
+        SCACertificate initialCert = this.generator.getX509Certificate(consumer);
         BigInteger initialSerial = initialCert.getSerial().getSerial();
 
         // The ConfigProperties.SCA_X509_CERT_EXPIRY_THRESHOLD value is 5 days, so if we set the serial
@@ -638,7 +642,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
 
         // Need a new SCACertificateGenerator so that the X509CertificateBuilder does not retain any
         // X509 extensions from the first 'generate' invocation.
-        SCACertificate actual = getNewGenerator()
+        SCACertificate actual = this.getNewGenerator()
             .getX509Certificate(consumer);
 
         assertThat(actual)
@@ -651,7 +655,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGenerateWithNullConsumer() {
-        assertThrows(IllegalArgumentException.class, () -> generator.generate(null));
+        assertThrows(IllegalArgumentException.class, () -> this.generator.generate(null));
     }
 
     @Test
@@ -659,7 +663,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
         Consumer consumer = new Consumer()
             .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
 
-        SCACertificate actual = generator.generate(consumer);
+        SCACertificate actual = this.generator.generate(consumer);
 
         assertNull(actual);
     }
@@ -669,7 +673,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
         Owner owner = this.createNonSCAOwner(TestUtil.randomString());
         Consumer consumer = this.createConsumer(owner);
 
-        SCACertificate actual = generator.generate(consumer);
+        SCACertificate actual = this.generator.generate(consumer);
 
         assertNull(actual);
     }
@@ -680,10 +684,10 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
         Consumer consumer = this.createConsumer(owner)
             .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
 
-        doReturn(false).when(v3CapabilityCheck)
+        doReturn(false).when(this.v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        SCACertificate actual = generator.generate(consumer);
+        SCACertificate actual = this.generator.generate(consumer);
 
         assertNull(actual);
     }
@@ -709,12 +713,12 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .when(v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        SCACertificate actual = generator.generate(consumer);
+        SCACertificate actual = this.generator.generate(consumer);
 
-        X509Certificate cert = getX509Certificate(actual);
+        X509Certificate cert = this.getX509Certificate(actual);
         assertNotNull(cert);
 
-        byte[] payload = extractEntitlementDataPayload(cert);
+        byte[] payload = this.extractEntitlementDataPayload(cert);
         assertNotNull(payload);
 
         List<String> contentPaths = new X509HuffmanDecodeUtil().extractContentPaths(payload);
@@ -738,15 +742,15 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .setOwner(owner)
             .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
 
-        consumer = consumerCurator.create(consumer);
+        consumer = this.consumerCurator.create(consumer);
 
         doReturn(true)
-            .when(v3CapabilityCheck)
+            .when(this.v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        SCACertificate expected = generator.generate(consumer);
+        SCACertificate expected = this.generator.generate(consumer);
 
-        SCACertificate actual = generator.generate(consumer);
+        SCACertificate actual = this.generator.generate(consumer);
 
         assertThat(actual)
             .returns(expected.getId(), SCACertificate::getId)
@@ -771,10 +775,10 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
         consumer = consumerCurator.create(consumer);
 
         doReturn(true)
-            .when(v3CapabilityCheck)
+            .when(this.v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        SCACertificate initialCert = generator.generate(consumer);
+        SCACertificate initialCert = this.generator.generate(consumer);
 
         // Update the exiration date to the past to expire the cert
         CertificateSerial serial = initialCert.getSerial();
@@ -782,7 +786,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
 
         // Need a new SCACertificateGenerator so that the X509CertificateBuilder does not retain any
         // X509 extensions from the first 'generate' invocation.
-        SCACertificate actual = getNewGenerator()
+        SCACertificate actual = this.getNewGenerator()
             .generate(consumer);
 
         // Verify the SCACertificate was recreated with a new serial
@@ -801,7 +805,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .when(v3CapabilityCheck)
             .isCertV3Capable(consumer);
 
-        SCACertificate initialCert = generator.generate(consumer);
+        SCACertificate initialCert = this.generator.generate(consumer);
 
         // The ConfigProperties.SCA_X509_CERT_EXPIRY_THRESHOLD value is 5 days, so if we set the serial
         // expiration to be in 2 days, we should regenerate the certificate
@@ -811,7 +815,7 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
 
         // Need a new SCACertificateGenerator so that the X509CertificateBuilder does not retain any
         // X509 extensions from the first 'generate' invocation.
-        SCACertificate actual = getNewGenerator()
+        SCACertificate actual = this.getNewGenerator()
             .generate(consumer);
 
         assertThat(actual)
@@ -1006,10 +1010,10 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
 
         assertNotNull(payload);
 
-        String entJsonData = extractEntitlementDataJson(payload);
+        String entJsonData = this.extractEntitlementDataJson(payload);
         assertNotNull(entJsonData);
 
-        JsonNode node = mapper.readTree(entJsonData);
+        JsonNode node = this.mapper.readTree(entJsonData);
         String payloadConsumerUuid = node.get("consumer").asText();
 
         if (consumerUuid != null) {

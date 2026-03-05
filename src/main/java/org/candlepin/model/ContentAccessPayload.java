@@ -19,6 +19,7 @@ import org.candlepin.util.Util;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Date;
+import java.util.stream.Stream;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
