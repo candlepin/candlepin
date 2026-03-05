@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.7.4
+Version: 4.7.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,33 @@ fi
 
 #raw
 %changelog
+* Thu Mar 05 2026 candlepin-bot 4.7.5-1
+- Add new translations using Weblate (hosted@weblate.org)
+- Bump org.sonarqube from 7.2.2.6593 to 7.2.3.7755
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump artemis from 2.51.0 to 2.52.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1149: Added non-unique index to deleted consumer's UUID
+  (crog@redhat.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.21.0 to 5.22.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1147: Force upgrade mchance-c3p0 & mchange-commons-java
+  (nmoumoul@redhat.com)
+- Bump jackson from 3.0.4 to 3.1.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.junit:junit-bom from 6.0.2 to 6.0.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump openapi-generator from 7.19.0 to 7.20.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.5.29 to 1.5.32
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mozilla:rhino from 1.9.0 to 1.9.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.postgresql:postgresql from 42.7.9 to 42.7.10
+  (49699333+dependabot[bot]@users.noreply.github.com)
+
 * Thu Feb 12 2026 candlepin-bot 4.7.4-1
 - Add new translations using Weblate (hosted@weblate.org)
 - Bump artemis from 2.50.0 to 2.51.0
