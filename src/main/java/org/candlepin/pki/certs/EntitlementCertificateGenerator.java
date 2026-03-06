@@ -474,9 +474,9 @@ public class EntitlementCertificateGenerator {
         payload += "-----END ENTITLEMENT DATA-----\n";
 
         byte[] bytes = this.signer.sign(new ByteArrayInputStream(payloadBytes));
-        String signature = "-----BEGIN RSA SIGNATURE-----\n";
+        String signature = "-----BEGIN MLDSA SIGNATURE-----\n";
         signature += Util.toBase64(bytes);
-        signature += "-----END RSA SIGNATURE-----\n";
+        signature += "-----END MLDSA SIGNATURE-----\n";
 
         pem += payload + signature;
         return pem;

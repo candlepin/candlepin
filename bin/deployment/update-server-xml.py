@@ -334,6 +334,136 @@ class AccessLogValveEditor(AbstractBaseEditor):
         ]
 
 
+class CandlepinConnectorAPR(AbstractBaseEditor):
+    """APR (Apache Portable Runtime) connector that uses OpenSSL directly.
+    This works with ML-DSA certificates since OpenSSL 3.5+ supports them,
+    bypassing Java JSSE KeyManager limitations.
+
+    Supports multiple certificates (RSA + ML-DSA) for hybrid deployment."""
+
+    def __init__(self, *args, **kwargs):
+        super(CandlepinConnectorAPR, self).__init__(*args, **kwargs)
+        self.port = "8443"
+        self._node = self._build_node()
+
+    @property
+    def parent_xpath(self):
+        return "/Server/Service"
+
+    @property
+    def search_xpath(self):
+        return './Connector[@port="{port}"]'.format(port=self.port)
+
+    @property
+    def new_node(self):
+        return self._node
+
+    @property
+    def attributes(self):
+        return [
+            ('port', self.port),
+            ('protocol', 'org.apache.coyote.http11.Http11AprProtocol'),
+            ('scheme', 'https'),
+            ('secure', 'true'),
+            ('SSLEnabled', 'true'),
+            ('maxThreads', '150'),
+            ('compression', 'on'),
+            ("compressableMimeType", "application/json,text/html,text/xml")
+        ]
+
+    def _build_node(self):
+        # <Connector port="8443" protocol="org.apache.coyote.http11.Http11AprProtocol"
+        #     scheme="https"
+        #     secure="true"
+        #     SSLEnabled="true"
+        #     maxThreads="150"
+        #     compression="on"
+        #     compressableMimeType="application/json,text/html,text/xml">
+        #
+        #     <SSLHostConfig certificateVerification="optional"
+        #         protocols="+TLSv1.2,+TLSv1.3"
+        #         sslProtocol="TLS"
+        #         caCertificateFile="/etc/candlepin/certs/candlepin-ca-bundle.crt">
+        #
+        #         <Certificate certificateFile="/etc/candlepin/certs/candlepin-ca-mldsa.crt"
+        #                certificateKeyFile="/etc/candlepin/certs/candlepin-ca-mldsa.key"
+        #                type="MLDSA" />
+        #         <Certificate certificateFile="/etc/candlepin/certs/candlepin-ca-rsa.crt"
+        #                certificateKeyFile="/etc/candlepin/certs/candlepin-ca-rsa.key"
+        #                type="RSA" />
+        #     </SSLHostConfig>
+        # </Connector>
+
+        connector = libxml2.newNode("Connector")
+        self._add_attributes(connector, self.attributes)
+
+        ssl_host_config = libxml2.newNode("SSLHostConfig")
+        self._add_attributes(ssl_host_config, [
+            ("certificateVerification", "optional"),
+            # Support TLS 1.2 and 1.3 for both legacy and PQC clients
+            ("protocols", "+TLSv1.2,+TLSv1.3"),
+            ("sslProtocol", "TLS"),
+            # Use combined CA bundle for client certificate verification
+            # Contains both RSA and ML-DSA CAs to verify both types of client certificates
+            ("caCertificateFile", "/etc/candlepin/certs/candlepin-ca-bundle.crt"),
+        ])
+
+        # ML-DSA certificate for PQC-capable clients (listed first for preference with BC JSSE clients)
+        certificate_mldsa = libxml2.newNode("Certificate")
+        self._add_attributes(certificate_mldsa, [
+            ('certificateFile', '/etc/candlepin/certs/candlepin-ca-mldsa.crt'),
+            ('certificateKeyFile', '/etc/candlepin/certs/candlepin-ca-mldsa.key'),
+            ('type', 'MLDSA')
+        ])
+
+        # RSA certificate for legacy clients (fallback)
+        certificate_rsa = libxml2.newNode("Certificate")
+        self._add_attributes(certificate_rsa, [
+            ('certificateFile', '/etc/candlepin/certs/candlepin-ca-rsa.crt'),
+            ('certificateKeyFile', '/etc/candlepin/certs/candlepin-ca-rsa.key'),
+            ('type', 'RSA')
+        ])
+
+        # Put it all together - ML-DSA first, then RSA
+        connector.addChild(libxml2.newText("\n  "))
+        connector.addChild(ssl_host_config)
+        connector.addChild(libxml2.newText("\n"))
+        ssl_host_config.addChild(libxml2.newText("\n    "))
+        ssl_host_config.addChild(certificate_mldsa)
+        ssl_host_config.addChild(libxml2.newText("\n    "))
+        ssl_host_config.addChild(certificate_rsa)
+        ssl_host_config.addChild(libxml2.newText("\n  "))
+
+        return connector
+
+
+class AprListenerAdder(AbstractBaseEditor):
+    """Adds the AprLifecycleListener required for APR connector.
+    This listener loads the Apache Portable Runtime (APR) native library."""
+
+    def __init__(self, *args, **kwargs):
+        super(AprListenerAdder, self).__init__(*args, **kwargs)
+        self.listener_class = "org.apache.catalina.core.AprLifecycleListener"
+        self._element = libxml2.newNode("Listener")
+        self._add_attributes(self._element, self.attributes)
+
+    @property
+    def parent_xpath(self):
+        return "/Server"
+
+    @property
+    def search_xpath(self):
+        return "./Listener[@className='%s']" % self.listener_class
+
+    @property
+    def new_node(self):
+        return self._element
+
+    @property
+    def attributes(self):
+        return [("className", self.listener_class)]
+
+
 class AprListenerDeleter(AbstractBaseEditor):
     """The AprLifecycleListener attempts to load the Apache Portable Runtime (APR).  The
     APR is a native library used to speed up certain operations.  In our case, loading the
@@ -375,6 +505,8 @@ def parse_options():
             help="print debug output")
     parser.add_option("--tomcat-version", action="store", default=None, type=str, dest="tc_version",
             help="specify a Tomcat version to target")
+    parser.add_option("--use-apr", action="store_true", default=False,
+            help="use APR connector with OpenSSL and dual RSA/ML-DSA certificates")
 
     (options, args) = parser.parse_args()
     if len(args) != 1:
@@ -408,20 +540,33 @@ def main():
 
     make_backup_config(conf_dir)
 
-    # Determine which SSLContextEditor we need...
-    tversion = parse_tc_version(options.tc_version)
-    if not tversion or len(tversion) < 1 or tversion[0] > 8 or (tversion[0] == 8 and tversion[1] >= 5):
-        ssl_editor_target = CandlepinConnectorEditorV3
+    # Determine which connector to use...
+    if options.use_apr:
+        logger.info("Using APR connector and dual RSA/ML-DSA certificate support")
+        ssl_editor_target = CandlepinConnectorAPR
+        use_apr = True
     else:
-        logger.warn("Using legacy Tomcat configuration")
-        ssl_editor_target = LegacySSLContextEditor
+        # Determine which SSLContextEditor we need...
+        tversion = parse_tc_version(options.tc_version)
+        if not tversion or len(tversion) < 1 or tversion[0] > 8 or (tversion[0] == 8 and tversion[1] >= 5):
+            ssl_editor_target = CandlepinConnectorEditorV3
+        else:
+            logger.warn("Using legacy Tomcat configuration")
+            ssl_editor_target = LegacySSLContextEditor
+        use_apr = False
 
     xml_file = os.path.join(conf_dir, "server.xml")
     logger.debug("Opening %s" % xml_file)
     with open_xml(xml_file) as doc:
         ssl_editor_target(doc).insert()
         AccessLogValveEditor(doc).insert()
-        AprListenerDeleter(doc).remove()
+
+        if use_apr:
+            # Add APR listener (required for APR connector)
+            AprListenerAdder(doc).insert()
+        else:
+            # Remove APR listener (causes issues with JSSE connector)
+            AprListenerDeleter(doc).remove()
 
         if options.stdout:
             print(doc.serialize())
