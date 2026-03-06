@@ -73,6 +73,7 @@ import java.security.spec.AlgorithmParameterSpec;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Map;
 import java.util.stream.Stream;
 
 
@@ -89,12 +90,28 @@ public class CryptoUtil {
     private static final BouncyCastleSecurityProvider SECURITY_PROVIDER_PROVIDER =
         new BouncyCastleSecurityProvider();
 
+    private static final String RSA_SCHEME_NAME = "rsa";
     private static final String RSA_SIGNATURE_ALGORITHM = "SHA256WithRSA";
     private static final String RSA_KEY_ALGORITHM = "RSA";
     private static final int RSA_KEY_SIZE = 4096;
 
+    private static final String MLDSA_SCHEME_NAME = "ml-dsa";
     private static final String MLDSA_SIGNATURE_ALGORITHM = "ML-DSA";
     private static final String MLDSA_KEY_ALGORITHM = "ML-DSA";
+
+    private static final String X509_RSA_SIGNATURE_ALGORITHM = "SHA256withRSA";
+    private static final String X509_RSA_KEY_ALGORITHM = "RSA";
+
+    private static final String X509_MLDSA_SIGNATURE_ALGORITHM = "2.16.840.1.101.3.4.3.19";
+    private static final String X509_MLDSA_KEY_ALGORITHM = "2.16.840.1.101.3.4.3.19";
+
+    public static final Map<String, String> SUPPORTED_X509_SIGNATURE_ALGORITHM_NAMES = Map.of(
+            RSA_SCHEME_NAME, X509_RSA_SIGNATURE_ALGORITHM,
+            MLDSA_SCHEME_NAME, X509_MLDSA_SIGNATURE_ALGORITHM);
+
+    public static final Map<String, String> SUPPORTED_X509_KEY_ALGORITHM_NAMES = Map.of(
+            RSA_SCHEME_NAME, X509_RSA_KEY_ALGORITHM,
+            MLDSA_SCHEME_NAME, X509_MLDSA_KEY_ALGORITHM);
 
     private CryptoUtil() {
         throw new UnsupportedOperationException();
@@ -772,7 +789,7 @@ public class CryptoUtil {
      *  a scheme with generated keys and certs using the Candlepin legacy RSA scheme
      */
     public static Scheme generateRsaScheme() throws KeyException, CertificateException {
-        return generateRsaScheme("rsa");
+        return generateRsaScheme(RSA_SCHEME_NAME);
     }
 
     /**

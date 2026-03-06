@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -21,6 +21,7 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
+import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.PemEncoder;
@@ -58,9 +59,6 @@ public class IdentityCertificateGenerator {
 
     private final int yearAddendum;
 
-    // Temporary
-    private final Scheme scheme;
-
     @Inject
     public IdentityCertificateGenerator(
         Configuration config,
@@ -73,27 +71,32 @@ public class IdentityCertificateGenerator {
         Objects.requireNonNull(config);
 
         this.cryptoManager = Objects.requireNonNull(cryptoManager);
-        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator); //temporary
+        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
 
         this.idCertCurator = Objects.requireNonNull(identityCertCurator);
         this.serialCurator = Objects.requireNonNull(serialCurator);
 
         this.yearAddendum = config.getInt(ConfigProperties.IDENTITY_CERT_YEAR_ADDENDUM);
-
-        // FIXME: Temporary; select the default scheme and run with it for testing. Replace this with per-op
-        // scheme selection
-        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
     }
 
     /**
      * Method creates identity certificate. If certificate already exists
      * the cached one is returned otherwise it creates a new one.
      *
-     * @param consumer A consumer for which to create certificate
+     * @param consumer
+     *  a consumer for which to create certificate
+     *
+     * @throws CryptoCapabilitiesException 
+     *  if unable to retrieve a crypto scheme for the consumer
+     *
      * @return Identity certificate
      */
-    public IdentityCertificate generate(Consumer consumer) {
+    public IdentityCertificate generate(Consumer consumer) throws CryptoCapabilitiesException {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
         return generateCertificate(consumer, false);
     }
 
@@ -101,14 +104,25 @@ public class IdentityCertificateGenerator {
      * Method creates identity certificate. If certificate already exists
      * it is deleted and a new one is created.
      *
-     * @param consumer A consumer for which to create certificate
+     * @param consumer
+     *  a consumer for which to create certificate
+     *
+     * @throws CryptoCapabilitiesException 
+     *  if unable to retrieve a crypto scheme for the consumer
+     *
      * @return Identity certificate
      */
-    public IdentityCertificate regenerate(Consumer consumer) {
+    public IdentityCertificate regenerate(Consumer consumer) throws CryptoCapabilitiesException {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
         return generateCertificate(consumer, true);
     }
 
-    private IdentityCertificate generateCertificate(Consumer consumer, boolean regenerate) {
+    private IdentityCertificate generateCertificate(Consumer consumer, boolean regenerate)
+        throws CryptoCapabilitiesException {
+
         IdentityCertificate certificate = null;
 
         if (consumer.getIdCert() != null) {
@@ -136,7 +150,9 @@ public class IdentityCertificateGenerator {
         }
     }
 
-    private IdentityCertificate createCertificate(Consumer consumer) throws KeyException {
+    private IdentityCertificate createCertificate(Consumer consumer)
+        throws KeyException, CryptoCapabilitiesException {
+
         log.debug("Generating identity cert for consumer: {}", consumer.getUuid());
 
         ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
@@ -149,8 +165,11 @@ public class IdentityCertificateGenerator {
         this.serialCurator.create(serial);
 
         KeyPair keyPair = this.keyPairGenerator.getConsumerKeyPair(consumer);
+        Scheme scheme = this.cryptoManager.getCryptoScheme(consumer)
+            .orElseThrow(() ->
+                new CryptoCapabilitiesException("unable to retrieve crypto scheme for consumer"));
 
-        X509Certificate certificate = this.cryptoManager.getCertificateBuilder(this.scheme)
+        X509Certificate certificate = this.cryptoManager.getCertificateBuilder(scheme)
             .withDN(dn)
             .withValidity(from, to)
             .withSerial(serial.getSerial())
