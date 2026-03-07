@@ -40,6 +40,7 @@ import org.candlepin.dto.api.server.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.server.v1.ProductContentDTO;
 import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.dto.api.server.v1.RoleDTO;
+import org.candlepin.dto.api.server.v1.SchemeDTO;
 import org.candlepin.dto.api.server.v1.SubscriptionDTO;
 import org.candlepin.dto.api.server.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.dto.api.server.v1.UeberCertificateDTO;
@@ -76,6 +77,7 @@ import org.candlepin.dto.api.v1.ProductContentTranslator;
 import org.candlepin.dto.api.v1.ProductTranslator;
 import org.candlepin.dto.api.v1.RoleInfoTranslator;
 import org.candlepin.dto.api.v1.RoleTranslator;
+import org.candlepin.dto.api.v1.SchemeTranslator;
 import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusTranslator;
 import org.candlepin.dto.api.v1.UeberCertificateTranslator;
 import org.candlepin.dto.api.v1.UpstreamConsumerArrayElementTranslator;
@@ -122,6 +124,7 @@ import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.pki.Scheme;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -185,6 +188,8 @@ public class StandardTranslator extends SimpleModelTranslator {
             new ContentTranslator(), Content.class, ContentDTO.class);
         this.registerTranslator(
             new ContentOverrideTranslator(), ContentOverride.class, ContentOverrideDTO.class);
+        this.registerTranslator(
+            new SchemeTranslator(), Scheme.class, SchemeDTO.class);
         this.registerTranslator(
             new DeletedConsumerTranslator(), DeletedConsumer.class, DeletedConsumerDTO.class);
         this.registerTranslator(

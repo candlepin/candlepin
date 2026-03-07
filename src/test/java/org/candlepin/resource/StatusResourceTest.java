@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -32,9 +33,15 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.CryptographyDTO;
+import org.candlepin.dto.api.server.v1.SchemeDTO;
 import org.candlepin.dto.api.server.v1.StatusDTO;
+import org.candlepin.dto.api.v1.SchemeTranslator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
 import org.candlepin.policy.js.JsRunnerProvider;
 
 import ch.qos.logback.classic.Level;
@@ -57,7 +64,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.security.cert.X509Certificate;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.function.Function;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -72,6 +82,10 @@ public class StatusResourceTest {
     @Mock private CandlepinModeManager modeManager;
     @Mock private KeycloakConfiguration keycloakConfig;
     @Mock private AdapterConfig mockKeycloakAdapterConfig;
+    @Mock private CryptoManager mockCryptoManager;
+    @Mock private ModelTranslator mockModelTranslator;
+
+    private Scheme defaultScheme;
 
     @BeforeEach
     public void setUp() {
@@ -89,11 +103,25 @@ public class StatusResourceTest {
         when(mockKeycloakAdapterConfig.getRealm()).thenReturn("realm");
         when(mockKeycloakAdapterConfig.getAuthServerUrl()).thenReturn("https://example.com/auth");
         when(mockKeycloakAdapterConfig.getResource()).thenReturn("resource");
+
+        this.defaultScheme = new Scheme.Builder()
+            .setName("legacy")
+            .setCertificate(mock(X509Certificate.class))
+            .setSignatureAlgorithm("SHA256withRSA")
+            .setKeyAlgorithm("RSA")
+            .setKeySize(4096)
+            .build();
+        when(mockCryptoManager.getCryptoSchemes()).thenReturn(List.of(this.defaultScheme));
+        when(mockCryptoManager.getDefaultCryptoScheme()).thenReturn(this.defaultScheme);
+
+        SchemeTranslator schemeTranslator = new SchemeTranslator();
+        when(mockModelTranslator.getStreamMapper(Scheme.class, SchemeDTO.class))
+            .thenAnswer(invocation -> (Function<Scheme, SchemeDTO>) schemeTranslator::translate);
     }
 
     private StatusResource createResource() {
         return new StatusResource(this.rulesCurator, this.config, this.jsProvider, this.candlepinCache,
-            this.modeManager, this.keycloakConfig);
+            this.modeManager, this.keycloakConfig, this.mockCryptoManager, mockModelTranslator);
     }
 
     @Test
@@ -202,5 +230,80 @@ public class StatusResourceTest {
         assertNull(statusDTO.getDeviceAuthUrl());
         assertNull(statusDTO.getDeviceAuthClientId());
         assertNull(statusDTO.getDeviceAuthScope());
+    }
+
+    @Test
+    public void testCryptographyFieldAlwaysPresent() {
+        StatusResource sr = this.createResource();
+        StatusDTO statusDTO = sr.status();
+
+        CryptographyDTO cryptography = statusDTO.getCryptography();
+        assertThat(cryptography)
+            .isNotNull()
+            .returns(this.defaultScheme.name(), CryptographyDTO::getDefaultScheme);
+
+        assertThat(cryptography.getSchemes())
+            .isNotNull()
+            .hasSize(1);
+    }
+
+    @Test
+    public void testCryptographyFieldWithMultipleSchemes() {
+        Scheme rsaScheme = new Scheme.Builder()
+            .setName("rsa")
+            .setCertificate(mock(X509Certificate.class))
+            .setSignatureAlgorithm("SHA256withRSA")
+            .setKeyAlgorithm("RSA")
+            .setKeySize(4096)
+            .build();
+        Scheme mldsaScheme = new Scheme.Builder()
+            .setName("mldsa")
+            .setCertificate(mock(X509Certificate.class))
+            .setSignatureAlgorithm("ML-DSA-87")
+            .setKeyAlgorithm("ML-DSA")
+            .build();
+
+        when(mockCryptoManager.getCryptoSchemes()).thenReturn(List.of(mldsaScheme, rsaScheme));
+        when(mockCryptoManager.getDefaultCryptoScheme()).thenReturn(rsaScheme);
+
+        StatusResource sr = this.createResource();
+        StatusDTO statusDTO = sr.status();
+
+        CryptographyDTO cryptography = statusDTO.getCryptography();
+        assertThat(cryptography)
+            .isNotNull()
+            .returns(rsaScheme.name(), CryptographyDTO::getDefaultScheme);
+
+        assertThat(cryptography.getSchemes())
+            .isNotNull()
+            .extracting(SchemeDTO::getName)
+            .containsExactly(mldsaScheme.name(), rsaScheme.name());
+    }
+
+    @Test
+    public void testCryptographySchemeWithoutKeySize() {
+        Scheme mldsaScheme = new Scheme.Builder()
+            .setName("mldsa")
+            .setCertificate(mock(X509Certificate.class))
+            .setSignatureAlgorithm("ML-DSA-87")
+            .setKeyAlgorithm("ML-DSA")
+            .build();
+
+        when(mockCryptoManager.getCryptoSchemes()).thenReturn(List.of(mldsaScheme));
+        when(mockCryptoManager.getDefaultCryptoScheme()).thenReturn(mldsaScheme);
+
+        StatusResource sr = this.createResource();
+        StatusDTO statusDTO = sr.status();
+
+        CryptographyDTO cryptography = statusDTO.getCryptography();
+        assertThat(cryptography)
+            .isNotNull();
+
+        assertThat(cryptography.getSchemes())
+            .singleElement()
+            .returns(mldsaScheme.name(), SchemeDTO::getName)
+            .returns(mldsaScheme.signatureAlgorithm(), SchemeDTO::getSignatureAlgorithm)
+            .returns(mldsaScheme.keyAlgorithm(), SchemeDTO::getKeyAlgorithm)
+            .returns(null, SchemeDTO::getKeySize);
     }
 }

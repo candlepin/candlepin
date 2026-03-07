@@ -17,6 +17,7 @@ package org.candlepin.spec;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.candlepin.dto.api.client.v1.CryptographyDTO;
 import org.candlepin.dto.api.client.v1.StatusDTO;
 import org.candlepin.resource.client.v1.StatusApi;
 import org.candlepin.spec.bootstrap.client.ApiClients;
@@ -45,6 +46,28 @@ class StatusSpecTest {
         assertThat(status.getRulesSource()).containsAnyOf("default", "database");
         assertThat(status.getManagerCapabilities()).isNotEmpty();
         assertThat(status.getTimeUTC()).isNotNull();
+    }
+
+    @Test
+    void shouldIncludeCryptographyInformation() {
+        StatusApi api = ApiClients.noAuth().status();
+        StatusDTO status = api.status();
+
+        CryptographyDTO cryptography = status.getCryptography();
+        assertThat(cryptography)
+            .isNotNull();
+
+        assertThat(cryptography.getDefaultScheme())
+            .isNotBlank();
+
+        assertThat(cryptography.getSchemes())
+            .isNotNull()
+            .isNotEmpty()
+            .allSatisfy(scheme -> {
+                assertThat(scheme.getName()).isNotBlank();
+                assertThat(scheme.getSignatureAlgorithm()).isNotBlank();
+                assertThat(scheme.getKeyAlgorithm()).isNotBlank();
+            });
     }
 
 }
