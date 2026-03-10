@@ -66,6 +66,9 @@ RUN mkdir -p /etc/candlepin/certs; \
 # Candlepin install
 COPY --from=builder /app/build /opt/tomcat/webapps
 
+# Candlepin configuration (run ./gradlew generateConfig before docker build)
+COPY build/candlepin.conf /etc/candlepin/candlepin.conf
+
 # Setup development certificate and key
 WORKDIR /etc/candlepin/certs
 COPY --from=builder /app/certs /etc/candlepin/certs
