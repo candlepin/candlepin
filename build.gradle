@@ -28,8 +28,8 @@ ext {
     api_spec_path = "${projectDir}/api/candlepin-api-spec.yaml"
     config_file = "${projectDir}/api/candlepin-api-config.json"
 
-    cpdb_username = "candlepin"
-    cpdb_password = ""
+    cpdb_username = project.findProperty("cpdb_username") ?: "candlepin"
+    cpdb_password = project.findProperty("cpdb_password") ?: ""
     db_name = "candlepin"
 
     if (project.findProperty("hidden_resources")) {

@@ -72,10 +72,12 @@ org.quartz.dataSource.myDS.password=<%= candlepin.cpdb_password %>
 org.quartz.dataSource.myDS.maxConnections=5
 
 <% if (candlepin.hostedtest) { %>\
-#overriding custom.yaml settings to ensure hostedtest resources are available
 candlepin.standalone=false
 module.config.hostedtest.configuration.module=org.candlepin.testext.hostedtest.HostedTestModule
 candlepin.auth.cloud.enable=true
+<% } else { %>\
+candlepin.standalone=true
+candlepin.auth.cloud.enable=false
 <% } %>\
 
 <% if (candlepin.manifestgen) { %>\
