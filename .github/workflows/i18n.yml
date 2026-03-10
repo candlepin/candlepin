@@ -23,6 +23,8 @@ jobs:
             java-version: 17
           - branch: candlepin-4.6-HOTFIX
             java-version: 17
+          - branch: candlepin-4.7-HOTFIX
+            java-version: 17
 
     steps:
       - name: Mask secrets
