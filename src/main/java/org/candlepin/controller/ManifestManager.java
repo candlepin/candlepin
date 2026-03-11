@@ -33,6 +33,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
+import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ExportCreationException;
@@ -407,7 +408,8 @@ public class ManifestManager {
      * @return an archive to the specified consumer's entitlements.
      */
     public File generateEntitlementArchive(Consumer consumer, Set<Long> serials)
-        throws ExportCreationException, ConcurrentContentPayloadCreationException {
+        throws ExportCreationException, ConcurrentContentPayloadCreationException,
+            CryptoCapabilitiesException {
 
         log.debug("Getting client certificate zip file for consumer: {}", consumer.getUuid());
         poolManager.regenerateDirtyEntitlements(consumer);
