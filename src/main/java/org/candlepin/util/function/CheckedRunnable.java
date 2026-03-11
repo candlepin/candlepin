@@ -26,6 +26,36 @@ package org.candlepin.util.function;
 @FunctionalInterface
 public interface CheckedRunnable<E extends Exception> {
 
+    @SuppressWarnings("unchecked")
+    private static <E extends Exception> void rethrowException(Exception exception) throws E {
+        throw (E) exception;
+    }
+
+    /**
+     * Wraps a checked runnable for use in unchecked contexts without losing the error handling of the
+     * typed checked exception; effectively using type erasure to turn a given checked exception into a
+     * runtime exception. Other exceptions, checked or otherwise, are passed through as normal.
+     *
+     * @param runnable
+     *  the CheckedRunnable to wrap with exception rethrow logic; cannot be null
+     *
+     * @throws E
+     *  if an exception of the given type occurs during execution of the target runnable
+     *
+     * @return
+     *  a runnable wrapping the checked runnable with exception rethrowing logic
+     */
+    static <E extends Exception> Runnable rethrow(CheckedRunnable<E> runnable) throws E {
+        return () -> {
+            try {
+                runnable.run();
+            }
+            catch (Exception exception) {
+                rethrowException(exception);
+            }
+        };
+    }
+
     /**
      * Executes the action represented by this runnable.
      */
