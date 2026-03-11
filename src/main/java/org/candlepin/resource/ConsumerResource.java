@@ -123,6 +123,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
+import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.certs.AnonymousCertificateGenerator;
 import org.candlepin.pki.certs.CertificateCreationException;
 import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
@@ -3151,8 +3152,18 @@ public class ConsumerResource implements ConsumerApi {
      * cert itself is the one stored in our db (and therefore the most recent
      * version) or not.
      *
-     * @param c Consumer whose certificate needs to be generated.
-     * @param regen if true, forces a regen of the certificate.
+     * @param c
+     *  Consumer whose certificate needs to be generated
+     *
+     * @param regen
+     *  if true, forces a regen of the certificate
+     *
+     * @throws BadRequestException
+     *  if unable to generate or regenerate an ID certificate
+     *
+     * @throws ConflictException
+     *  if unable to generate or regenerate an ID certificate due to cryptographic issues
+     *
      * @return an IdentityCertificate object
      */
     private IdentityCertificate generateIdCert(Consumer c, boolean regen) {
@@ -3170,6 +3181,10 @@ public class ConsumerResource implements ConsumerApi {
         catch (CertificateCreationException e) {
             log.error("Problem regenerating ID cert for unit:", e);
             throw new BadRequestException(i18n.tr("Problem regenerating ID cert for unit {0}", c), e);
+        }
+        catch (CryptoCapabilitiesException e) {
+            String msg = i18n.tr("Unable to generate ID certificate for consumer: {0}", c.getUuid());
+            throw new ConflictException(msg, e);
         }
 
         log.debug("Generated identity cert: {}", idCert.getSerial());
