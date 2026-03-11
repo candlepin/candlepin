@@ -14,6 +14,8 @@
  */
 package org.candlepin.util.function;
 
+import java.util.function.Supplier;
+
 
 
 /**
@@ -28,6 +30,39 @@ package org.candlepin.util.function;
  */
 @FunctionalInterface
 public interface CheckedSupplier<T, E extends Exception> {
+
+    @SuppressWarnings("unchecked")
+    private static <E extends Exception> void rethrowException(Exception exception) throws E {
+        throw (E) exception;
+    }
+
+    /**
+     * Wraps a checked supplier for use in unchecked contexts without losing the error handling of the
+     * typed checked exception; effectively using type erasure to turn a given checked exception into a
+     * runtime exception. Other exceptions, checked or otherwise, are passed through as normal.
+     *
+     * @param supplier
+     *  the CheckedSupplier to wrap with exception rethrow logic; cannot be null
+     *
+     * @throws E
+     *  if an exception of the given type occurs during execution of the target supplier
+     *
+     * @return
+     *  a supplier wrapping the checked supplier with exception rethrowing logic
+     */
+    static <T, E extends Exception> Supplier<T> rethrow(CheckedSupplier<T, E> supplier) throws E {
+        return () -> {
+            try {
+                return supplier.get();
+            }
+            catch (Exception exception) {
+                rethrowException(exception);
+            }
+
+            // This is safe -- we never actually get here
+            return null;
+        };
+    }
 
     /**
      * Fetches a value or result from this supplier. The output of this method may change from invocation to
