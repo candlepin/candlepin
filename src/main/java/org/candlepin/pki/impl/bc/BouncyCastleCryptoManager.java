@@ -162,12 +162,18 @@ public class BouncyCastleCryptoManager implements CryptoManager {
             throw new IllegalArgumentException("consumer is null");
         }
 
-        return consumer.getCryptoScheme()
-            .flatMap(this::getCryptoScheme);
+        // TODO: Scheme names on consumers is a dead concept. To be replaced with crypto capabilities that
+        // have to be matched up here.
+        Optional<String> scheme =  consumer.getCryptoScheme();
 
-        // If at some point we want to allow consumers to specify *any* configured scheme, whether or not it's
-        // present in the broadcast schemes list, we can add a check to fetch the value from the scheme reader
-        // if it wasn't present in the scheme list.
+        // If consumer describes crypto capabilities, attempt to match one, return empty optional if we can't
+        // resolve (should this be an exception instead?)
+
+        // If consumer does not describe capabilities, return default
+
+        return scheme.isPresent() ?
+            scheme.flatMap(this::getCryptoScheme) :
+            Optional.of(this.getDefaultCryptoScheme());
     }
 
     @Override

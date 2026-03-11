@@ -76,7 +76,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -614,7 +613,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void consumerCanDeleteSelf() throws GeneralSecurityException, IOException {
+    public void consumerCanDeleteSelf() throws Exception {
         Consumer toSubmit = new Consumer()
             .setName(CONSUMER_NAME)
             .setUsername(USER_NAME)
