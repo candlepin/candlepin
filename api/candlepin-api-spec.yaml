@@ -721,6 +721,11 @@ paths:
             type: array
             items:
               type: string
+        - name: checked_in_since
+          in: query
+          schema:
+            type: string
+            format: date-time
         - name: registration_authentication_method
           in: query
           description: Registration Authentication Method
