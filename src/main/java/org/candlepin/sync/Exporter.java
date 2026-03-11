@@ -33,6 +33,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.SCACertificate;
+import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.Scheme;
 import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
@@ -177,7 +178,9 @@ public class Exporter {
     }
 
     public File getEntitlementExport(Consumer consumer, Set<Long> serials)
-        throws ExportCreationException, ConcurrentContentPayloadCreationException {
+        throws ExportCreationException, ConcurrentContentPayloadCreationException,
+            CryptoCapabilitiesException {
+
         // TODO: need to delete tmpDir (which contains the archive,
         // which we need to return...)
         try {
@@ -406,9 +409,14 @@ public class Exporter {
      *
      * @throws ConcurrentContentPayloadCreationException
      *  if a concurrent request persists the content payload and causes a database constraint violation
+     *
+     * @throws CryptoCapabilitiesException
+     *  if the export cannot be created due to a lack of supported capabilities on the consumer
      */
     private void exportContentAccessCerts(File baseDir, Consumer consumer,
-        Set<Long> serials) throws IOException, ConcurrentContentPayloadCreationException {
+        Set<Long> serials)
+        throws IOException, ConcurrentContentPayloadCreationException, CryptoCapabilitiesException {
+
         SCACertificate contentAccessCert = this.scaCertificateGenerator.generate(consumer);
 
         if (contentAccessCert != null &&

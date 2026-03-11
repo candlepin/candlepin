@@ -2318,45 +2318,53 @@ public class ConsumerResource implements ConsumerApi {
                 throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
             }
 
-            SCACertificate scaCert = this.scaCertificateGenerator.getX509Certificate(consumer);
-            ContentAccessPayload scaPayload = this.scaCertificateGenerator.getContentPayload(consumer);
+            // TODO: Come up with a better way of dealing with all of these checked exceptions.
+            try {
+                SCACertificate scaCert = this.scaCertificateGenerator.getX509Certificate(consumer);
+                ContentAccessPayload scaPayload = this.scaCertificateGenerator.getContentPayload(consumer);
 
-            if (scaCert == null || scaPayload == null) {
-                String msg = I18n.marktr("Cannot retrieve content access certificate for consumer: {0}");
-                throw new BadRequestException(i18n.tr(msg, consumerUuid));
-            }
-
-            Date certUpdated = Util.firstOf(scaCert.getUpdated(), new Date());
-            Date payloadUpdated = scaPayload.getTimestamp();
-            Date lastUpdated = certUpdated.after(payloadUpdated) ? certUpdated : payloadUpdated;
-
-            // Check if either component has updated since the target date
-            if (since != null) {
-                // We are truncating the certs lasts update date to seconds and returning the certificate
-                // if and only if the cert's last update date is after the provided 'isModifiedSince' date so
-                // that the cert's last updated date can be used as the 'isModifiedSince' value in other
-                // requests without returning the certificate repeatedly.
-                OffsetDateTime lastUpdatedODT = lastUpdated.toInstant()
-                    .atOffset(ZoneOffset.UTC)
-                    .truncatedTo(ChronoUnit.SECONDS);
-                OffsetDateTime sinceODT = Util.parseOffsetDateTime(SINCE_DATE_FORMATER, since);
-
-                if (!lastUpdatedODT.isAfter(sinceODT)) {
-                    return Response.status(Response.Status.NOT_MODIFIED)
-                        .entity("Not modified since date supplied.")
-                        .build();
+                if (scaCert == null || scaPayload == null) {
+                    String msg = I18n.marktr("Cannot retrieve content access certificate for consumer: {0}");
+                    throw new BadRequestException(i18n.tr(msg, consumerUuid));
                 }
+
+                Date certUpdated = Util.firstOf(scaCert.getUpdated(), new Date());
+                Date payloadUpdated = scaPayload.getTimestamp();
+                Date lastUpdated = certUpdated.after(payloadUpdated) ? certUpdated : payloadUpdated;
+
+                // Check if either component has updated since the target date
+                if (since != null) {
+                    // We are truncating the certs lasts update date to seconds and returning the certificate
+                    // if and only if the cert's last update date is after the provided 'isModifiedSince' date
+                    // so that the cert's last updated date can be used as the 'isModifiedSince' value in
+                    // other requests without returning the certificate repeatedly.
+                    OffsetDateTime lastUpdatedODT = lastUpdated.toInstant()
+                        .atOffset(ZoneOffset.UTC)
+                        .truncatedTo(ChronoUnit.SECONDS);
+                    OffsetDateTime sinceODT = Util.parseOffsetDateTime(SINCE_DATE_FORMATER, since);
+
+                    if (!lastUpdatedODT.isAfter(sinceODT)) {
+                        return Response.status(Response.Status.NOT_MODIFIED)
+                            .entity("Not modified since date supplied.")
+                            .build();
+                    }
+                }
+
+                // No target date specified, or the components are newer than the target date
+                List<String> pieces = List.of(scaCert.getCert(), scaPayload.getPayload());
+
+                ContentAccessListing result = new ContentAccessListing()
+                    .setContentListing(scaCert.getSerial().getId(), pieces)
+                    .setLastUpdate(lastUpdated);
+
+                return Response.ok(result, MediaType.APPLICATION_JSON)
+                    .build();
             }
-
-            // No target date specified, or the components are newer than the target date
-            List<String> pieces = List.of(scaCert.getCert(), scaPayload.getPayload());
-
-            ContentAccessListing result = new ContentAccessListing()
-                .setContentListing(scaCert.getSerial().getId(), pieces)
-                .setLastUpdate(lastUpdated);
-
-            return Response.ok(result, MediaType.APPLICATION_JSON)
-                .build();
+            catch (CryptoCapabilitiesException e) {
+                String msg = I18n.marktr("Unable to generate usable content access payload " +
+                    "for consumer: {0}");
+                throw new ConflictException(i18n.tr(msg, consumerUuid), e);
+            }
         };
 
         try {
@@ -2397,54 +2405,61 @@ public class ConsumerResource implements ConsumerApi {
 
         Principal principal = ResteasyContext.getContextData(Principal.class);
 
-        Set<Long> serialSet = this.extractSerials(serials);
-        Stream<? extends Certificate> certStream;
+        try {
+            Set<Long> serialSet = this.extractSerials(serials);
+            Stream<? extends Certificate> certStream;
 
-        // TODO: This split is a mess, but is kind of necessary since anon cloud consumers and reggo consumers
-        // don't share a common ancestor, so while the logic should be reusable/innocuous between the two,
-        // the typing gets in the way a bit. In the future, anon consumers should just be another type of
-        // consumer and this problem goes away.
-        if (principal instanceof AnonymousCloudConsumerPrincipal anonPrincipal) {
-            log.debug("Getting client certificates for anonymous consumer: {}", consumerUuid);
+            // TODO: This split is a mess, but is kind of necessary since anon cloud consumers and reggo
+            // consumers don't share a common ancestor, so while the logic should be reusable/innocuous
+            // between the two, the typing gets in the way a bit. In the future, anon consumers should just be
+            // another type of consumer and this problem goes away.
+            if (principal instanceof AnonymousCloudConsumerPrincipal anonPrincipal) {
+                log.debug("Getting client certificates for anonymous consumer: {}", consumerUuid);
 
-            try {
-                AnonymousCloudConsumer consumer = anonPrincipal.getAnonymousCloudConsumer();
-                AnonymousContentAccessCertificate anonCert = this.anonymousCertGenerator.generate(consumer);
+                try {
+                    AnonymousCloudConsumer consumer = anonPrincipal.getAnonymousCloudConsumer();
+                    AnonymousContentAccessCertificate anonCert = this.anonymousCertGenerator
+                        .generate(consumer);
 
-                certStream = Stream.of(anonCert);
+                    certStream = Stream.of(anonCert);
+                }
+                catch (Exception e) {
+                    log.error(e.getMessage(), e);
+                    throw new IseException(this.i18n.tr("Unable to retrieve or create anonymous content " +
+                        "access certificate for consumer"));
+                }
             }
-            catch (Exception e) {
-                log.error(e.getMessage(), e);
-                throw new IseException(this.i18n.tr("Unable to retrieve or create anonymous content access " +
-                    "certificate for consumer"));
+            else {
+                log.debug("Getting client certificates for consumer: {}", consumerUuid);
+
+                Consumer consumer = this.consumerCurator.verifyAndLookupConsumer(consumerUuid);
+                this.revokeOnGuestMigration(consumer);
+
+                this.poolManager.regenerateDirtyEntitlements(consumer);
+                List<? extends Certificate> entitlementCerts = this.entCertAdapter.listForConsumer(consumer);
+                SCACertificate caCert = this.scaCertificateGenerator.generate(consumer);
+
+                certStream = this.buildCertificateStream(entitlementCerts, caCert);
             }
+
+            // Check if we should filter certs by the cert serial
+            if (serialSet != null && !serialSet.isEmpty()) {
+                certStream = certStream
+                    .filter(cert -> cert.getSerial() != null && serialSet.contains(cert.getSerial().getId()));
+            }
+
+            Stream<CertificateDTO> translatedCertStream = certStream
+                .map(this.translator.getStreamMapper(Certificate.class, CertificateDTO.class));
+
+            return Response.ok()
+                .type(MediaType.APPLICATION_JSON)
+                .entity(translatedCertStream)
+                .build();
         }
-        else {
-            log.debug("Getting client certificates for consumer: {}", consumerUuid);
-
-            Consumer consumer = this.consumerCurator.verifyAndLookupConsumer(consumerUuid);
-            this.revokeOnGuestMigration(consumer);
-
-            this.poolManager.regenerateDirtyEntitlements(consumer);
-            List<? extends Certificate> entitlementCerts = this.entCertAdapter.listForConsumer(consumer);
-            SCACertificate caCert = this.scaCertificateGenerator.generate(consumer);
-
-            certStream = this.buildCertificateStream(entitlementCerts, caCert);
+        catch (CryptoCapabilitiesException e) {
+            throw new ConflictException(i18n.tr("Unable to generate usable certificates for consumer: {0}",
+                consumerUuid), e);
         }
-
-        // Check if we should filter certs by the cert serial
-        if (serialSet != null && !serialSet.isEmpty()) {
-            certStream = certStream
-                .filter(cert -> cert.getSerial() != null && serialSet.contains(cert.getSerial().getId()));
-        }
-
-        Stream<CertificateDTO> translatedCertStream = certStream
-            .map(this.translator.getStreamMapper(Certificate.class, CertificateDTO.class));
-
-        return Response.ok()
-            .type(MediaType.APPLICATION_JSON)
-            .entity(translatedCertStream)
-            .build();
     }
 
     /**
@@ -2492,6 +2507,10 @@ public class ConsumerResource implements ConsumerApi {
         }
         catch (ExportCreationException e) {
             throw new IseException(this.i18n.tr("Unable to create entitlement certificate archive"), e);
+        }
+        catch (CryptoCapabilitiesException e) {
+            throw new ConflictException(i18n.tr("Unable to generate usable export for consumer: {0}",
+                consumer.getUuid()), e);
         }
     }
 
@@ -2556,23 +2575,31 @@ public class ConsumerResource implements ConsumerApi {
     @UpdateConsumerCheckIn
     public List<CertificateSerialDTO> getEntitlementCertificateSerials(
         @Verify(Consumer.class) String consumerUuid) {
+
         log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+
         revokeOnGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
         this.entitlementCurator.flush();
 
-        List<CertificateSerialDTO> allCertsSerials = new ArrayList<>();
-        for (Long id : entCertAdapter.listEntitlementSerialIds(consumer)) {
-            allCertsSerials.add(new CertificateSerialDTO().serial(id));
-        }
+        try {
+            List<CertificateSerialDTO> allCertsSerials = new ArrayList<>();
+            for (Long id : entCertAdapter.listEntitlementSerialIds(consumer)) {
+                allCertsSerials.add(new CertificateSerialDTO().serial(id));
+            }
 
-        SCACertificate x509Certificate = this.scaCertificateGenerator.getX509Certificate(consumer);
-        if (x509Certificate != null) {
-            allCertsSerials.add(new CertificateSerialDTO().serial(x509Certificate.getSerial().getId()));
-        }
+            SCACertificate x509Certificate = this.scaCertificateGenerator.getX509Certificate(consumer);
+            if (x509Certificate != null) {
+                allCertsSerials.add(new CertificateSerialDTO().serial(x509Certificate.getSerial().getId()));
+            }
 
-        return allCertsSerials;
+            return allCertsSerials;
+        }
+        catch (CryptoCapabilitiesException e) {
+            throw new ConflictException(i18n.tr("Unable to generate usable certificates for consumer: {0}",
+                consumer.getUuid()), e);
+        }
     }
 
     private void validateBindArguments(String poolIdString, Integer quantity, Collection<String> productIds,

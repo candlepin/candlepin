@@ -564,7 +564,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testGetCertSerials() {
+    public void testGetCertSerials() throws Exception {
         Consumer consumer = createConsumer(createOwner());
 
         Random random = new Random();
@@ -597,7 +597,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testGetCertSerialsWithNoSCACertSerial() {
+    public void testGetCertSerialsWithNoSCACertSerial() throws Exception {
         Consumer consumer = createConsumer(createOwner());
 
         Random random = new Random();
@@ -1842,7 +1842,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testGetContentAccessBodyWithNullContentAccessPayload() {
+    public void testGetContentAccessBodyWithNullContentAccessPayload() throws Exception {
         Owner owner = createOwner();
         doReturn(owner)
             .when(ownerCurator)
