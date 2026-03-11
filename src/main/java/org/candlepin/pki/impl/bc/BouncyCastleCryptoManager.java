@@ -164,7 +164,7 @@ public class BouncyCastleCryptoManager implements CryptoManager {
 
         // TODO: Scheme names on consumers is a dead concept. To be replaced with crypto capabilities that
         // have to be matched up here.
-        Optional<String> scheme =  consumer.getCryptoScheme();
+        Optional<String> scheme = consumer.getCryptoScheme();
 
         // If consumer describes crypto capabilities, attempt to match one, return empty optional if we can't
         // resolve (should this be an exception instead?)

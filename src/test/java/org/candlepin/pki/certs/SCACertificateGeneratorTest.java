@@ -91,7 +91,7 @@ import java.util.zip.Inflater;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class SCACertificateGeneratorTest extends DatabaseTestFixture {
+public class SCACertificateGeneratorTest extends DatabaseTestFixture {
     @Mock
     private V3CapabilityCheck v3CapabilityCheck;
     private Configuration config;
@@ -113,6 +113,13 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
     }
 
     private SCACertificateGenerator getNewGenerator() {
+        ContentAccessPayloadBuilderProvider payloadBuilderProvider = new ContentAccessPayloadBuilderProvider(
+            this.cryptoManager,
+            new EntitlementPayloadGenerator(new ObjectMapper()),
+            this.v3ExtensionUtil,
+            this.contentCurator,
+            this.caPayloadCurator);
+
         return new SCACertificateGenerator(
             this.config,
             this.cryptoManager,
@@ -120,12 +127,9 @@ class SCACertificateGeneratorTest extends DatabaseTestFixture {
             this.keyPairGenerator,
             this.v3ExtensionUtil,
             this.v3CapabilityCheck,
-            new EntitlementPayloadGenerator(new ObjectMapper()),
+            payloadBuilderProvider,
             this.caCertCurator,
-            this.caPayloadCurator,
             this.certSerialCurator,
-            this.contentCurator,
-            this.consumerCurator,
             this.environmentCurator);
     }
 
