@@ -856,7 +856,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testRegenerateIdCerts() {
+    public void testRegenerateIdCerts() throws Exception {
         Consumer consumer = createConsumer(createOwner());
         consumer.setIdCert(createIdCert());
         IdentityCertificate ic = consumer.getIdCert();
@@ -873,7 +873,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void expiredIdCertGetsRegenerated() {
+    public void expiredIdCertGetsRegenerated() throws Exception {
         Consumer consumer = createConsumer(createOwner());
         ComplianceStatus status = new ComplianceStatus();
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), anyBoolean()))
@@ -904,7 +904,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void doesGenerateMissingIdCert() {
+    public void doesGenerateMissingIdCert() throws Exception {
         Consumer consumer = createConsumer(createOwner());
         ComplianceStatus status = new ComplianceStatus();
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), anyBoolean()))

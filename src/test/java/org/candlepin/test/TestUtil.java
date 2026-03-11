@@ -15,7 +15,7 @@
 package org.candlepin.test;
 
 import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
-import static org.mockito.Mockito.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 
