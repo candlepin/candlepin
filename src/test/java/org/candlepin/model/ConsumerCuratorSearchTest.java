@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.equalToIgnoringCase;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -36,7 +37,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +77,11 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             .setEnvironmentIds(environmentIds);
 
         return this.consumerCurator.create(consumer);
+    }
+
+    private Consumer createConsumer(Owner owner, Instant lastCheckin) {
+        return this.createConsumer(owner)
+            .setLastCheckin(Date.from(lastCheckin));
     }
 
     private List<Consumer> createConsumersForQueryTests() {
@@ -1119,4 +1127,61 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         assertEquals(fetched.size(), fetchCount);
         assertEquals(expected, fetched.size());
     }
+
+    @Test
+    public void testFindConsumersByLastCheckin() {
+        Instant now = Instant.now();
+        int period = 86400;
+
+        Owner owner = this.createOwner();
+        Consumer consumer1 = this.createConsumer(owner, now.minusSeconds(period * 3));
+        Consumer consumer2 = this.createConsumer(owner, now.minusSeconds(period * 2));
+        Consumer consumer3 = this.createConsumer(owner, now.minusSeconds(period * 1));
+        Consumer consumer4 = this.createConsumer(owner); // never checked in
+
+        Date target = Date.from(now.minusSeconds(period * 2));
+        long expected = 2;
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setCheckedInSince(target);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer.getLastCheckin());
+            assertFalse(consumer.getLastCheckin().before(target));
+        }
+    }
+
+    @Test
+    public void testFindConsumersByLastCheckinNoMatch() {
+        Instant now = Instant.now();
+        int period = 86400;
+
+        Owner owner = this.createOwner();
+        Consumer consumer1 = this.createConsumer(owner, now.minusSeconds(period * 3));
+        Consumer consumer2 = this.createConsumer(owner, now.minusSeconds(period * 2));
+        Consumer consumer3 = this.createConsumer(owner, now.minusSeconds(period * 1));
+        Consumer consumer4 = this.createConsumer(owner); // never checked in
+
+        Date target = Date.from(now.plusSeconds(period));
+        long expected = 0;
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setCheckedInSince(target);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+    }
+
+
 }
