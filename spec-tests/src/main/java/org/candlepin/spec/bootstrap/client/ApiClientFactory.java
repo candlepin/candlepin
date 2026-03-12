@@ -22,17 +22,31 @@ import net.oauth.OAuthConsumer;
 import net.oauth.OAuthMessage;
 import net.oauth.signature.OAuthSignatureMethod;
 
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.file.Paths;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
@@ -44,14 +58,47 @@ import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.tls.HandshakeCertificates;
-import okhttp3.tls.HeldCertificate;
 
 /**
  * Class to build a Candlepin API instance.
  **/
 public class ApiClientFactory {
     private static final Logger log = LoggerFactory.getLogger(ApiClientFactory.class);
+
+    static {
+        try {
+            // Tomcat in our development/spec test setup is configured to use tomcat-native with an APR
+            // connector that uses the underlying openssl 3.5+ package, which already supports PQC TLS after
+            // setting the 'DEFAULT:PQ' crypto policy on the underlying OS.
+            // However, there is no equivalent to the tomcat-native/APR setup for java clients that want to
+            // perform PQC TLS, so we have to register the BouncyCastle security providers for this.
+            // TODO: Remove these once we start running spec tests against a java version that supports
+            //  PQC TLS (Java 29, or once PQC gets backported to Java 25).
+            java.security.Security.addProvider(
+                new org.bouncycastle.jce.provider.BouncyCastleProvider());
+            java.security.Security.addProvider(
+                new org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider());
+            java.security.Security.addProvider(
+                new org.bouncycastle.jsse.provider.BouncyCastleJsseProvider());
+
+            // The BCJSSE security provider has the ML-DSA signature scheme disabled by default (see
+            // https://github.com/bcgit/bc-java/commit/11d7ddd81ee843605ac9cc66e1ec84a41284fca3), due to the
+            // fact that its use in TLS 1.3 is still a draft
+            // (see https://datatracker.ietf.org/doc/html/draft-ietf-tls-mldsa-01), so
+            // we need to explicitly enable it.
+            // TODO: Remove this property once this becomes a standard and BC enables ML-DSA by default.
+            //
+            // Also, setting this property is overriding the entire
+            // default list of signature schemes the provider supports, so we have to set both the
+            // ML-DSA and RSA variants to make sure the client can handle both.
+            System.setProperty("jdk.tls.client.SignatureSchemes", "mldsa65,mldsa87,mldsa44," +
+                "rsa_pkcs1_sha256,rsa_pkcs1_sha384,rsa_pkcs1_sha512," +
+                "rsa_pss_rsae_sha256,rsa_pss_rsae_sha384,rsa_pss_rsae_sha512");
+        }
+        catch (Exception e) {
+            log.error("Failed to register BouncyCastle providers", e);
+        }
+    }
 
     private static final TrustManager[] TRUST_ALL_CERTS = {new TrustAllManager()};
 
@@ -144,9 +191,9 @@ public class ApiClientFactory {
         return apiClient;
     }
 
-    public ApiClient createSslClient(String cert) {
+    public ApiClient createmTLSClient(String cert) {
         ApiClient apiClient = createDefaultClient();
-        apiClient.setHttpClient(createSslOkHttpClient(cert));
+        apiClient.setHttpClient(createmTLSOkHttpClient(cert));
 
         return apiClient;
     }
@@ -166,20 +213,65 @@ public class ApiClientFactory {
         return clientBuilder.build();
     }
 
-    public OkHttpClient createSslOkHttpClient(String cert) {
-        // See https://square.github.io/okhttp/4.x/okhttp-tls/okhttp3.tls/-held-certificate/decode/
-        HeldCertificate clientCertificate = HeldCertificate.decode(cert);
+    public OkHttpClient createmTLSOkHttpClient(String cert) {
+        try {
+            // Parse the PEM certificate string using Bouncy Castle
+            // This supports ML-DSA and other post-quantum certificates
+            PEMParser pemParser = new PEMParser(new StringReader(cert));
 
-        HandshakeCertificates clientCertificates = new HandshakeCertificates.Builder()
-            .heldCertificate(clientCertificate)
-            // disable server cert validation
-            .addInsecureHost(properties.getProperty(ConfigKey.HOST.key()))
-            .build();
+            List<X509Certificate> certificates = new ArrayList<>();
+            PrivateKey privateKey = null;
 
-        return createClientBuilder()
-            //disable the server cert's hostname verification
-            .sslSocketFactory(clientCertificates.sslSocketFactory(), clientCertificates.trustManager())
-            .build();
+            Object object;
+            while ((object = pemParser.readObject()) != null) {
+                if (object instanceof X509CertificateHolder) {
+                    X509Certificate certificate = new JcaX509CertificateConverter()
+                        .setProvider("BC")
+                        .getCertificate((X509CertificateHolder) object);
+                    certificates.add(certificate);
+                }
+                else if (object instanceof PEMKeyPair) {
+                    PEMKeyPair keyPair = (PEMKeyPair) object;
+                    privateKey = new JcaPEMKeyConverter()
+                        .setProvider("BC")
+                        .getPrivateKey(keyPair.getPrivateKeyInfo());
+                }
+                else if (object instanceof PrivateKeyInfo) {
+                    privateKey = new JcaPEMKeyConverter()
+                        .setProvider("BC")
+                        .getPrivateKey((PrivateKeyInfo) object);
+                }
+            }
+            pemParser.close();
+
+            if (certificates.isEmpty() || privateKey == null) {
+                throw new IllegalArgumentException(
+                    "PEM string must contain both certificate and private key");
+            }
+
+            // Create a KeyStore with the client certificate and private key
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(null, null);
+            Certificate[] certChain = certificates.toArray(new Certificate[0]);
+            keyStore.setKeyEntry("client", privateKey, new char[0], certChain);
+
+            // Create KeyManager from the KeyStore
+            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(
+                KeyManagerFactory.getDefaultAlgorithm());
+            keyManagerFactory.init(keyStore, new char[0]);
+            KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
+
+            // Create SSLContext with the KeyManager and TrustAllManager
+            SSLContext sslContext = getSslContext(TRUST_ALL_CERTS);
+            sslContext.init(keyManagers, TRUST_ALL_CERTS, new java.security.SecureRandom());
+
+            return createClientBuilder()
+                .sslSocketFactory(sslContext.getSocketFactory(), (X509TrustManager) TRUST_ALL_CERTS[0])
+                .build();
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Failed to create TLS client with ML-DSA certificate", e);
+        }
     }
 
     private OkHttpClient.Builder createClientBuilder() {
@@ -195,7 +287,10 @@ public class ApiClientFactory {
 
     private SSLContext getSslContext(TrustManager[] trustAllCerts) {
         try {
-            final SSLContext sslContext = SSLContext.getInstance("TLSv1.3");
+            // Use BouncyCastle JSSE provider with TLS for ML-DSA support
+            // Using "TLS" enables both TLS 1.2 and TLS 1.3 - version negotiated during handshake
+            // ML-DSA signature schemes are supported in TLS 1.3
+            final SSLContext sslContext = SSLContext.getInstance("TLS", "BCJSSE");
             sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
             return sslContext;
         }
