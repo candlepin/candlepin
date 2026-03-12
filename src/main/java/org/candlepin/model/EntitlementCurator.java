@@ -85,13 +85,39 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     @Transactional
     public Set<Entitlement> bulkUpdate(Set<Entitlement> entitlements) {
         Set<Entitlement> toReturn = new HashSet<>();
+        if (entitlements == null || entitlements.isEmpty()) {
+            return toReturn;
+        }
+
+        Set<String> ids = new HashSet<>();
+        for (Entitlement ent : entitlements) {
+            if (ent.getId() != null) {
+                ids.add(ent.getId());
+            }
+        }
+
+        Map<String, Entitlement> existingById = new HashMap<>();
+        if (!ids.isEmpty()) {
+            String jpql = "SELECT e FROM Entitlement e WHERE e.id IN (:ids)";
+            TypedQuery<Entitlement> query = this.getEntityManager()
+                .createQuery(jpql, Entitlement.class);
+
+            for (List<String> block : this.partition(ids)) {
+                query.setParameter("ids", block);
+                for (Entitlement e : query.getResultList()) {
+                    existingById.put(e.getId(), e);
+                }
+            }
+        }
+
         for (Entitlement toUpdate : entitlements) {
-            Entitlement found = this.get(toUpdate.getId());
+            Entitlement found = existingById.get(toUpdate.getId());
             if (found != null) {
                 toReturn.add(found);
-                continue;
             }
-            toReturn.add(create(toUpdate));
+            else {
+                toReturn.add(create(toUpdate));
+            }
         }
         return toReturn;
     }

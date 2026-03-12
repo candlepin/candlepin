@@ -25,7 +25,11 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 /**
@@ -57,10 +61,17 @@ public class ConsumerTypeImporter {
      */
     public void store(Set<ConsumerType> consumerTypes) {
         log.debug("Creating/updating consumer types");
+        Set<String> labels = consumerTypes.stream()
+            .map(ConsumerType::getLabel)
+            .collect(Collectors.toSet());
+        List<ConsumerType> existingTypes = curator.getByLabels(labels);
+        Map<String, ConsumerType> existingByLabel = existingTypes.stream()
+            .collect(Collectors.toMap(ConsumerType::getLabel, Function.identity()));
+
         for (ConsumerType consumerType : consumerTypes) {
-            if (curator.getByLabel(consumerType.getLabel()) == null) {
+            if (!existingByLabel.containsKey(consumerType.getLabel())) {
                 curator.create(consumerType);
-                log.debug("Created consumer type: " + consumerType.getLabel());
+                log.debug("Created consumer type: {}", consumerType.getLabel());
             }
         }
     }

@@ -34,6 +34,7 @@ import org.candlepin.exceptions.NotImplementedException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
+import org.candlepin.model.AnonymousContentAccessCertificate;
 import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatusCurator;
@@ -55,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
@@ -220,12 +222,23 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
     public void deleteAnonymousConsumersByAccountId(String cloudAccountId) {
         List<AnonymousCloudConsumer> consumers = anonymousCloudConsumerCurator
             .getByCloudAccountId(cloudAccountId);
-        if (consumers != null) {
-            for (AnonymousCloudConsumer consumer : consumers) {
-                anonymousCloudCertCurator.delete(consumer.getContentAccessCert());
-                anonymousCloudConsumerCurator.delete(consumer);
-            }
+        if (consumers == null || consumers.isEmpty()) {
+            return;
         }
+
+        List<String> certIds = consumers.stream()
+            .map(AnonymousCloudConsumer::getContentAccessCert)
+            .filter(Objects::nonNull)
+            .map(AnonymousContentAccessCertificate::getId)
+            .collect(Collectors.toList());
+
+        List<String> consumerIds = consumers.stream()
+            .map(AnonymousCloudConsumer::getId)
+            .collect(Collectors.toList());
+
+        anonymousCloudConsumerCurator.unlinkAnonymousCertificates(certIds);
+        anonymousCloudConsumerCurator.deleteAnonymousCloudConsumers(consumerIds);
+        anonymousCloudCertCurator.deleteByIds(certIds);
     }
 
     private CloudRegistrationData getCloudRegistrationData(CloudRegistrationDTO cloudRegistrationDTO) {

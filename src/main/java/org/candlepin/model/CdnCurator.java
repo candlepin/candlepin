@@ -14,6 +14,12 @@
  */
 package org.candlepin.model;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.NoResultException;
@@ -53,6 +59,32 @@ public class CdnCurator extends AbstractHibernateCurator<Cdn> {
         catch (NonUniqueResultException e) {
             throw new IllegalStateException("Multiple CDN instances found with the same label: " + label, e);
         }
+    }
+
+    /**
+     * Retrieves CDN entities by their labels in a single query.
+     *
+     * @param labels
+     *  the labels of the CDNs to retrieve
+     *
+     * @return a map of label to CDN entity for all matching labels
+     */
+    public Map<String, Cdn> getByLabels(Collection<String> labels) {
+        if (labels == null || labels.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        String jpql = "SELECT c FROM Cdn c WHERE c.label IN (:labels)";
+        TypedQuery<Cdn> query = getEntityManager().createQuery(jpql, Cdn.class);
+
+        List<Cdn> results = new java.util.ArrayList<>();
+        for (List<String> block : this.partition(labels)) {
+            query.setParameter("labels", block);
+            results.addAll(query.getResultList());
+        }
+
+        return results.stream()
+            .collect(Collectors.toMap(Cdn::getLabel, cdn -> cdn));
     }
 
 }

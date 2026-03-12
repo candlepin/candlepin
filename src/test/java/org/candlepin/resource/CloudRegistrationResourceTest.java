@@ -760,14 +760,19 @@ public class CloudRegistrationResourceTest {
     void testDeleteAnonymousConsumers() {
         String accountId = "test-account-id";
         AnonymousCloudConsumer consumer = mock(AnonymousCloudConsumer.class);
+        AnonymousContentAccessCertificate cert = mock(AnonymousContentAccessCertificate.class);
+        doReturn("cert-id-1").when(cert).getId();
+        doReturn("consumer-id-1").when(consumer).getId();
         doReturn(List.of(consumer)).when(mockAnonCloudConsumerCurator).getByCloudAccountId(accountId);
-        doReturn(mock(AnonymousContentAccessCertificate.class)).when(consumer).getContentAccessCert();
+        doReturn(cert).when(consumer).getContentAccessCert();
 
         cloudRegResource.deleteAnonymousConsumersByAccountId(accountId);
         verify(this.mockAnonCloudConsumerCurator, Mockito.times(1))
-            .delete(consumer);
+            .unlinkAnonymousCertificates(List.of("cert-id-1"));
+        verify(this.mockAnonCloudConsumerCurator, Mockito.times(1))
+            .deleteAnonymousCloudConsumers(List.of("consumer-id-1"));
         verify(this.mockAnonCloudCertCurator, Mockito.times(1))
-            .delete(any(AnonymousContentAccessCertificate.class));
+            .deleteByIds(List.of("cert-id-1"));
     }
 
     private CloudRegistrationData getCloudRegistrationData(CloudRegistrationDTO cloudRegistrationDTO) {

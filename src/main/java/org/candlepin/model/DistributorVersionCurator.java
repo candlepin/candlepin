@@ -15,10 +15,15 @@
 package org.candlepin.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 import javax.persistence.NoResultException;
+import javax.persistence.TypedQuery;
 
 /**
  * DistributorVersionCurator
@@ -55,6 +60,33 @@ public class DistributorVersionCurator
         catch (NoResultException e) {
             return null;
         }
+    }
+
+    /**
+     * Retrieves {@link DistributorVersion}s by their names in a single query.
+     *
+     * @param names
+     *  the names of the distributor versions to retrieve
+     *
+     * @return a map of name to DistributorVersion for all matching names
+     */
+    public Map<String, DistributorVersion> findByNames(Collection<String> names) {
+        if (names == null || names.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        String jpql = "SELECT d FROM DistributorVersion d WHERE d.name IN (:names)";
+        TypedQuery<DistributorVersion> query = this.entityManager.get()
+            .createQuery(jpql, DistributorVersion.class);
+
+        List<DistributorVersion> results = new ArrayList<>();
+        for (List<String> block : this.partition(names)) {
+            query.setParameter("names", block);
+            results.addAll(query.getResultList());
+        }
+
+        return results.stream()
+            .collect(Collectors.toMap(DistributorVersion::getName, dv -> dv));
     }
 
     /**

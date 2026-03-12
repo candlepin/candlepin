@@ -849,9 +849,10 @@ public class ImporterTest {
 
     @Test
     public void importDistributorVersionUpdate() throws Exception {
-        doReturn(new DistributorVersion("test-dist-ver"))
+        DistributorVersion existingDv = new DistributorVersion("test-dist-ver");
+        doReturn(java.util.Map.of("test-dist-ver", existingDv))
             .when(this.mockDistributorVersionCurator)
-            .findByName("test-dist-ver");
+            .findByNames(any(java.util.Collection.class));
 
         File[] distVer = new File[1];
         distVer[0] = new File(this.tmpFolder, "dist-ver.json");

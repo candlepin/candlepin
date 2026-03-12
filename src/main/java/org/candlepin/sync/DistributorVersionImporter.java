@@ -28,7 +28,9 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 /**
@@ -61,19 +63,23 @@ public class DistributorVersionImporter {
      */
     public void store(Set<DistributorVersionDTO> distVers) {
         log.debug("Creating/updating distributor versions");
+        Set<String> names = distVers.stream()
+            .map(DistributorVersionDTO::getName)
+            .collect(Collectors.toSet());
+        Map<String, DistributorVersion> existingByName = curator.findByNames(names);
+
         for (DistributorVersionDTO distVer : distVers) {
-            // TODO: this should be using bulk entity lookup to improve performance
-            DistributorVersion existing = curator.findByName(distVer.getName());
+            DistributorVersion existing = existingByName.get(distVer.getName());
             if (existing == null) {
                 DistributorVersion newDistVer = distributorVersionDTOtoDistributorVersionEntity(distVer);
                 curator.create(newDistVer);
-                log.debug("Created distributor version: " + distVer.getName());
+                log.debug("Created distributor version: {}", distVer.getName());
             }
             else {
                 existing.setCapabilities(capabilityDTOsToCapabilityEntities(distVer.getCapabilities()));
                 existing.setDisplayName(distVer.getDisplayName());
                 curator.merge(existing);
-                log.debug("Updating distributor version: " + distVer.getName());
+                log.debug("Updating distributor version: {}", distVer.getName());
             }
         }
     }
