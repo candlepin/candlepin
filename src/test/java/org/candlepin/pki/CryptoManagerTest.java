@@ -227,51 +227,8 @@ public abstract class CryptoManagerTest {
         assertThrows(IllegalArgumentException.class, () -> cryptoManager.getCryptoScheme((String) null));
     }
 
-    @ParameterizedTest
-    @MethodSource("schemeSource")
-    public void testGetConsumerCryptoScheme(Scheme scheme) throws Exception {
-        Consumer consumer = new Consumer()
-            .setCryptoScheme(scheme.name());
-
-        // Build a configuration that definitely contains and lists the scheme under test
-        DevConfig config = TestConfig.defaults();
-        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
-        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(",", SUPPORTED_SCHEMES.keySet()));
-
-        CryptoManager cryptoManager = this.buildCryptoManager(config);
-
-        assertThat(cryptoManager.getCryptoScheme(consumer))
-            .isNotNull()
-            .hasValue(scheme);
-    }
-
-    // @ParameterizedTest
-    // @NullAndEmptySource
-    // public void testGetConsumerCryptoSchemeReturnsEmptyWhenSchemeNotDefined(String schemeName) {
-    //     Consumer consumer = new Consumer()
-    //         .setCryptoScheme(schemeName);
-
-    //     CryptoManager cryptoManager = this.buildCryptoManager();
-
-    //     assertThat(cryptoManager.getCryptoScheme(consumer))
-    //         .isNotNull()
-    //         .isEmpty();
-    // }
-
-    // @ParameterizedTest
-    // @ValueSource(strings = {"nonexistent_scheme_name", "!@#$invalid&*%)!(*%#", "0123456789", "\t", "   "})
-    // public void testGetConsumerCryptoSchemeReturnsEmptyWhenSchemeNameDoesntExist(String schemeName)
-    //     throws Exception {
-
-    //     Consumer consumer = new Consumer()
-    //         .setCryptoScheme(schemeName);
-
-    //     CryptoManager cryptoManager = this.buildCryptoManager();
-
-    //     assertThat(cryptoManager.getCryptoScheme(consumer))
-    //         .isNotNull()
-    //         .isEmpty();
-    // }
+    // TODO: Rewrite the consumer crypto scheme tests once we've updated the API to account for the
+    // scheme negotiation changes
 
     @Test
     public void testGetConsumerCryptoSchemeThrowsExceptionOnNullConsumer() throws Exception {

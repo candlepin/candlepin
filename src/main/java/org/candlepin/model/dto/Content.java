@@ -55,6 +55,10 @@ public class Content {
         return this;
     }
 
+    public String getId() {
+        return this.id;
+    }
+
     /**
      * @param type
      *
