@@ -20,6 +20,7 @@ import org.candlepin.config.Configuration;
 import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.exceptions.ConcurrentModificationException;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.exceptions.InvalidOrderKeyException;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.util.function.CheckedRunnable;

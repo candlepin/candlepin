@@ -1164,7 +1164,7 @@ public class ConsumerResourceTest {
         ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
         Consumer consumer = this.createConsumer(owner, ctype);
-        consumer.setName(RandomStringUtils.randomAlphanumeric(Consumer.MAX_LENGTH_OF_CONSUMER_NAME + 1));
+        consumer.setName(RandomStringUtils.randomAlphanumeric(Consumer.CONSUMER_NAME_MAX_LENGTH + 1));
         ConsumerDTO consumerDto = this.translator.translate(consumer, ConsumerDTO.class);
 
         UserPrincipal up = mock(UserPrincipal.class);
@@ -1175,7 +1175,7 @@ public class ConsumerResourceTest {
         BadRequestException ex = assertThrows(BadRequestException.class,
             () -> consumerResource.createConsumer(consumerDto, null, owner.getKey(), null, false));
         assertEquals(String.format("Name of the consumer should be shorter than %d characters.",
-            Consumer.MAX_LENGTH_OF_CONSUMER_NAME + 1), ex.getMessage());
+            Consumer.CONSUMER_NAME_MAX_LENGTH + 1), ex.getMessage());
     }
 
     @Test
