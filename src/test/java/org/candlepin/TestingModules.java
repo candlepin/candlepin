@@ -49,6 +49,7 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.OidUtil;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
@@ -58,6 +59,7 @@ import org.candlepin.pki.impl.bc.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.jca.JcaCertificateReader;
+import org.candlepin.pki.impl.jca.JcaOidUtil;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.RulesObjectMapper;
@@ -268,14 +270,15 @@ public class TestingModules {
             bind(java.security.Provider.class).toProvider(BouncyCastleSecurityProvider.class);
             bind(BouncyCastleProvider.class).toProvider(BouncyCastleSecurityProvider.class);
 
-            // Generic crypto wrappers and CA dependencies
+            // Generic crypto op wrappers and manager dependencies
             bind(CertificateReader.class).to(JcaCertificateReader.class).asEagerSingleton();
+            bind(OidUtil.class).to(JcaOidUtil.class).asEagerSingleton();
             bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class).asEagerSingleton();
             bind(PemEncoder.class).to(BouncyCastlePemEncoder.class).asEagerSingleton();
             bind(SubjectKeyIdentifierWriter.class).to(BouncyCastleSubjectKeyIdentifierWriter.class)
                 .asEagerSingleton();
 
-            // Crypto Manager
+            // CryptoManager
             bind(CryptoManager.class).to(BouncyCastleCryptoManager.class).asEagerSingleton();
 
             // Tier-2 generators

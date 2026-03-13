@@ -31,6 +31,7 @@ import org.candlepin.auth.permissions.Permission;
 import org.candlepin.controller.OwnerContentAccess;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.OwnerCurator.OwnerQueryArguments;
+import org.candlepin.model.exceptions.OwnerNotFoundException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 

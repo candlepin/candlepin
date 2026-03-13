@@ -153,8 +153,9 @@ public class IdentityCertificateGeneratorTest extends DatabaseTestFixture {
             .setName(TestUtil.randomString("name-"))
             .setUsername(TestUtil.randomString("username-"))
             .setOwner(owner)
-            .setType(consumerType)
-            .setCryptoScheme(TestUtil.randomString()));
+            .setType(consumerType));
+
+        CryptoUtil.configureConsumerWithNoSelectableScheme(consumer);
 
         assertThrows(CryptoCapabilitiesException.class, () -> {
             this.identityCertificateGenerator.generate(consumer);
@@ -258,8 +259,9 @@ public class IdentityCertificateGeneratorTest extends DatabaseTestFixture {
             .setName(TestUtil.randomString("name-"))
             .setUsername(TestUtil.randomString("username-"))
             .setOwner(owner)
-            .setType(consumerType)
-            .setCryptoScheme(TestUtil.randomString()));
+            .setType(consumerType));
+
+        CryptoUtil.configureConsumerWithNoSelectableScheme(consumer);
 
         assertThrows(CryptoCapabilitiesException.class, () -> {
             this.identityCertificateGenerator.regenerate(consumer);
@@ -289,14 +291,15 @@ public class IdentityCertificateGeneratorTest extends DatabaseTestFixture {
             .setManifest(false);
         consumerType = this.consumerTypeCurator.create(consumerType);
 
-        String schemeName = scheme != null ? scheme.name() : null;
-
         Consumer consumer = new Consumer()
             .setName(TestUtil.randomString("name-"))
             .setUsername(TestUtil.randomString("username-"))
             .setOwner(owner)
-            .setType(consumerType)
-            .setCryptoScheme(schemeName);
+            .setType(consumerType);
+
+        if (scheme != null) {
+            CryptoUtil.configureConsumerForSchemes(consumer, scheme);
+        }
 
         return this.consumerCurator.create(consumer);
     }

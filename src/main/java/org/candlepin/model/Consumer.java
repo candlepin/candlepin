@@ -15,7 +15,8 @@
 package org.candlepin.model;
 
 import org.candlepin.auth.AuthenticationMethod;
-import org.candlepin.exceptions.DuplicateEntryException;
+import org.candlepin.model.exceptions.DuplicateEntryException;
+import org.candlepin.model.exceptions.ValueTooLargeException;
 import org.candlepin.service.model.ConsumerInfo;
 import org.candlepin.util.Util;
 
@@ -41,7 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -87,9 +87,13 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_consumer";
 
-    // This is based on the limitation of the name in the generated identity certificate
-    // BZ 1451107
-    public static final int MAX_LENGTH_OF_CONSUMER_NAME = 250;
+    // BZ 1451107: limit consumer name length to a value no greater than what is permitted by the identity
+    // certificate creation logic and format.
+    /** The maximum length of any consumer name. */
+    public static final int CONSUMER_NAME_MAX_LENGTH = 250;
+
+    /** The maximum allowed length of any string of comma-delimited algorithm OIDs */
+    public static final int ALGORITHM_OIDS_MAX_LENGTH = 2048;
 
     /**
      * Commonly used/recognized consumer facts
@@ -159,7 +163,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     private String uuid;
 
     @Column(nullable = false)
-    @Size(max = MAX_LENGTH_OF_CONSUMER_NAME)
+    @Size(max = CONSUMER_NAME_MAX_LENGTH)
     @NotNull
     private String name;
 
@@ -348,9 +352,18 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
         orphanRemoval = true, cascade = { CascadeType.ALL })
     private ConsumerCloudData consumerCloudData;
 
-    // Temporarily transient; remove once we fully implement this on the consumer.
-    @Transient
-    private String cryptoScheme;
+    // At some point we can look at encapsulating these crypto capabilities in an object and deduplicating on
+    // them or something, but for now, we'll store them as individual fields.
+
+    /** Comma-delimited list of supported cryptographic key generation algorithm OIDs */
+    @Column(name = "key_algorithm_oids")
+    @Size(max = ALGORITHM_OIDS_MAX_LENGTH)
+    private String cryptoKeyAlgorithmOids;
+
+    /** Comma-delimited list of supported cryptographic signature algorithm OIDs */
+    @Column(name = "signature_algorithm_oids")
+    @Size(max = ALGORITHM_OIDS_MAX_LENGTH)
+    private String cryptoSignatureAlgorithmOids;
 
     public Consumer() {
         this.addOns = new HashSet<>();
@@ -646,37 +659,108 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     }
 
     /**
-     * Fetches the client-configured crypto scheme for this consumer. If the client has not defined the crypto
-     * scheme, this method returns an empty optional.
-     * <p>
-     * <strong>Warning:</strong> any scheme name returned by this method is not guaranteed to be a currently
-     * configured or even a valid scheme name. Receivers are responsible for validating or correcting the
-     * returned scheme name.
+     * Fetches this consumer's supported key generation algorithm OIDs. If the algorithm OIDs have not been
+     * set, or have since been cleared, this method returns null.
      *
      * @return
-     *  An optional containing the consumer's requested cryptographic scheme name, or an empty optional if
-     *  the consumer does not specify a scheme
+     *  a set containing the consumer's supported key generation algorithm OIDs, or null if no algorithm OIDs
+     *  have been set
      */
-    public Optional<String> getCryptoScheme() {
-        return Optional.ofNullable(this.cryptoScheme);
+    public Set<String> getSupportedKeyAlgorithmOids() {
+        return this.cryptoKeyAlgorithmOids != null ?
+            Util.toSet(this.cryptoKeyAlgorithmOids) :
+            null;
     }
 
     /**
-     * Sets or clears the cryptographic scheme name for this consumer. If the provided cryptographic scheme is
-     * null or empty, any existing value will be cleared.
-     * <p>
-     * <strong>Warning:</strong> this method performs no validation on the scheme name. Even if the name of
-     * the scheme is invalid or otherwise does not map to a currently configured scheme, it will be stored as
-     * provided.
+     * Sets the supported cryptographic key generation algorithm OIDs for this consumer, silently discarding
+     * any duplicate OIDs in the collection. If the collection of algorithm OIDs is null or empty, any
+     * existing value will be cleared. If the collection of OIDs exceeds the maximum storage capacity for this
+     * field, this method throws an exception.
      *
-     * @param schemeName
-     *  the name of the scheme to define for this consumer
+     * @param algorithmOids
+     *  a collection of key algorithm OIDs in string format (e.g. 1.234.56.7), or null to clear any existing
+     *  values
+     *
+     * @throws ValueTooLargeException
+     *  if the converted collection of algorithm OIDs is too large and cannot be stored
      *
      * @return
      *  a reference to this consumer instance
      */
-    public Consumer setCryptoScheme(String schemeName) {
-        this.cryptoScheme = schemeName != null && !schemeName.isBlank() ? schemeName : null;
+    public Consumer setSupportedKeyAlgorithmOids(Collection<String> algorithmOids) {
+        if (algorithmOids == null) {
+            this.cryptoKeyAlgorithmOids = null;
+            return this;
+        }
+
+        String oids = algorithmOids.stream()
+            .filter(Objects::nonNull)
+            .filter(oid -> !oid.isBlank())
+            .distinct()
+            .collect(Collectors.joining(","));
+
+        if (oids.length() > ALGORITHM_OIDS_MAX_LENGTH) {
+            String msg = String.format("Converted algorithm OID string length exceeds maximum size: %d > %d",
+                oids.length(), ALGORITHM_OIDS_MAX_LENGTH);
+
+            throw new ValueTooLargeException(msg);
+        }
+
+        this.cryptoKeyAlgorithmOids = !oids.isBlank() ? oids : null;
+        return this;
+    }
+
+    /**
+     * Fetches this consumer's supported signature algorithm OIDs. If the algorithm OIDs have not been set, or
+     * have since been cleared, this method returns null.
+     *
+     * @return
+     *  a set containing the consumer's supported signature algorithm OIDs, or null if no algorithm OIDs have
+     *  been set
+     */
+    public Set<String> getSupportedSignatureAlgorithmOids() {
+        return this.cryptoSignatureAlgorithmOids != null ?
+            Util.toSet(this.cryptoSignatureAlgorithmOids) :
+            null;
+    }
+
+    /**
+     * Sets the supported cryptographic signature algorithm OIDs for this consumer, silently discarding any
+     * null, empty, or duplicate OIDs in the collection. If the collection of algorithm OIDs is null or empty,
+     * any existing value will be cleared. If the collection of OIDs exceeds the maximum storage capacity for
+     * this field, this method throws an exception.
+     *
+     * @param algorithmOids
+     *  a collection of signature algorithm OIDs in string format (e.g. 1.234.56.7), or null to clear any
+     *  existing values
+     *
+     * @throws ValueTooLargeException
+     *  if the converted collection of algorithm OIDs is too large and cannot be stored
+     *
+     * @return
+     *  a reference to this consumer instance
+     */
+    public Consumer setSupportedSignatureAlgorithmOids(Collection<String> algorithmOids) {
+        if (algorithmOids == null) {
+            this.cryptoSignatureAlgorithmOids = null;
+            return this;
+        }
+
+        String oids = algorithmOids.stream()
+            .filter(Objects::nonNull)
+            .filter(oid -> !oid.isBlank())
+            .distinct()
+            .collect(Collectors.joining(","));
+
+        if (oids.length() > ALGORITHM_OIDS_MAX_LENGTH) {
+            String msg = String.format("Converted algorithm OID string length exceeds maximum size: %d > %d",
+                oids.length(), ALGORITHM_OIDS_MAX_LENGTH);
+
+            throw new ValueTooLargeException(msg);
+        }
+
+        this.cryptoSignatureAlgorithmOids = !oids.isBlank() ? oids : null;
         return this;
     }
 

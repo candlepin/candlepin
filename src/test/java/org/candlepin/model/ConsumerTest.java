@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
-import org.candlepin.exceptions.DuplicateEntryException;
+import org.candlepin.model.exceptions.DuplicateEntryException;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
