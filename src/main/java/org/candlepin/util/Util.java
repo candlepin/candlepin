@@ -59,6 +59,8 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 
@@ -617,18 +619,43 @@ public class Util {
      * The given input string is split on commas and will throw out any whitespace surrounding each
      * comma-delimited value using the regular expression: "\\s*,[\\s,]*"
      *
-     * @param list
+     * @param values
      *  the string to split and convert into a list of values
      *
      * @return
-     *  a list containing the split values from the string, if any
+     *  a list containing the split values from the input string, if any
      */
-    public static List<String> toList(String list) {
-        if (list == null || list.isBlank()) {
+    public static List<String> toList(String values) {
+        if (values == null || values.isBlank()) {
             return List.of();
         }
 
-        return Arrays.asList(list.trim().split("\\s*,[\\s,]*"));
+        return Arrays.asList(values.trim().split("\\s*,[\\s,]*"));
+    }
+
+    /**
+     * Splits a given string by comma and returns it as an immutable set, silently discarding empty or blank
+     * elements. If the input string is null or empty, this function returns an empty set.
+     * <p></p>
+     * The given input string is split on commas and will throw out any whitespace surrounding each
+     * comma-delimited value using the regular expression: "\\s*,[\\s,]*"
+     *
+     * @param values
+     *  the string to split and convert into a set of values
+     *
+     * @return
+     *  a set containing the split values from the string, if any
+     */
+    public static Set<String> toSet(String values) {
+        if (values == null || values.isBlank()) {
+            return Set.of();
+        }
+
+        // Impl note: we're using a stream as a workaround here, as Set.of will throw an exception of the
+        // input contains duplicate elements for reasons.
+        return Stream.of(values.trim().split("\\s*+,[\\s,]*+"))
+            .filter(value -> !value.isBlank())
+            .collect(Collectors.toSet());
     }
 
     /*

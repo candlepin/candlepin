@@ -111,7 +111,6 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -120,6 +119,7 @@ import org.candlepin.model.Release;
 import org.candlepin.model.SCACertificate;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.model.exceptions.InvalidOrderKeyException;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.pki.CryptoCapabilitiesException;
@@ -1380,11 +1380,12 @@ public class ConsumerResource implements ConsumerApi {
                 throw new BadRequestException(i18n.tr("System name cannot begin with # character"));
             }
 
-            int max = Consumer.MAX_LENGTH_OF_CONSUMER_NAME;
-            if (consumer.getName().length() > max) {
-                String m = "Name of the consumer should be shorter than {0} characters.";
-                throw new BadRequestException(i18n.tr(m, Integer.toString(max + 1)));
+            int maxLength = Consumer.CONSUMER_NAME_MAX_LENGTH;
+            if (consumer.getName().length() > maxLength) {
+                String msg = I18n.marktr("Name of the consumer should be shorter than {0} characters.");
+                throw new BadRequestException(i18n.tr(msg, maxLength + 1));
             }
+
         }
 
         if (type.isType(ConsumerTypeEnum.PERSON) && !isConsumerPersonNameValid(consumer.getName())) {

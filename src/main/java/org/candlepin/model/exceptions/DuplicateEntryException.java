@@ -12,18 +12,20 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.pki;
+package org.candlepin.model.exceptions;
+
+
 
 /**
- * Exception thrown when cryptographic capabilities cannot be determined or cannot be served.
+ * Thrown when an operation attempts to re-add an existing element to a collection owned by a model object.
  */
-public class CryptoCapabilitiesException extends Exception {
+public class DuplicateEntryException extends IllegalArgumentException {
 
     /**
      * Constructs a new exception with null as its detail message. The cause is not initialized,
      * and may subsequently be initialized by a call to initCause(java.lang.Throwable).
      */
-    public CryptoCapabilitiesException() {
+    public DuplicateEntryException() {
         super();
     }
 
@@ -35,7 +37,7 @@ public class CryptoCapabilitiesException extends Exception {
      *  the detail message. The detail message is saved for later retrieval by the getMessage()
      *  method.
      */
-    public CryptoCapabilitiesException(String message) {
+    public DuplicateEntryException(String message) {
         super(message);
     }
 
@@ -49,7 +51,7 @@ public class CryptoCapabilitiesException extends Exception {
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public CryptoCapabilitiesException(Throwable cause) {
+    public DuplicateEntryException(Throwable cause) {
         super(cause);
     }
 
@@ -67,8 +69,7 @@ public class CryptoCapabilitiesException extends Exception {
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public CryptoCapabilitiesException(String message, Throwable cause) {
+    public DuplicateEntryException(String message, Throwable cause) {
         super(message, cause);
     }
-
 }
