@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryArguments;
+import org.candlepin.model.exceptions.InvalidOrderKeyException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.Util;
 

@@ -18,8 +18,10 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
+import org.candlepin.model.Consumer;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.OidUtil;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.Scheme;
@@ -31,6 +33,7 @@ import org.candlepin.pki.impl.bc.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.jca.JcaCertificateReader;
+import org.candlepin.pki.impl.jca.JcaOidUtil;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -73,6 +76,8 @@ import java.security.spec.AlgorithmParameterSpec;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Stream;
 
 
@@ -93,8 +98,8 @@ public class CryptoUtil {
     private static final String RSA_KEY_ALGORITHM = "RSA";
     private static final int RSA_KEY_SIZE = 4096;
 
-    private static final String MLDSA_SIGNATURE_ALGORITHM = "ML-DSA";
-    private static final String MLDSA_KEY_ALGORITHM = "ML-DSA";
+    private static final String MLDSA_SIGNATURE_ALGORITHM = "ML-DSA-65";
+    private static final String MLDSA_KEY_ALGORITHM = "ML-DSA-65";
 
     private CryptoUtil() {
         throw new UnsupportedOperationException();
@@ -153,6 +158,20 @@ public class CryptoUtil {
     }
 
     /**
+     * Fetches an OidUtil implemented using a supported crypto security provider. Each call to this method
+     * may return a new instance, but it will never return null.
+     * <p>
+     * This method exists to fetch an OidUtil without needing an entire injection ecosystem in the calling
+     * test methods, and all the configuration that requires.
+     *
+     * @return
+     *  an OidUtil implementation
+     */
+    public static OidUtil getOidUtil() {
+        return new JcaOidUtil();
+    }
+
+    /**
      * Fetches a crypto manager using the specified configuration as the basis for it and its dependencies. If
      * the configuration is null, or is not fully configured, this function throws an exception.
      *
@@ -177,12 +196,13 @@ public class CryptoUtil {
         PrivateKeyReader keyReader = getPrivateKeyReader();
         CertificateReader certReader = getCertificateReader();
         SubjectKeyIdentifierWriter skiWriter = new BouncyCastleSubjectKeyIdentifierWriter();
+        OidUtil oidUtil = getOidUtil();
 
         SchemeReader schemeReader = new SchemeReader(config, keyReader, certReader);
 
         // Build & return crypto manager
         return new BouncyCastleCryptoManager(config, SECURITY_PROVIDER_PROVIDER.get(), schemeReader,
-            certReader, skiWriter);
+            certReader, skiWriter, oidUtil);
     }
 
     /**
@@ -887,6 +907,90 @@ public class CryptoUtil {
             .setKeyAlgorithm(keyAlgorithm)
             .setKeySize(keySize)
             .build();
+    }
+
+    /**
+     * Configures the consumer to indicate that it supports the specified schemes. If any of the schemes
+     * define an algorithm which cannot be resolved to an algorithm OID, this function throws an exception.
+     * <p></p>
+     * Note that while the consumer will be configured to support any of the given schemes, which one is
+     * selected by CryptoManager's getCryptoScheme method is still determined by the schemes specified in the
+     * core Candlepin configuration.
+     *
+     * @param consumer
+     *  the consumer to configure
+     *
+     * @param schemes
+     *  the schemes to support with the consumer's configuration
+     *
+     * @return
+     *  the configured consumer
+     */
+    public static Consumer configureConsumerForSchemes(Consumer consumer, Scheme... schemes) {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        OidUtil oidUtil = getOidUtil();
+        Set<String> keyAlgoOids = new HashSet<>();
+        Set<String> sigAlgoOids = new HashSet<>();
+
+        for (Scheme scheme : schemes) {
+            if (scheme == null) {
+                throw new IllegalArgumentException("schemes list contains null values");
+            }
+
+            String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+                .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+            String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+                .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+            keyAlgoOids.add(keyAlgoOid);
+            sigAlgoOids.add(sigAlgoOid);
+        }
+
+        return consumer.setSupportedKeyAlgorithmOids(keyAlgoOids)
+            .setSupportedSignatureAlgorithmOids(sigAlgoOids);
+    }
+
+    /**
+     * Configures the consumer such that it does not indicate any cryptographic capabilities, which should
+     * result in cryptographic operations executed in the context of this consumer using the default scheme.
+     *
+     * @param consumer
+     *  the consumer to configure
+     *
+     * @return
+     *  the configured consumer
+     */
+    public static Consumer configureConsumerForDefaultScheme(Consumer consumer) {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        return consumer.setSupportedKeyAlgorithmOids(null)
+            .setSupportedSignatureAlgorithmOids(null);
+    }
+
+    /**
+     * Configures the consumer such that it indicates cryptographic capabilities that cannot be matched to
+     * any of the known, supported schemes, as indicated by those returned by the generateSupportedSchemes
+     * function.
+     *
+     * @param consumer
+     *  the consumer to configure
+     *
+     * @return
+     *  the configured consumer
+     */
+    public static Consumer configureConsumerWithNoSelectableScheme(Consumer consumer) {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        return consumer.setSupportedKeyAlgorithmOids(Set.of("100.1.2.3.4.5"))
+            .setSupportedSignatureAlgorithmOids(Set.of("100.6.7.8.9.0"));
     }
 
 }

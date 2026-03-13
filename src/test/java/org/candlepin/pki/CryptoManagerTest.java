@@ -48,6 +48,7 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -80,6 +81,12 @@ public abstract class CryptoManagerTest {
      *  a new CryptoManager instance to test
      */
     protected abstract CryptoManager buildCryptoManager(Configuration config);
+
+    private static Stream<Arguments> schemeSource() {
+        return SUPPORTED_SCHEMES.values()
+            .stream()
+            .map(Arguments::of);
+    }
 
     private CryptoManager buildCryptoManager() {
         return this.buildCryptoManager(TestConfig.defaults());
@@ -116,10 +123,16 @@ public abstract class CryptoManagerTest {
         return config;
     }
 
-    private static Stream<Arguments> schemeSource() {
-        return SUPPORTED_SCHEMES.values()
-            .stream()
-            .map(Arguments::of);
+    private static String reverseOid(String oid) {
+        String[] chunks = oid.split("\\.");
+
+        for (int i = 0; i < chunks.length / 2; ++i) {
+            String tmp = chunks[i];
+            chunks[i] = chunks[chunks.length - i - 1];
+            chunks[chunks.length - i - 1] = tmp;
+        }
+
+        return String.join(".", chunks);
     }
 
     @Test
@@ -227,8 +240,207 @@ public abstract class CryptoManagerTest {
         assertThrows(IllegalArgumentException.class, () -> cryptoManager.getCryptoScheme((String) null));
     }
 
-    // TODO: Rewrite the consumer crypto scheme tests once we've updated the API to account for the
-    // scheme negotiation changes
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetConsumerCryptoScheme(Scheme scheme) throws Exception {
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+        String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(Set.of(keyAlgoOid))
+            .setSupportedSignatureAlgorithmOids(Set.of(sigAlgoOid));
+
+        // Build a configuration that definitely contains and lists the scheme under test
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(",", SUPPORTED_SCHEMES.keySet()));
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isNotNull()
+            .hasValue(scheme);
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetConsumerCryptoSchemeRespectsSchemeConfigPriorityOrder(Scheme target) throws Exception {
+        DevConfig config = TestConfig.defaults();
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        Set<String> keyAlgoOids = new HashSet<>();
+        Set<String> sigAlgoOids = new HashSet<>();
+
+        LinkedHashSet<Scheme> orderedSchemes = new LinkedHashSet<>();
+        orderedSchemes.add(target);
+        orderedSchemes.addAll(SUPPORTED_SCHEMES.values());
+
+        for (Scheme scheme : orderedSchemes) {
+            CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+
+            String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+                .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+            String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+                .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+            keyAlgoOids.add(keyAlgoOid);
+            sigAlgoOids.add(sigAlgoOid);
+        }
+
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(keyAlgoOids)
+            .setSupportedSignatureAlgorithmOids(sigAlgoOids);
+
+        // Set the configuration such that it definitely contains and lists the scheme under test
+        List<String> schemesList = orderedSchemes.stream()
+            .map(Scheme::name)
+            .toList();
+
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(",", schemesList));
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isNotNull()
+            .hasValue(target);
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetConsumerCryptoSchemeAllowsIndicatingOnlyKeyCapabilities(Scheme scheme)
+        throws Exception {
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+        // Setup the consumer such that it only indicates which key algorithms it supports, allowing us to
+        // select the "best" signature algorithm of our choosing so long as the scheme uses a supported key
+        // algorithm
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(Set.of(keyAlgoOid))
+            .setSupportedSignatureAlgorithmOids(null);
+
+        // Build a configuration that definitely contains and lists the scheme under test
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(",", SUPPORTED_SCHEMES.keySet()));
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isNotNull()
+            .hasValue(scheme);
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetConsumerCryptoSchemeAllowsIndicatingOnlySignatureCapabilities(Scheme scheme)
+        throws Exception {
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+        // Setup the consumer such that it only indicates which signature algorithms it supports, allowing us
+        // to select the "best" key algorithm of our choosing so long as the scheme uses a supported signature
+        // algorithm
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(null)
+            .setSupportedSignatureAlgorithmOids(Set.of(sigAlgoOid));
+
+        // Build a configuration that definitely contains and lists the scheme under test
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(",", SUPPORTED_SCHEMES.keySet()));
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isNotNull()
+            .hasValue(scheme);
+    }
+
+    @Test
+    public void testGetConsumerCryptoSchemeReturnsDefaultSchemeWhenNoCapabilitiesAreDefined() {
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(null)
+            .setSupportedSignatureAlgorithmOids(null);
+
+        CryptoManager cryptoManager = this.buildCryptoManager();
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isNotNull()
+            .hasValue(cryptoManager.getDefaultCryptoScheme());
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetConsumerCryptoSchemeReturnsEmptyWhenKeyAlgorithmIsNotSupported(Scheme scheme)
+        throws Exception {
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+        String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+        // Reverse the key algorithm OID to guarantee it doesn't match our scheme's key algo OID
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(Set.of(reverseOid(keyAlgoOid)))
+            .setSupportedSignatureAlgorithmOids(Set.of(sigAlgoOid));
+
+        // Build a configuration that definitely contains and lists the scheme under test
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(",", SUPPORTED_SCHEMES.keySet()));
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetConsumerCryptoSchemeReturnsEmptyWhenSignatureAlgorithmIsNotSupported(Scheme scheme)
+        throws Exception {
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+        String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+        // Reverse the key algorithm OID to guarantee it doesn't match our scheme's key algo OID
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(Set.of(keyAlgoOid))
+            .setSupportedSignatureAlgorithmOids(Set.of(reverseOid(sigAlgoOid)));
+
+        // Build a configuration that definitely contains and lists the scheme under test
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(",", SUPPORTED_SCHEMES.keySet()));
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isNotNull()
+            .isEmpty();
+    }
 
     @Test
     public void testGetConsumerCryptoSchemeThrowsExceptionOnNullConsumer() throws Exception {

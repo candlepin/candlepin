@@ -169,8 +169,7 @@ public class ConsumerKeyPairGeneratorTest {
     public void testGetConsumerKeyPairGeneratesWhenConsumerCacheIsNull(Scheme scheme) throws Exception {
         DevConfig config = this.buildConfiguration();
 
-        Consumer consumer = new Consumer()
-            .setCryptoScheme(scheme.name())
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer(), scheme)
             .setKeyPairData(null);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
@@ -197,8 +196,7 @@ public class ConsumerKeyPairGeneratorTest {
         CryptoManager cryptoManager = CryptoUtil.getCryptoManager(config);
         Scheme scheme = cryptoManager.getDefaultCryptoScheme();
 
-        Consumer consumer = new Consumer()
-            .setCryptoScheme(null) // ensure we're using the default/legacy scheme selection
+        Consumer consumer = CryptoUtil.configureConsumerForDefaultScheme(new Consumer())
             .setKeyPairData(null);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(cryptoManager);
@@ -227,8 +225,7 @@ public class ConsumerKeyPairGeneratorTest {
 
         KeyPairData kpdata = this.generateKeyPairData(scheme);
 
-        Consumer consumer = new Consumer()
-            .setCryptoScheme(scheme.name())
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer(), scheme)
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
@@ -259,8 +256,7 @@ public class ConsumerKeyPairGeneratorTest {
 
         KeyPairData kpdata = this.generateKeyPairData(scheme);
 
-        Consumer consumer = new Consumer()
-            .setCryptoScheme(null)
+        Consumer consumer = CryptoUtil.configureConsumerForDefaultScheme(new Consumer())
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(cryptoManager);
@@ -296,8 +292,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setPrivateKeyData(previousPrivKey)
             .setAlgorithm("fake_scheme");
 
-        Consumer consumer = new Consumer()
-            .setCryptoScheme(scheme.name())
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer(), scheme)
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
@@ -334,8 +329,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setPrivateKeyData(previousPrivKey)
             .setAlgorithm(keyAlgorithmString);
 
-        Consumer consumer = new Consumer()
-            .setCryptoScheme(scheme.name())
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer(), scheme)
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
@@ -370,8 +364,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setPrivateKeyData(null)
             .setAlgorithm(keyAlgorithmString);
 
-        Consumer consumer = new Consumer()
-            .setCryptoScheme(scheme.name())
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer(), scheme)
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
@@ -408,8 +401,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setPrivateKeyData(keypair.getPrivate().getEncoded())
             .setAlgorithm(null);
 
-        Consumer consumer = new Consumer()
-            .setCryptoScheme(legacyScheme.name())
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer(), legacyScheme)
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
@@ -453,8 +445,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setPrivateKeyData(keypair.getPrivate().getEncoded())
             .setAlgorithm(null);
 
-        Consumer consumer = new Consumer()
-            .setCryptoScheme(modernScheme.name())
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer(), modernScheme)
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
