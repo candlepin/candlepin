@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.model.CloudIdentifierFacts.AWS_ACCOUNT_ID;
 import static org.candlepin.model.CloudIdentifierFacts.AWS_INSTANCE_ID;
 import static org.candlepin.model.CloudIdentifierFacts.AZURE_OFFER;
@@ -27,7 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
-import org.candlepin.exceptions.DuplicateEntryException;
+import org.candlepin.model.exceptions.DuplicateEntryException;
+import org.candlepin.model.exceptions.ValueTooLargeException;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -38,9 +40,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -749,6 +754,152 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumer.setFacts(existingFacts);
 
         assertFalse(consumer.checkForCloudIdentifierFacts(incomingFacts));
+    }
+
+    @Test
+    public void testGetSupportedKeyAlgorithmOidsReturnsNullWhenNotSet() {
+        Consumer consumer = new Consumer();
+
+        assertThat(consumer.getSupportedKeyAlgorithmOids())
+            .isNull();
+    }
+
+    @Test
+    public void testGetSetSupportedKeyAlgorithmOids() {
+        List<String> input = List.of("1.2.3", "3.4.5", "5.6.7");
+
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(input);
+
+        assertThat(consumer.getSupportedKeyAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(input);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testSetSupportedKeyAlgorithmOidsAllowsClearingExistingValue(Collection<String> input) {
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(List.of("1.2.3", "3.4.5", "5.6.7"));
+
+        // Verify we have a non-null value as our init state
+        assertThat(consumer.getSupportedKeyAlgorithmOids())
+            .isNotNull();
+
+        // Set the value to null/empty
+        consumer.setSupportedKeyAlgorithmOids(input);
+
+        // Verify the value has been cleared
+        assertThat(consumer.getSupportedKeyAlgorithmOids())
+            .isNull();
+    }
+
+    @Test
+    public void testSetSupportedKeyAlgorithmOidsRemovesBlankValues() {
+        List<String> input = List.of("1.1", "", "1.2", " ", "\t", "1.3");
+
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(input);
+
+        assertThat(consumer.getSupportedKeyAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrder("1.1", "1.2", "1.3");
+    }
+
+    @Test
+    public void testSetSupportedKeyAlgorithmOidsRejectsSingleValueExceedingSize() {
+        Consumer consumer = new Consumer();
+        String value = "1".repeat(Consumer.ALGORITHM_OIDS_MAX_LENGTH + 1);
+
+        assertThrows(ValueTooLargeException.class,
+            () -> consumer.setSupportedKeyAlgorithmOids(List.of(value)));
+    }
+
+    @Test
+    public void testSetSupportedKeyAlgorithmOidsRejectsMultipleValuesExceedingSize() {
+        Consumer consumer = new Consumer();
+        List<String> input = new ArrayList<>();
+
+        do {
+            input.add(String.valueOf(input.size()));
+        }
+        while (String.join(",", input).length() <= Consumer.ALGORITHM_OIDS_MAX_LENGTH);
+
+        assertThrows(ValueTooLargeException.class,
+            () -> consumer.setSupportedKeyAlgorithmOids(input));
+    }
+
+    @Test
+    public void testGetSupportedSignatureAlgorithmOidsReturnsNullWhenNotSet() {
+        Consumer consumer = new Consumer();
+
+        assertThat(consumer.getSupportedSignatureAlgorithmOids())
+            .isNull();
+    }
+
+    @Test
+    public void testGetSetSupportedSignatureAlgorithmOids() {
+        List<String> input = List.of("1.2.3", "3.4.5", "5.6.7");
+
+        Consumer consumer = new Consumer()
+            .setSupportedSignatureAlgorithmOids(input);
+
+        assertThat(consumer.getSupportedSignatureAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(input);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testSetSupportedSignatureAlgorithmOidsAllowsClearingExistingValue(Collection<String> input) {
+        Consumer consumer = new Consumer()
+            .setSupportedSignatureAlgorithmOids(List.of("1.2.3", "3.4.5", "5.6.7"));
+
+        // Verify we have a non-null value as our init state
+        assertThat(consumer.getSupportedSignatureAlgorithmOids())
+            .isNotNull();
+
+        // Set the value to null/empty
+        consumer.setSupportedSignatureAlgorithmOids(input);
+
+        // Verify the value has been cleared
+        assertThat(consumer.getSupportedSignatureAlgorithmOids())
+            .isNull();
+    }
+
+    @Test
+    public void testSetSupportedSignatureAlgorithmOidsRemovesBlankValues() {
+        List<String> input = List.of("1.1", "", "1.2", " ", "\t", "1.3");
+
+        Consumer consumer = new Consumer()
+            .setSupportedSignatureAlgorithmOids(input);
+
+        assertThat(consumer.getSupportedSignatureAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrder("1.1", "1.2", "1.3");
+    }
+
+    @Test
+    public void testSetSupportedSignatureAlgorithmOidsRejectsSingleValueExceedingSize() {
+        Consumer consumer = new Consumer();
+        String value = "1".repeat(Consumer.ALGORITHM_OIDS_MAX_LENGTH + 1);
+
+        assertThrows(ValueTooLargeException.class,
+            () -> consumer.setSupportedSignatureAlgorithmOids(List.of(value)));
+    }
+
+    @Test
+    public void testSetSupportedSignatureAlgorithmOidsRejectsMultipleValuesExceedingSize() {
+        Consumer consumer = new Consumer();
+        List<String> input = new ArrayList<>();
+
+        do {
+            input.add(String.valueOf(input.size()));
+        }
+        while (String.join(",", input).length() <= Consumer.ALGORITHM_OIDS_MAX_LENGTH);
+
+        assertThrows(ValueTooLargeException.class,
+            () -> consumer.setSupportedSignatureAlgorithmOids(input));
     }
 
     private static Stream<Arguments> trueCases() {

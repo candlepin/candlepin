@@ -21,6 +21,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.KeyPairGenerator;
+import org.candlepin.pki.OidUtil;
 import org.candlepin.pki.Scheme;
 import org.candlepin.pki.SchemeReader;
 import org.candlepin.pki.SignatureValidator;
@@ -47,6 +48,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -66,6 +68,7 @@ public class BouncyCastleCryptoManager implements CryptoManager {
     private final BouncyCastleProvider securityProvider;
     private final CertificateReader certreader;
     private final SubjectKeyIdentifierWriter skiWriter;
+    private final OidUtil oidUtil;
 
     private final List<Scheme> schemes;
     private final Scheme defaultScheme;
@@ -73,7 +76,8 @@ public class BouncyCastleCryptoManager implements CryptoManager {
 
     @Inject
     public BouncyCastleCryptoManager(Configuration config, BouncyCastleProvider securityProvider,
-        SchemeReader schemeReader, CertificateReader certreader, SubjectKeyIdentifierWriter skiWriter) {
+        SchemeReader schemeReader, CertificateReader certreader, SubjectKeyIdentifierWriter skiWriter,
+        OidUtil oidUtil) {
 
         Objects.requireNonNull(config);
         Objects.requireNonNull(schemeReader);
@@ -81,6 +85,7 @@ public class BouncyCastleCryptoManager implements CryptoManager {
         this.securityProvider = Objects.requireNonNull(securityProvider);
         this.certreader = Objects.requireNonNull(certreader);
         this.skiWriter = Objects.requireNonNull(skiWriter);
+        this.oidUtil = Objects.requireNonNull(oidUtil);
 
         this.schemes = Collections.unmodifiableList(schemeReader.readSchemes());
         this.defaultScheme = schemeReader.readDefaultScheme();
@@ -155,25 +160,37 @@ public class BouncyCastleCryptoManager implements CryptoManager {
 
     @Override
     public Optional<Scheme> getCryptoScheme(Consumer consumer) {
-        // This may not even be needed. It was originally spec'd out to deal with the keygen stuff, but if
-        // that's getting refactored anyway, maybe this is extraneous.
-
         if (consumer == null) {
             throw new IllegalArgumentException("consumer is null");
         }
 
-        // TODO: Scheme names on consumers is a dead concept. To be replaced with crypto capabilities that
-        // have to be matched up here.
-        Optional<String> scheme = consumer.getCryptoScheme();
+        Set<String> supportedKeyAlgoOids = consumer.getSupportedKeyAlgorithmOids();
+        Set<String> supportedSignatureAlgoOids = consumer.getSupportedSignatureAlgorithmOids();
 
-        // If consumer describes crypto capabilities, attempt to match one, return empty optional if we can't
-        // resolve (should this be an exception instead?)
+        // if the consumer has indicated no support at all, it is likely a legacy consumer, and it should be
+        // given the default scheme
+        if (supportedKeyAlgoOids == null && supportedSignatureAlgoOids == null) {
+            return Optional.of(this.getDefaultCryptoScheme());
+        }
 
-        // If consumer does not describe capabilities, return default
+        // Otherwise *some* support has been indicated. Find first supported scheme. If the consumer has
+        // indicated partial support, then we only neeed to check the set of algorithms they've provided.
+        Predicate<Scheme> keyAlgoMatcher = supportedKeyAlgoOids == null ?
+            scheme -> true :
+            scheme -> this.oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+                .map(oid -> this.oidUtil.isAlgorithmSupported(supportedKeyAlgoOids, oid))
+                .orElse(false);
 
-        return scheme.isPresent() ?
-            scheme.flatMap(this::getCryptoScheme) :
-            Optional.of(this.getDefaultCryptoScheme());
+        Predicate<Scheme> sigAlgoMatcher = supportedSignatureAlgoOids == null ?
+            scheme -> true :
+            scheme -> this.oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+                .map(oid -> this.oidUtil.isAlgorithmSupported(supportedSignatureAlgoOids, oid))
+                .orElse(false);
+
+        return this.schemes.stream()
+            .filter(keyAlgoMatcher)
+            .filter(sigAlgoMatcher)
+            .findFirst();
     }
 
     @Override

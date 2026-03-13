@@ -12,18 +12,21 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.pki;
+package org.candlepin.model.exceptions;
+
+
 
 /**
- * Exception thrown when cryptographic capabilities cannot be determined or cannot be served.
+ * Thrown when the value provided for a given field is too large to be stored in a model entity, either
+ * because the value itself is too large, or because it requires more storage capacity than the entity allows.
  */
-public class CryptoCapabilitiesException extends Exception {
+public class ValueTooLargeException extends IllegalArgumentException {
 
     /**
      * Constructs a new exception with null as its detail message. The cause is not initialized,
      * and may subsequently be initialized by a call to initCause(java.lang.Throwable).
      */
-    public CryptoCapabilitiesException() {
+    public ValueTooLargeException() {
         super();
     }
 
@@ -35,7 +38,7 @@ public class CryptoCapabilitiesException extends Exception {
      *  the detail message. The detail message is saved for later retrieval by the getMessage()
      *  method.
      */
-    public CryptoCapabilitiesException(String message) {
+    public ValueTooLargeException(String message) {
         super(message);
     }
 
@@ -49,7 +52,7 @@ public class CryptoCapabilitiesException extends Exception {
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public CryptoCapabilitiesException(Throwable cause) {
+    public ValueTooLargeException(Throwable cause) {
         super(cause);
     }
 
@@ -67,8 +70,7 @@ public class CryptoCapabilitiesException extends Exception {
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public CryptoCapabilitiesException(String message, Throwable cause) {
+    public ValueTooLargeException(String message, Throwable cause) {
         super(message, cause);
     }
-
 }

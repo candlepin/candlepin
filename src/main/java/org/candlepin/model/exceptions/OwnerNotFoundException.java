@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,21 +12,10 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.exceptions;
+package org.candlepin.model.exceptions;
 
-/**
- * DuplicateEntryException
- *
- * Thrown when a request attempts to add same entry in Entity that
- * has already been added.
- *
- */
-public class DuplicateEntryException extends IllegalArgumentException {
-
-    public DuplicateEntryException(String message) {
-        super(message);
-    }
-    public DuplicateEntryException(String message, Throwable cause) {
-        super(message, cause);
+public class OwnerNotFoundException extends RuntimeException {
+    public OwnerNotFoundException(String ownerKey, Throwable cause) {
+        super(String.format("Requested owner: '%s' was not found", ownerKey), cause);
     }
 }

@@ -405,11 +405,14 @@ public class HypervisorUpdateAction {
             incHypervisorId = incHypervisorId.substring(1);
         }
 
-        int max = Consumer.MAX_LENGTH_OF_CONSUMER_NAME;
-        if (incHypervisorId.length() > max) {
-            log.debug("Hypervisor id too long, truncating");
-            incHypervisorId = incHypervisorId.substring(0, max);
+        // FIXME: WHY DO WE TRUNCATE THE ID!? WE'LL NEVER BE ABLE TO RECOVER IT ONCE THIS OCCURS!!!
+        int maxLength = Consumer.CONSUMER_NAME_MAX_LENGTH;
+        if (incHypervisorId.length() > maxLength) {
+            log.warn("Hypervisor id too long, truncating from {} to {} characters",
+                incHypervisorId.length(), maxLength);
+            incHypervisorId = incHypervisorId.substring(0, maxLength);
         }
+
         return incHypervisorId;
     }
 

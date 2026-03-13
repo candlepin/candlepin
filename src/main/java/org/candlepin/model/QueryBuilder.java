@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.model.exceptions.InvalidOrderKeyException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
