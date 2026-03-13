@@ -99,6 +99,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         private Collection<ConsumerType> types;
         private Collection<String> hypervisorIds;
         private Map<String, Collection<String>> facts;
+        private Date checkedInSince;
         private String environmentId;
 
         public ConsumerQueryArguments setOwner(Owner owner) {
@@ -175,6 +176,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         public Map<String, Collection<String>> getFacts() {
             return this.facts;
+        }
+
+        public ConsumerQueryArguments setCheckedInSince(Date checkedInSince) {
+            this.checkedInSince = checkedInSince;
+            return this;
+        }
+
+        public Date getCheckedInSince() {
+            return this.checkedInSince;
         }
 
         public ConsumerQueryArguments setEnvironmentId(String environmentId) {
@@ -1569,6 +1579,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                         entry.getKey(), entry.getValue()))
                     .filter(Objects::nonNull)
                     .forEach(predicates::add);
+            }
+
+            if (queryArgs.getCheckedInSince() != null) {
+                predicates.add(criteriaBuilder
+                    .greaterThanOrEqualTo(root.get(Consumer_.lastCheckin), queryArgs.getCheckedInSince()));
             }
 
             if (queryArgs.getEnvironmentId() != null) {

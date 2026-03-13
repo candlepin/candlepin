@@ -682,9 +682,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(consumer, owner));
         securityInterceptor.enable();
 
-        assertThrows(ForbiddenException.class, () -> consumerResource
-            .searchConsumers(null, null, null, new ArrayList<>(), null,
-                null, null, null, null, null, null, null));
+        assertThrows(ForbiddenException.class, () -> consumerResource.searchConsumers(null, null, null,
+            new ArrayList<>(), null, null, null, null, null, null, null, null, null));
     }
 
     @Test

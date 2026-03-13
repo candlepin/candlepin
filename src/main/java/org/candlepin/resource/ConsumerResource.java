@@ -650,10 +650,15 @@ public class ConsumerResource implements ConsumerApi {
         String ownerKey,
         List<String> uuids,
         List<String> hypervisorIds,
+        OffsetDateTime checkedInSince,
         String registrationAuthenticationMethod,
         List<String> facts,
         String environmentId,
-        Integer page, Integer perPage, String order, String sortBy) {
+        Integer page,
+        Integer perPage,
+        String order,
+        String sortBy) {
+
         if (!(environmentId == null || environmentId.isEmpty()) && (ownerKey == null || ownerKey.isEmpty())) {
             throw new BadRequestException(i18n.tr("The 'environmentId' query parameter cannot be " +
                 "used without also specifying the 'owner' query parameter."));
@@ -665,6 +670,7 @@ public class ConsumerResource implements ConsumerApi {
             (uuids == null || uuids.isEmpty()) &&
             (hypervisorIds == null || hypervisorIds.isEmpty()) &&
             (facts == null || facts.isEmpty()) &&
+            (checkedInSince == null) &&
             (environmentId == null || environmentId.isEmpty())) {
 
             throw new BadRequestException(i18n.tr("Must specify at least one search criteria."));
@@ -679,6 +685,7 @@ public class ConsumerResource implements ConsumerApi {
             .setUuids(uuids)
             .setTypes(types)
             .setHypervisorIds(hypervisorIds)
+            .setCheckedInSince(Util.toDate(checkedInSince))
             .setEnvironmentId(environmentId);
 
         new KeyValueStringParser(this.i18n).parseKeyValuePairs(facts)
