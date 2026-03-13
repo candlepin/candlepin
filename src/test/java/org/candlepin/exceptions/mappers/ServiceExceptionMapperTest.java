@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -20,6 +20,7 @@ import org.candlepin.service.exception.ServiceException;
 import org.candlepin.service.exception.cloudregistration.CloudRegistrationAuthorizationException;
 import org.candlepin.service.exception.cloudregistration.CloudRegistrationMalformedDataException;
 import org.candlepin.service.exception.cloudregistration.CloudRegistrationServiceException;
+import org.candlepin.service.exception.entitlementcert.CryptoCapabilitiesException;
 import org.candlepin.service.exception.product.ProductServiceException;
 import org.candlepin.service.exception.subscription.SubscriptionActivationException;
 import org.candlepin.service.exception.subscription.SubscriptionExhaustedTagException;
@@ -79,6 +80,9 @@ public class ServiceExceptionMapperTest extends TestExceptionMapperBase {
                 I18N.tr("Unable to complete Cloud Registration with provided data")),
             Arguments.of(new CloudRegistrationServiceException(message), 400,
                 I18N.tr("Unexpected error from Cloud Registration Service: {0}", message)),
+            Arguments.of(new CryptoCapabilitiesException(message), 409,
+                I18N.tr("Unable to generate a usable certificate from Entitlement Certificate Service: {0}",
+                    message)),
             Arguments.of(new UserInvalidException(username), 401,
                 I18N.tr("User \"{0}\"' is not valid.", username)),
             Arguments.of(new UserUnacceptedTermsException(username), 401,

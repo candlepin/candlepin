@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -21,8 +21,12 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.certs.EntitlementCertificateGenerator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +39,8 @@ import javax.inject.Inject;
  * DefaultEntitlementCertServiceAdapter
  */
 public class DefaultEntitlementCertServiceAdapter implements EntitlementCertServiceAdapter {
+    private static Logger log = LoggerFactory.getLogger(DefaultEntitlementCertServiceAdapter.class);
+
     private final EntitlementCertificateCurator entCertCurator;
     private final CertificateSerialCurator serialCurator;
     private final EntitlementCertificateGenerator entitlementCertificateGenerator;
@@ -59,7 +65,6 @@ public class DefaultEntitlementCertServiceAdapter implements EntitlementCertServ
     // NOTE: we can get consumer from entitlement.getConsumer()
     @Override
     public EntitlementCertificate generateEntitlementCert(Entitlement entitlement, Product product) {
-
         Map<String, Entitlement> entitlements = new HashMap<>();
         entitlements.put(entitlement.getPool().getId(), entitlement);
         Map<String, PoolQuantity> poolQuantities = new HashMap<>();
@@ -68,10 +73,17 @@ public class DefaultEntitlementCertServiceAdapter implements EntitlementCertServ
         Map<String, Product> products = new HashMap<>();
         products.put(entitlement.getPool().getId(), product);
 
-        Map<String, EntitlementCertificate> result = this.entitlementCertificateGenerator
-            .generate(entitlement.getConsumer(), poolQuantities, entitlements, products, true);
+        try {
+            Map<String, EntitlementCertificate> result = this.entitlementCertificateGenerator
+                .generate(entitlement.getConsumer(), poolQuantities, entitlements, products, true);
 
-        return result.get(entitlement.getPool().getId());
+            return result.get(entitlement.getPool().getId());
+        }
+        catch (CryptoCapabilitiesException e) {
+            String msg = "Unable to generate entitlement certificate";
+            log.error(msg, e);
+            throw new org.candlepin.service.exception.entitlementcert.CryptoCapabilitiesException(msg);
+        }
     }
 
     @Override
@@ -80,8 +92,15 @@ public class DefaultEntitlementCertServiceAdapter implements EntitlementCertServ
         Map<String, Entitlement> entitlements,
         Map<String, Product> products, boolean save) {
 
-        return this.entitlementCertificateGenerator
-            .generate(consumer, poolQuantities, entitlements, products, save);
+        try {
+            return this.entitlementCertificateGenerator
+                .generate(consumer, poolQuantities, entitlements, products, save);
+        }
+        catch (CryptoCapabilitiesException e) {
+            String msg = "Unable to generate entitlement certificate";
+            log.error(msg, e);
+            throw new org.candlepin.service.exception.entitlementcert.CryptoCapabilitiesException(msg);
+        }
     }
 
     public List<Long> listEntitlementSerialIds(Consumer consumer) {
