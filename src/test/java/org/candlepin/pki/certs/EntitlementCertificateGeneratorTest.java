@@ -18,11 +18,14 @@ package org.candlepin.pki.certs;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyIterable;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.config.DevConfig;
@@ -49,9 +52,11 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.OID;
 import org.candlepin.pki.RepoType;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.huffman.Huffman;
 import org.candlepin.pki.util.ConsumerKeyPairGenerator;
 import org.candlepin.test.CryptoUtil;
@@ -71,10 +76,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -100,9 +111,18 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class EntitlementCertificateGeneratorTest {
+    private static final Map<String, Scheme> SUPPORTED_SCHEMES = CryptoUtil.generateSupportedSchemes()
+        .collect(Collectors.toMap(Scheme::name, Function.identity()));
+
+    private static Stream<Arguments> schemeSource() {
+        return EntitlementCertificateGeneratorTest.SUPPORTED_SCHEMES.values()
+            .stream()
+            .map(Arguments::of);
+    }
+
     private static final List<String> TEST_URLS = List.of(
         "/content/dist/rhel/$releasever/$basearch/os",
         "/content/dist/rhel/$releasever/$basearch/debug",
@@ -143,6 +163,7 @@ public class EntitlementCertificateGeneratorTest {
 
     private Owner owner;
     private EntitlementCertificateGenerator generator;
+    private CryptoManager cryptoManager;
 
     @BeforeEach
     public void setUp() throws CertificateException, KeyException {
@@ -163,7 +184,7 @@ public class EntitlementCertificateGeneratorTest {
         DevConfig config = TestConfig.defaults();
         ObjectMapper mapper = new ObjectMapper();
 
-        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(config);
+        cryptoManager = spy(CryptoUtil.getCryptoManager(config));
         ConsumerKeyPairGenerator keyPairGenerator = new ConsumerKeyPairGenerator(cryptoManager,
             mock(KeyPairDataCurator.class));
         X509ExtensionUtil x509ExtensionUtil = new X509ExtensionUtil(config);
@@ -171,24 +192,25 @@ public class EntitlementCertificateGeneratorTest {
             new Huffman());
 
         this.generator = new EntitlementCertificateGenerator(
+            config,
+            keyPairGenerator,
+            new EntitlementPayloadGenerator(mapper),
+            cryptoManager,
+            CryptoUtil.getPemEncoder(),
+            i18n,
             x509ExtensionUtil,
             x509V3ExtensionUtil,
-            new EntitlementPayloadGenerator(mapper),
             this.entitlementCertificateCurator,
             this.serialCurator,
-            this.ownerCurator,
-            this.entitlementCurator,
-            i18n,
-            config,
             this.consumerTypeCurator,
+            this.entitlementCurator,
             this.environmentCurator,
-            keyPairGenerator,
-            CryptoUtil.getPemEncoder(),
-            cryptoManager);
+            this.ownerCurator
+        );
     }
 
     @Test
-    public void temporaryCertificateForUnmappedGuests() {
+    public void temporaryCertificateForUnmappedGuests() throws Exception {
         Consumer consumer = createConsumer(owner);
         Product product = createProduct();
         Subscription subscription = createSubscription(product);
@@ -216,7 +238,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void certificateShouldUsePreDatedPoolIfOlderThanHour() {
+    public void certificateShouldUsePreDatedPoolIfOlderThanHour() throws Exception {
         Consumer consumer = createConsumer(owner);
         Product product = createProduct();
         Subscription subscription = createSubscription(product);
@@ -233,7 +255,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void certificateShouldUsePastHourIfPooIsYoungerThanHour() {
+    public void certificateShouldUsePastHourIfPooIsYoungerThanHour() throws Exception {
         Consumer consumer = createConsumer(owner);
         Product product = createProduct();
         Subscription subscription = createSubscription(product);
@@ -285,7 +307,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void contentExtensionCreation() {
+    public void contentExtensionCreation() throws Exception {
         Consumer consumer = createConsumer(owner);
         Product productWithContent = createProductWithContent(3);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -301,7 +323,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void contentExtensionsShouldIncludePromotedContent() {
+    public void contentExtensionsShouldIncludePromotedContent() throws Exception {
         Product productWithContent = createProductWithContent(3);
         Environment environment = createEnvironment(productWithContent);
         Consumer consumer = createConsumer(owner);
@@ -320,7 +342,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void contentExtensionsShouldIncludePromotedContentFromMultipleEnvs() {
+    public void contentExtensionsShouldIncludePromotedContentFromMultipleEnvs() throws Exception {
         Product productWithContent1 = createProductWithContent(3);
         Product productWithContent2 = createProductWithContent(3);
         Environment environment1 = createEnvironment(productWithContent1);
@@ -344,7 +366,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void shouldContainContentRequiredTagsExtension() {
+    public void shouldContainContentRequiredTagsExtension() throws Exception {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -362,7 +384,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void shouldContainContentUrls() {
+    public void shouldContainContentUrls() throws Exception {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -380,7 +402,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void contentExtensionsShouldBeAddedDuringCertificateGeneration() {
+    public void contentExtensionsShouldBeAddedDuringCertificateGeneration() throws Exception {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -403,7 +425,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void managementDisabledByDefault() {
+    public void managementDisabledByDefault() throws Exception {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -421,7 +443,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void managementEnabledByAttribute() {
+    public void managementEnabledByAttribute() throws Exception {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -440,7 +462,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void stackingIdByAttribute() {
+    public void stackingIdByAttribute() throws Exception {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -459,7 +481,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void virtOnlyByAttribute() {
+    public void virtOnlyByAttribute() throws Exception {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -479,7 +501,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void orderNumberAttribute() {
+    public void orderNumberAttribute() throws Exception {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -499,7 +521,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void supportValuesPresentOnCertIfAttributePresent() {
+    public void supportValuesPresentOnCertIfAttributePresent() throws Exception {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -520,7 +542,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void supportValuesAbsentOnCertIfNoSupportAttributes() {
+    public void supportValuesAbsentOnCertIfNoSupportAttributes() throws Exception {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -544,7 +566,9 @@ public class EntitlementCertificateGeneratorTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"3.0", "3.1", "3.2", "3.3", "3.4"})
-    public void ensureV3CertificateCreationOkWhenConsumerSupportsV3Certs(String certVersion) {
+    public void ensureV3CertificateCreationOkWhenConsumerSupportsV3Certs(String certVersion)
+        throws Exception {
+
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, certVersion);
@@ -565,10 +589,16 @@ public class EntitlementCertificateGeneratorTest {
             .contains("3.4");
     }
 
-    @Test
-    public void ensureV3CertIsCreatedWhenV3CapabilityPresent() {
+    @ParameterizedTest
+    @NullSource
+    @MethodSource("schemeSource")
+    public void ensureV3CertIsCreatedWhenV3CapabilityPresent(Scheme scheme) throws Exception {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner, ConsumerType.ConsumerTypeEnum.CANDLEPIN);
+        if (scheme != null) {
+            consumer.setCryptoScheme(scheme.name());
+        }
+
         consumer.setCapabilities(Set.of(new ConsumerCapability("cert_v3")));
         Set<Product> providedProducts = Set.of(productWithContent);
         Product product = createProduct().setProvidedProducts(providedProducts);
@@ -585,10 +615,20 @@ public class EntitlementCertificateGeneratorTest {
         assertThat(extensionValue)
             .asString()
             .contains("3.4");
+
+        // If the consumer has a null scheme, then the default crypto scheme should be used
+        if (scheme == null) {
+            scheme = this.cryptoManager.getDefaultCryptoScheme();
+        }
+
+        ArgumentCaptor<Scheme> captor = ArgumentCaptor.forClass(Scheme.class);
+        verify(this.cryptoManager).getSigner(captor.capture());
+        assertThat(captor.getValue())
+            .returns(scheme.name(), Scheme::name);
     }
 
     @Test
-    public void ensureV1CertIsCreatedWhenV3factNotPresent() {
+    public void ensureV1CertIsCreatedWhenV3factNotPresent() throws Exception {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner);
         Set<Product> providedProducts = Set.of(productWithContent);
@@ -608,7 +648,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void ensureV3CertIsCreatedWhenHypervisor() {
+    public void ensureV3CertIsCreatedWhenHypervisor() throws Exception {
         Product productWithContent = createProductWithContent(3);
         Consumer consumer = createConsumer(owner, ConsumerType.ConsumerTypeEnum.HYPERVISOR);
         consumer.setCapabilities(Set.of(new ConsumerCapability("cert_v3")));
@@ -630,7 +670,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void shouldFilterProductContent() {
+    public void shouldFilterProductContent() throws Exception {
         Product productWithContent1 = createProductWithContent(3);
         Product productWithContent2 = createProductWithContent(3);
         Environment environment1 = createEnvironment(productWithContent1);
@@ -669,7 +709,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void testPrepareV1Extensions() {
+    public void testPrepareV1Extensions() throws Exception {
         Consumer consumer = createConsumer(owner);
         Product productWithContent1 = createProductWithContent(1);
         Product productWithContent2 = createProductWithContent(1, CONTENT_TYPE_FILE);
@@ -692,7 +732,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void testPrepareV1ExtensionsBrandedProduct() {
+    public void testPrepareV1ExtensionsBrandedProduct() throws Exception {
         Consumer consumer = createConsumer(owner);
         Product product = createProduct()
             .setAttribute(Product.Attributes.BRANDING_TYPE, "os");
@@ -709,7 +749,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void testPrepareV1ExtensionsNoCompatibleArch() {
+    public void testPrepareV1ExtensionsNoCompatibleArch() throws Exception {
         Consumer consumer = createConsumer(owner);
         consumer.setFact(Consumer.Facts.ARCHITECTURE, "x86_64");
         String wrongArches = "s390x,s390,ppc64,ia64";
@@ -734,7 +774,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void testPrepareV1ExtensionsKickstartContent() {
+    public void testPrepareV1ExtensionsKickstartContent() throws Exception {
         Consumer consumer = createConsumer(owner);
         Content wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE_KICKSTART, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABEL);
@@ -757,7 +797,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void testPrepareV1ExtensionsFileContent() {
+    public void testPrepareV1ExtensionsFileContent() throws Exception {
         Consumer consumer = createConsumer(owner);
         Content wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE_FILE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABEL);
@@ -780,7 +820,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void testPrepareV1ExtensionsFileUnknownContentType() {
+    public void testPrepareV1ExtensionsFileUnknownContentType() throws Exception {
         Consumer consumer = createConsumer(owner);
         Content wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE_UNKNOWN, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABEL);
@@ -804,7 +844,9 @@ public class EntitlementCertificateGeneratorTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"ns-1", "ns-2", "some long namespace"})
-    public void testPrepareV3ExtensionsIncludesEntitlementNamespaceForNamespacedProducts(String namespace) {
+    public void testPrepareV3ExtensionsIncludesEntitlementNamespaceForNamespacedProducts(String namespace)
+        throws Exception {
+
         Consumer consumer = createConsumer(owner);
         consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, "3.4");
         Product productWithContent = createProductWithContent(1);
@@ -825,7 +867,9 @@ public class EntitlementCertificateGeneratorTest {
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {" ", "   "})
-    public void testPrepareV3ExtensionsOmitsEntitlementNamespaceForGlobalProducts(String namespace) {
+    public void testPrepareV3ExtensionsOmitsEntitlementNamespaceForGlobalProducts(String namespace)
+        throws Exception {
+
         Consumer consumer = createConsumer(owner);
         consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, "3.4");
         Product productWithContent = createProductWithContent(1);
@@ -843,7 +887,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void testDetachedEntitlementDataNotAddedToCertV1() {
+    public void testDetachedEntitlementDataNotAddedToCertV1() throws Exception {
         Consumer consumer = createConsumer(owner);
         Product productWithContent = createProductWithContent(1);
         Product product = createProduct().setProvidedProducts(Set.of(productWithContent));
@@ -858,7 +902,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void testContentExtensionConsumerNoArchFact() {
+    public void testContentExtensionConsumerNoArchFact() throws Exception {
         owner.setContentPrefix("");
         Consumer consumer = createConsumer(owner);
         consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, "3.4");
@@ -887,7 +931,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void testSingleSegmentContent() {
+    public void testSingleSegmentContent() throws Exception {
         Consumer consumer = createConsumer(owner);
         consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, "3.4");
         Product product = createProduct();
@@ -906,7 +950,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void testContentExtensionLargeSet() {
+    public void testContentExtensionLargeSet() throws Exception {
         Consumer consumer = createConsumer(owner);
         consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, "3.4");
         Product product = createProduct();
@@ -929,6 +973,22 @@ public class EntitlementCertificateGeneratorTest {
         assertThatCertPayload(getX509Certificate(result))
             .hasSize(550)
             .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    public void testGenerateWithUnknownScheme() throws Exception {
+        Consumer consumer = createConsumer(owner)
+            .setCryptoScheme(TestUtil.randomString());
+        Product productWithContent1 = createProductWithContent(1);
+        Product productWithContent2 = createProductWithContent(1, CONTENT_TYPE_FILE);
+        Set<Product> providedProducts = Set.of(productWithContent1, productWithContent2);
+        Product product = createProduct().setProvidedProducts(providedProducts);
+        Subscription subscription = createSubscription(product);
+        Pool pool = createPool(product, subscription);
+        Entitlement entitlement = createEntitlement(pool, consumer, owner);
+
+        assertThrows(CryptoCapabilitiesException.class, () ->
+            generateCertificate(consumer, entitlement, product));
     }
 
     private ListAssert<String> assertThatCertPayload(X509Certificate certificate) {
@@ -1089,7 +1149,7 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     private Map<String, EntitlementCertificate> generateCertificate(
-        Consumer consumer, Entitlement entitlement, Product product) {
+        Consumer consumer, Entitlement entitlement, Product product) throws CryptoCapabilitiesException {
         Map<String, PoolQuantity> poolQuantities = Map.of(
             entitlement.getPool().getId(), new PoolQuantity(entitlement.getPool(), 10)
         );
