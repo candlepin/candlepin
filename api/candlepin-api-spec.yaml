@@ -9121,6 +9121,8 @@ components:
                 type: array
                 items:
                   $ref: '#/components/schemas/EnvironmentDTO'
+              cryptographicCapabilities:
+                $ref: '#/components/schemas/CryptographicCapabilitiesDTO'
 
     ConsumerActivationKeyDTO:
       description: Represent activation keys used by consumer in registration
@@ -9326,7 +9328,6 @@ components:
           items:
             type: string
 
-
     ContentOverrideDTO:
       description: Represents a content override for an activation key or consumer
       allOf:
@@ -9430,6 +9431,18 @@ components:
               type: string
             certificate:
               $ref: '#/components/schemas/CertificateDTO'
+
+    CryptographicCapabilitiesDTO:
+      description: Describes the cryptographic capabilities of a consumer or receiver of cryptographic assets
+      properties:
+        keyAlgorithms:
+          type: array
+          items:
+            type: string
+        signatureAlgorithms:
+          type: array
+          items:
+            type: string
 
     DeletedConsumerDTO:
       description: Represents a deleted consumer

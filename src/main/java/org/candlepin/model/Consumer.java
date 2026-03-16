@@ -667,10 +667,8 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
      *  have been set
      */
     public Set<String> getSupportedKeyAlgorithmOids() {
-        boolean algoOidsPresent = this.supportedKeyAlgorithmOids != null &&
-            !this.supportedKeyAlgorithmOids.isBlank();
-
-        return algoOidsPresent ? Util.toSet(this.supportedKeyAlgorithmOids) : null;
+        Set<String> output = Util.toSet(this.supportedKeyAlgorithmOids);
+        return !output.isEmpty() ? output : null;
     }
 
     /**
@@ -721,10 +719,8 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
      *  been set
      */
     public Set<String> getSupportedSignatureAlgorithmOids() {
-        boolean algoOidsPresent = this.supportedSignatureAlgorithmOids != null &&
-            !this.supportedSignatureAlgorithmOids.isBlank();
-
-        return algoOidsPresent ? Util.toSet(this.supportedSignatureAlgorithmOids) : null;
+        Set<String> output = Util.toSet(this.supportedSignatureAlgorithmOids);
+        return !output.isEmpty() ? output : null;
     }
 
     /**
