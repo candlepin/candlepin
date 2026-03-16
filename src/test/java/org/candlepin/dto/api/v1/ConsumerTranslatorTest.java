@@ -14,6 +14,7 @@
  */
 package org.candlepin.dto.api.v1;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -28,6 +29,7 @@ import org.candlepin.dto.api.server.v1.CapabilityDTO;
 import org.candlepin.dto.api.server.v1.ConsumerActivationKeyDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.ConsumerInstalledProductDTO;
+import org.candlepin.dto.api.server.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerActivationKey;
@@ -43,6 +45,8 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Release;
 import org.candlepin.util.Util;
+
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -123,7 +127,6 @@ public class ConsumerTranslatorTest extends
         when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
 
         Consumer consumer = new Consumer();
-
         consumer.setId("consumer_id");
         consumer.setUuid("consumer_uuid");
         consumer.setName("consumer_name");
@@ -147,6 +150,8 @@ public class ConsumerTranslatorTest extends
         consumer.setContentAccessMode("test_content_access_mode");
         consumer.setIdCert((IdentityCertificate) this.certificateTranslatorTest.initSourceObject());
         consumer.setType(ctype);
+        consumer.setSupportedKeyAlgorithmOids(List.of("1", "2", "3"));
+        consumer.setSupportedSignatureAlgorithmOids(List.of("4", "5", "6"));
 
         Map<String, String> facts = new HashMap<>();
         for (int i = 0; i < 5; ++i) {
@@ -311,6 +316,19 @@ public class ConsumerTranslatorTest extends
                     assertNull(dest.getCapabilities());
                 }
 
+                // crypto capabilities
+                CryptographicCapabilitiesDTO cryptoCapabilities = dest.getCryptographicCapabilities();
+                assertNotNull(cryptoCapabilities);
+
+                assertThat(cryptoCapabilities.getKeyAlgorithms())
+                    .isNotNull()
+                    .containsExactlyInAnyOrderElementsOf(source.getSupportedKeyAlgorithmOids());
+
+                assertThat(cryptoCapabilities.getSignatureAlgorithms())
+                    .isNotNull()
+                    .containsExactlyInAnyOrderElementsOf(source.getSupportedSignatureAlgorithmOids());
+
+                // activation keys
                 if (source.getActivationKeys() != null) {
                     for (ConsumerActivationKey key : source.getActivationKeys()) {
                         for (ConsumerActivationKeyDTO keyDTO : dest.getActivationKeys()) {
@@ -338,10 +356,99 @@ public class ConsumerTranslatorTest extends
                 assertNull(dest.getCapabilities());
                 assertNull(dest.getGuestIds());
                 assertNull(dest.getActivationKeys());
+                assertNull(dest.getCryptographicCapabilities());
             }
         }
         else {
             assertNull(dest);
         }
+    }
+
+    // Crypto capabilities are a tad weird, in the sense that internally they are a secondary object, and they
+    // don't have a direct 1:1 ruleset for population. These will require explicit testing to validate.
+
+    @Test
+    public void testCryptoCapabilitiesAreOmittedWhenSupportedAlgorithmsAreAbsent() {
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(null)
+            .setSupportedSignatureAlgorithmOids(null);
+
+        ConsumerDTO output = this.modelTranslator.translate(consumer, ConsumerDTO.class);
+
+        assertThat(output)
+            .isNotNull()
+            .returns(null, ConsumerDTO::getCryptographicCapabilities);
+    }
+
+    @Test
+    public void testCryptoCapabilitiesArePopulatedWhenKeyAlgorithmsArePresent() {
+        List<String> algorithmOids = List.of("1", "2", "3");
+
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(algorithmOids)
+            .setSupportedSignatureAlgorithmOids(null);
+
+        ConsumerDTO output = this.modelTranslator.translate(consumer, ConsumerDTO.class);
+
+        assertThat(output)
+            .isNotNull()
+            .doesNotReturn(null, ConsumerDTO::getCryptographicCapabilities);
+
+        CryptographicCapabilitiesDTO capabilities = output.getCryptographicCapabilities();
+
+        assertThat(capabilities.getKeyAlgorithms())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(algorithmOids);
+
+        assertNull(capabilities.getSignatureAlgorithms());
+    }
+
+    @Test
+    public void testCryptoCapabilitiesArePopulatedWhenSignatureAlgorithmsArePresent() {
+        List<String> algorithmOids = List.of("1", "2", "3");
+
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(null)
+            .setSupportedSignatureAlgorithmOids(algorithmOids);
+
+        ConsumerDTO output = this.modelTranslator.translate(consumer, ConsumerDTO.class);
+
+        assertThat(output)
+            .isNotNull()
+            .doesNotReturn(null, ConsumerDTO::getCryptographicCapabilities);
+
+        CryptographicCapabilitiesDTO capabilities = output.getCryptographicCapabilities();
+
+        assertNull(capabilities.getKeyAlgorithms());
+
+        assertThat(capabilities.getSignatureAlgorithms())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(algorithmOids);
+    }
+
+    @Test
+    public void testCryptoCapabilitiesArePopulatedWhenAllAlgorithmSetsArePresent() {
+        List<String> keyAlgorithmOids = List.of("1", "2", "3");
+        List<String> sigAlgorithmOids = List.of("4", "5", "6");
+
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(keyAlgorithmOids)
+            .setSupportedSignatureAlgorithmOids(sigAlgorithmOids);
+
+        ConsumerDTO output = this.modelTranslator.translate(consumer, ConsumerDTO.class);
+
+        assertThat(output)
+            .isNotNull()
+            .doesNotReturn(null, ConsumerDTO::getCryptographicCapabilities);
+
+        CryptographicCapabilitiesDTO capabilities = output.getCryptographicCapabilities();
+
+        assertThat(capabilities.getKeyAlgorithms())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(keyAlgorithmOids);
+
+        assertThat(capabilities.getSignatureAlgorithms())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(sigAlgorithmOids);
     }
 }

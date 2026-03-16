@@ -59,6 +59,7 @@ import org.candlepin.dto.api.server.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.server.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.server.v1.ContentAccessDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
+import org.candlepin.dto.api.server.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.dto.api.server.v1.DeleteResult;
 import org.candlepin.dto.api.server.v1.EntitlementDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentDTO;
@@ -120,6 +121,7 @@ import org.candlepin.model.SCACertificate;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.exceptions.InvalidOrderKeyException;
+import org.candlepin.model.exceptions.ValueTooLargeException;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.pki.CryptoCapabilitiesException;
@@ -1093,6 +1095,19 @@ public class ConsumerResource implements ConsumerApi {
         consumerToCreate.setActivationKeys(consumerAks);
 
         try {
+            CryptographicCapabilitiesDTO cryptoCapabilities = consumer.getCryptographicCapabilities();
+            if (cryptoCapabilities != null) {
+                consumerToCreate.setSupportedKeyAlgorithmOids(cryptoCapabilities.getKeyAlgorithms());
+                consumerToCreate.setSupportedSignatureAlgorithmOids(
+                    cryptoCapabilities.getSignatureAlgorithms());
+            }
+        }
+        catch (ValueTooLargeException e) {
+            throw new BadRequestException(i18n.tr("Unable to persist consumer: cryptographic capabilities " +
+                "exceed data storage capabilities"));
+        }
+
+        try {
             Date createdDate = consumerToCreate.getCreated();
             Date lastCheckIn = consumerToCreate.getLastCheckin();
 
@@ -1693,6 +1708,7 @@ public class ConsumerResource implements ConsumerApi {
         boolean guestMigrationChanged = guestMigration.isMigrationPending();
         boolean complianceChangesMade = complianceFactsChanged ||
             installedProductsChanged || guestMigrationChanged;
+        changesMade |= this.updateConsumerCryptoCapabilities(updated, toUpdate);
         changesMade = checkForFactsUpdate(toUpdate, updated) || changesMade;
         changesMade = checkForHypervisorIdUpdate(toUpdate, updated) || changesMade;
 
@@ -1900,6 +1916,33 @@ public class ConsumerResource implements ConsumerApi {
         }
 
         return true;
+    }
+
+    private boolean updateConsumerCryptoCapabilities(ConsumerDTO updated, Consumer toUpdate) {
+        boolean consumerUpdated = false;
+
+        try {
+            CryptographicCapabilitiesDTO cryptoCapabilities = updated.getCryptographicCapabilities();
+            if (cryptoCapabilities != null) {
+                if (cryptoCapabilities.getKeyAlgorithms() != null) {
+                    log.info("Updating consumer supported crypto key algorithms");
+                    toUpdate.setSupportedKeyAlgorithmOids(cryptoCapabilities.getKeyAlgorithms());
+                    consumerUpdated = true;
+                }
+
+                if (cryptoCapabilities.getSignatureAlgorithms() != null) {
+                    log.info("Updating consumer supported crypto signature algorithms");
+                    toUpdate.setSupportedSignatureAlgorithmOids(cryptoCapabilities.getSignatureAlgorithms());
+                    consumerUpdated = true;
+                }
+            }
+        }
+        catch (ValueTooLargeException e) {
+            throw new BadRequestException(i18n.tr("Unable to persist consumer: cryptographic capabilities " +
+                "exceed data storage capabilities"));
+        }
+
+        return consumerUpdated;
     }
 
     private boolean updateSystemPurposeData(ConsumerDTO updated, Consumer toUpdate) {
