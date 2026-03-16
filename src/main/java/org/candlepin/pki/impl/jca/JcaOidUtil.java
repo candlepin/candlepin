@@ -22,7 +22,7 @@ import java.util.Optional;
 
 import javax.inject.Singleton;
 
-
+// TODO: Replace the logic here with something more dynamic so we aren't tied down to only these algorithms.
 
 /**
  * A simple, native Java implementation of the OidUtil. This implementation hard-codes its mappings from known
