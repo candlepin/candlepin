@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,10 +12,21 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.model;
+package org.candlepin.pki.impl.jca;
 
-public class OwnerNotFoundException extends RuntimeException {
-    public OwnerNotFoundException(String ownerKey, Throwable cause) {
-        super(String.format("Requested owner: '%s' was not found", ownerKey), cause);
+import org.candlepin.pki.OidUtil;
+import org.candlepin.pki.OidUtilTest;
+
+
+
+/**
+ *
+ */
+public class JcaOidUtilTest extends OidUtilTest {
+
+    @Override
+    protected OidUtil buildOidUtil() {
+        return new JcaOidUtil();
     }
+
 }

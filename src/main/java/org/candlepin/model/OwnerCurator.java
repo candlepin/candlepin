@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.controller.OwnerContentAccess;
+import org.candlepin.model.exceptions.OwnerNotFoundException;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;

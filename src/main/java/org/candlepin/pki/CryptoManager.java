@@ -69,9 +69,10 @@ public interface CryptoManager {
 
     /**
      * Fetches the scheme appropriate for performing cryptographic operations for the given consumer,
-     * performing scheme negotiation based on the consumer's known facts and system information. If a scheme
-     * cannot be determined for this consumer, an empty optional is returned. If the provided consumer is
-     * null, this method throws an exception.
+     * performing scheme negotiation based on the consumer's provided cryptographic capabilities, if any. If a
+     * scheme matching the consumer's capabilities is not found, an empty optional is returned. Otherwise, if
+     * the consumer has not provided any cryptographic capabilities, this method returns the default scheme.
+     * If the provided consumer is null, this method throws an exception.
      *
      * @param consumer
      *  the consumer for which to fetch an appropriate scheme
@@ -80,8 +81,8 @@ public interface CryptoManager {
      *  if consumer is null
      *
      * @return
-     *  an optional containing the negotiated scheme to use for cryptographic operations for the given
-     *  consumer; or an empty optional if an appropriate scheme could not be determined
+     *  an optional containing the scheme best matching the consumer's provided cryptographic capabilities, or
+     *  an empty optional if an appropriate scheme could not be determined
      */
     Optional<Scheme> getCryptoScheme(Consumer consumer);
 
