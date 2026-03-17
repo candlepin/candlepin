@@ -9,8 +9,8 @@ from atlassian import Jira
 
 import requests
 
-JIRA_URL = 'https://issues.redhat.com'
-TARGET_VERSION_FIELD_ID = 'customfield_12319940'
+JIRA_URL = 'https://redhat.atlassian.net'
+TARGET_VERSION_FIELD_ID = 'customfield_10855'
 TARGET_VERSION_FIELD_NAME = 'Target Version'
 
 github_token = os.environ.get('GITHUB_TOKEN_PSW')
@@ -25,6 +25,10 @@ jira_token = os.environ.get('JIRA_TOKEN')
 if not jira_token:
     raise EnvironmentError('JIRA_TOKEN not provided')
 
+jira_username = os.environ.get('JIRA_USERNAME')
+if not jira_username:
+    raise EnvironmentError('JIRA_USERNAME not provided')
+
 pr = requests.get('https://api.github.com/repos/candlepin/candlepin/pulls/{pr}'.format(pr=pr_number),
                   headers={'Authorization': 'token {}'.format(github_token)}).json()
 target = pr['base']['ref']
@@ -33,7 +37,7 @@ pr_target_version = None
 if target == 'main':
     pr_target_version = ''
 else:
-    version_match = re.search('^candlepin-(.*)-HOTFIX$', target)
+    version_match = re.search(r'^candlepin-(.*)-HOTFIX$', target)
     if version_match:
         pr_target_version = version_match.group(1)
     if not pr_target_version:
@@ -42,7 +46,9 @@ else:
 
 jira = Jira(
     JIRA_URL,
-    token=jira_token
+    username=jira_username,
+    password=jira_token,
+    cloud=True
 )
 
 pr_commits = requests.get('https://api.github.com/repos/candlepin/candlepin/pulls/{pr}/commits'.format(pr=pr_number),
