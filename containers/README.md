@@ -7,6 +7,20 @@ production container images.
 
 The following topic includes information on how to use the Candlepin development container for testing.
 
+### Prerequisites
+
+Before building or running the development container, generate the WAR file and Candlepin
+configuration:
+
+```bash
+./gradlew war -Ptest_extensions=hostedtest,manifestgen
+./gradlew generateConfig -Pdb_host=postgres -Phostedtest=true -Pmanifestgen=true -Pcpdb_password=candlepin
+```
+
+The generated `build/candlepin.conf` is copied into the image during the Docker build
+(via `COPY build/candlepin.conf` in the Containerfile). When using `dev-container/docker-compose.yml`,
+it is also mounted as a volume to allow runtime overrides without rebuilding.
+
 ### Importing Test Data
 
 The Candlepin development container does not start with initializing the database with predefined test data,

@@ -48,30 +48,27 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
 
-      - if: matrix.mode == 'standalone'
-        name: Add standalone env variable
-        working-directory: ./.github/containers
-        shell: bash
-        run: |
-          echo "CANDLEPIN_STANDALONE=true" > .env
-          echo "CANDLEPIN_AUTH_CLOUD_ENABLE=false" >> .env
-          echo "MODULE_CONFIG_MANIFESTGEN_CONFIGURATION_MODULE=org.candlepin.testext.manifestgen.ManifestGeneratorModule" >> .env
-
-      - if: matrix.mode == 'hosted'
-        name: Add hosted env variables
-        working-directory: ./.github/containers
-        shell: bash
-        run: |
-          echo "CANDLEPIN_STANDALONE=false" > .env
-          echo "MODULE_CONFIG_HOSTEDTEST_CONFIGURATION_MODULE=org.candlepin.testext.hostedtest.HostedTestModule" >> .env
-          echo "CANDLEPIN_AUTH_CLOUD_ENABLE=true" >> .env
-          echo "MODULE_CONFIG_MANIFESTGEN_CONFIGURATION_MODULE=org.candlepin.testext.manifestgen.ManifestGeneratorModule" >> .env
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build Candlepin war file
         run: ./gradlew war -Ptest_extensions=hostedtest,manifestgen
+
+      - name: Generate Candlepin configuration
+        shell: bash
+        run: |
+          CONF_ARGS="-Pdb_host=${{ matrix.database }} -Pmanifestgen=true -Pcpdb_password=candlepin"
+          if [ "${{ matrix.database }}" == "mariadb" ]; then
+            CONF_ARGS="$CONF_ARGS -Pdatabase_server=mysql"
+          fi
+          if [ "${{ matrix.mode }}" == "hosted" ]; then
+            CONF_ARGS="$CONF_ARGS -Phostedtest=true"
+          fi
+          ./gradlew generateConfig $CONF_ARGS
+          if [ ! -s ./build/candlepin.conf ]; then
+            echo "ERROR: generateConfig did not produce build/candlepin.conf" >&2
+            exit 1
+          fi
 
       - uses: actions/cache/restore@v4
         id: restore-tomcat
@@ -96,7 +93,7 @@ jobs:
         shell: bash
         run: |
           WAR_FILE=$(find ./build/libs -name 'candlepin*.war' | head -n 1)
-          echo "WAR_FILE=$WAR_FILE" >> ./.github/containers/.env
+          echo "WAR_FILE=$WAR_FILE" > ./.github/containers/.env
           docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml --env-file ./.github/containers/.env up --build -d --wait
 
       - name: Run Spec tests
