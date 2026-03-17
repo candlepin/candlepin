@@ -30,14 +30,17 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
+
+
 
 /**
  * NoopEventSinkImpl
  * - Used if configuration candlepin.audit.hornetq.enable = false
  */
+@Singleton
 public class NoopEventSinkImpl implements EventSink {
-
-    private static Logger log = LoggerFactory.getLogger(NoopEventSinkImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(NoopEventSinkImpl.class);
 
     /*
      * needed cause guice needs public scope, default scope is package scope
@@ -54,6 +57,7 @@ public class NoopEventSinkImpl implements EventSink {
 
     @Override
     public void sendEvents() {
+        // Intentionally left empty
     }
 
     @Override
@@ -61,7 +65,9 @@ public class NoopEventSinkImpl implements EventSink {
         log.debug("emitConsumerCreated:" + newConsumer);
     }
 
+    @Override
     public void rollback() {
+        // Intentionally left empty
     }
 
     @Override
@@ -129,6 +135,5 @@ public class NoopEventSinkImpl implements EventSink {
     public List<QueueStatus> getQueueInfo() {
         return null;
     }
-
 
 }
