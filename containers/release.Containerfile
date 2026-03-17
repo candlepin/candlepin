@@ -9,7 +9,7 @@ RUN microdnf -y update && \
 USER root
 
 # Prepare Tomcat
-RUN wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.76/bin/apache-tomcat-9.0.76.tar.gz; \
+RUN wget --max-redirect=0 https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.76/bin/apache-tomcat-9.0.76.tar.gz; \
     tar xzf apache-tomcat-9.0.76.tar.gz; \
     mkdir /opt/tomcat; \
     mv apache-tomcat-9.0.76/* /opt/tomcat/
