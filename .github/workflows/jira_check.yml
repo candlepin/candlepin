@@ -17,12 +17,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Mask secrets
-        shell: bash
-        run: |
-          echo "::add-mask::${{ secrets.CANDLEPIN_JIRA_TOKEN }}"
-          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
-
       - name: Install packages
         shell: bash
         run: sudo apt-get install -y python3 python3-pip python3-requests git-core
@@ -45,6 +39,6 @@ jobs:
           ./.github/scripts/jira_target_version_check.py
         env:
           JIRA_TOKEN: ${{ secrets.CANDLEPIN_JIRA_TOKEN }}
+          JIRA_USERNAME: ${{ secrets.CANDLEPIN_JIRA_USERNAME }}
           GITHUB_TOKEN_PSW: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-
