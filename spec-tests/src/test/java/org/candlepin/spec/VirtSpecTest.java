@@ -371,7 +371,7 @@ class VirtSpecTest {
     }
 
     @Test
-    public void shouldAutoHealWhenGuestIsMigratedToAnotherHost() {
+    public void shouldAutoHealWhenGuestIsMigratedToAnotherHost() throws Exception {
         ConsumerDTO otherHost = createHost();
         ApiClient otherHostClient = ApiClients.ssl(otherHost);
         ConsumerDTO otherGuest = createGuest(owner, OTHER_GUEST_UUID);
@@ -408,6 +408,9 @@ class VirtSpecTest {
 
         otherGuestClient.consumers().bindPool(otherGuest.getUuid(), guestPool.getId(), 1);
         assertThatEntitlementsOf(otherGuestClient, otherGuest).hasSize(1);
+
+        // Ensure the otherHost's GuestId has a strictly newer timestamp than the original host's
+        Thread.sleep(1000);
 
         // Other host reports the new guest before the first Host reports it removed.
         // this is where the error would occur without the 786730 fix
