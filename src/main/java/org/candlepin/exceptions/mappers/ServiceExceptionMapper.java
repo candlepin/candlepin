@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -18,6 +18,7 @@ import org.candlepin.service.exception.ServiceException;
 import org.candlepin.service.exception.cloudregistration.CloudRegistrationAuthorizationException;
 import org.candlepin.service.exception.cloudregistration.CloudRegistrationMalformedDataException;
 import org.candlepin.service.exception.cloudregistration.CloudRegistrationServiceException;
+import org.candlepin.service.exception.entitlementcert.CryptoCapabilitiesException;
 import org.candlepin.service.exception.product.ProductServiceException;
 import org.candlepin.service.exception.subscription.SubscriptionActivationException;
 import org.candlepin.service.exception.subscription.SubscriptionExhaustedTagException;
@@ -96,6 +97,11 @@ public class ServiceExceptionMapper extends CandlepinExceptionMapper
             status = Status.BAD_REQUEST;
             message = i18n.get().tr(
                 "Unexpected error from Cloud Registration Service: {0}", exception.getMessage());
+        }
+        else if (exception instanceof CryptoCapabilitiesException) {
+            status = Status.CONFLICT;
+            message = i18n.get()
+                .tr("Unable to generate a usable certificate from Entitlement Certificate Service");
         }
         else if (exception instanceof UserInvalidException uie) {
             status = Status.UNAUTHORIZED;
