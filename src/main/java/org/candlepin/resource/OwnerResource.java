@@ -107,6 +107,8 @@ import org.candlepin.model.exceptions.OwnerNotFoundException;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.PagingUtilFactory;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.certs.UeberCertificateGenerator;
 import org.candlepin.resource.server.v1.OwnerApi;
 import org.candlepin.resource.util.AttachedFile;
@@ -139,6 +141,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.cert.CertificateException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -197,11 +200,14 @@ public class OwnerResource implements OwnerApi {
     private final DTOValidator validator;
     private final PrincipalProvider principalProvider;
     private final PagingUtilFactory pagingUtilFactory;
+    private final CryptoManager cryptoManager;
+
     private final int maxPagingSize;
 
     @Inject
     @SuppressWarnings("checkstyle:parameternumber")
-    public OwnerResource(OwnerCurator ownerCurator,
+    public OwnerResource(
+        OwnerCurator ownerCurator,
         ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,
         ConsumerManager consumerManager,
@@ -232,7 +238,8 @@ public class OwnerResource implements OwnerApi {
         JobManager jobManager,
         DTOValidator validator,
         PrincipalProvider principalProvider,
-        PagingUtilFactory pagingUtilFactory) {
+        PagingUtilFactory pagingUtilFactory,
+        CryptoManager cryptoManager) {
 
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.ownerInfoCurator = Objects.requireNonNull(ownerInfoCurator);
@@ -266,6 +273,8 @@ public class OwnerResource implements OwnerApi {
         this.validator = Objects.requireNonNull(validator);
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.pagingUtilFactory = Objects.requireNonNull(pagingUtilFactory);
+        this.cryptoManager = Objects.requireNonNull(cryptoManager);
+
         this.maxPagingSize = this.config.getInt(ConfigProperties.PAGING_MAX_PAGE_SIZE);
     }
 
@@ -1709,17 +1718,44 @@ public class OwnerResource implements OwnerApi {
     @Override
     @Transactional
     public UeberCertificateDTO createUeberCertificate(@Verify(Owner.class) String ownerKey) {
-        Principal principal = this.principalProvider.get();
-        UeberCertificate ueberCert = ueberCertGenerator.generate(ownerKey, principal.getUsername());
+        // Impl note: moving the lock out here to the request time instead of generation time, since it's
+        // kind of pointless to do with transactional isolation, but we want to maintain API behaviorial
+        // compatibility; and if we're going to do it at all, it should be within the context of the
+        // *actual* transaction boundaries, not buried in the controllery things.
+        Owner owner = this.ownerCurator.lockAndLoadByKey(ownerKey);
+        if (owner == null) {
+            // This shouldn't happen since we've already verified access to the owner with the @Verify
+            // annotation, but we'll be safe here anyway
+            throw new NotFoundException(this.i18n.tr("Owner with key \"{0}\" was not found", ownerKey));
+        }
 
-        return this.translator.translate(ueberCert, UeberCertificateDTO.class);
+        // Fetch the username of the principal generating the ueber/debug certificate
+        String username = this.principalProvider.get()
+            .getUsername();
+
+        try {
+            // Pick an appropriate scheme based on the request. For now, use the default scheme
+            Scheme scheme = this.cryptoManager.getDefaultCryptoScheme();
+
+            // Generate!
+            UeberCertificate ueberCert = this.ueberCertGenerator.generate(scheme, owner, username);
+            return this.translator.translate(ueberCert, UeberCertificateDTO.class);
+        }
+        catch (CertificateException e) {
+            // This really shouldn't be a bad request exception, but we're keeping it as such for backward
+            // compatibility purposes
+            log.error("Problem generating ueber cert for owner: {}", ownerKey, e);
+            throw new BadRequestException(
+                this.i18n.tr("Problem generating ueber cert for owner {0}", ownerKey), e);
+        }
     }
 
     @Override
     @Transactional
     public UeberCertificateDTO getUeberCertificate(@Verify(Owner.class) String ownerKey) {
         Owner owner = this.findOwnerByKey(ownerKey);
-        UeberCertificate ueberCert = ueberCertCurator.findForOwner(owner);
+        UeberCertificate ueberCert = this.ueberCertCurator.findForOwner(owner);
+
         if (ueberCert == null) {
             throw new NotFoundException(i18n.tr(
                 "uber certificate for owner {0} was not found. Please generate one.", owner.getKey()));

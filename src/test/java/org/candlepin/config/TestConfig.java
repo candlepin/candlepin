@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.KeyException;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 // TODO: FIXME: This sucks. A lot. TestConfig, DevConfig, and all the other nonsense we do to have mutable
 // test configuration are about as poorly implemented as can possibly be. It's resulted in tons of duplicate
@@ -47,19 +45,17 @@ public final class TestConfig {
         try {
             DevConfig config = new DevConfig(ConfigProperties.DEFAULT_PROPERTIES);
 
-            Map<String, Scheme> schemes = CryptoUtil.generateSupportedSchemes()
-                .collect(Collectors.toMap(Scheme::name, Function.identity()));
-
             String upstreamCertRepo = TestConfig.class.getClassLoader().getResource("certs/upstream")
                 .toURI().getPath();
 
             // Generate configuration for each scheme
-            for (Scheme scheme : schemes.values()) {
+            for (Scheme scheme : CryptoUtil.SUPPORTED_SCHEMES.values()) {
                 CryptoUtil.generateSchemeConfiguration(config, scheme, null);
             }
 
             // Write the standard crypto config
-            config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(", ", schemes.keySet()));
+            config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(", ",
+                CryptoUtil.SUPPORTED_SCHEMES.keySet()));
             config.setProperty(ConfigProperties.CRYPTO_UPSTREAM_CERT_REPO, upstreamCertRepo);
 
             // Write legacy configuration to ensure we don't break tests that are looking specifically for it

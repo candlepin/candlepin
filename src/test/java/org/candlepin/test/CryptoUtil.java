@@ -19,6 +19,7 @@ import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.dto.api.server.v1.CertificateDTO;
+import org.candlepin.model.AbstractCertificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoManager;
@@ -81,7 +82,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
@@ -97,6 +101,9 @@ import java.util.stream.Stream;
 public class CryptoUtil {
     private static final BouncyCastleSecurityProvider SECURITY_PROVIDER_PROVIDER =
         new BouncyCastleSecurityProvider();
+
+    public static final Map<String, Scheme> SUPPORTED_SCHEMES = generateSupportedSchemes()
+        .collect(Collectors.toMap(Scheme::name, Function.identity()));
 
     private static final String RSA_SIGNATURE_ALGORITHM = "SHA256WithRSA";
     private static final String RSA_KEY_ALGORITHM = "RSA";
@@ -1030,38 +1037,33 @@ public class CryptoUtil {
     }
 
     /**
-     * Parses an X509Certificate from the provided Candlepin certificate container DTO. If the container is
-     * null or does not have any certificate data, this function throws an exception. This function will never
-     * return null.
+     * Parses an X509Certificate from the provided string of certificate data. The certificate data is
+     * expected to use the same encoding as used to represent certificate container objects on the database
+     * and API models. That is, non-null values returned by Certificate.getCert() or CertificateDTO.getCert().
+     * If the provided certificate data is null or empty, this function throws an exception.
      *
-     * @param container
-     *  a CertificateDTO instance containing the certificate data from which to parse an X509Certificate
+     * @param certificateData
+     *  the string-encoded certificate data from which to extract an X509Certificate instance
      *
      * @throws IllegalArgumentException
-     *  if the container is null or does not have a cert
+     *  if the certificateData is null or empty
      *
      * @throws CertificateException
      *  if an exception occurs while parsing the certificate
      *
      * @return
-     *  an X509Certificate instance generated from the given certificate data from the CertificateDTO
-     *  container
+     *  an X509Certificate instance generated from the given certificate data
      */
-    public static X509Certificate parseCertificateFromDto(CertificateDTO container)
+    public static X509Certificate extractCertificateFromContainerString(String certificateData)
         throws CertificateException {
 
-        if (container == null) {
-            throw new IllegalArgumentException("container is null");
+        if (certificateData == null || certificateData.isBlank()) {
+            throw new IllegalArgumentException("certificateData is null or empty");
         }
 
-        if (container.getCert() == null) {
-            throw new IllegalArgumentException("container has no certificate data");
-        }
+        byte[] bytes = certificateData.getBytes(StandardCharsets.UTF_8);
 
-        byte[] certData = container.getCert()
-            .getBytes(StandardCharsets.UTF_8);
-
-        try (InputStream istream = new ByteArrayInputStream(certData)) {
+        try (InputStream istream = new ByteArrayInputStream(bytes)) {
             return getCertificateReader()
                 .read(istream);
         }
@@ -1071,34 +1073,89 @@ public class CryptoUtil {
     }
 
     /**
-     * Parses a PrivateKey from the provided Candlepin certificate container DTO. If the container is null or
-     * does not have any key data, this function throws an exception. This function will never return null.
+     * Convenience function for extracting X509Certificate instances from certificate DTOs. The result of this
+     * function is identical to the following:
+     * <pre>
+     *  X509Certificate output = CryptoUtil.extractCertificateFromContainerString(container.getCert());
+     * </pre>
      *
      * @param container
-     *  a CertificateDTO instance containing the certificate data from which to parse a PrivateKey
+     *  the CertificateDTO container from which to extract an X509Certificate instance; cannot be null
      *
      * @throws IllegalArgumentException
-     *  if the container is null or does not have a key
+     *  if container is null or does not contain certificate data
      *
      * @throws CertificateException
-     *  if an exception occurs while parsing the private key
+     *  if an exception occurs while parsing the certificate
      *
      * @return
-     *  a PrivateKey instance generated from the given private key data from the CertificateDTO container
+     *  an X509Certificate instance generated from data extracted from the given CertificateDTO container
      */
-    public static PrivateKey parsePrivateKeyFromDto(CertificateDTO container) throws KeyException {
+    public static X509Certificate extractCertificateFromContainer(CertificateDTO container)
+        throws CertificateException {
+
         if (container == null) {
             throw new IllegalArgumentException("container is null");
         }
 
-        if (container.getKey() == null) {
-            throw new IllegalArgumentException("container has no key data");
+        return extractCertificateFromContainerString(container.getCert());
+    }
+
+    /**
+     * Convenience function for extracting X509Certificate instances from certificate model objects. The
+     * result of this function is identical to the following:
+     * <pre>
+     *  X509Certificate output = CryptoUtil.extractCertificateFromContainerString(container.getCert());
+     * </pre>
+     *
+     * @param container
+     *  the CertificateDTO container from which to extract an X509Certificate instance; cannot be null
+     *
+     * @throws IllegalArgumentException
+     *  if container is null or does not contain certificate data
+     *
+     * @throws CertificateException
+     *  if an exception occurs while parsing the certificate
+     *
+     * @return
+     *  an X509Certificate instance generated from data extracted from the given CertificateDTO container
+     */
+    public static X509Certificate extractCertificateFromContainer(AbstractCertificate container)
+        throws CertificateException {
+
+        if (container == null) {
+            throw new IllegalArgumentException("container is null");
         }
 
-        byte[] keyData = container.getKey()
-            .getBytes(StandardCharsets.UTF_8);
+        return extractCertificateFromContainerString(container.getCert());
+    }
 
-        try (InputStream istream = new ByteArrayInputStream(keyData)) {
+    /**
+     * Parses a PrivateKey from the provided string of private key data. The key data is expected to use the
+     * same encoding as used to represent certificate container objects on the database and API models. That
+     * is, non-null values returned by Certificate.getKey() or CertificateDTO.getKey(). If the provided key
+     * data is null or empty, this function throws an exception.
+     *
+     * @param keyData
+     *  the string-encoded private key data from which to extract a PrivateKey instance
+     *
+     * @throws IllegalArgumentException
+     *  if the keyData is null or empty
+     *
+     * @throws KeyException
+     *  if an exception occurs while parsing the private key
+     *
+     * @return
+     *  a PrivateKey instance generated from the given private key data
+     */
+    public static PrivateKey extractPrivateKeyFromContainerString(String keyData) throws KeyException {
+        if (keyData == null || keyData.isBlank()) {
+            throw new IllegalArgumentException("keyData is null or empty");
+        }
+
+        byte[] bytes = keyData.getBytes(StandardCharsets.UTF_8);
+
+        try (InputStream istream = new ByteArrayInputStream(bytes)) {
             return getPrivateKeyReader()
                 .read(istream, null);
         }
@@ -1107,4 +1164,61 @@ public class CryptoUtil {
         }
     }
 
+    /**
+     * Convenience function for extracting PrivateKey instances from certificate DTOs. The result of this
+     * function is identical to the following:
+     * <pre>
+     *  PrivateKey output = CryptoUtil.extractPrivateKeyFromContainerString(container.getKey());
+     * </pre>
+     *
+     * @param container
+     *  the CertificateDTO container from which to extract a PrivateKey instance; cannot be null
+     *
+     * @throws IllegalArgumentException
+     *  if container is null or does not contain key data
+     *
+     * @throws KeyException
+     *  if an exception occurs while parsing the private key
+     *
+     * @return
+     *  a PrivateKey instance generated from data extracted from the given CertificateDTO container
+     */
+    public static PrivateKey extractPrivateKeyFromContainer(CertificateDTO container)
+        throws KeyException {
+
+        if (container == null) {
+            throw new IllegalArgumentException("container is null");
+        }
+
+        return extractPrivateKeyFromContainerString(container.getKey());
+    }
+
+    /**
+     * Convenience function for extracting PrivateKey instances from certificate model objects. The result of
+     * this function is identical to the following:
+     * <pre>
+     *  PrivateKey output = CryptoUtil.extractPrivateKeyFromContainerString(container.getKey());
+     * </pre>
+     *
+     * @param container
+     *  the CertificateDTO container from which to extract a PrivateKey instance; cannot be null
+     *
+     * @throws IllegalArgumentException
+     *  if container is null or does not contain key data
+     *
+     * @throws KeyException
+     *  if an exception occurs while parsing the private key
+     *
+     * @return
+     *  a PrivateKey instance generated from data extracted from the given CertificateDTO container
+     */
+    public static PrivateKey extractPrivateKeyFromContainer(AbstractCertificate container)
+        throws KeyException {
+
+        if (container == null) {
+            throw new IllegalArgumentException("container is null");
+        }
+
+        return extractPrivateKeyFromContainerString(container.getKey());
+    }
 }

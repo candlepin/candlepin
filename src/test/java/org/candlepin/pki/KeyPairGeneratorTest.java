@@ -25,7 +25,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.security.Key;
 import java.security.KeyPair;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -40,11 +39,9 @@ import java.util.stream.Stream;
  */
 public abstract class KeyPairGeneratorTest {
 
-    // A list of known, supported schemes
-    private static final List<Scheme> SUPPORTED_SCHEMES = CryptoUtil.generateSupportedSchemes().toList();
-
     protected static Stream<Arguments> schemeSource() {
-        return SUPPORTED_SCHEMES.stream()
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
+            .stream()
             .map(Arguments::of);
     }
 
