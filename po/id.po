@@ -658,8 +658,8 @@ msgstr "parameter kedua harus menjadi nomor prioritas."
 msgid ""
 "This unit has already had the subscription matching pool ID \"{1}\" attached."
 msgstr ""
-"Unit ini sudah pernah melampirkan langganan yang cocok dengan ID pool \"{1}"
-"\"."
+"Unit ini sudah pernah melampirkan langganan yang cocok dengan ID pool "
+"\"{1}\"."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:151
 #, java-format
@@ -720,7 +720,8 @@ msgstr ""
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:171
 #, java-format
 msgid "Unit does not support band calculation required by pool \"{1}\""
-msgstr "Unit tidak mendukung perhitungan band yang diperlukan oleh pool \"{1}\""
+msgstr ""
+"Unit tidak mendukung perhitungan band yang diperlukan oleh pool \"{1}\""
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:173
 #, java-format
@@ -1180,8 +1181,8 @@ msgstr ""
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
-"Mengabaikan permintaan untuk auto-attach. Ini dinonaktifkan untuk org \"{0}"
-"\"."
+"Mengabaikan permintaan untuk auto-attach. Ini dinonaktifkan untuk org "
+"\"{0}\"."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2739
 #, java-format
@@ -1189,8 +1190,8 @@ msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
 "the hypervisor autobind setting."
 msgstr ""
-"Mengabaikan permintaan untuk auto-attach. Ini dinonaktifkan untuk org \"{0}"
-"\" karena pengaturan autobind hypervisor."
+"Mengabaikan permintaan untuk auto-attach. Ini dinonaktifkan untuk org "
+"\"{0}\" karena pengaturan autobind hypervisor."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2781
 #, java-format
@@ -1211,7 +1212,8 @@ msgstr "Entitlement dengan ID \"{0}\" tidak dapat ditemukan."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2924
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
-msgstr "Sertifikat Entitlement dengan nomor seri \"{0}\" tidak dapat ditemukan."
+msgstr ""
+"Sertifikat Entitlement dengan nomor seri \"{0}\" tidak dapat ditemukan."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2941
 #, java-format
@@ -1587,7 +1589,8 @@ msgstr "konten produk berisi satu atau lebih elemen null"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:455
 msgid "product content contains one or more malformed content references"
-msgstr "konten produk berisi satu atau lebih referensi konten yang salah format"
+msgstr ""
+"konten produk berisi satu atau lebih referensi konten yang salah format"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:461
 msgid "one or more content references lacks a valid ID"
@@ -1742,7 +1745,8 @@ msgstr "Kunci Aktivasi dengan id {0} tidak dapat ditemukan."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1318
 msgid "The flags add_future and only_future cannot be used at the same time."
-msgstr "Flag add_future dan only_future tidak dapat digunakan secara bersamaan."
+msgstr ""
+"Flag add_future dan only_future tidak dapat digunakan secara bersamaan."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1323
 msgid ""

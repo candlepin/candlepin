@@ -1056,7 +1056,8 @@ msgstr "L’organisation {0} n’existe pas"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:422
 msgid "Consumer package profile uploads are not implemented"
-msgstr "Les uploads de profils de paquets consommateurs ne sont pas implémentés"
+msgstr ""
+"Les uploads de profils de paquets consommateurs ne sont pas implémentés"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
