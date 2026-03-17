@@ -99,7 +99,7 @@ public final class TestConfig {
             DEFAULT_CONFIG = config;
         }
         catch (KeyException | IOException | URISyntaxException e) {
-            throw new RuntimeException("Unable to generate standardized test crypto configuration", e);
+            throw new RuntimeException("Unable to generate standardized test configuration", e);
         }
     }
 

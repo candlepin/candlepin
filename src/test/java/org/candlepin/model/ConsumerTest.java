@@ -902,6 +902,46 @@ public class ConsumerTest extends DatabaseTestFixture {
             () -> consumer.setSupportedSignatureAlgorithmOids(input));
     }
 
+    @Test
+    public void testGetSupportedKeyAlgorithmOidsCorrectsMalformedPseudoEntryDBState() {
+        // This test verifies that in the event the DB is set to some string of delimiters, that it doesn't
+        // return an empty list
+        Consumer consumer = this.createConsumer(this.owner);
+
+        String jpql = "UPDATE Consumer c SET c.supportedKeyAlgorithmOids = ', ,, ,' WHERE c.id = :id";
+        int rows = this.consumerCurator.getEntityManager()
+            .createQuery(jpql)
+            .setParameter("id", consumer.getId())
+            .executeUpdate();
+
+        assertEquals(1, rows);
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        consumer = this.consumerCurator.get(consumer.getId());
+        assertNull(consumer.getSupportedKeyAlgorithmOids());
+    }
+
+    @Test
+    public void testGetSupportedSignatureAlgorithmOidsCorrectsMalformedPseudoEntryDBState() {
+        // This test verifies that in the event the DB is set to some string of delimiters, that it doesn't
+        // return an empty list
+        Consumer consumer = this.createConsumer(this.owner);
+
+        String jpql = "UPDATE Consumer c SET c.supportedSignatureAlgorithmOids = ', ,, ,' WHERE c.id = :id";
+        int rows = this.consumerCurator.getEntityManager()
+            .createQuery(jpql)
+            .setParameter("id", consumer.getId())
+            .executeUpdate();
+
+        assertEquals(1, rows);
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        consumer = this.consumerCurator.get(consumer.getId());
+        assertNull(consumer.getSupportedSignatureAlgorithmOids());
+    }
+
     private static Stream<Arguments> trueCases() {
         return Stream.of(
             // Case 1: When existing facts are null and incoming contains a cloud identifier, return true.

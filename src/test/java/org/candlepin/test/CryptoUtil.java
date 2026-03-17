@@ -18,6 +18,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
+import org.candlepin.dto.api.server.v1.CertificateDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoManager;
@@ -57,10 +58,13 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.OutputEncryptor;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyException;
@@ -871,6 +875,38 @@ public class CryptoUtil {
     }
 
     /**
+     * Returns a stream containing every known cryptographic key pair generation algorithm explicitly
+     * supported by Candlepin. Test suites looking to test all known key gen algorithms may make use of this
+     * function instead of defining their own aggregators.
+     * <p></p>
+     * Note that while these key pair generation algorithms *must* be supported, other algorithms may be
+     * supported by the underlying security providers and related cryptographic libraries. Implementations
+     * should still aim for generic implementations wherever possible.
+     *
+     * @return
+     *  a stream of supported key pair generation algorithm names
+     */
+    public static Stream<String> getSupportedKeyAlgorithms() {
+        return Stream.of(RSA_KEY_ALGORITHM, MLDSA_KEY_ALGORITHM);
+    }
+
+    /**
+     * Returns a stream containing every known cryptographic signature algorithm explicitly supported by
+     * Candlepin. Test suites looking to test all known signature algorithms may make use of this function
+     * instead of defining their own aggregators.
+     * <p></p>
+     * Note that while these signature algorithms *must* be supported, other algorithms may be supported by
+     * the underlying security providers and related cryptographic libraries. Implementations should still
+     * aim for generic implementations wherever possible.
+     *
+     * @return
+     *  a stream of supported signature algorithm names
+     */
+    public static Stream<String> getSupportedSignatureAlgorithms() {
+        return Stream.of(RSA_SIGNATURE_ALGORITHM, MLDSA_SIGNATURE_ALGORITHM);
+    }
+
+    /**
      * Generates a new scheme from the given scheme, generating a new keypair and certificate, but retaining
      * the same algorithms and key size. The newly generated scheme will contain a private key even if the
      * source scheme does not. The certificate in the new scheme will not be signed or otherwise derived from
@@ -991,6 +1027,84 @@ public class CryptoUtil {
 
         return consumer.setSupportedKeyAlgorithmOids(Set.of("100.1.2.3.4.5"))
             .setSupportedSignatureAlgorithmOids(Set.of("100.6.7.8.9.0"));
+    }
+
+    /**
+     * Parses an X509Certificate from the provided Candlepin certificate container DTO. If the container is
+     * null or does not have any certificate data, this function throws an exception. This function will never
+     * return null.
+     *
+     * @param container
+     *  a CertificateDTO instance containing the certificate data from which to parse an X509Certificate
+     *
+     * @throws IllegalArgumentException
+     *  if the container is null or does not have a cert
+     *
+     * @throws CertificateException
+     *  if an exception occurs while parsing the certificate
+     *
+     * @return
+     *  an X509Certificate instance generated from the given certificate data from the CertificateDTO
+     *  container
+     */
+    public static X509Certificate parseCertificateFromDto(CertificateDTO container)
+        throws CertificateException {
+
+        if (container == null) {
+            throw new IllegalArgumentException("container is null");
+        }
+
+        if (container.getCert() == null) {
+            throw new IllegalArgumentException("container has no certificate data");
+        }
+
+        byte[] certData = container.getCert()
+            .getBytes(StandardCharsets.UTF_8);
+
+        try (InputStream istream = new ByteArrayInputStream(certData)) {
+            return getCertificateReader()
+                .read(istream);
+        }
+        catch (IOException e) {
+            throw new CertificateException(e);
+        }
+    }
+
+    /**
+     * Parses a PrivateKey from the provided Candlepin certificate container DTO. If the container is null or
+     * does not have any key data, this function throws an exception. This function will never return null.
+     *
+     * @param container
+     *  a CertificateDTO instance containing the certificate data from which to parse a PrivateKey
+     *
+     * @throws IllegalArgumentException
+     *  if the container is null or does not have a key
+     *
+     * @throws CertificateException
+     *  if an exception occurs while parsing the private key
+     *
+     * @return
+     *  a PrivateKey instance generated from the given private key data from the CertificateDTO container
+     */
+    public static PrivateKey parsePrivateKeyFromDto(CertificateDTO container) throws KeyException {
+        if (container == null) {
+            throw new IllegalArgumentException("container is null");
+        }
+
+        if (container.getKey() == null) {
+            throw new IllegalArgumentException("container has no key data");
+        }
+
+        byte[] keyData = container.getKey()
+            .getBytes(StandardCharsets.UTF_8);
+
+        try (InputStream istream = new ByteArrayInputStream(keyData)) {
+            return getPrivateKeyReader()
+                .read(istream, null);
+        }
+        catch (IOException e) {
+            throw new KeyException(e);
+        }
     }
 
 }
