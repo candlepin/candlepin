@@ -88,6 +88,12 @@ public abstract class OidUtilTest {
         return kvpairSource(KEY_ALGO_NAMES_TO_OIDS);
     }
 
+    public static Stream<Arguments> keyOidSource() {
+        return KEY_ALGO_NAMES_TO_OIDS.values()
+            .stream()
+            .map(Arguments::of);
+    }
+
     public static Stream<Arguments> keyOidToNameSource() {
         return kmvmapSource(KEY_ALGO_NAMES_TO_OIDS);
     }
@@ -100,6 +106,12 @@ public abstract class OidUtilTest {
         return kmvmapSource(SIG_ALGO_NAMES_TO_OIDS);
     }
 
+    public static Stream<Arguments> signatureOidSource() {
+        return SIG_ALGO_NAMES_TO_OIDS.values()
+            .stream()
+            .map(Arguments::of);
+    }
+
     @ParameterizedTest
     @MethodSource("keyNameToOidSource")
     public void testKeyAlgorithmNameToOidTranslation(String algorithmName, String expected) {
@@ -109,6 +121,18 @@ public abstract class OidUtilTest {
             .isNotNull()
             .isPresent()
             .hasValue(expected);
+    }
+
+    @ParameterizedTest
+    @MethodSource("keyOidSource")
+    public void testKeyAlgorithmOidToOidTranslation(String algorithmOid) {
+        // This test validates that algorithm "names" that are OIDs map to themselves.
+        OidUtil oidUtil = this.buildOidUtil();
+
+        assertThat(oidUtil.getKeyAlgorithmOid(algorithmOid))
+            .isNotNull()
+            .isPresent()
+            .hasValue(algorithmOid);
     }
 
     @Test
@@ -165,6 +189,18 @@ public abstract class OidUtilTest {
             .isNotNull()
             .isPresent()
             .hasValue(expected);
+    }
+
+    @ParameterizedTest
+    @MethodSource("signatureOidSource")
+    public void testSignatureAlgorithmOidToOidTranslation(String algorithmOid) {
+        // This test validates that algorithm "names" that are OIDs map to themselves.
+        OidUtil oidUtil = this.buildOidUtil();
+
+        assertThat(oidUtil.getSignatureAlgorithmOid(algorithmOid))
+            .isNotNull()
+            .isPresent()
+            .hasValue(algorithmOid);
     }
 
     @Test

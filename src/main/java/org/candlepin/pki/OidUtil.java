@@ -28,7 +28,9 @@ public interface OidUtil {
     /**
      * Fetches the algorithm OID for the given key algorithm name. If the algorithm name does not map to a
      * known OID, or the backing security provider does not support the algorithm by name, this method returns
-     * an empty optional. If the specified algorithm name is null or empty, this method throws an exception.
+     * an empty optional. If the algorithm name is, itself, an OID and it is known by the backing security
+     * provider, this method returns the OID. If the specified algorithm name is null or empty, this method
+     * throws an exception.
      *
      * @param algorithmName
      *  the key algorithm name to translate
@@ -67,8 +69,9 @@ public interface OidUtil {
     /**
      * Fetches the algorithm OID for the given signature algorithm name. If the algorithm name does not map to
      * a known OID, or the backing security provider does not support the algorithm by name, this method
-     * returns an empty optional. If the specified algorithm name is null or empty, this method throws an
-     * exception.
+     * returns an empty optional. If the algorithm name is, itself, an OID and it is known by the backing
+     * security provider, this method returns the OID. If the specified algorithm name is null or empty, this
+     * method throws an exception.
      *
      * @throws IllegalArgumentException
      *  if the given algorithm name is null or empty

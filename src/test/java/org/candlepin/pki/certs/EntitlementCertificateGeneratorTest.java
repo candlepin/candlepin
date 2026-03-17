@@ -114,11 +114,9 @@ import java.util.stream.Stream;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class EntitlementCertificateGeneratorTest {
-    private static final Map<String, Scheme> SUPPORTED_SCHEMES = CryptoUtil.generateSupportedSchemes()
-        .collect(Collectors.toMap(Scheme::name, Function.identity()));
 
     private static Stream<Arguments> schemeSource() {
-        return EntitlementCertificateGeneratorTest.SUPPORTED_SCHEMES.values()
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
             .stream()
             .map(Arguments::of);
     }

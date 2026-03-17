@@ -51,11 +51,13 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.paging.PagingUtilFactory;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.certs.UeberCertificateGenerator;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.OwnerServiceAdapter;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
 
@@ -144,6 +146,8 @@ public class OwnerResourceOwnerClaimingTest {
     }
 
     private OwnerResource buildOwnerResource() {
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(this.config);
+
         return new OwnerResource(this.ownerCurator, this.activationKeyCurator,
             this.consumerCurator, this.consumerManager, this.i18n, this.eventSink, this.eventFactory,
             this.contentAccessManager, this.manifestManager, this.poolManager, this.poolService,
@@ -152,7 +156,7 @@ public class OwnerResourceOwnerClaimingTest {
             this.ueberCertificateGenerator, this.environmentCurator, this.calculatedAttributesUtil,
             this.contentOverrideValidator, this.serviceLevelValidator, this.ownerServiceAdapter, this.config,
             this.consumerTypeValidator, this.productCurator, this.modelTranslator, this.jobManager,
-            this.dtoValidator, this.principalProvider, this.pagingUtilFactory);
+            this.dtoValidator, this.principalProvider, this.pagingUtilFactory, cryptoManager);
     }
 
     @Test

@@ -58,11 +58,9 @@ import java.util.stream.Stream;
 
 public class SchemeReaderTest {
 
-    // A list of known, supported schemes
-    private static final List<Scheme> SUPPORTED_SCHEMES = CryptoUtil.generateSupportedSchemes().toList();
-
     private static Stream<Arguments> schemeSource() {
-        return SUPPORTED_SCHEMES.stream()
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
+            .stream()
             .map(Arguments::of);
     }
 
@@ -208,7 +206,7 @@ public class SchemeReaderTest {
         DevConfig config = new DevConfig();
         Map<String, Scheme> schemeMap = new HashMap<>();
 
-        for (Scheme scheme : SUPPORTED_SCHEMES) {
+        for (Scheme scheme : CryptoUtil.SUPPORTED_SCHEMES.values()) {
             schemeMap.put(scheme.name(), scheme);
             writeSchemeConfig(config, scheme, null);
         }
@@ -235,7 +233,7 @@ public class SchemeReaderTest {
     public void testReadSchemesThrowsExceptionOnMissingSchemesList() throws Exception {
         DevConfig config = new DevConfig();
 
-        for (Scheme scheme : SUPPORTED_SCHEMES) {
+        for (Scheme scheme : CryptoUtil.SUPPORTED_SCHEMES.values()) {
             writeSchemeConfig(config, scheme, null);
         }
 
@@ -253,7 +251,7 @@ public class SchemeReaderTest {
         List<String> schemeNames = new ArrayList<>();
         schemeNames.add(schemeName);
 
-        for (Scheme scheme : SUPPORTED_SCHEMES) {
+        for (Scheme scheme : CryptoUtil.SUPPORTED_SCHEMES.values()) {
             schemeNames.add(scheme.name());
             writeSchemeConfig(config, scheme, null);
         }
@@ -273,7 +271,7 @@ public class SchemeReaderTest {
         List<String> schemeNames = new ArrayList<>();
         schemeNames.add("missing_scheme");
 
-        for (Scheme scheme : SUPPORTED_SCHEMES) {
+        for (Scheme scheme : CryptoUtil.SUPPORTED_SCHEMES.values()) {
             schemeNames.add(scheme.name());
             writeSchemeConfig(config, scheme, null);
         }

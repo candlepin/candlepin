@@ -34,6 +34,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -120,6 +121,8 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.PageRequest.Order;
 import org.candlepin.paging.PagingUtilFactory;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.certs.UeberCertificateGenerator;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
@@ -128,6 +131,7 @@ import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ImporterException;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
@@ -153,6 +157,7 @@ import org.mockito.stubbing.Answer;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -216,6 +221,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private OwnerServiceAdapter ownerServiceAdapter;
     private ServiceLevelValidator serviceLevelValidator;
     private ConsumerTypeValidator consumerTypeValidator;
+    private CryptoManager cryptoManager;
 
     private Owner owner;
     private Product product;
@@ -231,6 +237,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         dtoValidator = this.injector.getInstance(DTOValidator.class);
         contentAccessManager = this.injector.getInstance(ContentAccessManager.class);
         pagingUtilFactory = this.injector.getInstance(PagingUtilFactory.class);
+        this.cryptoManager = this.injector.getInstance(CryptoManager.class);
 
         this.owner = this.ownerCurator.create(new Owner()
             .setKey(OWNER_NAME)
@@ -283,7 +290,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             this.calculatedAttributesUtil, this.contentOverrideValidator, this.serviceLevelValidator,
             this.ownerServiceAdapter, this.config, this.consumerTypeValidator, this.mockProductCurator,
             this.modelTranslator, this.mockJobManager, this.dtoValidator, this.principalProvider,
-            this.pagingUtilFactory);
+            this.pagingUtilFactory, this.cryptoManager);
     }
 
     private ProductDTO buildTestProductDTO() {
@@ -350,9 +357,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         // Generate an ueber certificate for the Owner. This will need to
         // be cleaned up along with the owner deletion.
-        UeberCertificate uCert = ueberCertGenerator.generate(owner.getKey(),
-            setupAdminPrincipal("test").getUsername());
-        assertNotNull(uCert);
+        Scheme scheme = CryptoUtil.SUPPORTED_SCHEMES.values().stream().findAny().get();
+
+        String username = this.setupAdminPrincipal("test")
+            .getUsername();
+
+        UeberCertificate cert = this.ueberCertGenerator.generate(scheme, owner, username);
+        assertNotNull(cert);
 
         ownerResource.deleteOwner(owner.getKey(), true, true);
 
@@ -1881,7 +1892,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             this.environmentCurator, this.calculatedAttributesUtil, this.contentOverrideValidator,
             this.serviceLevelValidator, this.ownerServiceAdapter, this.config, this.consumerTypeValidator,
             this.mockProductCurator, this.modelTranslator, this.mockJobManager, this.dtoValidator,
-            this.principalProvider, this.pagingUtilFactory);
+            this.principalProvider, this.pagingUtilFactory, this.cryptoManager);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -2265,41 +2276,71 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCreateUeberCertificateFromScratch() {
-        Principal principal = setupPrincipal(owner, Access.ALL);
+    public void testCreateUeberCertificateFromScratch() throws Exception {
         Owner owner = TestUtil.createOwner();
-        UeberCertificate entCert = mock(UeberCertificate.class);
+        Principal principal = setupPrincipal(owner, Access.ALL);
+        UeberCertificate cert = mock(UeberCertificate.class);
 
-        when(this.mockOwnerCurator.getByKey("admin"))
-            .thenReturn(owner);
-
-        when(this.mockUeberCertificateGenerator.generate(owner.getKey(), principal.getUsername()))
-            .thenReturn(entCert);
+        doReturn(owner).when(this.mockOwnerCurator)
+            .lockAndLoadByKey(owner.getKey());
+        doReturn(cert).when(this.mockUeberCertificateGenerator)
+            .generate(any(Scheme.class), eq(owner), eq(principal.getUsername()));
         when(this.principalProvider.get()).thenReturn(principal);
 
         OwnerResource resource = this.buildOwnerResource();
 
-        UeberCertificateDTO expected = this.modelTranslator.translate(entCert, UeberCertificateDTO.class);
+        UeberCertificateDTO expected = this.modelTranslator.translate(cert, UeberCertificateDTO.class);
         UeberCertificateDTO result = resource.createUeberCertificate(owner.getKey());
         assertEquals(expected, result);
     }
 
     @Test
-    public void testCreateUeberCertificateRegenerate() {
-        Principal principal = setupPrincipal(owner, Access.ALL);
+    public void testCreateUeberCertificateRegenerate() throws Exception {
         Owner owner = TestUtil.createOwner();
-        UeberCertificate entCert = mock(UeberCertificate.class);
+        Principal principal = setupPrincipal(owner, Access.ALL);
+        UeberCertificate cert = mock(UeberCertificate.class);
 
         OwnerResource resource = this.buildOwnerResource();
 
-        when(this.mockUeberCertificateGenerator.generate(owner.getKey(), principal.getUsername()))
-            .thenReturn(entCert);
+        doReturn(owner).when(this.mockOwnerCurator)
+            .lockAndLoadByKey(owner.getKey());
+        doReturn(cert).when(this.mockUeberCertificateGenerator)
+            .generate(any(Scheme.class), eq(owner), eq(principal.getUsername()));
         when(this.principalProvider.get()).thenReturn(principal);
 
-        UeberCertificateDTO expected = this.modelTranslator.translate(entCert, UeberCertificateDTO.class);
+        UeberCertificateDTO expected = this.modelTranslator.translate(cert, UeberCertificateDTO.class);
         UeberCertificateDTO result = resource.createUeberCertificate(owner.getKey());
 
         assertEquals(expected, result);
+    }
+
+    @Test
+    public void testCreateUeberCertificateRequiresValidOwner() throws Exception {
+        Owner owner = TestUtil.createOwner();
+        Principal principal = setupPrincipal(owner, Access.ALL);
+
+        doReturn(null).when(this.mockOwnerCurator)
+            .lockAndLoadByKey(owner.getKey());
+
+        when(this.principalProvider.get()).thenReturn(principal);
+
+        OwnerResource resource = this.buildOwnerResource();
+        assertThrows(NotFoundException.class, () -> resource.createUeberCertificate("404owner"));
+    }
+
+    @Test
+    public void testCreateUeberCertificateThrowsExceptionWhenCertGenerationFails() throws Exception {
+        Owner owner = TestUtil.createOwner();
+        Principal principal = setupPrincipal(owner, Access.ALL);
+
+        when(this.principalProvider.get()).thenReturn(principal);
+        doReturn(owner).when(this.mockOwnerCurator)
+            .lockAndLoadByKey(owner.getKey());
+        doThrow(new CertificateException("kaboom")).when(this.mockUeberCertificateGenerator)
+            .generate(any(Scheme.class), eq(owner), eq(principal.getUsername()));
+
+        OwnerResource resource = this.buildOwnerResource();
+        assertThrows(BadRequestException.class, () -> resource.createUeberCertificate(owner.getKey()));
     }
 
     @Test

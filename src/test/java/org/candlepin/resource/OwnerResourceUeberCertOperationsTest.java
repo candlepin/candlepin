@@ -41,6 +41,7 @@ import org.candlepin.model.Role;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.User;
 import org.candlepin.paging.PagingUtilFactory;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.certs.UeberCertificateGenerator;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
@@ -77,6 +78,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     private DTOValidator dtoValidator;
     private PagingUtilFactory pagingUtilFactory;
     private ConsumerManager consumerManager;
+    private CryptoManager cryptoManager;
 
     private PrincipalProvider principalProvider;
     private JobManager jobManager;
@@ -106,6 +108,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         dtoValidator = this.injector.getInstance(DTOValidator.class);
         pagingUtilFactory = this.injector.getInstance(PagingUtilFactory.class);
         consumerManager = this.injector.getInstance(ConsumerManager.class);
+        this.cryptoManager = this.injector.getInstance(CryptoManager.class);
 
         owner = ownerCurator.create(new Owner()
             .setKey(OWNER_NAME)
@@ -130,7 +133,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
             ueberCertGenerator, environmentCurator, calculatedAttributesUtil, contentOverrideValidator,
             serviceLevelValidator, ownerService, config, consumerTypeValdator, productCurator,
             this.modelTranslator, this.jobManager, dtoValidator, this.principalProvider,
-            this.pagingUtilFactory);
+            this.pagingUtilFactory, this.cryptoManager);
     }
 
     @Test
