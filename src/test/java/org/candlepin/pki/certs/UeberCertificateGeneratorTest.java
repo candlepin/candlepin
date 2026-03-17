@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,112 +12,242 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.pki.certs;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.candlepin.config.Configuration;
 import org.candlepin.config.TestConfig;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.CertificateSerial;
-import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UeberCertificate;
-import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.OidUtil;
+import org.candlepin.pki.Scheme;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.candlepin.test.CryptoUtil;
-import org.candlepin.test.TestUtil;
+import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.X509ExtensionUtil;
 
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.Locale;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Date;
+import java.util.stream.Stream;
 
 
 
-@ExtendWith(MockitoExtension.class)
-class UeberCertificateGeneratorTest {
-    @Mock
-    private CertificateSerialCurator serialCurator;
-    @Mock
-    private OwnerCurator ownerCurator;
-    @Mock
-    private UeberCertificateCurator ueberCertificateCurator;
-    @Mock
-    private ConsumerTypeCurator consumerTypeCurator;
-    private UeberCertificateGenerator generator;
+public class UeberCertificateGeneratorTest extends DatabaseTestFixture {
 
-    @BeforeEach
-    void setUp() {
-        I18n i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
+    private static Stream<Arguments> schemeSource() {
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
+            .stream()
+            .map(Arguments::of);
+    }
+
+    private UeberCertificateGenerator buildGenerator() {
         Configuration config = TestConfig.defaults();
         CryptoManager cryptoManager = CryptoUtil.getCryptoManager(config);
 
-        this.generator = new UeberCertificateGenerator(
+        return new UeberCertificateGenerator(
             new DefaultUniqueIdGenerator(),
-            this.serialCurator,
-            this.ownerCurator,
+            this.certSerialCurator,
             this.ueberCertificateCurator,
             this.consumerTypeCurator,
-            i18n,
             cryptoManager,
             new X509ExtensionUtil(config),
             CryptoUtil.getPemEncoder());
     }
 
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGenerateCertificate(Scheme scheme) throws Exception {
+        Owner owner = this.createOwner();
+        String username = "username";
+
+        assertNull(this.ueberCertificateCurator.findForOwner(owner));
+
+        UeberCertificateGenerator generator = this.buildGenerator();
+        UeberCertificate output = generator.generate(scheme, owner, username);
+
+        assertThat(output)
+            .isNotNull()
+            .doesNotReturn(null, UeberCertificate::getCert)
+            .doesNotReturn(null, UeberCertificate::getKey);
+
+        // Verify we can fetch the ueber cert via curator
+        assertThat(this.ueberCertificateCurator.findForOwner(owner))
+            .isSameAs(output);
+
+        // Verify the cert and key are of the intended scheme
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        X509Certificate x509cert = CryptoUtil.extractCertificateFromContainer(output);
+        String sigAlgorithmOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+            .orElseThrow(() -> new RuntimeException("Unable to convert algorithm name to an OID"));
+
+        assertEquals(sigAlgorithmOid, x509cert.getSigAlgOID());
+
+        PrivateKey pkey = CryptoUtil.extractPrivateKeyFromContainer(output);
+        String keyAlgorithmOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+            .orElseThrow(() -> new RuntimeException("Unable to convert algorithm name to an OID"));
+
+        String receivedKeyAlgorithmOid = oidUtil.getKeyAlgorithmOid(pkey.getAlgorithm())
+            .orElseThrow(() -> new RuntimeException("Unable to convert algorithm name to an OID"));
+
+        assertEquals(keyAlgorithmOid, receivedKeyAlgorithmOid);
+
+        // Verify the cert was issued by the scheme's CA cert, and isn't self-signed
+        assertThat(x509cert.getIssuerX500Principal())
+            .isNotEqualTo(x509cert.getSubjectX500Principal())
+            .isEqualTo(scheme.certificate().getSubjectX500Principal());
+
+        // Verify the cert has the correct validity range. It needs to be active at the time of generation,
+        // and up to December, 2049
+        assertThat(x509cert.getNotBefore())
+            .isNotNull()
+            .isBefore(new Date());
+
+        assertThat(x509cert.getNotAfter())
+            .isNotNull()
+            .isAfter(Date.from(OffsetDateTime.of(2049, 12, 1, 0, 0, 0, 0, ZoneOffset.UTC).toInstant()));
+    }
+
+    // TODO: Add a test that validates the cert has the correct extensions and content >:(
+
     @Test
-    void shouldRegenerateExistingCertificate() {
-        Owner owner = TestUtil.createOwner();
-        when(this.ownerCurator.getByKey(anyString())).thenReturn(owner);
-        when(this.consumerTypeCurator.getByLabel(anyString(), anyBoolean())).thenReturn(createType());
-        when(this.serialCurator.create(any(CertificateSerial.class))).thenAnswer(invocation -> {
-            CertificateSerial argument = invocation.getArgument(0);
-            argument.setSerial((long) TestUtil.randomInt());
-            return argument;
-        });
+    public void testGenerateCertificateRequiresScheme() throws Exception {
+        Owner owner = this.createOwner();
+        String username = "username";
 
-        UeberCertificate certificate = this.generator.generate("owner_key", "username");
+        UeberCertificateGenerator generator = this.buildGenerator();
 
-        verify(this.ueberCertificateCurator).deleteForOwner(owner);
-        Assertions.assertThat(certificate)
-            .isNotNull();
+        assertThrows(IllegalArgumentException.class, () -> generator.generate(null, owner, username));
     }
 
     @Test
-    void shouldFailForMissingOwner() {
-        Assertions.assertThatThrownBy(() -> this.generator.generate("owner_key", "username"))
-            .isInstanceOf(NotFoundException.class);
+    public void testGenerateCertificateRequiresOwner() throws Exception {
+        Scheme scheme = CryptoUtil.SUPPORTED_SCHEMES.values().stream().findAny().get();
+        String username = "username";
+
+        UeberCertificateGenerator generator = this.buildGenerator();
+
+        assertThrows(IllegalArgumentException.class, () -> generator.generate(scheme, null, username));
     }
 
-    @Test
-    void shouldHandleFailures() {
-        Owner owner = TestUtil.createOwner();
-        when(this.ownerCurator.getByKey(anyString())).thenReturn(owner);
-        when(this.ueberCertificateCurator.deleteForOwner(owner)).thenThrow(RuntimeException.class);
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { " ", "\t", "\n" })
+    public void testGenerateCertificateDoesNotRequireUsername(String username) throws Exception {
+        // The username isn't guaranteed to be populated by every principal, and the existing implementation
+        // performs no validation or checks on its presence. This test codifies this behavior to avoid any
+        // regressions on this going forward.
 
-        Assertions.assertThatThrownBy(() -> this.generator.generate("owner_key", "username"))
-            .isInstanceOf(BadRequestException.class);
+        Scheme scheme = CryptoUtil.SUPPORTED_SCHEMES.values().stream().findAny().get();
+        Owner owner = this.createOwner();
+
+        UeberCertificateGenerator generator = this.buildGenerator();
+        UeberCertificate output = generator.generate(scheme, owner, username);
+
+        assertThat(output)
+            .isNotNull()
+            .doesNotReturn(null, UeberCertificate::getCert)
+            .doesNotReturn(null, UeberCertificate::getKey);
     }
 
-    private static ConsumerType createType() {
-        return new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN)
-            .setId(TestUtil.randomString());
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGenerateCertificateRevokesPreviousOwnerUeberCert(Scheme scheme) throws Exception {
+        // This test verifies that any previous ueber certificate for the owner is revoked as part of the
+        // operation to generate a new one
+
+        Owner owner = this.createOwner();
+        String username = "username";
+
+        UeberCertificateGenerator generator = this.buildGenerator();
+        UeberCertificate first = generator.generate(scheme, owner, username);
+
+        assertThat(this.ueberCertificateCurator.findForOwner(owner))
+            .isNotNull()
+            .isSameAs(first)
+            .doesNotReturn(null, UeberCertificate::getCert)
+            .doesNotReturn(null, UeberCertificate::getKey);
+
+        // Generate a second cert for the same owner
+        UeberCertificate second = generator.generate(scheme, owner, username);
+
+        assertThat(second)
+            .isNotNull()
+            .isNotSameAs(first)
+            .doesNotReturn(null, UeberCertificate::getCert)
+            .doesNotReturn(first.getCert(), UeberCertificate::getCert)
+            .doesNotReturn(null, UeberCertificate::getKey)
+            .doesNotReturn(first.getKey(), UeberCertificate::getKey)
+            .extracting(UeberCertificate::getSerial)
+            .returns(false, CertificateSerial::isRevoked);
+
+        assertThat(this.ueberCertificateCurator.findForOwner(owner))
+            .isSameAs(second);
+
+        assertThat(first)
+            .extracting(UeberCertificate::getSerial)
+            .returns(true, CertificateSerial::isRevoked);
     }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGenerateCertificateDoesNotRevokeOtherOwnerCert(Scheme scheme) throws Exception {
+        // This test verifies that any previous ueber certificate for the owner is revoked as part of the
+        // operation to generate a new one
+
+        UeberCertificateGenerator generator = this.buildGenerator();
+
+        Owner owner1 = this.createOwner();
+        String owner1User = "owner1_user";
+
+        UeberCertificate owner1Cert = generator.generate(scheme, owner1, owner1User);
+        assertThat(this.ueberCertificateCurator.findForOwner(owner1))
+            .isNotNull()
+            .isSameAs(owner1Cert)
+            .doesNotReturn(null, UeberCertificate::getCert)
+            .doesNotReturn(null, UeberCertificate::getKey);
+
+        // Generate a new cert for a different owner
+        Owner owner2 = this.createOwner();
+        String owner2User = "owner2_user";
+
+        UeberCertificate owner2Cert = generator.generate(scheme, owner2, owner2User);
+        assertThat(owner2Cert)
+            .isNotNull()
+            .isNotSameAs(owner1Cert)
+            .doesNotReturn(null, UeberCertificate::getCert)
+            .doesNotReturn(owner1Cert.getCert(), UeberCertificate::getCert)
+            .doesNotReturn(null, UeberCertificate::getKey)
+            .doesNotReturn(owner1Cert.getKey(), UeberCertificate::getKey)
+            .extracting(UeberCertificate::getSerial)
+            .returns(false, CertificateSerial::isRevoked);
+
+        // Verify that neither cert has been revoked
+        assertThat(this.ueberCertificateCurator.findForOwner(owner1))
+            .isSameAs(owner1Cert)
+            .extracting(UeberCertificate::getSerial)
+            .returns(false, CertificateSerial::isRevoked);
+
+        assertThat(this.ueberCertificateCurator.findForOwner(owner2))
+            .isSameAs(owner2Cert)
+            .extracting(UeberCertificate::getSerial)
+            .returns(false, CertificateSerial::isRevoked);
+    }
+
 }

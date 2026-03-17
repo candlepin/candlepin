@@ -47,15 +47,11 @@ import java.security.KeyPair;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
 
 public class ConsumerKeyPairGeneratorTest {
-
-    // A list of known, supported schemes
-    private static final List<Scheme> SUPPORTED_SCHEMES = CryptoUtil.generateSupportedSchemes().toList();
 
     // Some supported algorithm names are actually mapped to whatever the crypto backend decides is the
     // "best" sub-algorithm for it. E.g. "ML-DSA" without a security level will result in the backend
@@ -67,21 +63,19 @@ public class ConsumerKeyPairGeneratorTest {
         "ML-DSA", Set.of("ML-DSA-44", "ML-DSA-65", "ML-DSA-87"));
 
     private static Stream<Arguments> schemeSource() {
-        return SUPPORTED_SCHEMES.stream()
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
+            .stream()
             .map(Arguments::of);
     }
 
     private DevConfig buildConfiguration() throws KeyException, IOException {
         DevConfig config = TestConfig.defaults();
 
-        for (Scheme scheme : SUPPORTED_SCHEMES) {
+        for (Scheme scheme : CryptoUtil.SUPPORTED_SCHEMES.values()) {
             CryptoUtil.generateSchemeConfiguration(config, scheme, null);
         }
 
-        String schemesList = SUPPORTED_SCHEMES.stream()
-            .map(Scheme::name)
-            .collect(Collectors.joining(","));
-
+        String schemesList = String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet());
         config.setProperty(ConfigProperties.CRYPTO_SCHEMES, schemesList);
 
         return config;

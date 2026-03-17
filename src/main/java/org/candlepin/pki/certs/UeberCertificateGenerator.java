@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -16,8 +16,6 @@ package org.candlepin.pki.certs;
 
 import org.candlepin.controller.util.ContentPathBuilder;
 import org.candlepin.controller.util.PromotedContent;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -26,7 +24,6 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.UeberCertificate;
@@ -39,15 +36,13 @@ import org.candlepin.pki.X509Extension;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.X509ExtensionUtil;
 
-import com.google.inject.persist.Transactional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xnap.commons.i18n.I18n;
 
 import java.math.BigInteger;
 import java.security.KeyException;
 import java.security.KeyPair;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -68,88 +63,100 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class UeberCertificateGenerator {
+    private static final Logger log = LoggerFactory.getLogger(UeberCertificateGenerator.class);
+
     private static final String UEBER_CERT_CONSUMER_TYPE = "uebercert";
     private static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
-    private static final  String UEBER_CONTENT_NAME = "ueber_content";
+    private static final String UEBER_CONTENT_NAME = "ueber_content";
     private static final String UEBER_PRODUCT_POSTFIX = "_ueber_product";
-
-    private static final Logger log = LoggerFactory.getLogger(UeberCertificateGenerator.class);
 
     private final UniqueIdGenerator idGenerator;
     private final CertificateSerialCurator serialCurator;
-    private final OwnerCurator ownerCurator;
     private final UeberCertificateCurator ueberCertCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
-    private final I18n i18n;
     private final CryptoManager cryptoManager;
     private final X509ExtensionUtil extensionUtil;
     private final PemEncoder pemEncoder;
-
-    // TODO: Temporary, should not be universal
-    private final Scheme scheme;
 
     @Inject
     public UeberCertificateGenerator(
         UniqueIdGenerator idGenerator,
         CertificateSerialCurator serialCurator,
-        OwnerCurator ownerCurator,
         UeberCertificateCurator ueberCertCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        I18n i18n,
         CryptoManager cryptoManager,
         X509ExtensionUtil extensionUtil,
         PemEncoder pemEncoder) {
 
         this.idGenerator = Objects.requireNonNull(idGenerator);
         this.serialCurator = Objects.requireNonNull(serialCurator);
-        this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.ueberCertCurator = Objects.requireNonNull(ueberCertCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
-        this.i18n = Objects.requireNonNull(i18n);
         this.cryptoManager = Objects.requireNonNull(cryptoManager);
         this.extensionUtil = Objects.requireNonNull(extensionUtil);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
-
-        // FIXME: Temporary; select the default scheme and run with it for testing. Replace this with per-op
-        // scheme selection
-        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
     }
 
-    @Transactional
-    public UeberCertificate generate(String ownerKey, String username) {
-        Owner owner = this.ownerCurator.getByKey(ownerKey);
-        if (owner == null) {
-            throw new NotFoundException(i18n.tr("Unable to find an owner with key: {0}", ownerKey));
+    /**
+     * Generates and persists a new ueber (or debug) certificate for the given owner. If the owner has already
+     * generated an ueber certificate, the existing one will be revoked and deleted, and a new one will be
+     * generated and returned. This method will never return null.
+     *
+     * @param scheme
+     *  the cryptographic scheme to follow when generating the certificate; cannot be null, and must contain
+     *  a private key
+     *
+     * @param owner
+     *  The owner for which to generate an ueber certificate; cannot be null
+     *
+     * @param username
+     *  the username of the principal which is generating the certificate for the given owner
+     *
+     * @throws IllegalArgumentException
+     *  if the scheme or owner are null
+     *
+     * @throws CertificateException
+     *  if an exception occurs while generating cryptographic assets for the certificate
+     *
+     * @return
+     *  the newly generated ueber certificate
+     */
+    public UeberCertificate generate(Scheme scheme, Owner owner, String username)
+        throws CertificateException {
+
+        if (scheme == null) {
+            throw new IllegalArgumentException("scheme is null");
         }
 
-        this.ownerCurator.lock(owner);
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
 
         try {
             // There can only be one ueber certificate per owner, so delete the existing and regenerate it.
             this.ueberCertCurator.deleteForOwner(owner);
-            return  this.generateUeberCert(owner, username);
+            return this.generateUeberCert(scheme, owner, username);
         }
-        catch (Exception e) {
-            // TODO: FIXME: This exception handler is (a) too general and (b) throws an API exception! >:(
-            log.error("Problem generating ueber cert for owner: {}", ownerKey, e);
-            throw new BadRequestException(i18n.tr(
-                "Problem generating ueber cert for owner {0}", ownerKey), e);
+        catch (KeyException e) {
+            throw new CertificateException(e);
         }
     }
 
-    private UeberCertificate generateUeberCert(Owner owner, String generatedByUsername) throws KeyException {
+    private UeberCertificate generateUeberCert(Scheme scheme, Owner owner, String generatedByUsername)
+        throws KeyException {
+
         ConsumerType ueberCertType = this.consumerTypeCurator.getByLabel(UEBER_CERT_CONSUMER_TYPE, true);
         UeberCertData ueberCertData = new UeberCertData(owner, generatedByUsername, ueberCertType);
 
         CertificateSerial serial = new CertificateSerial(ueberCertData.getEndDate());
         serial = serialCurator.create(serial);
 
-        KeyPair keyPair = this.cryptoManager.getKeyPairGenerator(this.scheme)
+        KeyPair keyPair = this.cryptoManager.getKeyPairGenerator(scheme)
             .generateKeyPair();
 
         byte[] pemEncodedKeyPair = this.pemEncoder.encodeAsBytes(keyPair.getPrivate());
-        X509Certificate x509Cert =
-            createX509Certificate(ueberCertData, BigInteger.valueOf(serial.getId()), keyPair);
+        X509Certificate x509Cert = this.createX509Certificate(scheme, ueberCertData,
+            BigInteger.valueOf(serial.getId()), keyPair);
 
         UeberCertificate ueberCert = new UeberCertificate();
         ueberCert.setSerial(serial);
@@ -163,7 +170,7 @@ public class UeberCertificateGenerator {
         return ueberCert;
     }
 
-    private X509Certificate createX509Certificate(UeberCertData data, BigInteger serialNumber,
+    private X509Certificate createX509Certificate(Scheme scheme, UeberCertData data, BigInteger serialNumber,
         KeyPair keyPair) {
 
         ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(null, List.of());
@@ -183,7 +190,7 @@ public class UeberCertificateGenerator {
         }
 
         DistinguishedName dn = new DistinguishedName(null, data.getOwner());
-        return this.cryptoManager.getCertificateBuilder(this.scheme)
+        return this.cryptoManager.getCertificateBuilder(scheme)
             .withDN(dn)
             .withSerial(serialNumber)
             .withValidity(data.startDate.toInstant(), data.endDate.toInstant())

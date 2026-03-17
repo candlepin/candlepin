@@ -64,7 +64,17 @@ public class JcaOidUtil implements OidUtil {
             throw new IllegalArgumentException("algorithmName is null or empty");
         }
 
-        return Optional.ofNullable(KEY_ALGO_NAME_TO_OID.get(algorithmName.toUpperCase()));
+        String key = algorithmName.toUpperCase();
+
+        // Check if the mapping exists
+        Optional<String> output = Optional.ofNullable(KEY_ALGO_NAME_TO_OID.get(key));
+        if (output.isPresent()) {
+            return output;
+        }
+
+        // If not, check if the algorithm name *is* an OID, and we've mapped it
+        return Optional.of(key)
+            .filter(KEY_ALGO_NAME_TO_OID::containsValue);
     }
 
     @Override
@@ -86,7 +96,17 @@ public class JcaOidUtil implements OidUtil {
             throw new IllegalArgumentException("algorithmName is null or empty");
         }
 
-        return Optional.ofNullable(SIG_ALGO_NAME_TO_OID.get(algorithmName.toUpperCase()));
+        String key = algorithmName.toUpperCase();
+
+        // Check if the mapping exists
+        Optional<String> output = Optional.ofNullable(SIG_ALGO_NAME_TO_OID.get(key));
+        if (output.isPresent()) {
+            return output;
+        }
+
+        // If not, check if the algorithm name *is* an OID, and we've mapped it
+        return Optional.of(key)
+            .filter(SIG_ALGO_NAME_TO_OID::containsValue);
     }
 
     @Override

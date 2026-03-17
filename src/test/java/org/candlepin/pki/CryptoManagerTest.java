@@ -50,11 +50,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
@@ -65,10 +62,6 @@ import java.util.stream.Stream;
  * base CryptoManager API/interface.
  */
 public abstract class CryptoManagerTest {
-
-    // A mapping of known, supported schemes
-    private static final Map<String, Scheme> SUPPORTED_SCHEMES = CryptoUtil.generateSupportedSchemes()
-        .collect(Collectors.toMap(Scheme::name, Function.identity()));
 
     /**
      * Builds a new CryptoManager instance to test, using the given system configuration. Each invocation of
@@ -83,7 +76,7 @@ public abstract class CryptoManagerTest {
     protected abstract CryptoManager buildCryptoManager(Configuration config);
 
     private static Stream<Arguments> schemeSource() {
-        return SUPPORTED_SCHEMES.values()
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
             .stream()
             .map(Arguments::of);
     }
@@ -99,7 +92,8 @@ public abstract class CryptoManagerTest {
             CryptoUtil.generateSchemeConfiguration(config, scheme, null);
         }
 
-        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(",", SUPPORTED_SCHEMES.keySet()));
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
+            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
 
         return config;
     }
@@ -154,7 +148,7 @@ public abstract class CryptoManagerTest {
     public void testGetCryptoSchemes() throws Exception {
         // We won't know exactly *what* order we'll get here; but we can guarantee that from this point on,
         // the schemes are deduplicated and in a reproducible order.
-        List<Scheme> expected = new ArrayList<>(SUPPORTED_SCHEMES.values());
+        List<Scheme> expected = new ArrayList<>(CryptoUtil.SUPPORTED_SCHEMES.values());
         DevConfig config = addSchemeConfig(TestConfig.defaults(), expected);
 
         CryptoManager cryptoManager = this.buildCryptoManager(config);
@@ -175,13 +169,13 @@ public abstract class CryptoManagerTest {
 
     @Test
     public void testGetCryptoScheme() throws Exception {
-        List<Scheme> supportedSchemes = new ArrayList<>(SUPPORTED_SCHEMES.values());
+        List<Scheme> supportedSchemes = new ArrayList<>(CryptoUtil.SUPPORTED_SCHEMES.values());
         DevConfig config = addSchemeConfig(TestConfig.defaults(), supportedSchemes);
 
         CryptoManager cryptoManager = this.buildCryptoManager(config);
 
-        for (String schemeName : SUPPORTED_SCHEMES.keySet()) {
-            Scheme expected = SUPPORTED_SCHEMES.get(schemeName);
+        for (String schemeName : CryptoUtil.SUPPORTED_SCHEMES.keySet()) {
+            Scheme expected = CryptoUtil.SUPPORTED_SCHEMES.get(schemeName);
             Optional<Scheme> actual = cryptoManager.getCryptoScheme(schemeName);
 
             assertThat(actual)
@@ -193,7 +187,7 @@ public abstract class CryptoManagerTest {
     @ParameterizedTest
     @ValueSource(strings = { "", "   ", "\t", "does_not_exist" })
     public void testGetCryptoSchemeWhenNotPresent(String schemeName) throws Exception {
-        List<Scheme> schemes = new ArrayList<>(SUPPORTED_SCHEMES.values());
+        List<Scheme> schemes = new ArrayList<>(CryptoUtil.SUPPORTED_SCHEMES.values());
         DevConfig config = addSchemeConfig(TestConfig.defaults(), schemes);
 
         CryptoManager cryptoManager = this.buildCryptoManager(config);
@@ -258,7 +252,8 @@ public abstract class CryptoManagerTest {
         // Build a configuration that definitely contains and lists the scheme under test
         DevConfig config = TestConfig.defaults();
         CryptoUtil.generateSchemeConfiguration(config, scheme, null);
-        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(",", SUPPORTED_SCHEMES.keySet()));
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
+            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
 
         CryptoManager cryptoManager = this.buildCryptoManager(config);
 
@@ -278,7 +273,7 @@ public abstract class CryptoManagerTest {
 
         LinkedHashSet<Scheme> orderedSchemes = new LinkedHashSet<>();
         orderedSchemes.add(target);
-        orderedSchemes.addAll(SUPPORTED_SCHEMES.values());
+        orderedSchemes.addAll(CryptoUtil.SUPPORTED_SCHEMES.values());
 
         for (Scheme scheme : orderedSchemes) {
             CryptoUtil.generateSchemeConfiguration(config, scheme, null);
@@ -331,7 +326,8 @@ public abstract class CryptoManagerTest {
         // Build a configuration that definitely contains and lists the scheme under test
         DevConfig config = TestConfig.defaults();
         CryptoUtil.generateSchemeConfiguration(config, scheme, null);
-        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(",", SUPPORTED_SCHEMES.keySet()));
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
+            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
 
         CryptoManager cryptoManager = this.buildCryptoManager(config);
 
@@ -360,7 +356,8 @@ public abstract class CryptoManagerTest {
         // Build a configuration that definitely contains and lists the scheme under test
         DevConfig config = TestConfig.defaults();
         CryptoUtil.generateSchemeConfiguration(config, scheme, null);
-        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(",", SUPPORTED_SCHEMES.keySet()));
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
+            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
 
         CryptoManager cryptoManager = this.buildCryptoManager(config);
 
@@ -403,7 +400,8 @@ public abstract class CryptoManagerTest {
         // Build a configuration that definitely contains and lists the scheme under test
         DevConfig config = TestConfig.defaults();
         CryptoUtil.generateSchemeConfiguration(config, scheme, null);
-        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(",", SUPPORTED_SCHEMES.keySet()));
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
+            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
 
         CryptoManager cryptoManager = this.buildCryptoManager(config);
 
@@ -433,7 +431,8 @@ public abstract class CryptoManagerTest {
         // Build a configuration that definitely contains and lists the scheme under test
         DevConfig config = TestConfig.defaults();
         CryptoUtil.generateSchemeConfiguration(config, scheme, null);
-        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(",", SUPPORTED_SCHEMES.keySet()));
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
+            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
 
         CryptoManager cryptoManager = this.buildCryptoManager(config);
 
@@ -466,7 +465,7 @@ public abstract class CryptoManagerTest {
 
     @Test
     public void testGetDefaultCryptoSchemeRespectsConfiguration() throws Exception {
-        List<Scheme> supportedSchemes = new ArrayList<>(SUPPORTED_SCHEMES.values());
+        List<Scheme> supportedSchemes = new ArrayList<>(CryptoUtil.SUPPORTED_SCHEMES.values());
         DevConfig config = addSchemeConfig(TestConfig.defaults(), supportedSchemes);
 
         for (Scheme expected : supportedSchemes) {
@@ -502,7 +501,7 @@ public abstract class CryptoManagerTest {
     @Test
     public void testGetUpstreamCertificates() throws Exception {
         Set<X509Certificate> upstreamCerts = new HashSet<>();
-        for (Scheme scheme : SUPPORTED_SCHEMES.values()) {
+        for (Scheme scheme : CryptoUtil.SUPPORTED_SCHEMES.values()) {
             upstreamCerts.add(CryptoUtil.generateX509Certificate(scheme));
             upstreamCerts.add(CryptoUtil.generateX509Certificate(scheme));
         }
@@ -533,7 +532,7 @@ public abstract class CryptoManagerTest {
     @Test
     public void testGetUpstreamCertificatesFallsBackToLegacyConfig() throws Exception {
         Set<X509Certificate> upstreamCerts = new HashSet<>();
-        for (Scheme scheme : SUPPORTED_SCHEMES.values()) {
+        for (Scheme scheme : CryptoUtil.SUPPORTED_SCHEMES.values()) {
             upstreamCerts.add(CryptoUtil.generateX509Certificate(scheme));
             upstreamCerts.add(CryptoUtil.generateX509Certificate(scheme));
         }
@@ -595,6 +594,12 @@ public abstract class CryptoManagerTest {
         @BeforeAll
         public void init() throws Exception {
             DevConfig config = TestConfig.defaults();
+
+            // Ensure that our supported schemes are present in the config
+            CryptoManagerTest.addSchemeConfig(config, List.copyOf(CryptoUtil.SUPPORTED_SCHEMES.values()));
+
+            String schemes = String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet());
+            config.setProperty(ConfigProperties.CRYPTO_SCHEMES, schemes);
 
             // Generate a default scheme that's separate from the primary schemes
             Scheme defaultScheme = CryptoUtil.generateRsaScheme("default_scheme");
@@ -699,7 +704,7 @@ public abstract class CryptoManagerTest {
         }
 
         private static Stream<Arguments> schemeSource() {
-            return CryptoManagerTest.SUPPORTED_SCHEMES.values()
+            return CryptoUtil.SUPPORTED_SCHEMES.values()
                 .stream()
                 .map(Arguments::of);
         }
@@ -709,7 +714,9 @@ public abstract class CryptoManagerTest {
         public void testIsTrustedCertificateRejectsUnknownSelfSignedCertificate(Scheme scheme)
             throws Exception {
 
-            X509Certificate testCert = CryptoUtil.generateX509Certificate(scheme);
+            // Ensure the scheme from which we generate our cert is disconnected from those in our config
+            Scheme alt = CryptoUtil.generateSchemeFromScheme(scheme);
+            X509Certificate testCert = CryptoUtil.generateX509Certificate(alt);
 
             boolean output = this.cryptoManager.isTrustedCertificate(testCert);
             assertFalse(output);
@@ -718,7 +725,9 @@ public abstract class CryptoManagerTest {
         @ParameterizedTest
         @MethodSource("schemeSource")
         public void testIsTrustedCertificateRejectsUnknownSignedCertificate(Scheme scheme) throws Exception {
-            X509Certificate testCert = CryptoUtil.generateSignedX509Certificate(scheme);
+            // Ensure the scheme from which we generate our cert is disconnected from those in our config
+            Scheme alt = CryptoUtil.generateSchemeFromScheme(scheme);
+            X509Certificate testCert = CryptoUtil.generateSignedX509Certificate(alt);
 
             boolean output = this.cryptoManager.isTrustedCertificate(testCert);
             assertFalse(output);
