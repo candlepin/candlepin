@@ -246,8 +246,12 @@ Whenever an implementation comment would be used to define the overall purpose o
 Note that non-required Javadoc is still required to follow the formatting rules of [Formatting](#formatting) and [The summary fragment](#the-summary-fragment).
 
 ## Setup
-For full developer deployment instructions, see
-https://www.candlepinproject.org/docs/candlepin/developer_deployment.html#developer-deployment.
+If you have not done so on this machine, you need to:
+
+- Install Git and configure your GitHub access
+- Install OpenJDK 17 (for compiling) and OpenJDK 25 (for running Tomcat)
+
+Docker is not strictly necessary: it is used to run the MariaDB and PostgreSQL tests which are not enabled by default.
 
 ### IDE Config and Code Style
 TODO
@@ -484,24 +488,28 @@ The Postgres container is expected to have the following environment variables s
 
 Default Tomcat server.xml connector configuration:
 ```xml
-<Connector
-  port="8443"
-  protocol="HTTP/1.1"
-  scheme="https"
-  secure="true"
-  SSLEnabled="true"
-  maxThreads="150">
+<Connector port="8443"
+    protocol="org.apache.coyote.http11.Http11AprProtocol"
+    scheme="https"
+    secure="true"
+    SSLEnabled="true"
+    maxThreads="150"
+    compression="on"
+    compressableMimeType="application/json,text/html,text/xml">
 
-  <SSLHostConfig
-    certificateVerification="optional"
-    protocols="+TLSv1,+TLSv1.1,+TLSv1.2"
-    sslProtocol="TLS">
-    <Certificate
-      certificateFile="/etc/candlepin/certs/candlepin-ca.crt"
-      certificateKeyFile="/etc/candlepin/certs/candlepin-ca.key"
-      type="RSA" />
-  </SSLHostConfig>
-</Connector>
+        <SSLHostConfig certificateVerification="optional"
+            protocols="+TLSv1.2,+TLSv1.3"
+            sslProtocol="TLS"
+            caCertificateFile="/etc/candlepin/certs/candlepin-ca-bundle.crt">
+
+            <Certificate certificateFile="/etc/candlepin/certs/candlepin-mldsa-65-ca.crt"
+                certificateKeyFile="/etc/candlepin/certs/candlepin-mldsa-65-ca.key"
+                type="MLDSA" />
+            <Certificate certificateFile="/etc/candlepin/certs/candlepin-rsa-ca.crt"
+                certificateKeyFile="/etc/candlepin/certs/candlepin-rsa-ca.key"
+                type="RSA" />
+        </SSLHostConfig>
+    </Connector>
 ```
 ## Frequently Asked Questions
 TODO
