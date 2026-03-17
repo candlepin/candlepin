@@ -34,8 +34,7 @@ gendb() {
 
         # New database implies we probably don't want any events left laying around in the
         # queue to fire:
-        info_msg "Cleaning hornetq journal"
-        $SUDO rm -rf /var/lib/candlepin/hornetq/*
+        info_msg "Cleaning activemq-artemis journal"
         $SUDO rm -rf /var/lib/candlepin/activemq-artemis/*
     fi
 }
@@ -97,6 +96,7 @@ update_legacy_keystore() {
 configure_tomcat() {
     if [ "$FORCECERT" == "1" ]; then
         GEN_CERTS_ARGS="--force"
+        $SUDO rm -rf /etc/candlepin/certs/*
     fi
 
     # This works fine for our dev deployment -- especially within Vagrant images -- but may not work as
@@ -112,17 +112,10 @@ configure_tomcat() {
         GEN_CERTS_ARGS="${GEN_CERTS_ARGS} --hostaddr ${HOSTADDR}"
     fi
 
-    $SUDO "${PROJECT_DIR}/bin/deployment/gen_certs.sh" --trust $GEN_CERTS_ARGS
-
-    # Generate a private key and certificate using the ml-dsa-65 algorithm
-    $SUDO "${PROJECT_DIR}/bin/deployment/gen_certs.sh" $GEN_CERTS_ARGS \
-        --trust \
-        --use-ml-dsa-65 \
-        --cert_out /etc/candlepin/certs/candlepin-mldsa-65-ca.crt \
-        --key_out /etc/candlepin/certs/candlepin-mldsa-65-ca.key
+    $SUDO "${PROJECT_DIR}/bin/deployment/gen_certs.sh" --pq --trust $GEN_CERTS_ARGS
 
     # update server.xml
-    $SUDO python $PROJECT_DIR/bin/deployment/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR
+    $SUDO python $PROJECT_DIR/bin/deployment/update-server-xml.py --tomcat-version $TC_VERSION --use-apr $CONTAINER_CONF_DIR
 
     # create conf.d file to disable FIPS for our TC instance
     local CONTAINER_CONFD_DIR="${CONTAINER_CONF_DIR}/conf.d"
@@ -130,6 +123,11 @@ configure_tomcat() {
 
     $SUDO sh -c "echo 'JAVA_OPTS=\"\$JAVA_OPTS -Dcom.redhat.fips=false\"' > $FIPS_CONF_FILE"
     $SUDO sh -c "echo >> $FIPS_CONF_FILE"
+
+    # create conf.d file to set Tomcat's JAVA_HOME to Java 25
+    local JAVA_HOME_CONF_FILE="${CONTAINER_CONFD_DIR}/candlepin_java_home.conf"
+    $SUDO sh -c "echo 'JAVA_HOME=\"/usr/lib/jvm/java-25-openjdk\"' > $JAVA_HOME_CONF_FILE"
+    $SUDO sh -c "echo >> $JAVA_HOME_CONF_FILE"
 }
 
 upload_products() {
@@ -304,17 +302,16 @@ if [ $(id -u) -ne 0 ]; then
     fi
 fi
 
-# use tomcat 6, unless it doesnt exist and tomcat does
-TC=tomcat6
-TC_VERSION=6
+TC=tomcat
+TC_VERSION="9"
 
-if ( [ -f /usr/sbin/tomcat ] && (! [ -f /usr/sbin/tomcat6 ] ) );
-then
-    TC=tomcat
+if [ -f /usr/sbin/tomcat ]; then
     TC_PATH=/usr/sbin/tomcat
-
-    # Determine which Tomcat version we're using
-    TC_VERSION=$($TC_PATH version | grep -oP "(?<=Server number:  )([0-9]+\.[0-9]+)")
+    # Try to detect actual version from RPM installation
+    DETECTED_VERSION=$($TC_PATH version 2>/dev/null | grep -oP "(?<=Server number:  )([0-9]+\.[0-9]+\.[0-9]+)" || echo "")
+    if [ ! -z "$DETECTED_VERSION" ]; then
+        TC_VERSION=$DETECTED_VERSION
+    fi
 fi
 
 if [ -z $TC_HOME ]; then
@@ -323,20 +320,15 @@ fi
 
 info_msg "Configuring Tomcat $TC_VERSION found at $TC_HOME"
 
-isrpm $TC_HOME
-if [ "$?" -ne 0 ]; then
-    START="$TC_HOME/bin/catalina.sh jpda start"
-    STOP="$TC_HOME/bin/catalina.sh stop"
-    CONTAINER_CONF_DIR="$TC_HOME/conf"
-elif [ -f "/usr/bin/systemctl" ]; then
+if [ -f "/usr/bin/systemctl" ]; then
     START="$SUDO /usr/bin/systemctl start $TC"
     STOP="$SUDO /usr/bin/systemctl stop $TC"
-    CONTAINER_CONF_DIR="/etc/$TC"
 else
     START="$SUDO /sbin/service $TC start"
     STOP="$SUDO /sbin/service $TC stop"
-    CONTAINER_CONF_DIR="/etc/$TC"
 fi
+
+CONTAINER_CONF_DIR="/etc/$TC"
 
 # Check if we're in a container using supervisord instead:
 if [ "$SUPERVISOR" == "1" ]; then

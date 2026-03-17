@@ -10,7 +10,8 @@ USER root
 
 # Prepare Tomcat
 ARG TOMCAT_VERSION=9.0.87
-RUN wget https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz; \
+RUN wget --max-redirect=0 https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-$
+{TOMCAT_VERSION}.tar.gz; \
     tar xzf apache-tomcat-${TOMCAT_VERSION}.tar.gz; \
     mkdir /opt/tomcat; \
     mv apache-tomcat-${TOMCAT_VERSION}/* /opt/tomcat/

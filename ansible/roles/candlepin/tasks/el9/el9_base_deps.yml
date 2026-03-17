@@ -18,6 +18,15 @@
     - system_update
     - candlepin
 
+- name: "Install EPEL repository"
+  become: true
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+  tags:
+    - base_deps
+    - candlepin
+
 - name: "Install Candlepin requirements"
   become: true
   ansible.builtin.package:
@@ -27,9 +36,11 @@
       - gettext
       - git
       - java-17-openjdk-devel
+      - java-25-openjdk-headless
       - make
       - openssl
       - tomcat
+      - tomcat-native
       - platform-python
       - python3
       - python3-libxml2
@@ -41,6 +52,14 @@
       - zlib
       - zlib-devel
     state: present
+  tags:
+    - base_deps
+    - candlepin
+
+- name: "Enable post-quantum crypto policy"
+  become: true
+  ansible.builtin.command: update-crypto-policies --set DEFAULT:PQ
+  changed_when: true
   tags:
     - base_deps
     - candlepin
@@ -63,12 +82,12 @@
     - base_deps
     - candlepin
 
-- name: "Update Tomcat configuration to use Alternatives-configured Java"
+- name: "Update Tomcat configuration to use Java 25"
   become: true
   ansible.builtin.lineinfile:
     dest: /etc/tomcat/tomcat.conf
     regexp: "JAVA_HOME="
-    line: "JAVA_HOME=\"/usr/lib/jvm/java\""
+    line: "JAVA_HOME=\"/usr/lib/jvm/java-25-openjdk\""
   tags:
     - base_deps
     - candlepin
