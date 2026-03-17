@@ -10,7 +10,7 @@ RUN dnf -y --setopt install_weak_deps=False update && \
     dnf clean all
 
 # Prepare Tomcat
-ARG TOMCAT_VERSION=9.0.87
+ARG TOMCAT_VERSION=9.0.110
 COPY apache-tomcat-${TOMCAT_VERSION}.tar.gz /tmp/
 RUN tar xzf /tmp/apache-tomcat-${TOMCAT_VERSION}.tar.gz -C /tmp && \
     mkdir /opt/tomcat && \
@@ -25,7 +25,7 @@ COPY ${WAR_FILE} ./candlepin.war
 RUN mkdir -p /app/certs
 WORKDIR /app/certs
 COPY ./bin/deployment/gen_certs.sh .
-RUN ./gen_certs.sh --cert_out ./candlepin-ca.crt --key_out ./candlepin-ca.key --hostname candlepin; \
+RUN ./gen_certs.sh --pq --cert_dir ./ --hostname candlepin; \
     rm gen_certs.sh;
 
 FROM quay.io/centos/centos:stream9
@@ -36,11 +36,15 @@ USER root
 # Update and install dependencies
 RUN dnf -y update && \
     dnf -y update ca-certificates && \
-    dnf install -y java-17-openjdk-headless openssl initscripts && \
+    dnf install -y epel-release && \
+    dnf install -y java-25-openjdk-headless tomcat-native openssl initscripts && \
     dnf clean all
 
-ENV JAVA_HOME=/usr/lib/jvm/jre-17-openjdk
-ENV JRE_HOME=/usr/lib/jvm/jre-17-openjdk
+# Enable post-quantum algorithms (ML-DSA, ML-KEM) for OpenSSL/TLS
+RUN update-crypto-policies --set DEFAULT:PQ
+
+ENV JAVA_HOME=/usr/lib/jvm/jre-25-openjdk
+ENV JRE_HOME=/usr/lib/jvm/jre-25-openjdk
 ENV CATALINA_OPTS=-Djavax.net.ssl.trustStore=$JAVA_HOME/lib/security/cacerts
 
 # Tomcat Setup
