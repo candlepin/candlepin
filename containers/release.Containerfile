@@ -3,7 +3,7 @@ FROM registry.access.redhat.com/ubi9-minimal:latest as builder
 ARG WAR_FILE
 
 RUN microdnf -y update && \
-    microdnf install -y java-17-openjdk-devel wget tar && \
+    microdnf install -y java-25-openjdk-devel wget tar && \
     microdnf clean all
 
 USER root
@@ -50,11 +50,11 @@ USER root
 # Update and install dependencies
 RUN microdnf -y update && \
     microdnf -y update ca-certificates && \
-    microdnf install -y java-17-openjdk-headless initscripts && \
+    microdnf install -y java-25-openjdk-headless initscripts && \
     microdnf clean all
 
-ENV JAVA_HOME=/usr/lib/jvm/jre-17-openjdk
-ENV JRE_HOME=/usr/lib/jvm/jre-17-openjdk
+ENV JAVA_HOME=/usr/lib/jvm/jre-25-openjdk
+ENV JRE_HOME=/usr/lib/jvm/jre-25-openjdk
 ENV CATALINA_OPTS=-Djavax.net.ssl.trustStore=$JAVA_HOME/lib/security/cacerts
 
 # Tomcat Setup
