@@ -60,6 +60,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.pki.OidUtil;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.DatabaseTestFixture;
@@ -127,12 +128,16 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     private static final String DEFAULT_SERVICE_LEVEL = "VIP";
 
     public static Stream<Arguments> supportedSignatureAlgorithmsSource() {
-        return CryptoUtil.getSupportedSignatureAlgorithms()
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
+            .stream()
+            .map(Scheme::signatureAlgorithm)
             .map(Arguments::of);
     }
 
     public static Stream<Arguments> supportedKeyAlgorithmsSource() {
-        return CryptoUtil.getSupportedKeyAlgorithms()
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
+            .stream()
+            .map(Scheme::keyAlgorithm)
             .map(Arguments::of);
     }
 

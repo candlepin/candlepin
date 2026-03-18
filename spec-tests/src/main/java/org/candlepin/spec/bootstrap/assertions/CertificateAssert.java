@@ -18,6 +18,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
+import org.candlepin.dto.api.client.v1.CryptographicCapabilitiesDTO;
+import org.candlepin.dto.api.client.v1.UeberCertificateDTO;
 import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 import org.candlepin.spec.bootstrap.data.builder.OID;
 import org.candlepin.spec.bootstrap.data.util.X509HuffmanDecodeUtil;
@@ -33,6 +35,9 @@ import org.bouncycastle.asn1.DERUTF8String;
 import java.io.IOException;
 import java.util.List;
 
+// TODO: Rewrite all of this. This is so narrow and opinionated it's hard to actually add things to it
+// without affecting many other things.:/
+
 public class CertificateAssert extends AbstractAssert<CertificateAssert, X509Cert> {
 
     public CertificateAssert(X509Cert cert) {
@@ -44,6 +49,10 @@ public class CertificateAssert extends AbstractAssert<CertificateAssert, X509Cer
     }
 
     public static CertificateAssert assertThatCert(CertificateDTO actual) {
+        return assertThatCert(X509Cert.from(actual));
+    }
+
+    public static CertificateAssert assertThatCert(UeberCertificateDTO actual) {
         return assertThatCert(X509Cert.from(actual));
     }
 
@@ -109,6 +118,36 @@ public class CertificateAssert extends AbstractAssert<CertificateAssert, X509Cer
 
     public CertificateAssert hasContentRepoDisabled(ContentDTO content) {
         return hasExtensionValue(OID.contentRepoEnabled(content), "0");
+    }
+
+    public CertificateAssert usesKeyAlgorithmMatchingCapabilities(CryptographicCapabilitiesDTO caps) {
+        // If the capabilities are null (legacy) or do not define key algorithms, then we match
+        if (caps == null || caps.getKeyAlgorithms() == null) {
+            return this;
+        }
+
+        // Otherwise, ensure the algo OID is present in the capabilities
+        if (!caps.getKeyAlgorithms().contains(actual.keyAlgorithmOid())) {
+            this.failWithMessage("Expected key algorithm OID \"%s\" to be present in capabilities: %s",
+                actual.keyAlgorithmOid(), caps.getKeyAlgorithms());
+        }
+
+        return this;
+    }
+
+    public CertificateAssert usesSignatureAlgorithmMatchingCapabilities(CryptographicCapabilitiesDTO caps) {
+        // If the capabilities are null (legacy) or do not define signature algorithms, then we match
+        if (caps == null || caps.getSignatureAlgorithms() == null) {
+            return this;
+        }
+
+        // Otherwise, ensure the algo OID is present in the capabilities
+        if (!caps.getSignatureAlgorithms().contains(actual.signatureAlgorithmOid())) {
+            this.failWithMessage("Expected signature algorithm OID \"%s\" to be present in capabilities: %s",
+                actual.signatureAlgorithmOid(), caps.getSignatureAlgorithms());
+        }
+
+        return this;
     }
 
     public ListAssert<String> extractingEntitlementPayload() {

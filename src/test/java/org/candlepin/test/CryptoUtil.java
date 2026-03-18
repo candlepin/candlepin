@@ -882,38 +882,6 @@ public class CryptoUtil {
     }
 
     /**
-     * Returns a stream containing every known cryptographic key pair generation algorithm explicitly
-     * supported by Candlepin. Test suites looking to test all known key gen algorithms may make use of this
-     * function instead of defining their own aggregators.
-     * <p></p>
-     * Note that while these key pair generation algorithms *must* be supported, other algorithms may be
-     * supported by the underlying security providers and related cryptographic libraries. Implementations
-     * should still aim for generic implementations wherever possible.
-     *
-     * @return
-     *  a stream of supported key pair generation algorithm names
-     */
-    public static Stream<String> getSupportedKeyAlgorithms() {
-        return Stream.of(RSA_KEY_ALGORITHM, MLDSA_KEY_ALGORITHM);
-    }
-
-    /**
-     * Returns a stream containing every known cryptographic signature algorithm explicitly supported by
-     * Candlepin. Test suites looking to test all known signature algorithms may make use of this function
-     * instead of defining their own aggregators.
-     * <p></p>
-     * Note that while these signature algorithms *must* be supported, other algorithms may be supported by
-     * the underlying security providers and related cryptographic libraries. Implementations should still
-     * aim for generic implementations wherever possible.
-     *
-     * @return
-     *  a stream of supported signature algorithm names
-     */
-    public static Stream<String> getSupportedSignatureAlgorithms() {
-        return Stream.of(RSA_SIGNATURE_ALGORITHM, MLDSA_SIGNATURE_ALGORITHM);
-    }
-
-    /**
      * Generates a new scheme from the given scheme, generating a new keypair and certificate, but retaining
      * the same algorithms and key size. The newly generated scheme will contain a private key even if the
      * source scheme does not. The certificate in the new scheme will not be signed or otherwise derived from
