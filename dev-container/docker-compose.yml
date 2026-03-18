@@ -20,13 +20,6 @@ services:
   candlepin:
     image: quay.io/candlepin/candlepin:dev-latest
     container_name: candlepin
-    environment:
-      JPA_CONFIG_HIBERNATE_CONNECTION_URL: jdbc:postgresql://postgres/candlepin
-      CANDLEPIN_AUTH_CLOUD_ENABLE: "false"
-      CANDLEPIN_AUTH_TRUSTED_ENABLE: "true"
-      CANDLEPIN_STANDALONE: "false"
-      MODULE_CONFIG_HOSTED_CONFIGURATION_MODULE: org.candlepin.testext.hostedtest.HostedTestModule
-
     ports:
       - "8443:8443"
     healthcheck:

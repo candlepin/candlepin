@@ -95,18 +95,12 @@ This is a development image and not intended for production use."
 
 USER root
 
-# Add default Candlepin configurations
-RUN echo "jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQL92Dialect" > /etc/candlepin/candlepin.conf; \
-    echo "jpa.config.hibernate.connection.driver_class=org.postgresql.Driver" >> /etc/candlepin/candlepin.conf; \
-    echo "jpa.config.hibernate.connection.url=jdbc:postgresql://localhost/candlepin" >> /etc/candlepin/candlepin.conf; \
-    echo "jpa.config.hibernate.connection.username=candlepin" >> /etc/candlepin/candlepin.conf; \
-    echo "jpa.config.hibernate.connection.password=candlepin" >> /etc/candlepin/candlepin.conf; \
-    echo "candlepin.auth.trusted.enable=true" >> /etc/candlepin/candlepin.conf; \
-    echo "candlepin.auth.oauth.enable=true" >> /etc/candlepin/candlepin.conf; \
-    echo "candlepin.auth.oauth.consumer.rspec.secret=rspec-oauth-secret" >> /etc/candlepin/candlepin.conf; \
-    echo "candlepin.db.database_manage_on_startup=Manage" >> /etc/candlepin/candlepin.conf; \
-    echo "candlepin.standalone=true" >> /etc/candlepin/candlepin.conf; \
-    echo "candlepin.hidden_resources=" >> /etc/candlepin/candlepin.conf;
+ENV CATALINA_OPTS="$CATALINA_OPTS -Xdebug -Xrunjdwp:transport=dt_socket,address=*:8000,server=y,suspend=n"
+
+# Copy the generated candlepin.conf (run ./gradlew generateConfig before docker build)
+COPY build/candlepin.conf /etc/candlepin/candlepin.conf
+RUN test -s /etc/candlepin/candlepin.conf || \
+    (echo "ERROR: build/candlepin.conf is empty. Run ./gradlew generateConfig first." >&2 && exit 1)
 
 # Setup development certificate and key
 WORKDIR /etc/candlepin/certs
