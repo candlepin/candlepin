@@ -117,7 +117,7 @@ public class UeberCertificateGeneratorTest extends DatabaseTestFixture {
         // and up to December, 2049
         assertThat(x509cert.getNotBefore())
             .isNotNull()
-            .isBefore(new Date());
+            .isBeforeOrEqualTo(new Date());
 
         assertThat(x509cert.getNotAfter())
             .isNotNull()

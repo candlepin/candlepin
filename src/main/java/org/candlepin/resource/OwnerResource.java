@@ -50,6 +50,7 @@ import org.candlepin.dto.api.server.v1.ClaimantOwner;
 import org.candlepin.dto.api.server.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.server.v1.ContentAccessDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
+import org.candlepin.dto.api.server.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.dto.api.server.v1.EntitlementDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.dto.api.server.v1.ImportRecordDTO;
@@ -108,6 +109,7 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.PagingUtilFactory;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.OidUtil;
 import org.candlepin.pki.Scheme;
 import org.candlepin.pki.certs.UeberCertificateGenerator;
 import org.candlepin.resource.server.v1.OwnerApi;
@@ -153,7 +155,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -201,6 +205,7 @@ public class OwnerResource implements OwnerApi {
     private final PrincipalProvider principalProvider;
     private final PagingUtilFactory pagingUtilFactory;
     private final CryptoManager cryptoManager;
+    private final OidUtil oidUtil;
 
     private final int maxPagingSize;
 
@@ -239,7 +244,8 @@ public class OwnerResource implements OwnerApi {
         DTOValidator validator,
         PrincipalProvider principalProvider,
         PagingUtilFactory pagingUtilFactory,
-        CryptoManager cryptoManager) {
+        CryptoManager cryptoManager,
+        OidUtil oidUtil) {
 
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.ownerInfoCurator = Objects.requireNonNull(ownerInfoCurator);
@@ -274,6 +280,7 @@ public class OwnerResource implements OwnerApi {
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.pagingUtilFactory = Objects.requireNonNull(pagingUtilFactory);
         this.cryptoManager = Objects.requireNonNull(cryptoManager);
+        this.oidUtil = Objects.requireNonNull(oidUtil);
 
         this.maxPagingSize = this.config.getInt(ConfigProperties.PAGING_MAX_PAGE_SIZE);
     }
@@ -293,14 +300,11 @@ public class OwnerResource implements OwnerApi {
      *  if the given Owner key is null or empty.
      */
     private Owner findOwnerByKey(String key) {
-        Owner owner;
-        if (key != null && !key.isEmpty()) {
-            owner = ownerCurator.getByKey(key);
-        }
-        else {
-            throw new BadRequestException(i18n.tr("Owner key is null or empty."));
+        if (key == null || key.isBlank()) {
+            throw new BadRequestException(i18n.tr("Owner key is null or empty"));
         }
 
+        Owner owner = this.ownerCurator.getByKey(key);
         if (owner == null) {
             throw new NotFoundException(i18n.tr("Owner with key \"{0}\" was not found", key));
         }
@@ -1715,9 +1719,69 @@ public class OwnerResource implements OwnerApi {
         return dto;
     }
 
+    /**
+     * Picks a cryptographic scheme from the CryptoManager's list of configured schemes based on the provided
+     * capabilities. If the given capabilities object is null, or does not define any capabilities, the
+     * CryptoManager's default cryptographic scheme will be returned. If capabilities are provided but a
+     * matching scheme cannot be selected, this method throws an exception.
+     *
+     * @param capabilities
+     *  the client-provided cryptographic capabilities
+     *
+     * @throws ConflictException
+     *  if capabilities are provided, but cannot be matched to any configured cryptographic scheme
+     *
+     * @return
+     *  the best cryptographic scheme that matches the provided capabilities, or the default scheme if no
+     *  capabilities are provided
+     */
+    private Scheme selectBestCryptoScheme(Optional<CryptographicCapabilitiesDTO> capabilities) {
+        List<String> keyAlgorithms = capabilities.map(CryptographicCapabilitiesDTO::getKeyAlgorithms)
+            .filter(list -> !list.isEmpty())
+            .orElse(null);
+
+        List<String> sigAlgorithms = capabilities.map(CryptographicCapabilitiesDTO::getSignatureAlgorithms)
+            .filter(list -> !list.isEmpty())
+            .orElse(null);
+
+        // If the capabilities aren't provided, return the default scheme
+        if (keyAlgorithms == null && sigAlgorithms == null) {
+            return this.cryptoManager.getDefaultCryptoScheme();
+        }
+
+        // Otherwise *some* support has been indicated. Find first supported scheme. If the consumer has
+        // indicated partial support, then we only neeed to check the set of algorithms they've provided.
+        Predicate<Scheme> keyAlgoMatcher = keyAlgorithms == null ?
+            scheme -> true :
+            scheme -> this.oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+                .map(oid -> this.oidUtil.isAlgorithmSupported(keyAlgorithms, oid))
+                .orElse(false);
+
+        Predicate<Scheme> sigAlgoMatcher = sigAlgorithms == null ?
+            scheme -> true :
+            scheme -> this.oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+                .map(oid -> this.oidUtil.isAlgorithmSupported(sigAlgorithms, oid))
+                .orElse(false);
+
+        return this.cryptoManager.getCryptoSchemes()
+            .stream()
+            .filter(keyAlgoMatcher)
+            .filter(sigAlgoMatcher)
+            .findFirst()
+            .orElseThrow(() -> new ConflictException(this.i18n.tr("Unable to generate an ueber certificate " +
+                "compatible with the provided cryptographic capabilities")));
+    }
+
     @Override
     @Transactional
-    public UeberCertificateDTO createUeberCertificate(@Verify(Owner.class) String ownerKey) {
+    public UeberCertificateDTO createUeberCertificate(
+        @Verify(Owner.class) String ownerKey,
+        CryptographicCapabilitiesDTO cryptoCapabilities) {
+
+        if (ownerKey == null || ownerKey.isBlank()) {
+            throw new BadRequestException(i18n.tr("Owner key is null or empty"));
+        }
+
         // Impl note: moving the lock out here to the request time instead of generation time, since it's
         // kind of pointless to do with transactional isolation, but we want to maintain API behaviorial
         // compatibility; and if we're going to do it at all, it should be within the context of the
@@ -1734,8 +1798,8 @@ public class OwnerResource implements OwnerApi {
             .getUsername();
 
         try {
-            // Pick an appropriate scheme based on the request. For now, use the default scheme
-            Scheme scheme = this.cryptoManager.getDefaultCryptoScheme();
+            // Pick an appropriate scheme based on the request
+            Scheme scheme = this.selectBestCryptoScheme(Optional.ofNullable(cryptoCapabilities));
 
             // Generate!
             UeberCertificate ueberCert = this.ueberCertGenerator.generate(scheme, owner, username);

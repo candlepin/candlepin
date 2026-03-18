@@ -16,10 +16,12 @@ package org.candlepin.spec.bootstrap.client.cert;
 
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.EntitlementDTO;
+import org.candlepin.dto.api.client.v1.UeberCertificateDTO;
 
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERUTF8String;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 
 import tools.jackson.databind.JsonNode;
 
@@ -47,6 +49,10 @@ import java.util.stream.Collectors;
 public class X509Cert {
 
     public static X509Cert from(CertificateDTO certificate) {
+        return new X509Cert(parseCertificate(certificate.getCert()));
+    }
+
+    public static X509Cert from(UeberCertificateDTO certificate) {
         return new X509Cert(parseCertificate(certificate.getCert()));
     }
 
@@ -134,6 +140,29 @@ public class X509Cert {
         return subjectAlternativeNames().stream()
             .map(objects -> (String) objects.get(1))
             .collect(Collectors.joining(","));
+    }
+
+    public String signatureAlgorithm() {
+        return this.certificate.getSigAlgName();
+    }
+
+    public String signatureAlgorithmOid() {
+        return this.certificate.getSigAlgOID();
+    }
+
+    public String keyAlgorithm() {
+        return this.certificate.getPublicKey()
+            .getAlgorithm();
+    }
+
+    public String keyAlgorithmOid() {
+        byte[] bytes = this.certificate.getPublicKey()
+            .getEncoded();
+
+        return SubjectPublicKeyInfo.getInstance(bytes)
+            .getAlgorithm() // AlgorithmIdentifier
+            .getAlgorithm() // ASN1ObjectIdentifier
+            .getId();
     }
 
     public ASN1Primitive extensionValue(String extensionId) {
