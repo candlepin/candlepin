@@ -15,13 +15,15 @@
 package org.candlepin.pki.certs;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
-import org.candlepin.config.Configuration;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
@@ -30,6 +32,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.OidUtil;
 import org.candlepin.pki.Scheme;
 import org.candlepin.pki.util.ConsumerKeyPairGenerator;
 import org.candlepin.test.CryptoUtil;
@@ -43,17 +46,26 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.security.KeyException;
+import java.security.PrivateKey;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.stream.Stream;
 
 public class IdentityCertificateGeneratorTest extends DatabaseTestFixture {
+    private static final int CERT_DURATION = 1; // in years
+
     private CryptoManager cryptoManager;
 
     private IdentityCertificateGenerator identityCertificateGenerator;
 
     @BeforeEach
     public void setUp() throws CertificateException, KeyException {
-        Configuration config = TestConfig.defaults();
+        DevConfig config = TestConfig.defaults();
+        config.setProperty(ConfigProperties.IDENTITY_CERT_YEAR_ADDENDUM, String.valueOf(CERT_DURATION));
 
         this.cryptoManager = CryptoUtil.getCryptoManager(this.config);
 
@@ -119,7 +131,7 @@ public class IdentityCertificateGeneratorTest extends DatabaseTestFixture {
         assertNotNull(persistedSerial);
         assertSerial(persistedSerial, actual.getSerial());
 
-        // TODO: Assert that the correct scheme was used for generating the cert when the capability exists
+        this.assertScheme(scheme, persistedCert);
     }
 
     @Test
@@ -133,7 +145,7 @@ public class IdentityCertificateGeneratorTest extends DatabaseTestFixture {
         // A certificate should be generated using the default scheme
         assertNotNull(actual);
 
-        // TODO: Assert that the correct scheme was used for generating the cert when the capability exists
+        this.assertScheme(this.cryptoManager.getDefaultCryptoScheme(), actual);
     }
 
     @Test
@@ -225,7 +237,7 @@ public class IdentityCertificateGeneratorTest extends DatabaseTestFixture {
         assertNotNull(persistedSerial);
         assertSerial(persistedSerial, actual.getSerial());
 
-        // TODO: Assert that the correct scheme was used for generating the cert when the capability exists
+        this.assertScheme(scheme, persistedCert);
     }
 
     @Test
@@ -239,7 +251,7 @@ public class IdentityCertificateGeneratorTest extends DatabaseTestFixture {
         // A certificate should be generated using the default scheme
         assertNotNull(actual);
 
-        // TODO: Assert that the correct scheme was used for generating the cert when the capability exists
+        this.assertScheme(this.cryptoManager.getDefaultCryptoScheme(), actual);
     }
 
     @Test
@@ -336,6 +348,43 @@ public class IdentityCertificateGeneratorTest extends DatabaseTestFixture {
             .returns(expected.getExpiration(), CertificateSerial::getExpiration)
             .returns(expected.getCreated(), CertificateSerial::getCreated)
             .returns(expected.getUpdated(), CertificateSerial::getUpdated);
+    }
+
+    private void assertScheme(Scheme scheme, IdentityCertificate certificate)
+        throws KeyException, CertificateException {
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        X509Certificate x509cert = CryptoUtil.extractCertificateFromContainer(certificate);
+        String expectedSigAlgorithmOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+            .orElseThrow(() -> new RuntimeException("Unable to convert algorithm name to an OID"));
+
+        assertEquals(expectedSigAlgorithmOid, x509cert.getSigAlgOID());
+
+        PrivateKey privateKey = CryptoUtil.extractPrivateKeyFromContainer(certificate);
+        String expectedKeyAlgorithmOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+            .orElseThrow(() -> new RuntimeException("Unable to convert algorithm name to an OID"));
+
+        String actualKeyAlgorithmOid = oidUtil.getKeyAlgorithmOid(privateKey.getAlgorithm())
+            .orElseThrow(() -> new RuntimeException("Unable to convert algorithm name to an OID"));
+
+        assertEquals(expectedKeyAlgorithmOid, actualKeyAlgorithmOid);
+
+        // Verify the cert was issued by the scheme's CA cert, and isn't self-signed
+        assertThat(x509cert.getIssuerX500Principal())
+            .isNotEqualTo(x509cert.getSubjectX500Principal())
+            .isEqualTo(scheme.certificate().getSubjectX500Principal());
+
+        assertThat(x509cert.getNotBefore())
+            .isNotNull()
+            .isBeforeOrEqualTo(new Date());
+
+        Instant endDate = ZonedDateTime.now(ZoneOffset.UTC)
+            .plusYears(CERT_DURATION).toInstant();
+
+        assertThat(x509cert.getNotAfter())
+            .isNotNull()
+            .isCloseTo(endDate, 30000L); // plus or minus 30 seconds
     }
 
 }

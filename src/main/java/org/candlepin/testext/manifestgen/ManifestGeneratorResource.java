@@ -252,6 +252,10 @@ public class ManifestGeneratorResource {
             log.error("Unable to entitle pool for manifest generation", e);
             throw new IseException("Unable to entitle pools for manifest generation", e);
         }
+        catch (CryptoCapabilitiesException e) {
+            throw new ConflictException(i18n.tr("Unable to determing signature scheme for consumer: {0}",
+                consumerUuid), e);
+        }
         finally {
             transaction.rollback();
         }

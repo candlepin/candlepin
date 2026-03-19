@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -16,15 +16,17 @@ package org.candlepin.sync;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
@@ -55,7 +57,9 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SCACertificate;
+import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -70,6 +74,9 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -93,6 +100,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -107,26 +115,35 @@ import java.util.zip.ZipInputStream;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ExporterTest {
+
+    private static Stream<Arguments> schemeSource() {
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
+            .stream()
+            .map(Arguments::of);
+    }
+
+    private static final String SIGNATURE_FILENAME = "signature.json";
+
     @Mock
-    private ConsumerTypeCurator ctc;
+    private ConsumerTypeCurator consumerTypeCurator;
     @Mock
-    private OwnerCurator oc;
+    private OwnerCurator ownerCurator;
     @Mock
-    private RulesCurator rc;
+    private RulesCurator rulesCurator;
     @Mock
-    private EntitlementCertServiceAdapter ecsa;
+    private EntitlementCertServiceAdapter entitlementCertService;
     @Mock
-    private EntitlementCurator ec;
+    private EntitlementCurator entitlementCurator;
     @Mock
-    private DistributorVersionCurator dvc;
+    private DistributorVersionCurator distributorVersionCurator;
     @Mock
-    private CdnCurator cdnc;
+    private CdnCurator cdnCurator;
     @Mock
-    private EnvironmentCurator mockEnvironmentCurator;
+    private EnvironmentCurator environmentCurator;
     @Mock
     private ExportRules exportRules;
     @Mock
-    private PrincipalProvider pprov;
+    private PrincipalProvider principalProvider;
     @Mock
     private SCACertificateGenerator scaCertificateGenerator;
 
@@ -135,16 +152,16 @@ public class ExporterTest {
     private ObjectMapper mapper;
 
     private ModelTranslator translator;
-    private SyncUtils su;
-    private MetaExporter me;
-    private ConsumerExporter ce;
-    private ConsumerTypeExporter cte;
-    private RulesExporter re;
-    private ProductExporter pe;
-    private CdnExporter cdne;
-    private DistributorVersionExporter dve;
-    private EntitlementExporter ee;
-
+    private SyncUtils syncYUtil;
+    private MetaExporter metaExporter;
+    private ConsumerExporter consumerExporter;
+    private ConsumerTypeExporter consumerTypeExporter;
+    private RulesExporter rulesExporter;
+    private ProductExporter productExporter;
+    private CdnExporter cdnExporter;
+    private DistributorVersionExporter distributorVersionExporter;
+    private EntitlementExporter entitlementExporter;
+    private SignatureFileExporter signatureFileExporter;
 
     @BeforeEach
     public void setUp() {
@@ -152,48 +169,68 @@ public class ExporterTest {
         this.cryptoManager = CryptoUtil.getCryptoManager(this.config);
         this.mapper = ObjectMapperFactory.getSyncObjectMapper(this.config);
 
-        me = new MetaExporter();
-        translator = new StandardTranslator(ctc, mockEnvironmentCurator, oc);
-        ce = new ConsumerExporter(translator);
-        cte = new ConsumerTypeExporter(translator);
-        re = new RulesExporter(rc);
-        pe = new ProductExporter(translator);
-        ee = new EntitlementExporter(translator);
-        dve = new DistributorVersionExporter(translator);
-        cdne = new CdnExporter(translator);
-        su = new SyncUtils(config);
+        metaExporter = new MetaExporter();
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator);
+        consumerExporter = new ConsumerExporter(translator);
+        consumerTypeExporter = new ConsumerTypeExporter(translator);
+        rulesExporter = new RulesExporter(rulesCurator);
+        productExporter = new ProductExporter(translator);
+        entitlementExporter = new EntitlementExporter(translator);
+        distributorVersionExporter = new DistributorVersionExporter(translator);
+        signatureFileExporter = new SignatureFileExporter(mapper);
+        cdnExporter = new CdnExporter(translator);
+        syncYUtil = new SyncUtils(config);
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
     }
 
-    private KeyPairData generateConsumerKeyPairData() throws KeyException {
-        // TODO: FIXME: This should be scheme-aware. Will be fixed with the exporter overhaul
-        String algorithm = "RSA";
-        KeyPair keypair = CryptoUtil.generateKeyPair(algorithm, 4096);
+    private KeyPairData generateConsumerKeyPairData(Scheme scheme) throws KeyException {
+        if (scheme == null) {
+            scheme = this.cryptoManager.getDefaultCryptoScheme();
+        }
+
+        KeyPair keypair = CryptoUtil.generateKeyPair(scheme);
 
         return new KeyPairData()
             .setPublicKeyData(keypair.getPublic().getEncoded())
             .setPrivateKeyData(keypair.getPrivate().getEncoded())
-            .setAlgorithm(algorithm);
+            .setAlgorithm(scheme.keyAlgorithm());
     }
 
     private Exporter buildExporter() {
-        return new Exporter(this.ctc, this.me, this.ce, this.cte, this.re, this.ecsa, this.pe, this.ec,
-            this.ee, this.cryptoManager, this.config, this.exportRules, this.pprov, this.dvc, this.dve,
-            this.cdnc, this.cdne, this.su, this.mapper, this.translator, this.scaCertificateGenerator);
+        return new Exporter(
+            this.consumerTypeCurator,
+            this.metaExporter,
+            this.consumerExporter,
+            this.consumerTypeExporter,
+            this.rulesExporter,
+            this.entitlementCertService,
+            this.productExporter,
+            this.entitlementCurator,
+            this.entitlementExporter,
+            this.cryptoManager,
+            this.config,
+            this.exportRules,
+            this.principalProvider,
+            this.distributorVersionCurator,
+            this.distributorVersionExporter,
+            this.cdnCurator,
+            this.cdnExporter,
+            this.syncYUtil,
+            this.mapper,
+            this.translator,
+            this.scaCertificateGenerator,
+            this.signatureFileExporter);
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void exportProducts() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
-        Consumer consumer = mock(Consumer.class);
         Entitlement ent = mock(Entitlement.class);
+
         Rules mrules = mock(Rules.class);
         Principal principal = mock(Principal.class);
         IdentityCertificate idcert = new IdentityCertificate();
-
-        Set<Entitlement> entitlements = new HashSet<>();
-        entitlements.add(ent);
 
         Owner owner = TestUtil.createOwner("Example-Corporation");
 
@@ -231,27 +268,27 @@ public class ExporterTest {
 
         when(ent.getPool()).thenReturn(pool);
         when(mrules.getRules()).thenReturn("foobar");
-        when(rc.getRules()).thenReturn(mrules);
-        when(consumer.getEntitlements()).thenReturn(entitlements);
-        when(pprov.get()).thenReturn(principal);
+        when(rulesCurator.getRules()).thenReturn(mrules);
+        when(principalProvider.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
         idcert.setSerial(new CertificateSerial(10L, new Date()));
         idcert.setKey("euh0876puhapodifbvj094");
         idcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
         idcert.setCreated(new Date());
         idcert.setUpdated(new Date());
-        when(consumer.getIdCert()).thenReturn(idcert);
 
-        KeyPairData keyPairData = this.generateConsumerKeyPairData();
-        when(consumer.getKeyPairData()).thenReturn(keyPairData);
+        KeyPairData keyPairData = this.generateConsumerKeyPairData(null);
 
-        when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
+        when(consumerTypeCurator.listAll()).thenReturn(List.of(new ConsumerType("system")));
+        when(cdnCurator.listAll()).thenReturn(new LinkedList<>());
+        when(consumerTypeCurator.listAll()).thenReturn(new LinkedList<>());
+        when(ownerCurator.findOwnerById(owner.getId())).thenReturn(owner);
 
-        when(cdnc.listAll()).thenReturn(new LinkedList<>());
-        when(ctc.listAll()).thenReturn(new LinkedList<>());
-
-        when(consumer.getOwnerId()).thenReturn(owner.getId());
-        when(oc.findOwnerById(owner.getId())).thenReturn(owner);
+        Consumer consumer = new Consumer()
+            .setEntitlements(Set.of(ent))
+            .setIdCert(idcert)
+            .setKeyPairData(keyPairData)
+            .setOwner(owner);
 
         // FINALLY test this badboy
         Exporter exporter = this.buildExporter();
@@ -271,35 +308,36 @@ public class ExporterTest {
         assertTrue(new File("/tmp/consumer_export.zip").delete());
         assertTrue(new File("/tmp/12345.json").delete());
         assertTrue(new File("/tmp/332211.json").delete());
+
+        // Should use legacy signature file
+        assertFalse(this.verifyHasEntry(export, SIGNATURE_FILENAME));
     }
 
     @Test
     public void doNotExportDirtyEntitlements() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
-        Consumer consumer = mock(Consumer.class);
         Entitlement ent = mock(Entitlement.class);
         Principal principal = mock(Principal.class);
         IdentityCertificate idcert = new IdentityCertificate();
 
-        List<Entitlement> entitlements = new ArrayList<>();
-        entitlements.add(ent);
-
-        when(pprov.get()).thenReturn(principal);
+        when(principalProvider.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
-
-        when(ec.listByConsumer(consumer)).thenReturn(entitlements);
         when(ent.isDirty()).thenReturn(true);
         idcert.setSerial(new CertificateSerial(10L, new Date()));
         idcert.setKey("euh0876puhapodifbvj094");
         idcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
         idcert.setCreated(new Date());
         idcert.setUpdated(new Date());
-        when(consumer.getIdCert()).thenReturn(idcert);
 
-        KeyPairData keyPairData = this.generateConsumerKeyPairData();
-        when(consumer.getKeyPairData()).thenReturn(keyPairData);
+        KeyPairData keyPairData = this.generateConsumerKeyPairData(null);
 
-        when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
+        Consumer consumer = new Consumer()
+            .setEntitlements(Set.of(ent))
+            .setIdCert(idcert)
+            .setKeyPairData(keyPairData);
+
+        when(entitlementCurator.listByConsumer(consumer)).thenReturn(List.of(ent));
+        when(consumerTypeCurator.listAll()).thenReturn(List.of(new ConsumerType("system")));
 
         Exporter exporter = this.buildExporter();
         assertThrows(ExportCreationException.class, () -> exporter.getFullExport(consumer, null, null, null));
@@ -310,13 +348,12 @@ public class ExporterTest {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
         Instant start = Instant.now().minusSeconds(1L);
         Rules mrules = mock(Rules.class);
-        Consumer consumer = mock(Consumer.class);
         Principal principal = mock(Principal.class);
         IdentityCertificate idcert = new IdentityCertificate();
 
         when(mrules.getRules()).thenReturn("foobar");
-        when(rc.getRules()).thenReturn(mrules);
-        when(pprov.get()).thenReturn(principal);
+        when(rulesCurator.getRules()).thenReturn(mrules);
+        when(principalProvider.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
 
         idcert.setSerial(new CertificateSerial(10L, new Date()));
@@ -324,14 +361,15 @@ public class ExporterTest {
         idcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
         idcert.setCreated(new Date());
         idcert.setUpdated(new Date());
-        when(consumer.getIdCert()).thenReturn(idcert);
 
-        KeyPairData keyPairData = this.generateConsumerKeyPairData();
-        when(consumer.getKeyPairData()).thenReturn(keyPairData);
+        KeyPairData keyPairData = this.generateConsumerKeyPairData(null);
 
-        when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
+        Consumer consumer = new Consumer()
+            .setIdCert(idcert)
+            .setKeyPairData(keyPairData);
 
-        when(cdnc.listAll()).thenReturn(new LinkedList<>());
+        when(consumerTypeCurator.listAll()).thenReturn(List.of(new ConsumerType("system")));
+        when(cdnCurator.listAll()).thenReturn(new LinkedList<>());
 
         // FINALLY test this badboy
         Exporter exporter = this.buildExporter();
@@ -346,18 +384,20 @@ public class ExporterTest {
         FileUtils.deleteDirectory(export.getParentFile());
         assertTrue(new File("/tmp/consumer_export.zip").delete());
         assertTrue(new File("/tmp/meta.json").delete());
+
+        // Should use legacy signature file
+        assertFalse(this.verifyHasEntry(export, SIGNATURE_FILENAME));
     }
 
     @Test
     public void exportIdentityCertificate() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
         Rules mrules = mock(Rules.class);
-        Consumer consumer = mock(Consumer.class);
         Principal principal = mock(Principal.class);
 
         when(mrules.getRules()).thenReturn("foobar");
-        when(rc.getRules()).thenReturn(mrules);
-        when(pprov.get()).thenReturn(principal);
+        when(rulesCurator.getRules()).thenReturn(mrules);
+        when(principalProvider.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
 
         // specific to this test
@@ -367,14 +407,15 @@ public class ExporterTest {
         idcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
         idcert.setCreated(new Date());
         idcert.setUpdated(new Date());
-        when(consumer.getIdCert()).thenReturn(idcert);
 
-        KeyPairData keyPairData = this.generateConsumerKeyPairData();
-        when(consumer.getKeyPairData()).thenReturn(keyPairData);
+        KeyPairData keyPairData = this.generateConsumerKeyPairData(null);
 
-        when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
+        Consumer consumer = new Consumer()
+            .setIdCert(idcert)
+            .setKeyPairData(keyPairData);
 
-        when(cdnc.listAll()).thenReturn(new LinkedList<>());
+        when(consumerTypeCurator.listAll()).thenReturn(List.of(new ConsumerType("system")));
+        when(cdnCurator.listAll()).thenReturn(new LinkedList<>());
 
         // FINALLY test this badboy
         Exporter exporter = this.buildExporter();
@@ -384,6 +425,9 @@ public class ExporterTest {
         assertNotNull(export);
         assertTrue(export.exists());
         verifyContent(export, "export/upstream_consumer/10.pem", new VerifyIdentityCert("10.pem"));
+
+        // Should use legacy signature file
+        assertFalse(this.verifyHasEntry(export, SIGNATURE_FILENAME));
     }
 
     @Test
@@ -392,12 +436,11 @@ public class ExporterTest {
         config.setProperty(ConfigProperties.PREFIX_WEBURL, "localhost:8443/weburl");
         config.setProperty(ConfigProperties.PREFIX_APIURL, "localhost:8443/apiurl");
         Rules mrules = mock(Rules.class);
-        Consumer consumer = mock(Consumer.class);
         Principal principal = mock(Principal.class);
 
         when(mrules.getRules()).thenReturn("foobar");
-        when(rc.getRules()).thenReturn(mrules);
-        when(pprov.get()).thenReturn(principal);
+        when(rulesCurator.getRules()).thenReturn(mrules);
+        when(principalProvider.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
 
         // specific to this test
@@ -407,30 +450,33 @@ public class ExporterTest {
         idcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
         idcert.setCreated(new Date());
         idcert.setUpdated(new Date());
-        when(consumer.getIdCert()).thenReturn(idcert);
 
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
 
-        KeyPairData keyPairData = this.generateConsumerKeyPairData();
-        when(consumer.getKeyPairData()).thenReturn(keyPairData);
-        when(consumer.getUuid()).thenReturn("8auuid");
-        when(consumer.getName()).thenReturn("consumer_name");
-        when(consumer.getContentAccessMode()).thenReturn("access_mode");
-        when(consumer.getTypeId()).thenReturn(ctype.getId());
+        KeyPairData keyPairData = this.generateConsumerKeyPairData(null);
 
-        when(ctc.getConsumerType(consumer)).thenReturn(ctype);
-        when(ctc.get(ctype.getId())).thenReturn(ctype);
+        Consumer consumer = new Consumer()
+            .setUuid("8auuid")
+            .setName("consumer_name")
+            .setContentAccessMode("access_mode")
+            .setType(ctype)
+            .setIdCert(idcert)
+            .setKeyPairData(keyPairData);
 
-        when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
-
-        when(cdnc.listAll()).thenReturn(new LinkedList<>());
+        when(consumerTypeCurator.getConsumerType(consumer)).thenReturn(ctype);
+        when(consumerTypeCurator.get(ctype.getId())).thenReturn(ctype);
+        when(consumerTypeCurator.listAll()).thenReturn(List.of(new ConsumerType("system")));
+        when(cdnCurator.listAll()).thenReturn(new LinkedList<>());
 
         // FINALLY test this badboy
         Exporter exporter = this.buildExporter();
         File export = exporter.getFullExport(consumer, null, null, null);
 
         verifyContent(export, "export/consumer.json", new VerifyConsumer("consumer.json"));
+
+        // Should use legacy signature file
+        assertFalse(this.verifyHasEntry(export, SIGNATURE_FILENAME));
     }
 
     @Test
@@ -439,12 +485,11 @@ public class ExporterTest {
         config.setProperty(ConfigProperties.PREFIX_WEBURL, "localhost:8443/weburl");
         config.setProperty(ConfigProperties.PREFIX_APIURL, "localhost:8443/apiurl");
         Rules mrules = mock(Rules.class);
-        Consumer consumer = mock(Consumer.class);
         Principal principal = mock(Principal.class);
 
         when(mrules.getRules()).thenReturn("foobar");
-        when(rc.getRules()).thenReturn(mrules);
-        when(pprov.get()).thenReturn(principal);
+        when(rulesCurator.getRules()).thenReturn(mrules);
+        when(principalProvider.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
 
         IdentityCertificate idcert = new IdentityCertificate();
@@ -453,18 +498,22 @@ public class ExporterTest {
         idcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
         idcert.setCreated(new Date());
         idcert.setUpdated(new Date());
-        when(consumer.getIdCert()).thenReturn(idcert);
 
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
 
-        KeyPairData keyPairData = this.generateConsumerKeyPairData();
-        when(consumer.getKeyPairData()).thenReturn(keyPairData);
-        when(consumer.getUuid()).thenReturn("8auuid");
-        when(consumer.getName()).thenReturn("consumer_name");
-        when(consumer.getTypeId()).thenReturn(ctype.getId());
-        when(ctc.getConsumerType(consumer)).thenReturn(ctype);
-        when(ctc.get(ctype.getId())).thenReturn(ctype);
+        KeyPairData keyPairData = this.generateConsumerKeyPairData(null);
+
+        Consumer consumer = new Consumer()
+            .setUuid("8auuid")
+            .setName("consumer_name")
+            .setContentAccessMode("access_mode")
+            .setType(ctype)
+            .setIdCert(idcert)
+            .setKeyPairData(keyPairData);
+
+        when(consumerTypeCurator.getConsumerType(consumer)).thenReturn(ctype);
+        when(consumerTypeCurator.get(ctype.getId())).thenReturn(ctype);
 
         DistributorVersion dv = new DistributorVersion("test-dist-ver");
         Set<DistributorVersionCapability> dvcSet = new HashSet<>();
@@ -474,12 +523,12 @@ public class ExporterTest {
         dv.setCapabilities(dvcSet);
         List<DistributorVersion> dvList = new ArrayList<>();
         dvList.add(dv);
-        when(dvc.listAll()).thenReturn(dvList);
+        when(distributorVersionCurator.listAll()).thenReturn(dvList);
 
-        when(ctc.listAll()).thenReturn(List.of(new ConsumerType("system")));
+        when(consumerTypeCurator.listAll()).thenReturn(List.of(new ConsumerType("system")));
 
-        when(cdnc.listAll()).thenReturn(new LinkedList<>());
-        when(ctc.listAll()).thenReturn(new LinkedList<>());
+        when(cdnCurator.listAll()).thenReturn(new LinkedList<>());
+        when(consumerTypeCurator.listAll()).thenReturn(new LinkedList<>());
 
         // FINALLY test this badboy
         Exporter exporter = this.buildExporter();
@@ -487,27 +536,32 @@ public class ExporterTest {
 
         verifyContent(export, "export/distributor_version/test-dist-ver.json",
             new VerifyDistributorVersion("test-dist-ver.json"));
+
+        // Should use legacy signature file
+        assertFalse(this.verifyHasEntry(export, SIGNATURE_FILENAME));
     }
 
     @Test
     public void testGetEntitlementExport() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
 
-        // Setup consumer
-        Consumer consumer = mock(Consumer.class);
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
-        KeyPairData keyPairData = this.generateConsumerKeyPairData();
-        when(consumer.getKeyPairData()).thenReturn(keyPairData);
-        when(consumer.getUuid()).thenReturn("consumer");
-        when(consumer.getName()).thenReturn("consumer_name");
-        when(consumer.getTypeId()).thenReturn(ctype.getId());
-        when(ctc.getConsumerType(consumer)).thenReturn(ctype);
-        when(ctc.get(ctype.getId())).thenReturn(ctype);
+        KeyPairData keyPairData = this.generateConsumerKeyPairData(null);
+
+        Consumer consumer = new Consumer()
+            .setUuid("consumer")
+            .setName("consumer_name")
+            .setContentAccessMode("access_mode")
+            .setType(ctype)
+            .setKeyPairData(keyPairData);
+
+        when(consumerTypeCurator.getConsumerType(consumer)).thenReturn(ctype);
+        when(consumerTypeCurator.get(ctype.getId())).thenReturn(ctype);
 
         // Setup principal
         Principal principal = mock(Principal.class);
-        when(pprov.get()).thenReturn(principal);
+        when(principalProvider.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
 
         // Create dummy ent cert
@@ -526,7 +580,7 @@ public class ExporterTest {
         cac.setCert("content-access-cert");
         cac.setKey("content-access-key");
 
-        when(ecsa.listForConsumer(consumer)).thenReturn(List.of(entCert));
+        when(entitlementCertService.listForConsumer(consumer)).thenReturn(List.of(entCert));
         when(scaCertificateGenerator.generate(consumer)).thenReturn(cac);
 
         Exporter exporter = this.buildExporter();
@@ -541,27 +595,32 @@ public class ExporterTest {
 
         // Check consumer export has content access cert.
         assertTrue(verifyHasEntry(export, "export/content_access_certificates/654321.pem"));
+
+        // Should use legacy signature file
+        assertFalse(this.verifyHasEntry(export, SIGNATURE_FILENAME));
     }
 
     @Test
     public void testGetEntitlementExportWithUnknownSerialId() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
 
-        // Setup consumer
-        Consumer consumer = mock(Consumer.class);
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
-        KeyPairData keyPairData = this.generateConsumerKeyPairData();
-        doReturn(keyPairData).when(consumer).getKeyPairData();
-        doReturn("consumer").when(consumer).getUuid();
-        doReturn("consumer_name").when(consumer).getName();
-        doReturn(ctype.getId()).when(consumer).getTypeId();
-        doReturn(ctype).when(ctc).getConsumerType(consumer);
-        doReturn(ctype).when(ctc).get(ctype.getId());
+        KeyPairData keyPairData = this.generateConsumerKeyPairData(null);
+
+        Consumer consumer = new Consumer()
+            .setUuid("consumer")
+            .setName("consumer_name")
+            .setContentAccessMode("access_mode")
+            .setType(ctype)
+            .setKeyPairData(keyPairData);
+
+        doReturn(ctype).when(consumerTypeCurator).getConsumerType(consumer);
+        doReturn(ctype).when(consumerTypeCurator).get(ctype.getId());
 
         // Setup principal
         Principal principal = mock(Principal.class);
-        doReturn(principal).when(pprov).get();
+        doReturn(principal).when(principalProvider).get();
         doReturn("testUser").when(principal).getUsername();
 
         // Create dummy ent cert
@@ -580,7 +639,7 @@ public class ExporterTest {
         cac.setCert("content-access-cert");
         cac.setKey("content-access-key");
 
-        doReturn(List.of(entCert)).when(ecsa).listForConsumer(consumer);
+        doReturn(List.of(entCert)).when(entitlementCertService).listForConsumer(consumer);
         doReturn(cac).when(scaCertificateGenerator).generate(consumer);
 
         Exporter exporter = this.buildExporter();
@@ -596,27 +655,33 @@ public class ExporterTest {
 
         // Check consumer export does not have content access cert.
         assertFalse(verifyHasEntry(export, "export/content_access_certificates/654321.pem"));
+
+        // Should use legacy signature file
+        assertFalse(this.verifyHasEntry(export, SIGNATURE_FILENAME));
     }
 
     @Test
     public void testGetEntitlementExportWithValidEntitlementCertSerial() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
 
-        // Setup consumer
-        Consumer consumer = mock(Consumer.class);
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
-        KeyPairData keyPairData = this.generateConsumerKeyPairData();
-        doReturn(keyPairData).when(consumer).getKeyPairData();
-        doReturn("consumer").when(consumer).getUuid();
-        doReturn("consumer_name").when(consumer).getName();
-        doReturn(ctype.getId()).when(consumer).getTypeId();
-        doReturn(ctype).when(ctc).getConsumerType(consumer);
-        doReturn(ctype).when(ctc).get(ctype.getId());
+
+        KeyPairData keyPairData = this.generateConsumerKeyPairData(null);
+
+        Consumer consumer = new Consumer()
+            .setUuid("consumer")
+            .setName("consumer_name")
+            .setContentAccessMode("access_mode")
+            .setType(ctype)
+            .setKeyPairData(keyPairData);
+
+        doReturn(ctype).when(consumerTypeCurator).getConsumerType(consumer);
+        doReturn(ctype).when(consumerTypeCurator).get(ctype.getId());
 
         // Setup principal
         Principal principal = mock(Principal.class);
-        doReturn(principal).when(pprov).get();
+        doReturn(principal).when(principalProvider).get();
         doReturn("testUser").when(principal).getUsername();
 
         // Create dummy ent cert
@@ -635,7 +700,7 @@ public class ExporterTest {
         cac.setCert("content-access-cert");
         cac.setKey("content-access-key");
 
-        doReturn(List.of(entCert)).when(ecsa).listForConsumer(consumer);
+        doReturn(List.of(entCert)).when(entitlementCertService).listForConsumer(consumer);
         doReturn(cac).when(scaCertificateGenerator).generate(consumer);
 
         Exporter exporter = this.buildExporter();
@@ -651,27 +716,33 @@ public class ExporterTest {
 
         // Check consumer export does not have content access cert.
         assertFalse(verifyHasEntry(export, "export/content_access_certificates/654321.pem"));
+
+        // Should use legacy signature file
+        assertFalse(this.verifyHasEntry(export, SIGNATURE_FILENAME));
     }
 
     @Test
     public void testGetEntitlementExportWithValidContentAccessCertSerial() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
 
-        // Setup consumer
-        Consumer consumer = mock(Consumer.class);
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
-        KeyPairData keyPairData = this.generateConsumerKeyPairData();
-        doReturn(keyPairData).when(consumer).getKeyPairData();
-        doReturn("consumer").when(consumer).getUuid();
-        doReturn("consumer_name").when(consumer).getName();
-        doReturn(ctype.getId()).when(consumer).getTypeId();
-        doReturn(ctype).when(ctc).getConsumerType(consumer);
-        doReturn(ctype).when(ctc).get(ctype.getId());
+
+        KeyPairData keyPairData = this.generateConsumerKeyPairData(null);
+
+        Consumer consumer = new Consumer()
+            .setUuid("consumer")
+            .setName("consumer_name")
+            .setContentAccessMode("access_mode")
+            .setType(ctype)
+            .setKeyPairData(keyPairData);
+
+        doReturn(ctype).when(consumerTypeCurator).getConsumerType(consumer);
+        doReturn(ctype).when(consumerTypeCurator).get(ctype.getId());
 
         // Setup principal
         Principal principal = mock(Principal.class);
-        doReturn(principal).when(pprov).get();
+        doReturn(principal).when(principalProvider).get();
         doReturn("testUser").when(principal).getUsername();
 
         // Create dummy ent cert
@@ -690,7 +761,7 @@ public class ExporterTest {
         cac.setCert("content-access-cert");
         cac.setKey("content-access-key");
 
-        doReturn(List.of(entCert)).when(ecsa).listForConsumer(consumer);
+        doReturn(List.of(entCert)).when(entitlementCertService).listForConsumer(consumer);
         doReturn(cac).when(scaCertificateGenerator).generate(consumer);
 
         Exporter exporter = this.buildExporter();
@@ -706,6 +777,115 @@ public class ExporterTest {
 
         // Check consumer export has content access cert.
         assertTrue(verifyHasEntry(export, "export/content_access_certificates/654321.pem"));
+
+        // Should use legacy signature file
+        assertFalse(this.verifyHasEntry(export, SIGNATURE_FILENAME));
+    }
+
+    @Test
+    public void testGetFullExportWithUnknownSchema() throws KeyException {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        IdentityCertificate idcert = new IdentityCertificate();
+        idcert.setSerial(new CertificateSerial(10L, new Date()));
+        idcert.setKey(TestUtil.randomString("key-"));
+        idcert.setCert(TestUtil.randomString("cert-"));
+        idcert.setCreated(new Date());
+        idcert.setUpdated(new Date());
+
+        Consumer consumer = CryptoUtil.configureConsumerWithNoSelectableScheme(new Consumer()
+            .setIdCert(idcert)
+            .setKeyPairData(generateConsumerKeyPairData(null)));
+
+        Rules mockRules = mock(Rules.class);
+        when(mockRules.getRules()).thenReturn("rules");
+
+        when(rulesCurator.getRules()).thenReturn(mockRules);
+        when(principalProvider.get()).thenReturn(new UserPrincipal("testUser", List.of(), false));
+        when(consumerTypeCurator.listAll()).thenReturn(List.of(new ConsumerType("system")));
+        when(cdnCurator.listAll()).thenReturn(new LinkedList<>());
+        when(entitlementCurator.listByConsumer(consumer)).thenReturn(List.of());
+        when(entitlementCertService.listForConsumer(consumer)).thenReturn(List.of());
+
+        Exporter exporter = this.buildExporter();
+
+        assertThrows(CryptoCapabilitiesException.class, () -> exporter.getFullExport(consumer,
+            TestUtil.randomString(), TestUtil.randomString(), TestUtil.randomString()));
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetFullExportWithSupportedSchemas(Scheme scheme) throws Exception {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        IdentityCertificate idcert = new IdentityCertificate();
+        idcert.setSerial(new CertificateSerial(10L, new Date()));
+        idcert.setKey(TestUtil.randomString("key-"));
+        idcert.setCert(TestUtil.randomString("cert-"));
+        idcert.setCreated(new Date());
+        idcert.setUpdated(new Date());
+
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer()
+            .setIdCert(idcert)
+            .setKeyPairData(generateConsumerKeyPairData(scheme)), scheme);
+
+        Rules mockRules = mock(Rules.class);
+        when(mockRules.getRules()).thenReturn("rules");
+
+        when(rulesCurator.getRules()).thenReturn(mockRules);
+        when(principalProvider.get()).thenReturn(new UserPrincipal("testUser", List.of(), false));
+        when(consumerTypeCurator.listAll()).thenReturn(List.of(new ConsumerType("system")));
+        when(cdnCurator.listAll()).thenReturn(new LinkedList<>());
+        when(entitlementCurator.listByConsumer(consumer)).thenReturn(List.of());
+        when(entitlementCertService.listForConsumer(consumer)).thenReturn(List.of());
+
+        Exporter exporter = this.buildExporter();
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
+            TestUtil.randomString());
+
+        assertNotNull(export);
+        assertTrue(export.exists());
+        assertTrue(this.verifyHasEntry(export, SIGNATURE_FILENAME));
+    }
+
+    @Test
+    public void testGetEntitlementExportWithUnknownSchema() throws KeyException {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        Consumer consumer = CryptoUtil.configureConsumerWithNoSelectableScheme(new Consumer()
+            .setUuid("consumer")
+            .setName("consumer_name")
+            .setKeyPairData(generateConsumerKeyPairData(null)));
+
+        when(principalProvider.get()).thenReturn(new UserPrincipal("testUser", List.of(), false));
+        when(entitlementCertService.listForConsumer(consumer)).thenReturn(List.of());
+
+        Exporter exporter = this.buildExporter();
+
+        ExportCreationException ex = assertThrows(ExportCreationException.class,
+            () -> exporter.getEntitlementExport(consumer, null));
+        assertInstanceOf(CryptoCapabilitiesException.class, ex.getCause());
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetEntitlementExportWithSupportedSchemas(Scheme scheme) throws Exception {
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer()
+            .setUuid("consumer")
+            .setName("consumer_name")
+            .setKeyPairData(generateConsumerKeyPairData(scheme)), scheme);
+
+        when(principalProvider.get()).thenReturn(new UserPrincipal("testUser", List.of(), false));
+        when(entitlementCertService.listForConsumer(consumer)).thenReturn(List.of());
+
+        Exporter exporter = this.buildExporter();
+        File export = exporter.getEntitlementExport(consumer, null);
+
+        assertNotNull(export);
+        assertTrue(export.exists());
+        assertTrue(this.verifyHasEntry(export, SIGNATURE_FILENAME));
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -15,6 +15,7 @@
 package org.candlepin.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -28,6 +29,7 @@ import org.candlepin.dto.api.client.v1.CloudAuthenticationResultDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
+import org.candlepin.dto.api.client.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.dto.api.client.v1.ExportResultDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
@@ -40,8 +42,6 @@ import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.HostedTestApi;
 import org.candlepin.resource.client.v1.CdnApi;
 import org.candlepin.resource.client.v1.ConsumerTypeApi;
-import org.candlepin.resource.client.v1.OwnerContentApi;
-import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.resource.client.v1.RolesApi;
 import org.candlepin.resource.client.v1.RulesApi;
 import org.candlepin.resource.client.v1.UsersApi;
@@ -79,6 +79,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
 import java.io.IOException;
@@ -112,6 +116,14 @@ class ExportSpecTest {
     private static final String CONTENT_ACCESS_CERTS_PATH = "export/content_access_certificates/";
     private static final String CDN_PATH = "export/content_delivery_network/";
     private static final String RULES_PATH = "export/rules2/";
+    private static final String SIGNATURE_FILENAME = "signature.json";
+    private static final String LEGACY_SIGNATURE_FILENAME = "signature";
+
+    private static Stream<Arguments> capabilitiesSource() {
+        return CryptoCapabilities.getSupportedCapabilities()
+            .stream()
+            .map(Arguments::of);
+    }
 
     @Test
     void shouldAllowManifestCreationWithReadOnlyUser() throws Exception {
@@ -255,6 +267,31 @@ class ExportSpecTest {
         assertThat(entitlementCerts).singleElement();
     }
 
+
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldExportSignature(CryptographicCapabilitiesDTO capabilities) throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers
+            .random(owner)
+            .cryptographicCapabilities(capabilities));
+
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        File manifest = consumerClient.consumers().exportCertificatesInZipFormat(consumer.getUuid(), null);
+        ZipFile export = ExportUtil.getExportArchive(manifest);
+
+        ZipEntry entry = export.getEntry(signatureFileName);
+
+        this.assertSignature(entry, legacy);
+    }
+
+    @Test
+    public void shouldExportLegacySignature() throws Exception {
+
+    }
+
     @Test
     @OnlyInHosted
     @OnlyWithCapability("cloud_registration")
@@ -297,8 +334,6 @@ class ExportSpecTest {
     class StandardExporter {
         private ApiClient client;
         private OwnerClient ownerApi;
-        private OwnerContentApi ownerContentApi;
-        private OwnerProductApi ownerProductApi;
         private CdnApi cdnApi;
         private ConsumerClient consumerApi;
         private ConsumerTypeApi consumerTypeApi;
@@ -319,8 +354,6 @@ class ExportSpecTest {
         void beforeEach() throws Exception {
             client = ApiClients.admin();
             ownerApi = client.owners();
-            ownerContentApi = client.ownerContent();
-            ownerProductApi = client.ownerProducts();
             cdnApi = client.cdns();
             consumerApi = client.consumers();
             consumerTypeApi = client.consumerTypes();
@@ -624,7 +657,7 @@ class ExportSpecTest {
             this.owner = ownerApi.createOwner(Owners.random());
 
             UserDTO user = usersApi.createUser(Users.random());
-            RoleDTO role = rolesApi.createRole(Roles.ownerAll(owner).addUsersItem(user));
+            rolesApi.createRole(Roles.ownerAll(owner).addUsersItem(user));
 
             // prep data for creation upstream
             ProductDTO engProduct = Products.randomEng();

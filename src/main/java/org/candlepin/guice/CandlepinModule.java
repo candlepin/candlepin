@@ -176,6 +176,7 @@ import org.candlepin.sync.ConsumerTypeExporter;
 import org.candlepin.sync.Exporter;
 import org.candlepin.sync.MetaExporter;
 import org.candlepin.sync.RulesExporter;
+import org.candlepin.sync.SignatureFileExporter;
 import org.candlepin.sync.SyncUtils;
 import org.candlepin.util.AttributeValidator;
 import org.candlepin.util.DateSource;
@@ -500,6 +501,7 @@ public class CandlepinModule extends AbstractModule {
         bind(ConsumerTypeExporter.class);
         bind(ConsumerExporter.class);
         bind(RulesExporter.class);
+        bind(SignatureFileExporter.class);
     }
 
     private void configureActiveMQComponents() {
