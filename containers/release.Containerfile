@@ -3,29 +3,26 @@ FROM registry.access.redhat.com/ubi9-minimal:latest as builder
 ARG WAR_FILE
 
 RUN microdnf -y update && \
-    microdnf install -y java-17-openjdk-devel wget tar && \
+    microdnf install -y openssl tar gzip && \
     microdnf clean all
 
-USER root
-
 # Prepare Tomcat
-RUN wget --max-redirect=0 https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.76/bin/apache-tomcat-9.0.76.tar.gz; \
-    tar xzf apache-tomcat-9.0.76.tar.gz; \
-    mkdir /opt/tomcat; \
-    mv apache-tomcat-9.0.76/* /opt/tomcat/
+ARG TOMCAT_VERSION=9.0.110
+COPY apache-tomcat-${TOMCAT_VERSION}.tar.gz /tmp/
+RUN tar xzf /tmp/apache-tomcat-${TOMCAT_VERSION}.tar.gz -C /tmp && \
+    mkdir /opt/tomcat && \
+    mv /tmp/apache-tomcat-${TOMCAT_VERSION}/* /opt/tomcat/
 
 # Prepare Candlepin
-RUN mkdir -p /app/build/candlepin
+RUN mkdir -p /app/build
 WORKDIR /app/build
 COPY ${WAR_FILE} ./candlepin.war
-WORKDIR /app/build/candlepin
-RUN jar xvf /app/build/candlepin.war
 
 # Prepare development certs
 RUN mkdir -p /app/certs
 WORKDIR /app/certs
 COPY ./bin/deployment/gen_certs.sh .
-RUN ./gen_certs.sh --cert_out ./candlepin-ca.crt --key_out ./candlepin-ca.key --hostname candlepin; \
+RUN ./gen_certs.sh --cert_dir ./ --hostname candlepin; \
     rm gen_certs.sh;
 
 ################################# Production Image #################################
@@ -46,14 +43,13 @@ which is designed to manage software subscriptions from both vendor's & customer
 
 USER root
 
-# Update and install dependencies
 RUN microdnf -y update && \
     microdnf -y update ca-certificates && \
-    microdnf install -y java-17-openjdk-headless initscripts && \
+    microdnf install -y java-25-openjdk-headless initscripts && \
     microdnf clean all
 
-ENV JAVA_HOME=/usr/lib/jvm/jre-17-openjdk
-ENV JRE_HOME=/usr/lib/jvm/jre-17-openjdk
+ENV JAVA_HOME=/usr/lib/jvm/jre-25-openjdk
+ENV JRE_HOME=/usr/lib/jvm/jre-25-openjdk
 ENV CATALINA_OPTS=-Djavax.net.ssl.trustStore=$JAVA_HOME/lib/security/cacerts
 
 # Tomcat Setup
@@ -79,7 +75,6 @@ WORKDIR /opt/tomcat/bin
 
 USER tomcat
 
-# Expose ports for tomcat, candlepin, postgres and mariadb
 EXPOSE 8080 8443 5432 3306
 
 ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "run"]
@@ -97,7 +92,6 @@ USER root
 
 ENV CATALINA_OPTS="$CATALINA_OPTS -Xdebug -Xrunjdwp:transport=dt_socket,address=*:8000,server=y,suspend=n"
 
-# Copy the generated candlepin.conf (run ./gradlew generateConfig before docker build)
 COPY build/candlepin.conf /etc/candlepin/candlepin.conf
 RUN test -s /etc/candlepin/candlepin.conf || \
     (echo "ERROR: build/candlepin.conf is empty. Run ./gradlew generateConfig first." >&2 && exit 1)
@@ -106,7 +100,6 @@ RUN test -s /etc/candlepin/candlepin.conf || \
 WORKDIR /etc/candlepin/certs
 COPY --from=builder /app/certs /etc/candlepin/certs
 
-# Add the certificate to the Java trust store
 RUN ln -s /etc/candlepin/certs/*.crt /etc/pki/ca-trust/source/anchors --force; \
     update-ca-trust;
 
@@ -117,7 +110,6 @@ WORKDIR /opt/tomcat/bin
 
 USER tomcat
 
-# Expose ports for tomcat, candlepin, postgres and mariadb
 EXPOSE 8080 8443 5432 3306
 
 ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "run"]
