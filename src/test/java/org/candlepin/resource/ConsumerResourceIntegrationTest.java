@@ -1273,7 +1273,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             .isNotNull()
             .doesNotReturn(null, ConsumerDTO::getIdCert);
 
-        X509Certificate certificate = CryptoUtil.parseCertificateFromDto(output.getIdCert());
+        X509Certificate certificate = CryptoUtil.extractCertificateFromContainer(output.getIdCert());
         assertEquals(algorithmOid, certificate.getSigAlgOID());
     }
 
@@ -1301,7 +1301,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             .isNotNull()
             .doesNotReturn(null, ConsumerDTO::getIdCert);
 
-        PrivateKey pkey = CryptoUtil.parsePrivateKeyFromDto(output.getIdCert());
+        PrivateKey pkey = CryptoUtil.extractPrivateKeyFromContainer(output.getIdCert());
         String receivedAlgorithmOid = oidUtil.getKeyAlgorithmOid(pkey.getAlgorithm())
             .orElseThrow(() -> new RuntimeException("Unable to convert received algorithm name to an OID"));
 

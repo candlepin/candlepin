@@ -48,7 +48,6 @@ import java.io.Reader;
 import java.io.Writer;
 import java.security.KeyException;
 import java.security.PrivateKey;
-import java.util.List;
 import java.util.stream.Stream;
 
 
@@ -60,11 +59,9 @@ import java.util.stream.Stream;
  */
 public abstract class PrivateKeyReaderTest {
 
-    // A list of known, supported schemes
-    private static final List<Scheme> SUPPORTED_SCHEMES = CryptoUtil.generateSupportedSchemes().toList();
-
     private static Stream<Arguments> schemeSource() {
-        return SUPPORTED_SCHEMES.stream()
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
+            .stream()
             .map(Arguments::of);
     }
 

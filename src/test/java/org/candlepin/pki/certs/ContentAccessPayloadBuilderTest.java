@@ -66,14 +66,10 @@ public class ContentAccessPayloadBuilderTest extends DatabaseTestFixture {
     // The crypto manager we'll use for these tests
     private static final CryptoManager CRYPTO_MANAGER = CryptoUtil.getCryptoManager();
 
-    // A mapping of known, supported schemes
-    private static final Map<String, Scheme> SUPPORTED_SCHEMES = CryptoUtil.generateSupportedSchemes()
-        .collect(Collectors.toMap(Scheme::name, Function.identity()));
-
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static Stream<Arguments> schemeSource() {
-        return SUPPORTED_SCHEMES.values()
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
             .stream()
             .map(Arguments::of);
     }
@@ -315,7 +311,7 @@ public class ContentAccessPayloadBuilderTest extends DatabaseTestFixture {
 
     @Test
     public void testBuildRequiresOwner() throws Exception {
-        Scheme scheme = SUPPORTED_SCHEMES.values().stream().findAny().get();
+        Scheme scheme = CryptoUtil.SUPPORTED_SCHEMES.values().stream().findAny().get();
         Owner owner = this.createOwner();
         Consumer consumer = this.createConsumer(owner);
         Environment environment = this.buildEnvironment(owner, "env1");
@@ -330,7 +326,7 @@ public class ContentAccessPayloadBuilderTest extends DatabaseTestFixture {
 
     @Test
     public void testBuildRequiresConsumer() throws Exception {
-        Scheme scheme = SUPPORTED_SCHEMES.values().stream().findAny().get();
+        Scheme scheme = CryptoUtil.SUPPORTED_SCHEMES.values().stream().findAny().get();
         Owner owner = this.createOwner();
         Environment environment = this.buildEnvironment(owner, "env1");
 
@@ -344,7 +340,7 @@ public class ContentAccessPayloadBuilderTest extends DatabaseTestFixture {
 
     @Test
     public void testBuildDoesNotRequiresEnvironments() throws Exception {
-        Scheme scheme = SUPPORTED_SCHEMES.values().stream().findAny().get();
+        Scheme scheme = CryptoUtil.SUPPORTED_SCHEMES.values().stream().findAny().get();
         Owner owner = this.createOwner();
         Consumer consumer = this.createConsumer(owner);
 

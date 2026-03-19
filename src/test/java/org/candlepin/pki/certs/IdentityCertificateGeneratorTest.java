@@ -44,15 +44,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.security.KeyException;
 import java.security.cert.CertificateException;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class IdentityCertificateGeneratorTest extends DatabaseTestFixture {
-    private static final Map<String, Scheme> SUPPORTED_SCHEMES = CryptoUtil.generateSupportedSchemes()
-        .collect(Collectors.toMap(Scheme::name, Function.identity()));
-
     private CryptoManager cryptoManager;
 
     private IdentityCertificateGenerator identityCertificateGenerator;
@@ -94,7 +88,7 @@ public class IdentityCertificateGeneratorTest extends DatabaseTestFixture {
     }
 
     private static Stream<Arguments> schemeSource() {
-        return IdentityCertificateGeneratorTest.SUPPORTED_SCHEMES.values()
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
             .stream()
             .map(Arguments::of);
     }
