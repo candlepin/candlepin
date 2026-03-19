@@ -8,6 +8,8 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: |
-        sed "" ${{ inputs.varFilePath }} >> $GITHUB_ENV
+    - env:
+        VAR_FILE_PATH: ${{ inputs.varFilePath }}
+      run: |
+        sed "" "$VAR_FILE_PATH" >> "$GITHUB_ENV"
       shell: bash
