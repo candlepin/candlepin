@@ -1,7 +1,7 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Pino Toscano <toscano.pino@tiscali.it>, 2023, 2024.
 # John Sefler <jsefler@redhat.com>, 2023.
-# Salvatore Cocuzza <info@salvatorecocuzza.it>, 2025.
+# Salvatore Cocuzza <info@salvatorecocuzza.it>, 2025, 2026.
 # Nikos Moumoulidis <nmoumoul@redhat.com>, 2025.
 # Nathan <nathan95@live.it>, 2026.
 msgid ""
@@ -9,8 +9,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-01-29 07:33+0000\n"
-"PO-Revision-Date: 2026-01-20 12:58+0000\n"
-"Last-Translator: Nathan <nathan95@live.it>\n"
+"PO-Revision-Date: 2026-03-05 22:58+0000\n"
+"Last-Translator: Salvatore Cocuzza <info@salvatorecocuzza.it>\n"
 "Language-Team: Italian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/it/>\n"
 "Language: it\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.15.2\n"
+"X-Generator: Weblate 5.16.1\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -1052,6 +1052,7 @@ msgstr "L''organizzazione {0} non esiste"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:422
 msgid "Consumer package profile uploads are not implemented"
 msgstr ""
+"I caricamenti del profilo del pacchetto consumatore non sono implementati"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
