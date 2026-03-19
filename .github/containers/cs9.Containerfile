@@ -76,7 +76,7 @@ COPY --from=builder /app/certs /etc/candlepin/certs
 RUN ln -s /etc/candlepin/certs/*.crt /etc/pki/ca-trust/source/anchors --force; \
     update-ca-trust;
 
-COPY ./containers/server.xml /opt/tomcat/conf
+COPY ./.github/containers/server.xml /opt/tomcat/conf
 
 WORKDIR /opt/tomcat/bin
 
