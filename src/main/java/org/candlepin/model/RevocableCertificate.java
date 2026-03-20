@@ -56,8 +56,9 @@ public abstract class RevocableCertificate<T extends RevocableCertificate> exten
         return serial;
     }
 
-    public void setSerial(CertificateSerial serialNumber) {
+    public T setSerial(CertificateSerial serialNumber) {
         this.serial = serialNumber;
+        return (T) this;
     }
 
     /**

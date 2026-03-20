@@ -17,6 +17,7 @@ package org.candlepin.pki.impl.bc;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.ConfigurationException;
+import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.pki.CertificateReader;
@@ -211,7 +212,7 @@ public class BouncyCastleCryptoManager implements CryptoManager {
         // if the consumer has indicated no support at all, it is likely a legacy consumer, and it should be
         // given the default scheme
         if (supportedKeyAlgoOids == null && supportedSignatureAlgoOids == null) {
-            log.debug("Consumer has provided no crypto capabilities, returning default scheme");
+            log.debug("Caller has provided no crypto capabilities, returning default scheme");
             return Optional.of(this.getDefaultCryptoScheme());
         }
 
@@ -249,6 +250,30 @@ public class BouncyCastleCryptoManager implements CryptoManager {
         // auth negotiation
         ConsumerType ctype = consumer.getType();
         if (!(this.enableSchemeNegotiation || (ctype != null && ctype.isManifest()))) {
+            log.debug("Scheme negotiation is disabled and consumer is not a manifest consumer, " +
+                "returning default scheme");
+
+            return this.getDefaultCryptoScheme();
+        }
+        // end temp logic
+
+        Set<String> supportedKeyAlgoOids = consumer.getSupportedKeyAlgorithmOids();
+        Set<String> supportedSignatureAlgoOids = consumer.getSupportedSignatureAlgorithmOids();
+
+        return this.getCryptoScheme(supportedKeyAlgoOids, supportedSignatureAlgoOids)
+            .orElseThrow(() -> new CryptoCapabilitiesException("Unable to negotiate a crypto scheme for " +
+                "the given consumer: " + consumer.getUuid()));
+    }
+
+    @Override
+    public Scheme getCryptoScheme(AnonymousCloudConsumer consumer) throws CryptoCapabilitiesException {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        // TODO: FIXME: Temporary gating; remove this logic once all dependent services support PQC certs and
+        // auth negotiation
+        if (!this.enableSchemeNegotiation) {
             log.debug("Scheme negotiation is disabled and consumer is not a manifest consumer, " +
                 "returning default scheme");
 
