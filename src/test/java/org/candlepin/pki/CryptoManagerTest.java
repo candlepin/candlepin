@@ -27,6 +27,7 @@ import org.candlepin.config.Configuration;
 import org.candlepin.config.ConfigurationException;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
+import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.test.CryptoUtil;
@@ -546,7 +547,6 @@ public abstract class CryptoManagerTest {
 
         // This test verifies that the isUsingDefaultCryptoScheme check returns false even in the case that
         // the algorithms they provide are not supported.
-
         OidUtil oidUtil = CryptoUtil.getOidUtil();
 
         String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
@@ -579,7 +579,6 @@ public abstract class CryptoManagerTest {
 
         // This test verifies that the isUsingDefaultCryptoScheme check returns false even in the case that
         // the algorithms they provide are not supported.
-
         OidUtil oidUtil = CryptoUtil.getOidUtil();
 
         String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
@@ -625,6 +624,216 @@ public abstract class CryptoManagerTest {
 
         assertThrows(IllegalArgumentException.class,
             () -> cryptoManager.isUsingDefaultCryptoScheme((Consumer) null));
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetAnonCloudConsumerCryptoScheme(Scheme scheme) throws Exception {
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+        String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setSupportedKeyAlgorithmOids(Set.of(keyAlgoOid))
+            .setSupportedSignatureAlgorithmOids(Set.of(sigAlgoOid));
+
+        // Build a configuration that definitely contains and lists the scheme under test
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
+            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isEqualTo(scheme);
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetAnonCloudConsumerCryptoSchemeRespectsSchemeConfigPriorityOrder(Scheme target)
+        throws Exception {
+
+        DevConfig config = TestConfig.defaults();
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        Set<String> keyAlgoOids = new HashSet<>();
+        Set<String> sigAlgoOids = new HashSet<>();
+
+        LinkedHashSet<Scheme> orderedSchemes = new LinkedHashSet<>();
+        orderedSchemes.add(target);
+        orderedSchemes.addAll(CryptoUtil.SUPPORTED_SCHEMES.values());
+
+        for (Scheme scheme : orderedSchemes) {
+            CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+
+            String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+                .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+            String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+                .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+            keyAlgoOids.add(keyAlgoOid);
+            sigAlgoOids.add(sigAlgoOid);
+        }
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setSupportedKeyAlgorithmOids(keyAlgoOids)
+            .setSupportedSignatureAlgorithmOids(sigAlgoOids);
+
+        // Set the configuration such that it definitely contains and lists the scheme under test
+        List<String> schemesList = orderedSchemes.stream()
+            .map(Scheme::name)
+            .toList();
+
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(",", schemesList));
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isEqualTo(target);
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetAnonCloudConsumerCryptoSchemeAllowsIndicatingOnlyKeyCapabilities(Scheme scheme)
+        throws Exception {
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+        // Setup the consumer such that it only indicates which key algorithms it supports, allowing us to
+        // select the "best" signature algorithm of our choosing so long as the scheme uses a supported key
+        // algorithm
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setSupportedKeyAlgorithmOids(Set.of(keyAlgoOid))
+            .setSupportedSignatureAlgorithmOids(null);
+
+        // Build a configuration that definitely contains and lists the scheme under test
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
+            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isEqualTo(scheme);
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetAnonCloudConsumerCryptoSchemeAllowsIndicatingOnlySignatureCapabilities(Scheme scheme)
+        throws Exception {
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+        // Setup the consumer such that it only indicates which signature algorithms it supports, allowing us
+        // to select the "best" key algorithm of our choosing so long as the scheme uses a supported signature
+        // algorithm
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setSupportedKeyAlgorithmOids(null)
+            .setSupportedSignatureAlgorithmOids(Set.of(sigAlgoOid));
+
+        // Build a configuration that definitely contains and lists the scheme under test
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
+            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isEqualTo(scheme);
+    }
+
+    @Test
+    public void testGetAnonCloudConsumerCryptoSchemeReturnsDefaultSchemeWhenNoCapabilitiesAreDefined()
+        throws Exception {
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setSupportedKeyAlgorithmOids(null)
+            .setSupportedSignatureAlgorithmOids(null);
+
+        CryptoManager cryptoManager = this.buildCryptoManager();
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isEqualTo(cryptoManager.getDefaultCryptoScheme());
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetAnonCloudConsumerCryptoSchemeThrowsExceptionWhenKeyAlgorithmIsNotSupported(
+        Scheme scheme) throws Exception {
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+        String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+        // Reverse the key algorithm OID to guarantee it doesn't match our scheme's key algo OID
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setSupportedKeyAlgorithmOids(Set.of(reverseOid(keyAlgoOid)))
+            .setSupportedSignatureAlgorithmOids(Set.of(sigAlgoOid));
+
+        // Build a configuration that definitely contains and lists the scheme under test
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
+            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThrows(CryptoCapabilitiesException.class, () -> cryptoManager.getCryptoScheme(consumer));
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetAnonCloudConsumerCryptoSchemeThrowsExceptionWhenSignatureAlgorithmIsNotSupported(
+        Scheme scheme) throws Exception {
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+        String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+        // Reverse the key algorithm OID to guarantee it doesn't match our scheme's key algo OID
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setSupportedKeyAlgorithmOids(Set.of(keyAlgoOid))
+            .setSupportedSignatureAlgorithmOids(Set.of(reverseOid(sigAlgoOid)));
+
+        // Build a configuration that definitely contains and lists the scheme under test
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
+            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThrows(CryptoCapabilitiesException.class, () -> cryptoManager.getCryptoScheme(consumer));
+    }
+
+    @Test
+    public void testGetAnonCloudConsumerCryptoSchemeThrowsExceptionOnNullConsumer() throws Exception {
+        CryptoManager cryptoManager = this.buildCryptoManager();
+
+        assertThrows(IllegalArgumentException.class,
+            () -> cryptoManager.getCryptoScheme((AnonymousCloudConsumer) null));
     }
 
     @Test

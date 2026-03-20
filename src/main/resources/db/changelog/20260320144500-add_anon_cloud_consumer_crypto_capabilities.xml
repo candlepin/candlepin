@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="20260320144500-1" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="cp_anonymous_cloud_consumers" columnName="key_algorithm_oids"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="cp_anonymous_cloud_consumers">
+            <column name="key_algorithm_oids" type="VARCHAR(2048)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20260320144500-2" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="cp_anonymous_cloud_consumers" columnName="signature_algorithm_oids"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="cp_anonymous_cloud_consumers">
+            <column name="signature_algorithm_oids" type="VARCHAR(2048)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>
