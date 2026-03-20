@@ -151,7 +151,10 @@ class CertRevocationSpecTest {
 
     @Test
     public void shouldPutRevokedUberCertOnCrl() {
-        long certSerial = ownerClient.createUeberCertificate(owner.getKey()).getSerial().getSerial();
+        long certSerial = ownerClient.createUeberCertificate(owner.getKey(), null)
+            .getSerial()
+            .getSerial();
+
         ownerClient.deleteOwner(owner.getKey(), false, false);
         assertTrue(certificateRevocationListApi.getCurrentCrl().contains(certSerial));
     }
