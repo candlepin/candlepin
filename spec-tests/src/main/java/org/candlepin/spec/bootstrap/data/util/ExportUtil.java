@@ -17,11 +17,13 @@ package org.candlepin.spec.bootstrap.data.util;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -30,6 +32,8 @@ import java.util.zip.ZipFile;
  */
 public final class ExportUtil {
     private static final String EXPORT_NAME = "consumer_export.zip";
+    public static final String SIGNATURE_FILENAME = "signature.json";
+    public static final String LEGACY_SIGNATURE_FILENAME = "signature";
 
     private ExportUtil() {
         throw new UnsupportedOperationException();
@@ -64,6 +68,38 @@ public final class ExportUtil {
             }
 
             return new ZipFile(tmp);
+        }
+    }
+
+    public static JsonNode getSignatureFile(File manifest) throws IOException {
+        if (manifest == null) {
+            throw new IllegalArgumentException("manifest is null");
+        }
+
+        try (ZipFile zipFile = new ZipFile(manifest)) {
+            ZipEntry entry = zipFile.getEntry(SIGNATURE_FILENAME);
+            if (entry == null) {
+                return null;
+            }
+
+            File tmp = File.createTempFile("signature", ".json");
+            tmp.deleteOnExit();
+
+            try (InputStream istream = zipFile.getInputStream(entry)) {
+                return ApiClient.MAPPER.readTree(istream);
+            }
+        }
+    }
+
+    public static boolean legacySignatureFileExists(File manifest) throws IOException {
+        if (manifest == null) {
+            throw new IllegalArgumentException("manifest is null");
+        }
+
+        try (ZipFile zipFile = new ZipFile(manifest)) {
+            ZipEntry entry = zipFile.getEntry(LEGACY_SIGNATURE_FILENAME);
+
+            return entry != null;
         }
     }
 

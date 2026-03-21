@@ -15,13 +15,13 @@
 package org.candlepin.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.CdnDTO;
@@ -35,7 +35,6 @@ import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
-import org.candlepin.dto.api.client.v1.RoleDTO;
 import org.candlepin.dto.api.client.v1.SubscriptionDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
 import org.candlepin.invoker.client.ApiException;
@@ -45,6 +44,7 @@ import org.candlepin.resource.client.v1.ConsumerTypeApi;
 import org.candlepin.resource.client.v1.RolesApi;
 import org.candlepin.resource.client.v1.RulesApi;
 import org.candlepin.resource.client.v1.UsersApi;
+import org.candlepin.spec.bootstrap.assertions.CertificateAssert;
 import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.assertions.OnlyWithCapability;
 import org.candlepin.spec.bootstrap.client.ApiClient;
@@ -60,6 +60,7 @@ import org.candlepin.spec.bootstrap.data.builder.Cdns;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.CryptoCapabilities;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
@@ -74,6 +75,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import org.apache.commons.codec.binary.Base64;
+import org.assertj.core.util.Files;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -82,11 +84,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -116,8 +119,6 @@ class ExportSpecTest {
     private static final String CONTENT_ACCESS_CERTS_PATH = "export/content_access_certificates/";
     private static final String CDN_PATH = "export/content_delivery_network/";
     private static final String RULES_PATH = "export/rules2/";
-    private static final String SIGNATURE_FILENAME = "signature.json";
-    private static final String LEGACY_SIGNATURE_FILENAME = "signature";
 
     private static Stream<Arguments> capabilitiesSource() {
         return CryptoCapabilities.getSupportedCapabilities()
@@ -275,21 +276,60 @@ class ExportSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers
-            .random(owner)
+            .random(owner, ConsumerTypes.Candlepin)
             .cryptographicCapabilities(capabilities));
-
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        File manifest = consumerClient.consumers().exportCertificatesInZipFormat(consumer.getUuid(), null);
-        ZipFile export = ExportUtil.getExportArchive(manifest);
+        File manifest = this.createExport(consumerClient, consumer.getUuid(), null);
+        
+        JsonNode signature = ExportUtil.getSignatureFile(manifest);
+        assertNotNull(signature,
+                String.format("%s file is not present in manifest", ExportUtil.SIGNATURE_FILENAME));
+        assertSignature(capabilities, signature);
 
-        ZipEntry entry = export.getEntry(signatureFileName);
+        // Legacy signature should not be present if the consumer defines cryptographic capabilities
+        assertFalse(ExportUtil.legacySignatureFileExists(manifest),
+            String.format("%s file should not be present in manifest", ExportUtil.LEGACY_SIGNATURE_FILENAME));
+    }
 
-        this.assertSignature(entry, legacy);
+    private void assertSignature(CryptographicCapabilitiesDTO capabilities, JsonNode root) {
+        assertNotNull(root.get("scheme"), "missing scheme in signature file");
+        JsonNode scheme = root.get("scheme");
+
+        assertNotNull(scheme.get("name"), "missing scheme name in signature file");
+
+        // TODO: Problem here
+
+        assertNotNull(scheme.get("certificate"), "missing scheme certificate in signature file");
+        String cert = scheme.get("certificate").asText();
+        cert = new String(Base64.decodeBase64(cert));
+
+        CertificateAssert.assertThatCert(cert)
+            .usesKeyAlgorithmMatchingCapabilities(capabilities)
+            .usesSignatureAlgorithmMatchingCapabilities(capabilities);
+
+        assertNotNull(scheme.get("signature_algorithm"), "missing scheme signature algorithm in signature file");
+        String signatureAlgo = scheme.get("signature_algorithm").asText();
+        assertThat(signatureAlgo)
+            .satisfies(capabilities.getSignatureAlgorithms()::contains);
+
+        assertNotNull(scheme.get("key_algorithm"), "missing scheme key algorithm in signature file");
+        String keyAlgo = scheme.get("key_algorithm").asText();
+        assertThat(keyAlgo)
+            .satisfies(capabilities.getKeyAlgorithms()::contains);
     }
 
     @Test
     public void shouldExportLegacySignature() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
+        ConsumerDTO consumer = adminClient.consumers()
+            .createConsumer(Consumers.random(owner, ConsumerTypes.Candlepin));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        File manifest = this.createExport(consumerClient, consumer.getUuid(), null);
+
+        assertTrue(ExportUtil.legacySignatureFileExists(manifest));
+        assertNull(ExportUtil.getSignatureFile(manifest));
     }
 
     @Test
@@ -750,6 +790,9 @@ class ExportSpecTest {
         String cdnName = cdn == null ? null : cdn.getName();
         String cdnUrl = cdn == null ? null : cdn.getUrl();
         File export = apiClient.consumers().exportData(consumerUuid, cdnLabel, cdnName, cdnUrl);
+
+        System.out.println("TESTING: Export file location - " + export.getAbsolutePath());
+
         export.deleteOnExit();
 
         return export;
