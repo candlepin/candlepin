@@ -264,6 +264,12 @@ public class ConfigProperties {
     public static final String CRYPTO_SCHEME_KEY_ALGORITHM = "key_algorithm";
     public static final String CRYPTO_SCHEME_KEY_SIZE = "key_size";
 
+    // TODO: FIXME: Temporary config controlling whether or not non-manifest consumers can perform crypto
+    // scheme negotiation. Remove this config once dependent systems are updated to support PQC certs and
+    // negotiation.
+    public static final String CRYPTO_CLIENT_NEGOTIATION_ENABLED =
+        "candlepin.crypto.temp.client_negotiation.enabled";
+
     /**
      * Fetches a string representing the prefix for all per-scheme configuration for the specified crypto
      * scheme.
@@ -456,6 +462,12 @@ public class ConfigProperties {
             this.put(LEGACY_CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
             this.put(LEGACY_CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
             this.put(LEGACY_CA_CERT_UPSTREAM, "/etc/candlepin/certs/upstream");
+
+            // TODO: FIXME: Temporary config controlling whether or not non-manifest consumers can perform
+            // crypto scheme negotiation. Remove this config once dependent systems are updated to support
+            // PQC certs and negotiation.
+            this.put(CRYPTO_CLIENT_NEGOTIATION_ENABLED, "true");
+            // end temp logic
 
             this.put(ACTIVATION_DEBUG_PREFIX, "");
 

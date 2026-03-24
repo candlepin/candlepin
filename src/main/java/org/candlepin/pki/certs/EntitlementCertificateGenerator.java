@@ -182,9 +182,7 @@ public class EntitlementCertificateGenerator {
             PromotedContent promotedContent = new PromotedContent(contentPathBuilder)
                 .withAll(environments);
 
-            Scheme scheme = this.cryptoManager.getCryptoScheme(consumer)
-                .orElseThrow(() -> new CryptoCapabilitiesException("cannot select scheme for consumer: " +
-                    consumer));
+            Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
 
             Map<String, EntitlementCertificate> entitlementCerts = new HashMap<>();
             boolean shouldCreateV3Certificate = shouldGenerateV3(consumer);
