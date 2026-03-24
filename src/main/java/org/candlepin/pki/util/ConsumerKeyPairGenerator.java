@@ -17,6 +17,7 @@ package org.candlepin.pki.util;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.KeyPairData;
 import org.candlepin.model.KeyPairDataCurator;
+import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.Scheme;
 
@@ -191,21 +192,23 @@ public class ConsumerKeyPairGenerator {
      * @throws IllegalArgumentException
      *  if the given consumer is null
      *
+     * @throws CryptoCapabilitiesException
+     *  if a crypto scheme cannot be negotiated for the given consumer
+     *
      * @throws KeyException
      *  if an exception occurs while generating (or regenerating) a key pair for the consumer
      *
      * @return
      *  the key pair for the given consumer
      */
-    public KeyPair getConsumerKeyPair(Consumer consumer) throws KeyException {
+    public KeyPair getConsumerKeyPair(Consumer consumer) throws CryptoCapabilitiesException, KeyException {
         if (consumer == null) {
             throw new IllegalArgumentException("consumer is null");
         }
 
         KeyPairData kpdata = consumer.getKeyPairData();
 
-        Scheme scheme = this.cryptoManager.getCryptoScheme(consumer)
-            .orElse(this.cryptoManager.getDefaultCryptoScheme());
+        Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
         String schemeKeyAlgorithm = this.buildAlgorithmString(scheme);
 
         // Check that the consumer even has a key pair to begin with

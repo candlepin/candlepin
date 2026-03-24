@@ -27,6 +27,7 @@ import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.test.CryptoUtil;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -258,8 +259,7 @@ public abstract class CryptoManagerTest {
         CryptoManager cryptoManager = this.buildCryptoManager(config);
 
         assertThat(cryptoManager.getCryptoScheme(consumer))
-            .isNotNull()
-            .hasValue(scheme);
+            .isEqualTo(scheme);
     }
 
     @ParameterizedTest
@@ -302,8 +302,7 @@ public abstract class CryptoManagerTest {
         CryptoManager cryptoManager = this.buildCryptoManager(config);
 
         assertThat(cryptoManager.getCryptoScheme(consumer))
-            .isNotNull()
-            .hasValue(target);
+            .isEqualTo(target);
     }
 
     @ParameterizedTest
@@ -332,8 +331,7 @@ public abstract class CryptoManagerTest {
         CryptoManager cryptoManager = this.buildCryptoManager(config);
 
         assertThat(cryptoManager.getCryptoScheme(consumer))
-            .isNotNull()
-            .hasValue(scheme);
+            .isEqualTo(scheme);
     }
 
     @ParameterizedTest
@@ -362,12 +360,13 @@ public abstract class CryptoManagerTest {
         CryptoManager cryptoManager = this.buildCryptoManager(config);
 
         assertThat(cryptoManager.getCryptoScheme(consumer))
-            .isNotNull()
-            .hasValue(scheme);
+            .isEqualTo(scheme);
     }
 
     @Test
-    public void testGetConsumerCryptoSchemeReturnsDefaultSchemeWhenNoCapabilitiesAreDefined() {
+    public void testGetConsumerCryptoSchemeReturnsDefaultSchemeWhenNoCapabilitiesAreDefined()
+        throws Exception {
+
         Consumer consumer = new Consumer()
             .setSupportedKeyAlgorithmOids(null)
             .setSupportedSignatureAlgorithmOids(null);
@@ -375,13 +374,12 @@ public abstract class CryptoManagerTest {
         CryptoManager cryptoManager = this.buildCryptoManager();
 
         assertThat(cryptoManager.getCryptoScheme(consumer))
-            .isNotNull()
-            .hasValue(cryptoManager.getDefaultCryptoScheme());
+            .isEqualTo(cryptoManager.getDefaultCryptoScheme());
     }
 
     @ParameterizedTest
     @MethodSource("schemeSource")
-    public void testGetConsumerCryptoSchemeReturnsEmptyWhenKeyAlgorithmIsNotSupported(Scheme scheme)
+    public void testGetConsumerCryptoSchemeThrowsExceptionWhenKeyAlgorithmIsNotSupported(Scheme scheme)
         throws Exception {
 
         OidUtil oidUtil = CryptoUtil.getOidUtil();
@@ -405,14 +403,12 @@ public abstract class CryptoManagerTest {
 
         CryptoManager cryptoManager = this.buildCryptoManager(config);
 
-        assertThat(cryptoManager.getCryptoScheme(consumer))
-            .isNotNull()
-            .isEmpty();
+        assertThrows(CryptoCapabilitiesException.class, () -> cryptoManager.getCryptoScheme(consumer));
     }
 
     @ParameterizedTest
     @MethodSource("schemeSource")
-    public void testGetConsumerCryptoSchemeReturnsEmptyWhenSignatureAlgorithmIsNotSupported(Scheme scheme)
+    public void testGetConsumerCryptoSchemeThrowsExceptionWhenSignatureAlgorithmIsNotSupported(Scheme scheme)
         throws Exception {
 
         OidUtil oidUtil = CryptoUtil.getOidUtil();
@@ -436,9 +432,7 @@ public abstract class CryptoManagerTest {
 
         CryptoManager cryptoManager = this.buildCryptoManager(config);
 
-        assertThat(cryptoManager.getCryptoScheme(consumer))
-            .isNotNull()
-            .isEmpty();
+        assertThrows(CryptoCapabilitiesException.class, () -> cryptoManager.getCryptoScheme(consumer));
     }
 
     @Test
@@ -446,6 +440,123 @@ public abstract class CryptoManagerTest {
         CryptoManager cryptoManager = this.buildCryptoManager();
 
         assertThrows(IllegalArgumentException.class, () -> cryptoManager.getCryptoScheme((Consumer) null));
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testIsConsumerUsingDefaultSchemeReturnsFalseWhenCapabilitiesProvided(Scheme scheme)
+        throws Exception {
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+        String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(Set.of(keyAlgoOid))
+            .setSupportedSignatureAlgorithmOids(Set.of(sigAlgoOid));
+
+        // Build a configuration that definitely contains and lists the scheme under test
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
+            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThat(cryptoManager.isUsingDefaultCryptoScheme(consumer))
+            .isEqualTo(false);
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testIsConsumerUsingDefaultSchemeReturnsFalseWhenKeyAlgorithmIsNotSupported(Scheme scheme)
+        throws Exception {
+
+        // This test verifies that the isUsingDefaultCryptoScheme check returns false even in the case that
+        // the algorithms they provide are not supported.
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+        String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+        // Reverse the key algorithm OID to guarantee it doesn't match our scheme's key algo OID
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(Set.of(reverseOid(keyAlgoOid)))
+            .setSupportedSignatureAlgorithmOids(Set.of(sigAlgoOid));
+
+        // Build a configuration that definitely contains and lists the scheme under test
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
+            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThat(cryptoManager.isUsingDefaultCryptoScheme(consumer))
+            .isEqualTo(false);
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testIsConsumerUsingDefaultSchemeReturnsFalseWhenSignatureAlgorithmIsNotSupported(
+        Scheme scheme) throws Exception {
+
+        // This test verifies that the isUsingDefaultCryptoScheme check returns false even in the case that
+        // the algorithms they provide are not supported.
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+        String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+        // Reverse the key algorithm OID to guarantee it doesn't match our scheme's key algo OID
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(Set.of(keyAlgoOid))
+            .setSupportedSignatureAlgorithmOids(Set.of(reverseOid(sigAlgoOid)));
+
+        // Build a configuration that definitely contains and lists the scheme under test
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
+            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThat(cryptoManager.isUsingDefaultCryptoScheme(consumer))
+            .isEqualTo(false);
+    }
+
+    @Test
+    public void testIsConsumerUsingDefaultSchemeReturnsTrueWhenNoCapabilitiesAreDefined()
+        throws Exception {
+
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(null)
+            .setSupportedSignatureAlgorithmOids(null);
+
+        CryptoManager cryptoManager = this.buildCryptoManager();
+
+        assertThat(cryptoManager.isUsingDefaultCryptoScheme(consumer))
+            .isEqualTo(true);
+    }
+
+    @Test
+    public void testIsConsumerUsingDefaultSchemeThrowsExceptionOnNullConsumer() throws Exception {
+        CryptoManager cryptoManager = this.buildCryptoManager();
+
+        assertThrows(IllegalArgumentException.class,
+            () -> cryptoManager.isUsingDefaultCryptoScheme((Consumer) null));
     }
 
     @Test
@@ -865,5 +976,79 @@ public abstract class CryptoManagerTest {
         CryptoManager cryptoManager = this.buildCryptoManager();
         assertThrows(IllegalArgumentException.class, () -> cryptoManager.getKeyPairGenerator(null));
     }
+
+    // TODO: FIXME: Temporary logic testing. Remove once the feature flag is removed.
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetConsumerCryptoSchemeReturnsDefaultWhenCapsSpecifiedIfNegotiationDisabled(
+        Scheme scheme) throws Exception {
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+        String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+        Consumer consumer = new Consumer()
+            .setSupportedKeyAlgorithmOids(Set.of(keyAlgoOid))
+            .setSupportedSignatureAlgorithmOids(Set.of(sigAlgoOid));
+
+        // Build a configuration that definitely contains and lists the scheme under test
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
+            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
+
+        // Disable client negotiation to ensure they always get the default no matter what we set
+        config.setProperty(ConfigProperties.CRYPTO_CLIENT_NEGOTIATION_ENABLED, "false");
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isEqualTo(cryptoManager.getDefaultCryptoScheme());
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetConsumerCryptoSchemeReturnsExpectedWhenCapsSpecifiedIfNegotiationDisabledForManifest(
+        Scheme scheme) throws Exception {
+        // This test verifies that manifest consumers bypass the scheme negotiation feature flag
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+        String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+            .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+        ConsumerType ctype = new ConsumerType()
+            .setId("type_id")
+            .setManifest(true);
+
+        Consumer consumer = new Consumer()
+            .setType(ctype)
+            .setSupportedKeyAlgorithmOids(Set.of(keyAlgoOid))
+            .setSupportedSignatureAlgorithmOids(Set.of(sigAlgoOid));
+
+        // Build a configuration that definitely contains and lists the scheme under test
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
+            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
+
+        // Disable client scheme negotiation to ensure that our manifest consumer can still negoate even
+        // though regular clients cannot
+        config.setProperty(ConfigProperties.CRYPTO_CLIENT_NEGOTIATION_ENABLED, "false");
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        assertThat(cryptoManager.getCryptoScheme(consumer))
+            .isEqualTo(scheme);
+    }
+
+    // end temporary tests
 
 }

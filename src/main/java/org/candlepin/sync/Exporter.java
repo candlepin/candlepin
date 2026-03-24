@@ -190,7 +190,7 @@ public class Exporter {
             this.exportDistributorVersions(baseDir);
             this.exportContentDeliveryNetworks(baseDir);
 
-            Scheme scheme = this.getConsumerScheme(consumer);
+            Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
 
             return this.makeArchive(consumer, scheme, tmpDir, baseDir);
         }
@@ -237,7 +237,7 @@ public class Exporter {
             this.exportEntitlementsCerts(baseDir, consumer, serials, false);
             this.exportContentAccessCerts(baseDir, consumer, serials);
 
-            Scheme scheme = this.getConsumerScheme(consumer);
+            Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
 
             return this.makeArchive(consumer, scheme, tmpDir, baseDir);
         }
@@ -260,19 +260,13 @@ public class Exporter {
             byte[] signature = this.cryptoManager.getSigner(scheme)
                 .sign(archiveInputStream);
 
-            boolean legacy = this.isUsingLegacySignature(consumer);
+            boolean legacy = this.cryptoManager.isUsingDefaultCryptoScheme(consumer);
             File signedArchive = this.createSignedZipArchive(tempDir, archive, exportFileName, signature,
                 "signed Candlepin export for " + consumer.getUuid(), scheme, legacy);
 
             log.debug("Returning file: {}", archive.getAbsolutePath());
             return signedArchive;
         }
-    }
-
-    private Scheme getConsumerScheme(Consumer consumer) throws CryptoCapabilitiesException {
-        return this.cryptoManager.getCryptoScheme(consumer)
-            .orElseThrow(() -> new CryptoCapabilitiesException("cannot select scheme for consumer: " +
-                consumer));
     }
 
     private File createZipArchiveWithDir(File tempDir, File exportDir,
@@ -675,11 +669,6 @@ public class Exporter {
                 }
             }
         }
-    }
-
-    private boolean isUsingLegacySignature(Consumer consumer) {
-        return consumer.getSupportedKeyAlgorithmOids() == null &&
-            consumer.getSupportedSignatureAlgorithmOids() == null;
     }
 
 }
