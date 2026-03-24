@@ -151,7 +151,7 @@ public class IdentityCertificateGenerator {
     }
 
     private IdentityCertificate createCertificate(Consumer consumer)
-        throws KeyException, CryptoCapabilitiesException {
+        throws CryptoCapabilitiesException, KeyException {
 
         log.debug("Generating identity cert for consumer: {}", consumer.getUuid());
 
@@ -165,9 +165,7 @@ public class IdentityCertificateGenerator {
         this.serialCurator.create(serial);
 
         KeyPair keyPair = this.keyPairGenerator.getConsumerKeyPair(consumer);
-        Scheme scheme = this.cryptoManager.getCryptoScheme(consumer)
-            .orElseThrow(() -> new CryptoCapabilitiesException("cannot select scheme for consumer: " +
-                consumer));
+        Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
 
         X509Certificate certificate = this.cryptoManager.getCertificateBuilder(scheme)
             .withDN(dn)
