@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -21,30 +21,31 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.CdnDTO;
+import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.CloudAuthenticationResultDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
+import org.candlepin.dto.api.client.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.dto.api.client.v1.ExportResultDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
-import org.candlepin.dto.api.client.v1.RoleDTO;
 import org.candlepin.dto.api.client.v1.SubscriptionDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
 import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.HostedTestApi;
 import org.candlepin.resource.client.v1.CdnApi;
 import org.candlepin.resource.client.v1.ConsumerTypeApi;
-import org.candlepin.resource.client.v1.OwnerContentApi;
-import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.resource.client.v1.RolesApi;
 import org.candlepin.resource.client.v1.RulesApi;
 import org.candlepin.resource.client.v1.UsersApi;
+import org.candlepin.spec.bootstrap.assertions.CertificateAssert;
 import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.assertions.OnlyWithCapability;
 import org.candlepin.spec.bootstrap.client.ApiClient;
@@ -53,6 +54,7 @@ import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
 import org.candlepin.spec.bootstrap.client.api.JobsClient;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
+import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.Branding;
@@ -60,6 +62,7 @@ import org.candlepin.spec.bootstrap.data.builder.Cdns;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.CryptoCapabilities;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
@@ -79,10 +82,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.cert.X509Certificate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -90,6 +103,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -112,6 +127,14 @@ class ExportSpecTest {
     private static final String CONTENT_ACCESS_CERTS_PATH = "export/content_access_certificates/";
     private static final String CDN_PATH = "export/content_delivery_network/";
     private static final String RULES_PATH = "export/rules2/";
+    private static final String UPSTREAM_CONSUMER_PATH = "export/upstream_consumer/";
+
+    private static Stream<Arguments> capabilitiesSource() {
+        return CryptoCapabilities.getSupportedCapabilities()
+            .stream()
+            .filter(Objects::nonNull)
+            .map(Arguments::of);
+    }
 
     @Test
     void shouldAllowManifestCreationWithReadOnlyUser() throws Exception {
@@ -255,6 +278,150 @@ class ExportSpecTest {
         assertThat(entitlementCerts).singleElement();
     }
 
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldExportSignature(CryptographicCapabilitiesDTO capabilities) throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ContentDTO cont = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), cont.getId(), true);
+        PoolDTO pool = adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers
+            .random(owner, ConsumerTypes.Candlepin)
+            .cryptographicCapabilities(capabilities));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
+
+        File manifest = this.createExportAsync(consumerClient, consumer.getUuid(), null);
+        assertSignature(capabilities, manifest);
+
+        ZipFile export = ExportUtil.getExportArchive(manifest);
+        int actualNumberOfCerts = assertEntCerts(export, capabilities);
+        assertEquals(1, actualNumberOfCerts);
+        CertificateDTO idCert = assertUpstreamIDCert(export, capabilities);
+
+        // Verify that the upstream consumer ID certificate can establish a mTLS connection
+        ConsumerDTO actual = ApiClients.ssl(idCert).consumers().getConsumer(consumer.getUuid());
+        assertNotNull(actual);
+
+        String msg = String.format("%s file should not be present in manifest",
+            ExportUtil.LEGACY_SIGNATURE_FILENAME);
+        assertFalse(ExportUtil.legacySignatureFileExists(manifest), msg);
+    }
+
+    @Test
+    public void shouldExportLegacySignature() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers
+            .random(owner, ConsumerTypes.Candlepin)
+            .cryptographicCapabilities(null));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        File manifest = this.createExportAsync(consumerClient, consumer.getUuid(), null);
+
+        assertTrue(ExportUtil.legacySignatureFileExists(manifest));
+        assertNull(ExportUtil.getSignatureFile(manifest));
+    }
+
+    private void assertSignature(CryptographicCapabilitiesDTO capabilities, File manifest)
+        throws InvalidKeyException, NoSuchAlgorithmException, SignatureException, IOException {
+
+        JsonNode root = ExportUtil.getSignatureFile(manifest);
+        assertNotNull(root,
+                String.format("%s file is not present in manifest", ExportUtil.SIGNATURE_FILENAME));
+
+        assertNotNull(root.get("signature"), "signature file is missing the signature");
+        byte[] signatureBytes = Base64.decodeBase64(root.get("signature").asText());
+
+        assertNotNull(root.get("scheme"), "signature file is missing the scheme");
+        JsonNode scheme = root.get("scheme");
+
+        assertNotNull(scheme.get("name"), "signature file is missing the scheme name");
+        assertNotNull(scheme.get("signature_algorithm"), "signature file is missing the signature algorithm");
+        assertNotNull(scheme.get("key_algorithm"), "signature file is missing the key algorithm");
+        assertNotNull(scheme.get("certificate"), "signature file is missing the scheme certificate");
+
+        // Verify the certificate uses the crypo capabilities
+        String certB64 = scheme.get("certificate").asText();
+        X509Certificate x509Certificate = X509Cert.parseCertificate(Base64.decodeBase64(certB64));
+        CertificateAssert.assertThatCert(new X509Cert(x509Certificate))
+            .usesKeyAlgorithmMatchingCapabilities(capabilities)
+            .usesSignatureAlgorithmMatchingCapabilities(capabilities);
+
+        // Verify the signature
+        Signature signature = Signature.getInstance(scheme.get("signature_algorithm").asText());
+        signature.initVerify(x509Certificate);
+
+        try (ZipFile zipFile = new ZipFile(manifest)) {
+            ZipEntry entry = zipFile.getEntry(ExportUtil.EXPORT_NAME);
+            try (InputStream istream = zipFile.getInputStream(entry)) {
+                byte[] buffer = new byte[4096];
+                int read;
+
+                while ((read = istream.read(buffer)) != -1) {
+                    signature.update(buffer, 0, read);
+                }
+            }
+        }
+
+        assertTrue(signature.verify(signatureBytes));
+    }
+
+    private CertificateDTO assertUpstreamIDCert(ZipFile export, CryptographicCapabilitiesDTO capabilities)
+        throws IOException {
+
+        Optional<? extends ZipEntry> upstreamConsumerEntry = export.stream()
+            .filter(e -> e.getName().startsWith(UPSTREAM_CONSUMER_PATH))
+            .filter(e -> e.getName().lastIndexOf('/') == UPSTREAM_CONSUMER_PATH.length() - 1)
+            .findFirst();
+
+        assertThat(upstreamConsumerEntry).isNotEmpty();
+
+        CertificateDTO actual = ExportUtil
+            .deserializeJsonFile(export, upstreamConsumerEntry.get().getName(), CertificateDTO.class);
+
+        CertificateAssert.assertThatCert(actual)
+            .usesKeyAlgorithmMatchingCapabilities(capabilities)
+            .usesSignatureAlgorithmMatchingCapabilities(capabilities);
+
+        return actual;
+    }
+
+    private int assertEntCerts(ZipFile export, CryptographicCapabilitiesDTO capabilities)
+        throws IOException {
+
+        List<ZipEntry> entitlementCerts = export.stream()
+            .filter(e -> e.getName().startsWith(ENTITILEMENT_CERTIFICATES_PATH))
+            .filter(e -> e.getName().lastIndexOf('/') == ENTITILEMENT_CERTIFICATES_PATH.length() - 1)
+            .collect(Collectors.toList());
+
+        for (ZipEntry entry : entitlementCerts) {
+            try (InputStream is = export.getInputStream(entry);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+
+                byte[] buffer = new byte[4096];
+                int len;
+                while ((len = is.read(buffer)) != -1) {
+                    baos.write(buffer, 0, len);
+                }
+
+                String cert = baos.toString(StandardCharsets.UTF_8);
+
+                CertificateAssert.assertThatCert(X509Cert.from(cert))
+                    .usesKeyAlgorithmMatchingCapabilities(capabilities)
+                    .usesSignatureAlgorithmMatchingCapabilities(capabilities);
+            }
+        }
+
+        return entitlementCerts.size();
+    }
+
     @Test
     @OnlyInHosted
     @OnlyWithCapability("cloud_registration")
@@ -297,8 +464,6 @@ class ExportSpecTest {
     class StandardExporter {
         private ApiClient client;
         private OwnerClient ownerApi;
-        private OwnerContentApi ownerContentApi;
-        private OwnerProductApi ownerProductApi;
         private CdnApi cdnApi;
         private ConsumerClient consumerApi;
         private ConsumerTypeApi consumerTypeApi;
@@ -319,8 +484,6 @@ class ExportSpecTest {
         void beforeEach() throws Exception {
             client = ApiClients.admin();
             ownerApi = client.owners();
-            ownerContentApi = client.ownerContent();
-            ownerProductApi = client.ownerProducts();
             cdnApi = client.cdns();
             consumerApi = client.consumers();
             consumerTypeApi = client.consumerTypes();
@@ -624,7 +787,7 @@ class ExportSpecTest {
             this.owner = ownerApi.createOwner(Owners.random());
 
             UserDTO user = usersApi.createUser(Users.random());
-            RoleDTO role = rolesApi.createRole(Roles.ownerAll(owner).addUsersItem(user));
+            rolesApi.createRole(Roles.ownerAll(owner).addUsersItem(user));
 
             // prep data for creation upstream
             ProductDTO engProduct = Products.randomEng();
