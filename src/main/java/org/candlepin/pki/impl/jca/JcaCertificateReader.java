@@ -23,12 +23,14 @@ import java.security.cert.X509Certificate;
 import java.util.Objects;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 
 
 /**
  * Simple JCA-based implementation of the certificate reader
  */
+@Singleton
 public class JcaCertificateReader implements CertificateReader {
     private static final String X509_CERT_TYPE = "X.509";
 

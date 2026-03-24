@@ -182,7 +182,7 @@ public class EntitlementCertificateGeneratorTest {
         DevConfig config = TestConfig.defaults();
         ObjectMapper mapper = new ObjectMapper();
 
-        cryptoManager = spy(CryptoUtil.getCryptoManager(config));
+        cryptoManager = spy(CryptoUtil.getCryptoManager());
         ConsumerKeyPairGenerator keyPairGenerator = new ConsumerKeyPairGenerator(cryptoManager,
             mock(KeyPairDataCurator.class));
         X509ExtensionUtil x509ExtensionUtil = new X509ExtensionUtil(config);

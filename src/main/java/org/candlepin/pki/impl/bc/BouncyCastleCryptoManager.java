@@ -22,6 +22,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OidUtil;
 import org.candlepin.pki.Scheme;
@@ -40,11 +41,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.security.InvalidKeyException;
+import java.security.KeyException;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -95,22 +100,56 @@ public class BouncyCastleCryptoManager implements CryptoManager {
 
         this.schemes = Collections.unmodifiableList(schemeReader.readSchemes());
         this.defaultScheme = schemeReader.readDefaultScheme();
-        this.validateSchemes();
-
         this.upstreamCertificateRepo = this.readUpstreamCertificateRepoConfig(config);
 
+        // Validate the schemes we've loaded
+        Stream.concat(this.schemes.stream(), Stream.of(this.defaultScheme))
+            .forEach(this::validateScheme);
+
+        // Temporary feature flag
         this.enableSchemeNegotiation = config.getBoolean(ConfigProperties.CRYPTO_CLIENT_NEGOTIATION_ENABLED);
     }
 
     /**
-     * Validates the configured schemes by attempting to generate a key and certificate with each, using the
-     * configured security provider. If any scheme fails this step, this method throws an exception.
+     * Validates that the given scheme can actually be used to perform cryptographic operations by attempting
+     * to generate a key and certificate with each, using the configured security provider. If the scheme
+     * fails validation, this method throws an exception.
+     *
+     * @param scheme
+     *  the scheme to validate
      *
      * @throws ConfigurationException
      *  if any scheme fails validation
      */
-    private void validateSchemes() {
-        // TODO: validate the schemes
+    private void validateScheme(Scheme scheme) {
+        try {
+            byte[] bytes = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+            // We don't care about the result of any of these methods, just that they seem to work, indicating
+            // that the scheme resolves to usable algorithms
+            byte[] signature = this.getSigner(scheme)
+                .sign(bytes);
+
+            this.getSignatureValidator(scheme)
+                .forSignature(signature)
+                .validate(bytes);
+
+            Instant startTime = Instant.now();
+            Instant endTime = startTime.plusSeconds(86400);
+
+            KeyPair keypair = this.getKeyPairGenerator(scheme)
+                .generateKeyPair();
+
+            this.getCertificateBuilder(scheme)
+                .withDN(new DistinguishedName("validation_cn", "validation_on"))
+                .withSerial(BigInteger.valueOf(123))
+                .withValidity(startTime, endTime)
+                .withKeyPair(keypair)
+                .build();
+        }
+        catch (KeyException | org.candlepin.pki.SignatureException e) {
+            throw new ConfigurationException("Scheme validation failed for scheme: " + scheme.name(), e);
+        }
     }
 
     /**

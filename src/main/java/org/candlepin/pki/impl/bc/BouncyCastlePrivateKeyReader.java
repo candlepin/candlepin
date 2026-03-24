@@ -48,6 +48,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 
 
@@ -55,6 +56,7 @@ import javax.inject.Inject;
  * Bouncy Castle implementation of the abstract private key reader; supporting both PKCS1 and PKCS8 key
  * formats.
  */
+@Singleton
 public class BouncyCastlePrivateKeyReader extends AbstractPrivateKeyReader {
 
     private static final String HEADER_DEK_INFO = "DEK-Info";

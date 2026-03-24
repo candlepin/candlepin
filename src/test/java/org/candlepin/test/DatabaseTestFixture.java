@@ -89,6 +89,7 @@ import org.candlepin.model.UserCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.resteasy.ResourceLocatorMap;
@@ -189,6 +190,7 @@ public class DatabaseTestFixture {
     protected MethodLocator methodLocator;
     protected AnnotationLocator annotationLocator;
 
+    private static CryptoManager cryptoManager;
     private static Injector parentInjector;
     protected Injector injector;
     private CandlepinRequestScope cpRequestScope;
@@ -200,6 +202,10 @@ public class DatabaseTestFixture {
 
     @BeforeAll
     public static void initClass() {
+        // Ensure we have a crypto manager initialized that can bind to to avoid some extra initialization
+        // slowness
+        cryptoManager = CryptoUtil.getCryptoManager();
+
         parentInjector = Guice.createInjector(new TestingModules.JpaModule());
         insertValidationEventListeners(parentInjector);
     }
@@ -235,9 +241,14 @@ public class DatabaseTestFixture {
     public void init(boolean beginTransaction) throws Exception {
         this.config = TestConfig.defaults();
 
-        Module testingModule = new TestingModules.StandardTest(this.config);
-        this.injector = parentInjector.createChildInjector(
-            Modules.override(testingModule).with(getGuiceOverrideModule()));
+        // Impl note: Creating a new injector on every test invocation causes *every object to be
+        // reconstructed*, even if that object was bound or flagged as a singleton! This can cause major
+        // performance issues for objects with expensive initialization (e.g. CryptoManager).
+        // This should eventually be ripped out and replaced with more consistent DI; however at the time of
+        // writing, our database setup and teardown relies upon this behavior.
+        Module instancedTestModule = Modules.override(new TestingModules.StandardTest(this.config))
+            .with(this.getGuiceOverrideModule());
+        this.injector = parentInjector.createChildInjector(instancedTestModule);
 
         methodLocator = new MethodLocator(injector);
         methodLocator.init();
@@ -258,10 +269,10 @@ public class DatabaseTestFixture {
         cpRequestScope.enter();
         this.injector.injectMembers(this);
 
-        dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
+        dateSource = (DateSourceForTesting) this.injector.getInstance(DateSource.class);
         dateSource.currentDate(TestUtil.createDate(2010, 1, 1));
 
-        HttpServletRequest req = parentInjector.getInstance(HttpServletRequest.class);
+        HttpServletRequest req = this.injector.getInstance(HttpServletRequest.class);
         when(req.getAttribute("username")).thenReturn("mock_user");
 
         if (beginTransaction) {
@@ -362,7 +373,10 @@ public class DatabaseTestFixture {
         return new AbstractModule() {
             @Override
             protected void configure() {
-                // NO OP
+                // Bind to a specific instance of the CryptoManager to avoid spinning up a new instance on
+                // every test. Tests which need new instances can manually construct one using CryptoUtil
+                // or direct construction; or override this module to avoid this fixed binding.
+                bind(CryptoManager.class).toInstance(cryptoManager);
             }
         };
     }

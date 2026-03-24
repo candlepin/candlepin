@@ -23,8 +23,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.DevConfig;
-import org.candlepin.config.TestConfig;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -64,15 +62,14 @@ public class IdentityCertificateGeneratorTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() throws CertificateException, KeyException {
-        DevConfig config = TestConfig.defaults();
-        config.setProperty(ConfigProperties.IDENTITY_CERT_YEAR_ADDENDUM, String.valueOf(CERT_DURATION));
+        this.config.setProperty(ConfigProperties.IDENTITY_CERT_YEAR_ADDENDUM, String.valueOf(CERT_DURATION));
 
-        this.cryptoManager = CryptoUtil.getCryptoManager(this.config);
+        this.cryptoManager = CryptoUtil.getCryptoManager();
 
         ConsumerKeyPairGenerator keyPairGenerator =
             new ConsumerKeyPairGenerator(cryptoManager, this.keyPairDataCurator);
 
-        this.identityCertificateGenerator = new IdentityCertificateGenerator(config,
+        this.identityCertificateGenerator = new IdentityCertificateGenerator(this.config,
             this.cryptoManager,
             CryptoUtil.getPemEncoder(),
             keyPairGenerator,

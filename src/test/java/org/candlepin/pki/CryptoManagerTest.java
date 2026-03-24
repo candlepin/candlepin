@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.config.ConfigurationException;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.model.Consumer;
@@ -44,6 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.security.KeyException;
+import java.security.KeyPair;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -93,8 +95,12 @@ public abstract class CryptoManagerTest {
             CryptoUtil.generateSchemeConfiguration(config, scheme, null);
         }
 
+        List<String> schemeNames = schemes.stream()
+            .map(Scheme::name)
+            .toList();
+
         config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
-            String.join(",", CryptoUtil.SUPPORTED_SCHEMES.keySet()));
+            String.join(",", schemeNames));
 
         return config;
     }
@@ -128,6 +134,68 @@ public abstract class CryptoManagerTest {
         }
 
         return String.join(".", chunks);
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testCryptoManagerThrowsExceptionOnMalformedKeyAlgorithm(Scheme scheme) throws Exception {
+        // This test validates that the crypto manager immediately fails when a scheme is fully configured,
+        // but has an invalid key algorithm/size
+
+        String signatureAlgorithm = scheme.signatureAlgorithm();
+        String keyAlgorithm = scheme.keyAlgorithm();
+        Integer keySize = scheme.keySize().orElse(null);
+
+        KeyPair keypair = keySize != null ?
+            CryptoUtil.generateKeyPair(keyAlgorithm, keySize) :
+            CryptoUtil.generateKeyPair(keyAlgorithm, null);
+
+        X509Certificate certificate = CryptoUtil.generateX509Certificate(keypair, signatureAlgorithm);
+
+        Scheme malformed = new Scheme.Builder()
+            .setName(scheme.name() + "_malformed")
+            .setPrivateKey(keypair.getPrivate())
+            .setCertificate(certificate)
+            .setSignatureAlgorithm(signatureAlgorithm)
+            .setKeyAlgorithm("malformed_key_algo")
+            .setKeySize(8675309)
+            .build();
+
+        DevConfig config = addSchemeConfig(TestConfig.defaults(), List.of(scheme, malformed));
+
+        assertThrows(ConfigurationException.class, () -> this.buildCryptoManager(config));
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testCryptoManagerThrowsExceptionOnMalformedSignatureAlgorithm(Scheme scheme)
+        throws Exception {
+
+        // This test validates that the crypto manager immediately fails when a scheme is fully configured,
+        // but has an invalid signature algorithms.
+
+        String signatureAlgorithm = scheme.signatureAlgorithm();
+        String keyAlgorithm = scheme.keyAlgorithm();
+        Integer keySize = scheme.keySize().orElse(null);
+
+        KeyPair keypair = keySize != null ?
+            CryptoUtil.generateKeyPair(keyAlgorithm, keySize) :
+            CryptoUtil.generateKeyPair(keyAlgorithm, null);
+
+        X509Certificate certificate = CryptoUtil.generateX509Certificate(keypair, signatureAlgorithm);
+
+        Scheme malformed = new Scheme.Builder()
+            .setName(scheme.name() + "_malformed")
+            .setPrivateKey(keypair.getPrivate())
+            .setCertificate(certificate)
+            .setSignatureAlgorithm("malformed_sig_algo")
+            .setKeyAlgorithm(keyAlgorithm)
+            .setKeySize(keySize)
+            .build();
+
+        DevConfig config = addSchemeConfig(TestConfig.defaults(), List.of(scheme, malformed));
+
+        assertThrows(ConfigurationException.class, () -> this.buildCryptoManager(config));
     }
 
     @Test

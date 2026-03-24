@@ -24,6 +24,8 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
+import javax.inject.Singleton;
+
 
 
 /**
@@ -31,6 +33,7 @@ import java.util.List;
  * expect but hosted Candlepin instances have use cases that require custom SubjectKeyIdentifiers so they may
  * write and bind other implementations of the SubjectKeyIdentifierWriter interface.
  */
+@Singleton
 public class BouncyCastleSubjectKeyIdentifierWriter implements SubjectKeyIdentifierWriter {
 
     @Override
