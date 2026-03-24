@@ -27,10 +27,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.auth.ConsumerPrincipal;
-import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.model.exceptions.DuplicateEntryException;
 import org.candlepin.model.exceptions.ValueTooLargeException;
-import org.candlepin.resource.ConsumerResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
@@ -58,8 +56,6 @@ import javax.validation.ConstraintViolationException;
 
 public class ConsumerTest extends DatabaseTestFixture {
 
-    private ConsumerResource consumerResource;
-
     private Owner owner;
     private Consumer consumer;
     private ConsumerType consumerType;
@@ -80,7 +76,7 @@ public class ConsumerTest extends DatabaseTestFixture {
             .setType(consumerType)
             .setFact("foo", "bar")
             .setFact("foo1", "bar1");
-        consumerResource = injector.getInstance(ConsumerResource.class);
+
         consumerCurator.create(consumer);
     }
 
@@ -162,21 +158,29 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void ensureUpdatedDateChangesOnUpdate() {
+    public void ensureUpdatedDateChangesOnUpdate() throws Exception {
+        // Store the consumer's current last-updated time:
         Date beforeUpdateDate = consumer.getUpdated();
 
-        // Create a new consumer, can't re-use reference to the old:
-        ConsumerDTO newConsumer = new ConsumerDTO();
-        newConsumer.setUuid(consumer.getUuid());
-        newConsumer.putFactsItem("FACT", "FACT_VALUE");
+        // Sleep to ensure we don't hit test failures because our backing DB throws milliseconds away
+        Thread.sleep(1000);
 
-        consumerResource.updateConsumer(consumer.getUuid(), newConsumer);
+        // Make some changes to the consumer (note, it has to be changes to the consumer directly; only
+        // adding facts is not good enough.
+        consumer.setName("updated_name");
 
-        Consumer lookedUp = consumerCurator.get(consumer.getId());
-        Date lookedUpDate = lookedUp.getUpdated();
-        assertEquals("FACT_VALUE", lookedUp.getFact("FACT"));
+        // Ensure those changes will be picked up (this is probably extraneous)
+        this.consumerCurator.merge(consumer);
 
-        assertTrue(beforeUpdateDate.before(lookedUpDate));
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        Consumer lookedUp = this.consumerCurator.get(consumer.getId());
+        assertNotNull(lookedUp);
+
+        assertThat(lookedUp.getUpdated())
+            .isNotNull()
+            .isAfter(beforeUpdateDate);
     }
 
     @Test

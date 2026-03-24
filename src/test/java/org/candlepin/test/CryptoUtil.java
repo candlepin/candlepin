@@ -112,6 +112,8 @@ public class CryptoUtil {
     private static final String MLDSA_SIGNATURE_ALGORITHM = "ML-DSA-65";
     private static final String MLDSA_KEY_ALGORITHM = "ML-DSA-65";
 
+    private static CryptoManager standardCryptoManager;
+
     private CryptoUtil() {
         throw new UnsupportedOperationException();
     }
@@ -219,12 +221,21 @@ public class CryptoUtil {
     /**
      * Fetches a crypto manager configured with the "supported" schemes and crypto configuration as the basis
      * for it and its dependencies.
+     * <p>
+     * <strong>Note:</strong> this method may return a cached instance of the standardized CryptoManager.
+     * Callers should not expect distinct CryptoManager instances from every invocation of this method. If a
+     * new instance is required on every invocation, the getCryptoManager(Configuration) method should be used
+     * instead.
      *
      * @return
-     *  a new CryptoManager instance configured using the standard configuration
+     *  a CryptoManager configured using the standard configuration
      */
     public static CryptoManager getCryptoManager() {
-        return getCryptoManager(TestConfig.defaults());
+        if (standardCryptoManager == null) {
+            standardCryptoManager = getCryptoManager(TestConfig.defaults());
+        }
+
+        return standardCryptoManager;
     }
 
     /**

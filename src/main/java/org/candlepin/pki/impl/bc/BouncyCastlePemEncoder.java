@@ -29,6 +29,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
+import javax.inject.Singleton;
+
+
+@Singleton
 public class BouncyCastlePemEncoder implements PemEncoder {
     private static final byte[] LINE_SEPARATOR = String.format("%n").getBytes();
 
