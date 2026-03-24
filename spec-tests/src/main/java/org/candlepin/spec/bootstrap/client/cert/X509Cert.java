@@ -117,6 +117,16 @@ public class X509Cert {
         }
     }
 
+    public static X509Certificate parseCertificate(byte[] encoded) {
+        try {
+            return (X509Certificate) CertificateFactory.getInstance("X.509")
+                .generateCertificate(new ByteArrayInputStream(encoded));
+        }
+        catch (CertificateException e) {
+            throw new CertificateParsingFailedException(e);
+        }
+    }
+
     private final X509Certificate certificate;
 
     public X509Cert(X509Certificate certificate) {

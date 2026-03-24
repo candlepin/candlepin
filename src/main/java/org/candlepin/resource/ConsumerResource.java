@@ -3086,7 +3086,6 @@ public class ConsumerResource implements ConsumerApi {
     public File exportData(@Verify(Consumer.class) String consumerUuid, String cdnLabel, String webAppPrefix,
         String apiUrl) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
         HttpServletResponse response = ResteasyContext.getContextData(HttpServletResponse.class);
         try {
             File archive = manifestManager.generateManifest(consumerUuid, cdnLabel, webAppPrefix, apiUrl);
@@ -3095,6 +3094,10 @@ public class ConsumerResource implements ConsumerApi {
         }
         catch (ExportCreationException e) {
             throw new IseException(i18n.tr("Unable to create export archive"), e);
+        }
+        catch (CryptoCapabilitiesException e) {
+            throw new ConflictException(i18n.tr("Unable to determine the signature scheme for consumer: {0}",
+                consumer.getUuid()), e);
         }
     }
 
