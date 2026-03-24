@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -17,6 +17,7 @@ package org.candlepin.spec.bootstrap.data.util;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 
 import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -30,7 +31,9 @@ import java.util.zip.ZipFile;
  * Utility methods for managing manifest exports.
  */
 public final class ExportUtil {
-    private static final String EXPORT_NAME = "consumer_export.zip";
+    public static final String EXPORT_NAME = "consumer_export.zip";
+    public static final String SIGNATURE_FILENAME = "signature.json";
+    public static final String LEGACY_SIGNATURE_FILENAME = "signature";
 
     private ExportUtil() {
         throw new UnsupportedOperationException();
@@ -57,7 +60,7 @@ public final class ExportUtil {
 
         try (ZipFile zipFile = new ZipFile(manifest)) {
             ZipEntry entry = zipFile.getEntry(EXPORT_NAME);
-            File tmp = File.createTempFile("export", ".zip");
+            File tmp = File.createTempFile(SIGNATURE_FILENAME, "");
             tmp.deleteOnExit();
             try (InputStream istream = zipFile.getInputStream(entry);
                 FileOutputStream ostream = new FileOutputStream(tmp)) {
@@ -65,6 +68,35 @@ public final class ExportUtil {
             }
 
             return new ZipFile(tmp);
+        }
+    }
+
+    public static JsonNode getSignatureFile(File manifest) throws IOException {
+        if (manifest == null) {
+            throw new IllegalArgumentException("manifest is null");
+        }
+
+        try (ZipFile zipFile = new ZipFile(manifest)) {
+            ZipEntry entry = zipFile.getEntry(SIGNATURE_FILENAME);
+            if (entry == null) {
+                return null;
+            }
+
+            try (InputStream istream = zipFile.getInputStream(entry)) {
+                return ApiClient.MAPPER.readTree(istream);
+            }
+        }
+    }
+
+    public static boolean legacySignatureFileExists(File manifest) throws IOException {
+        if (manifest == null) {
+            throw new IllegalArgumentException("manifest is null");
+        }
+
+        try (ZipFile zipFile = new ZipFile(manifest)) {
+            ZipEntry entry = zipFile.getEntry(LEGACY_SIGNATURE_FILENAME);
+
+            return entry != null;
         }
     }
 
