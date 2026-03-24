@@ -130,6 +130,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.InputStream;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Properties;
 
 import javax.inject.Named;
@@ -150,6 +151,44 @@ import javax.validation.ValidatorFactory;
 public class TestingModules {
     private TestingModules() {
         // This class is just a container for various Guice Modules used during testing
+    }
+
+    public static class PKIModule extends AbstractModule {
+        private final Configuration config;
+
+        public PKIModule(Configuration config) {
+            this.config = Objects.requireNonNull(config);
+        }
+
+        public PKIModule() {
+            this(TestConfig.defaults());
+        }
+
+        @Override
+        public void configure() {
+            bind(Configuration.class).toInstance(this.config);
+
+            // Security provider binding
+            bind(BouncyCastleSecurityProvider.class);
+            bind(java.security.Provider.class).toProvider(BouncyCastleSecurityProvider.class);
+            bind(BouncyCastleProvider.class).toProvider(BouncyCastleSecurityProvider.class);
+
+            // Generic crypto op wrappers and manager dependencies
+            bind(CertificateReader.class).to(JcaCertificateReader.class);
+            bind(OidUtil.class).to(JcaOidUtil.class);
+            bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class);
+            bind(PemEncoder.class).to(BouncyCastlePemEncoder.class);
+            bind(SubjectKeyIdentifierWriter.class).to(BouncyCastleSubjectKeyIdentifierWriter.class);
+
+            // CryptoManager
+            bind(CryptoManager.class).to(BouncyCastleCryptoManager.class);
+
+            // Tier-2 generators
+            bind(X509ExtensionUtil.class);
+
+            // We cannot bind the other classes here, as they may require curators or other things that are
+            // not bound in this context.
+        }
     }
 
     public static class ServletEnvironmentModule extends AbstractModule {
@@ -252,7 +291,7 @@ public class TestingModules {
     }
 
     public static class StandardTest extends AbstractModule {
-        private Configuration config;
+        private final Configuration config;
 
         public StandardTest() {
             this.config = TestConfig.defaults();
@@ -264,32 +303,11 @@ public class TestingModules {
 
         private TestingInterceptor authMethodInterceptor;
 
-        private void bindPki() {
-            // Security provider binding
-            bind(BouncyCastleSecurityProvider.class);
-            bind(java.security.Provider.class).toProvider(BouncyCastleSecurityProvider.class);
-            bind(BouncyCastleProvider.class).toProvider(BouncyCastleSecurityProvider.class);
-
-            // Generic crypto op wrappers and manager dependencies
-            bind(CertificateReader.class).to(JcaCertificateReader.class).asEagerSingleton();
-            bind(OidUtil.class).to(JcaOidUtil.class).asEagerSingleton();
-            bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class).asEagerSingleton();
-            bind(PemEncoder.class).to(BouncyCastlePemEncoder.class).asEagerSingleton();
-            bind(SubjectKeyIdentifierWriter.class).to(BouncyCastleSubjectKeyIdentifierWriter.class)
-                .asEagerSingleton();
-
-            // CryptoManager
-            bind(CryptoManager.class).to(BouncyCastleCryptoManager.class).asEagerSingleton();
-
-            // Tier-2 generators
-            bind(X509ExtensionUtil.class);
-
-            // We cannot bind the other classes here, as they may require curators or other things that are
-            // not bound in this context.
-        }
-
         @Override
         public void configure() {
+            // Add our PKI bindings
+            install(new PKIModule(this.config));
+
             CandlepinCache mockedCandlepinCache = mock(CandlepinCache.class);
             when(mockedCandlepinCache.getStatusCache()).thenReturn(mock(StatusCache.class));
             // This is not necessary in the normal module because the config is bound in the
@@ -320,8 +338,6 @@ public class TestingModules {
             bind(ProductResource.class);
             bind(DateSource.class).to(DateSourceForTesting.class).asEagerSingleton();
             bind(Enforcer.class).to(EnforcerForTesting.class); // .to(JavascriptEnforcer.class);
-
-            this.bindPki();
 
             bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
             bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);

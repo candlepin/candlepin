@@ -90,7 +90,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     private PoolManager poolManager;
     private PoolService poolService;
-    private UeberCertificateGenerator ueberCertGenerator;
 
     private Owner owner;
     private Product product;
@@ -105,7 +104,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void setUp() {
         poolManager = injector.getInstance(PoolManager.class);
         poolService = injector.getInstance(PoolService.class);
-        ueberCertGenerator = injector.getInstance(UeberCertificateGenerator.class);
 
         owner = createOwner();
         ownerCurator.create(owner);
@@ -225,7 +223,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool);
 
-        this.ueberCertGenerator.generate(scheme, owner, new NoAuthPrincipal().getUsername());
+        UeberCertificateGenerator ueberCertGenerator = injector.getInstance(UeberCertificateGenerator.class);
+        ueberCertGenerator.generate(scheme, owner, new NoAuthPrincipal().getUsername());
 
         PoolQualifier qualifier = new PoolQualifier()
             .setConsumer(consumer)
