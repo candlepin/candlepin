@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Server port="8005" shutdown="SHUTDOWN">
   <Listener className="org.apache.catalina.startup.VersionLoggerListener" />
+  <Listener className="org.apache.catalina.core.AprLifecycleListener" />
   <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
   <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
   <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
@@ -14,24 +15,28 @@
 
   <Service name="Catalina">
 
-    <Connector
-      port="8443"
-      protocol="HTTP/1.1"
-      scheme="https"
-      secure="true"
-      SSLEnabled="true"
-      maxThreads="150">
+    <Connector port="8443"
+        protocol="org.apache.coyote.http11.Http11AprProtocol"
+        scheme="https"
+        secure="true"
+        SSLEnabled="true"
+        maxThreads="150"
+        compression="on"
+        compressableMimeType="application/json,text/html,text/xml">
 
-      <SSLHostConfig
-        certificateVerification="optional"
-        protocols="+TLSv1.2,+TLSv1.3"
-        sslProtocol="TLS">
-        <Certificate
-          certificateFile="/etc/candlepin/certs/candlepin-ca.crt"
-          certificateKeyFile="/etc/candlepin/certs/candlepin-ca.key"
-          type="RSA" />
-      </SSLHostConfig>
-    </Connector>
+            <SSLHostConfig certificateVerification="optional"
+                protocols="+TLSv1.2,+TLSv1.3"
+                sslProtocol="TLS"
+                caCertificateFile="/etc/candlepin/certs/candlepin-ca-bundle.crt">
+
+                <Certificate certificateFile="/etc/candlepin/certs/candlepin-mldsa-65-ca.crt"
+                    certificateKeyFile="/etc/candlepin/certs/candlepin-mldsa-65-ca.key"
+                    type="MLDSA" />
+                <Certificate certificateFile="/etc/candlepin/certs/candlepin-rsa-ca.crt"
+                    certificateKeyFile="/etc/candlepin/certs/candlepin-rsa-ca.key"
+                    type="RSA" />
+            </SSLHostConfig>
+        </Connector>
 
     <Connector port="8080" protocol="HTTP/1.1" connectionTimeout="20000" redirectPort="8443" />
     <Engine name="Catalina" defaultHost="localhost">
