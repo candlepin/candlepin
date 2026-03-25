@@ -18,7 +18,9 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.ConfigurationException;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OidUtil;
@@ -74,6 +76,10 @@ public class BouncyCastleCryptoManager implements CryptoManager {
     private final Scheme defaultScheme;
     private final File upstreamCertificateRepo;
 
+    // TODO: FIXME: This feature flag is temporary and should be removed once all dependent services have
+    // enabled support for PQC certs and negotiation
+    private final boolean enableSchemeNegotiation;
+
     @Inject
     public BouncyCastleCryptoManager(Configuration config, BouncyCastleProvider securityProvider,
         SchemeReader schemeReader, CertificateReader certreader, SubjectKeyIdentifierWriter skiWriter,
@@ -92,6 +98,8 @@ public class BouncyCastleCryptoManager implements CryptoManager {
         this.validateSchemes();
 
         this.upstreamCertificateRepo = this.readUpstreamCertificateRepoConfig(config);
+
+        this.enableSchemeNegotiation = config.getBoolean(ConfigProperties.CRYPTO_CLIENT_NEGOTIATION_ENABLED);
     }
 
     /**
@@ -158,14 +166,8 @@ public class BouncyCastleCryptoManager implements CryptoManager {
             .findAny();
     }
 
-    @Override
-    public Optional<Scheme> getCryptoScheme(Consumer consumer) {
-        if (consumer == null) {
-            throw new IllegalArgumentException("consumer is null");
-        }
-
-        Set<String> supportedKeyAlgoOids = consumer.getSupportedKeyAlgorithmOids();
-        Set<String> supportedSignatureAlgoOids = consumer.getSupportedSignatureAlgorithmOids();
+    private Optional<Scheme> getCryptoScheme(Set<String> supportedKeyAlgoOids,
+        Set<String> supportedSignatureAlgoOids) {
 
         // if the consumer has indicated no support at all, it is likely a legacy consumer, and it should be
         // given the default scheme
@@ -191,6 +193,48 @@ public class BouncyCastleCryptoManager implements CryptoManager {
             .filter(keyAlgoMatcher)
             .filter(sigAlgoMatcher)
             .findFirst();
+    }
+
+    @Override
+    public Scheme getCryptoScheme(Consumer consumer) throws CryptoCapabilitiesException {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        // TODO: FIXME: Temporary gating; remove this logic once all dependent services support PQC certs and
+        // auth negotiation
+        ConsumerType ctype = consumer.getType();
+        if (!(this.enableSchemeNegotiation || (ctype != null && ctype.isManifest()))) {
+            return this.getDefaultCryptoScheme();
+        }
+        // end temp logic
+
+        Set<String> supportedKeyAlgoOids = consumer.getSupportedKeyAlgorithmOids();
+        Set<String> supportedSignatureAlgoOids = consumer.getSupportedSignatureAlgorithmOids();
+
+        return this.getCryptoScheme(supportedKeyAlgoOids, supportedSignatureAlgoOids)
+            .orElseThrow(() -> new CryptoCapabilitiesException("Unable to negotiate a crypto scheme for " +
+                "the given consumer: " + consumer.getUuid()));
+    }
+
+    @Override
+    public boolean isUsingDefaultCryptoScheme(Consumer consumer) {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        // TODO: FIXME: Temporary gating; remove this logic once all dependent services support PQC certs and
+        // auth negotiation
+        ConsumerType ctype = consumer.getType();
+        if (!(this.enableSchemeNegotiation || (ctype != null && ctype.isManifest()))) {
+            return true;
+        }
+        // end temp logic
+
+        Set<String> supportedKeyAlgoOids = consumer.getSupportedKeyAlgorithmOids();
+        Set<String> supportedSignatureAlgoOids = consumer.getSupportedSignatureAlgorithmOids();
+
+        return supportedKeyAlgoOids == null && supportedSignatureAlgoOids == null;
     }
 
     @Override

@@ -69,10 +69,10 @@ public interface CryptoManager {
 
     /**
      * Fetches the scheme appropriate for performing cryptographic operations for the given consumer,
-     * performing scheme negotiation based on the consumer's provided cryptographic capabilities, if any. If a
-     * scheme matching the consumer's capabilities is not found, an empty optional is returned. Otherwise, if
-     * the consumer has not provided any cryptographic capabilities, this method returns the default scheme.
-     * If the provided consumer is null, this method throws an exception.
+     * performing scheme negotiation based on the consumer's provided cryptographic capabilities, if any. If
+     * the consumer has not provided any cryptographic capabilities or if scheme negotiation is disabled for
+     * the given consumer, this method returns the default scheme. If a scheme matching the consumer's
+     * capabilities is not found, or the provided consumer is null, this method throws an exception.
      *
      * @param consumer
      *  the consumer for which to fetch an appropriate scheme
@@ -80,11 +80,32 @@ public interface CryptoManager {
      * @throws IllegalArgumentException
      *  if consumer is null
      *
+     * @throws CryptoCapabilitiesException
+     *  if the consumer has specified cryptographic capabilities that do not permit any known scheme to be
+     *  selected
+     *
      * @return
-     *  an optional containing the scheme best matching the consumer's provided cryptographic capabilities, or
-     *  an empty optional if an appropriate scheme could not be determined
+     *  the scheme best matching the consumer's cryptographic capabilities
      */
-    Optional<Scheme> getCryptoScheme(Consumer consumer);
+    Scheme getCryptoScheme(Consumer consumer) throws CryptoCapabilitiesException;
+
+    /**
+     * Checks whether or not a consumer has provided cryptographic capabilities and is getting a negotiated
+     * crypto scheme, or if they are using the default or legacy scheme selection process. Returns true if the
+     * consumer does not provide the necessary metrics for scheme negotiation or negotiation is disabled for
+     * the consumer; false otherwise.
+     *
+     * @param consumer
+     *  the consumer to test
+     *
+     * @throws IllegalArgumentException
+     *  if consumer is null
+     *
+     * @return
+     *  true if the consumer is *not* providing scheme negotiation metrics or for which negotiation is
+     *  disabled; false otherwise.
+     */
+    boolean isUsingDefaultCryptoScheme(Consumer consumer);
 
     /**
      * Fetches the default scheme to use when scheme negotiation is not possible or otherwise cannot be

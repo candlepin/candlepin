@@ -156,7 +156,7 @@ public class SCACertificateGenerator {
         // These need to be ordered according to priority! At the time of writing, getConsumerEnvironments
         // does this, but if that ever changes, we absolutely need that sorting here.
         List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
-        Scheme scheme = this.getConsumerCryptoScheme(consumer);
+        Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
 
         return this.getContentAccessPayload(scheme, owner, consumer, environments);
     }
@@ -197,7 +197,7 @@ public class SCACertificateGenerator {
         // These need to be ordered according to priority! At the time of writing, getConsumerEnvironments
         // does this, but if that ever changes, we absolutely need that sorting here.
         List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
-        Scheme scheme = this.getConsumerCryptoScheme(consumer);
+        Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
 
         try {
             return this.getCertificate(scheme, owner, consumer, environments);
@@ -248,7 +248,7 @@ public class SCACertificateGenerator {
         // These need to be ordered according to priority! At the time of writing, getConsumerEnvironments
         // does this, but if that ever changes, we absolutely need that sorting here.
         List<Environment> environments = environmentCurator.getConsumerEnvironments(consumer);
-        Scheme scheme = this.getConsumerCryptoScheme(consumer);
+        Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
 
         try {
             SCACertificate cert = this.getCertificate(scheme, owner, consumer, environments);
@@ -273,12 +273,6 @@ public class SCACertificateGenerator {
         }
     }
 
-    private Scheme getConsumerCryptoScheme(Consumer consumer) throws CryptoCapabilitiesException {
-        return this.cryptoManager.getCryptoScheme(consumer)
-            .orElseThrow(() -> new CryptoCapabilitiesException("cannot select scheme for consumer: " +
-                consumer));
-    }
-
     private boolean hasCertificateExpired(SCACertificate certificate) {
         CertificateSerial serial = certificate.getSerial();
 
@@ -299,7 +293,7 @@ public class SCACertificateGenerator {
     }
 
     private SCACertificate getCertificate(Scheme scheme, Owner owner, Consumer consumer,
-        List<Environment> environments) throws KeyException {
+        List<Environment> environments) throws CryptoCapabilitiesException, KeyException {
 
         SCACertificate scaCertificate = consumer.getContentAccessCert();
         if (scaCertificate == null) {
