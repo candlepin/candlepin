@@ -14,6 +14,7 @@
  */
 package org.candlepin.sync;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -88,11 +89,14 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.KeyException;
 import java.security.KeyPair;
+import java.security.cert.CertificateEncodingException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -102,6 +106,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 // TODO: FIXME: Rewrite this test to not be so reliant upon mocks. It's making things incredibly brittle and
@@ -115,9 +120,6 @@ import java.util.zip.ZipInputStream;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ExporterTest {
-
-    private static final String LEGACY_SIGNATURE_FILENAME = "signature";
-
     private static Stream<Arguments> schemeSource() {
         return CryptoUtil.SUPPORTED_SCHEMES.values()
             .stream()
@@ -161,7 +163,7 @@ public class ExporterTest {
     private CdnExporter cdnExporter;
     private DistributorVersionExporter distributorVersionExporter;
     private EntitlementExporter entitlementExporter;
-    private SignatureFileExporter signatureFileExporter;
+    private SchemeFileExporter schemeFileExporter;
 
     @BeforeEach
     public void setUp() {
@@ -177,7 +179,7 @@ public class ExporterTest {
         productExporter = new ProductExporter(translator);
         entitlementExporter = new EntitlementExporter(translator);
         distributorVersionExporter = new DistributorVersionExporter(translator);
-        signatureFileExporter = new SignatureFileExporter(mapper);
+        schemeFileExporter = new SchemeFileExporter(mapper);
         cdnExporter = new CdnExporter(translator);
         syncUtil = new SyncUtils(config);
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
@@ -219,7 +221,7 @@ public class ExporterTest {
             this.mapper,
             this.translator,
             this.scaCertificateGenerator,
-            this.signatureFileExporter);
+            this.schemeFileExporter);
     }
 
     @Test
@@ -303,9 +305,7 @@ public class ExporterTest {
         verifyContent(export, "export/products/MKT-sub-prod.json",
             new VerifyProduct("MKT-sub-prod.json", mktSubProd));
 
-        // Should use legacy signature file
-        assertTrue(this.verifyHasEntry(export, LEGACY_SIGNATURE_FILENAME));
-        assertFalse(this.verifyHasEntry(export, SignatureFile.FILENAME));
+        verifySignatureFile(export, null);
 
         FileUtils.deleteDirectory(export.getParentFile());
         assertTrue(new File("/tmp/consumer_export.zip").delete());
@@ -380,9 +380,7 @@ public class ExporterTest {
         assertTrue(export.exists());
         verifyContent(export, "export/meta.json", new VerifyMetadata(new Date(start.toEpochMilli())));
 
-        // Should use legacy signature file
-        assertTrue(this.verifyHasEntry(export, LEGACY_SIGNATURE_FILENAME));
-        assertFalse(this.verifyHasEntry(export, SignatureFile.FILENAME));
+        verifySignatureFile(export, null);
 
         // cleanup the mess
         FileUtils.deleteDirectory(export.getParentFile());
@@ -427,9 +425,7 @@ public class ExporterTest {
         assertTrue(export.exists());
         verifyContent(export, "export/upstream_consumer/10.pem", new VerifyIdentityCert("10.pem"));
 
-        // Should use legacy signature file
-        assertTrue(this.verifyHasEntry(export, LEGACY_SIGNATURE_FILENAME));
-        assertFalse(this.verifyHasEntry(export, SignatureFile.FILENAME));
+        verifySignatureFile(export, null);
     }
 
     @Test
@@ -477,9 +473,7 @@ public class ExporterTest {
 
         verifyContent(export, "export/consumer.json", new VerifyConsumer("consumer.json"));
 
-        // Should use legacy signature file
-        assertTrue(this.verifyHasEntry(export, LEGACY_SIGNATURE_FILENAME));
-        assertFalse(this.verifyHasEntry(export, SignatureFile.FILENAME));
+        verifySignatureFile(export, null);
     }
 
     @Test
@@ -540,9 +534,7 @@ public class ExporterTest {
         verifyContent(export, "export/distributor_version/test-dist-ver.json",
             new VerifyDistributorVersion("test-dist-ver.json"));
 
-        // Should use legacy signature file
-        assertTrue(this.verifyHasEntry(export, LEGACY_SIGNATURE_FILENAME));
-        assertFalse(this.verifyHasEntry(export, SignatureFile.FILENAME));
+        verifySignatureFile(export, null);
     }
 
     @Test
@@ -600,9 +592,7 @@ public class ExporterTest {
         // Check consumer export has content access cert.
         assertTrue(verifyHasEntry(export, "export/content_access_certificates/654321.pem"));
 
-        // Should use legacy signature file
-        assertTrue(this.verifyHasEntry(export, LEGACY_SIGNATURE_FILENAME));
-        assertFalse(this.verifyHasEntry(export, SignatureFile.FILENAME));
+        verifySignatureFile(export, null);
     }
 
     @Test
@@ -661,9 +651,7 @@ public class ExporterTest {
         // Check consumer export does not have content access cert.
         assertFalse(verifyHasEntry(export, "export/content_access_certificates/654321.pem"));
 
-        // Should use legacy signature file
-        assertTrue(this.verifyHasEntry(export, LEGACY_SIGNATURE_FILENAME));
-        assertFalse(this.verifyHasEntry(export, SignatureFile.FILENAME));
+        verifySignatureFile(export, null);
     }
 
     @Test
@@ -723,9 +711,7 @@ public class ExporterTest {
         // Check consumer export does not have content access cert.
         assertFalse(verifyHasEntry(export, "export/content_access_certificates/654321.pem"));
 
-        // Should use legacy signature file
-        assertTrue(this.verifyHasEntry(export, LEGACY_SIGNATURE_FILENAME));
-        assertFalse(this.verifyHasEntry(export, SignatureFile.FILENAME));
+        verifySignatureFile(export, null);
     }
 
     @Test
@@ -785,9 +771,7 @@ public class ExporterTest {
         // Check consumer export has content access cert.
         assertTrue(verifyHasEntry(export, "export/content_access_certificates/654321.pem"));
 
-        // Should use legacy signature file
-        assertTrue(this.verifyHasEntry(export, LEGACY_SIGNATURE_FILENAME));
-        assertFalse(this.verifyHasEntry(export, SignatureFile.FILENAME));
+        verifySignatureFile(export, null);
     }
 
     @Test
@@ -853,8 +837,7 @@ public class ExporterTest {
 
         assertNotNull(export);
         assertTrue(export.exists());
-        assertTrue(this.verifyHasEntry(export, SignatureFile.FILENAME));
-        assertFalse(this.verifyHasEntry(export, LEGACY_SIGNATURE_FILENAME));
+        verifySignatureFile(export, scheme);
     }
 
     @Test
@@ -894,8 +877,7 @@ public class ExporterTest {
 
         assertNotNull(export);
         assertTrue(export.exists());
-        assertTrue(this.verifyHasEntry(export, SignatureFile.FILENAME));
-        assertFalse(this.verifyHasEntry(export, LEGACY_SIGNATURE_FILENAME));
+        verifySignatureFile(export, scheme);
     }
 
     /**
@@ -992,6 +974,48 @@ public class ExporterTest {
                 catch (IOException e) {
                     e.printStackTrace();
                 }
+            }
+        }
+    }
+
+    private void verifySignatureFile(File export, Scheme scheme)
+        throws CertificateEncodingException, IOException {
+
+        if (export == null) {
+            throw new IllegalArgumentException("export is null");
+        }
+
+        if (scheme == null) {
+            scheme = this.cryptoManager.getDefaultCryptoScheme();
+        }
+
+        try (ZipFile zipFile = new ZipFile(export)) {
+            ZipEntry consumerExportEntry = zipFile.getEntry("consumer_export.zip");
+            assertNotNull(consumerExportEntry, "consumer_export.zip not found");
+
+            File tempZip = File.createTempFile("temp", ".zip");
+            tempZip.deleteOnExit();
+            try (InputStream is = zipFile.getInputStream(consumerExportEntry);
+                OutputStream os = new FileOutputStream(tempZip)) {
+                is.transferTo(os);
+            }
+
+            try (ZipFile archiveZip = new ZipFile(tempZip)) {
+                ZipEntry schemeEntry = archiveZip.getEntry("export/" + SchemeFile.FILENAME);
+                assertNotNull(schemeEntry, "scheme file not found");
+
+                SchemeFile actual = this.mapper
+                    .readValue(archiveZip.getInputStream(schemeEntry), SchemeFile.class);
+
+                String expectedCert = Base64.getEncoder()
+                    .encodeToString(scheme.certificate().getEncoded());
+
+                assertThat(actual)
+                    .isNotNull()
+                    .returns(scheme.name(), SchemeFile::name)
+                    .returns(expectedCert, SchemeFile::certificate)
+                    .returns(scheme.signatureAlgorithm(), SchemeFile::signatureAlgorithm)
+                    .returns(scheme.keyAlgorithm(), SchemeFile::keyAlgorithm);
             }
         }
     }

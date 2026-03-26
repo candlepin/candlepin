@@ -48,6 +48,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -55,6 +56,8 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.security.cert.CertificateEncodingException;
 import java.util.Collection;
 import java.util.Date;
@@ -98,7 +101,7 @@ public class Exporter {
     private final ModelTranslator translator;
     private final SCACertificateGenerator scaCertificateGenerator;
     private final SyncUtils syncUtils;
-    private final SignatureFileExporter signatureFileExporter;
+    private final SchemeFileExporter schemeFileExporter;
 
     @Inject
     public Exporter(
@@ -123,7 +126,7 @@ public class Exporter {
         @Named("ExportObjectMapper") ObjectMapper mapper,
         ModelTranslator translator,
         SCACertificateGenerator scaCertificateGenerator,
-        SignatureFileExporter signatureFileExporter) {
+        SchemeFileExporter schemeFileExporter) {
 
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.meta = Objects.requireNonNull(meta);
@@ -146,7 +149,7 @@ public class Exporter {
         this.mapper = Objects.requireNonNull(mapper);
         this.translator = Objects.requireNonNull(translator);
         this.scaCertificateGenerator = Objects.requireNonNull(scaCertificateGenerator);
-        this.signatureFileExporter = Objects.requireNonNull(signatureFileExporter);
+        this.schemeFileExporter = Objects.requireNonNull(schemeFileExporter);
     }
 
     /**
@@ -192,6 +195,7 @@ public class Exporter {
             this.exportContentDeliveryNetworks(baseDir);
 
             Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
+            this.exportScheme(baseDir, scheme);
 
             return this.makeArchive(consumer, scheme, tmpDir, baseDir);
         }
@@ -239,6 +243,7 @@ public class Exporter {
             this.exportContentAccessCerts(baseDir, consumer, serials);
 
             Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
+            this.exportScheme(baseDir, scheme);
 
             return this.makeArchive(consumer, scheme, tmpDir, baseDir);
         }
@@ -249,7 +254,7 @@ public class Exporter {
     }
 
     private File makeArchive(Consumer consumer, Scheme scheme, File tempDir, File exportDir)
-        throws CertificateEncodingException, IOException {
+        throws IOException {
 
         String exportFileName = String.format("%s-%s.zip", consumer.getUuid(), exportDir.getName());
         log.info("Creating archive of {} in: {}", exportDir.getAbsolutePath(), exportFileName);
@@ -261,9 +266,8 @@ public class Exporter {
             byte[] signature = this.cryptoManager.getSigner(scheme)
                 .sign(archiveInputStream);
 
-            boolean legacy = this.cryptoManager.isUsingDefaultCryptoScheme(consumer);
             File signedArchive = this.createSignedZipArchive(tempDir, archive, exportFileName, signature,
-                "signed Candlepin export for " + consumer.getUuid(), scheme, legacy);
+                "signed Candlepin export for " + consumer.getUuid());
 
             log.debug("Returning file: {}", archive.getAbsolutePath());
             return signedArchive;
@@ -290,8 +294,7 @@ public class Exporter {
     }
 
     private File createSignedZipArchive(File tempDir, File toAdd,
-        String exportFileName, byte[] signature, String comment, Scheme scheme, boolean legacy)
-        throws IOException, CertificateEncodingException {
+        String exportFileName, byte[] signature, String comment) throws IOException {
 
         File archive = new File(tempDir, exportFileName);
         ZipOutputStream out = null;
@@ -299,13 +302,7 @@ public class Exporter {
             out = new ZipOutputStream(new FileOutputStream(archive));
             out.setComment(comment);
             addFileToArchive(out, toAdd.getParent().length() + 1, toAdd);
-
-            if (legacy) {
-                addLegacySignatureToArchive(out, signature);
-            }
-            else {
-                addSignatureToArchive(out, scheme, signature);
-            }
+            this.addSignatureToArchive(out, signature);
         }
         finally {
             if (out != null) {
@@ -352,20 +349,13 @@ public class Exporter {
         }
     }
 
-    private void addLegacySignatureToArchive(ZipOutputStream out, byte[] signature)
+    private void addSignatureToArchive(ZipOutputStream out, byte[] signature)
         throws IOException, FileNotFoundException {
 
-        log.debug("Adding legacy signature to archive.");
+        log.debug("Adding signature to archive.");
         out.putNextEntry(new ZipEntry("signature"));
         out.write(signature, 0, signature.length);
         out.closeEntry();
-    }
-
-    private void addSignatureToArchive(ZipOutputStream out, Scheme scheme, byte[] signature)
-        throws IOException, CertificateEncodingException {
-
-        log.debug("Adding signature to archive.");
-        this.signatureFileExporter.export(out, scheme, signature);
     }
 
     private void exportMeta(File baseDir, String cdnKey)
@@ -669,6 +659,15 @@ public class Exporter {
                     cdnExporter.export(mapper, writer, cdn);
                 }
             }
+        }
+    }
+
+    private void exportScheme(File baseDir, Scheme scheme) throws CertificateEncodingException, IOException {
+        log.debug("Exporting scheme: {}", scheme.name());
+
+        File file = new File(baseDir.getCanonicalPath(), SchemeFile.FILENAME);
+        try (BufferedWriter writer = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8)) {
+            this.schemeFileExporter.export(writer, scheme);
         }
     }
 
