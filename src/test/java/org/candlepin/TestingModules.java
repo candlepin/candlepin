@@ -108,6 +108,8 @@ import org.candlepin.validation.CandlepinMessageInterpolator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
@@ -251,20 +253,15 @@ public class TestingModules {
         }
     }
 
-    public static class StandardTest extends AbstractModule {
-        private Configuration config;
-
-        public StandardTest() {
-            this.config = TestConfig.defaults();
-        }
-
-        public StandardTest(Configuration config) {
-            this.config = config;
-        }
-
-        private TestingInterceptor authMethodInterceptor;
-
-        private void bindPki() {
+    /**
+     * PKI bindings shared by {@link StandardTest} and {@link org.candlepin.test.DatabaseTestFixture}. When
+     * installed on the database fixture parent injector with a {@link Configuration} binding, the
+     * {@link CryptoManager} eager singleton is created once per parent injector (per test class), not once per
+     * child injector (per test method).
+     */
+    public static final class PkiBindingsModule extends AbstractModule {
+        @Override
+        protected void configure() {
             // Security provider binding
             bind(BouncyCastleSecurityProvider.class);
             bind(java.security.Provider.class).toProvider(BouncyCastleSecurityProvider.class);
@@ -287,6 +284,62 @@ public class TestingModules {
             // We cannot bind the other classes here, as they may require curators or other things that are
             // not bound in this context.
         }
+    }
+
+    /**
+     * Re-exposes PKI singletons from a bootstrap injector on the database parent injector without binding
+     * {@link Configuration}, so per-test {@link StandardTest} modules can still bind their own
+     * {@code Configuration} instances.
+     */
+    public static final class DatabaseFixturePkiExportsModule extends AbstractModule {
+        private final Injector pkiBootstrap;
+
+        public DatabaseFixturePkiExportsModule(Injector pkiBootstrap) {
+            this.pkiBootstrap = pkiBootstrap;
+        }
+
+        @Override
+        protected void configure() {
+            bind(CryptoManager.class).toInstance(pkiBootstrap.getInstance(CryptoManager.class));
+            bind(CertificateReader.class).toInstance(pkiBootstrap.getInstance(CertificateReader.class));
+            bind(OidUtil.class).toInstance(pkiBootstrap.getInstance(OidUtil.class));
+            bind(PrivateKeyReader.class).toInstance(pkiBootstrap.getInstance(PrivateKeyReader.class));
+            bind(PemEncoder.class).toInstance(pkiBootstrap.getInstance(PemEncoder.class));
+            bind(SubjectKeyIdentifierWriter.class)
+                .toInstance(pkiBootstrap.getInstance(SubjectKeyIdentifierWriter.class));
+            bind(X509ExtensionUtil.class).toInstance(pkiBootstrap.getInstance(X509ExtensionUtil.class));
+            bind(BouncyCastleSecurityProvider.class)
+                .toInstance(pkiBootstrap.getInstance(BouncyCastleSecurityProvider.class));
+            bind(BouncyCastleProvider.class).toInstance(pkiBootstrap.getInstance(BouncyCastleProvider.class));
+            bind(java.security.Provider.class)
+                .toInstance(pkiBootstrap.getInstance(Key.get(java.security.Provider.class)));
+        }
+    }
+
+    public static class StandardTest extends AbstractModule {
+        private final Configuration config;
+        private final boolean installPkiBindings;
+
+        public StandardTest() {
+            this.config = TestConfig.defaults();
+            this.installPkiBindings = true;
+        }
+
+        public StandardTest(Configuration config) {
+            this.config = config;
+            this.installPkiBindings = true;
+        }
+
+        /**
+         * @param installPkiBindings
+         *  when false, PKI must already be bound on a parent injector (see DatabaseTestFixture)
+         */
+        public StandardTest(Configuration config, boolean installPkiBindings) {
+            this.config = config;
+            this.installPkiBindings = installPkiBindings;
+        }
+
+        private TestingInterceptor authMethodInterceptor;
 
         @Override
         public void configure() {
@@ -321,7 +374,9 @@ public class TestingModules {
             bind(DateSource.class).to(DateSourceForTesting.class).asEagerSingleton();
             bind(Enforcer.class).to(EnforcerForTesting.class); // .to(JavascriptEnforcer.class);
 
-            this.bindPki();
+            if (this.installPkiBindings) {
+                install(new PkiBindingsModule());
+            }
 
             bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
             bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);

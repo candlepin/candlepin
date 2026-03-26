@@ -200,7 +200,20 @@ public class DatabaseTestFixture {
 
     @BeforeAll
     public static void initClass() {
-        parentInjector = Guice.createInjector(new TestingModules.JpaModule());
+        // Build PKI once in a throwaway injector (with its own Configuration) and export concrete instances
+        // on the parent injector. That way BouncyCastleCryptoManager's per-scheme validation runs once per
+        // test class, while each @BeforeEach child injector can still bind a fresh Configuration.
+        Configuration bootstrapConfig = TestConfig.defaults();
+        Injector pkiBootstrap = Guice.createInjector(new AbstractModule() {
+            @Override
+            protected void configure() {
+                bind(Configuration.class).toInstance(bootstrapConfig);
+                install(new TestingModules.PkiBindingsModule());
+            }
+        });
+        parentInjector = Guice.createInjector(
+            new TestingModules.JpaModule(),
+            new TestingModules.DatabaseFixturePkiExportsModule(pkiBootstrap));
         insertValidationEventListeners(parentInjector);
     }
 
@@ -235,7 +248,7 @@ public class DatabaseTestFixture {
     public void init(boolean beginTransaction) throws Exception {
         this.config = TestConfig.defaults();
 
-        Module testingModule = new TestingModules.StandardTest(this.config);
+        Module testingModule = new TestingModules.StandardTest(this.config, false);
         this.injector = parentInjector.createChildInjector(
             Modules.override(testingModule).with(getGuiceOverrideModule()));
 
