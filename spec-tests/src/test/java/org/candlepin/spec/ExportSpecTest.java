@@ -298,9 +298,30 @@ class ExportSpecTest {
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
         File manifest = this.createExportAsync(consumerClient, consumer.getUuid(), null);
-        assertSignature(capabilities, manifest);
-
         ZipFile export = ExportUtil.getExportArchive(manifest);
+
+        ZipEntry entry = export.getEntry("export/" + ExportUtil.SCHEME_FILENAME);
+        assertNotNull(entry, ExportUtil.SCHEME_FILENAME + " is not found in archive");
+
+        JsonNode scheme = null;
+        try (InputStream istream = export.getInputStream(entry)) {
+            scheme = ApiClient.MAPPER.readTree(istream);
+        }
+
+        // Verify the scheme content
+        assertNotNull(scheme.get("name"), "signature file is missing the scheme name");
+        assertNotNull(scheme.get("signature_algorithm"), "signature file is missing the signature algorithm");
+        assertNotNull(scheme.get("key_algorithm"), "signature file is missing the key algorithm");
+        assertNotNull(scheme.get("certificate"), "signature file is missing the scheme certificate");
+
+        String certB64 = scheme.get("certificate").asText();
+        X509Certificate x509Certificate = X509Cert.parseCertificate(Base64.decodeBase64(certB64));
+        CertificateAssert.assertThatCert(new X509Cert(x509Certificate))
+            .usesKeyAlgorithmMatchingCapabilities(capabilities)
+            .usesSignatureAlgorithmMatchingCapabilities(capabilities);
+
+        assertSignature(manifest, x509Certificate, scheme.get("signature_algorithm").asText());
+
         int actualNumberOfCerts = assertEntCerts(export, capabilities);
         assertEquals(1, actualNumberOfCerts);
         CertificateDTO idCert = assertUpstreamIDCert(export, capabilities);
@@ -308,56 +329,17 @@ class ExportSpecTest {
         // Verify that the upstream consumer ID certificate can establish a mTLS connection
         ConsumerDTO actual = ApiClients.ssl(idCert).consumers().getConsumer(consumer.getUuid());
         assertNotNull(actual);
-
-        String msg = String.format("%s file should not be present in manifest",
-            ExportUtil.LEGACY_SIGNATURE_FILENAME);
-        assertFalse(ExportUtil.legacySignatureFileExists(manifest), msg);
     }
 
-    @Test
-    public void shouldExportLegacySignature() throws Exception {
-        ApiClient adminClient = ApiClients.admin();
-        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
-
-        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers
-            .random(owner, ConsumerTypes.Candlepin)
-            .cryptographicCapabilities(null));
-        ApiClient consumerClient = ApiClients.ssl(consumer);
-
-        File manifest = this.createExportAsync(consumerClient, consumer.getUuid(), null);
-
-        assertTrue(ExportUtil.legacySignatureFileExists(manifest));
-        assertNull(ExportUtil.getSignatureFile(manifest));
-    }
-
-    private void assertSignature(CryptographicCapabilitiesDTO capabilities, File manifest)
+    private void assertSignature(File manifest, X509Certificate cert, String sigAlgo)
         throws InvalidKeyException, NoSuchAlgorithmException, SignatureException, IOException {
 
-        JsonNode root = ExportUtil.getSignatureFile(manifest);
-        assertNotNull(root,
-                String.format("%s file is not present in manifest", ExportUtil.SIGNATURE_FILENAME));
-
-        assertNotNull(root.get("signature"), "signature file is missing the signature");
-        byte[] signatureBytes = Base64.decodeBase64(root.get("signature").asText());
-
-        assertNotNull(root.get("scheme"), "signature file is missing the scheme");
-        JsonNode scheme = root.get("scheme");
-
-        assertNotNull(scheme.get("name"), "signature file is missing the scheme name");
-        assertNotNull(scheme.get("signature_algorithm"), "signature file is missing the signature algorithm");
-        assertNotNull(scheme.get("key_algorithm"), "signature file is missing the key algorithm");
-        assertNotNull(scheme.get("certificate"), "signature file is missing the scheme certificate");
-
-        // Verify the certificate uses the crypo capabilities
-        String certB64 = scheme.get("certificate").asText();
-        X509Certificate x509Certificate = X509Cert.parseCertificate(Base64.decodeBase64(certB64));
-        CertificateAssert.assertThatCert(new X509Cert(x509Certificate))
-            .usesKeyAlgorithmMatchingCapabilities(capabilities)
-            .usesSignatureAlgorithmMatchingCapabilities(capabilities);
+        byte[] signatureContent = ExportUtil.getSignature(manifest);
+        assertNotNull(signatureContent);
 
         // Verify the signature
-        Signature signature = Signature.getInstance(scheme.get("signature_algorithm").asText());
-        signature.initVerify(x509Certificate);
+        Signature signature = Signature.getInstance(sigAlgo);
+        signature.initVerify(cert);
 
         try (ZipFile zipFile = new ZipFile(manifest)) {
             ZipEntry entry = zipFile.getEntry(ExportUtil.EXPORT_NAME);
@@ -371,7 +353,7 @@ class ExportSpecTest {
             }
         }
 
-        assertTrue(signature.verify(signatureBytes));
+        assertTrue(signature.verify(signatureContent));
     }
 
     private CertificateDTO assertUpstreamIDCert(ZipFile export, CryptographicCapabilitiesDTO capabilities)
