@@ -172,8 +172,13 @@ public class BouncyCastleCryptoManager implements CryptoManager {
         // if the consumer has indicated no support at all, it is likely a legacy consumer, and it should be
         // given the default scheme
         if (supportedKeyAlgoOids == null && supportedSignatureAlgoOids == null) {
+            log.debug("Consumer has provided no crypto capabilities, returning default scheme");
             return Optional.of(this.getDefaultCryptoScheme());
         }
+
+        log.debug("Finding scheme best matching supported crypto algorithms:");
+        log.debug("  key algorithms: {}", supportedKeyAlgoOids);
+        log.debug("  sig algorithms: {}", supportedSignatureAlgoOids);
 
         // Otherwise *some* support has been indicated. Find first supported scheme. If the consumer has
         // indicated partial support, then we only neeed to check the set of algorithms they've provided.
@@ -205,6 +210,9 @@ public class BouncyCastleCryptoManager implements CryptoManager {
         // auth negotiation
         ConsumerType ctype = consumer.getType();
         if (!(this.enableSchemeNegotiation || (ctype != null && ctype.isManifest()))) {
+            log.debug("Scheme negotiation is disabled and consumer is not a manifest consumer, " +
+                "returning default scheme");
+
             return this.getDefaultCryptoScheme();
         }
         // end temp logic
