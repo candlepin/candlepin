@@ -15,17 +15,21 @@
 package org.candlepin.spec.consumers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.candlepin.spec.bootstrap.assertions.CertificateAssert.assertThatCert;
+import static org.candlepin.spec.bootstrap.assertions.PrivateKeyAssert.assertThatKey;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertGone;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.client.v1.ConsumerInstalledProductDTO;
+import org.candlepin.dto.api.client.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.dto.api.client.v1.EnvironmentDTO;
 import org.candlepin.dto.api.client.v1.GuestIdDTO;
 import org.candlepin.dto.api.client.v1.NestedOwnerDTO;
@@ -43,6 +47,7 @@ import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
+import org.candlepin.spec.bootstrap.data.builder.CryptoCapabilities;
 import org.candlepin.spec.bootstrap.data.builder.Environments;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Permissions;
@@ -80,6 +85,45 @@ public class ConsumerResourceSpecTest {
     private ApiClient adminClient;
     private OwnerDTO owner;
 
+    private static Stream<Arguments> capabilitiesSource() {
+        return CryptoCapabilities.getSupportedCapabilities()
+            .stream()
+            .map(Arguments::of);
+    }
+
+    private static void verifyCapabilities(CryptographicCapabilitiesDTO expected,
+        CryptographicCapabilitiesDTO actual) {
+
+        if (expected == null) {
+            assertNull(actual);
+            return;
+        }
+
+        assertNotNull(actual);
+
+        List<String> expKeyAlgorithms = expected.getKeyAlgorithms();
+        List<String> actKeyAlgorithms = actual.getKeyAlgorithms();
+        if (expKeyAlgorithms != null) {
+            assertThat(actKeyAlgorithms)
+                .isNotNull()
+                .containsExactlyInAnyOrderElementsOf(expKeyAlgorithms);
+        }
+        else {
+            assertNull(actKeyAlgorithms);
+        }
+
+        List<String> expSigAlgorithms = expected.getSignatureAlgorithms();
+        List<String> actSigAlgorithms = actual.getSignatureAlgorithms();
+        if (expSigAlgorithms != null) {
+            assertThat(actSigAlgorithms)
+                .isNotNull()
+                .containsExactlyInAnyOrderElementsOf(expSigAlgorithms);
+        }
+        else {
+            assertNull(actSigAlgorithms);
+        }
+    }
+
     @BeforeEach
     public void setup() {
         adminClient = ApiClients.admin();
@@ -110,6 +154,69 @@ public class ConsumerResourceSpecTest {
             .isAfterOrEqualTo(init)
             .isAfterOrEqualTo(output.getCreated())
             .isBeforeOrEqualTo(post);
+    }
+
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldCreateConsumerIdentityCertsAccordingToClientCapabilities(
+        CryptographicCapabilitiesDTO capabilities) {
+
+        OwnerDTO owner = this.adminClient.owners().createOwner(Owners.random());
+        ConsumerDTO input = Consumers.random(owner)
+            .cryptographicCapabilities(capabilities);
+
+        OffsetDateTime init = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        ConsumerDTO output = this.adminClient.consumers().createConsumer(input);
+        assertNotNull(output);
+
+        OffsetDateTime post = OffsetDateTime.now()
+            .truncatedTo(ChronoUnit.SECONDS);
+
+        CertificateDTO cert = output.getIdCert();
+
+        assertThat(cert)
+            .isNotNull()
+            .doesNotReturn(null, CertificateDTO::getId)
+            .doesNotReturn(null, CertificateDTO::getCreated)
+            .doesNotReturn(null, CertificateDTO::getUpdated)
+            .doesNotReturn(null, CertificateDTO::getKey)
+            .doesNotReturn(null, CertificateDTO::getCert);
+
+        assertThatCert(cert)
+            .usesKeyAlgorithmMatchingCapabilities(capabilities)
+            .usesSignatureAlgorithmMatchingCapabilities(capabilities);
+
+        assertThatKey(cert)
+            .isNotNull()
+            .usesAlgorithmMatchingCapabilities(capabilities);
+
+        assertThat(cert.getId())
+            .isNotNull()
+            .isNotBlank();
+
+        assertThat(cert.getCreated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isBeforeOrEqualTo(post);
+
+        assertThat(cert.getUpdated())
+            .isNotNull()
+            .isAfterOrEqualTo(init)
+            .isAfterOrEqualTo(cert.getCreated())
+            .isBeforeOrEqualTo(post);
+
+        // ID cert should be usable as an auth source
+        ApiClient consumerClient = ApiClients.ssl(output);
+        ConsumerDTO fetched = consumerClient.consumers().getConsumer(output.getUuid());
+
+        assertThat(fetched)
+            .isNotNull()
+            .returns(output.getId(), ConsumerDTO::getId)
+            .returns(output.getUuid(), ConsumerDTO::getUuid)
+            .returns(output.getName(), ConsumerDTO::getName)
+            .returns(output.getIdCert(), ConsumerDTO::getIdCert);
     }
 
     public static Stream<Arguments> cloudFactsSource() {
@@ -308,6 +415,72 @@ public class ConsumerResourceSpecTest {
         assertThat(actual)
             .isNotNull()
             .returns(expectedGuestId2, GuestIdDTO::getGuestId);
+    }
+
+    @Test
+    public void shouldAllowChangingIdentityCertificateFormatWithCapabilitiesChange() {
+        OwnerDTO owner = this.adminClient.owners().createOwner(Owners.random());
+
+        CryptographicCapabilitiesDTO rsaCaps = CryptoCapabilities.rsa();
+        CryptographicCapabilitiesDTO mldsaCaps = CryptoCapabilities.mldsa();
+
+        ConsumerDTO input = Consumers.random(owner)
+            .cryptographicCapabilities(rsaCaps);
+
+        ConsumerDTO rsaConsumer = this.adminClient.consumers().createConsumer(input);
+        assertNotNull(rsaConsumer);
+
+        verifyCapabilities(rsaCaps, rsaConsumer.getCryptographicCapabilities());
+
+        assertThatCert(rsaConsumer.getIdCert())
+            .usesKeyAlgorithmMatchingCapabilities(rsaCaps)
+            .usesSignatureAlgorithmMatchingCapabilities(rsaCaps);
+
+        assertThatKey(rsaConsumer.getIdCert())
+            .isNotNull()
+            .usesAlgorithmMatchingCapabilities(rsaCaps);
+
+        // Update the consumer's capabilities to only support ML-DSA
+        input.cryptographicCapabilities(mldsaCaps);
+
+        this.adminClient.consumers().updateConsumer(rsaConsumer.getUuid(), input);
+        ConsumerDTO mldsaConsumer = this.adminClient.consumers().getConsumer(rsaConsumer.getUuid());
+
+        // Just updating the consumer itself is not enough to trigger a change to the ID cert. It should
+        // be as it was initially, only changing to the proper cert once we force a refresh.
+        assertThat(mldsaConsumer)
+            .isNotNull()
+            .returns(rsaConsumer.getIdCert(), ConsumerDTO::getIdCert);
+
+        verifyCapabilities(mldsaCaps, mldsaConsumer.getCryptographicCapabilities());
+
+        // Forcefully regenerate the ID cert to ensure we get a new cert with the new capabilities
+        mldsaConsumer = this.adminClient.consumers()
+            .regenerateIdentityCertificates(mldsaConsumer.getUuid());
+
+        assertThat(mldsaConsumer)
+            .isNotNull()
+            .doesNotReturn(null, ConsumerDTO::getIdCert)
+            .doesNotReturn(rsaConsumer.getIdCert(), ConsumerDTO::getIdCert);
+
+        assertThatCert(mldsaConsumer.getIdCert())
+            .usesKeyAlgorithmMatchingCapabilities(mldsaCaps)
+            .usesSignatureAlgorithmMatchingCapabilities(mldsaCaps);
+
+        assertThatKey(mldsaConsumer.getIdCert())
+            .isNotNull()
+            .usesAlgorithmMatchingCapabilities(mldsaCaps);
+
+        // The new ID cert should be usable as an auth source
+        ApiClient consumerClient = ApiClients.ssl(mldsaConsumer);
+        ConsumerDTO fetched = consumerClient.consumers().getConsumer(mldsaConsumer.getUuid());
+
+        assertThat(fetched)
+            .isNotNull()
+            .returns(mldsaConsumer.getId(), ConsumerDTO::getId)
+            .returns(mldsaConsumer.getUuid(), ConsumerDTO::getUuid)
+            .returns(mldsaConsumer.getName(), ConsumerDTO::getName)
+            .returns(mldsaConsumer.getIdCert(), ConsumerDTO::getIdCert);
     }
 
     @Test
