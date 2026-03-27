@@ -18,7 +18,11 @@ import org.candlepin.pki.Scheme;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Base64.Encoder;
@@ -92,6 +96,43 @@ public record SchemeFile(
             encodedCert,
             scheme.signatureAlgorithm(),
             scheme.keyAlgorithm());
+    }
+
+    /**
+     * Create a {@link Scheme} using the provided scheme file.
+     *
+     * @param schemeFile
+     *  the scheme file used to create a scheme instance
+     *
+     * @throws IllegalArgumentException
+     *  if the provided scheme file is null or the certificate in the scheme file is not in a valid Base64
+     *  scheme
+     *
+     * @throws CertificateException
+     *  if unable to create a X.509 certificate
+     *
+     * @return the created scheme
+     */
+    public static Scheme toScheme(SchemeFile schemeFile) throws CertificateException {
+        if (schemeFile == null) {
+            throw new IllegalArgumentException("scheme file is null");
+        }
+
+        byte[] decoded = Base64.getDecoder().decode(schemeFile.certificate());
+        try (ByteArrayInputStream is = new ByteArrayInputStream(decoded)) {
+            X509Certificate certificate = (X509Certificate) CertificateFactory.getInstance("X.509")
+                .generateCertificate(is);
+
+            return new Scheme.Builder()
+                .setName(schemeFile.name())
+                .setCertificate(certificate)
+                .setKeyAlgorithm(schemeFile.keyAlgorithm())
+                .setSignatureAlgorithm(schemeFile.signatureAlgorithm())
+                .build();
+        }
+        catch (IOException e) {
+            throw new CertificateException(e);
+        }
     }
 
 }
