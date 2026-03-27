@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -41,6 +41,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.Scheme;
+import org.candlepin.pki.SignatureException;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.sync.file.ManifestFile;
@@ -66,6 +67,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -76,6 +78,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 import javax.inject.Inject;
@@ -118,7 +121,11 @@ public class Importer {
      * import, but be overridden with forces.
      */
     public enum Conflict {
-        MANIFEST_OLD, MANIFEST_SAME, DISTRIBUTOR_CONFLICT, SIGNATURE_CONFLICT
+        MANIFEST_OLD,
+        MANIFEST_SAME,
+        DISTRIBUTOR_CONFLICT,
+        SIGNATURE_CONFLICT,
+        UNTRUSTED_SIGNING_CERTIFICATE
     }
 
     private final ConsumerTypeCurator consumerTypeCurator;
@@ -138,9 +145,6 @@ public class Importer {
     private final ImportRecordCurator importRecordCurator;
     private final SubscriptionReconciler subscriptionReconciler;
     private final ModelTranslator translator;
-
-    // Temporary
-    private final Scheme scheme;
 
     @Inject
     public Importer(
@@ -178,18 +182,34 @@ public class Importer {
         this.importRecordCurator = Objects.requireNonNull(importRecordCurator);
         this.subscriptionReconciler = Objects.requireNonNull(subscriptionReconciler);
         this.translator = Objects.requireNonNull(translator);
-
         this.cryptoManager = Objects.requireNonNull(cryptoManager);
-
-        // Temporary measure to get a scheme; this should be determined on a per-op basis
-        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
     }
 
+    /**
+     * Imports the provided manifest.
+     *
+     * @param owner
+     *  the owner to import the manifest for
+     *
+     * @param archive
+     *  the manifest to import
+     *
+     * @param overrides
+     *  conflict overrides to override conflicting issues during the import
+     *
+     * @param uploadedFileName
+     *  the filename for persisted import record
+     *
+     * @throws ImporterException
+     *  if the export could not be loaded
+     *
+     * @return the created import record
+     */
     public ImportRecord loadExport(Owner owner, File archive, ConflictOverrides overrides,
         String uploadedFileName) throws ImporterException {
         try {
-            return doExport(owner, unpackExportFile(archive.getName(), new FileInputStream(archive)),
-                overrides, uploadedFileName);
+            return loadFromExportFile(owner, unpackExportFile(archive.getName(),
+                new FileInputStream(archive)), overrides, uploadedFileName);
         }
         catch (FileNotFoundException e) {
             log.error(String.format("Could not find import archive: %s", archive.getAbsolutePath()));
@@ -200,17 +220,28 @@ public class Importer {
     /**
      * Loads a manifest from the {@link ManifestFileService}'s stored location.
      *
-     * @param export the exported manifest file to load.
-     * @param owner the {@link Owner} to import data into.
-     * @param overrides the conflicts that are to be overridden.
-     * @param uploadedFileName the name of the file that was initially uploaded.
+     * @param export
+     *  the exported manifest file to load
+     *
+     * @param owner
+     *  the {@link Owner} to import data into
+     *
+     * @param overrides
+     *  the conflicts that are to be overridden
+     *
+     * @param uploadedFileName
+     *  the name of the file that was initially uploaded
+     *
+     * @throws ImporterException
+     *  if the export could not be loaded
+     *
      * @return the resulting {@link ImportRecord}
-     * @throws ImporterException if the export could not be loaded.
      */
     public ImportRecord loadStoredExport(ManifestFile export, Owner owner, ConflictOverrides overrides,
         String uploadedFileName) throws ImporterException {
         try {
-            return doExport(owner, extractFromService(export), overrides, uploadedFileName);
+            return loadFromExportFile(owner, extractFromService(export), overrides,
+                uploadedFileName);
         }
         catch (ManifestFileServiceException e) {
             throw new ImporterException("Could not load stored manifest file for async import", e);
@@ -382,45 +413,32 @@ public class Importer {
         return lastrun;
     }
 
-    private ImportRecord doExport(Owner owner, File exportDir, ConflictOverrides overrides,
+    private ImportRecord loadFromExportFile(Owner owner, File exportDir, ConflictOverrides overrides,
         String uploadedFileName) throws ImporterException {
 
         Map<String, Object> result = new HashMap<>();
         try {
-            File signature = new File(exportDir, "signature");
-            if (signature.length() == 0) {
-                throw new ImportExtractionException(
-                    i18n.tr("The archive does not contain the required signature file"));
-            }
-
-            boolean verifiedSignature = this.cryptoManager.getSignatureValidator(this.scheme)
-                .withAdditionalCertificates(this.cryptoManager.getUpstreamCertificates())
-                .forSignature(this.loadSignature(new File(exportDir, "signature")))
-                .validate(new File(exportDir, "consumer_export.zip"));
-
-            if (!verifiedSignature) {
-                log.warn("Archive signature check failed.");
-
-                // TODO: Check if the override includes "TRUST" and, if so, add the manifest's cert to the
-                // set of trusted certs for future validation.
-
-                if (!overrides.isForced(Conflict.SIGNATURE_CONFLICT)) {
-                    /*
-                     * Normally for import conflicts that can be overridden, we try to
-                     * report them all the first time so if the user intends to override,
-                     * they can do so with just one more request. However in the case of
-                     * a bad signature, we're going to report immediately due to the nature
-                     * of what this might mean.
-                     */
-                    throw new ImportConflictException(i18n.tr("Archive failed signature check"),
-                        Conflict.SIGNATURE_CONFLICT);
+            File consumerExport = this.getConsumerExport(exportDir);
+            Scheme scheme = null;
+            Set<X509Certificate> additionalCerts = null;
+            try (ZipFile zipFile = new ZipFile(consumerExport)) {
+                ZipEntry schemeEntry = zipFile.getEntry("export/" + SchemeFile.FILENAME);
+                if (schemeEntry != null) {
+                    SchemeFile schemeFile = this.mapper
+                        .readValue(zipFile.getInputStream(schemeEntry), SchemeFile.class);
+                    scheme = SchemeFile.toScheme(schemeFile);
                 }
                 else {
-                    log.warn("Ignoring signature check failure.");
+                    // This is a legacy export and we will need to use the default crypto scheme
+                    // and the upstream certificates for signature validation
+                    scheme = this.cryptoManager.getDefaultCryptoScheme();
+                    additionalCerts = this.cryptoManager.getUpstreamCertificates();
                 }
             }
 
-            File consumerExport = new File(exportDir, "consumer_export.zip");
+            this.verifyCertificate(scheme.certificate(), overrides);
+            this.verifySignature(scheme, exportDir, additionalCerts, overrides);
+
             File consumerExportDir = extractArchive(exportDir, consumerExport.getName(),
                 new FileInputStream(consumerExport));
 
@@ -439,10 +457,10 @@ public class Importer {
             importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFile);
 
             List<SubscriptionDTO> importSubs = importObjects(owner, importFiles, overrides);
-            Meta m = mapper.readValue(importFiles.get(ImportFile.META.fileName()), Meta.class);
+            Meta meta = mapper.readValue(importFiles.get(ImportFile.META.fileName()), Meta.class);
 
             result.put("subscriptions", importSubs);
-            result.put("meta", m);
+            result.put("meta", meta);
 
             sink.emitImportCreated(owner);
             return recordImportSuccess(owner, result, overrides, uploadedFileName);
@@ -482,6 +500,96 @@ public class Importer {
                     log.error("Failed to delete extracted export", e);
                 }
             }
+        }
+    }
+
+    private File getConsumerExport(File exportDir) throws ImportExtractionException {
+        File consumerExport = new File(exportDir, "consumer_export.zip");
+
+        // Verify that the consumer export is not a malformed zip file
+        try (ZipFile zipFile = new ZipFile(consumerExport)) {
+            return consumerExport;
+        }
+        catch (IOException e) {
+            throw new ImportExtractionException(i18n.tr(
+                "The archive {0} is not a properly compressed file or is empty", consumerExport.getName()));
+        }
+    }
+
+    private void verifyCertificate(X509Certificate certificate, ConflictOverrides overrides)
+        throws ImportExtractionException, CertificateException {
+
+        if (!this.cryptoManager.isTrustedCertificate(certificate)) {
+            log.warn("signature certificate verification failed");
+            if (!overrides.isForced(Conflict.UNTRUSTED_SIGNING_CERTIFICATE)) {
+                String msg = this.i18n.tr("Archive signed by an untrusted certificate");
+                throw new ImportExtractionException(msg);
+            }
+            else {
+                log.warn("Archive signed by an untrusted certificate; ignoring");
+            }
+        }
+    }
+
+    private void verifySignature(Scheme scheme, File exportDir,
+        Set<X509Certificate> additionalCerts, ConflictOverrides overrides)
+        throws ImportExtractionException, IOException {
+
+        byte[] signature = this.loadSignature(exportDir);
+        File consumerExport = new File(exportDir, "consumer_export.zip");
+
+        boolean verifiedSignature = false;
+        try {
+            verifiedSignature = this.cryptoManager.getSignatureValidator(scheme)
+                .withAdditionalCertificates(additionalCerts)
+                .forSignature(signature)
+                .validate(consumerExport);
+        }
+        catch (SignatureException e) {
+            log.warn("Signature exception when verifying signature", e);
+        }
+
+        if (!verifiedSignature) {
+            log.warn("Archive signature check failed.");
+
+            // TODO: Check if the override includes "TRUST" and, if so, add the manifest's cert to the
+            // set of trusted certs for future validation.
+
+            if (!overrides.isForced(Conflict.SIGNATURE_CONFLICT)) {
+                /*
+                    * Normally for import conflicts that can be overridden, we try to
+                    * report them all the first time so if the user intends to override,
+                    * they can do so with just one more request. However in the case of
+                    * a bad signature, we're going to report immediately due to the nature
+                    * of what this might mean.
+                    */
+                throw new ImportConflictException(i18n.tr("Archive failed signature check"),
+                    Conflict.SIGNATURE_CONFLICT);
+            }
+            else {
+                log.warn("Ignoring signature check failure.");
+            }
+        }
+    }
+
+    private byte[] loadSignature(File exportDir)
+        throws IOException, ImportExtractionException {
+        File signatureFile = new File(exportDir, "signature");
+        if (signatureFile.length() == 0) {
+            throw new ImportExtractionException(
+                i18n.tr("The archive does not contain the required signature file"));
+        }
+
+        byte[] signatureBytes = new byte[(int) signatureFile.length()];
+        int offset = 0;
+        int numRead = 0;
+        try (FileInputStream signature = new FileInputStream(signatureFile)) {
+            while (offset < signatureBytes.length && numRead >= 0) {
+                numRead = signature.read(signatureBytes, offset, signatureBytes.length - offset);
+                offset += numRead;
+            }
+
+            return signatureBytes;
         }
     }
 
@@ -773,21 +881,6 @@ public class Importer {
         }
 
         return new File(tempDir.getAbsolutePath(), "export");
-    }
-
-    private byte[] loadSignature(File signatureFile) throws IOException {
-        // signature is never going to be a huge file, therefore cast is a-okay
-        byte[] signatureBytes = new byte[(int) signatureFile.length()];
-        try (FileInputStream signature = new FileInputStream(signatureFile)) {
-            int offset = 0;
-            int numRead = 0;
-            while (offset < signatureBytes.length && numRead >= 0) {
-                numRead = signature.read(signatureBytes, offset, signatureBytes.length - offset);
-                offset += numRead;
-            }
-
-            return signatureBytes;
-        }
     }
 
     protected void importDistributorVersions(File[] versionFiles) throws IOException {
