@@ -96,7 +96,7 @@ class DbSetup(object):
         )
 
         os.environ["DBUSERNAME"] = self.username
-        os.environ["JAVA_HOME"] = "/usr/lib/jvm/jre-17-openjdk"
+        os.environ["JAVA_HOME"] = "/usr/lib/jvm/jre-25-openjdk"
 
         if self.password:
             os.environ["DBPASSWORD"] = self.password
