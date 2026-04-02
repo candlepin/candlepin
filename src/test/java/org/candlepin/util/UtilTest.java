@@ -14,6 +14,7 @@
  */
 package org.candlepin.util;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -376,6 +377,84 @@ public class UtilTest {
             assertEquals(2, items.size());
             assertTrue(items.contains("item1"));
             assertTrue(items.contains("item2"));
+        }
+    }
+
+
+    @Nested
+    public class ToSetTests {
+        private void verifyOutput(Set<String> output, String... expectedElements) {
+            assertThat(output)
+                .isNotNull()
+                .hasSize(expectedElements.length)
+                .containsExactlyInAnyOrder(expectedElements);
+        }
+
+        @Test
+        public void testNullInputs() {
+            assertThat(Util.toSet(null))
+                .isNotNull()
+                .isEmpty();
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"", " ", " , ", ",,,"})
+        public void testEmptyInputs(String input) {
+            assertThat(Util.toSet(input))
+                .isNotNull()
+                .isEmpty();
+        }
+
+        @Test
+        public void testCommaDelimitedValuesAreConvertedProperly() {
+            String input = "v1,v2,v3";
+
+            this.verifyOutput(Util.toSet(input), "v1", "v2", "v3");
+        }
+
+        @Test
+        public void testLeadingWhitespaceIsDiscarded() {
+            String input = "   v1, v2, v3";
+
+            this.verifyOutput(Util.toSet(input), "v1", "v2", "v3");
+        }
+
+        @Test
+        public void testTrailingWhitespaceIsDiscarded() {
+            String input = "v1  ,v2  ,v3   ";
+
+            this.verifyOutput(Util.toSet(input), "v1", "v2", "v3");
+        }
+
+        @Test
+        public void testInternalWhitespaceisRetained() {
+            String input = " v 1 , v 2 , v 3 ";
+
+            this.verifyOutput(Util.toSet(input), "v 1", "v 2", "v 3");
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {",v1,,v2,,v3,", ",,,v1,,,v2,,,v3,,,"})
+        public void testEmptyElementsAreDiscarded(String input) {
+            this.verifyOutput(Util.toSet(input), "v1", "v2", "v3");
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {" ,v1, , ,v2, , ,v3, ", "   ,v1,   ,v2,   ,v3,   "})
+        public void testBlankElementsAreDiscarded(String input) {
+            this.verifyOutput(Util.toSet(input), "v1", "v2", "v3");
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"v1,v2,v2,v1", "v1,v2,v1,v2", "v1,v1,v1,v2,v2,v2"})
+        public void testDuplicatedValuesAreDiscarded(String input) {
+            this.verifyOutput(Util.toSet(input), "v1", "v2");
+        }
+
+        @Test
+        public void testOutputIsImmutable() {
+            Set<String> output = Util.toSet("1,2,3");
+            assertThrows(UnsupportedOperationException.class, () -> output.add("4"));
         }
     }
 

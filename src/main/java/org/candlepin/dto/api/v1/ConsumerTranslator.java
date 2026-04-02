@@ -22,6 +22,7 @@ import org.candlepin.dto.api.server.v1.ConsumerActivationKeyDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.server.v1.ConsumerTypeDTO;
+import org.candlepin.dto.api.server.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.dto.api.server.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
@@ -152,9 +153,6 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
                 dest.setOwner(owner != null ? translator.translate(owner, NestedOwnerDTO.class) : null);
             }
 
-            // TODO: FIXME: WHY DOES THIS PROPERTY VIOLATE EXISTING CONVENTIONS WITH RESPECT TO NULLABILITY
-            // ON DTO COLLECTIONS? WE ADDED A NEW PROPERTY AND THEN STILL VIOLATED THOSE CONVENTIONS!
-            // WHY WHY WHY WHY WHY!?
             if (source.getEnvironmentIds() != null && !source.getEnvironmentIds().isEmpty()) {
                 List<EnvironmentDTO> environments = this.environmentCurator.getConsumerEnvironments(source)
                     .stream()
@@ -211,6 +209,20 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
                 dest.setCapabilities(null);
             }
 
+            Set<String> keyAlgorithmOids = source.getSupportedKeyAlgorithmOids();
+            Set<String> sigAlgorithmOids = source.getSupportedSignatureAlgorithmOids();
+
+            if (keyAlgorithmOids != null || sigAlgorithmOids != null) {
+                CryptographicCapabilitiesDTO cryptoCapabilitiesDto = new CryptographicCapabilitiesDTO()
+                    .keyAlgorithms(keyAlgorithmOids != null ? List.copyOf(keyAlgorithmOids) : null)
+                    .signatureAlgorithms(sigAlgorithmOids != null ? List.copyOf(sigAlgorithmOids) : null);
+
+                dest.cryptographicCapabilities(cryptoCapabilitiesDto);
+            }
+            else {
+                dest.cryptographicCapabilities(null);
+            }
+
             Set<ConsumerActivationKey> keys = source.getActivationKeys();
             if (keys != null) {
                 Set<ConsumerActivationKeyDTO> keysDTOSet = new HashSet<>();
@@ -250,6 +262,7 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
                 .environment(null)
                 .installedProducts(null)
                 .capabilities(null)
+                .cryptographicCapabilities(null)
                 .hypervisorId(null)
                 .type(null)
                 .idCert(null);

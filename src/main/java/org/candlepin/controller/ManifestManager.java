@@ -33,6 +33,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
+import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ExportCreationException;
@@ -132,15 +133,28 @@ public class ManifestManager {
     /**
      * Generates a manifest for the specified consumer.
      *
-     * @param consumerUuid the target consumer's UUID.
-     * @param cdnLabel the CDN label to store in the meta file.
-     * @param webUrl the URL pointing to the manifest's originating web application.
-     * @param apiUrl the API URL pointing to the manifest's originating candlepin API.
+     * @param consumerUuid
+     *  the target consumer's UUID.
+     *
+     * @param cdnLabel
+     *  the CDN label to store in the meta file.
+     *
+     * @param webUrl
+     *  the URL pointing to the manifest's originating web application.
+     *
+     * @param apiUrl
+     *  the API URL pointing to the manifest's originating candlepin API.
+     *
+     * @throws ExportCreationException
+     *  when an export fails.
+     *
+     * @throws CryptoCapabilitiesException
+     *  if unable to determine a cryptographic scheme for the consumer
+     *
      * @return an archive of the target consumer
-     * @throws ExportCreationException when an export fails.
      */
     public File generateManifest(String consumerUuid, String cdnLabel, String webUrl, String apiUrl)
-        throws ExportCreationException {
+        throws ExportCreationException, CryptoCapabilitiesException {
 
         log.info("Exporting consumer {}", consumerUuid);
 
@@ -331,15 +345,28 @@ public class ManifestManager {
      * Generates a manifest for the specifed consumer and stores the resulting file via the
      * {@link ManifestFileService}.
      *
-     * @param consumerUuid the target consumer's UUID.
-     * @param cdnLabel the CDN label to store in the meta file.
-     * @param webUrl the URL pointing to the manifest's originating web application.
-     * @param apiUrl the API URL pointing to the manifest's originating candlepin API.
+     * @param consumerUuid
+     *  the target consumer's UUID.
+     *
+     * @param cdnLabel
+     *  the CDN label to store in the meta file.
+     *
+     * @param webUrl
+     *  the URL pointing to the manifest's originating web application.
+     *
+     * @param apiUrl
+     *  the API URL pointing to the manifest's originating candlepin API.
+     *
+     * @throws ExportCreationException
+     *  if there are any issues generating the manifest.
+     *
+     * @throws CryptoCapabilitiesException
+     *  if unable to determine a cryptographic scheme for the consumer
+     *
      * @return an {@link ExportResult} containing the details of the stored file.
-     * @throws ExportCreationException if there are any issues generating the manifest.
      */
     public ExportResult generateAndStoreManifest(String consumerUuid, String cdnLabel, String webUrl,
-        String apiUrl) throws ExportCreationException {
+        String apiUrl) throws ExportCreationException, CryptoCapabilitiesException {
 
         Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
 
@@ -407,7 +434,8 @@ public class ManifestManager {
      * @return an archive to the specified consumer's entitlements.
      */
     public File generateEntitlementArchive(Consumer consumer, Set<Long> serials)
-        throws ExportCreationException, ConcurrentContentPayloadCreationException {
+        throws ExportCreationException, ConcurrentContentPayloadCreationException,
+            CryptoCapabilitiesException {
 
         log.debug("Getting client certificate zip file for consumer: {}", consumer.getUuid());
         poolManager.regenerateDirtyEntitlements(consumer);

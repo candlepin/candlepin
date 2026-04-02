@@ -564,7 +564,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testGetCertSerials() {
+    public void testGetCertSerials() throws Exception {
         Consumer consumer = createConsumer(createOwner());
 
         Random random = new Random();
@@ -597,7 +597,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testGetCertSerialsWithNoSCACertSerial() {
+    public void testGetCertSerialsWithNoSCACertSerial() throws Exception {
         Consumer consumer = createConsumer(createOwner());
 
         Random random = new Random();
@@ -859,7 +859,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testRegenerateIdCerts() {
+    public void testRegenerateIdCerts() throws Exception {
         Consumer consumer = createConsumer(createOwner());
         consumer.setIdCert(createIdCert());
         IdentityCertificate ic = consumer.getIdCert();
@@ -876,7 +876,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void expiredIdCertGetsRegenerated() {
+    public void expiredIdCertGetsRegenerated() throws Exception {
         Consumer consumer = createConsumer(createOwner());
         ComplianceStatus status = new ComplianceStatus();
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), anyBoolean()))
@@ -907,7 +907,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void doesGenerateMissingIdCert() {
+    public void doesGenerateMissingIdCert() throws Exception {
         Consumer consumer = createConsumer(createOwner());
         ComplianceStatus status = new ComplianceStatus();
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), anyBoolean()))
@@ -1164,7 +1164,7 @@ public class ConsumerResourceTest {
         ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
         Consumer consumer = this.createConsumer(owner, ctype);
-        consumer.setName(RandomStringUtils.randomAlphanumeric(Consumer.MAX_LENGTH_OF_CONSUMER_NAME + 1));
+        consumer.setName(RandomStringUtils.randomAlphanumeric(Consumer.CONSUMER_NAME_MAX_LENGTH + 1));
         ConsumerDTO consumerDto = this.translator.translate(consumer, ConsumerDTO.class);
 
         UserPrincipal up = mock(UserPrincipal.class);
@@ -1175,7 +1175,7 @@ public class ConsumerResourceTest {
         BadRequestException ex = assertThrows(BadRequestException.class,
             () -> consumerResource.createConsumer(consumerDto, null, owner.getKey(), null, false));
         assertEquals(String.format("Name of the consumer should be shorter than %d characters.",
-            Consumer.MAX_LENGTH_OF_CONSUMER_NAME + 1), ex.getMessage());
+            Consumer.CONSUMER_NAME_MAX_LENGTH + 1), ex.getMessage());
     }
 
     @Test
@@ -1842,7 +1842,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testGetContentAccessBodyWithNullContentAccessPayload() {
+    public void testGetContentAccessBodyWithNullContentAccessPayload() throws Exception {
         Owner owner = createOwner();
         doReturn(owner)
             .when(ownerCurator)

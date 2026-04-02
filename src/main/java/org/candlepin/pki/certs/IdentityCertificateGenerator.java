@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -21,13 +21,17 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
+import org.candlepin.pki.CryptoCapabilitiesException;
+import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.DistinguishedName;
-import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.PemEncoder;
+import org.candlepin.pki.Scheme;
+import org.candlepin.pki.util.ConsumerKeyPairGenerator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.KeyException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
@@ -37,7 +41,6 @@ import java.util.Date;
 import java.util.Objects;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 
@@ -47,26 +50,33 @@ import javax.inject.Singleton;
 @Singleton
 public class IdentityCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(IdentityCertificateGenerator.class);
-    private final KeyPairGenerator keyPairGenerator;
+
+    private final CryptoManager cryptoManager;
+    private final ConsumerKeyPairGenerator keyPairGenerator;
     private final PemEncoder pemEncoder;
     private final IdentityCertificateCurator idCertCurator;
     private final CertificateSerialCurator serialCurator;
-    private final Provider<X509CertificateBuilder> certBuilder;
+
     private final int yearAddendum;
 
     @Inject
     public IdentityCertificateGenerator(
         Configuration config,
+        CryptoManager cryptoManager,
         PemEncoder pemEncoder,
-        KeyPairGenerator keyPairGenerator,
+        ConsumerKeyPairGenerator keyPairGenerator,
         IdentityCertificateCurator identityCertCurator,
-        CertificateSerialCurator serialCurator,
-        Provider<X509CertificateBuilder> certBuilder) {
+        CertificateSerialCurator serialCurator) {
+
+        Objects.requireNonNull(config);
+
+        this.cryptoManager = Objects.requireNonNull(cryptoManager);
         this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
+
         this.idCertCurator = Objects.requireNonNull(identityCertCurator);
         this.serialCurator = Objects.requireNonNull(serialCurator);
-        this.certBuilder = Objects.requireNonNull(certBuilder);
+
         this.yearAddendum = config.getInt(ConfigProperties.IDENTITY_CERT_YEAR_ADDENDUM);
     }
 
@@ -74,10 +84,19 @@ public class IdentityCertificateGenerator {
      * Method creates identity certificate. If certificate already exists
      * the cached one is returned otherwise it creates a new one.
      *
-     * @param consumer A consumer for which to create certificate
+     * @param consumer
+     *  a consumer for which to create certificate
+     *
+     * @throws CryptoCapabilitiesException
+     *  if unable to determine a cryptographic scheme for the consumer
+     *
      * @return Identity certificate
      */
-    public IdentityCertificate generate(Consumer consumer) {
+    public IdentityCertificate generate(Consumer consumer) throws CryptoCapabilitiesException {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
         return generateCertificate(consumer, false);
     }
 
@@ -85,14 +104,25 @@ public class IdentityCertificateGenerator {
      * Method creates identity certificate. If certificate already exists
      * it is deleted and a new one is created.
      *
-     * @param consumer A consumer for which to create certificate
+     * @param consumer
+     *  a consumer for which to create certificate
+     *
+     * @throws CryptoCapabilitiesException
+     *  if unable to determine a cryptographic scheme for the consumer
+     *
      * @return Identity certificate
      */
-    public IdentityCertificate regenerate(Consumer consumer) {
+    public IdentityCertificate regenerate(Consumer consumer) throws CryptoCapabilitiesException {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
         return generateCertificate(consumer, true);
     }
 
-    private IdentityCertificate generateCertificate(Consumer consumer, boolean regenerate) {
+    private IdentityCertificate generateCertificate(Consumer consumer, boolean regenerate)
+        throws CryptoCapabilitiesException {
+
         IdentityCertificate certificate = null;
 
         if (consumer.getIdCert() != null) {
@@ -109,14 +139,22 @@ public class IdentityCertificateGenerator {
             }
         }
 
-        IdentityCertificate newCertificate = this.createCertificate(consumer);
-        consumer.setIdCert(newCertificate);
+        try {
+            IdentityCertificate newCertificate = this.createCertificate(consumer);
+            consumer.setIdCert(newCertificate);
 
-        return newCertificate;
+            return newCertificate;
+        }
+        catch (KeyException e) {
+            throw new CertificateCreationException("Exception occurred while building certificate", e);
+        }
     }
 
-    private IdentityCertificate createCertificate(Consumer consumer) {
+    private IdentityCertificate createCertificate(Consumer consumer)
+        throws CryptoCapabilitiesException, KeyException {
+
         log.debug("Generating identity cert for consumer: {}", consumer.getUuid());
+
         ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
         Instant from = now.minusHours(1).toInstant();
         Instant to = now.plusYears(this.yearAddendum).toInstant();
@@ -125,9 +163,11 @@ public class IdentityCertificateGenerator {
         // We need the sequence generated id before we create the EntitlementCertificate,
         // otherwise we could have used cascading create
         this.serialCurator.create(serial);
-        KeyPair keyPair = this.keyPairGenerator.getKeyPair(consumer);
 
-        X509Certificate certificate = this.certBuilder.get()
+        KeyPair keyPair = this.keyPairGenerator.getConsumerKeyPair(consumer);
+        Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
+
+        X509Certificate certificate = this.cryptoManager.getCertificateBuilder(scheme)
             .withDN(dn)
             .withValidity(from, to)
             .withSerial(serial.getSerial())

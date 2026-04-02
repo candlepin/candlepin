@@ -15,7 +15,8 @@
 package org.candlepin.model;
 
 import org.candlepin.auth.AuthenticationMethod;
-import org.candlepin.exceptions.DuplicateEntryException;
+import org.candlepin.model.exceptions.DuplicateEntryException;
+import org.candlepin.model.exceptions.ValueTooLargeException;
 import org.candlepin.service.model.ConsumerInfo;
 import org.candlepin.util.Util;
 
@@ -86,9 +87,13 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_consumer";
 
-    // This is based on the limitation of the name in the generated identity certificate
-    // BZ 1451107
-    public static final int MAX_LENGTH_OF_CONSUMER_NAME = 250;
+    // BZ 1451107: limit consumer name length to a value no greater than what is permitted by the identity
+    // certificate creation logic and format.
+    /** The maximum length of any consumer name. */
+    public static final int CONSUMER_NAME_MAX_LENGTH = 250;
+
+    /** The maximum allowed length of any string of comma-delimited algorithm OIDs */
+    public static final int ALGORITHM_OIDS_MAX_LENGTH = 2048;
 
     /**
      * Commonly used/recognized consumer facts
@@ -158,7 +163,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     private String uuid;
 
     @Column(nullable = false)
-    @Size(max = MAX_LENGTH_OF_CONSUMER_NAME)
+    @Size(max = CONSUMER_NAME_MAX_LENGTH)
     @NotNull
     private String name;
 
@@ -235,6 +240,10 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @Column(name = "type_id")
     @NotNull
     private String typeId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "type_id", insertable = false, updatable = false)
+    private ConsumerType type;
 
     @Column(name = "owner_id", nullable = false)
     private String ownerId;
@@ -346,6 +355,19 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @OneToOne(mappedBy = "consumer",
         orphanRemoval = true, cascade = { CascadeType.ALL })
     private ConsumerCloudData consumerCloudData;
+
+    // At some point we can look at encapsulating these crypto capabilities in an object and deduplicating on
+    // them or something, but for now, we'll store them as individual fields.
+
+    /** Comma-delimited list of supported cryptographic key generation algorithm OIDs */
+    @Column(name = "key_algorithm_oids")
+    @Size(max = ALGORITHM_OIDS_MAX_LENGTH)
+    private String supportedKeyAlgorithmOids;
+
+    /** Comma-delimited list of supported cryptographic signature algorithm OIDs */
+    @Column(name = "signature_algorithm_oids")
+    @Size(max = ALGORITHM_OIDS_MAX_LENGTH)
+    private String supportedSignatureAlgorithmOids;
 
     public Consumer() {
         this.addOns = new HashSet<>();
@@ -475,6 +497,17 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     }
 
     /**
+     * Fetches the type of this consumer, if the type ID is set. This may perform a lazy lookup of the
+     * consumer type, and should generally be avoided if the type ID is sufficient.
+     *
+     * @return
+     *  The type of this consumer, if the type ID is populated; null otherwise.
+     */
+    public ConsumerType getType() {
+        return this.type;
+    }
+
+    /**
      * Sets the ID of the consumer type to of this consumer.
      *
      * @param typeId
@@ -485,6 +518,8 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
      */
     public Consumer setTypeId(String typeId) {
         this.typeId = typeId;
+        this.type = null;
+
         this.updateRHCloudProfileModified();
 
         return this;
@@ -504,7 +539,10 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
             throw new IllegalArgumentException("type is null or has not been persisted");
         }
 
-        return this.setTypeId(type.getId());
+        this.setTypeId(type.getId());
+        this.type = type;
+
+        return this;
     }
 
     /**
@@ -637,6 +675,110 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
             this.facts.putAll(facts);
         }
 
+        return this;
+    }
+
+    /**
+     * Fetches this consumer's supported key generation algorithm OIDs. If the algorithm OIDs have not been
+     * set, or have since been cleared, this method returns null.
+     *
+     * @return
+     *  a set containing the consumer's supported key generation algorithm OIDs, or null if no algorithm OIDs
+     *  have been set
+     */
+    public Set<String> getSupportedKeyAlgorithmOids() {
+        Set<String> output = Util.toSet(this.supportedKeyAlgorithmOids);
+        return !output.isEmpty() ? output : null;
+    }
+
+    /**
+     * Sets the supported cryptographic key generation algorithm OIDs for this consumer, silently discarding
+     * any duplicate OIDs in the collection. If the collection of algorithm OIDs is null or empty, any
+     * existing value will be cleared. If the collection of OIDs exceeds the maximum storage capacity for this
+     * field, this method throws an exception.
+     *
+     * @param algorithmOids
+     *  a collection of key algorithm OIDs in string format (e.g. 1.234.56.7), or null to clear any existing
+     *  values
+     *
+     * @throws ValueTooLargeException
+     *  if the converted collection of algorithm OIDs is too large and cannot be stored
+     *
+     * @return
+     *  a reference to this consumer instance
+     */
+    public Consumer setSupportedKeyAlgorithmOids(Collection<String> algorithmOids) {
+        if (algorithmOids == null) {
+            this.supportedKeyAlgorithmOids = null;
+            return this;
+        }
+
+        String oids = algorithmOids.stream()
+            .filter(Objects::nonNull)
+            .filter(oid -> !oid.isBlank())
+            .distinct()
+            .collect(Collectors.joining(","));
+
+        if (oids.length() > ALGORITHM_OIDS_MAX_LENGTH) {
+            String msg = String.format("Converted algorithm OID string length exceeds maximum size: %d > %d",
+                oids.length(), ALGORITHM_OIDS_MAX_LENGTH);
+
+            throw new ValueTooLargeException(msg);
+        }
+
+        this.supportedKeyAlgorithmOids = !oids.isBlank() ? oids : null;
+        return this;
+    }
+
+    /**
+     * Fetches this consumer's supported signature algorithm OIDs. If the algorithm OIDs have not been set, or
+     * have since been cleared, this method returns null.
+     *
+     * @return
+     *  a set containing the consumer's supported signature algorithm OIDs, or null if no algorithm OIDs have
+     *  been set
+     */
+    public Set<String> getSupportedSignatureAlgorithmOids() {
+        Set<String> output = Util.toSet(this.supportedSignatureAlgorithmOids);
+        return !output.isEmpty() ? output : null;
+    }
+
+    /**
+     * Sets the supported cryptographic signature algorithm OIDs for this consumer, silently discarding any
+     * null, empty, or duplicate OIDs in the collection. If the collection of algorithm OIDs is null or empty,
+     * any existing value will be cleared. If the collection of OIDs exceeds the maximum storage capacity for
+     * this field, this method throws an exception.
+     *
+     * @param algorithmOids
+     *  a collection of signature algorithm OIDs in string format (e.g. 1.234.56.7), or null to clear any
+     *  existing values
+     *
+     * @throws ValueTooLargeException
+     *  if the converted collection of algorithm OIDs is too large and cannot be stored
+     *
+     * @return
+     *  a reference to this consumer instance
+     */
+    public Consumer setSupportedSignatureAlgorithmOids(Collection<String> algorithmOids) {
+        if (algorithmOids == null) {
+            this.supportedSignatureAlgorithmOids = null;
+            return this;
+        }
+
+        String oids = algorithmOids.stream()
+            .filter(Objects::nonNull)
+            .filter(oid -> !oid.isBlank())
+            .distinct()
+            .collect(Collectors.joining(","));
+
+        if (oids.length() > ALGORITHM_OIDS_MAX_LENGTH) {
+            String msg = String.format("Converted algorithm OID string length exceeds maximum size: %d > %d",
+                oids.length(), ALGORITHM_OIDS_MAX_LENGTH);
+
+            throw new ValueTooLargeException(msg);
+        }
+
+        this.supportedSignatureAlgorithmOids = !oids.isBlank() ? oids : null;
         return this;
     }
 
@@ -812,12 +954,25 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
         return this;
     }
 
-    public KeyPairData getKeyPairData() {
-        return keyPairData;
-    }
-
     public Date getLastCheckin() {
         return this.lastCheckin;
+    }
+
+    /**
+     * Fetches the most recently generated key pair for this consumer. If a key pair has not yet been
+     * generated or the previous key pair was removed, this method returns null.
+     * <p>
+     * <strong>Warning</strong>: Due to the long legacy this data has, it is possible the key algorithm or
+     * size has changed since this key pair was generated. Callers should not use this method to make
+     * authoritative decisions or operations with the key pair returned without first ensuring the key pair is
+     * still valid for the given context. In essence, this value should be treated as a cache.
+     *
+     * @return
+     *  the most recently generated key pair data for this consumer, or null if a key pair has not yet been
+     *  generated or the last key pair was removed
+     */
+    public KeyPairData getKeyPairData() {
+        return keyPairData;
     }
 
     public Consumer setKeyPairData(KeyPairData keyPairData) {

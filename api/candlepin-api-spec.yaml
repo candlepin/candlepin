@@ -7190,8 +7190,8 @@ paths:
                 $ref: '#/components/schemas/UeberCertificateDTO'
         404:
           description: |
-            An owner could not be found using the provided key
-            or Uber certificate for owner was not found. Please generate one.
+            An owner could not be found using the provided key or Uber certificate for owner was not found.
+            Please generate one.
           content:
             application/json:
               schema:
@@ -7206,8 +7206,9 @@ paths:
 
     post:
       description: |
-        Creates an Ueber Entitlement Certificate. If a certificate
-        already exists, it will be regenerated.
+        Generates a new ueber (debug) certificate, granting access to all known content for the specified
+        owner. If the owner has already generated an ueber certificate, the existing one will be revoked and
+        a new certificate will be generated.
       tags:
         - owner
       operationId: createUeberCertificate
@@ -7219,6 +7220,17 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        description: |
+          The cryptographic capabilities of the system to receive and use the ueber certificate. If provided,
+          the certificate will be generated using a cryptographic scheme matching the provided capabilities.
+          If a scheme cannot be selected matching the given capabilities, this endpoint returns a 403
+          CONFLICT. If omitted, a default cryptographic scheme will be selected automatically.
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CryptographicCapabilitiesDTO'
       responses:
         200:
           description: Ueber Entitlement Certificate for the owner successfully created
@@ -7235,6 +7247,13 @@ paths:
               example:
                 displayMessage: Problem generating ueber cert for an owner
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: |
+            Unable to generate an ueber certificate compatible with the provided cryptographic capabilities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
         404:
           description: An owner could not be found using the provided key
           content:
@@ -9121,6 +9140,8 @@ components:
                 type: array
                 items:
                   $ref: '#/components/schemas/EnvironmentDTO'
+              cryptographicCapabilities:
+                $ref: '#/components/schemas/CryptographicCapabilitiesDTO'
 
     ConsumerActivationKeyDTO:
       description: Represent activation keys used by consumer in registration
@@ -9326,7 +9347,6 @@ components:
           items:
             type: string
 
-
     ContentOverrideDTO:
       description: Represents a content override for an activation key or consumer
       allOf:
@@ -9430,6 +9450,18 @@ components:
               type: string
             certificate:
               $ref: '#/components/schemas/CertificateDTO'
+
+    CryptographicCapabilitiesDTO:
+      description: Describes the cryptographic capabilities of a consumer or receiver of cryptographic assets
+      properties:
+        keyAlgorithms:
+          type: array
+          items:
+            type: string
+        signatureAlgorithms:
+          type: array
+          items:
+            type: string
 
     DeletedConsumerDTO:
       description: Represents a deleted consumer

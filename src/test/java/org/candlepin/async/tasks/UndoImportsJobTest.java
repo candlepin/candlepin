@@ -15,7 +15,6 @@
 package org.candlepin.async.tasks;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -36,9 +35,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.Product;
-import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UpstreamConsumer;
-import org.candlepin.pki.certs.UeberCertificateGenerator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -58,7 +55,6 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
 
     protected I18n i18n;
     protected ImportRecordCurator importRecordCurator;
-    protected UeberCertificateGenerator ueberCertGenerator;
     protected OwnerCurator ownerCurator;
     protected ExporterMetadataCurator exportCurator;
     protected PoolService poolService;
@@ -69,10 +65,10 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     public void setUp() {
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
         poolService = this.injector.getInstance(PoolService.class);
-        ueberCertGenerator = this.injector.getInstance(UeberCertificateGenerator.class);
         ownerCurator = this.injector.getInstance(OwnerCurator.class);
         exportCurator = this.injector.getInstance(ExporterMetadataCurator.class);
         importRecordCurator = this.injector.getInstance(ImportRecordCurator.class);
+
         this.undoImportsJob = new UndoImportsJob(
             this.i18n, this.ownerCurator, this.poolService,
             this.exportCurator, this.importRecordCurator, this.config);
@@ -116,11 +112,6 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         Pool pool7 = this.createPool("pool7", owner2, true, PoolType.NORMAL);
         Pool pool8 = this.createPool("pool8", owner2, true, PoolType.BONUS);
         Pool pool9 = this.createPool("pool9", owner2, true, PoolType.ENTITLEMENT_DERIVED);
-
-        // Create an ueber certificate for the owner.
-        UeberCertificate uebercert = ueberCertGenerator.generate(owner1.getKey(),
-            this.setupAdminPrincipal("test_admin").getUsername());
-        assertNotNull(uebercert);
 
         // Verify initial state
         assertEquals(

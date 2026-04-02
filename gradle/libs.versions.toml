@@ -26,6 +26,7 @@ artemis-stomp = { module = "org.apache.artemis:artemis-stomp-protocol", version.
 assertj = { module = "org.assertj:assertj-core", version = "3.27.7" }
 bouncycastle-prov = { module = "org.bouncycastle:bcprov-jdk18on", version = "1.83"}
 bouncycastle-pkix = { module = "org.bouncycastle:bcpkix-jdk18on", version = "1.83"}
+bouncycastle-tls = { module = "org.bouncycastle:bctls-jdk18on", version = "1.83"}
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.3" }
 checkstyle = { module = "com.puppycrawl.tools:checkstyle", version = "12.3.1" }
 checkstyle-sevntu = { module = "com.github.sevntu-checkstyle:sevntu-checks", version = "1.44.1" }
@@ -73,6 +74,7 @@ junit-jupiter-params = { group = "org.junit.jupiter", name = "junit-jupiter-para
 junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine" }
 junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
 keycloak = { module = "org.keycloak:keycloak-servlet-filter-adapter", version = "25.0.3" }
+keycloak-core = { module = "org.keycloak:keycloak-core", version = "26.5.3" }
 # Do not upgrade liquibase beyond 4.29 until Liquibase has stopped using RandomStringUtils.random(...)
 liquibase = { module = "org.liquibase:liquibase-core", version = { strictly = "4.29.0" } }
 liquibase-slf4j = { module = "com.mattbertolini:liquibase-slf4j", version = "5.1.0" }
@@ -83,7 +85,6 @@ mockito-junit = { module = "org.mockito:mockito-junit-jupiter", version = "5.23.
 oauth = { module = "net.oauth.core:oauth-provider", version = "20100527" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp3" }
 okhttp-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp3" }
-okhttp-tls = { module = "com.squareup.okhttp3:okhttp-tls", version.ref = "okhttp3" }
 openapi = { module = "org.openapitools:openapi-generator", version.ref = "openapi-generator" }
 openapi-databind-nullable = { module = "org.openapitools:jackson-databind-nullable", version = "0.2.10" }
 otel-annotation = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations", version = "2.26.1" }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -16,22 +16,17 @@ package org.candlepin.auth;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.config.ConversionException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.pki.CertificateReader;
 import org.candlepin.resteasy.filter.AuthUtil;
 
 import org.jboss.resteasy.spi.HttpRequest;
-import org.keycloak.TokenVerifier;
 import org.keycloak.common.VerificationException;
 import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.JsonWebToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.PublicKey;
-import java.security.cert.X509Certificate;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -43,41 +38,26 @@ import javax.inject.Inject;
  * CloudRegistration authorize endpoint
  */
 public class CloudRegistrationAuth implements AuthProvider {
-    private static Logger log = LoggerFactory.getLogger(CloudRegistrationAuth.class);
+    private static final Logger log = LoggerFactory.getLogger(CloudRegistrationAuth.class);
 
     private static final String AUTH_TYPE = "Bearer";
 
     private final Configuration config;
     private final OwnerCurator ownerCurator;
-    private final CertificateReader certificateReader;
+    private final CloudAuthTokenGenerator cloudTokenGenerator;
 
     private final boolean enabled;
-    private final PublicKey publicKey;
 
     @Inject
-    public CloudRegistrationAuth(Configuration config, OwnerCurator ownerCurator,
-        CertificateReader certificateReader) {
+    public CloudRegistrationAuth(Configuration config,
+        OwnerCurator ownerCurator,
+        CloudAuthTokenGenerator cloudTokenManager) {
+
         this.config = Objects.requireNonNull(config);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
-        this.certificateReader = Objects.requireNonNull(certificateReader);
+        this.cloudTokenGenerator = Objects.requireNonNull(cloudTokenManager);
 
-        // Pre-parse config values
-        try {
-            this.enabled = this.config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
-        }
-        catch (ConversionException e) {
-            // Try to pretty up the exception for easy debugging
-            throw new RuntimeException("Invalid value(s) found while parsing JWT configuration", e);
-        }
-
-        // Fetch our keys
-        try {
-            X509Certificate certificate = this.certificateReader.getCACert();
-            this.publicKey = certificate.getPublicKey();
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Unable to load public and private keys", e);
-        }
+        this.enabled = this.config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
     }
 
     /**
@@ -103,42 +83,35 @@ public class CloudRegistrationAuth implements AuthProvider {
         }
 
         try {
-            TokenVerifier<JsonWebToken> verifier = TokenVerifier.create(authChunks[1], JsonWebToken.class)
-                .publicKey(publicKey)
-                .verify();
+            JsonWebToken token = this.cloudTokenGenerator.validateToken(authChunks[1]);
 
-            JsonWebToken token = verifier.getToken();
+            String actualType = token.getType();
+            if (!CloudAuthTokenType.STANDARD.equalsType(actualType)) {
+                log.debug("Invalid token type. Expected: {}, but was {}",
+                    CloudAuthTokenType.STANDARD, actualType);
+                return null;
+            }
+
+            String subject = token.getSubject();
+            if (subject == null || subject.isEmpty()) {
+                log.debug("Token contains a null or empty subject");
+                return null;
+            }
+
             String[] audiences = token.getAudience();
-
-            // Verify that the token is active and hasn't expired
-            if (!token.isActive()) {
-                throw new VerificationException("Token is not active or has expired");
+            String audience = audiences != null && audiences.length > 0 ? audiences[0] : null;
+            if (audience == null || audience.isEmpty()) {
+                log.debug("Token contains a null or empty audience");
+                return null;
             }
 
-            // Verify the token has the JWT type we're expecting
-            if (CloudAuthTokenType.STANDARD.equalsType(token.getType())) {
-                // Pull the subject (username) and owner key(s) out of the token
-                String subject = token.getSubject();
-                String ownerKey = audiences != null && audiences.length > 0 ? audiences[0] : null;
+            String ownerKey = audience;
 
-                if (subject == null || subject.isEmpty()) {
-                    throw new VerificationException("Token contains an invalid subject: " + subject);
-                }
-
-                if (ownerKey == null || ownerKey.isEmpty()) {
-                    throw new VerificationException("Token contains an invalid audience: " + ownerKey);
-                }
-
-                log.info("Token type used for authentication: {}", CloudAuthTokenType.STANDARD);
-                return this.createPrincipal(ownerKey);
-            }
+            log.info("Token type used for authentication: {}", CloudAuthTokenType.STANDARD);
+            return this.createPrincipal(ownerKey, subject);
         }
         catch (VerificationException e) {
-            log.debug("Cloud registration token validation failed:", e);
-
-            // Impl note:
-            // Since we're using a common/standard auth type (bearer), we can't immediately fail
-            // out here, as it's possible the token will be verified by another provider
+            log.debug("Invalid token", e);
         }
 
         return null;
@@ -150,13 +123,17 @@ public class CloudRegistrationAuth implements AuthProvider {
      *
      * @param ownerKey
      *  the key of an organization in which the principal will have authorization to register clients
+     *
+     * @param username
+     *  the username used to create the principal
+     *
      * @return
      *  a minimal {@link Principal} representing the cloud registration token
      */
-    private CloudConsumerPrincipal createPrincipal(String ownerKey) {
+    private CloudConsumerPrincipal createPrincipal(String ownerKey, String username) {
         Owner owner = this.ownerCurator.getByKey(ownerKey);
         if (owner != null) {
-            return new CloudConsumerPrincipal(owner);
+            return new CloudConsumerPrincipal(owner, username);
         }
         return null;
     }

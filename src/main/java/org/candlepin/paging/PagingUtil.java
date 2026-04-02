@@ -17,8 +17,8 @@ package org.candlepin.paging;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.QueryBuilder;
+import org.candlepin.model.exceptions.InvalidOrderKeyException;
 
 import org.jboss.resteasy.core.ResteasyContext;
 import org.xnap.commons.i18n.I18n;

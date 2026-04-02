@@ -39,7 +39,8 @@ import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
-import org.candlepin.pki.impl.Signer;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.sync.file.ManifestFile;
@@ -65,6 +66,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -125,7 +127,7 @@ public class Importer {
     private final OwnerCurator ownerCurator;
     private final IdentityCertificateCurator idCertCurator;
     private final RefresherFactory refresherFactory;
-    private final Signer signer;
+    private final CryptoManager cryptoManager;
     private final ExporterMetadataCurator expMetaCurator;
     private final CertificateSerialCurator csCurator;
     private final CdnCurator cdnCurator;
@@ -137,13 +139,27 @@ public class Importer {
     private final SubscriptionReconciler subscriptionReconciler;
     private final ModelTranslator translator;
 
+    // Temporary
+    private final Scheme scheme;
+
     @Inject
-    public Importer(ConsumerTypeCurator consumerTypeCurator,
-        RulesImporter rulesImporter, OwnerCurator ownerCurator, IdentityCertificateCurator idCertCurator,
-        RefresherFactory refresherFactory, Signer signer, ExporterMetadataCurator emc,
-        CertificateSerialCurator csc, EventSink sink, I18n i18n, DistributorVersionCurator distVerCurator,
-        CdnCurator cdnCurator, SyncUtils syncUtils, @Named("ImportObjectMapper") ObjectMapper mapper,
-        ImportRecordCurator importRecordCurator, SubscriptionReconciler subscriptionReconciler,
+    public Importer(
+        ConsumerTypeCurator consumerTypeCurator,
+        RulesImporter rulesImporter,
+        OwnerCurator ownerCurator,
+        IdentityCertificateCurator idCertCurator,
+        RefresherFactory refresherFactory,
+        CryptoManager cryptoManager,
+        ExporterMetadataCurator emc,
+        CertificateSerialCurator csc,
+        EventSink sink,
+        I18n i18n,
+        DistributorVersionCurator distVerCurator,
+        CdnCurator cdnCurator,
+        SyncUtils syncUtils,
+        @Named("ImportObjectMapper") ObjectMapper mapper,
+        ImportRecordCurator importRecordCurator,
+        SubscriptionReconciler subscriptionReconciler,
         ModelTranslator translator) {
 
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
@@ -153,7 +169,6 @@ public class Importer {
         this.refresherFactory = Objects.requireNonNull(refresherFactory);
         this.syncUtils = Objects.requireNonNull(syncUtils);
         this.mapper = Objects.requireNonNull(mapper);
-        this.signer = Objects.requireNonNull(signer);
         this.expMetaCurator = Objects.requireNonNull(emc);
         this.csCurator = Objects.requireNonNull(csc);
         this.sink = Objects.requireNonNull(sink);
@@ -163,6 +178,11 @@ public class Importer {
         this.importRecordCurator = Objects.requireNonNull(importRecordCurator);
         this.subscriptionReconciler = Objects.requireNonNull(subscriptionReconciler);
         this.translator = Objects.requireNonNull(translator);
+
+        this.cryptoManager = Objects.requireNonNull(cryptoManager);
+
+        // Temporary measure to get a scheme; this should be determined on a per-op basis
+        this.scheme = this.cryptoManager.getDefaultCryptoScheme();
     }
 
     public ImportRecord loadExport(Owner owner, File archive, ConflictOverrides overrides,
@@ -373,13 +393,16 @@ public class Importer {
                     i18n.tr("The archive does not contain the required signature file"));
             }
 
-            boolean verifiedSignature = this.signer.verifySignature(
-                new File(exportDir, "consumer_export.zip"),
-                loadSignature(new File(exportDir, "signature"))
-            );
+            boolean verifiedSignature = this.cryptoManager.getSignatureValidator(this.scheme)
+                .withAdditionalCertificates(this.cryptoManager.getUpstreamCertificates())
+                .forSignature(this.loadSignature(new File(exportDir, "signature")))
+                .validate(new File(exportDir, "consumer_export.zip"));
 
             if (!verifiedSignature) {
                 log.warn("Archive signature check failed.");
+
+                // TODO: Check if the override includes "TRUST" and, if so, add the manifest's cert to the
+                // set of trusted certs for future validation.
 
                 if (!overrides.isForced(Conflict.SIGNATURE_CONFLICT)) {
                     /*
@@ -425,9 +448,18 @@ public class Importer {
             return recordImportSuccess(owner, result, overrides, uploadedFileName);
         }
         catch (FileNotFoundException fnfe) {
+            // FIXME: This logic is not correct. We have *at least* two file operations above, loading both
+            // the signature and the manifest itself. We're assuming that only the latter is missing, which
+            // isn't guaranteed to be true.
+
             log.error("Archive file does not contain consumer_export.zip", fnfe);
             throw new ImportExtractionException(i18n.tr("The archive does not contain " +
                 "the required consumer_export.zip file"));
+        }
+        catch (CertificateException e) {
+            log.error("Unable to load upstream certificates to validate manifest", e);
+            throw new ImporterException(i18n.tr("Unable to read certificates to validate manifest"),
+                e, result);
         }
         catch (ConstraintViolationException cve) {
             log.error("Failed to import archive", cve);

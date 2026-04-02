@@ -190,7 +190,7 @@ public final class ApiClients {
      */
     public static ApiClient ssl(CertificateDTO cert) {
         String certificate = cert.getCert() + cert.getKey();
-        return new ApiClient(CLIENT_FACTORY.createSslClient(certificate));
+        return new ApiClient(CLIENT_FACTORY.createmTLSClient(certificate));
     }
 
     /**

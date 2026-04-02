@@ -80,7 +80,6 @@ import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.server.v1.SetConsumerEnvironmentsDTO;
 import org.candlepin.dto.api.server.v1.SystemPurposeAttributesDTO;
-import org.candlepin.dto.api.server.v1.UeberCertificateDTO;
 import org.candlepin.dto.api.server.v1.UpstreamConsumerDTOArrayElement;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ConflictException;
@@ -103,7 +102,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerCurator.OwnerQueryArguments;
 import org.candlepin.model.OwnerInfoCurator;
-import org.candlepin.model.OwnerNotFoundException;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
@@ -116,10 +114,14 @@ import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.model.exceptions.OwnerNotFoundException;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.PageRequest.Order;
 import org.candlepin.paging.PagingUtilFactory;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.OidUtil;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.certs.UeberCertificateGenerator;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
@@ -128,6 +130,7 @@ import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ImporterException;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
@@ -216,6 +219,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private OwnerServiceAdapter ownerServiceAdapter;
     private ServiceLevelValidator serviceLevelValidator;
     private ConsumerTypeValidator consumerTypeValidator;
+    private CryptoManager cryptoManager;
+    private OidUtil oidUtil;
 
     private Owner owner;
     private Product product;
@@ -231,6 +236,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         dtoValidator = this.injector.getInstance(DTOValidator.class);
         contentAccessManager = this.injector.getInstance(ContentAccessManager.class);
         pagingUtilFactory = this.injector.getInstance(PagingUtilFactory.class);
+        this.cryptoManager = this.injector.getInstance(CryptoManager.class);
+        this.oidUtil = this.injector.getInstance(OidUtil.class);
 
         this.owner = this.ownerCurator.create(new Owner()
             .setKey(OWNER_NAME)
@@ -283,7 +290,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             this.calculatedAttributesUtil, this.contentOverrideValidator, this.serviceLevelValidator,
             this.ownerServiceAdapter, this.config, this.consumerTypeValidator, this.mockProductCurator,
             this.modelTranslator, this.mockJobManager, this.dtoValidator, this.principalProvider,
-            this.pagingUtilFactory);
+            this.pagingUtilFactory, this.cryptoManager, this.oidUtil);
     }
 
     private ProductDTO buildTestProductDTO() {
@@ -350,9 +357,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         // Generate an ueber certificate for the Owner. This will need to
         // be cleaned up along with the owner deletion.
-        UeberCertificate uCert = ueberCertGenerator.generate(owner.getKey(),
-            setupAdminPrincipal("test").getUsername());
-        assertNotNull(uCert);
+        Scheme scheme = CryptoUtil.SUPPORTED_SCHEMES.values().stream().findAny().get();
+
+        String username = this.setupAdminPrincipal("test")
+            .getUsername();
+
+        UeberCertificate cert = this.ueberCertGenerator.generate(scheme, owner, username);
+        assertNotNull(cert);
 
         ownerResource.deleteOwner(owner.getKey(), true, true);
 
@@ -1881,7 +1892,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             this.environmentCurator, this.calculatedAttributesUtil, this.contentOverrideValidator,
             this.serviceLevelValidator, this.ownerServiceAdapter, this.config, this.consumerTypeValidator,
             this.mockProductCurator, this.modelTranslator, this.mockJobManager, this.dtoValidator,
-            this.principalProvider, this.pagingUtilFactory);
+            this.principalProvider, this.pagingUtilFactory, this.cryptoManager, this.oidUtil);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -2262,44 +2273,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         assertThrows(NotFoundException.class,
             () -> resource.ownerEntitlements("Taylor Swift", null, null, null, null, null, null));
-    }
-
-    @Test
-    public void testCreateUeberCertificateFromScratch() {
-        Principal principal = setupPrincipal(owner, Access.ALL);
-        Owner owner = TestUtil.createOwner();
-        UeberCertificate entCert = mock(UeberCertificate.class);
-
-        when(this.mockOwnerCurator.getByKey("admin"))
-            .thenReturn(owner);
-
-        when(this.mockUeberCertificateGenerator.generate(owner.getKey(), principal.getUsername()))
-            .thenReturn(entCert);
-        when(this.principalProvider.get()).thenReturn(principal);
-
-        OwnerResource resource = this.buildOwnerResource();
-
-        UeberCertificateDTO expected = this.modelTranslator.translate(entCert, UeberCertificateDTO.class);
-        UeberCertificateDTO result = resource.createUeberCertificate(owner.getKey());
-        assertEquals(expected, result);
-    }
-
-    @Test
-    public void testCreateUeberCertificateRegenerate() {
-        Principal principal = setupPrincipal(owner, Access.ALL);
-        Owner owner = TestUtil.createOwner();
-        UeberCertificate entCert = mock(UeberCertificate.class);
-
-        OwnerResource resource = this.buildOwnerResource();
-
-        when(this.mockUeberCertificateGenerator.generate(owner.getKey(), principal.getUsername()))
-            .thenReturn(entCert);
-        when(this.principalProvider.get()).thenReturn(principal);
-
-        UeberCertificateDTO expected = this.modelTranslator.translate(entCert, UeberCertificateDTO.class);
-        UeberCertificateDTO result = resource.createUeberCertificate(owner.getKey());
-
-        assertEquals(expected, result);
     }
 
     @Test

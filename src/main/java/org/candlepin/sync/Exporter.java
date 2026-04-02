@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -33,9 +33,11 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.SCACertificate;
+import org.candlepin.pki.CryptoCapabilitiesException;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
 import org.candlepin.pki.certs.SCACertificateGenerator;
-import org.candlepin.pki.impl.Signer;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.version.VersionUtil;
@@ -46,6 +48,7 @@ import org.slf4j.LoggerFactory;
 
 import tools.jackson.databind.ObjectMapper;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -53,6 +56,9 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.security.cert.CertificateEncodingException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -87,29 +93,39 @@ public class Exporter {
     private final ConsumerTypeCurator consumerTypeCurator;
     private final EntitlementCertServiceAdapter entCertAdapter;
     private final EntitlementCurator entitlementCurator;
-    private final Signer signer;
+    private final CryptoManager cryptoManager;
     private final Configuration config;
     private final ExportRules exportRules;
     private final PrincipalProvider principalProvider;
     private final ModelTranslator translator;
     private final SCACertificateGenerator scaCertificateGenerator;
     private final SyncUtils syncUtils;
+    private final SchemeFileExporter schemeFileExporter;
 
     @Inject
-    public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
-        ConsumerExporter consumerExporter, ConsumerTypeExporter consumerType,
+    public Exporter(
+        ConsumerTypeCurator consumerTypeCurator,
+        MetaExporter meta,
+        ConsumerExporter consumerExporter,
+        ConsumerTypeExporter consumerType,
         RulesExporter rules,
-        EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
-        EntitlementCurator entitlementCurator, EntitlementExporter entExporter,
-        Signer signer, Configuration config, ExportRules exportRules,
-        PrincipalProvider principalProvider, DistributorVersionCurator distVerCurator,
+        EntitlementCertServiceAdapter entCertAdapter,
+        ProductExporter productExporter,
+        EntitlementCurator entitlementCurator,
+        EntitlementExporter entExporter,
+        CryptoManager cryptoManager,
+        Configuration config,
+        ExportRules exportRules,
+        PrincipalProvider principalProvider,
+        DistributorVersionCurator distVerCurator,
         DistributorVersionExporter distVerExporter,
         CdnCurator cdnCurator,
         CdnExporter cdnExporter,
         SyncUtils syncUtils,
         @Named("ExportObjectMapper") ObjectMapper mapper,
         ModelTranslator translator,
-        SCACertificateGenerator scaCertificateGenerator) {
+        SCACertificateGenerator scaCertificateGenerator,
+        SchemeFileExporter schemeFileExporter) {
 
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.meta = Objects.requireNonNull(meta);
@@ -120,7 +136,7 @@ public class Exporter {
         this.productExporter = Objects.requireNonNull(productExporter);
         this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
         this.entExporter = Objects.requireNonNull(entExporter);
-        this.signer = Objects.requireNonNull(signer);
+        this.cryptoManager = Objects.requireNonNull(cryptoManager);
         this.config = Objects.requireNonNull(config);
         this.exportRules = Objects.requireNonNull(exportRules);
         this.principalProvider = Objects.requireNonNull(principalProvider);
@@ -132,70 +148,113 @@ public class Exporter {
         this.mapper = Objects.requireNonNull(mapper);
         this.translator = Objects.requireNonNull(translator);
         this.scaCertificateGenerator = Objects.requireNonNull(scaCertificateGenerator);
+        this.schemeFileExporter = Objects.requireNonNull(schemeFileExporter);
     }
 
     /**
      * Creates a manifest archive for the target {@link Consumer}.
      *
-     * @param consumer the target consumer to export.
-     * @param cdnLabel the CDN label to store in the meta file.
-     * @param webUrl the URL pointing to the manifest's originating web application.
-     * @param apiUrl the API URL pointing to the manifest's originating candlepin API.
+     * @param consumer
+     *  the target consumer to export.
+     *
+     * @param cdnLabel
+     *  the CDN label to store in the meta file.
+     *
+     * @param webUrl
+     *  the URL pointing to the manifest's originating web application.
+     *
+     * @param apiUrl
+     *  the API URL pointing to the manifest's originating candlepin API.
+     *
+     * @throws ExportCreationException
+     *  when an error occurs while creating the manifest file.
+     *
+     * @throws CryptoCapabilitiesException
+     *  if unable to determine a cryptographic scheme for the consumer
+     *
      * @return a newly created manifest file for the target consumer.
-     * @throws ExportCreationException when an error occurs while creating the manifest file.
      */
     public File getFullExport(Consumer consumer, String cdnLabel, String webUrl,
-        String apiUrl) throws ExportCreationException {
+        String apiUrl) throws ExportCreationException, CryptoCapabilitiesException {
+
         try {
-            File tmpDir = syncUtils.makeTempDir("export");
+            File tmpDir = this.syncUtils.makeTempDir("export");
             File baseDir = new File(tmpDir.getAbsolutePath(), "export");
             baseDir.mkdir();
 
-            exportMeta(baseDir, cdnLabel);
-            exportConsumer(baseDir, consumer, webUrl, apiUrl);
-            exportIdentityCertificate(baseDir, consumer);
-            exportEntitlements(baseDir, consumer);
-            exportEntitlementsCerts(baseDir, consumer, null, true);
-            exportProducts(baseDir, consumer);
-            exportConsumerTypes(baseDir);
-            exportRules(baseDir);
-            exportDistributorVersions(baseDir);
-            exportContentDeliveryNetworks(baseDir);
-            return makeArchive(consumer, tmpDir, baseDir);
+            this.exportMeta(baseDir, cdnLabel);
+            this.exportConsumer(baseDir, consumer, webUrl, apiUrl);
+            this.exportIdentityCertificate(baseDir, consumer);
+            this.exportEntitlements(baseDir, consumer);
+            this.exportEntitlementsCerts(baseDir, consumer, null, true);
+            this.exportProducts(baseDir, consumer);
+            this.exportConsumerTypes(baseDir);
+            this.exportRules(baseDir);
+            this.exportDistributorVersions(baseDir);
+            this.exportContentDeliveryNetworks(baseDir);
+
+            Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
+            this.exportScheme(baseDir, scheme);
+
+            return this.makeArchive(consumer, scheme, tmpDir, baseDir);
         }
-        catch (IOException e) {
+        catch (CertificateEncodingException | IOException e) {
             log.error("Error generating entitlement export", e);
             throw new ExportCreationException("Unable to create export archive", e);
         }
     }
 
+
+    /**
+     * Creates a manifest archive for the provided consumer. This archive contains only the entitlement
+     * certificates and the content access certificates for the consumer.
+     *
+     * @param consumer
+     *  the consumer to create the manifest archive for
+     *
+     * @param serials
+     *  entitlement certificate serials to include in the archive
+     *
+     * @throws ExportCreationException
+     *  if unable to export the manifest archive
+     *
+     * @throws ConcurrentContentPayloadCreationException
+     *  if a concurrent request persists the content payload and causes a database constraint violation
+     *
+     * @throws CryptoCapabilitiesException
+     *  if unable to determine a cryptographic scheme for the consumer
+     *
+     * @return the generated manifest archive
+     */
     public File getEntitlementExport(Consumer consumer, Set<Long> serials)
-        throws ExportCreationException, ConcurrentContentPayloadCreationException {
+        throws ExportCreationException, ConcurrentContentPayloadCreationException,
+            CryptoCapabilitiesException {
+
         // TODO: need to delete tmpDir (which contains the archive,
         // which we need to return...)
         try {
-            File tmpDir = syncUtils.makeTempDir("export");
+            File tmpDir = this.syncUtils.makeTempDir("export");
             File baseDir = new File(tmpDir.getAbsolutePath(), "export");
             baseDir.mkdir();
 
-            exportMeta(baseDir, null);
-            exportEntitlementsCerts(baseDir, consumer, serials, false);
-            exportContentAccessCerts(baseDir, consumer, serials);
-            return makeArchive(consumer, tmpDir, baseDir);
+            this.exportMeta(baseDir, null);
+            this.exportEntitlementsCerts(baseDir, consumer, serials, false);
+            this.exportContentAccessCerts(baseDir, consumer, serials);
+
+            Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
+            this.exportScheme(baseDir, scheme);
+
+            return this.makeArchive(consumer, scheme, tmpDir, baseDir);
         }
-        catch (IOException e) {
+        catch (CertificateEncodingException | CryptoCapabilitiesException | IOException e) {
             log.error("Error generating entitlement export", e);
             throw new ExportCreationException("Unable to create export archive", e);
         }
     }
 
-    /**
-     * Create a tar.gz archive of the exported directory.
-     *
-     * @param exportDir Directory where Candlepin data was exported.
-     * @return File reference to the new archive zip.
-     */
-    private File makeArchive(Consumer consumer, File tempDir, File exportDir) throws IOException {
+    private File makeArchive(Consumer consumer, Scheme scheme, File tempDir, File exportDir)
+        throws IOException {
+
         String exportFileName = String.format("%s-%s.zip", consumer.getUuid(), exportDir.getName());
         log.info("Creating archive of {} in: {}", exportDir.getAbsolutePath(), exportFileName);
 
@@ -203,9 +262,10 @@ public class Exporter {
             "Candlepin export for " + consumer.getUuid());
 
         try (InputStream archiveInputStream = new FileInputStream(archive)) {
-            File signedArchive = createSignedZipArchive(
-                tempDir, archive, exportFileName,
-                this.signer.sign(archiveInputStream),
+            byte[] signature = this.cryptoManager.getSigner(scheme)
+                .sign(archiveInputStream);
+
+            File signedArchive = this.createSignedZipArchive(tempDir, archive, exportFileName, signature,
                 "signed Candlepin export for " + consumer.getUuid());
 
             log.debug("Returning file: {}", archive.getAbsolutePath());
@@ -233,8 +293,7 @@ public class Exporter {
     }
 
     private File createSignedZipArchive(File tempDir, File toAdd,
-        String exportFileName, byte[] signature, String comment)
-        throws FileNotFoundException, IOException {
+        String exportFileName, byte[] signature, String comment) throws IOException {
 
         File archive = new File(tempDir, exportFileName);
         ZipOutputStream out = null;
@@ -242,13 +301,14 @@ public class Exporter {
             out = new ZipOutputStream(new FileOutputStream(archive));
             out.setComment(comment);
             addFileToArchive(out, toAdd.getParent().length() + 1, toAdd);
-            addSignatureToArchive(out, signature);
+            this.addSignatureToArchive(out, signature);
         }
         finally {
             if (out != null) {
                 out.close();
             }
         }
+
         return archive;
     }
 
@@ -398,9 +458,14 @@ public class Exporter {
      *
      * @throws ConcurrentContentPayloadCreationException
      *  if a concurrent request persists the content payload and causes a database constraint violation
+     *
+     * @throws CryptoCapabilitiesException
+     *  if the export cannot be created due to a lack of supported capabilities on the consumer
      */
     private void exportContentAccessCerts(File baseDir, Consumer consumer,
-        Set<Long> serials) throws IOException, ConcurrentContentPayloadCreationException {
+        Set<Long> serials)
+        throws IOException, ConcurrentContentPayloadCreationException, CryptoCapabilitiesException {
+
         SCACertificate contentAccessCert = this.scaCertificateGenerator.generate(consumer);
 
         if (contentAccessCert != null &&
@@ -595,4 +660,14 @@ public class Exporter {
             }
         }
     }
+
+    private void exportScheme(File baseDir, Scheme scheme) throws CertificateEncodingException, IOException {
+        log.debug("Exporting scheme: {}", scheme.name());
+
+        File file = new File(baseDir.getCanonicalPath(), SchemeFile.FILENAME);
+        try (BufferedWriter writer = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8)) {
+            this.schemeFileExporter.export(writer, scheme);
+        }
+    }
+
 }

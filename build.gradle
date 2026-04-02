@@ -165,6 +165,7 @@ dependencies {
 
     // Keycloak
     implementation(libs.keycloak)
+    implementation(libs.keycloak.core)
 
     // Hibernate JPA integration
     implementation(libs.hibernate.jpamodelgen)
