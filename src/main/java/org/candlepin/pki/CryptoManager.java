@@ -14,6 +14,7 @@
  */
 package org.candlepin.pki;
 
+import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.Consumer;
 
 import java.security.cert.CertificateException;
@@ -88,6 +89,24 @@ public interface CryptoManager {
      *  the scheme best matching the consumer's cryptographic capabilities
      */
     Scheme getCryptoScheme(Consumer consumer) throws CryptoCapabilitiesException;
+
+    /**
+     * Fetches the scheme appropriate for performing cryptographic operations for the given consumer,
+     * performing scheme negotiation based on the consumer's provided cryptographic capabilities, if any. If
+     * the consumer has not provided any cryptographic capabilities or if scheme negotiation is disabled for
+     * the given consumer, this method returns the default scheme. If a scheme matching the consumer's
+     * capabilities is not found, or the provided consumer is null, this method throws an exception.
+     *
+     * @param consumer
+     *  the anonymous cloud consumer for which to fetch an appropriate scheme
+     *
+     * @throws IllegalArgumentException
+     *  if consumer is null
+     *
+     * @return
+     *  the scheme best matching the consumer's cryptographic capabilities
+     */
+    Scheme getCryptoScheme(AnonymousCloudConsumer consumer) throws CryptoCapabilitiesException;
 
     /**
      * Checks whether or not a consumer has provided cryptographic capabilities and is getting a negotiated
