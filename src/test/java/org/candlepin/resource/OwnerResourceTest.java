@@ -41,7 +41,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobConfig;
-import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.ImportJob;
 import org.candlepin.audit.Event;
@@ -129,7 +128,6 @@ import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
-import org.candlepin.sync.ImporterException;
 import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -155,7 +153,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1882,7 +1879,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testImportManifestAsyncSuccess() throws IOException, ImporterException, JobException {
+    public void testImportManifestAsyncSuccess() throws Exception {
         OwnerResource thisOwnerResource = new OwnerResource(
             this.mockOwnerCurator, this.activationKeyCurator, this.consumerCurator, this.mockConsumerManager,
             this.i18n, this.mockEventSink, this.mockEventFactory, this.contentAccessManager,

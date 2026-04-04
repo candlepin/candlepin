@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,6 +14,7 @@
  */
 package org.candlepin.spec.bootstrap.data.builder;
 
+import org.candlepin.dto.api.client.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.SubscriptionDTO;
 import org.candlepin.spec.bootstrap.client.ApiClient;
@@ -29,7 +30,9 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 
@@ -47,6 +50,7 @@ public class ExportGenerator {
 
     private final ApiClient client;
     private final List<SubscriptionDTO> subscriptions;
+    private CryptographicCapabilitiesDTO cryptoCapabilities;
     private String consumerUuid;
 
     public ExportGenerator() {
@@ -173,6 +177,24 @@ public class ExportGenerator {
     }
 
     /**
+     * Sets the cryptographic capabilities for this generator.
+     *
+     * @param capabilities
+     *  the cryptographic capabilities to set for this generator
+     *
+     * @return a reference to this generator
+     */
+    public ExportGenerator usingCryptographicCapabilities(CryptographicCapabilitiesDTO capabilities) {
+        if (capabilities == null) {
+            return this;
+        }
+
+        this.cryptoCapabilities = capabilities;
+
+        return this;
+    }
+
+    /**
      * Adds the given products to this manifest generator, using a randomly generated subscription
      * for each product. Null collections and elements will be silently ignored.
      *
@@ -248,10 +270,17 @@ public class ExportGenerator {
         String webAppPrefix = cdn != null ? cdn.webUrl() : null;
         String apiUrl = cdn != null ? cdn.apiUrl() : null;
 
+        Map<String, Object> body = new HashMap<>();
+        body.put("subscriptions", this.subscriptions);
+
+        if (this.cryptoCapabilities != null) {
+            body.put("crypto_capabilities", this.cryptoCapabilities);
+        }
+
         Request request = Request.from(this.client)
             .setPath(MANIFEST_GENERATOR_ENDPOINT)
             .setMethod("POST")
-            .setBody(this.subscriptions);
+            .setBody(body);
 
         // Add in optional query bits
         if (this.consumerUuid != null && !consumerUuid.isBlank()) {
