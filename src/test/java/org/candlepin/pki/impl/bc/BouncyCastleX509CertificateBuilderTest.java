@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.pki.DistinguishedName;
@@ -47,7 +48,10 @@ import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import java.math.BigInteger;
 import java.security.KeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -101,13 +105,18 @@ public class BouncyCastleX509CertificateBuilderTest {
         X509Certificate cert = this.builder
             .withDN(distinguishedName)
             .withValidity(start, end)
-            .withSerial(1999L)
+            .withRandomSerial()
             .withKeyPair(keyPair)
             .withSubjectAltName("altName")
             .build();
 
         assertEquals("SHA256withRSA", cert.getSigAlgName());
-        assertEquals("1999", cert.getSerialNumber().toString());
+
+        // If this test *ever* fails, the .withRandomSerial method is broken. Even if re-running the test
+        // passes. Treat any failure as catastrophic.
+        assertThat(cert.getSerialNumber())
+            .isNotNull()
+            .isPositive();
 
         X509CertificateHolder holder = new X509CertificateHolder(cert.getEncoded());
         Extensions bcExtensions = holder.getExtensions();
@@ -335,6 +344,21 @@ public class BouncyCastleX509CertificateBuilderTest {
             .returns(expected.keyAlgorithm(), Scheme::keyAlgorithm)
             .returns(expected.keySize(), Scheme::keySize);
     }
+
+    @ParameterizedTest
+    @ValueSource(longs = { 0, -1, Byte.MIN_VALUE, Short.MIN_VALUE, Integer.MIN_VALUE, Long.MIN_VALUE })
+    public void testWithSerialLongDisallowsNonPositiveValues(long input) {
+        assertThrows(IllegalArgumentException.class, () -> this.builder.withSerial(input));
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = { 0, -1, Byte.MIN_VALUE, Short.MIN_VALUE, Integer.MIN_VALUE, Long.MIN_VALUE })
+    public void testWithSerialBigIntegerDisallowsNonPositiveValues(long input) {
+        assertThrows(IllegalArgumentException.class,
+            () -> this.builder.withSerial(BigInteger.valueOf(input)));
+    }
+
+    // TODO: More tests will be added after the conversion of this test suite
 
     private KeyPair createKeyPair() {
         try {
