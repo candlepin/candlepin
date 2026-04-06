@@ -130,6 +130,15 @@ public class BouncyCastleX509CertificateBuilder implements X509CertificateBuilde
 
     @Override
     public X509CertificateBuilder withSerial(BigInteger serial) {
+        if (serial == null) {
+            this.certSerial = null;
+            return this;
+        }
+
+        if (serial.compareTo(BigInteger.ONE) < 0) {
+            throw new IllegalArgumentException("certificate serial is not a positive value");
+        }
+
         this.certSerial = serial;
         return this;
     }
@@ -141,17 +150,18 @@ public class BouncyCastleX509CertificateBuilder implements X509CertificateBuilde
 
     @Override
     public X509CertificateBuilder withRandomSerial() {
-        SecureRandom rand = new SecureRandom();
+        // Generate a random serial that's guaranteed to be positive.
+        SecureRandom srand = new SecureRandom();
         long serial;
 
-        // Impl note:
-        // Math.abs cannot negate MIN_VALUE, so we'll generate a new value when that happens.
         do {
-            serial = rand.nextLong();
+            // If we happen to generate Long.MIN_VALUE, this will AND it to zero, which is also kind of
+            // bad here. Re-roll the serial if that happens.
+            serial = srand.nextLong() & Long.MAX_VALUE;
         }
-        while (serial == Long.MIN_VALUE);
+        while (serial == 0);
 
-        return this.withSerial(serial);
+        return this.withSerial(BigInteger.valueOf(serial));
     }
 
     @Override
