@@ -41,8 +41,9 @@ public abstract class AbstractCertificate<T extends AbstractCertificate> extends
     @NotNull
     private byte[] cert;
 
-    public void setKeyAsBytes(byte[] key) {
+    public T setKeyAsBytes(byte[] key) {
         this.key = key;
+        return (T) this;
     }
 
     public byte[] getKeyAsBytes() {
@@ -57,12 +58,14 @@ public abstract class AbstractCertificate<T extends AbstractCertificate> extends
         return new String(key);
     }
 
-    public void setKey(String key) {
+    public T setKey(String key) {
         this.key = key.getBytes();
+        return (T) this;
     }
 
-    public void setCertAsBytes(byte[] cert) {
+    public T setCertAsBytes(byte[] cert) {
         this.cert = cert;
+        return (T) this;
     }
 
     public byte[] getCertAsBytes() {
@@ -81,8 +84,9 @@ public abstract class AbstractCertificate<T extends AbstractCertificate> extends
         return this.getCert();
     }
 
-    public void setCert(String cert) {
+    public T setCert(String cert) {
         this.cert = cert.getBytes();
+        return (T) this;
     }
 
 }

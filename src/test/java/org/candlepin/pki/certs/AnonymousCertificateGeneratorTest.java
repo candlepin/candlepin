@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2025 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,16 +12,17 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.pki.certs;
 
-import static io.smallrye.common.constraint.Assert.assertNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -29,11 +30,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.cache.AnonymousCertContent;
-import org.candlepin.cache.AnonymousCertContentCache;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.ConfigurationException;
 import org.candlepin.config.DevConfig;
@@ -46,8 +44,10 @@ import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.dto.Content;
+import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.KeyPairGenerator;
+import org.candlepin.pki.OidUtil;
 import org.candlepin.pki.Scheme;
 import org.candlepin.pki.huffman.Huffman;
 import org.candlepin.service.ProductServiceAdapter;
@@ -64,20 +64,37 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.mockito.stubbing.Answer;
 
 import tools.jackson.databind.ObjectMapper;
 
 import java.security.KeyException;
+import java.security.PrivateKey;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+// TODO: FIXME: Rewrite this test suite. It's very reliant on mocks and doesn't actually test the generator
+// very well.
 
 
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class AnonymousCertificateGeneratorTest {
     @Mock
     private CertificateSerialCurator serialCurator;
@@ -89,8 +106,6 @@ class AnonymousCertificateGeneratorTest {
     private EntitlementCurator entitlementCurator;
     @Mock
     private ProductServiceAdapter productAdapter;
-    @Mock
-    private AnonymousCertContentCache contentCache;
 
     private DevConfig config;
     private AnonymousCertificateGenerator generator;
@@ -101,11 +116,10 @@ class AnonymousCertificateGeneratorTest {
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         this.generator = this.createGenerator();
+        this.mockCuratorMethods();
     }
 
-    private AnonymousCertificateGenerator createGenerator(CryptoManager cryptoManager)
-        throws CertificateException, KeyException {
-
+    private AnonymousCertificateGenerator createGenerator(CryptoManager cryptoManager) {
         X509V3ExtensionUtil extensionUtil = spy(new X509V3ExtensionUtil(
             config, this.entitlementCurator, new Huffman()));
 
@@ -117,14 +131,193 @@ class AnonymousCertificateGeneratorTest {
             this.anonConsumerCurator,
             this.anonymousCertificateCurator,
             this.productAdapter,
-            this.contentCache,
             CryptoUtil.getPemEncoder(),
             cryptoManager);
     }
 
-    private AnonymousCertificateGenerator createGenerator() throws CertificateException, KeyException {
+    private AnonymousCertificateGenerator createGenerator() {
         CryptoManager cryptoManager = CryptoUtil.getCryptoManager(this.config);
         return this.createGenerator(cryptoManager);
+    }
+
+    private void mockCuratorMethods() {
+        // Cert serial
+        Answer<CertificateSerial> createSerialAnswer = iom -> {
+            CertificateSerial serial = iom.getArgument(0);
+            serial.setSerial(123L);
+
+            return serial;
+        };
+
+        doAnswer(createSerialAnswer).when(this.serialCurator).create(any(CertificateSerial.class));
+        doAnswer(createSerialAnswer).when(this.serialCurator).create(any(CertificateSerial.class),
+            anyBoolean());
+
+        // anon ca cert curator
+        doAnswer(returnsFirstArg()).when(this.anonymousCertificateCurator)
+            .create(any(AnonymousContentAccessCertificate.class));
+    }
+
+    private void mockServiceAdapterProductLookup(Collection<ProductInfo> productInfo) {
+        Map<String, ProductInfo> productMap = productInfo.stream()
+            .collect(Collectors.toMap(ProductInfo::getId, Function.identity()));
+
+        doAnswer(iom -> {
+            Collection<String> productIds = iom.getArgument(0);
+
+            if (productIds == null) {
+                return List.of();
+            }
+
+            return productIds.stream()
+                .map(productMap::get)
+                .filter(Objects::nonNull)
+                .toList();
+        }).when(this.productAdapter).getChildrenByProductIds(anyCollection());
+    }
+
+    private static Stream<Arguments> schemeSource() {
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
+            .stream()
+            .map(Arguments::of);
+    }
+
+    private void assertCertificateMatchesScheme(AnonymousContentAccessCertificate cert, Scheme scheme)
+        throws CertificateException, KeyException {
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        X509Certificate x509cert = CryptoUtil.extractCertificateFromContainer(cert);
+        String sigAlgorithmOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+            .orElseThrow(() -> new RuntimeException("Unable to convert algorithm name to an OID"));
+
+        assertEquals(sigAlgorithmOid, x509cert.getSigAlgOID());
+
+        PrivateKey pkey = CryptoUtil.extractPrivateKeyFromContainer(cert);
+        String keyAlgorithmOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+            .orElseThrow(() -> new RuntimeException("Unable to convert algorithm name to an OID"));
+
+        String receivedKeyAlgorithmOid = oidUtil.getKeyAlgorithmOid(pkey.getAlgorithm())
+            .orElseThrow(() -> new RuntimeException("Unable to convert algorithm name to an OID"));
+
+        assertEquals(keyAlgorithmOid, receivedKeyAlgorithmOid);
+
+        // Verify the cert was issued by the scheme's CA cert, and isn't self-signed
+        assertThat(x509cert.getIssuerX500Principal())
+            .isNotEqualTo(x509cert.getSubjectX500Principal())
+            .isEqualTo(scheme.certificate().getSubjectX500Principal());
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGenerateCertificate(Scheme scheme) throws Exception {
+        List<ProductInfo> productInfo = Stream.generate(this::createProductInfo)
+            .limit(3)
+            .toList();
+
+        List<String> productIds = productInfo.stream()
+            .map(ProductInfo::getId)
+            .toList();
+
+        this.mockServiceAdapterProductLookup(productInfo);
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setId(TestUtil.randomString("id-"))
+            .setUuid(TestUtil.randomString("uuid-"))
+            .setCloudAccountId(TestUtil.randomString("cloudAccountId-"))
+            .setCloudInstanceId(TestUtil.randomString("instanceId-"))
+            .setProductIds(productIds)
+            .setCloudProviderShortName("aws");
+
+        CryptoUtil.configureConsumerForSchemes(consumer, scheme);
+
+        AnonymousCertificateGenerator generator = this.createGenerator();
+        AnonymousContentAccessCertificate output = generator.generate(consumer);
+
+        assertThat(output)
+            .isNotNull()
+            .doesNotReturn(null, AnonymousContentAccessCertificate::getCert)
+            .doesNotReturn(null, AnonymousContentAccessCertificate::getKey);
+
+        // Verify we can fetch the ueber cert via curator
+        assertThat(consumer.getContentAccessCert())
+            .isSameAs(output);
+
+        this.assertCertificateMatchesScheme(output, scheme);
+
+        // cert duration is verified in another test
+    }
+
+    @Test
+    public void testGenerateCertificateWithNoCryptoCapabilities() throws Exception {
+        List<ProductInfo> productInfo = Stream.generate(this::createProductInfo)
+            .limit(3)
+            .toList();
+
+        List<String> productIds = productInfo.stream()
+            .map(ProductInfo::getId)
+            .toList();
+
+        this.mockServiceAdapterProductLookup(productInfo);
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setId(TestUtil.randomString("id-"))
+            .setUuid(TestUtil.randomString("uuid-"))
+            .setCloudAccountId(TestUtil.randomString("cloudAccountId-"))
+            .setCloudInstanceId(TestUtil.randomString("instanceId-"))
+            .setProductIds(productIds)
+            .setCloudProviderShortName("aws");
+
+        CryptoUtil.configureConsumerForDefaultScheme(consumer);
+
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(this.config);
+        Scheme defaultScheme = cryptoManager.getDefaultCryptoScheme();
+
+        AnonymousCertificateGenerator generator = this.createGenerator(cryptoManager);
+        AnonymousContentAccessCertificate output = generator.generate(consumer);
+
+        assertThat(output)
+            .isNotNull()
+            .doesNotReturn(null, AnonymousContentAccessCertificate::getCert)
+            .doesNotReturn(null, AnonymousContentAccessCertificate::getKey);
+
+        // Verify we can fetch the ueber cert via curator
+        assertThat(consumer.getContentAccessCert())
+            .isSameAs(output);
+
+        // Verify the cert and key are of the intended scheme
+        this.assertCertificateMatchesScheme(output, defaultScheme);
+
+        // cert duration is verified in another test
+    }
+
+    @Test
+    public void testGenerateCertificateThrowsExceptionWhenNoSchemeSupported() throws Exception {
+        List<ProductInfo> productInfo = Stream.generate(this::createProductInfo)
+            .limit(3)
+            .toList();
+
+        List<String> productIds = productInfo.stream()
+            .map(ProductInfo::getId)
+            .toList();
+
+        this.mockServiceAdapterProductLookup(productInfo);
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setId(TestUtil.randomString("id-"))
+            .setUuid(TestUtil.randomString("uuid-"))
+            .setCloudAccountId(TestUtil.randomString("cloudAccountId-"))
+            .setCloudInstanceId(TestUtil.randomString("instanceId-"))
+            .setProductIds(productIds)
+            .setCloudProviderShortName("aws");
+
+        CryptoUtil.configureConsumerWithNoSelectableScheme(consumer);
+
+        AnonymousCertificateGenerator generator = this.createGenerator();
+
+        assertThrows(CryptoCapabilitiesException.class, () -> generator.generate(consumer));
+
+        assertNull(consumer.getContentAccessCert());
     }
 
     @Test
@@ -139,7 +332,7 @@ class AnonymousCertificateGeneratorTest {
         this.config.setProperty(ConfigProperties.STANDALONE, "true");
         AnonymousCloudConsumer consumer = createAnonConsumer();
 
-        assertThrows(RuntimeException.class, () -> this.generator.generate(consumer));
+        assertThrows(CertificateException.class, () -> this.generator.generate(consumer));
     }
 
     @Test
@@ -165,24 +358,6 @@ class AnonymousCertificateGeneratorTest {
             .returns(expected.getSerial(), AnonymousContentAccessCertificate::getSerial);
     }
 
-    @Test
-    public void shouldReturnCachedCertIfPresent() {
-        when(this.anonymousCertificateCurator.create(any(AnonymousContentAccessCertificate.class)))
-            .thenAnswer(returnsFirstArg());
-        when(this.contentCache.get(anyCollection())).thenReturn(createCertContent());
-        when(this.serialCurator.create(any(CertificateSerial.class))).thenAnswer(invocation -> {
-            CertificateSerial argument = invocation.getArgument(0);
-            argument.setSerial(123L);
-            return argument;
-        });
-        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
-
-        AnonymousContentAccessCertificate result = this.generator.generate(consumer);
-
-        assertNotNull(result);
-        verifyNoInteractions(this.productAdapter);
-    }
-
     @ParameterizedTest
     @NullAndEmptySource
     public void shouldFailToCreateCertWhenNoProductInfoAvailable(List<ProductInfo> productInfo) {
@@ -190,7 +365,7 @@ class AnonymousCertificateGeneratorTest {
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
 
         assertThatThrownBy(() -> this.generator.generate(consumer))
-            .isInstanceOf(CertificateCreationException.class);
+            .isInstanceOf(CertificateException.class);
     }
 
     @ParameterizedTest
@@ -228,25 +403,22 @@ class AnonymousCertificateGeneratorTest {
         this.config.setProperty(ConfigProperties.ANON_CERT_DURATION, String.valueOf(certDuration));
         this.generator = this.createGenerator();
 
-        List<ProductInfo> productInfo = List.of(
-            createProductInfo(), createProductInfo(), createProductInfo()
-        );
+        List<ProductInfo> productInfo = Stream.generate(this::createProductInfo)
+            .limit(3)
+            .toList();
 
-        when(this.anonymousCertificateCurator.create(any(AnonymousContentAccessCertificate.class)))
-            .thenAnswer(returnsFirstArg());
-        when(this.productAdapter.getChildrenByProductIds(anyCollection())).thenReturn(productInfo);
-        when(this.serialCurator.create(any(CertificateSerial.class))).thenAnswer(invocation -> {
-            CertificateSerial argument = invocation.getArgument(0);
-            argument.setSerial(123L);
-            return argument;
-        });
+        List<String> productIds = productInfo.stream()
+            .map(ProductInfo::getId)
+            .toList();
+
+        this.mockServiceAdapterProductLookup(productInfo);
 
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setId(TestUtil.randomString("id-"))
             .setUuid(TestUtil.randomString("uuid-"))
             .setCloudAccountId(TestUtil.randomString("cloudAccountId-"))
             .setCloudInstanceId(TestUtil.randomString("instanceId-"))
-            .setProductIds(List.of("productId"))
+            .setProductIds(productIds)
             .setCloudProviderShortName("aws");
 
         AnonymousContentAccessCertificate actual = this.generator.generate(consumer);
@@ -262,37 +434,16 @@ class AnonymousCertificateGeneratorTest {
     }
 
     @Test
-    void shouldCreateNewCertWhenMissing() {
-        List<ProductInfo> productInfo = List.of(
-            createProductInfo(), createProductInfo(), createProductInfo()
-        );
-        when(this.anonymousCertificateCurator.create(any(AnonymousContentAccessCertificate.class)))
-            .thenAnswer(returnsFirstArg());
-        when(this.productAdapter.getChildrenByProductIds(anyCollection())).thenReturn(productInfo);
-        when(this.serialCurator.create(any(CertificateSerial.class))).thenAnswer(invocation -> {
-            CertificateSerial argument = invocation.getArgument(0);
-            argument.setSerial(123L);
-            return argument;
-        });
-        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
-
-        AnonymousContentAccessCertificate result = this.generator.generate(consumer);
-
-        assertNotNull(result);
-    }
-
-    @Test
     public void testGenerateThrowsExceptionIfKeyPairCannotBeGenerated() throws Exception {
-        doReturn(List.of(this.createProductInfo()))
-            .when(this.productAdapter)
-            .getChildrenByProductIds(anyCollection());
+        List<ProductInfo> productInfo = Stream.generate(this::createProductInfo)
+            .limit(3)
+            .toList();
 
-        doAnswer(iom -> {
-            CertificateSerial serial = iom.getArgument(0);
-            serial.setSerial(123L);
-            return serial;
-        }).when(this.serialCurator)
-            .create(any(CertificateSerial.class));
+        List<String> productIds = productInfo.stream()
+            .map(ProductInfo::getId)
+            .toList();
+
+        this.mockServiceAdapterProductLookup(productInfo);
 
         KeyPairGenerator mockKeyPairGenerator = mock(KeyPairGenerator.class);
         doThrow(new KeyException("kaboom")).when(mockKeyPairGenerator).generateKeyPair();
@@ -300,18 +451,14 @@ class AnonymousCertificateGeneratorTest {
         CryptoManager mockCryptoManager = spy(CryptoUtil.getCryptoManager(this.config));
         doReturn(mockKeyPairGenerator).when(mockCryptoManager).getKeyPairGenerator(any(Scheme.class));
 
-        AnonymousCloudConsumer consumer = this.createAnonConsumer();
+        AnonymousCloudConsumer consumer = this.createAnonConsumer()
+            .setProductIds(productIds);
+
         AnonymousCertificateGenerator generator = this.createGenerator(mockCryptoManager);
 
-        assertThrows(CertificateCreationException.class, () -> generator.generate(consumer));
+        assertThrows(CertificateException.class, () -> generator.generate(consumer));
 
         verify(mockKeyPairGenerator, times(1)).generateKeyPair();
-    }
-
-    private AnonymousCertContent createCertContent() {
-        return new AnonymousCertContent("content", List.of(
-            createContent(), createContent(), createContent()
-        ));
     }
 
     private static Content createContent() {
@@ -339,6 +486,7 @@ class AnonymousCertificateGeneratorTest {
 
         ProductInfo prodInfo = mock(ProductInfo.class);
         doReturn(List.of(prodContent)).when(prodInfo).getProductContent();
+        doReturn(TestUtil.randomString("sku-")).when(prodInfo).getId();
 
         return prodInfo;
     }

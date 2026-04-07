@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.model.exceptions.ValueTooLargeException;
 import org.candlepin.util.Util;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -32,6 +33,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 
 
@@ -58,6 +60,8 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     public static final int CLOUD_OFFERING_ID_MAX_LENGTH = 255;
     /** Max length for a value in the cloud provider shortname field */
     public static final int CLOUD_PROVIDER_MAX_LENGTH = 15;
+
+    public static final int ALGORITHM_OIDS_MAX_LENGTH = 2048;
 
 
     @Id
@@ -96,6 +100,20 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
 
     @Column(name = "owner_key")
     private String ownerKey;
+
+    // At some point we can look at encapsulating these crypto capabilities in an object and deduplicating on
+    // them or something, but for now, we'll store them as individual fields.
+
+    /** Comma-delimited list of supported cryptographic key generation algorithm OIDs */
+    @Column(name = "key_algorithm_oids")
+    @Size(max = ALGORITHM_OIDS_MAX_LENGTH)
+    private String supportedKeyAlgorithmOids;
+
+    /** Comma-delimited list of supported cryptographic signature algorithm OIDs */
+    @Column(name = "signature_algorithm_oids")
+    @Size(max = ALGORITHM_OIDS_MAX_LENGTH)
+    private String supportedSignatureAlgorithmOids;
+
 
     public AnonymousCloudConsumer() {
         this.uuid = Util.generateUUID();
@@ -287,16 +305,15 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     }
 
     /**
-     * @return the product IDs for this anonymous cloud consumer
+     * Fetches the SKU product IDs for this anonymous cloud consumer. If the consumer does not have access to
+     * any product IDs or the product IDs have not yet been set, this method returns an empty set. This method
+     * will never return null.
+     *
+     * @return
+     *  a set containing the SKU product IDs for this anonymous cloud consumer
      */
     public Set<String> getProductIds() {
-        Set<String> productIdsSet = Set.copyOf(Util.toList(this.productIds));
-
-        productIdsSet = productIdsSet.stream()
-            .filter(str -> str != null && !str.isBlank())
-            .collect(Collectors.toSet());
-
-        return productIdsSet;
+        return Util.toSet(this.productIds);
     }
 
     /**
@@ -314,16 +331,18 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
             throw new IllegalArgumentException("productIds is empty");
         }
 
-        // filter null and blank strings and collect as set to remove duplicates
-        Set<String> productSet = productIds.stream()
-            .filter(str -> str != null && !str.isBlank())
-            .collect(Collectors.toSet());
+        // filter null and blank strings
+        String pids = productIds.stream()
+            .filter(Objects::nonNull)
+            .filter(pid -> !pid.isBlank())
+            .distinct()
+            .collect(Collectors.joining(","));
 
-        if (productSet.isEmpty()) {
+        if (pids.isBlank()) {
             throw new IllegalArgumentException("productIds is empty after removing null and blank entries");
         }
 
-        this.productIds = String.join(",", productSet);
+        this.productIds = pids;
         return this;
     }
 
@@ -360,6 +379,110 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
      */
     public AnonymousCloudConsumer setOwnerKey(String ownerKey) {
         this.ownerKey = ownerKey;
+        return this;
+    }
+
+    /**
+     * Fetches this consumer's supported key generation algorithm OIDs. If the algorithm OIDs have not been
+     * set, or have since been cleared, this method returns null.
+     *
+     * @return
+     *  a set containing the consumer's supported key generation algorithm OIDs, or null if no algorithm OIDs
+     *  have been set
+     */
+    public Set<String> getSupportedKeyAlgorithmOids() {
+        Set<String> output = Util.toSet(this.supportedKeyAlgorithmOids);
+        return !output.isEmpty() ? output : null;
+    }
+
+    /**
+     * Sets the supported cryptographic key generation algorithm OIDs for this consumer, silently discarding
+     * any duplicate OIDs in the collection. If the collection of algorithm OIDs is null or empty, any
+     * existing value will be cleared. If the collection of OIDs exceeds the maximum storage capacity for this
+     * field, this method throws an exception.
+     *
+     * @param algorithmOids
+     *  a collection of key algorithm OIDs in string format (e.g. 1.234.56.7), or null to clear any existing
+     *  values
+     *
+     * @throws ValueTooLargeException
+     *  if the converted collection of algorithm OIDs is too large and cannot be stored
+     *
+     * @return
+     *  a reference to this consumer instance
+     */
+    public AnonymousCloudConsumer setSupportedKeyAlgorithmOids(Collection<String> algorithmOids) {
+        if (algorithmOids == null) {
+            this.supportedKeyAlgorithmOids = null;
+            return this;
+        }
+
+        String oids = algorithmOids.stream()
+            .filter(Objects::nonNull)
+            .filter(oid -> !oid.isBlank())
+            .distinct()
+            .collect(Collectors.joining(","));
+
+        if (oids.length() > ALGORITHM_OIDS_MAX_LENGTH) {
+            String msg = String.format("Converted algorithm OID string length exceeds maximum size: %d > %d",
+                oids.length(), ALGORITHM_OIDS_MAX_LENGTH);
+
+            throw new ValueTooLargeException(msg);
+        }
+
+        this.supportedKeyAlgorithmOids = !oids.isBlank() ? oids : null;
+        return this;
+    }
+
+    /**
+     * Fetches this consumer's supported signature algorithm OIDs. If the algorithm OIDs have not been set, or
+     * have since been cleared, this method returns null.
+     *
+     * @return
+     *  a set containing the consumer's supported signature algorithm OIDs, or null if no algorithm OIDs have
+     *  been set
+     */
+    public Set<String> getSupportedSignatureAlgorithmOids() {
+        Set<String> output = Util.toSet(this.supportedSignatureAlgorithmOids);
+        return !output.isEmpty() ? output : null;
+    }
+
+    /**
+     * Sets the supported cryptographic signature algorithm OIDs for this consumer, silently discarding any
+     * null, empty, or duplicate OIDs in the collection. If the collection of algorithm OIDs is null or empty,
+     * any existing value will be cleared. If the collection of OIDs exceeds the maximum storage capacity for
+     * this field, this method throws an exception.
+     *
+     * @param algorithmOids
+     *  a collection of signature algorithm OIDs in string format (e.g. 1.234.56.7), or null to clear any
+     *  existing values
+     *
+     * @throws ValueTooLargeException
+     *  if the converted collection of algorithm OIDs is too large and cannot be stored
+     *
+     * @return
+     *  a reference to this anonymous cloud consumer instance
+     */
+    public AnonymousCloudConsumer setSupportedSignatureAlgorithmOids(Collection<String> algorithmOids) {
+        if (algorithmOids == null) {
+            this.supportedSignatureAlgorithmOids = null;
+            return this;
+        }
+
+        String oids = algorithmOids.stream()
+            .filter(Objects::nonNull)
+            .filter(oid -> !oid.isBlank())
+            .distinct()
+            .collect(Collectors.joining(","));
+
+        if (oids.length() > ALGORITHM_OIDS_MAX_LENGTH) {
+            String msg = String.format("Converted algorithm OID string length exceeds maximum size: %d > %d",
+                oids.length(), ALGORITHM_OIDS_MAX_LENGTH);
+
+            throw new ValueTooLargeException(msg);
+        }
+
+        this.supportedSignatureAlgorithmOids = !oids.isBlank() ? oids : null;
         return this;
     }
 

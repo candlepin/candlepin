@@ -20,6 +20,7 @@ import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.dto.api.server.v1.CertificateDTO;
 import org.candlepin.model.AbstractCertificate;
+import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.Consumer;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoManager;
@@ -1007,6 +1008,94 @@ public class CryptoUtil {
      *  the configured consumer
      */
     public static Consumer configureConsumerWithNoSelectableScheme(Consumer consumer) {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        return consumer.setSupportedKeyAlgorithmOids(Set.of("100.1.2.3.4.5"))
+            .setSupportedSignatureAlgorithmOids(Set.of("100.6.7.8.9.0"));
+    }
+
+    /**
+     * Configures the consumer to indicate that it supports the specified schemes. If any of the schemes
+     * define an algorithm which cannot be resolved to an algorithm OID, this function throws an exception.
+     * <p></p>
+     * Note that while the consumer will be configured to support any of the given schemes, which one is
+     * selected by CryptoManager's getCryptoScheme method is still determined by the schemes specified in the
+     * core Candlepin configuration.
+     *
+     * @param consumer
+     *  the consumer to configure
+     *
+     * @param schemes
+     *  the schemes to support with the consumer's configuration
+     *
+     * @return
+     *  the configured consumer
+     */
+    public static AnonymousCloudConsumer configureConsumerForSchemes(AnonymousCloudConsumer consumer,
+        Scheme... schemes) {
+
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        OidUtil oidUtil = getOidUtil();
+        Set<String> keyAlgoOids = new HashSet<>();
+        Set<String> sigAlgoOids = new HashSet<>();
+
+        for (Scheme scheme : schemes) {
+            if (scheme == null) {
+                throw new IllegalArgumentException("schemes list contains null values");
+            }
+
+            String keyAlgoOid = oidUtil.getKeyAlgorithmOid(scheme.keyAlgorithm())
+                .orElseThrow(() -> new RuntimeException("scheme key algorithm does not map to an OID"));
+
+            String sigAlgoOid = oidUtil.getSignatureAlgorithmOid(scheme.signatureAlgorithm())
+                .orElseThrow(() -> new RuntimeException("scheme signature algorithm does not map to an OID"));
+
+            keyAlgoOids.add(keyAlgoOid);
+            sigAlgoOids.add(sigAlgoOid);
+        }
+
+        return consumer.setSupportedKeyAlgorithmOids(keyAlgoOids)
+            .setSupportedSignatureAlgorithmOids(sigAlgoOids);
+    }
+
+    /**
+     * Configures the consumer such that it does not indicate any cryptographic capabilities, which should
+     * result in cryptographic operations executed in the context of this consumer using the default scheme.
+     *
+     * @param consumer
+     *  the consumer to configure
+     *
+     * @return
+     *  the configured consumer
+     */
+    public static AnonymousCloudConsumer configureConsumerForDefaultScheme(AnonymousCloudConsumer consumer) {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        return consumer.setSupportedKeyAlgorithmOids(null)
+            .setSupportedSignatureAlgorithmOids(null);
+    }
+
+    /**
+     * Configures the consumer such that it indicates cryptographic capabilities that cannot be matched to
+     * any of the known, supported schemes, as indicated by those returned by the generateSupportedSchemes
+     * function.
+     *
+     * @param consumer
+     *  the consumer to configure
+     *
+     * @return
+     *  the configured consumer
+     */
+    public static AnonymousCloudConsumer configureConsumerWithNoSelectableScheme(
+        AnonymousCloudConsumer consumer) {
+
         if (consumer == null) {
             throw new IllegalArgumentException("consumer is null");
         }

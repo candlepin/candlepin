@@ -17,8 +17,11 @@ package org.candlepin.model;
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.collection;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.candlepin.model.exceptions.ValueTooLargeException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -28,6 +31,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.validation.ConstraintViolationException;
@@ -486,6 +490,214 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
             .returns(expectedCert, AnonymousCloudConsumer::getContentAccessCert)
             .extracting(AnonymousCloudConsumer::getProductIds, as(collection(String.class)))
             .containsExactly(expectedProductId);
+    }
+
+    @Test
+    public void testGetSupportedKeyAlgorithmOidsReturnsNullWhenNotSet() {
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+
+        assertThat(consumer.getSupportedKeyAlgorithmOids())
+            .isNull();
+    }
+
+    @Test
+    public void testGetSetSupportedKeyAlgorithmOids() {
+        List<String> input = List.of("1.2.3", "3.4.5", "5.6.7");
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setSupportedKeyAlgorithmOids(input);
+
+        assertThat(consumer.getSupportedKeyAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(input);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testSetSupportedKeyAlgorithmOidsAllowsClearingExistingValue(Collection<String> input) {
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setSupportedKeyAlgorithmOids(List.of("1.2.3", "3.4.5", "5.6.7"));
+
+        // Verify we have a non-null value as our init state
+        assertThat(consumer.getSupportedKeyAlgorithmOids())
+            .isNotNull();
+
+        // Set the value to null/empty
+        consumer.setSupportedKeyAlgorithmOids(input);
+
+        // Verify the value has been cleared
+        assertThat(consumer.getSupportedKeyAlgorithmOids())
+            .isNull();
+    }
+
+    @Test
+    public void testSetSupportedKeyAlgorithmOidsRemovesBlankValues() {
+        List<String> input = List.of("1.1", "", "1.2", " ", "\t", "1.3");
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setSupportedKeyAlgorithmOids(input);
+
+        assertThat(consumer.getSupportedKeyAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrder("1.1", "1.2", "1.3");
+    }
+
+    @Test
+    public void testSetSupportedKeyAlgorithmOidsRejectsSingleValueExceedingSize() {
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+        String value = "1".repeat(Consumer.ALGORITHM_OIDS_MAX_LENGTH + 1);
+
+        assertThrows(ValueTooLargeException.class,
+            () -> consumer.setSupportedKeyAlgorithmOids(List.of(value)));
+    }
+
+    @Test
+    public void testSetSupportedKeyAlgorithmOidsRejectsMultipleValuesExceedingSize() {
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+        List<String> input = new ArrayList<>();
+
+        do {
+            input.add(String.valueOf(input.size()));
+        }
+        while (String.join(",", input).length() <= Consumer.ALGORITHM_OIDS_MAX_LENGTH);
+
+        assertThrows(ValueTooLargeException.class,
+            () -> consumer.setSupportedKeyAlgorithmOids(input));
+    }
+
+    @Test
+    public void testGetSupportedSignatureAlgorithmOidsReturnsNullWhenNotSet() {
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+
+        assertThat(consumer.getSupportedSignatureAlgorithmOids())
+            .isNull();
+    }
+
+    @Test
+    public void testGetSetSupportedSignatureAlgorithmOids() {
+        List<String> input = List.of("1.2.3", "3.4.5", "5.6.7");
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setSupportedSignatureAlgorithmOids(input);
+
+        assertThat(consumer.getSupportedSignatureAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(input);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testSetSupportedSignatureAlgorithmOidsAllowsClearingExistingValue(Collection<String> input) {
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setSupportedSignatureAlgorithmOids(List.of("1.2.3", "3.4.5", "5.6.7"));
+
+        // Verify we have a non-null value as our init state
+        assertThat(consumer.getSupportedSignatureAlgorithmOids())
+            .isNotNull();
+
+        // Set the value to null/empty
+        consumer.setSupportedSignatureAlgorithmOids(input);
+
+        // Verify the value has been cleared
+        assertThat(consumer.getSupportedSignatureAlgorithmOids())
+            .isNull();
+    }
+
+    @Test
+    public void testSetSupportedSignatureAlgorithmOidsRemovesBlankValues() {
+        List<String> input = List.of("1.1", "", "1.2", " ", "\t", "1.3");
+
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setSupportedSignatureAlgorithmOids(input);
+
+        assertThat(consumer.getSupportedSignatureAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrder("1.1", "1.2", "1.3");
+    }
+
+    @Test
+    public void testSetSupportedSignatureAlgorithmOidsRejectsSingleValueExceedingSize() {
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+        String value = "1".repeat(Consumer.ALGORITHM_OIDS_MAX_LENGTH + 1);
+
+        assertThrows(ValueTooLargeException.class,
+            () -> consumer.setSupportedSignatureAlgorithmOids(List.of(value)));
+    }
+
+    @Test
+    public void testSetSupportedSignatureAlgorithmOidsRejectsMultipleValuesExceedingSize() {
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+        List<String> input = new ArrayList<>();
+
+        do {
+            input.add(String.valueOf(input.size()));
+        }
+        while (String.join(",", input).length() <= Consumer.ALGORITHM_OIDS_MAX_LENGTH);
+
+        assertThrows(ValueTooLargeException.class,
+            () -> consumer.setSupportedSignatureAlgorithmOids(input));
+    }
+
+    @Test
+    public void testGetSupportedKeyAlgorithmOidsCorrectsMalformedPseudoEntryDBState() {
+        // This test verifies that in the event the DB is set to some string of delimiters, that it doesn't
+        // return an empty list
+        Owner owner = this.createOwner();
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setCloudInstanceId("test_cloud_instance")
+            .setCloudAccountId("test_account_id")
+            .setCloudOfferingId("test_offering_id")
+            .setCloudProviderShortName("test_provider")
+            .setProductIds(List.of("p1", "p2", "p3"))
+            .setOwnerKey(owner.getKey());
+
+        this.anonymousCloudConsumerCurator.create(consumer);
+
+        String jpql = "UPDATE AnonymousCloudConsumer ac SET ac.supportedKeyAlgorithmOids = ', ,, ,' " +
+            "WHERE ac.id = :id";
+
+        int rows = this.anonymousCloudConsumerCurator.getEntityManager()
+            .createQuery(jpql)
+            .setParameter("id", consumer.getId())
+            .executeUpdate();
+
+        assertEquals(1, rows);
+        this.anonymousCloudConsumerCurator.flush();
+        this.anonymousCloudConsumerCurator.clear();
+
+        consumer = this.anonymousCloudConsumerCurator.get(consumer.getId());
+        assertNull(consumer.getSupportedKeyAlgorithmOids());
+    }
+
+    @Test
+    public void testGetSupportedSignatureAlgorithmOidsCorrectsMalformedPseudoEntryDBState() {
+        // This test verifies that in the event the DB is set to some string of delimiters, that it doesn't
+        // return an empty list
+        Owner owner = this.createOwner();
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setCloudInstanceId("test_cloud_instance")
+            .setCloudAccountId("test_account_id")
+            .setCloudOfferingId("test_offering_id")
+            .setCloudProviderShortName("test_provider")
+            .setProductIds(List.of("p1", "p2", "p3"))
+            .setOwnerKey(owner.getKey());
+
+        this.anonymousCloudConsumerCurator.create(consumer);
+
+        String jpql = "UPDATE AnonymousCloudConsumer ac SET ac.supportedSignatureAlgorithmOids = ', ,, ,' " +
+            "WHERE ac.id = :id";
+
+        int rows = this.anonymousCloudConsumerCurator.getEntityManager()
+            .createQuery(jpql)
+            .setParameter("id", consumer.getId())
+            .executeUpdate();
+
+        assertEquals(1, rows);
+        this.anonymousCloudConsumerCurator.flush();
+        this.anonymousCloudConsumerCurator.clear();
+
+        consumer = this.anonymousCloudConsumerCurator.get(consumer.getId());
+        assertNull(consumer.getSupportedSignatureAlgorithmOids());
     }
 
     private String generateString(int length) {
