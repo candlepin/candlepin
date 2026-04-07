@@ -40,6 +40,7 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -142,17 +143,17 @@ public class JcaSignatureValidatorTest {
     }
 
     private byte[] signData(String algorithm, PrivateKey privateKey, InputStream istream) throws Exception {
-        Signature jcaSignature = Signature.getInstance(algorithm);
-        jcaSignature.initSign(privateKey);
+        Signature signer = Signature.getInstance(algorithm);
+        signer.initSign(privateKey);
 
         byte[] buffer = new byte[4096];
         int read;
 
         while ((read = istream.read(buffer)) != -1) {
-            jcaSignature.update(buffer, 0, read);
+            signer.update(buffer, 0, read);
         }
 
-        return jcaSignature.sign();
+        return signer.sign();
     }
 
     private byte[] signData(String algorithm, PrivateKey privateKey, byte[] data) throws Exception {
@@ -246,16 +247,26 @@ public class JcaSignatureValidatorTest {
     @ParameterizedTest
     @MethodSource("schemeSource")
     public void testValidateWithBytesAndAdditionalCertificatesAsArray(ExtScheme scheme) throws Exception {
-        ExtScheme alt1 = generateFromScheme(scheme);
-        ExtScheme alt2 = generateFromScheme(scheme);
+        ExtScheme altScheme = generateFromScheme(scheme);
+
+        List<X509Certificate> certificates = new ArrayList<>();
+        certificates.add(altScheme.certificate());
+
+        for (Scheme supportedScheme : CryptoUtil.SUPPORTED_SCHEMES.values()) {
+            X509Certificate cert = CryptoUtil.generateX509Certificate(supportedScheme);
+            certificates.add(cert);
+        }
+
+        X509Certificate[] certsArray = certificates.toArray(new X509Certificate[0]);
 
         String data = "hello world";
         byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
-        byte[] signature = this.signData(alt2.signatureAlgorithm(), alt2.keypair().getPrivate(), bytes);
+        byte[] signature = this.signData(altScheme.signatureAlgorithm(), altScheme.keypair().getPrivate(),
+            bytes);
 
         SignatureValidator validator = buildValidator(scheme)
             .forSignature(signature)
-            .withAdditionalCertificates(alt1.certificate(), alt2.certificate());
+            .withAdditionalCertificates(certsArray);
 
         assertTrue(validator.validate(bytes));
     }
@@ -265,16 +276,24 @@ public class JcaSignatureValidatorTest {
     public void testValidateWithBytesAndAdditionalCertificatesAsCollection(ExtScheme scheme)
         throws Exception {
 
-        ExtScheme alt1 = generateFromScheme(scheme);
-        ExtScheme alt2 = generateFromScheme(scheme);
+        ExtScheme altScheme = generateFromScheme(scheme);
+
+        List<X509Certificate> certificates = new ArrayList<>();
+        certificates.add(altScheme.certificate());
+
+        for (Scheme supportedScheme : CryptoUtil.SUPPORTED_SCHEMES.values()) {
+            X509Certificate cert = CryptoUtil.generateX509Certificate(supportedScheme);
+            certificates.add(cert);
+        }
 
         String data = "hello world";
         byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
-        byte[] signature = this.signData(alt2.signatureAlgorithm(), alt2.keypair().getPrivate(), bytes);
+        byte[] signature = this.signData(altScheme.signatureAlgorithm(), altScheme.keypair().getPrivate(),
+            bytes);
 
         SignatureValidator validator = buildValidator(scheme)
             .forSignature(signature)
-            .withAdditionalCertificates(List.of(alt1.certificate(), alt2.certificate()));
+            .withAdditionalCertificates(certificates);
 
         assertTrue(validator.validate(bytes));
     }
@@ -282,17 +301,22 @@ public class JcaSignatureValidatorTest {
     @ParameterizedTest
     @MethodSource("schemeSource")
     public void testValidateWithBytesFailsWithNoMatchingCertificates(ExtScheme scheme) throws Exception {
-        ExtScheme alt1 = generateFromScheme(scheme);
-        ExtScheme alt2 = generateFromScheme(scheme);
-        ExtScheme alt3 = generateFromScheme(scheme);
+        ExtScheme altScheme = generateFromScheme(scheme);
+
+        List<X509Certificate> certificates = new ArrayList<>();
+        for (Scheme supportedScheme : CryptoUtil.SUPPORTED_SCHEMES.values()) {
+            X509Certificate cert = CryptoUtil.generateX509Certificate(supportedScheme);
+            certificates.add(cert);
+        }
 
         String data = "hello world";
         byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
-        byte[] signature = this.signData(alt3.signatureAlgorithm(), alt3.keypair().getPrivate(), bytes);
+        byte[] signature = this.signData(altScheme.signatureAlgorithm(), altScheme.keypair().getPrivate(),
+            bytes);
 
         SignatureValidator validator = buildValidator(scheme)
             .forSignature(signature)
-            .withAdditionalCertificates(alt1.certificate(), alt2.certificate());
+            .withAdditionalCertificates(certificates);
 
         assertFalse(validator.validate(bytes));
     }
@@ -338,17 +362,27 @@ public class JcaSignatureValidatorTest {
     @ParameterizedTest
     @MethodSource("schemeSource")
     public void testValidateWithFileAndAdditionalCertificatesAsArray(ExtScheme scheme) throws Exception {
-        ExtScheme alt1 = generateFromScheme(scheme);
-        ExtScheme alt2 = generateFromScheme(scheme);
+        ExtScheme altScheme = generateFromScheme(scheme);
+
+        List<X509Certificate> certificates = new ArrayList<>();
+        certificates.add(altScheme.certificate());
+
+        for (Scheme supportedScheme : CryptoUtil.SUPPORTED_SCHEMES.values()) {
+            X509Certificate cert = CryptoUtil.generateX509Certificate(supportedScheme);
+            certificates.add(cert);
+        }
+
+        X509Certificate[] certsArray = certificates.toArray(new X509Certificate[0]);
 
         String data = "hello world";
         File file = generateTempFile(data);
         byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
-        byte[] signature = this.signData(alt2.signatureAlgorithm(), alt2.keypair().getPrivate(), bytes);
+        byte[] signature = this.signData(altScheme.signatureAlgorithm(), altScheme.keypair().getPrivate(),
+            bytes);
 
         SignatureValidator validator = buildValidator(scheme)
             .forSignature(signature)
-            .withAdditionalCertificates(alt1.certificate(), alt2.certificate());
+            .withAdditionalCertificates(certsArray);
 
         assertTrue(validator.validate(file));
     }
@@ -356,17 +390,25 @@ public class JcaSignatureValidatorTest {
     @ParameterizedTest
     @MethodSource("schemeSource")
     public void testValidateWithFileAndAdditionalCertificatesAsCollection(ExtScheme scheme) throws Exception {
-        ExtScheme alt1 = generateFromScheme(scheme);
-        ExtScheme alt2 = generateFromScheme(scheme);
+        ExtScheme altScheme = generateFromScheme(scheme);
+
+        List<X509Certificate> certificates = new ArrayList<>();
+        certificates.add(altScheme.certificate());
+
+        for (Scheme supportedScheme : CryptoUtil.SUPPORTED_SCHEMES.values()) {
+            X509Certificate cert = CryptoUtil.generateX509Certificate(supportedScheme);
+            certificates.add(cert);
+        }
 
         String data = "hello world";
         File file = generateTempFile(data);
         byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
-        byte[] signature = this.signData(alt2.signatureAlgorithm(), alt2.keypair().getPrivate(), bytes);
+        byte[] signature = this.signData(altScheme.signatureAlgorithm(), altScheme.keypair().getPrivate(),
+            bytes);
 
         SignatureValidator validator = buildValidator(scheme)
             .forSignature(signature)
-            .withAdditionalCertificates(List.of(alt1.certificate(), alt2.certificate()));
+            .withAdditionalCertificates(certificates);
 
         assertTrue(validator.validate(file));
     }
@@ -374,18 +416,23 @@ public class JcaSignatureValidatorTest {
     @ParameterizedTest
     @MethodSource("schemeSource")
     public void testValidateWithFileFailsWithNoMatchingCertificates(ExtScheme scheme) throws Exception {
-        ExtScheme alt1 = generateFromScheme(scheme);
-        ExtScheme alt2 = generateFromScheme(scheme);
-        ExtScheme alt3 = generateFromScheme(scheme);
+        ExtScheme altScheme = generateFromScheme(scheme);
+
+        List<X509Certificate> certificates = new ArrayList<>();
+        for (Scheme supportedScheme : CryptoUtil.SUPPORTED_SCHEMES.values()) {
+            X509Certificate cert = CryptoUtil.generateX509Certificate(supportedScheme);
+            certificates.add(cert);
+        }
 
         String data = "hello world";
         File file = generateTempFile(data);
         byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
-        byte[] signature = this.signData(alt3.signatureAlgorithm(), alt3.keypair().getPrivate(), bytes);
+        byte[] signature = this.signData(altScheme.signatureAlgorithm(), altScheme.keypair().getPrivate(),
+            bytes);
 
         SignatureValidator validator = buildValidator(scheme)
             .forSignature(signature)
-            .withAdditionalCertificates(alt1.certificate(), alt2.certificate());
+            .withAdditionalCertificates(certificates);
 
         assertFalse(validator.validate(file));
     }

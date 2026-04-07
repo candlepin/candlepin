@@ -28,12 +28,12 @@ import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
+import java.security.SignatureException;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 
@@ -48,11 +48,38 @@ public class JcaSignatureValidator implements SignatureValidator {
     // Size of the byte buffer to use to consume blocks of data from input streams
     private static final int BUFFER_SIZE = 4096;
 
+    // Bit in the X.509 key usage extension that declares the cert as usable for digital signatures
+    private static final int DIGITAL_SIGNATURE_USAGE_BIT = 0;
+
     private final java.security.Provider securityProvider;
     private final Scheme scheme;
 
     private byte[] signature;
     private Set<X509Certificate> additionalCerts;
+
+    /**
+     * A simple functional interface to assist in abstracting distinct logic away from the generalized
+     * validation routine. Allows for generically declaring an exception to be rethrown, while still throwing
+     * the java.security.SignatureException all Signature.update operations are expected to throw.
+     */
+    @FunctionalInterface
+    private interface SignatureUpdater<E extends Exception> {
+        /**
+         * Updates the given Signature instance with the data whose signature is to be verified.
+         * Implementations must call Signature.update at least once as part of this operation.
+         *
+         * @param verifier
+         *  the Signature instance to be updated with data for calculating the signature via the
+         *  Signature.update method; cannot be null
+         *
+         * @throws SignatureException
+         *  if a SignatureException occurs while updating the signature
+         *
+         * @throws E
+         *  if the targeted exception occurs as a result of the implementation of this method
+         */
+        void update(Signature verifier) throws SignatureException, E;
+    }
 
     /**
      * Creates a new signature validator for the given cryptographic scheme.
@@ -99,32 +126,35 @@ public class JcaSignatureValidator implements SignatureValidator {
         return this;
     }
 
-    @Override
-    public boolean validate(File file) throws IOException {
-        if (file == null) {
-            throw new IllegalArgumentException("file is null");
-        }
-
+    private <E extends Exception> boolean performValidation(SignatureUpdater<E> updater) throws E {
         if (this.signature == null || this.signature.length < 1) {
             throw new IllegalStateException("signature has not yet been configured");
         }
 
-        CheckedPredicate<X509Certificate, IOException> predicate = certificate -> {
-            try (InputStream istream = new FileInputStream(file)) {
-                Signature jcaSignature = Signature.getInstance(this.scheme.signatureAlgorithm(),
-                    this.securityProvider);
-                jcaSignature.initVerify(certificate);
-
-                byte[] buffer = new byte[BUFFER_SIZE];
-                int read;
-
-                while ((read = istream.read(buffer)) != -1) {
-                    jcaSignature.update(buffer, 0, read);
+        CheckedPredicate<X509Certificate, E> predicate = certificate -> {
+            try {
+                // Verify this cert can be used for digital signatures. If the cert doesn't define key usage
+                // or this method otherwise returns null, treat it as permissive.
+                boolean[] usages = certificate.getKeyUsage();
+                if (usages != null && !usages[DIGITAL_SIGNATURE_USAGE_BIT]) {
+                    return false;
                 }
 
-                return jcaSignature.verify(this.signature);
+                Signature verifier = Signature.getInstance(this.scheme.signatureAlgorithm(),
+                    this.securityProvider);
+                verifier.initVerify(certificate);
+
+                updater.update(verifier);
+
+                return verifier.verify(this.signature);
             }
-            catch (java.security.SignatureException | NoSuchAlgorithmException | InvalidKeyException e) {
+            catch (InvalidKeyException e) {
+                // Key and cert don't match signature scheme. Move on to next cert
+                log.debug("Certificate not usable for signature validation with scheme: <cert: {}>, {}",
+                    certificate.getSerialNumber(), this.scheme);
+                return false;
+            }
+            catch (java.security.SignatureException | NoSuchAlgorithmException e) {
                 throw new org.candlepin.pki.SignatureException(
                     "Unexpected exception occurred while verifying signature", e);
             }
@@ -137,33 +167,34 @@ public class JcaSignatureValidator implements SignatureValidator {
     }
 
     @Override
-    public boolean validate(byte[] data) {
-        if (this.signature == null || this.signature.length < 1) {
-            throw new IllegalStateException("signature has not yet been configured");
+    public boolean validate(File file) throws IOException {
+        if (file == null) {
+            throw new IllegalArgumentException("file is null");
         }
 
-        Predicate<X509Certificate> predicate = certificate -> {
-            try {
-                Signature jcaSignature = Signature.getInstance(this.scheme.signatureAlgorithm(),
-                    this.securityProvider);
-                jcaSignature.initVerify(certificate);
+        SignatureUpdater<IOException> updater = verifier -> {
+            try (InputStream istream = new FileInputStream(file)) {
+                byte[] buffer = new byte[BUFFER_SIZE];
+                int read;
 
-                if (data != null) {
-                    jcaSignature.update(data);
+                while ((read = istream.read(buffer)) != -1) {
+                    verifier.update(buffer, 0, read);
                 }
-
-                return jcaSignature.verify(this.signature);
-            }
-            catch (java.security.SignatureException | NoSuchAlgorithmException | InvalidKeyException e) {
-                throw new org.candlepin.pki.SignatureException(
-                    "Unexpected exception occurred while verifying signature", e);
             }
         };
 
-        return Stream.concat(Stream.of(this.scheme.certificate()), this.additionalCerts.stream())
-            .filter(predicate)
-            .findFirst()
-            .isPresent();
+        return this.performValidation(updater);
+    }
+
+    @Override
+    public boolean validate(byte[] data) {
+        SignatureUpdater<RuntimeException> updater = verifier -> {
+            if (data != null) {
+                verifier.update(data);
+            }
+        };
+
+        return this.performValidation(updater);
     }
 
 }
