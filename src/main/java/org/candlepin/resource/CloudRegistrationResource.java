@@ -27,6 +27,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.dto.api.server.v1.CloudAuthenticationResultDTO;
 import org.candlepin.dto.api.server.v1.CloudRegistrationDTO;
+import org.candlepin.dto.api.server.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotAuthorizedException;
@@ -39,6 +40,7 @@ import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryArguments;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.exceptions.ValueTooLargeException;
 import org.candlepin.resource.server.v1.CloudRegistrationApi;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.exception.cloudregistration.CloudRegistrationNotSupportedForOfferingException;
@@ -121,6 +123,26 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
                 "Request is missing cloud provider type (e.g. amazon, gcp, azure)"));
         }
 
+        // If the user has provided crypto capabilities, verify that they won't cause storage problems later
+        // to avoid doing a lot of unnecessary work before throwing our BRE
+        CryptographicCapabilitiesDTO cryptoCapabilities = cloudRegistrationDTO.getCryptographicCapabilities();
+        try {
+            // Impl note: we won't have a real anon cloud consumer until much later, but we can still use a
+            // fake/temp instance to do our storage checks all the same. It's a bit of wasted effort, but it's
+            // better than firing off jobs and hitting our adapters (and other backing services) just to throw
+            // an exception.
+            AnonymousCloudConsumer temp = new AnonymousCloudConsumer();
+
+            if (cryptoCapabilities != null) {
+                temp.setSupportedKeyAlgorithmOids(cryptoCapabilities.getKeyAlgorithms());
+                temp.setSupportedSignatureAlgorithmOids(cryptoCapabilities.getSignatureAlgorithms());
+            }
+        }
+        catch (ValueTooLargeException e) {
+            throw new BadRequestException(this.i18n.tr("Unable to process authorization request: " +
+                "cryptographic capabilities exceed data storage capabilities"));
+        }
+
         Principal principal = this.principalProvider.get();
         try {
             if (!this.enabled) {
@@ -154,7 +176,8 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
 
                 validateCloudAuthenticationResult(authResult);
 
-                CloudAuthenticationResultDTO resultDTO = processAdapterAuthResult(principal, authResult);
+                CloudAuthenticationResultDTO resultDTO = this.processAdapterAuthResult(principal,
+                    cryptoCapabilities, authResult);
 
                 return Response.status(Response.Status.OK)
                     .type(MediaType.APPLICATION_JSON)
@@ -236,15 +259,14 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
     }
 
     private CloudRegistrationData getCloudRegistrationData(CloudRegistrationDTO cloudRegistrationDTO) {
-        CloudRegistrationData registrationData = new CloudRegistrationData();
-        registrationData.setType(cloudRegistrationDTO.getType());
-        registrationData.setMetadata(cloudRegistrationDTO.getMetadata());
-        registrationData.setSignature(cloudRegistrationDTO.getSignature());
-        return registrationData;
+        return new CloudRegistrationData()
+            .setType(cloudRegistrationDTO.getType())
+            .setMetadata(cloudRegistrationDTO.getMetadata())
+            .setSignature(cloudRegistrationDTO.getSignature());
     }
 
     private CloudAuthenticationResultDTO processAdapterAuthResult(Principal principal,
-        CloudAuthenticationResult authResult) {
+        CryptographicCapabilitiesDTO cryptoCapabilities, CloudAuthenticationResult authResult) {
 
         // verify that the owner exists upstream and is entitled
         String ownerKey = authResult.getOwnerKey();
@@ -302,6 +324,12 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
                     .setCloudOfferingId(authResult.getOfferId())
                     .setProductIds(authResult.getProductIds())
                     .setCloudProviderShortName(authResult.getCloudProvider());
+
+                if (cryptoCapabilities != null) {
+                    createdAnonConsumer.setSupportedKeyAlgorithmOids(cryptoCapabilities.getKeyAlgorithms());
+                    createdAnonConsumer.setSupportedSignatureAlgorithmOids(
+                        cryptoCapabilities.getSignatureAlgorithms());
+                }
 
                 createdAnonConsumer = anonymousCloudConsumerCurator.create(createdAnonConsumer);
                 anonymousConsumerUuid = createdAnonConsumer.getUuid();
