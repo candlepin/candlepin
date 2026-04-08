@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -26,6 +26,7 @@ import org.candlepin.dto.api.client.v1.BrandingDTO;
 import org.candlepin.dto.api.client.v1.CdnDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
+import org.candlepin.dto.api.client.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.dto.api.client.v1.ImportRecordDTO;
 import org.candlepin.dto.api.client.v1.ImportUpstreamConsumerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
@@ -44,6 +45,7 @@ import org.candlepin.spec.bootstrap.data.builder.Branding;
 import org.candlepin.spec.bootstrap.data.builder.Cdns;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.CryptoCapabilities;
 import org.candlepin.spec.bootstrap.data.builder.ExportCdn;
 import org.candlepin.spec.bootstrap.data.builder.ExportGenerator;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
@@ -54,6 +56,9 @@ import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import tools.jackson.databind.JsonNode;
 
@@ -70,6 +75,12 @@ import java.util.stream.Stream;
 @OnlyInStandalone
 public class ImportSuccessSpecTest {
     private static final String RECORD_CLEANER_JOB_KEY = "ImportRecordCleanerJob";
+
+    private static Stream<Arguments> capabilitiesSource() {
+        return CryptoCapabilities.getSupportedCapabilities()
+            .stream()
+            .map(Arguments::of);
+    }
 
     private static ApiClient adminClient;
 
@@ -107,8 +118,9 @@ public class ImportSuccessSpecTest {
         return product;
     }
 
-    @Test
-    public void shouldCreatePools() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldCreatePools(CryptographicCapabilitiesDTO capabilities) throws Exception {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         ProductDTO derivedProvidedProduct = Products.random();
@@ -122,6 +134,7 @@ public class ImportSuccessSpecTest {
             .providedProducts(Set.of(providedProduct));
 
         File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(product)
             .export();
 
@@ -153,8 +166,11 @@ public class ImportSuccessSpecTest {
             .isEqualTo(derivedProvidedProduct.getId());
     }
 
-    @Test
-    public void shouldNotRemoveCustomPoolsDuringImport() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldNotRemoveCustomPoolsDuringImport(CryptographicCapabilitiesDTO capabilities)
+        throws Exception {
+
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         // Create some local, custom products and pools
@@ -165,6 +181,7 @@ public class ImportSuccessSpecTest {
 
         // Create a basic manifest for import
         File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(Products.random())
             .export();
 
@@ -180,8 +197,11 @@ public class ImportSuccessSpecTest {
             .contains(pool1.getId(), pool2.getId());
     }
 
-    @Test
-    public void shouldIgnoreMultiplierForPoolQuantity() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldIgnoreMultiplierForPoolQuantity(CryptographicCapabilitiesDTO capabilities)
+        throws Exception {
+
         // This test is weird. We're verifying that the quantity of the pools we get in the manifest
         // aren't affected by multipliers and junk on the given source pool/product. While that's
         // fine and all, that's not an import test; it's an *exporter* test. Once the pools are
@@ -200,6 +220,7 @@ public class ImportSuccessSpecTest {
             .quantity(10L);
 
         File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addSubscription(virtSub)
             .export();
 
@@ -214,14 +235,18 @@ public class ImportSuccessSpecTest {
             .returns(virtSub.getQuantity(), PoolDTO::getQuantity);
     }
 
-    @Test
-    public void shouldSetUpstreamConsumerAfterSuccessfulImport() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldSetUpstreamConsumerAfterSuccessfulImport(CryptographicCapabilitiesDTO capabilities)
+        throws Exception {
+
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         assertThat(owner)
             .extracting(OwnerDTO::getUpstreamConsumer)
             .isNull();
 
         File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(Products.random())
             .export();
 
@@ -236,8 +261,11 @@ public class ImportSuccessSpecTest {
             .isNotNull();
     }
 
-    @Test
-    public void shouldPopulateUpstreamConsumerWithCdnDetails() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldPopulateUpstreamConsumerWithCdnDetails(CryptographicCapabilitiesDTO capabilities)
+        throws Exception {
+
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         CdnDTO cdn = adminClient.cdns().createCdn(Cdns.random());
@@ -248,6 +276,7 @@ public class ImportSuccessSpecTest {
             .isNull();
 
         File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(Products.random())
             .export(exportCdn);
 
@@ -263,12 +292,16 @@ public class ImportSuccessSpecTest {
             .isNotNull();
     }
 
-    @Test
-    public void shouldPopulateSubscriptionsWithCdnDetails() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldPopulateSubscriptionsWithCdnDetails(CryptographicCapabilitiesDTO capabilities)
+        throws Exception {
+
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         CdnDTO cdn = adminClient.cdns().createCdn(Cdns.random());
 
         File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(Products.random())
             .export(Cdns.toExport(cdn));
 
@@ -281,12 +314,15 @@ public class ImportSuccessSpecTest {
             .isEqualTo(cdn);
     }
 
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldCreateSuccessRecordOfTheImport(CryptographicCapabilitiesDTO capabilities)
+        throws Exception {
 
-    @Test
-    public void shouldCreateSuccessRecordOfTheImport() throws Exception {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(Products.random())
             .export();
 
@@ -300,11 +336,15 @@ public class ImportSuccessSpecTest {
             .containsOnly("SUCCESS");
     }
 
-    @Test
-    public void shouldPopulateOriginInfoOfTheImportRecord() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldPopulateOriginInfoOfTheImportRecord(CryptographicCapabilitiesDTO capabilities)
+        throws Exception {
+
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(Products.random())
             .export();
 
@@ -369,8 +409,9 @@ public class ImportSuccessSpecTest {
             .hasSize(recordsRetained);
     }
 
-    @Test
-    public void shouldImportArchContentCorrectly() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldImportArchContentCorrectly(CryptographicCapabilitiesDTO capabilities) throws Exception {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         ContentDTO archContent = Contents.random()
@@ -385,6 +426,7 @@ public class ImportSuccessSpecTest {
         this.addContentToProduct(archProduct, archContent);
 
         File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(archProduct)
             .export();
 
@@ -396,8 +438,9 @@ public class ImportSuccessSpecTest {
             .returns("i386,x86_64", ContentDTO::getArches);
     }
 
-    @Test
-    public void shouldContainBrandingInfo() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldContainBrandingInfo(CryptographicCapabilitiesDTO capabilities) throws Exception {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         ProductDTO engProduct = Products.randomEng();
@@ -406,6 +449,7 @@ public class ImportSuccessSpecTest {
             .branding(Set.of(branding));
 
         File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(engProduct)
             .addProduct(brandedProduct)
             .export();
@@ -424,11 +468,15 @@ public class ImportSuccessSpecTest {
             .returns(branding.getType(), BrandingDTO::getType);
     }
 
-    @Test
-    public void shouldNotContainBrandingWhenNoBrandingProvided() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldNotContainBrandingWhenNoBrandingProvided(CryptographicCapabilitiesDTO capabilities)
+        throws Exception {
+
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(Products.random())
             .export();
 
@@ -441,12 +489,16 @@ public class ImportSuccessSpecTest {
             .isEmpty();
     }
 
-    @Test
-    public void shouldStoreTheSubscriptionUpstreamEntitlementCert() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldStoreTheSubscriptionUpstreamEntitlementCert(CryptographicCapabilitiesDTO capabilities)
+        throws Exception {
+
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
 
         File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(Products.random())
             .export();
 
@@ -471,8 +523,11 @@ public class ImportSuccessSpecTest {
             .contains(subCert.get("cert"));
     }
 
-    @Test
-    public void shouldImportContentWithMetadataExpirationSetToOne() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldImportContentWithMetadataExpirationSetToOne(CryptographicCapabilitiesDTO capabilities)
+        throws Exception {
+
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         ProductDTO providedProduct = Products.random();
@@ -489,6 +544,7 @@ public class ImportSuccessSpecTest {
         this.addContentToProduct(product, this.createContent());
 
         File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(product)
             .export();
 

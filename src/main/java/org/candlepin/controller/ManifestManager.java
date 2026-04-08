@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -191,12 +191,22 @@ public class ManifestManager {
     /**
      * Imports the specified manifest archive into the specifed {@link Owner}.
      *
-     * @param owner the target owner.
-     * @param archive the archive to import
-     * @param uploadedFileName the name of the originally uploaded file.
-     * @param overrides the {@link ConflictOverrides} to apply during the import process.
+     * @param owner
+     *  the target owner.
+     *
+     * @param archive
+     *  the archive to import
+     *
+     * @param uploadedFileName
+     *  the name of the originally uploaded file.
+     *
+     * @param overrides
+     *  the {@link ConflictOverrides} to apply during the import process.
+     *
+     * @throws ImporterException
+     *  if there is an issue importing the manifest.
+     *
      * @return the result of the import.
-     * @throws ImporterException if there is an issue importing the manifest.
      */
     public ImportRecord importManifest(Owner owner, File archive, String uploadedFileName,
         ConflictOverrides overrides) throws ImporterException {
@@ -218,13 +228,25 @@ public class ManifestManager {
      * Imports a stored manifest file into the target {@link Owner}. The stored file is deleted
      * as soon as the import is complete.
      *
-     * @param targetOwner the target owner.
-     * @param fileId the manifest file ID.
-     * @param overrides the {@link ConflictOverrides} to apply to the import process.
-     * @param uploadedFileName the originally uploaded file name.
+     * @param targetOwner
+     *  the target owner.
+     *
+     * @param fileId
+     *  the manifest file ID.
+     *
+     * @param overrides
+     *  the {@link ConflictOverrides} to apply to the import process.
+     *
+     * @param uploadedFileName
+     *  the originally uploaded file name.
+     *
+     * @throws BadRequestException
+     *  if the file is not found in the {@link ManifestFileService}
+     *
+     * @throws ImporterException
+     *  if there is an issue importing the file.
+     *
      * @return the result of the import.
-     * @throws BadRequestException if the file is not found in the {@link ManifestFileService}
-     * @throws ImporterException if there is an issue importing the file.
      */
     @Transactional
     public ImportRecord importStoredManifest(Owner targetOwner, String fileId, ConflictOverrides overrides,
