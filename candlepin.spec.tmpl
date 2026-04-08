@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.4.24
+Version: 4.4.25
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,12 @@ fi
 
 #raw
 %changelog
+* Wed Apr 08 2026 candlepin-bot 4.4.25-1
+- CANDLEPIN-1163: Update for migration to Atlassian cloud jira
+  (nmoumoul@redhat.com)
+- CANDLEPIN-1146: Force upgrade mchance-c3p0 & mchange-commons-java
+  (nmoumoul@redhat.com)
+
 * Tue Feb 24 2026 candlepin-bot 4.4.24-1
 - Add new translations using Weblate (hosted@weblate.org)
 - Add new translations using Weblate (hosted@weblate.org)
