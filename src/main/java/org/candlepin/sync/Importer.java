@@ -15,6 +15,7 @@
 package org.candlepin.sync;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.config.ConfigurationException;
 import org.candlepin.controller.RefresherFactory;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.manifest.v1.CdnDTO;
@@ -40,6 +41,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.CryptoPolicyValidator;
 import org.candlepin.pki.Scheme;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
@@ -128,6 +130,7 @@ public class Importer {
     private final IdentityCertificateCurator idCertCurator;
     private final RefresherFactory refresherFactory;
     private final CryptoManager cryptoManager;
+    private final CryptoPolicyValidator cryptoPolicyValidator;
     private final ExporterMetadataCurator expMetaCurator;
     private final CertificateSerialCurator csCurator;
     private final CdnCurator cdnCurator;
@@ -150,6 +153,7 @@ public class Importer {
         IdentityCertificateCurator idCertCurator,
         RefresherFactory refresherFactory,
         CryptoManager cryptoManager,
+        CryptoPolicyValidator cryptoPolicyValidator,
         ExporterMetadataCurator emc,
         CertificateSerialCurator csc,
         EventSink sink,
@@ -180,6 +184,7 @@ public class Importer {
         this.translator = Objects.requireNonNull(translator);
 
         this.cryptoManager = Objects.requireNonNull(cryptoManager);
+        this.cryptoPolicyValidator = Objects.requireNonNull(cryptoPolicyValidator);
 
         // Temporary measure to get a scheme; this should be determined on a per-op basis
         this.scheme = this.cryptoManager.getDefaultCryptoScheme();
@@ -437,6 +442,20 @@ public class Importer {
             // Need the rules file as well which is in a nested dir:
             File rulesFile = new File(consumerExportDir, ImportFile.RULES_FILE.fileName());
             importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFile);
+
+            // Validate the manifest's scheme against the system crypto policy if scheme.json is present
+            File schemeJsonFile = importFiles.get(SchemeFile.FILENAME);
+            if (schemeJsonFile != null && schemeJsonFile.isFile()) {
+                try {
+                    SchemeFile manifestScheme = mapper.readValue(schemeJsonFile, SchemeFile.class);
+                    this.cryptoPolicyValidator.validateSchemeFile(manifestScheme);
+                }
+                catch (ConfigurationException e) {
+                    throw new ImporterException(
+                        i18n.tr("Manifest scheme violates the system crypto policy: {0}",
+                            e.getMessage()), e);
+                }
+            }
 
             List<SubscriptionDTO> importSubs = importObjects(owner, importFiles, overrides);
             Meta m = mapper.readValue(importFiles.get(ImportFile.META.fileName()), Meta.class);

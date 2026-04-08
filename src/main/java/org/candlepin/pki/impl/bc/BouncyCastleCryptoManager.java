@@ -22,6 +22,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.CryptoPolicyValidator;
 import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OidUtil;
@@ -88,10 +89,11 @@ public class BouncyCastleCryptoManager implements CryptoManager {
     @Inject
     public BouncyCastleCryptoManager(Configuration config, BouncyCastleProvider securityProvider,
         SchemeReader schemeReader, CertificateReader certreader, SubjectKeyIdentifierWriter skiWriter,
-        OidUtil oidUtil) {
+        OidUtil oidUtil, CryptoPolicyValidator cryptoPolicyValidator) {
 
         Objects.requireNonNull(config);
         Objects.requireNonNull(schemeReader);
+        Objects.requireNonNull(cryptoPolicyValidator);
 
         this.securityProvider = Objects.requireNonNull(securityProvider);
         this.certreader = Objects.requireNonNull(certreader);
@@ -105,6 +107,10 @@ public class BouncyCastleCryptoManager implements CryptoManager {
         // Validate the schemes we've loaded
         Stream.concat(this.schemes.stream(), Stream.of(this.defaultScheme))
             .forEach(this::validateScheme);
+
+        // Validate schemes against the system crypto policy
+        Stream.concat(this.schemes.stream(), Stream.of(this.defaultScheme))
+            .forEach(cryptoPolicyValidator::validateScheme);
 
         // Temporary feature flag
         this.enableSchemeNegotiation = config.getBoolean(ConfigProperties.CRYPTO_CLIENT_NEGOTIATION_ENABLED);

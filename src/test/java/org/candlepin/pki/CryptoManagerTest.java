@@ -15,6 +15,7 @@
 package org.candlepin.pki;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -77,6 +78,22 @@ public abstract class CryptoManagerTest {
      *  a new CryptoManager instance to test
      */
     protected abstract CryptoManager buildCryptoManager(Configuration config);
+
+    /**
+     * Builds a new CryptoManager instance to test, using the given system configuration and crypto policy
+     * validator. Each invocation should return a new instance.
+     *
+     * @param config
+     *  the configuration to use for the crypto manager
+     *
+     * @param cryptoPolicyValidator
+     *  the crypto policy validator to use
+     *
+     * @return
+     *  a new CryptoManager instance to test
+     */
+    protected abstract CryptoManager buildCryptoManager(Configuration config,
+        CryptoPolicyValidator cryptoPolicyValidator);
 
     private static Stream<Arguments> schemeSource() {
         return CryptoUtil.SUPPORTED_SCHEMES.values()
@@ -196,6 +213,46 @@ public abstract class CryptoManagerTest {
         DevConfig config = addSchemeConfig(TestConfig.defaults(), List.of(scheme, malformed));
 
         assertThrows(ConfigurationException.class, () -> this.buildCryptoManager(config));
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testCryptoManagerThrowsExceptionWhenKeyAlgorithmViolatesCryptoPolicy(Scheme scheme)
+        throws Exception {
+
+        DevConfig config = addSchemeConfig(TestConfig.defaults(), List.of(scheme));
+        CryptoPolicyValidator validator = new CryptoPolicyValidator(scheme.keyAlgorithm());
+
+        assertThrows(ConfigurationException.class, () -> this.buildCryptoManager(config, validator));
+    }
+
+    @Test
+    public void testCryptoManagerThrowsExceptionWhenKeySizeViolatesCryptoPolicy() throws Exception {
+        Scheme rsaScheme = CryptoUtil.SUPPORTED_SCHEMES.values().stream()
+            .filter(s -> s.keyAlgorithm().equalsIgnoreCase("RSA") && s.keySize().isPresent())
+            .findFirst()
+            .orElse(null);
+
+        if (rsaScheme == null) {
+            return;
+        }
+
+        int disallowBelow = rsaScheme.keySize().get() + 1;
+        DevConfig config = addSchemeConfig(TestConfig.defaults(), List.of(rsaScheme));
+        CryptoPolicyValidator validator = new CryptoPolicyValidator("RSA keySize < " + disallowBelow);
+
+        assertThrows(ConfigurationException.class, () -> this.buildCryptoManager(config, validator));
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testCryptoManagerStartsSuccessfullyWithPermissiveCryptoPolicy(Scheme scheme)
+        throws Exception {
+
+        DevConfig config = addSchemeConfig(TestConfig.defaults(), List.of(scheme));
+        CryptoPolicyValidator validator = new CryptoPolicyValidator((String) null);
+
+        assertDoesNotThrow(() -> this.buildCryptoManager(config, validator));
     }
 
     @Test

@@ -18,6 +18,7 @@ import org.candlepin.config.Configuration;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.CryptoManagerTest;
+import org.candlepin.pki.CryptoPolicyValidator;
 import org.candlepin.pki.OidUtil;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SchemeReader;
@@ -36,6 +37,13 @@ public class BouncyCastleCryptoManagerTest extends CryptoManagerTest {
 
     @Override
     protected CryptoManager buildCryptoManager(Configuration config) {
+        return buildCryptoManager(config, new CryptoPolicyValidator((String) null));
+    }
+
+    @Override
+    protected CryptoManager buildCryptoManager(Configuration config,
+        CryptoPolicyValidator cryptoPolicyValidator) {
+
         CertificateReader certReader = CryptoUtil.getCertificateReader();
         PrivateKeyReader keyReader = CryptoUtil.getPrivateKeyReader();
         SchemeReader schemeReader = new SchemeReader(config, keyReader, certReader);
@@ -43,7 +51,7 @@ public class BouncyCastleCryptoManagerTest extends CryptoManagerTest {
         OidUtil oidUtil = CryptoUtil.getOidUtil();
 
         return new BouncyCastleCryptoManager(config, SECURITY_PROVIDER_PROVIDER.get(), schemeReader,
-            certReader, skiWriter, oidUtil);
+            certReader, skiWriter, oidUtil, cryptoPolicyValidator);
     }
 
 }

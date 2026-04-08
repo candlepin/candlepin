@@ -69,6 +69,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.CryptoPolicyValidator;
 import org.candlepin.pki.Scheme;
 import org.candlepin.pki.SignatureValidator;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -157,6 +158,7 @@ public class ImporterTest {
     private String mockJsPath;
 
     private CryptoManager cryptoManager;
+    private CryptoPolicyValidator cryptoPolicyValidator;
 
 
     @BeforeEach
@@ -175,6 +177,7 @@ public class ImporterTest {
         this.updateReleaseVersion("0.0.3", "1");
 
         this.cryptoManager = spy(CryptoUtil.getCryptoManager(this.config));
+        this.cryptoPolicyValidator = new CryptoPolicyValidator((String) null);
     }
 
     @AfterEach
@@ -195,8 +198,13 @@ public class ImporterTest {
     }
 
     private Importer buildImporter() {
+        return buildImporter(this.cryptoPolicyValidator);
+    }
+
+    private Importer buildImporter(CryptoPolicyValidator cryptoPolicyValidator) {
         return new Importer(this.mockConsumerTypeCurator, this.mockRulesImporter, this.mockOwnerCurator,
             this.mockIdentityCertCurator, this.refresherFactory, this.cryptoManager,
+            cryptoPolicyValidator,
             this.mockExporterMetadataCurator, this.mockCertSerialCurator, this.mockEventSink, this.i18n,
             this.mockDistributorVersionCurator, this.mockCdnCurator, this.syncUtils, this.mapper,
             this.mockImportRecordCurator, this.mockSubscriptionReconciler, this.modelTranslator);
@@ -1061,6 +1069,122 @@ public class ImporterTest {
 
         verify(this.mockEventSink, never()).emitSubscriptionExpired(any(SubscriptionDTO.class));
         verify(this.mockImportRecordCurator).create(record);
+    }
+
+    @Test
+    public void testImportThrowsExceptionWhenManifestSchemeViolatesCryptoPolicy() throws Exception {
+        SignatureValidator mockSignatureValidator = mock(SignatureValidator.class, Answers.RETURNS_SELF);
+        doReturn(true).when(mockSignatureValidator).validate(any(File.class));
+        doReturn(mockSignatureValidator).when(this.cryptoManager).getSignatureValidator(any(Scheme.class));
+
+        Owner owner = mock(Owner.class);
+        ConflictOverrides co = mock(ConflictOverrides.class);
+
+        String schemeJson = "{\"name\":\"legacy\",\"certificate\":\"AAAA\"," +
+            "\"signature_algorithm\":\"SHA256withRSA\",\"key_algorithm\":\"RSA\"}";
+
+        // entries must be under "export/" to match extractArchive's expected layout
+        File ceArchive = new File(this.tmpFolder, "consumer_export.zip");
+        try (ZipOutputStream cezip = new ZipOutputStream(new FileOutputStream(ceArchive))) {
+            cezip.putNextEntry(new ZipEntry("export/" + SchemeFile.FILENAME));
+            cezip.write(schemeJson.getBytes());
+            cezip.closeEntry();
+            cezip.putNextEntry(new ZipEntry("export/dummy.txt"));
+            cezip.write("placeholder".getBytes());
+            cezip.closeEntry();
+        }
+
+        File archive = new File(this.tmpFolder, "file.zip");
+        try (ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive))) {
+            out.putNextEntry(new ZipEntry("signature"));
+            out.write("signature placeholder".getBytes());
+            out.closeEntry();
+            addFileToArchive(out, ceArchive);
+        }
+
+        CryptoPolicyValidator restrictiveValidator = new CryptoPolicyValidator("RSA");
+        Importer importer = this.buildImporter(restrictiveValidator);
+
+        Throwable throwable = assertThrows(ImporterException.class,
+            () -> importer.loadExport(owner, archive, co, "original_file.zip"));
+        assertThat(throwable.getMessage(),
+            StringContains.containsString("Manifest scheme violates the system crypto policy"));
+    }
+
+    @Test
+    public void testImportSucceedsWhenManifestSchemeCompliesWithCryptoPolicy() throws Exception {
+        SignatureValidator mockSignatureValidator = mock(SignatureValidator.class, Answers.RETURNS_SELF);
+        doReturn(true).when(mockSignatureValidator).validate(any(File.class));
+        doReturn(mockSignatureValidator).when(this.cryptoManager).getSignatureValidator(any(Scheme.class));
+
+        Owner owner = mock(Owner.class);
+        ConflictOverrides co = mock(ConflictOverrides.class);
+
+        String schemeJson = "{\"name\":\"legacy\",\"certificate\":\"AAAA\"," +
+            "\"signature_algorithm\":\"SHA256withRSA\",\"key_algorithm\":\"RSA\"}";
+
+        File ceArchive = new File(this.tmpFolder, "consumer_export.zip");
+        try (ZipOutputStream cezip = new ZipOutputStream(new FileOutputStream(ceArchive))) {
+            cezip.putNextEntry(new ZipEntry("export/" + SchemeFile.FILENAME));
+            cezip.write(schemeJson.getBytes());
+            cezip.closeEntry();
+            cezip.putNextEntry(new ZipEntry("export/dummy.txt"));
+            cezip.write("placeholder".getBytes());
+            cezip.closeEntry();
+        }
+
+        File archive = new File(this.tmpFolder, "file.zip");
+        try (ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive))) {
+            out.putNextEntry(new ZipEntry("signature"));
+            out.write("signature placeholder".getBytes());
+            out.closeEntry();
+            addFileToArchive(out, ceArchive);
+        }
+
+        CryptoPolicyValidator permissiveValidator = new CryptoPolicyValidator("MD2");
+        Importer importer = this.buildImporter(permissiveValidator);
+
+        // The import will fail further down (missing meta.json) but should NOT fail on crypto policy
+        Throwable throwable = assertThrows(ImporterException.class,
+            () -> importer.loadExport(owner, archive, co, "original_file.zip"));
+        assertThat(throwable.getMessage(),
+            org.hamcrest.Matchers.not(
+                StringContains.containsString("Manifest scheme violates the system crypto policy")));
+    }
+
+    @Test
+    public void testImportSucceedsWithoutSchemeJson() throws Exception {
+        SignatureValidator mockSignatureValidator = mock(SignatureValidator.class, Answers.RETURNS_SELF);
+        doReturn(true).when(mockSignatureValidator).validate(any(File.class));
+        doReturn(mockSignatureValidator).when(this.cryptoManager).getSignatureValidator(any(Scheme.class));
+
+        Owner owner = mock(Owner.class);
+        ConflictOverrides co = mock(ConflictOverrides.class);
+
+        File ceArchive = new File(this.tmpFolder, "consumer_export.zip");
+        try (ZipOutputStream cezip = new ZipOutputStream(new FileOutputStream(ceArchive))) {
+            cezip.putNextEntry(new ZipEntry("export/dummy.txt"));
+            cezip.write("placeholder".getBytes());
+            cezip.closeEntry();
+        }
+
+        File archive = new File(this.tmpFolder, "file.zip");
+        try (ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive))) {
+            out.putNextEntry(new ZipEntry("signature"));
+            out.write("signature placeholder".getBytes());
+            out.closeEntry();
+            addFileToArchive(out, ceArchive);
+        }
+
+        CryptoPolicyValidator restrictiveValidator = new CryptoPolicyValidator("RSA");
+        Importer importer = this.buildImporter(restrictiveValidator);
+
+        // No scheme.json -> no crypto policy violation, will fail later on missing meta.json
+        Throwable throwable = assertThrows(ImporterException.class,
+            () -> importer.loadExport(owner, archive, co, "original_file.zip"));
+        assertThat(throwable.getMessage(),
+            org.hamcrest.Matchers.not(
+                StringContains.containsString("Manifest scheme violates the system crypto policy")));
     }
 
 }

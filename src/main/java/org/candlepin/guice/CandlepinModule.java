@@ -96,6 +96,7 @@ import org.candlepin.messaging.impl.noop.NoopContextListener;
 import org.candlepin.messaging.impl.noop.NoopSessionFactory;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.CryptoPolicyValidator;
 import org.candlepin.pki.OidUtil;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
@@ -319,6 +320,9 @@ public class CandlepinModule extends AbstractModule {
         bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class).asEagerSingleton();
         bind(PemEncoder.class).to(BouncyCastlePemEncoder.class).asEagerSingleton();
         // Impl note: SubjectKeyIdentifier is bound in the DefaultConfig pseudo-module
+
+        // Crypto policy validator
+        bind(CryptoPolicyValidator.class).asEagerSingleton();
 
         // CryptoManager
         bind(CryptoManager.class).to(BouncyCastleCryptoManager.class).asEagerSingleton();

@@ -23,6 +23,7 @@ import org.candlepin.model.AbstractCertificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.CryptoPolicyValidator;
 import org.candlepin.pki.OidUtil;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
@@ -213,9 +214,10 @@ public class CryptoUtil {
 
         SchemeReader schemeReader = new SchemeReader(config, keyReader, certReader);
 
-        // Build & return crypto manager
+        // Build & return crypto manager (no crypto policy restrictions for test environments)
+        CryptoPolicyValidator cryptoPolicyValidator = new CryptoPolicyValidator((String) null);
         return new BouncyCastleCryptoManager(config, SECURITY_PROVIDER_PROVIDER.get(), schemeReader,
-            certReader, skiWriter, oidUtil);
+            certReader, skiWriter, oidUtil, cryptoPolicyValidator);
     }
 
     /**
