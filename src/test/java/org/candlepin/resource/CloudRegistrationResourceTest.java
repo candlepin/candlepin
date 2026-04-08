@@ -17,8 +17,13 @@ package org.candlepin.resource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -39,6 +44,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.dto.api.server.v1.CloudAuthenticationResultDTO;
 import org.candlepin.dto.api.server.v1.CloudRegistrationDTO;
+import org.candlepin.dto.api.server.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.exceptions.NotImplementedException;
@@ -62,8 +68,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -71,7 +80,7 @@ import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -79,6 +88,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.ws.rs.core.Response;
 
@@ -611,6 +621,167 @@ public class CloudRegistrationResourceTest {
             .returns(expectedTokenType, CloudAuthenticationResultDTO::getTokenType);
     }
 
+    /**
+     * Performs the general work needed to invoke anonymous registration, returning the AnonymousCloudConsumer
+     * created as a result of the registration request
+     *
+     * @param capabilities
+     *  the CryptoCapabilitiesDTO to send as part of the registration request
+     *
+     * @return
+     *  the generated AnonymousCloudConsumer
+     */
+    private AnonymousCloudConsumer performCloudRegV2AnonRegistrationCryptoCapabilitiesTest(
+        CryptographicCapabilitiesDTO capabilities) throws Exception {
+
+        CloudRegistrationDTO input = new CloudRegistrationDTO()
+            .type("test-type")
+            .metadata("test-metadata")
+            .signature("test-signature")
+            .cryptographicCapabilities(capabilities);
+
+        Set<String> prodIds = Set.of("productId");
+        String accountId = "cloudAccountId";
+        String offeringId = "offerId";
+
+        CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId",
+            TestUtil.randomString(), null, offeringId, prodIds, true, false);
+
+        doReturn(result)
+            .when(this.mockCloudRegistrationAdapter)
+            .resolveCloudRegistrationDataV2(this.getCloudRegistrationData(input));
+
+        doAnswer(returnsFirstArg())
+            .when(this.mockAnonCloudConsumerCurator)
+            .create(any(AnonymousCloudConsumer.class));
+
+        String expectedTokenType = CloudAuthTokenType.ANONYMOUS.toString();
+        String expectedToken = "anon-token";
+
+        doReturn(expectedToken)
+            .when(mockTokenGenerator)
+            .generateAuthToken(eq(principal), anyString(), eq(expectedTokenType), anyLong());
+
+        Response response = cloudRegResource.cloudAuthorize(input, 2);
+
+        assertThat(response)
+            .isNotNull()
+            .returns(200, Response::getStatus)
+            .extracting(Response::getEntity)
+            .isNotNull()
+            .isInstanceOf(CloudAuthenticationResultDTO.class);
+
+        CloudAuthenticationResultDTO resultDto = (CloudAuthenticationResultDTO) response.getEntity();
+
+        assertThat(resultDto)
+            .isNotNull()
+            .returns(null, CloudAuthenticationResultDTO::getOwnerKey)
+            .returns(expectedToken, CloudAuthenticationResultDTO::getToken)
+            .returns(expectedTokenType, CloudAuthenticationResultDTO::getTokenType);
+
+        verify(mockJobManager).queueJob(any(CloudAccountOrgSetupJobConfig.class));
+
+        ArgumentCaptor<AnonymousCloudConsumer> captor = ArgumentCaptor.forClass(AnonymousCloudConsumer.class);
+        verify(this.mockAnonCloudConsumerCurator, times(1)).create(captor.capture());
+
+        AnonymousCloudConsumer anonConsumer = captor.getValue();
+
+        assertThat(anonConsumer)
+            .isNotNull()
+            .returns(resultDto.getAnonymousConsumerUuid(), AnonymousCloudConsumer::getUuid);
+
+        return anonConsumer;
+    }
+
+    @Test
+    public void testCloudRegV2CreatesAnonConsumerWithCryptoCapabilities() throws Exception {
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(List.of("1.2", "2.3", "3.4"))
+            .signatureAlgorithms(List.of("5.6", "6.7", "7.8"));
+
+        AnonymousCloudConsumer anonConsumer = this.performCloudRegV2AnonRegistrationCryptoCapabilitiesTest(
+            cryptoCapabilities);
+
+        assertThat(anonConsumer.getSupportedKeyAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(cryptoCapabilities.getKeyAlgorithms());
+
+        assertThat(anonConsumer.getSupportedSignatureAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(cryptoCapabilities.getSignatureAlgorithms());
+    }
+
+    @Test
+    public void testCloudRegV2CreatesAnonConsumerWithPartialCryptoCapabilitiesHavingKeyAlgorithms()
+        throws Exception {
+
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(List.of("1.2", "2.3", "3.4"))
+            .signatureAlgorithms(null);
+
+        AnonymousCloudConsumer anonConsumer = this.performCloudRegV2AnonRegistrationCryptoCapabilitiesTest(
+            cryptoCapabilities);
+
+        assertThat(anonConsumer.getSupportedKeyAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(cryptoCapabilities.getKeyAlgorithms());
+
+        assertThat(anonConsumer.getSupportedSignatureAlgorithmOids())
+            .isNull();
+    }
+
+    @Test
+    public void testCloudRegV2CreatesAnonConsumerWithPartialCryptoCapabilitiesHavingSignatureAlgorithms()
+        throws Exception {
+
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(null)
+            .signatureAlgorithms(List.of("5.6", "6.7", "7.8"));
+
+
+        AnonymousCloudConsumer anonConsumer = this.performCloudRegV2AnonRegistrationCryptoCapabilitiesTest(
+            cryptoCapabilities);
+
+        assertThat(anonConsumer.getSupportedKeyAlgorithmOids())
+            .isNull();
+
+        assertThat(anonConsumer.getSupportedSignatureAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(cryptoCapabilities.getSignatureAlgorithms());
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}")
+    @MethodSource("largeAlgorithmOidsSource")
+    public void testCloudRegV2WithExcessivelyLargeKeyAlgorithmsThrowsException(List<String> oids) {
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(oids)
+            .signatureAlgorithms(null);
+
+        CloudRegistrationDTO input = new CloudRegistrationDTO()
+            .type("test-type")
+            .metadata("test-metadata")
+            .signature("test-signature")
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        assertThrows(BadRequestException.class, () -> this.cloudRegResource.cloudAuthorize(input, 2));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}")
+    @MethodSource("largeAlgorithmOidsSource")
+    public void testCloudRegV2WithExcessivelyLargeSignatureAlgorithmsThrowsException(List<String> oids) {
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(null)
+            .signatureAlgorithms(oids);
+
+        CloudRegistrationDTO input = new CloudRegistrationDTO()
+            .type("test-type")
+            .metadata("test-metadata")
+            .signature("test-signature")
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        assertThrows(BadRequestException.class, () -> this.cloudRegResource.cloudAuthorize(input, 2));
+    }
+
     @Test
     public void testAuthorizeWithUnknownVersion() {
         assertThrows(BadRequestException.class,
@@ -793,11 +964,10 @@ public class CloudRegistrationResourceTest {
     }
 
     private CloudRegistrationData getCloudRegistrationData(CloudRegistrationDTO cloudRegistrationDTO) {
-        CloudRegistrationData registrationData = new CloudRegistrationData();
-        registrationData.setType(cloudRegistrationDTO.getType());
-        registrationData.setMetadata(cloudRegistrationDTO.getMetadata());
-        registrationData.setSignature(cloudRegistrationDTO.getSignature());
-        return registrationData;
+        return new CloudRegistrationData()
+            .setType(cloudRegistrationDTO.getType())
+            .setMetadata(cloudRegistrationDTO.getMetadata())
+            .setSignature(cloudRegistrationDTO.getSignature());
     }
 
     private CloudAuthenticationResult buildMockAuthResult(String cloudAccountId, String instanceId,
@@ -829,5 +999,30 @@ public class CloudRegistrationResourceTest {
 
         return job;
     }
+
+    public static Stream<Arguments> largeAlgorithmOidsSource() {
+        StringBuilder largeOidBuilder = new StringBuilder();
+        for (int i = 1; i <= AnonymousCloudConsumer.ALGORITHM_OIDS_MAX_LENGTH; ++i) {
+            largeOidBuilder.append(i).append('.');
+
+            if (largeOidBuilder.length() > AnonymousCloudConsumer.ALGORITHM_OIDS_MAX_LENGTH) {
+                break; // no reason to keep going once the OID is large enough to hit the max on its own
+            }
+        }
+
+        List<String> largeOidCount = new ArrayList<>();
+        for (int i = 1; i <= AnonymousCloudConsumer.ALGORITHM_OIDS_MAX_LENGTH; ++i) {
+            largeOidCount.add(String.valueOf(i));
+
+            if (String.join(",", largeOidCount).length() > AnonymousCloudConsumer.ALGORITHM_OIDS_MAX_LENGTH) {
+                break; // we can abort once the stringified size is enough to hit the max column size
+            }
+        }
+
+        return Stream.of(
+            Arguments.of(List.of(largeOidBuilder.toString())),
+            Arguments.of(largeOidCount));
+    }
+
 
 }

@@ -15,6 +15,7 @@
 package org.candlepin.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.candlepin.spec.bootstrap.assertions.CertificateAssert.assertThatCert;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
@@ -30,9 +31,11 @@ import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.ClaimantOwner;
 import org.candlepin.dto.api.client.v1.CloudAuthenticationResultDTO;
+import org.candlepin.dto.api.client.v1.CloudRegistrationDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.client.v1.ContentDTO;
+import org.candlepin.dto.api.client.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
@@ -47,8 +50,10 @@ import org.candlepin.spec.bootstrap.client.api.CloudRegistrationClient;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.client.request.Response;
+import org.candlepin.spec.bootstrap.data.builder.CloudRegistrations;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.CryptoCapabilities;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
@@ -87,8 +92,18 @@ import java.util.stream.Stream;
 @OnlyWithCapability("cloud_registration")
 class CloudRegistrationSpecTest {
 
+    private static final int CLOUDREG_V1 = 1;
+    private static final int CLOUDREG_V2 = 2;
+
     private static final String STANDARD_TOKEN_TYPE = "CP-Cloud-Registration";
     private static final String ANON_TOKEN_TYPE = "CP-Anonymous-Cloud-Registration";
+
+
+    private static Stream<Arguments> capabilitiesSource() {
+        return CryptoCapabilities.getSupportedCapabilities()
+            .stream()
+            .map(Arguments::of);
+    }
 
     @Test
     public void shouldGenerateValidTokenWithValidMetadata() {
@@ -115,6 +130,68 @@ class CloudRegistrationSpecTest {
 
         assertTokenType(ApiClient.MAPPER, token, STANDARD_TOKEN_TYPE);
         assertNotNull(consumer);
+    }
+
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldAllowV1TokenGenerationWithCryptoCapabilities(
+        CryptographicCapabilitiesDTO capabilities) {
+
+        ApiClient adminClient = ApiClients.admin();
+        HostedTestApi upstreamClient = adminClient.hosted();
+        CloudRegistrationClient cloudRegistration = ApiClients.noAuth().cloudAuthorization();
+
+        OwnerDTO owner = upstreamClient.createOwner(Owners.random());
+
+        CloudRegistrationDTO input = CloudRegistrations.random()
+            .metadata(owner.getKey()) // cloud reg v1 hosted test adapter requires owner key as metadata
+            .cryptographicCapabilities(capabilities);
+
+        String token = cloudRegistration.cloudAuthorize(input, CLOUDREG_V1);
+
+        assertNotNull(token);
+        assertTokenType(ApiClient.MAPPER, token, STANDARD_TOKEN_TYPE);
+
+        // There aren't any immediate impacts we can test wrt to the crypto capabilities here; we just
+        // shouldn't be negatively impacted by any capabilities -- null or otherwise.
+    }
+
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldNotAutomaticallyPropagateCapabilitiesFromV1Token(
+        CryptographicCapabilitiesDTO capabilities) {
+
+        // Test verifies that while the token endpoint does accept capabilities, those capabilities are not
+        // propagated to a registration request automatically. The user must provide them, again, during the
+        // normal registration or they will be omitted.
+
+        ApiClient adminClient = ApiClients.admin();
+        HostedTestApi upstreamClient = adminClient.hosted();
+        CloudRegistrationClient cloudRegistration = ApiClients.noAuth().cloudAuthorization();
+
+        // Create owner both locally and upstream
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        upstreamClient.createOwner(owner);
+
+        CloudRegistrationDTO registrationDto = CloudRegistrations.random()
+            .metadata(owner.getKey()) // cloud reg v1 hosted test adapter requires owner key as metadata
+            .cryptographicCapabilities(capabilities);
+
+        String token = cloudRegistration.cloudAuthorize(registrationDto, CLOUDREG_V1);
+
+        assertNotNull(token);
+        assertTokenType(ApiClient.MAPPER, token, STANDARD_TOKEN_TYPE);
+
+        ConsumerDTO input = Consumers.randomNoOwner()
+            .cryptographicCapabilities(null);
+
+        ConsumerDTO output = ApiClients.bearerToken(token)
+            .consumers()
+            .createConsumerWithoutOwner(input);
+
+        assertThat(output)
+            .isNotNull()
+            .returns(null, ConsumerDTO::getCryptographicCapabilities);
     }
 
     @ParameterizedTest
@@ -193,6 +270,50 @@ class CloudRegistrationSpecTest {
             .returns(STANDARD_TOKEN_TYPE, CloudAuthenticationResultDTO::getTokenType);
     }
 
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldAllowV2StandardTokenGenerationWithCryptoCapabilities(
+        CryptographicCapabilitiesDTO capabilities) {
+
+        ApiClient adminClient = ApiClients.admin();
+        HostedTestApi upstreamClient = adminClient.hosted();
+        CloudRegistrationClient cloudRegistration = ApiClients.noAuth().cloudAuthorization();
+
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random().anonymous(true));
+        upstreamClient.createOwner(owner);
+
+        ProductDTO prod = adminClient.ownerProducts().createProduct(owner.getKey(), Products.random());
+        upstreamClient.createProduct(prod);
+
+        adminClient.owners().createPool(owner.getKey(), Pools.random(prod));
+        upstreamClient.createSubscription(Subscriptions.random(owner, prod));
+
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offeringId = StringUtil.random("cloud-offer-");
+
+        upstreamClient.associateProductIdsToCloudOffer(offeringId, List.of(prod.getId()));
+        upstreamClient.associateOwnerToCloudAccount(accountId, owner.getKey());
+
+        CloudRegistrationDTO input = CloudRegistrations.forOffering("test_type", accountId, instanceId,
+            offeringId);
+
+        input.signature("")
+            .cryptographicCapabilities(capabilities);
+
+        CloudAuthenticationResultDTO output = cloudRegistration.cloudAuthorizeV2(input);
+
+        assertTokenType(ApiClient.MAPPER, output.getToken(), STANDARD_TOKEN_TYPE);
+        assertThat(output)
+            .isNotNull()
+            .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
+            .returns(null, CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
+            .returns(STANDARD_TOKEN_TYPE, CloudAuthenticationResultDTO::getTokenType);
+
+        // There aren't any immediate impacts we can test wrt to the crypto capabilities here; we just
+        // shouldn't be negatively impacted by any capabilities -- null or otherwise.
+    }
+
     @Test
     public void shouldReceiveAnonTokenForV2AuthWithExistingOwnerForCloudAccountIdAndNoEntitlement() {
         ApiClient adminClient = ApiClients.admin();
@@ -259,6 +380,45 @@ class CloudRegistrationSpecTest {
             .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
             .doesNotReturn(null, CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
             .returns(ANON_TOKEN_TYPE, CloudAuthenticationResultDTO::getTokenType);
+    }
+
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldAllowV2AnonymousTokenGenerationWithCryptoCapabilities(
+        CryptographicCapabilitiesDTO capabilities) {
+
+        ApiClient adminClient = ApiClients.admin();
+        HostedTestApi upstreamClient = adminClient.hosted();
+        CloudRegistrationClient cloudRegistration = ApiClients.noAuth().cloudAuthorization();
+
+        OwnerDTO owner = upstreamClient.createOwner(Owners.random());
+        ProductDTO prod = upstreamClient.createProduct(Products.random());
+        upstreamClient.createSubscription(Subscriptions.random(owner, prod));
+
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offeringId = StringUtil.random("cloud-offer-");
+
+        upstreamClient.associateProductIdsToCloudOffer(offeringId, List.of(prod.getId()));
+        upstreamClient.associateOwnerToCloudAccount(accountId, owner.getKey());
+
+        CloudRegistrationDTO input = CloudRegistrations.forOffering("test_type", accountId, instanceId,
+            offeringId);
+
+        input.signature("")
+            .cryptographicCapabilities(capabilities);
+
+        CloudAuthenticationResultDTO output = cloudRegistration.cloudAuthorizeV2(input);
+
+        assertTokenType(ApiClient.MAPPER, output.getToken(), ANON_TOKEN_TYPE);
+        assertThat(output)
+            .isNotNull()
+            .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
+            .doesNotReturn(null, CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
+            .returns(ANON_TOKEN_TYPE, CloudAuthenticationResultDTO::getTokenType);
+
+        // There aren't any immediate impacts we can test wrt to the crypto capabilities here; we just
+        // shouldn't be negatively impacted by any capabilities -- null or otherwise.
     }
 
     @Test
@@ -611,6 +771,57 @@ class CloudRegistrationSpecTest {
 
         assertNull(certEnabledContent.get("enabled"));
         assertFalse(certDisabledContent.get("enabled").asBoolean());
+    }
+
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldExportCertificatesWithAnonymousTokenAccordingToProvidedCapabilities(
+        CryptographicCapabilitiesDTO capabilities) {
+
+        ApiClient adminClient = ApiClients.admin();
+        HostedTestApi upstreamClient = adminClient.hosted();
+        CloudRegistrationClient cloudRegistration = ApiClients.noAuth().cloudAuthorization();
+
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        upstreamClient.createOwner(owner);
+
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offeringId = StringUtil.random("cloud-offer-");
+
+        ProductDTO product = upstreamClient.createProduct(Products.random());
+        ContentDTO enabledContent = upstreamClient.createContent(Contents.random());
+        ContentDTO disabledContent = upstreamClient.createContent(Contents.random());
+
+        upstreamClient.addContentToProduct(product.getId(), enabledContent.getId(), true);
+        upstreamClient.addContentToProduct(product.getId(), disabledContent.getId(), false);
+        upstreamClient.associateProductIdsToCloudOffer(offeringId, List.of(product.getId()));
+        upstreamClient.associateOwnerToCloudAccount(accountId, owner.getKey());
+
+        CloudRegistrationDTO input = CloudRegistrations.forOffering("test_type", accountId, instanceId,
+            offeringId)
+            .signature("")
+            .cryptographicCapabilities(capabilities);
+
+        CloudAuthenticationResultDTO output = cloudRegistration.cloudAuthorizeV2(input);
+
+        assertTokenType(ApiClient.MAPPER, output.getToken(), ANON_TOKEN_TYPE);
+        assertThat(output)
+            .isNotNull()
+            .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
+            .doesNotReturn(null, CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
+            .returns(ANON_TOKEN_TYPE, CloudAuthenticationResultDTO::getTokenType);
+
+        List<CertificateDTO> certExport = ApiClients.bearerToken(output.getToken()).consumers()
+            .fetchCertificates(output.getAnonymousConsumerUuid());
+
+        assertThat(certExport)
+            .isNotNull()
+            .singleElement();
+
+        assertThatCert(certExport.get(0))
+            .usesKeyAlgorithmMatchingCapabilities(capabilities)
+            .usesSignatureAlgorithmMatchingCapabilities(capabilities);
     }
 
     @Test
