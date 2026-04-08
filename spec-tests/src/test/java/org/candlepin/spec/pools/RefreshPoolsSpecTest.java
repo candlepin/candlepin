@@ -501,7 +501,8 @@ public class RefreshPoolsSpecTest {
         scaOwnerKey, null, true);
         ApiClient consumerClient = ApiClients.ssl(user);
 
-        List<JsonNode> certificates = consumerClient.consumers().exportCertificates(user.getUuid(), null);
+        List<JsonNode> certificates = consumerClient.consumers()
+            .exportCertificatePayloads(user.getUuid(), null);
         assertEquals(1, certificates.size());
         JsonNode body = certificates.get(0);
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(body);
@@ -531,7 +532,7 @@ public class RefreshPoolsSpecTest {
         assertEquals(updatedContent.getContentUrl(), actualContent.getContentUrl());
 
         // Verify the SCA cert has changed as a result
-        certificates = consumerClient.consumers().exportCertificates(user.getUuid(), null);
+        certificates = consumerClient.consumers().exportCertificatePayloads(user.getUuid(), null);
         assertEquals(1, certificates.size());
         body = certificates.get(0);
         prodIdToContentIds = CertificateUtil.toProductContentIdMap(body);

@@ -577,7 +577,8 @@ public class EnvironmentSpecTest {
         ApiClient consumerClient = ApiClients.ssl(consumer);
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
-        List<JsonNode> certificates = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certificates = consumerClient.consumers()
+            .exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certificates).hasSize(1);
 
         assertThat(certificates.get(0).get("products")).hasSize(1);
@@ -619,7 +620,8 @@ public class EnvironmentSpecTest {
         ApiClient consumerClient = ApiClients.ssl(consumer);
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
-        List<JsonNode> certificates = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certificates = consumerClient.consumers()
+            .exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certificates).hasSize(1);
 
         assertThat(certificates.get(0).get("products")).hasSize(1);
@@ -657,7 +659,8 @@ public class EnvironmentSpecTest {
         ApiClient consumerClient = ApiClients.ssl(consumer);
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
-        List<JsonNode> certificates = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certificates = consumerClient.consumers()
+            .exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certificates).hasSize(1);
 
         assertThat(certificates.get(0).get("products")).hasSize(1);
@@ -699,7 +702,8 @@ public class EnvironmentSpecTest {
         ApiClient consumerClient = ApiClients.ssl(consumer);
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
-        List<JsonNode> certificates = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certificates = consumerClient.consumers()
+            .exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certificates).hasSize(1);
 
         assertThat(certificates.get(0).get("products")).hasSize(1);
@@ -788,7 +792,7 @@ public class EnvironmentSpecTest {
         Long pool2Serial = serialOf(entitlement2);
 
         List<JsonNode> certificatesBeforeDelete = consumerClient.consumers()
-            .exportCertificates(consumer.getUuid(), null);
+            .exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certificatesBeforeDelete).hasSize(2);
 
         ownerClient.environments().deleteEnvironment(env1.getId());

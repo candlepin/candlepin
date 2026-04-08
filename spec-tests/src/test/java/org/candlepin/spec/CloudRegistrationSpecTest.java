@@ -593,7 +593,7 @@ class CloudRegistrationSpecTest {
             .returns(ANON_TOKEN_TYPE, CloudAuthenticationResultDTO::getTokenType);
 
         List<JsonNode> certs = ApiClients.bearerToken(result.getToken()).consumers()
-            .exportCertificates(result.getAnonymousConsumerUuid(), null);
+            .exportCertificatePayloads(result.getAnonymousConsumerUuid(), null);
 
         assertThat(certs).singleElement();
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
