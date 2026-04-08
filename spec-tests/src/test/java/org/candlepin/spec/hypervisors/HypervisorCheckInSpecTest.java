@@ -1430,7 +1430,8 @@ public class HypervisorCheckInSpecTest {
         assertEquals(hypervisor1StackDerivedPool1, guestRH00271Entitlement.getPool().getId());
 
         // Verify guest's entitlement certs each contain the appropriate content set
-        List<JsonNode> jsonNodes = guestClient.consumers().exportCertificates(guest.getUuid(), null);
+        List<JsonNode> jsonNodes = guestClient.consumers()
+            .exportCertificatePayloads(guest.getUuid(), null);
         assertEquals(2, jsonNodes.size());
         JsonNode rh00051Cert = jsonNodes.stream().filter(x ->
             guestRH00051Entitlement.getPool().getId().equals(x.get("pool").get("id").asText()))
@@ -1451,7 +1452,8 @@ public class HypervisorCheckInSpecTest {
         executeMigration(owner, data1, data2, virtwho, guestUuid);
         //  At this point, the guest will have the entitlements from the old hypervisor revoked, and
         //  it will get the entitlements from the new hypervisor auto-attached
-        List<JsonNode> newJsonNodes = guestClient.consumers().exportCertificates(guest.getUuid(), null);
+        List<JsonNode> newJsonNodes = guestClient.consumers()
+            .exportCertificatePayloads(guest.getUuid(), null);
         assertEquals(2, jsonNodes.size());
         // Verify guest's entitlement certs each contain the appropriate content set
         List<EntitlementDTO> newEnts = guestClient.consumers().listEntitlements(guest.getUuid());

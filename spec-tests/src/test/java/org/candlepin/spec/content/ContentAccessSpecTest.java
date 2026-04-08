@@ -166,7 +166,7 @@ public class ContentAccessSpecTest {
             .facts(Map.of("system.certificate_version", "3.3", "uname.machine", "ppc64")));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).singleElement();
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
         assertThat(prodIdToContentIds)
@@ -390,7 +390,7 @@ public class ContentAccessSpecTest {
             .createConsumer(Consumers.random(owner).facts(Map.of("system.certificate_version", "1.0")));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).isEmpty();
     }
 
@@ -558,7 +558,7 @@ public class ContentAccessSpecTest {
             .createConsumer(Consumers.random(owner).addEnvironmentsItem(env));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).singleElement();
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
         assertThat(prodIdToContentIds)
@@ -578,7 +578,7 @@ public class ContentAccessSpecTest {
             .singleElement()
             .returns(content.getId(), EnvironmentContentDTO::getContentId);
 
-        certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).singleElement();
         prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
         assertThat(prodIdToContentIds)
@@ -593,7 +593,7 @@ public class ContentAccessSpecTest {
 
         env = adminClient.environments().getEnvironment(env.getId());
         assertThat(env.getEnvironmentContent()).isEmpty();
-        certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).singleElement();
         prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
         assertThat(prodIdToContentIds)
@@ -723,7 +723,7 @@ public class ContentAccessSpecTest {
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).singleElement();
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
         assertThat(prodIdToContentIds)
@@ -734,7 +734,7 @@ public class ContentAccessSpecTest {
         owner.contentAccessMode(Owners.ENTITLEMENT_ACCESS_MODE);
         adminClient.owners().updateOwner(ownerKey, owner);
 
-        certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).isEmpty();
     }
 
@@ -754,12 +754,12 @@ public class ContentAccessSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).isEmpty();
 
         owner.contentAccessMode(Owners.SCA_ACCESS_MODE);
         adminClient.owners().updateOwner(ownerKey, owner);
-        certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).singleElement();
     }
 
@@ -1148,11 +1148,11 @@ public class ContentAccessSpecTest {
             }
 
             List<Callable<List<JsonNode>>> tasks = List.of(
-                () -> adminClient.consumers().exportCertificates(consumer1.getUuid(), null),
-                () -> adminClient.consumers().exportCertificates(consumer2.getUuid(), null),
-                () -> adminClient.consumers().exportCertificates(consumer3.getUuid(), null),
-                () -> adminClient.consumers().exportCertificates(consumer4.getUuid(), null),
-                () -> adminClient.consumers().exportCertificates(consumer5.getUuid(), null));
+                () -> adminClient.consumers().exportCertificatePayloads(consumer1.getUuid(), null),
+                () -> adminClient.consumers().exportCertificatePayloads(consumer2.getUuid(), null),
+                () -> adminClient.consumers().exportCertificatePayloads(consumer3.getUuid(), null),
+                () -> adminClient.consumers().exportCertificatePayloads(consumer4.getUuid(), null),
+                () -> adminClient.consumers().exportCertificatePayloads(consumer5.getUuid(), null));
 
             ExecutorService execService = Executors.newFixedThreadPool(consumers.size());
             List<Future<List<JsonNode>>> futures = execService.invokeAll(tasks);
@@ -1186,13 +1186,13 @@ public class ContentAccessSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        assertThat(consumerClient.consumers().exportCertificates(consumer.getUuid(), null))
+        assertThat(consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null))
             .singleElement();
 
         content.setName(StringUtil.random("name-"));
         adminClient.ownerContent().updateContent(ownerKey, content.getId(), content);
 
-        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
         assertThat(prodIdToContentIds)
             .hasSize(1)
@@ -1269,7 +1269,7 @@ public class ContentAccessSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        assertThat(consumerClient.consumers().exportCertificates(consumer.getUuid(), null))
+        assertThat(consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null))
             .singleElement();
 
         // Update the content prefix on the org, which should trigger a refresh of at least the
@@ -1277,7 +1277,7 @@ public class ContentAccessSpecTest {
         owner.setContentPrefix("content_prefix");
         adminClient.owners().updateOwner(owner.getKey(), owner);
 
-        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
         assertThat(prodIdToContentIds)
             .hasSize(1)
@@ -1476,7 +1476,7 @@ public class ContentAccessSpecTest {
 
         // confirm that there is a content access cert
         // and only a content access cert
-        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).singleElement();
         JsonNode certContent = certs.get(0).get("products").get(0).get("content");
         assertThat(certContent).singleElement();
@@ -1538,7 +1538,9 @@ public class ContentAccessSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        List<JsonNode> entCerts = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> entCerts = consumerClient.consumers()
+            .exportCertificatePayloads(consumer.getUuid(), null);
+
         assertThat(entCerts).singleElement();
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(entCerts.get(0));
         assertThat(prodIdToContentIds)
@@ -1629,7 +1631,8 @@ public class ContentAccessSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        List<JsonNode> entCerts = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> entCerts = consumerClient.consumers()
+            .exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(entCerts).singleElement();
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(entCerts.get(0));
         assertThat(prodIdToContentIds)
@@ -1677,7 +1680,9 @@ public class ContentAccessSpecTest {
 
         // Make sure that content cont1 is not present in cert,
         // since pro1 does not have active pool
-        List<JsonNode> entCerts = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> entCerts = consumerClient.consumers()
+            .exportCertificatePayloads(consumer.getUuid(), null);
+
         assertThat(entCerts).singleElement();
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(entCerts.get(0));
         assertThat(prodIdToContentIds)
@@ -1721,7 +1726,8 @@ public class ContentAccessSpecTest {
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        List<JsonNode> entCerts = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> entCerts = consumerClient.consumers()
+            .exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(entCerts).singleElement();
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(entCerts.get(0));
         assertThat(prodIdToContentIds)
