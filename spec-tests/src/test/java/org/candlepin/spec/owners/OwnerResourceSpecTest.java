@@ -1777,7 +1777,7 @@ public class OwnerResourceSpecTest {
             .environments(List.of(env1));
         consumer = admin.consumers().createConsumer(consumer);
 
-        List<JsonNode> certs = admin.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = admin.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
         assertThat(prodIdToContentIds)
             .hasSize(1)
@@ -1792,7 +1792,7 @@ public class OwnerResourceSpecTest {
         admin.owners().setConsumersToEnvironments(ownerKey, req);
 
         // Verify that the certificate content was updated
-        certs = admin.consumers().exportCertificates(consumer.getUuid(), null);
+        certs = admin.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).singleElement();
         prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
         assertThat(prodIdToContentIds)

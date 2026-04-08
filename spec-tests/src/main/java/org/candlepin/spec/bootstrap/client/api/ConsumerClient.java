@@ -156,8 +156,7 @@ public class ConsumerClient extends ConsumerApi {
             "", "", false, null, new ArrayList<>()));
     }
 
-    @Override
-    public List<JsonNode> exportCertificates(String consumerUuid, String serials) {
+    public List<JsonNode> exportCertificatePayloads(String consumerUuid, String serials) {
         Object jsonPayload = super.exportCertificates(consumerUuid, serials);
         try {
             return CertificateUtil.extractEntitlementCertificatesFromPayload(jsonPayload, mapper);

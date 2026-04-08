@@ -284,7 +284,8 @@ public class DerivedProductSpecTest {
         assertThat(distributorClient.consumers().bindPool(distributor.getUuid(), mainPool.getId(), 1))
             .isNotEmpty();
 
-        List<JsonNode> certs = distributorClient.consumers().exportCertificates(distributor.getUuid(), null);
+        List<JsonNode> certs = distributorClient.consumers()
+            .exportCertificatePayloads(distributor.getUuid(), null);
         assertThat(certs)
             .singleElement()
             .returns(3, x -> x.get("products").size());
@@ -322,7 +323,10 @@ public class DerivedProductSpecTest {
 
         assertThat(distributorClient.consumers().bindPool(distributor.getUuid(), modifiedPool.getId(), 1))
             .isNotEmpty();
-        List<JsonNode> certs = distributorClient.consumers().exportCertificates(distributor.getUuid(), null);
+
+        List<JsonNode> certs = distributorClient.consumers()
+            .exportCertificatePayloads(distributor.getUuid(), null);
+
         assertThat(certs)
             .singleElement()
             .returns(4, x -> x.get("products").size());
@@ -344,7 +348,9 @@ public class DerivedProductSpecTest {
         // Unbind the base entitlement. This should trigger the removal of the modifier content since the
         // distributor no longer has an entitlement that provides @modified_product.
         distributorClient.consumers().unbindByEntitlementId(distributor.getUuid(), vdcPoolEnt.getId());
-        List<JsonNode> certs = distributorClient.consumers().exportCertificates(distributor.getUuid(), null);
+        List<JsonNode> certs = distributorClient.consumers()
+            .exportCertificatePayloads(distributor.getUuid(), null);
+
         assertThat(certs)
             .singleElement();
         verifyModifierContent(certs, false, setupData);
@@ -364,7 +370,8 @@ public class DerivedProductSpecTest {
         // Delete the base pool. This should trigger the removal of the modifier content since the
         // distributor no longer has an entitlement that provides @modified_product.
         client.pools().deletePool(vdcPool.getId());
-        List<JsonNode> certs = distributorClient.consumers().exportCertificates(distributor.getUuid(), null);
+        List<JsonNode> certs = distributorClient.consumers()
+            .exportCertificatePayloads(distributor.getUuid(), null);
         assertThat(certs)
             .singleElement();
         verifyModifierContent(certs, false, setupData);
@@ -385,7 +392,8 @@ public class DerivedProductSpecTest {
 
         assertThat(physicalClient.consumers().bindPool(physicalSystem.getUuid(), mainPool.getId(), 1))
             .isNotNull();
-        List<JsonNode> certs = physicalClient.consumers().exportCertificates(physicalSystem.getUuid(), null);
+        List<JsonNode> certs = physicalClient.consumers()
+            .exportCertificatePayloads(physicalSystem.getUuid(), null);
         assertThat(certs)
             .singleElement()
             .returns(1, x -> x.get("products").size());
@@ -487,7 +495,9 @@ public class DerivedProductSpecTest {
             .bindPoolSync(distributor.getUuid(), mainPools.get(0).getId(), 1)
             .get(0);
 
-        List<JsonNode> certs = distributorClient.consumers().exportCertificates(distributor.getUuid(), null);
+        List<JsonNode> certs = distributorClient.consumers()
+            .exportCertificatePayloads(distributor.getUuid(), null);
+
         assertThat(certs)
             .singleElement()
             .extracting(node -> node.get("products"))
@@ -514,7 +524,7 @@ public class DerivedProductSpecTest {
 
         // Export the certs again and verify the product on the certificate has changed to reflect
         // the new content
-        certs = distributorClient.consumers().exportCertificates(distributor.getUuid(), null);
+        certs = distributorClient.consumers().exportCertificatePayloads(distributor.getUuid(), null);
         assertThat(certs)
             .singleElement()
             .extracting(node -> node.get("products"))
@@ -530,7 +540,7 @@ public class DerivedProductSpecTest {
             .bindPoolSync(distributor.getUuid(), mainPools.get(0).getId(), 1)
             .get(0);
 
-        certs = distributorClient.consumers().exportCertificates(distributor.getUuid(), null);
+        certs = distributorClient.consumers().exportCertificatePayloads(distributor.getUuid(), null);
         assertThat(certs)
             .singleElement()
             .extracting(node -> node.get("products"))

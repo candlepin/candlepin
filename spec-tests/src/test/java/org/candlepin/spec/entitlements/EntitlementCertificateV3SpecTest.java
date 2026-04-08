@@ -265,7 +265,7 @@ public class EntitlementCertificateV3SpecTest {
     @Test
     public void shouldGenerateCorrectBodyInTheBlob() {
         consumerApi.bindProduct(system.getUuid(), product.getId());
-        List<JsonNode> jsonNodes = consumerApi.exportCertificates(system.getUuid(), null);
+        List<JsonNode> jsonNodes = consumerApi.exportCertificatePayloads(system.getUuid(), null);
         assertEquals(1, jsonNodes.size());
         JsonNode jsonBody = jsonNodes.get(0);
         assertEquals(system.getUuid(), jsonBody.get("consumer").asText());
@@ -364,7 +364,7 @@ public class EntitlementCertificateV3SpecTest {
 
         assertThat(pool.getBranding()).hasSize(1);
         consumerApi.bindProduct(system.getUuid(), engProduct.getId());
-        List<JsonNode> jsonNodes = consumerApi.exportCertificates(system.getUuid(), null);
+        List<JsonNode> jsonNodes = consumerApi.exportCertificatePayloads(system.getUuid(), null);
         assertEquals(1, jsonNodes.size());
         JsonNode jsonBody = jsonNodes.get(0);
         assertEquals(mktProduct.getName(), jsonBody.get("subscription").get("name").asText());
@@ -409,7 +409,7 @@ public class EntitlementCertificateV3SpecTest {
         ConsumerClient consumers = consumerClient.consumers();
         JsonNode bindResult = consumers.bindProduct(system.getUuid(), product.getId());
 
-        List<JsonNode> jsonNodes = consumers.exportCertificates(system.getUuid(), null);
+        List<JsonNode> jsonNodes = consumers.exportCertificatePayloads(system.getUuid(), null);
         assertEquals(1, jsonNodes.size());
         JsonNode jsonBody = jsonNodes.get(0);
         assertThat(jsonBody.get("products").get(0).get("content")).hasSize(4);
@@ -459,7 +459,7 @@ public class EntitlementCertificateV3SpecTest {
         JsonNode bindResult = consumers.bindProduct(system.getUuid(), product.getId());
 
         // confirm content count to cross-check
-        List<JsonNode> jsonNodes = consumers.exportCertificates(system.getUuid(), null);
+        List<JsonNode> jsonNodes = consumers.exportCertificatePayloads(system.getUuid(), null);
         assertEquals(1, jsonNodes.size());
         JsonNode jsonBody = jsonNodes.get(0);
         assertThat(jsonBody.get("products")).hasSize(1);
