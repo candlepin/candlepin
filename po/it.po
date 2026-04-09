@@ -3,13 +3,14 @@
 # John Sefler <jsefler@redhat.com>, 2023.
 # Salvatore Cocuzza <info@salvatorecocuzza.it>, 2025.
 # Nikos Moumoulidis <nmoumoul@redhat.com>, 2025.
+# Ali Ciloqlu <ali.ciloqlu@murena.io>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-09-11 07:11+0000\n"
-"PO-Revision-Date: 2025-10-08 19:54+0000\n"
-"Last-Translator: Salvatore Cocuzza <info@salvatorecocuzza.it>\n"
+"PO-Revision-Date: 2026-04-09 18:58+0000\n"
+"Last-Translator: Ali Ciloqlu <ali.ciloqlu@murena.io>\n"
 "Language-Team: Italian <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-6-hotfix/it/>\n"
 "Language: it\n"
@@ -17,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.13.3\n"
+"X-Generator: Weblate 5.16.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -354,7 +355,7 @@ msgstr "Il file manifest richiesto non è stato trovato: {0}"
 #: src/main/java/org/candlepin/controller/ManifestManager.java:276
 #, java-format
 msgid "Unable to find specified manifest by id: {0}"
-msgstr "Impossibile trovare il manifest specificato usando l''ID: {0}"
+msgstr "Impossibile trovare il manifest specificato usando l''id: {0}"
 
 #: src/main/java/org/candlepin/controller/ManifestManager.java:282
 #, java-format
@@ -893,7 +894,7 @@ msgstr ""
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:215
 #, java-format
 msgid "Unable to adjust quantity for the entitlement with id \"{1}\": {0}"
-msgstr "Impossibile modificare la quantità per il diritto con ID \"{1}\": {0}"
+msgstr "Impossibile modificare la quantità per il diritto con id \"{1}\": {0}"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:112
 msgid "Activation key ID is null or empty"
@@ -940,12 +941,12 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/OwnerResource.java:444
 #, java-format
 msgid "Pool with id {0} could not be found."
-msgstr "Non è stato trovato il pool con ID {0}."
+msgstr "Non è stato trovato il pool con id {0}."
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:443
 #, java-format
 msgid "Product with id {0} could not be found."
-msgstr "Non è stato trovato il prodotto con ID {0}."
+msgstr "Non è stato trovato il prodotto con id {0}."
 
 #: src/main/java/org/candlepin/resource/CdnResource.java:83
 #, java-format
@@ -968,7 +969,7 @@ msgstr "Nessuna informazione di registrazione cloud fornita"
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:116
 msgid "Request is missing cloud provider type (e.g. amazon, gcp, azure)"
 msgstr ""
-"Nella richiesta manca il tipo di provider cloud (ad esempio Amazon, GCP, "
+"Nella richiesta manca il tipo di provider cloud (ad esempio amazon, gcp, "
 "Azure)"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:132
@@ -1212,7 +1213,7 @@ msgstr "L''ambiente \"{0}\" è stato specificato più di una volta."
 #, java-format
 msgid "Problem updating unit {0}. Hypervisor id: {1} is already used."
 msgstr ""
-"Problema durante l'aggiornamento dell'unità {0}. ID hypervisor: {1} è già "
+"Problema durante l'aggiornamento dell'unità {0}. id hypervisor: {1} è già "
 "utilizzato."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2178
@@ -1337,7 +1338,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2922
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
-msgstr "Nessun diritto per il consumatore \"{0}\" con ID pool \"{1}\""
+msgstr "Nessun diritto per il consumatore \"{0}\" con id pool \"{1}\""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1364,7 +1365,7 @@ msgstr "Record di eliminazione per hypervisor \"{0}\" non trovato."
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:105
 #, java-format
 msgid "Unit type with id \"{0}\" could not be found."
-msgstr "Impossibile trovare il tipo di unità con ID \"{0}\"."
+msgstr "Impossibile trovare il tipo di unità con id \"{0}\"."
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:127
 #, java-format
@@ -1505,7 +1506,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:412
 #, java-format
 msgid "The content with id {0} has already been promoted in this environment."
-msgstr "Il contenuto con ID {0} è già stato promosso in questo ambiente."
+msgstr "Il contenuto con id {0} è già stato promosso in questo ambiente."
 
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:426
 #, java-format
@@ -1789,31 +1790,31 @@ msgstr "Non è stato trovato il proprietario con la chiave \"{0}\""
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:322
 msgid "Owner id is null or empty."
-msgstr "L''ID del proprietario è nullo o vuoto."
+msgstr "L''id del proprietario è nullo o vuoto."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:326
 #, java-format
 msgid "Owner with id \"{0}\" was not found"
-msgstr "Non è stato trovato il proprietario con l''ID \"{0}\""
+msgstr "Non è stato trovato il proprietario con l''id \"{0}\""
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:355
 msgid "Owner lookup failed because id and key were null or empty."
 msgstr ""
-"Non è stato trovato un proprietario poiché l''ID e la chiave erano nulli o "
+"Non è stato trovato un proprietario poiché l''id e la chiave erano nulli o "
 "vuoti."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:379
 msgid "Entitlement id is null or empty."
-msgstr "L'ID diritto è nullo o vuoto."
+msgstr "L'id diritto è nullo o vuoto."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:384
 #, java-format
 msgid "Entitlement with id {0} could not be found."
-msgstr "Impossibile trovare il diritto con ID {0}."
+msgstr "Impossibile trovare il diritto con id {0}."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:410
 msgid "Consumer id is null or empty."
-msgstr "L'ID consumatore è nullo o vuoto."
+msgstr "L'id consumatore è nullo o vuoto."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:414
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:111
@@ -1823,7 +1824,7 @@ msgstr "Unità non trovata: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:440
 msgid "Pool id is null or empty."
-msgstr "L''ID del pool è nullo o vuoto."
+msgstr "L''id del pool è nullo o vuoto."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:535
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:208
@@ -1890,7 +1891,7 @@ msgstr "Utente {0} non può accedere all''utenza {1}"
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1312
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
-msgstr "Non è stata trovata la chiave di attivazione con l''ID {0}."
+msgstr "Non è stata trovata la chiave di attivazione con l''id {0}."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1318
 msgid "The flags add_future and only_future cannot be used at the same time."
