@@ -15,10 +15,14 @@
 package org.candlepin.spec.entitlements;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.candlepin.spec.bootstrap.assertions.CertificateAssert.assertThatCert;
+import static org.candlepin.spec.bootstrap.assertions.PrivateKeyAssert.assertThatKey;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import org.candlepin.dto.api.client.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
+import org.candlepin.dto.api.client.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.UeberCertificateDTO;
@@ -30,6 +34,7 @@ import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.CryptoCapabilities;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
@@ -38,28 +43,49 @@ import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.DEROctetString;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @SpecTest
 public class UeberCertSpecTest {
 
+    private static final String REDHAT_OID = "1.3.6.1.4.1.2312.9";
+
     private static ApiClient client;
     private static OwnerClient ownerApi;
     private static OwnerProductApi ownerProductApi;
     private static OwnerContentApi ownerContentApi;
-    final String REDHAT_OID = "1.3.6.1.4.1.2312.9";
+
+    private static Stream<Arguments> capabilitiesSource() {
+        return CryptoCapabilities.getSupportedCapabilities()
+            .stream()
+            .map(Arguments::of);
+    }
+
+    private String getExtensionValue(X509Certificate cert, String extensionId) {
+        try {
+            byte[] derValue = cert.getExtensionValue(extensionId);
+            ASN1Primitive value = ASN1Primitive.fromByteArray(derValue);
+            byte[] octetString = ((DEROctetString) value).getOctets();
+            return DEROctetString.fromByteArray(octetString).toString();
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @BeforeAll
     public static void beforeAll() {
@@ -69,17 +95,36 @@ public class UeberCertSpecTest {
         ownerContentApi = client.ownerContent();
     }
 
-    @Test
-    public void shouldPopulateGeneratedFieldsWhenCreatingUeberCertificates() {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldGenerateUeberCertificatesUsingVaryingCryptoCapabilities(
+        CryptographicCapabilitiesDTO capabilities) {
+
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
 
         OffsetDateTime init = OffsetDateTime.now()
             .truncatedTo(ChronoUnit.SECONDS);
 
-        UeberCertificateDTO output = this.ownerApi.createUeberCertificate(owner.getKey());
+        UeberCertificateDTO output = ownerApi.createUeberCertificate(owner.getKey(), capabilities);
 
         OffsetDateTime post = OffsetDateTime.now()
             .truncatedTo(ChronoUnit.SECONDS);
+
+        assertThat(output)
+            .isNotNull()
+            .doesNotReturn(null, UeberCertificateDTO::getId)
+            .doesNotReturn(null, UeberCertificateDTO::getCreated)
+            .doesNotReturn(null, UeberCertificateDTO::getUpdated)
+            .doesNotReturn(null, UeberCertificateDTO::getKey)
+            .doesNotReturn(null, UeberCertificateDTO::getCert);
+
+        assertThatCert(output)
+            .usesKeyAlgorithmMatchingCapabilities(capabilities)
+            .usesSignatureAlgorithmMatchingCapabilities(capabilities);
+
+        assertThatKey(output)
+            .isNotNull()
+            .usesAlgorithmMatchingCapabilities(capabilities);
 
         assertThat(output.getId())
             .isNotNull()
@@ -98,15 +143,27 @@ public class UeberCertSpecTest {
     }
 
     @Test
-    public void shouldOwnerCanBeDeleted() {
+    public void shouldAllowOwnerDeletionAfterGeneratingUeberCertificate() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ownerApi.createUeberCertificate(owner.getKey());
+
+        UeberCertificateDTO container = ownerApi.createUeberCertificate(owner.getKey(), null);
+        assertNotNull(container);
+
         ownerApi.deleteOwner(owner.getKey(), false, false);
         assertNotFound(() -> ownerApi.getOwner(owner.getKey()));
+
+        // The ueber cert should be revoked as a result of the owner deletion
+        CertificateSerialDTO serial = client.certificateSerial()
+            .getCertificateSerial(container.getSerial().getId());
+
+        assertThat(serial)
+            .isNotNull()
+            .returns(Boolean.TRUE, CertificateSerialDTO::getRevoked);
     }
 
-    @Test
-    public void shouldContainAllContentForTheEntireOrg() {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldContainAllContentForTheEntireOrg(CryptographicCapabilitiesDTO capabilities) {
         OwnerDTO owner1 = ownerApi.createOwner(Owners.random());
 
         ProductDTO prod1 = ownerProductApi.createProduct(
@@ -141,8 +198,11 @@ public class UeberCertSpecTest {
             .orderNumber("order3"));
 
         //  generate and verify cert
-        UeberCertificateDTO ueberCert = ownerApi.createUeberCertificate(owner1.getKey());
-        assertNotNull(ueberCert);
+        UeberCertificateDTO ueberCert = ownerApi.createUeberCertificate(owner1.getKey(), capabilities);
+        assertThatCert(ueberCert)
+            .isNotNull()
+            .usesKeyAlgorithmMatchingCapabilities(capabilities)
+            .usesSignatureAlgorithmMatchingCapabilities(capabilities);
 
         X509Certificate x509 = X509Cert.parseCertificate(ueberCert.getCert());
         assertThat(x509.getNotAfter()).isEqualTo(Instant.parse("2049-12-01T13:00:00.00Z"));
@@ -164,55 +224,29 @@ public class UeberCertSpecTest {
                 }
             }
         }
+
         assertThat(certProudct).isNotNull().endsWith("ueber_product");
         assertThat(certContent).isNotNull().endsWith("ueber_content");
     }
 
     @Test
-    public void shouldHandleConcurrentRequestsToGenerateCertForAnWwner() {
+    public void shouldHandleConcurrentRequestsToGenerateCertForAnOwner() throws Exception {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        List<Runnable> threads = List.of(
-            () -> generateCert(owner),
-            () -> generateCert(owner),
-            () -> generateCert(owner),
-            () -> generateCert(owner),
-            () -> generateCert(owner));
-        runAllThreads(threads);
+
+        Runnable task = () -> assertNotNull(ownerApi.createUeberCertificate(owner.getKey(), null));
+        int threadCount = 5;
+
+        List<Thread> threads = Stream.generate(() -> new Thread(task))
+            .limit(threadCount)
+            .toList();
+
+        threads.forEach(Thread::start);
+        for (Thread thread : threads) {
+            thread.join();
+        }
 
         // Verify that the cert can be generated again.
-        assertNotNull(ownerApi.createUeberCertificate(owner.getKey()));
+        task.run();
     }
 
-    private String getExtensionValue(X509Certificate cert, String extensionId) {
-        try {
-            byte[] derValue = cert.getExtensionValue(extensionId);
-            ASN1Primitive value = ASN1Primitive.fromByteArray(derValue);
-            byte[] octetString = ((DEROctetString) value).getOctets();
-            return DEROctetString.fromByteArray(octetString).toString();
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void generateCert(OwnerDTO owner) {
-        assertNotNull(ownerApi.createUeberCertificate(owner.getKey()));
-    }
-
-    private static void runAllThreads(Collection<Runnable> threads) {
-        Set<Thread> toRun = threads.stream()
-            .map(Thread::new)
-            .collect(Collectors.toSet());
-        for (Thread t : toRun) {
-            t.start();
-        }
-        for (Thread t : toRun) {
-            try {
-                t.join();
-            }
-            catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
 }

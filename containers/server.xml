@@ -24,7 +24,7 @@
 
       <SSLHostConfig
         certificateVerification="optional"
-        protocols="+TLSv1,+TLSv1.1,+TLSv1.2"
+        protocols="+TLSv1.2,+TLSv1.3"
         sslProtocol="TLS">
         <Certificate
           certificateFile="/etc/candlepin/certs/candlepin-ca.crt"

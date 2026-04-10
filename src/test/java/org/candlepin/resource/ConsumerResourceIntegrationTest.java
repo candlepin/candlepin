@@ -29,8 +29,6 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.config.Configuration;
-import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.PoolService;
 import org.candlepin.dto.api.server.v1.CertificateDTO;
@@ -38,11 +36,13 @@ import org.candlepin.dto.api.server.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.server.v1.ConsumerTypeDTO;
+import org.candlepin.dto.api.server.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.dto.api.server.v1.EntitlementDTO;
 import org.candlepin.dto.api.server.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
@@ -59,14 +59,13 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
-import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.OidUtil;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
 
 import org.apache.commons.io.FileUtils;
 import org.jboss.resteasy.core.ResteasyContext;
@@ -82,7 +81,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -127,9 +127,85 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     private static final String DEFAULT_SERVICE_LEVEL = "VIP";
 
-    @Override
-    protected Module getGuiceOverrideModule() {
-        return new ProductCertCreationModule();
+    public static Stream<Arguments> supportedSignatureAlgorithmsSource() {
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
+            .stream()
+            .map(Scheme::signatureAlgorithm)
+            .map(Arguments::of);
+    }
+
+    public static Stream<Arguments> supportedKeyAlgorithmsSource() {
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
+            .stream()
+            .map(Scheme::keyAlgorithm)
+            .map(Arguments::of);
+    }
+
+    public static Stream<Arguments> largeAlgorithmOidsSource() {
+        StringBuilder largeOidBuilder = new StringBuilder();
+        for (int i = 1; i <= Consumer.ALGORITHM_OIDS_MAX_LENGTH; ++i) {
+            largeOidBuilder.append(i).append('.');
+
+            if (largeOidBuilder.length() > Consumer.ALGORITHM_OIDS_MAX_LENGTH) {
+                break; // no reason to keep going once the OID is large enough to hit the max on its own
+            }
+        }
+
+        List<String> largeOidCount = new ArrayList<>();
+        for (int i = 1; i <= Consumer.ALGORITHM_OIDS_MAX_LENGTH; ++i) {
+            largeOidCount.add(String.valueOf(i));
+
+            if (String.join(",", largeOidCount).length() > Consumer.ALGORITHM_OIDS_MAX_LENGTH) {
+                break; // we can abort once the stringified size is enough to hit the max column size
+            }
+        }
+
+        return Stream.of(
+            Arguments.of(List.of(largeOidBuilder.toString())),
+            Arguments.of(largeOidCount));
+    }
+
+    public static Stream<Arguments> systemConsumerContentAccessModeInputSource() {
+        String entMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
+        String scaMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
+
+        return Stream.of(
+            Arguments.of(entMode, null, false),
+            Arguments.of(scaMode, null, false),
+            Arguments.of("potato", null, false),
+            Arguments.of("", null, true),
+            Arguments.of(null, null, true));
+    }
+
+    public static Stream<Arguments> manifestConsumerContentAccessModeInputSource() {
+        String entMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
+        String scaMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
+        String combined = String.join(",", entMode, scaMode);
+
+        return Stream.of(
+            Arguments.of(entMode, entMode, entMode, entMode, true),
+            Arguments.of(entMode, entMode, scaMode, entMode, false),
+            Arguments.of(entMode, entMode, "potato", entMode, false),
+            Arguments.of(entMode, entMode, "", null, true),
+            Arguments.of(entMode, entMode, null, entMode, true),
+
+            Arguments.of(scaMode, scaMode, entMode, scaMode, false),
+            Arguments.of(scaMode, scaMode, scaMode, scaMode, true),
+            Arguments.of(scaMode, scaMode, "potato", scaMode, false),
+            Arguments.of(scaMode, scaMode, "", null, true),
+            Arguments.of(scaMode, scaMode, null, scaMode, true),
+
+            Arguments.of(combined, entMode, entMode, entMode, true),
+            Arguments.of(combined, entMode, scaMode, scaMode, true),
+            Arguments.of(combined, entMode, "potato", scaMode, false),
+            Arguments.of(combined, entMode, "", null, true),
+            Arguments.of(combined, entMode, null, scaMode, true),
+
+            Arguments.of(combined, scaMode, entMode, entMode, true),
+            Arguments.of(combined, scaMode, scaMode, scaMode, true),
+            Arguments.of(combined, scaMode, "potato", null, false),
+            Arguments.of(combined, scaMode, "", null, true),
+            Arguments.of(combined, scaMode, null, scaMode, true));
     }
 
     @BeforeEach
@@ -353,37 +429,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             () -> consumerResource.createConsumer(anotherToSubmit, null, owner.getKey(), null, true));
     }
 
-    public static Stream<Arguments> manifestConsumerContentAccessModeInputSource() {
-        String entMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
-        String scaMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
-        String combined = String.join(",", entMode, scaMode);
-
-        return Stream.of(
-            Arguments.of(entMode, entMode, entMode, entMode, true),
-            Arguments.of(entMode, entMode, scaMode, entMode, false),
-            Arguments.of(entMode, entMode, "potato", entMode, false),
-            Arguments.of(entMode, entMode, "", null, true),
-            Arguments.of(entMode, entMode, null, entMode, true),
-
-            Arguments.of(scaMode, scaMode, entMode, scaMode, false),
-            Arguments.of(scaMode, scaMode, scaMode, scaMode, true),
-            Arguments.of(scaMode, scaMode, "potato", scaMode, false),
-            Arguments.of(scaMode, scaMode, "", null, true),
-            Arguments.of(scaMode, scaMode, null, scaMode, true),
-
-            Arguments.of(combined, entMode, entMode, entMode, true),
-            Arguments.of(combined, entMode, scaMode, scaMode, true),
-            Arguments.of(combined, entMode, "potato", scaMode, false),
-            Arguments.of(combined, entMode, "", null, true),
-            Arguments.of(combined, entMode, null, scaMode, true),
-
-            Arguments.of(combined, scaMode, entMode, entMode, true),
-            Arguments.of(combined, scaMode, scaMode, scaMode, true),
-            Arguments.of(combined, scaMode, "potato", null, false),
-            Arguments.of(combined, scaMode, "", null, true),
-            Arguments.of(combined, scaMode, null, scaMode, true));
-    }
-
     @ParameterizedTest(name = "{displayName} {index}: {0} {1} {2} {3}")
     @MethodSource("manifestConsumerContentAccessModeInputSource")
     public void testManifestConsumerCreationContentAccessMode(String ownerModeList, String ownerMode,
@@ -411,18 +456,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             assertThrows(BadRequestException.class,
                 () -> this.consumerResource.createConsumer(dto, null, this.owner.getKey(), null, false));
         }
-    }
-
-    public static Stream<Arguments> systemConsumerContentAccessModeInputSource() {
-        String entMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
-        String scaMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
-
-        return Stream.of(
-            Arguments.of(entMode, null, false),
-            Arguments.of(scaMode, null, false),
-            Arguments.of("potato", null, false),
-            Arguments.of("", null, true),
-            Arguments.of(null, null, true));
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
@@ -625,7 +658,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void consumerCanDeleteSelf() throws GeneralSecurityException, IOException {
+    public void consumerCanDeleteSelf() throws Exception {
         Consumer toSubmit = new Consumer()
             .setName(CONSUMER_NAME)
             .setUsername(USER_NAME)
@@ -824,14 +857,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void testInvalidProductId() {
         assertThrows(BadRequestException.class, () -> consumerResource.bind(consumer.getUuid(), "JarjarBinks",
             null, null, null, null, false, null, null));
-    }
-
-    private static class ProductCertCreationModule extends AbstractModule {
-        @Override
-        protected void configure() {
-            bind(Configuration.class).toInstance(TestConfig.defaults());
-            bind(CertificateReader.class).asEagerSingleton();
-        }
     }
 
     @Test
@@ -1094,4 +1119,383 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertThrows(BadRequestException.class, () ->
             consumerResource.createConsumer(dto, someuser.getUsername(), owner.getKey(), null, false));
     }
+
+    @Test
+    public void testCreateConsumerWithoutCryptoCapabilities() {
+        ConsumerDTO input = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO)
+            .cryptographicCapabilities(null);
+
+        ConsumerDTO output = this.consumerResource.createConsumer(input, USER_NAME, this.owner.getKey(), null,
+            false);
+
+        assertThat(output)
+            .isNotNull()
+            .returns(null, ConsumerDTO::getCryptographicCapabilities);
+    }
+
+    @Test
+    public void testCreateConsumerWithCryptoCapabilities() {
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(List.of("1.2", "2.3", "3.4"))
+            .signatureAlgorithms(List.of("5.6", "6.7", "7.8"));
+
+        ConsumerDTO input = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO)
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        ConsumerDTO output = this.consumerResource.createConsumer(input, USER_NAME, this.owner.getKey(), null,
+            false);
+
+        assertThat(output)
+            .isNotNull()
+            .doesNotReturn(null, ConsumerDTO::getCryptographicCapabilities);
+
+        Consumer consumer = this.consumerCurator.get(output.getId());
+
+        assertThat(consumer.getSupportedKeyAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(cryptoCapabilities.getKeyAlgorithms());
+
+        assertThat(consumer.getSupportedSignatureAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(cryptoCapabilities.getSignatureAlgorithms());
+    }
+
+    @Test
+    public void testCreateConsumerWithPartialCryptoCapabilitiesKeyAlgorithms() {
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(List.of("1.2", "2.3", "3.4"))
+            .signatureAlgorithms(null);
+
+        ConsumerDTO input = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO)
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        ConsumerDTO output = this.consumerResource.createConsumer(input, USER_NAME, this.owner.getKey(), null,
+            false);
+
+        assertThat(output)
+            .isNotNull()
+            .doesNotReturn(null, ConsumerDTO::getCryptographicCapabilities);
+
+        Consumer consumer = this.consumerCurator.get(output.getId());
+
+        assertThat(consumer.getSupportedKeyAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(cryptoCapabilities.getKeyAlgorithms());
+
+        assertThat(consumer.getSupportedSignatureAlgorithmOids())
+            .isNull();
+    }
+
+    @Test
+    public void testCreateConsumerWithPartialCryptoCapabilitiesSignatureAlgorithms() {
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(null)
+            .signatureAlgorithms(List.of("5.6", "6.7", "7.8"));
+
+        ConsumerDTO input = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO)
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        ConsumerDTO output = this.consumerResource.createConsumer(input, USER_NAME, this.owner.getKey(), null,
+            false);
+
+        assertThat(output)
+            .isNotNull()
+            .doesNotReturn(null, ConsumerDTO::getCryptographicCapabilities);
+
+        Consumer consumer = this.consumerCurator.get(output.getId());
+
+        assertThat(consumer.getSupportedKeyAlgorithmOids())
+            .isNull();
+
+        assertThat(consumer.getSupportedSignatureAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(cryptoCapabilities.getSignatureAlgorithms());
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}")
+    @MethodSource("largeAlgorithmOidsSource")
+    public void testCreateConsumerWithExcessivelyLargeKeyAlgorithmsThrowsException(List<String> oids) {
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(oids)
+            .signatureAlgorithms(null);
+
+        ConsumerDTO input = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO)
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        assertThrows(BadRequestException.class,
+            () -> this.consumerResource.createConsumer(input, USER_NAME, this.owner.getKey(), null, false));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}")
+    @MethodSource("largeAlgorithmOidsSource")
+    public void testCreateConsumerWithExcessivelyLargeSignatureAlgorithmsThrowsException(List<String> oids) {
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(null)
+            .signatureAlgorithms(oids);
+
+        ConsumerDTO input = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO)
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        assertThrows(BadRequestException.class,
+            () -> this.consumerResource.createConsumer(input, USER_NAME, this.owner.getKey(), null, false));
+    }
+
+    @Test
+    public void testCreateConsumerWithUnmappableCryptoCapabilitiesPreventsIdentityCertificateGeneration() {
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(List.of("1", "2", "3"))
+            .signatureAlgorithms(List.of("4", "5", "6"));
+
+        ConsumerDTO input = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO)
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        assertThrows(ConflictException.class,
+            () -> this.consumerResource.createConsumer(input, USER_NAME, this.owner.getKey(), null, true));
+    }
+
+    @ParameterizedTest
+    @MethodSource("supportedSignatureAlgorithmsSource")
+    public void testCreateConsumerWithCryptoCapsSigAlgosGeneratesCorrectIDCertificate(String algorithm)
+        throws Exception {
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String algorithmOid = oidUtil.getSignatureAlgorithmOid(algorithm)
+            .orElseThrow(() -> new RuntimeException("Unable to convert algorithm name to an OID"));
+
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(null)
+            .signatureAlgorithms(List.of(algorithmOid));
+
+        ConsumerDTO input = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO)
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        ConsumerDTO output = this.consumerResource.createConsumer(input, USER_NAME, this.owner.getKey(), null,
+            true);
+
+        assertThat(output)
+            .isNotNull()
+            .doesNotReturn(null, ConsumerDTO::getIdCert);
+
+        X509Certificate certificate = CryptoUtil.extractCertificateFromContainer(output.getIdCert());
+        assertEquals(algorithmOid, certificate.getSigAlgOID());
+    }
+
+    @ParameterizedTest
+    @MethodSource("supportedKeyAlgorithmsSource")
+    public void testCreateConsumerWithCryptoCapsKeyAlgosGeneratesCorrectIDCertificate(String algorithm)
+        throws Exception {
+
+        OidUtil oidUtil = CryptoUtil.getOidUtil();
+
+        String algorithmOid = oidUtil.getKeyAlgorithmOid(algorithm)
+            .orElseThrow(() -> new RuntimeException("Unable to convert algorithm name to an OID"));
+
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(List.of(algorithmOid))
+            .signatureAlgorithms(null);
+
+        ConsumerDTO input = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO)
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        ConsumerDTO output = this.consumerResource.createConsumer(input, USER_NAME, this.owner.getKey(), null,
+            true);
+
+        assertThat(output)
+            .isNotNull()
+            .doesNotReturn(null, ConsumerDTO::getIdCert);
+
+        PrivateKey pkey = CryptoUtil.extractPrivateKeyFromContainer(output.getIdCert());
+        String receivedAlgorithmOid = oidUtil.getKeyAlgorithmOid(pkey.getAlgorithm())
+            .orElseThrow(() -> new RuntimeException("Unable to convert received algorithm name to an OID"));
+
+        assertEquals(algorithmOid, receivedAlgorithmOid);
+    }
+
+    @Test
+    public void testUpdateConsumerWithoutCryptoCapabilities() {
+        Consumer consumer = this.createConsumer(this.owner);
+
+        ConsumerDTO input = new ConsumerDTO()
+            .cryptographicCapabilities(null);
+
+        this.consumerResource.updateConsumer(consumer.getUuid(), input);
+
+        // Impl note: This is likely to return the exact same instance as our consumer; but this will isolate
+        // us from any changes in backend. But, this does mean that we can't directly compare values on this
+        // result object to those on consumer: they're likely to be the same.
+        Consumer result = this.consumerCurator.get(consumer.getId());
+
+        assertThat(result)
+            .isNotNull()
+            .returns(null, Consumer::getSupportedKeyAlgorithmOids)
+            .returns(null, Consumer::getSupportedSignatureAlgorithmOids);
+    }
+
+    @Test
+    public void testUpdateConsumerWithCryptoCapabilities() {
+        Consumer consumer = this.createConsumer(this.owner);
+
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(List.of("1.2", "2.3", "3.4"))
+            .signatureAlgorithms(List.of("5.6", "6.7", "7.8"));
+
+        ConsumerDTO input = new ConsumerDTO()
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        this.consumerResource.updateConsumer(consumer.getUuid(), input);
+        Consumer result = this.consumerCurator.get(consumer.getId());
+
+        assertThat(result.getSupportedKeyAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(cryptoCapabilities.getKeyAlgorithms());
+
+        assertThat(result.getSupportedSignatureAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(cryptoCapabilities.getSignatureAlgorithms());
+    }
+
+    @Test
+    public void testUpdateConsumerWithPartialCryptoCapabilitiesKeyAlgorithms() {
+        Consumer consumer = this.createConsumer(this.owner);
+
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(List.of("1.2", "2.3", "3.4"))
+            .signatureAlgorithms(null);
+
+        ConsumerDTO input = new ConsumerDTO()
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        this.consumerResource.updateConsumer(consumer.getUuid(), input);
+        Consumer result = this.consumerCurator.get(consumer.getId());
+
+        assertThat(result.getSupportedKeyAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(cryptoCapabilities.getKeyAlgorithms());
+
+        assertThat(result.getSupportedSignatureAlgorithmOids())
+            .isNull();
+    }
+
+    @Test
+    public void testUpdateConsumerWithPartialCryptoCapabilitiesSignatureAlgorithms() {
+        Consumer consumer = this.createConsumer(this.owner);
+
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(null)
+            .signatureAlgorithms(List.of("5.6", "6.7", "7.8"));
+
+        ConsumerDTO input = new ConsumerDTO()
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        this.consumerResource.updateConsumer(consumer.getUuid(), input);
+        Consumer result = this.consumerCurator.get(consumer.getId());
+
+        assertThat(result.getSupportedKeyAlgorithmOids())
+            .isNull();
+
+        assertThat(result.getSupportedSignatureAlgorithmOids())
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(cryptoCapabilities.getSignatureAlgorithms());
+    }
+
+    @Test
+    public void testUpdateConsumerCanClearExistingCryptoCapabilities() {
+        Consumer consumer = this.createConsumer(this.owner)
+            .setSupportedKeyAlgorithmOids(List.of("1.2", "2.3", "3.4"))
+            .setSupportedSignatureAlgorithmOids(List.of("5.6", "6.7", "7.8"));
+
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(List.of())
+            .signatureAlgorithms(List.of());
+
+        ConsumerDTO input = new ConsumerDTO()
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        this.consumerResource.updateConsumer(consumer.getUuid(), input);
+        Consumer result = this.consumerCurator.get(consumer.getId());
+
+        assertThat(result.getSupportedKeyAlgorithmOids())
+            .isNull();
+
+        assertThat(result.getSupportedSignatureAlgorithmOids())
+            .isNull();
+    }
+
+    @Test
+    public void testUpdateConsumerCanClearExistingKeyAlgorithms() {
+        Consumer consumer = this.createConsumer(this.owner)
+            .setSupportedKeyAlgorithmOids(List.of("1.2", "2.3", "3.4"));
+
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(List.of())
+            .signatureAlgorithms(null);
+
+        ConsumerDTO input = new ConsumerDTO()
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        this.consumerResource.updateConsumer(consumer.getUuid(), input);
+        Consumer result = this.consumerCurator.get(consumer.getId());
+
+        assertThat(result.getSupportedKeyAlgorithmOids())
+            .isNull();
+
+        assertThat(result.getSupportedSignatureAlgorithmOids())
+            .isNull();
+    }
+
+    @Test
+    public void testUpdateConsumerCanClearExistingSignatureAlgorithms() {
+        Consumer consumer = this.createConsumer(this.owner)
+            .setSupportedSignatureAlgorithmOids(List.of("5.6", "6.7", "7.8"));
+
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(null)
+            .signatureAlgorithms(List.of());
+
+        ConsumerDTO input = new ConsumerDTO()
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        this.consumerResource.updateConsumer(consumer.getUuid(), input);
+        Consumer result = this.consumerCurator.get(consumer.getId());
+
+        assertThat(result.getSupportedKeyAlgorithmOids())
+            .isNull();
+
+        assertThat(result.getSupportedSignatureAlgorithmOids())
+            .isNull();
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}")
+    @MethodSource("largeAlgorithmOidsSource")
+    public void testUpdateConsumerWithExcessivelyLargeKeyAlgorithmsThrowsException(List<String> oids) {
+        Consumer consumer = this.createConsumer(this.owner);
+
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(oids)
+            .signatureAlgorithms(null);
+
+        ConsumerDTO input = new ConsumerDTO()
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        assertThrows(BadRequestException.class,
+            () -> this.consumerResource.updateConsumer(consumer.getUuid(), input));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}")
+    @MethodSource("largeAlgorithmOidsSource")
+    public void testUpdateConsumerWithExcessivelyLargeSignatureAlgorithmsThrowsException(List<String> oids) {
+        Consumer consumer = this.createConsumer(this.owner);
+
+        CryptographicCapabilitiesDTO cryptoCapabilities = new CryptographicCapabilitiesDTO()
+            .keyAlgorithms(null)
+            .signatureAlgorithms(oids);
+
+        ConsumerDTO input = new ConsumerDTO()
+            .cryptographicCapabilities(cryptoCapabilities);
+
+        assertThrows(BadRequestException.class,
+            () -> this.consumerResource.updateConsumer(consumer.getUuid(), input));
+    }
+
 }

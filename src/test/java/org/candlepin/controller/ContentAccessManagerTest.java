@@ -16,7 +16,6 @@ package org.candlepin.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -27,7 +26,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
@@ -50,17 +48,12 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.SCACertificate;
-import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
 import com.google.inject.Provider;
 
-import org.bouncycastle.openssl.PEMKeyPair;
-import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -72,8 +65,6 @@ import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.security.KeyPair;
 import java.util.Date;
 import java.util.Set;
@@ -102,8 +93,6 @@ public class ContentAccessManagerTest {
     @Mock
     private AnonymousCloudConsumerCurator mockAnonCloudConsumerCurator;
     @Mock
-    private KeyPairGenerator keyPairGenerator;
-    @Mock
     private JobManager jobManager;
     @Mock
     private I18n i18n;
@@ -112,21 +101,6 @@ public class ContentAccessManagerTest {
 
     private final String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
     private final String orgEnvironmentMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
-
-    @BeforeAll
-    public static void loadTestKeyPair() throws Exception {
-        ClassLoader classloader = ContentAccessManagerTest.class.getClassLoader();
-        InputStream keyStream = classloader.getResourceAsStream("test.key");
-        assertNotNull(keyStream);
-
-        testingKeyPair = null;
-        try (PEMParser reader = new PEMParser(new InputStreamReader(keyStream))) {
-            testingKeyPair = new JcaPEMKeyConverter().getKeyPair((PEMKeyPair) reader.readObject());
-        }
-        assertNotNull(testingKeyPair);
-        assertNotNull(testingKeyPair.getPrivate());
-        assertNotNull(testingKeyPair.getPrivate().getEncoded());
-    }
 
     @BeforeEach
     public void setup() throws Exception {
@@ -139,8 +113,6 @@ public class ContentAccessManagerTest {
         doAnswer(new PersistSimulator<>()).when(this.mockConsumerCurator).merge(any(Consumer.class));
         doAnswer(new PersistSimulator<>()).when(this.mockContentAccessCertCurator)
             .create(any(SCACertificate.class));
-        when(this.keyPairGenerator.getKeyPair(any(Consumer.class))).thenReturn(testingKeyPair);
-        when(this.keyPairGenerator.generateKeyPair()).thenReturn(testingKeyPair);
 
         doAnswer(iom -> {
             CertificateSerial serial = iom.getArgument(0);

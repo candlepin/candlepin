@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -22,16 +22,18 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.auth.Principal;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
@@ -46,8 +48,10 @@ import org.candlepin.dto.manifest.v1.DistributorVersionDTO.DistributorVersionCap
 import org.candlepin.dto.manifest.v1.EntitlementDTO;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -57,8 +61,10 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.ImportRecord;
+import org.candlepin.model.ImportRecord.Status;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.model.Owner;
@@ -67,10 +73,26 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.pki.impl.Signer;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
+import org.candlepin.pki.SignatureValidator;
+import org.candlepin.pki.certs.ContentAccessPayloadBuilderProvider;
+import org.candlepin.pki.certs.EntitlementPayloadGenerator;
+import org.candlepin.pki.certs.IdentityCertificateGenerator;
+import org.candlepin.pki.certs.SCACertificateGenerator;
+import org.candlepin.pki.certs.V3CapabilityCheck;
+import org.candlepin.pki.huffman.Huffman;
+import org.candlepin.pki.util.ConsumerKeyPairGenerator;
+import org.candlepin.policy.js.export.ExportRules;
+import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.Importer.ImportFile;
+import org.candlepin.sync.file.ManifestFile;
+import org.candlepin.test.CryptoUtil;
+import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
+import org.candlepin.util.X509V3ExtensionUtil;
 
 import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.AfterEach;
@@ -78,6 +100,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -92,10 +118,13 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -104,13 +133,20 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class ImporterTest {
+public class ImporterTest extends DatabaseTestFixture {
+    private static Stream<Arguments> schemeSource() {
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
+            .stream()
+            .map(Arguments::of);
+    }
 
     @TempDir
     protected File tmpFolder;
@@ -141,20 +177,27 @@ public class ImporterTest {
     @Mock
     private RulesImporter mockRulesImporter;
     @Mock
-    private Signer signer;
-    @Mock
     private EventSink mockEventSink;
     @Mock
     private DistributorVersionCurator mockDistributorVersionCurator;
     @Mock
     private SubscriptionReconciler mockSubscriptionReconciler;
+    @Mock
+    private PrincipalProvider mockPrincipalProvider;
+    @Mock
+    private EntitlementCertServiceAdapter mockEntitlementCertServiceAdapter;
 
     private ObjectMapper mapper;
     private ClassLoader classLoader = getClass().getClassLoader();
     private String mockJsPath;
 
+    private CryptoManager cryptoManager;
+    private IdentityCertificateGenerator identityCertificateGenerator;
+
     @BeforeEach
     public void init() throws Exception {
+        super.init();
+
         this.config = TestConfig.defaults();
         this.config.setProperty(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
 
@@ -167,6 +210,19 @@ public class ImporterTest {
         this.mockJsPath = new File(this.tmpFolder, "empty.js").getPath();
 
         this.updateReleaseVersion("0.0.3", "1");
+
+        this.cryptoManager = spy(CryptoUtil.getCryptoManager(this.config));
+
+        Principal principal = mock(Principal.class);
+        doReturn(principal).when(mockPrincipalProvider).get();
+
+        this.identityCertificateGenerator = new IdentityCertificateGenerator(config,
+            this.cryptoManager,
+            CryptoUtil.getPemEncoder(),
+            new ConsumerKeyPairGenerator(cryptoManager, this.keyPairDataCurator),
+            this.identityCertificateCurator,
+            this.certSerialCurator);
+
     }
 
     @AfterEach
@@ -187,12 +243,11 @@ public class ImporterTest {
     }
 
     private Importer buildImporter() {
-        return new Importer(this.mockConsumerTypeCurator, this.mockRulesImporter,
-            this.mockOwnerCurator, this.mockIdentityCertCurator, this.refresherFactory,
-            this.signer, this.mockExporterMetadataCurator,
-            this.mockCertSerialCurator, this.mockEventSink, this.i18n, this.mockDistributorVersionCurator,
-            this.mockCdnCurator, this.syncUtils, this.mapper, this.mockImportRecordCurator,
-            this.mockSubscriptionReconciler, this.modelTranslator);
+        return new Importer(this.mockConsumerTypeCurator, this.mockRulesImporter, this.mockOwnerCurator,
+            this.mockIdentityCertCurator, this.refresherFactory, this.cryptoManager,
+            this.mockExporterMetadataCurator, this.mockCertSerialCurator, this.mockEventSink, this.i18n,
+            this.mockDistributorVersionCurator, this.mockCdnCurator, this.syncUtils, this.mapper,
+            this.mockImportRecordCurator, this.mockSubscriptionReconciler, this.modelTranslator);
     }
 
     private File createTempDirectory(String prefix) throws IOException {
@@ -505,37 +560,16 @@ public class ImporterTest {
         Throwable throwable = assertThrows(ImportExtractionException.class,
             () -> importer.loadExport(owner, archive, co, "original_file.zip"));
 
-        String m = i18n.tr("The archive does not contain the required signature file");
+        String m = i18n.tr("The archive consumer_export.zip is not a properly compressed file or is empty");
         assertThat(throwable.getMessage(), StringContains.containsString(m));
-    }
-
-    @Test
-    public void testImportBadSignature() throws IOException {
-        Owner owner = mock(Owner.class);
-        ConflictOverrides co = mock(ConflictOverrides.class);
-
-        File archive = new File(this.tmpFolder, "file.zip");
-        ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive));
-        out.putNextEntry(new ZipEntry("signature"));
-        out.write("This is the placeholder for the signature file".getBytes());
-
-        File ceArchive = new File(this.tmpFolder, "consumer_export.zip");
-        FileOutputStream fos = new FileOutputStream(ceArchive);
-        fos.write("This is just a flat file".getBytes());
-        fos.close();
-
-        addFileToArchive(out, ceArchive);
-        out.close();
-
-        Importer importer = this.buildImporter();
-        assertThrows(ImportConflictException.class,
-            () -> importer.loadExport(owner, archive, co, "original_file.zip"));
     }
 
     @Test
     public void testImportBadConsumerZip() throws Exception {
         // Mock a passed signature check:
-        when(this.signer.verifySignature(any(File.class), any(byte[].class))).thenReturn(true);
+        SignatureValidator mockSignatureValidator = mock(SignatureValidator.class, Answers.RETURNS_SELF);
+        doReturn(true).when(mockSignatureValidator).validate(any(File.class));
+        doReturn(mockSignatureValidator).when(this.cryptoManager).getSignatureValidator(any(Scheme.class));
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
@@ -564,7 +598,9 @@ public class ImporterTest {
     @Test
     public void testImportZipSigAndEmptyConsumerZip() throws Exception {
         // Mock a passed signature check:
-        when(this.signer.verifySignature(any(File.class), any(byte[].class))).thenReturn(true);
+        SignatureValidator mockSignatureValidator = mock(SignatureValidator.class, Answers.RETURNS_SELF);
+        doReturn(true).when(mockSignatureValidator).validate(any(File.class));
+        doReturn(mockSignatureValidator).when(this.cryptoManager).getSignatureValidator(any(Scheme.class));
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
@@ -812,6 +848,692 @@ public class ImporterTest {
         importer.importConsumer(owner, consumerfile, upstream, forcedConflicts, meta);
 
         verify(this.mockOwnerCurator).merge(owner);
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testLoadExportWithSupportedSchemes(Scheme scheme) throws Exception {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        Owner owner = this.createOwner();
+        ConsumerType consumerType = this.createConsumerType(true);
+        doReturn(consumerType).when(mockConsumerTypeCurator).getByLabel(any(String.class));
+
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(consumerType), scheme);
+        consumer = this.consumerCurator.create(consumer);
+
+        IdentityCertificate idCert = this.identityCertificateGenerator.generate(consumer);
+        consumer.setIdCert(idCert);
+        consumer = this.consumerCurator.update(consumer);
+
+        Exporter exporter = this.createExporter();
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
+            TestUtil.randomString());
+        assertNotNull(export);
+        assertTrue(export.exists());
+        export.deleteOnExit();
+
+        Refresher mockRefresher = mock(Refresher.class);
+        doReturn(mockRefresher)
+            .when(this.refresherFactory)
+            .getRefresher(any(SubscriptionServiceAdapter.class));
+        doReturn(mockRefresher).when(mockRefresher).add(any(Owner.class));
+
+        Owner mockOwner = mock(Owner.class);
+        Importer importer = this.buildImporter();
+
+        ImportRecord importRecord = importer
+            .loadExport(mockOwner, export, new ConflictOverrides(), "original_file.zip");
+
+        org.assertj.core.api.Assertions.assertThat(importRecord)
+            .isNotNull()
+            .returns(Status.SUCCESS_WITH_WARNING, ImportRecord::getStatus)
+            .returns(mockOwner, ImportRecord::getOwner)
+            .doesNotReturn(null, ImportRecord::getFileName);
+    }
+
+    @Test
+    public void testLoadExportWithLegacyExport() throws Exception {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        Owner owner = this.createOwner();
+        ConsumerType consumerType = this.createConsumerType(true);
+        doReturn(consumerType).when(mockConsumerTypeCurator).getByLabel(any(String.class));
+
+        Consumer consumer = new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(consumerType);
+        consumer = this.consumerCurator.create(consumer);
+
+        IdentityCertificate idCert = this.identityCertificateGenerator.generate(consumer);
+        consumer.setIdCert(idCert);
+        consumer = this.consumerCurator.update(consumer);
+
+        Exporter exporter = this.createExporter();
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
+            TestUtil.randomString());
+        assertNotNull(export);
+        assertTrue(export.exists());
+        export.deleteOnExit();
+
+        Refresher mockRefresher = mock(Refresher.class);
+        doReturn(mockRefresher)
+            .when(this.refresherFactory)
+            .getRefresher(any(SubscriptionServiceAdapter.class));
+        doReturn(mockRefresher).when(mockRefresher).add(any(Owner.class));
+
+        Owner mockOwner = mock(Owner.class);
+        Importer importer = this.buildImporter();
+
+        File legacyExport = this.toLegacyExport(export, this.cryptoManager.getDefaultCryptoScheme());
+
+        ImportRecord importRecord = importer
+            .loadExport(mockOwner, legacyExport, new ConflictOverrides(), "original_file.zip");
+
+        org.assertj.core.api.Assertions.assertThat(importRecord)
+            .isNotNull()
+            .returns(Status.SUCCESS_WITH_WARNING, ImportRecord::getStatus)
+            .returns(mockOwner, ImportRecord::getOwner)
+            .doesNotReturn(null, ImportRecord::getFileName);
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testLoadExportWithSignatureConflict(Scheme scheme) throws Exception {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        Owner owner = this.createOwner();
+        ConsumerType consumerType = this.createConsumerType(true);
+        doReturn(consumerType).when(mockConsumerTypeCurator).getByLabel(any(String.class));
+
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(consumerType), scheme);
+        consumer = this.consumerCurator.create(consumer);
+
+        IdentityCertificate idCert = this.identityCertificateGenerator.generate(consumer);
+        consumer.setIdCert(idCert);
+        consumer = this.consumerCurator.update(consumer);
+
+        Exporter exporter = this.createExporter();
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
+            TestUtil.randomString());
+        assertNotNull(export);
+        assertTrue(export.exists());
+        export.deleteOnExit();
+
+        byte[] badSignature = TestUtil.randomString("bad-signature-").getBytes();
+        File modifiedExport = this.modifySignatureFile(export, badSignature);
+
+        Refresher mockRefresher = mock(Refresher.class);
+        doReturn(mockRefresher)
+            .when(this.refresherFactory)
+            .getRefresher(any(SubscriptionServiceAdapter.class));
+        doReturn(mockRefresher).when(mockRefresher).add(any(Owner.class));
+
+        Owner mockOwner = mock(Owner.class);
+        Importer importer = this.buildImporter();
+
+        assertThrows(ImportConflictException.class, () -> {
+            importer.loadExport(mockOwner, modifiedExport, new ConflictOverrides(), "original_file.zip");
+        });
+
+        // Should import with signature conflict override
+        ConflictOverrides overrides = new ConflictOverrides(Importer.Conflict.SIGNATURE_CONFLICT);
+        ImportRecord importRecord = importer
+            .loadExport(mockOwner, export, overrides, "original_file.zip");
+
+        org.assertj.core.api.Assertions.assertThat(importRecord)
+            .isNotNull()
+            .returns(Status.SUCCESS_WITH_WARNING, ImportRecord::getStatus)
+            .returns(mockOwner, ImportRecord::getOwner)
+            .doesNotReturn(null, ImportRecord::getFileName);
+    }
+
+    @Test
+    public void testLoadExportWithEmptySignature() throws Exception {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        Owner owner = this.createOwner();
+        ConsumerType consumerType = this.createConsumerType(true);
+        doReturn(consumerType).when(mockConsumerTypeCurator).getByLabel(any(String.class));
+
+        Scheme scheme = this.cryptoManager.getDefaultCryptoScheme();
+
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(consumerType), scheme);
+        consumer = this.consumerCurator.create(consumer);
+
+        IdentityCertificate idCert = this.identityCertificateGenerator.generate(consumer);
+        consumer.setIdCert(idCert);
+        consumer = this.consumerCurator.update(consumer);
+
+        Exporter exporter = this.createExporter();
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
+            TestUtil.randomString());
+        assertNotNull(export);
+        assertTrue(export.exists());
+        export.deleteOnExit();
+
+        File modifiedExport = this.modifySignatureFile(export, new byte[0]);
+
+        Refresher mockRefresher = mock(Refresher.class);
+        doReturn(mockRefresher)
+            .when(this.refresherFactory)
+            .getRefresher(any(SubscriptionServiceAdapter.class));
+        doReturn(mockRefresher).when(mockRefresher).add(any(Owner.class));
+
+        Owner mockOwner = mock(Owner.class);
+        Importer importer = this.buildImporter();
+
+        Throwable throwable = assertThrows(ImportExtractionException.class, () -> {
+            importer.loadExport(mockOwner, modifiedExport, new ConflictOverrides(), "original_file.zip");
+        });
+
+        org.assertj.core.api.Assertions.assertThat(throwable.getMessage())
+            .contains("The archive does not contain the required signature file");
+    }
+
+    @Test
+    public void testLoadExportWithNonTrustedCert() throws Exception {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        Owner owner = this.createOwner();
+        ConsumerType consumerType = this.createConsumerType(true);
+        doReturn(consumerType).when(mockConsumerTypeCurator).getByLabel(any(String.class));
+
+        Scheme scheme = this.cryptoManager.getDefaultCryptoScheme();
+
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(consumerType), scheme);
+        consumer = this.consumerCurator.create(consumer);
+
+        IdentityCertificate idCert = this.identityCertificateGenerator.generate(consumer);
+        consumer.setIdCert(idCert);
+        consumer = this.consumerCurator.update(consumer);
+
+        Exporter exporter = this.createExporter();
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
+            TestUtil.randomString());
+        assertNotNull(export);
+        assertTrue(export.exists());
+        export.deleteOnExit();
+
+        Refresher mockRefresher = mock(Refresher.class);
+        doReturn(mockRefresher)
+            .when(this.refresherFactory)
+            .getRefresher(any(SubscriptionServiceAdapter.class));
+        doReturn(mockRefresher).when(mockRefresher).add(any(Owner.class));
+
+        // Simulate untrusted certificate
+        doReturn(false).when(this.cryptoManager).isTrustedCertificate(any(X509Certificate.class));
+
+        Owner mockOwner = mock(Owner.class);
+        Importer importer = this.buildImporter();
+
+        assertThrows(ImportConflictException.class, () -> {
+            importer.loadExport(mockOwner, export, new ConflictOverrides(), "original_file.zip");
+        });
+
+        // Should import with override
+        ConflictOverrides overrides = new ConflictOverrides(Importer.Conflict.UNTRUSTED_SIGNING_CERTIFICATE);
+        ImportRecord importRecord = importer
+            .loadExport(mockOwner, export, overrides, "original_file.zip");
+
+        org.assertj.core.api.Assertions.assertThat(importRecord)
+            .isNotNull()
+            .returns(Status.SUCCESS_WITH_WARNING, ImportRecord::getStatus)
+            .returns(mockOwner, ImportRecord::getOwner)
+            .doesNotReturn(null, ImportRecord::getFileName);
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testLoadStoredExportWithSupportedSchemes(Scheme scheme) throws Exception {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        Owner owner = this.createOwner();
+        ConsumerType consumerType = this.createConsumerType(true);
+        doReturn(consumerType).when(mockConsumerTypeCurator).getByLabel(any(String.class));
+
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(consumerType), scheme);
+        consumer = this.consumerCurator.create(consumer);
+
+        IdentityCertificate idCert = this.identityCertificateGenerator.generate(consumer);
+        consumer.setIdCert(idCert);
+        consumer = this.consumerCurator.update(consumer);
+
+        Exporter exporter = this.createExporter();
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
+            TestUtil.randomString());
+        assertNotNull(export);
+        assertTrue(export.exists());
+        export.deleteOnExit();
+
+        Refresher mockRefresher = mock(Refresher.class);
+        doReturn(mockRefresher)
+            .when(this.refresherFactory)
+            .getRefresher(any(SubscriptionServiceAdapter.class));
+        doReturn(mockRefresher).when(mockRefresher).add(any(Owner.class));
+
+        Owner mockOwner = mock(Owner.class);
+        Importer importer = this.buildImporter();
+        ManifestFile mockManifestFile = mock(ManifestFile.class);
+
+        try (FileInputStream is = new FileInputStream(export)) {
+            doReturn(is).when(mockManifestFile).getInputStream();
+
+            ImportRecord importRecord = importer
+                .loadStoredExport(mockManifestFile, mockOwner, new ConflictOverrides(), "original_file.zip");
+
+            org.assertj.core.api.Assertions.assertThat(importRecord)
+                .isNotNull()
+                .returns(Status.SUCCESS_WITH_WARNING, ImportRecord::getStatus)
+                .returns(mockOwner, ImportRecord::getOwner)
+                .doesNotReturn(null, ImportRecord::getFileName);
+        }
+    }
+
+    @Test
+    public void testLoadStoredExportWithLegacyExport() throws Exception {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        Owner owner = this.createOwner();
+        ConsumerType consumerType = this.createConsumerType(true);
+        doReturn(consumerType).when(mockConsumerTypeCurator).getByLabel(any(String.class));
+
+        Consumer consumer = new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(consumerType);
+        consumer = this.consumerCurator.create(consumer);
+
+        IdentityCertificate idCert = this.identityCertificateGenerator.generate(consumer);
+        consumer.setIdCert(idCert);
+        consumer = this.consumerCurator.update(consumer);
+
+        Exporter exporter = this.createExporter();
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
+            TestUtil.randomString());
+        export.deleteOnExit();
+
+        assertNotNull(export);
+        assertTrue(export.exists());
+
+        Refresher mockRefresher = mock(Refresher.class);
+        doReturn(mockRefresher)
+            .when(this.refresherFactory)
+            .getRefresher(any(SubscriptionServiceAdapter.class));
+        doReturn(mockRefresher).when(mockRefresher).add(any(Owner.class));
+
+        Owner mockOwner = mock(Owner.class);
+        Importer importer = this.buildImporter();
+        ManifestFile mockManifestFile = mock(ManifestFile.class);
+
+        File legacyExport = this.toLegacyExport(export, this.cryptoManager.getDefaultCryptoScheme());
+
+        try (FileInputStream is = new FileInputStream(legacyExport)) {
+            doReturn(is).when(mockManifestFile).getInputStream();
+
+            ImportRecord importRecord = importer
+                .loadStoredExport(mockManifestFile, mockOwner, new ConflictOverrides(), "original_file.zip");
+
+            org.assertj.core.api.Assertions.assertThat(importRecord)
+                .isNotNull()
+                .returns(Status.SUCCESS_WITH_WARNING, ImportRecord::getStatus)
+                .returns(mockOwner, ImportRecord::getOwner)
+                .doesNotReturn(null, ImportRecord::getFileName);
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testLoadStoredExportWithSignatureConflict(Scheme scheme) throws Exception {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        Owner owner = this.createOwner();
+        ConsumerType consumerType = this.createConsumerType(true);
+        doReturn(consumerType).when(mockConsumerTypeCurator).getByLabel(any(String.class));
+
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(consumerType), scheme);
+        consumer = this.consumerCurator.create(consumer);
+
+        IdentityCertificate idCert = this.identityCertificateGenerator.generate(consumer);
+        consumer.setIdCert(idCert);
+        consumer = this.consumerCurator.update(consumer);
+
+        Exporter exporter = this.createExporter();
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
+            TestUtil.randomString());
+        assertNotNull(export);
+        assertTrue(export.exists());
+        export.deleteOnExit();
+
+        byte[] badSignature = TestUtil.randomString("bad-signature-").getBytes();
+        File modifiedExport = this.modifySignatureFile(export, badSignature);
+
+        Refresher mockRefresher = mock(Refresher.class);
+        doReturn(mockRefresher)
+            .when(this.refresherFactory)
+            .getRefresher(any(SubscriptionServiceAdapter.class));
+        doReturn(mockRefresher).when(mockRefresher).add(any(Owner.class));
+
+        Owner mockOwner = mock(Owner.class);
+        Importer importer = this.buildImporter();
+        ManifestFile mockManifestFile = mock(ManifestFile.class);
+
+        try (FileInputStream is = new FileInputStream(modifiedExport)) {
+            doReturn(is).when(mockManifestFile).getInputStream();
+
+            assertThrows(ImportConflictException.class, () -> {
+                importer.loadExport(mockOwner, modifiedExport, new ConflictOverrides(), "original_file.zip");
+            });
+
+            // Should import with signature conflict override
+            ConflictOverrides overrides = new ConflictOverrides(Importer.Conflict.SIGNATURE_CONFLICT);
+            ImportRecord importRecord = importer
+                .loadExport(mockOwner, modifiedExport, overrides, "original_file.zip");
+
+            org.assertj.core.api.Assertions.assertThat(importRecord)
+                .isNotNull()
+                .returns(Status.SUCCESS_WITH_WARNING, ImportRecord::getStatus)
+                .returns(mockOwner, ImportRecord::getOwner)
+                .doesNotReturn(null, ImportRecord::getFileName);
+        }
+    }
+
+    @Test
+    public void testLoadStoredExportWithEmptySignature() throws Exception {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        Owner owner = this.createOwner();
+        ConsumerType consumerType = this.createConsumerType(true);
+        doReturn(consumerType).when(mockConsumerTypeCurator).getByLabel(any(String.class));
+
+        Scheme scheme = this.cryptoManager.getDefaultCryptoScheme();
+
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(consumerType), scheme);
+        consumer = this.consumerCurator.create(consumer);
+
+        IdentityCertificate idCert = this.identityCertificateGenerator.generate(consumer);
+        consumer.setIdCert(idCert);
+        consumer = this.consumerCurator.update(consumer);
+
+        Exporter exporter = this.createExporter();
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
+            TestUtil.randomString());
+        assertNotNull(export);
+        assertTrue(export.exists());
+        export.deleteOnExit();
+
+        File modifiedExport = this.modifySignatureFile(export, new byte[0]);
+
+        Refresher mockRefresher = mock(Refresher.class);
+        doReturn(mockRefresher)
+            .when(this.refresherFactory)
+            .getRefresher(any(SubscriptionServiceAdapter.class));
+        doReturn(mockRefresher).when(mockRefresher).add(any(Owner.class));
+
+        Owner mockOwner = mock(Owner.class);
+        Importer importer = this.buildImporter();
+        ManifestFile mockManifestFile = mock(ManifestFile.class);
+
+        try (FileInputStream is = new FileInputStream(export)) {
+            doReturn(is).when(mockManifestFile).getInputStream();
+
+            Throwable throwable = assertThrows(ImportExtractionException.class, () -> {
+                importer.loadExport(mockOwner, modifiedExport, new ConflictOverrides(), "original_file.zip");
+            });
+
+            org.assertj.core.api.Assertions.assertThat(throwable.getMessage())
+                .contains("The archive does not contain the required signature file");
+        }
+    }
+
+    @Test
+    public void testLoadStoredExportWithNonTrustedCert() throws Exception {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        Owner owner = this.createOwner();
+        ConsumerType consumerType = this.createConsumerType(true);
+        doReturn(consumerType).when(mockConsumerTypeCurator).getByLabel(any(String.class));
+
+        Scheme scheme = this.cryptoManager.getDefaultCryptoScheme();
+
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(consumerType), scheme);
+        consumer = this.consumerCurator.create(consumer);
+
+        IdentityCertificate idCert = this.identityCertificateGenerator.generate(consumer);
+        consumer.setIdCert(idCert);
+        consumer = this.consumerCurator.update(consumer);
+
+        Exporter exporter = this.createExporter();
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
+            TestUtil.randomString());
+        assertNotNull(export);
+        assertTrue(export.exists());
+        export.deleteOnExit();
+
+        Refresher mockRefresher = mock(Refresher.class);
+        doReturn(mockRefresher)
+            .when(this.refresherFactory)
+            .getRefresher(any(SubscriptionServiceAdapter.class));
+        doReturn(mockRefresher).when(mockRefresher).add(any(Owner.class));
+
+        // Simulate untrusted certificate
+        doReturn(false).when(this.cryptoManager).isTrustedCertificate(any(X509Certificate.class));
+
+        Owner mockOwner = mock(Owner.class);
+        Importer importer = this.buildImporter();
+        ManifestFile mockManifestFile = mock(ManifestFile.class);
+
+        try (FileInputStream is = new FileInputStream(export)) {
+            doReturn(is).when(mockManifestFile).getInputStream();
+
+            assertThrows(ImportConflictException.class, () -> {
+                importer.loadStoredExport(mockManifestFile, mockOwner, new ConflictOverrides(),
+                    "original_file.zip");
+            });
+        }
+
+        // Should import with override
+        ConflictOverrides overrides = new ConflictOverrides(Importer.Conflict.UNTRUSTED_SIGNING_CERTIFICATE);
+        ImportRecord importRecord = importer
+            .loadExport(mockOwner, export, overrides, "original_file.zip");
+
+        org.assertj.core.api.Assertions.assertThat(importRecord)
+            .isNotNull()
+            .returns(Status.SUCCESS_WITH_WARNING, ImportRecord::getStatus)
+            .returns(mockOwner, ImportRecord::getOwner)
+            .doesNotReturn(null, ImportRecord::getFileName);
+    }
+
+    /**
+     * Duplicates the provided manifest into a new manifest and removes the scheme.json file
+     * from the consumer_export.zip archive and with a recalculated signature.
+     *
+     * @param manifest
+     *  the original manifest to be modified
+     *
+     * @param scheme
+     *  the scheme to use when creating the new signature
+     *
+     * @return a new modified manifest that does not contain the scheme.json file.
+     */
+    private File toLegacyExport(File manifest, Scheme scheme) throws IOException {
+        String schemePath = "export/" + SchemeFile.FILENAME;
+
+        Path outputPath = Files.createTempFile(this.tmpFolder.toPath(), "legacy-manifest", ".zip");
+        File legacyManifest = outputPath.toFile();
+        legacyManifest.deleteOnExit();
+
+        File innerOriginal = Files.createTempFile(this.tmpFolder.toPath(), "consumer_export_orig", ".zip")
+            .toFile();
+        innerOriginal.deleteOnExit();
+
+        File innerWithoutScheme = Files.createTempFile(this.tmpFolder.toPath(), "consumer_export_legacy",
+            ".zip").toFile();
+        innerWithoutScheme.deleteOnExit();
+
+        try (ZipFile outer = new ZipFile(manifest)) {
+            ZipEntry innerEntry = outer.getEntry("consumer_export.zip");
+            try (InputStream is = outer.getInputStream(innerEntry);
+                FileOutputStream fos = new FileOutputStream(innerOriginal)) {
+                is.transferTo(fos);
+            }
+
+            try (ZipFile innerZip = new ZipFile(innerOriginal);
+                ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(innerWithoutScheme))) {
+                for (ZipEntry entry : innerZip.stream().toList()) {
+                    if (schemePath.equals(entry.getName())) {
+                        continue;
+                    }
+
+                    zos.putNextEntry(new ZipEntry(entry));
+                    if (!entry.isDirectory()) {
+                        try (InputStream entryStream = innerZip.getInputStream(entry)) {
+                            entryStream.transferTo(zos);
+                        }
+                    }
+
+                    zos.closeEntry();
+                }
+            }
+
+            // Generate the new signature
+            byte[] newSignature;
+            try (InputStream toSign = new FileInputStream(innerWithoutScheme)) {
+                newSignature = this.cryptoManager.getSigner(scheme)
+                    .sign(toSign);
+            }
+
+            // Replace the signature
+            try (ZipOutputStream outerZos = new ZipOutputStream(Files.newOutputStream(outputPath))) {
+                outerZos.putNextEntry(new ZipEntry("consumer_export.zip"));
+                try (InputStream is = new FileInputStream(innerWithoutScheme)) {
+                    is.transferTo(outerZos);
+                }
+
+                outerZos.closeEntry();
+                outerZos.putNextEntry(new ZipEntry("signature"));
+                outerZos.write(newSignature);
+                outerZos.closeEntry();
+            }
+        }
+
+        return legacyManifest;
+    }
+
+    private File modifySignatureFile(File manifest, byte[] signature)
+        throws IOException {
+
+        Path outputPath = Files.createTempFile("modified-manifest", ".zip");
+        File modifiedManifest = outputPath.toFile();
+        modifiedManifest.deleteOnExit();
+
+        try (ZipFile zip = new ZipFile(manifest);
+            ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(outputPath))) {
+            for (ZipEntry entry : zip.stream().toList()) {
+                zos.putNextEntry(new ZipEntry(entry.getName()));
+                if ("signature".equals(entry.getName())) {
+                    zos.write(signature);
+                }
+                else {
+                    try (InputStream istream = zip.getInputStream(entry)) {
+                        istream.transferTo(zos);
+                    }
+                }
+            }
+        }
+
+        return modifiedManifest;
+    }
+
+    private Exporter createExporter() {
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(this.config);
+        StandardTranslator translator =
+            new StandardTranslator(this.consumerTypeCurator, this.environmentCurator, this.ownerCurator);
+
+        return new Exporter(
+            this.consumerTypeCurator,
+            new MetaExporter(),
+            new ConsumerExporter(translator),
+            new ConsumerTypeExporter(translator),
+            new RulesExporter(rulesCurator),
+            this.mockEntitlementCertServiceAdapter,
+            new ProductExporter(translator),
+            this.entitlementCurator,
+            new EntitlementExporter(translator),
+            cryptoManager,
+            this.config,
+            new ExportRules(this.consumerTypeCurator),
+            this.mockPrincipalProvider,
+            this.distributorVersionCurator,
+            new DistributorVersionExporter(translator),
+            this.cdnCurator,
+            new CdnExporter(translator),
+            new SyncUtils(this.config),
+            this.mapper,
+            translator,
+            this.createSCACertificateGenerator(cryptoManager),
+            new SchemeFileExporter(mapper));
+    }
+
+    private SCACertificateGenerator createSCACertificateGenerator(CryptoManager cryptoManager) {
+        ConsumerKeyPairGenerator keyPairGenerator
+            = new ConsumerKeyPairGenerator(cryptoManager, this.keyPairDataCurator);
+        X509V3ExtensionUtil v3ExtensionUtil
+            = new X509V3ExtensionUtil(this.config, this.entitlementCurator, new Huffman());
+        V3CapabilityCheck v3CapabilityCheck = new V3CapabilityCheck(this.consumerTypeCurator);
+        ContentAccessPayloadBuilderProvider payloadBuilderProvider = new ContentAccessPayloadBuilderProvider(
+            cryptoManager,
+            new EntitlementPayloadGenerator(this.mapper),
+            v3ExtensionUtil,
+            this.contentCurator,
+            this.caPayloadCurator);
+
+        return new SCACertificateGenerator(
+            this.config,
+            cryptoManager,
+            CryptoUtil.getPemEncoder(),
+            keyPairGenerator,
+            v3ExtensionUtil,
+            v3CapabilityCheck,
+            payloadBuilderProvider,
+            this.caCertCurator,
+            this.certSerialCurator,
+            this.environmentCurator);
     }
 
     private File[] createUpstreamFiles() throws URISyntaxException {

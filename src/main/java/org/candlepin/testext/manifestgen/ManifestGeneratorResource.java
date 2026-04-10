@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -16,7 +16,9 @@ package org.candlepin.testext.manifestgen;
 
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.dto.api.server.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.dto.api.server.v1.SubscriptionDTO;
+import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.guice.CandlepinCapabilities;
 import org.candlepin.model.Consumer;
@@ -25,12 +27,12 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.resource.util.AttachedFile;
@@ -39,6 +41,7 @@ import org.candlepin.sync.ExportCreationException;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
@@ -46,7 +49,6 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +88,7 @@ public class ManifestGeneratorResource {
     private final ManifestManager manifestManager;
     private final PoolManager poolManager;
     private final IdentityCertificateGenerator identityCertificateGenerator;
+    private final I18n i18n;
 
     private final ObjectMapper objectMapper;
 
@@ -93,7 +96,7 @@ public class ManifestGeneratorResource {
     public ManifestGeneratorResource(OwnerCurator ownerCurator,
         ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator, PoolCurator poolCurator,
         EntityMapperFactory entityMapperFactory, ManifestManager manifestManager, PoolManager poolManager,
-        IdentityCertificateGenerator identityCertificateGenerator, ObjectMapper objectMapper) {
+        IdentityCertificateGenerator identityCertificateGenerator, I18n i18n, ObjectMapper objectMapper) {
 
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
@@ -104,6 +107,7 @@ public class ManifestGeneratorResource {
         this.manifestManager = Objects.requireNonNull(manifestManager);
         this.poolManager = Objects.requireNonNull(poolManager);
         this.identityCertificateGenerator = Objects.requireNonNull(identityCertificateGenerator);
+        this.i18n = Objects.requireNonNull(i18n);
 
         this.objectMapper = Objects.requireNonNull(objectMapper);
     }
@@ -154,8 +158,8 @@ public class ManifestGeneratorResource {
     /**
      * Generates the manifest consumer for the given owner.
      */
-    private Consumer createManifestConsumer(Owner owner, String uuid, long rnd) throws IOException,
-        GeneralSecurityException {
+    private Consumer createManifestConsumer(Owner owner, String uuid, long rnd,
+        CryptographicCapabilitiesDTO cryptoCapabilities) {
 
         ConsumerType ctype = this.consumerTypeCurator.getByLabel(ConsumerTypeEnum.CANDLEPIN.getLabel());
         if (ctype == null) {
@@ -178,21 +182,38 @@ public class ManifestGeneratorResource {
             .map(cname -> new ConsumerCapability(cname))
             .toList();
 
+        List<String> keyAlgos = cryptoCapabilities != null ?
+            cryptoCapabilities.getKeyAlgorithms() :
+            null;
+
+        List<String> signatureAlgos = cryptoCapabilities != null ?
+            cryptoCapabilities.getSignatureAlgorithms() :
+            null;
+
         Consumer consumer = new Consumer()
             .setUuid(uuid)
             .setType(ctype)
             .setName("manifest_consumer-" + rnd)
             .setOwner(owner)
             .setFacts(facts)
-            .setCapabilities(capabilities);
+            .setCapabilities(capabilities)
+            .setSupportedKeyAlgorithmOids(keyAlgos)
+            .setSupportedSignatureAlgorithmOids(signatureAlgos);
 
-        IdentityCertificate identityCert = this.identityCertificateGenerator.generate(consumer);
-        consumer.setIdCert(identityCert);
+        try {
+            IdentityCertificate identityCert = this.identityCertificateGenerator.generate(consumer);
+            consumer.setIdCert(identityCert);
+        }
+        catch (CryptoCapabilitiesException e) {
+            String msg = i18n.tr("Unable to generate ID certificate for consumer: {0}", consumer.getUuid());
+            throw new ConflictException(msg, e);
+        }
 
         return this.consumerCurator.create(consumer);
     }
 
-    private File generateManifest(List<SubscriptionDTO> subscriptions, String consumerUuid, String cdnLabel,
+    private File generateManifest(List<SubscriptionDTO> subscriptions,
+        CryptographicCapabilitiesDTO cryptoCapabilities, String consumerUuid, String cdnLabel,
         String webAppPrefix, String apiUrl) throws ExportCreationException {
 
         long rnd = System.currentTimeMillis();
@@ -211,7 +232,7 @@ public class ManifestGeneratorResource {
                 .persist();
 
             // create consumer
-            Consumer consumer = this.createManifestConsumer(owner, consumerUuid, rnd);
+            Consumer consumer = this.createManifestConsumer(owner, consumerUuid, rnd, cryptoCapabilities);
 
             // Bind pools
             // We could probably not consume the full quantity, but it's not really important. The
@@ -224,7 +245,7 @@ public class ManifestGeneratorResource {
                 }
             }
 
-            List<Entitlement> entitlements = this.poolManager.entitleByPools(consumer, poolQuantities);
+            this.poolManager.entitleByPools(consumer, poolQuantities);
 
             // Build manifest file
             File manifest = this.manifestManager.generateManifest(consumer.getUuid(),
@@ -232,13 +253,13 @@ public class ManifestGeneratorResource {
 
             return manifest;
         }
-        catch (IOException | GeneralSecurityException e) {
-            log.error("Unable to create manifest consumer", e);
-            throw new IseException("Unable to create manifest consumer", e);
-        }
         catch (EntitlementRefusedException e) {
             log.error("Unable to entitle pool for manifest generation", e);
             throw new IseException("Unable to entitle pools for manifest generation", e);
+        }
+        catch (CryptoCapabilitiesException e) {
+            throw new ConflictException(i18n.tr("Unable to determine the signature scheme for consumer: {0}",
+                consumerUuid), e);
         }
         finally {
             transaction.rollback();
@@ -254,10 +275,22 @@ public class ManifestGeneratorResource {
         @QueryParam("webapp_prefix") String webAppPrefix,
         @QueryParam("api_url") String apiUrl,
         @QueryParam("consumer_uuid") String consumerUuid,
-        List<SubscriptionDTO> pools) {
+        Map<String, Object> body) {
 
         try {
-            File manifest = this.generateManifest(pools, consumerUuid, cdnLabel, webAppPrefix, apiUrl);
+            TypeReference<List<SubscriptionDTO>> poolsTyperef = new TypeReference<List<SubscriptionDTO>>() {};
+            Object serializedSubs = body.get("subscriptions");
+            List<SubscriptionDTO> pools = serializedSubs != null ?
+                this.objectMapper.convertValue(serializedSubs, poolsTyperef) :
+                null;
+
+            Object serializedCapabilities = body.get("crypto_capabilities");
+            CryptographicCapabilitiesDTO cryptoCapabilities = serializedCapabilities != null ?
+                this.objectMapper.convertValue(serializedCapabilities, CryptographicCapabilitiesDTO.class) :
+                null;
+
+            File manifest = this.generateManifest(pools, cryptoCapabilities, consumerUuid, cdnLabel,
+                webAppPrefix, apiUrl);
 
             return Response.ok(manifest, "application/zip")
                 .header("Content-Disposition", "attachment; filename=" + manifest.getName())
@@ -314,11 +347,15 @@ public class ManifestGeneratorResource {
         MultipartInput input) {
 
         AttachedFile attached = AttachedFile.getAttachedFile(input);
-        TypeReference<List<SubscriptionDTO>> typeref = new TypeReference<List<SubscriptionDTO>>() {};
-        List<SubscriptionDTO> pools = this.processAttachedFile(attached, typeref);
+        TypeReference<List<SubscriptionDTO>> poolsTyperef = new TypeReference<List<SubscriptionDTO>>() {};
+        List<SubscriptionDTO> pools = this.processAttachedFile(attached, poolsTyperef);
+        TypeReference<CryptographicCapabilitiesDTO> cryptoTyperef =
+            new TypeReference<CryptographicCapabilitiesDTO>() {};
+        CryptographicCapabilitiesDTO cryptoCapabilities = this.processAttachedFile(attached, cryptoTyperef);
 
         try {
-            File manifest = this.generateManifest(pools, consumerUuid, cdnLabel, webAppPrefix, apiUrl);
+            File manifest = this.generateManifest(pools, cryptoCapabilities, consumerUuid, cdnLabel,
+                webAppPrefix, apiUrl);
 
             return Response.ok(manifest, "application/zip")
                 .header("Content-Disposition", "attachment; filename=" + manifest.getName())

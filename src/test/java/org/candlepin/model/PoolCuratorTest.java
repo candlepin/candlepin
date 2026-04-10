@@ -43,7 +43,9 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
+import org.candlepin.pki.Scheme;
 import org.candlepin.pki.certs.UeberCertificateGenerator;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
@@ -88,7 +90,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     private PoolManager poolManager;
     private PoolService poolService;
-    private UeberCertificateGenerator ueberCertGenerator;
 
     private Owner owner;
     private Product product;
@@ -103,7 +104,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void setUp() {
         poolManager = injector.getInstance(PoolManager.class);
         poolService = injector.getInstance(PoolService.class);
-        ueberCertGenerator = injector.getInstance(UeberCertificateGenerator.class);
 
         owner = createOwner();
         ownerCurator.create(owner);
@@ -138,6 +138,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         consumer = this.createMockConsumer(owner, false);
         consumer.setFact("cpu_cores", "4");
         consumer = consumerCurator.merge(consumer);
+    }
+
+    public static Stream<Arguments> schemeSource() {
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
+            .stream()
+            .map(Arguments::of);
     }
 
     protected Consumer createMockConsumer(Owner owner, boolean manifestType) {
@@ -203,8 +209,9 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(1, results.size());
     }
 
-    @Test
-    public void testAvailablePoolsDoesNotIncludeUeberPool() {
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testAvailablePoolsDoesNotIncludeUeberPool(Scheme scheme) throws Exception {
         Owner owner = this.createOwner();
         Product product = this.createProduct();
 
@@ -216,7 +223,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool);
 
-        ueberCertGenerator.generate(owner.getKey(), new NoAuthPrincipal().getUsername());
+        UeberCertificateGenerator ueberCertGenerator = injector.getInstance(UeberCertificateGenerator.class);
+        ueberCertGenerator.generate(scheme, owner, new NoAuthPrincipal().getUsername());
 
         PoolQualifier qualifier = new PoolQualifier()
             .setConsumer(consumer)

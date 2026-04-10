@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.candlepin.spec.bootstrap.assertions.CertificateAssert.assertThatCert;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
+import static org.candlepin.spec.bootstrap.assertions.PrivateKeyAssert.assertThatKey;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotModified;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,6 +35,7 @@ import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
 import org.candlepin.dto.api.client.v1.ContentToPromoteDTO;
+import org.candlepin.dto.api.client.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.dto.api.client.v1.EnvironmentContentDTO;
 import org.candlepin.dto.api.client.v1.EnvironmentDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
@@ -51,6 +53,7 @@ import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.CryptoCapabilities;
 import org.candlepin.spec.bootstrap.data.builder.Environments;
 import org.candlepin.spec.bootstrap.data.builder.Facts;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
@@ -63,6 +66,9 @@ import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import com.google.gson.internal.LinkedTreeMap;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -82,6 +88,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -93,6 +100,45 @@ public class ContentAccessSpecTest {
 
     private static final String CONTENT_ACCESS_OUTPUT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
     private static final String CONTENT_ACCESS_INPUT_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss z";
+
+    private static Stream<Arguments> capabilitiesSource() {
+        return CryptoCapabilities.getSupportedCapabilities()
+            .stream()
+            .map(Arguments::of);
+    }
+
+    private static void verifyCapabilities(CryptographicCapabilitiesDTO expected,
+        CryptographicCapabilitiesDTO actual) {
+
+        if (expected == null) {
+            assertNull(actual);
+            return;
+        }
+
+        assertNotNull(actual);
+
+        List<String> expKeyAlgorithms = expected.getKeyAlgorithms();
+        List<String> actKeyAlgorithms = actual.getKeyAlgorithms();
+        if (expKeyAlgorithms != null) {
+            assertThat(actKeyAlgorithms)
+                .isNotNull()
+                .containsExactlyInAnyOrderElementsOf(expKeyAlgorithms);
+        }
+        else {
+            assertNull(actKeyAlgorithms);
+        }
+
+        List<String> expSigAlgorithms = expected.getSignatureAlgorithms();
+        List<String> actSigAlgorithms = actual.getSignatureAlgorithms();
+        if (expSigAlgorithms != null) {
+            assertThat(actSigAlgorithms)
+                .isNotNull()
+                .containsExactlyInAnyOrderElementsOf(expSigAlgorithms);
+        }
+        else {
+            assertNull(actSigAlgorithms);
+        }
+    }
 
     @Test
     public void shouldFilterContentWithMismatchedArchitecture() {
@@ -120,7 +166,7 @@ public class ContentAccessSpecTest {
             .facts(Map.of("system.certificate_version", "3.3", "uname.machine", "ppc64")));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).singleElement();
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
         assertThat(prodIdToContentIds)
@@ -292,6 +338,43 @@ public class ContentAccessSpecTest {
             );
     }
 
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldGenerateContentAccessCertificatesAccordingToConsumerCryptoCapabilities(
+        CryptographicCapabilitiesDTO capabilities) throws Exception {
+
+        ApiClient adminClient = ApiClients.admin();
+
+        OwnerDTO ownerDTO = Owners.randomSca();
+        OwnerDTO owner = adminClient.owners().createOwner(ownerDTO.contentPrefix("/" + ownerDTO.getKey()));
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer = Consumers.random(owner)
+            .cryptographicCapabilities(capabilities);
+
+        consumer = adminClient.consumers().createConsumer(consumer);
+        verifyCapabilities(capabilities, consumer.getCryptographicCapabilities());
+
+        // Fetch the certs, which should match the given capabilities
+        List<CertificateDTO> certExport = adminClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(certExport)
+            .isNotNull()
+            .singleElement();
+
+        assertThatCert(certExport.get(0))
+            .usesKeyAlgorithmMatchingCapabilities(capabilities)
+            .usesSignatureAlgorithmMatchingCapabilities(capabilities);
+
+        assertThatKey(certExport.get(0))
+            .isNotNull()
+            .usesAlgorithmMatchingCapabilities(capabilities);
+    }
+
     @Test
     public void shouldNotReproduceAContentAccessCertificateWithV1ConsumerOnRegistration() {
         ApiClient adminClient = ApiClients.admin();
@@ -307,7 +390,7 @@ public class ContentAccessSpecTest {
             .createConsumer(Consumers.random(owner).facts(Map.of("system.certificate_version", "1.0")));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).isEmpty();
     }
 
@@ -475,7 +558,7 @@ public class ContentAccessSpecTest {
             .createConsumer(Consumers.random(owner).addEnvironmentsItem(env));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).singleElement();
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
         assertThat(prodIdToContentIds)
@@ -495,7 +578,7 @@ public class ContentAccessSpecTest {
             .singleElement()
             .returns(content.getId(), EnvironmentContentDTO::getContentId);
 
-        certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).singleElement();
         prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
         assertThat(prodIdToContentIds)
@@ -510,7 +593,7 @@ public class ContentAccessSpecTest {
 
         env = adminClient.environments().getEnvironment(env.getId());
         assertThat(env.getEnvironmentContent()).isEmpty();
-        certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).singleElement();
         prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
         assertThat(prodIdToContentIds)
@@ -640,7 +723,7 @@ public class ContentAccessSpecTest {
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).singleElement();
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
         assertThat(prodIdToContentIds)
@@ -651,7 +734,7 @@ public class ContentAccessSpecTest {
         owner.contentAccessMode(Owners.ENTITLEMENT_ACCESS_MODE);
         adminClient.owners().updateOwner(ownerKey, owner);
 
-        certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).isEmpty();
     }
 
@@ -671,12 +754,12 @@ public class ContentAccessSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).isEmpty();
 
         owner.contentAccessMode(Owners.SCA_ACCESS_MODE);
         adminClient.owners().updateOwner(ownerKey, owner);
-        certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).singleElement();
     }
 
@@ -755,6 +838,66 @@ public class ContentAccessSpecTest {
         assertEquals(originalX509, updatedX509);
         assertNotEquals(originalContent, updatedContent);
         assertNotEquals(originalLastUpdate, updatedLastUpdate);
+    }
+
+    @Test
+    public void shouldRegenerateContentAccessCertificateWhenCryptoCapabilitiesChange() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+
+        OwnerDTO ownerDTO = Owners.randomSca();
+        OwnerDTO owner = adminClient.owners().createOwner(ownerDTO.contentPrefix("/" + ownerDTO.getKey()));
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        CryptographicCapabilitiesDTO rsaCaps = CryptoCapabilities.rsa();
+        CryptographicCapabilitiesDTO mldsaCaps = CryptoCapabilities.mldsa();
+
+        // Set the consumer's capabilities to RSA as our baseline
+        adminClient.consumers().updateConsumer(consumer.getUuid(),
+            consumer.cryptographicCapabilities(rsaCaps));
+
+        ConsumerDTO rsaConsumer = adminClient.consumers().getConsumer(consumer.getUuid());
+        verifyCapabilities(rsaCaps, rsaConsumer.getCryptographicCapabilities());
+
+        // Fetch the certs, which should match the RSA capabilities
+        List<CertificateDTO> certExport1 = adminClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(certExport1)
+            .isNotNull()
+            .singleElement();
+
+        assertThatCert(certExport1.get(0))
+            .usesKeyAlgorithmMatchingCapabilities(rsaCaps)
+            .usesSignatureAlgorithmMatchingCapabilities(rsaCaps);
+
+        assertThatKey(certExport1.get(0))
+            .isNotNull()
+            .usesAlgorithmMatchingCapabilities(rsaCaps);
+
+        // Change the consumer's capabilities
+        adminClient.consumers().updateConsumer(consumer.getUuid(),
+            consumer.cryptographicCapabilities(mldsaCaps));
+
+        ConsumerDTO mldsaConsumer = adminClient.consumers().getConsumer(consumer.getUuid());
+        verifyCapabilities(mldsaCaps, mldsaConsumer.getCryptographicCapabilities());
+
+        // Fetching the certs again should trigger a regen of the SCA cert (and the consumer's keypair)
+        List<CertificateDTO> certExport2 = adminClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(certExport2)
+            .isNotNull()
+            .singleElement();
+
+        assertThatCert(certExport2.get(0))
+            .usesKeyAlgorithmMatchingCapabilities(mldsaCaps)
+            .usesSignatureAlgorithmMatchingCapabilities(mldsaCaps);
+
+        assertThatKey(certExport2.get(0))
+            .isNotNull()
+            .usesAlgorithmMatchingCapabilities(mldsaCaps);
     }
 
     @Test
@@ -1005,11 +1148,11 @@ public class ContentAccessSpecTest {
             }
 
             List<Callable<List<JsonNode>>> tasks = List.of(
-                () -> adminClient.consumers().exportCertificates(consumer1.getUuid(), null),
-                () -> adminClient.consumers().exportCertificates(consumer2.getUuid(), null),
-                () -> adminClient.consumers().exportCertificates(consumer3.getUuid(), null),
-                () -> adminClient.consumers().exportCertificates(consumer4.getUuid(), null),
-                () -> adminClient.consumers().exportCertificates(consumer5.getUuid(), null));
+                () -> adminClient.consumers().exportCertificatePayloads(consumer1.getUuid(), null),
+                () -> adminClient.consumers().exportCertificatePayloads(consumer2.getUuid(), null),
+                () -> adminClient.consumers().exportCertificatePayloads(consumer3.getUuid(), null),
+                () -> adminClient.consumers().exportCertificatePayloads(consumer4.getUuid(), null),
+                () -> adminClient.consumers().exportCertificatePayloads(consumer5.getUuid(), null));
 
             ExecutorService execService = Executors.newFixedThreadPool(consumers.size());
             List<Future<List<JsonNode>>> futures = execService.invokeAll(tasks);
@@ -1043,13 +1186,13 @@ public class ContentAccessSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        assertThat(consumerClient.consumers().exportCertificates(consumer.getUuid(), null))
+        assertThat(consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null))
             .singleElement();
 
         content.setName(StringUtil.random("name-"));
         adminClient.ownerContent().updateContent(ownerKey, content.getId(), content);
 
-        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
         assertThat(prodIdToContentIds)
             .hasSize(1)
@@ -1126,7 +1269,7 @@ public class ContentAccessSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        assertThat(consumerClient.consumers().exportCertificates(consumer.getUuid(), null))
+        assertThat(consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null))
             .singleElement();
 
         // Update the content prefix on the org, which should trigger a refresh of at least the
@@ -1134,7 +1277,7 @@ public class ContentAccessSpecTest {
         owner.setContentPrefix("content_prefix");
         adminClient.owners().updateOwner(owner.getKey(), owner);
 
-        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
         assertThat(prodIdToContentIds)
             .hasSize(1)
@@ -1333,7 +1476,7 @@ public class ContentAccessSpecTest {
 
         // confirm that there is a content access cert
         // and only a content access cert
-        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = consumerClient.consumers().exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(certs).singleElement();
         JsonNode certContent = certs.get(0).get("products").get(0).get("content");
         assertThat(certContent).singleElement();
@@ -1395,7 +1538,9 @@ public class ContentAccessSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        List<JsonNode> entCerts = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> entCerts = consumerClient.consumers()
+            .exportCertificatePayloads(consumer.getUuid(), null);
+
         assertThat(entCerts).singleElement();
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(entCerts.get(0));
         assertThat(prodIdToContentIds)
@@ -1486,7 +1631,8 @@ public class ContentAccessSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        List<JsonNode> entCerts = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> entCerts = consumerClient.consumers()
+            .exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(entCerts).singleElement();
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(entCerts.get(0));
         assertThat(prodIdToContentIds)
@@ -1534,7 +1680,9 @@ public class ContentAccessSpecTest {
 
         // Make sure that content cont1 is not present in cert,
         // since pro1 does not have active pool
-        List<JsonNode> entCerts = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> entCerts = consumerClient.consumers()
+            .exportCertificatePayloads(consumer.getUuid(), null);
+
         assertThat(entCerts).singleElement();
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(entCerts.get(0));
         assertThat(prodIdToContentIds)
@@ -1578,7 +1726,8 @@ public class ContentAccessSpecTest {
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        List<JsonNode> entCerts = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> entCerts = consumerClient.consumers()
+            .exportCertificatePayloads(consumer.getUuid(), null);
         assertThat(entCerts).singleElement();
         Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(entCerts.get(0));
         assertThat(prodIdToContentIds)

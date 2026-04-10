@@ -3,31 +3,29 @@ FROM registry.access.redhat.com/ubi9-minimal:latest as builder
 ARG WAR_FILE
 
 RUN microdnf -y update && \
-    microdnf install -y java-17-openjdk-devel wget tar && \
+    microdnf install -y wget tar gzip openssl && \
     microdnf clean all
 
 USER root
 
 # Prepare Tomcat
-ARG TOMCAT_VERSION=9.0.87
+ARG TOMCAT_VERSION=9.0.110
 RUN wget https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz; \
     tar xzf apache-tomcat-${TOMCAT_VERSION}.tar.gz; \
     mkdir /opt/tomcat; \
     mv apache-tomcat-${TOMCAT_VERSION}/* /opt/tomcat/
 
 # Prepare Candlepin
-RUN mkdir -p /app/build/candlepin
+RUN mkdir -p /app/build/
 WORKDIR /app/build
 COPY ${WAR_FILE} ./candlepin.war
-WORKDIR /app/build/candlepin
-RUN jar xvf /app/build/candlepin.war
 
 # Prepare development certs
 RUN mkdir -p /app/certs
 WORKDIR /app/certs
 COPY ./bin/deployment/gen_certs.sh .
-RUN ./gen_certs.sh --cert_out ./candlepin-ca.crt --key_out ./candlepin-ca.key --hostname candlepin; \
-    rm gen_certs.sh;
+RUN ./gen_certs.sh --cert_dir /app/certs --hostname candlepin --force && \
+    rm gen_certs.sh
 
 ################################# Production Image #################################
 
@@ -50,11 +48,11 @@ USER root
 # Update and install dependencies
 RUN microdnf -y update && \
     microdnf -y update ca-certificates && \
-    microdnf install -y java-17-openjdk-headless initscripts && \
+    microdnf install -y java-25-openjdk-headless initscripts && \
     microdnf clean all
 
-ENV JAVA_HOME=/usr/lib/jvm/jre-17-openjdk
-ENV JRE_HOME=/usr/lib/jvm/jre-17-openjdk
+ENV JAVA_HOME=/usr/lib/jvm/jre-25-openjdk
+ENV JRE_HOME=/usr/lib/jvm/jre-25-openjdk
 ENV CATALINA_OPTS=-Djavax.net.ssl.trustStore=$JAVA_HOME/lib/security/cacerts
 
 # Tomcat Setup
@@ -112,7 +110,7 @@ RUN ln -s /etc/candlepin/certs/*.crt /etc/pki/ca-trust/source/anchors --force; \
     update-ca-trust;
 
 COPY ./containers/server.xml /opt/tomcat/conf
-COPY ./containers/logback.xml /opt/tomcat/webapps/candlepin/WEB-INF/classes/logback.xml
+COPY ./containers/logback.xml /opt/tomcat/logback-override.xml
 
 WORKDIR /opt/tomcat/bin
 
@@ -121,4 +119,4 @@ USER tomcat
 # Expose ports for tomcat, remote debug and candlepin
 EXPOSE 8080 8000 8443
 
-ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "run"]
+ENTRYPOINT ["sh", "-c", "rm -rf /opt/tomcat/webapps/candlepin && /opt/tomcat/bin/catalina.sh run"]

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,12 +14,15 @@
  */
 package org.candlepin.config;
 
+
+
 /**
- * A ConfigurationException is thrown when there is a problem building a Configuration
- * object.
+ * A ConfigurationException is thrown when there is a configuration-related issue, such as missing or
+ * erroneous configuration values, or the inability to load or instantiate an object due to a configuration
+ * problem.
  */
-@SuppressWarnings("serial")
-public class ConfigurationException extends Exception {
+public class ConfigurationException extends RuntimeException {
+
     public ConfigurationException() {
         super();
     }
@@ -35,4 +38,5 @@ public class ConfigurationException extends Exception {
     public ConfigurationException(String message, Throwable cause) {
         super(message, cause);
     }
+
 }

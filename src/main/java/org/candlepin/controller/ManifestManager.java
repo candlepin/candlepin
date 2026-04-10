@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -33,6 +33,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
+import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ExportCreationException;
@@ -132,15 +133,28 @@ public class ManifestManager {
     /**
      * Generates a manifest for the specified consumer.
      *
-     * @param consumerUuid the target consumer's UUID.
-     * @param cdnLabel the CDN label to store in the meta file.
-     * @param webUrl the URL pointing to the manifest's originating web application.
-     * @param apiUrl the API URL pointing to the manifest's originating candlepin API.
+     * @param consumerUuid
+     *  the target consumer's UUID.
+     *
+     * @param cdnLabel
+     *  the CDN label to store in the meta file.
+     *
+     * @param webUrl
+     *  the URL pointing to the manifest's originating web application.
+     *
+     * @param apiUrl
+     *  the API URL pointing to the manifest's originating candlepin API.
+     *
+     * @throws ExportCreationException
+     *  when an export fails.
+     *
+     * @throws CryptoCapabilitiesException
+     *  if unable to determine a cryptographic scheme for the consumer
+     *
      * @return an archive of the target consumer
-     * @throws ExportCreationException when an export fails.
      */
     public File generateManifest(String consumerUuid, String cdnLabel, String webUrl, String apiUrl)
-        throws ExportCreationException {
+        throws ExportCreationException, CryptoCapabilitiesException {
 
         log.info("Exporting consumer {}", consumerUuid);
 
@@ -177,12 +191,22 @@ public class ManifestManager {
     /**
      * Imports the specified manifest archive into the specifed {@link Owner}.
      *
-     * @param owner the target owner.
-     * @param archive the archive to import
-     * @param uploadedFileName the name of the originally uploaded file.
-     * @param overrides the {@link ConflictOverrides} to apply during the import process.
+     * @param owner
+     *  the target owner.
+     *
+     * @param archive
+     *  the archive to import
+     *
+     * @param uploadedFileName
+     *  the name of the originally uploaded file.
+     *
+     * @param overrides
+     *  the {@link ConflictOverrides} to apply during the import process.
+     *
+     * @throws ImporterException
+     *  if there is an issue importing the manifest.
+     *
      * @return the result of the import.
-     * @throws ImporterException if there is an issue importing the manifest.
      */
     public ImportRecord importManifest(Owner owner, File archive, String uploadedFileName,
         ConflictOverrides overrides) throws ImporterException {
@@ -204,13 +228,25 @@ public class ManifestManager {
      * Imports a stored manifest file into the target {@link Owner}. The stored file is deleted
      * as soon as the import is complete.
      *
-     * @param targetOwner the target owner.
-     * @param fileId the manifest file ID.
-     * @param overrides the {@link ConflictOverrides} to apply to the import process.
-     * @param uploadedFileName the originally uploaded file name.
+     * @param targetOwner
+     *  the target owner.
+     *
+     * @param fileId
+     *  the manifest file ID.
+     *
+     * @param overrides
+     *  the {@link ConflictOverrides} to apply to the import process.
+     *
+     * @param uploadedFileName
+     *  the originally uploaded file name.
+     *
+     * @throws BadRequestException
+     *  if the file is not found in the {@link ManifestFileService}
+     *
+     * @throws ImporterException
+     *  if there is an issue importing the file.
+     *
      * @return the result of the import.
-     * @throws BadRequestException if the file is not found in the {@link ManifestFileService}
-     * @throws ImporterException if there is an issue importing the file.
      */
     @Transactional
     public ImportRecord importStoredManifest(Owner targetOwner, String fileId, ConflictOverrides overrides,
@@ -331,15 +367,28 @@ public class ManifestManager {
      * Generates a manifest for the specifed consumer and stores the resulting file via the
      * {@link ManifestFileService}.
      *
-     * @param consumerUuid the target consumer's UUID.
-     * @param cdnLabel the CDN label to store in the meta file.
-     * @param webUrl the URL pointing to the manifest's originating web application.
-     * @param apiUrl the API URL pointing to the manifest's originating candlepin API.
+     * @param consumerUuid
+     *  the target consumer's UUID.
+     *
+     * @param cdnLabel
+     *  the CDN label to store in the meta file.
+     *
+     * @param webUrl
+     *  the URL pointing to the manifest's originating web application.
+     *
+     * @param apiUrl
+     *  the API URL pointing to the manifest's originating candlepin API.
+     *
+     * @throws ExportCreationException
+     *  if there are any issues generating the manifest.
+     *
+     * @throws CryptoCapabilitiesException
+     *  if unable to determine a cryptographic scheme for the consumer
+     *
      * @return an {@link ExportResult} containing the details of the stored file.
-     * @throws ExportCreationException if there are any issues generating the manifest.
      */
     public ExportResult generateAndStoreManifest(String consumerUuid, String cdnLabel, String webUrl,
-        String apiUrl) throws ExportCreationException {
+        String apiUrl) throws ExportCreationException, CryptoCapabilitiesException {
 
         Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
 
@@ -407,7 +456,8 @@ public class ManifestManager {
      * @return an archive to the specified consumer's entitlements.
      */
     public File generateEntitlementArchive(Consumer consumer, Set<Long> serials)
-        throws ExportCreationException, ConcurrentContentPayloadCreationException {
+        throws ExportCreationException, ConcurrentContentPayloadCreationException,
+            CryptoCapabilitiesException {
 
         log.debug("Getting client certificate zip file for consumer: {}", consumer.getUuid());
         poolManager.regenerateDirtyEntitlements(consumer);

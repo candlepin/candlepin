@@ -90,7 +90,9 @@ public class SkuLevelEnableOverrideSpecTest {
         PoolDTO pool = ownerClient.createPool(owner.getKey(), Pools.random(product));
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
-        List<JsonNode> result = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> result = consumerClient.consumers()
+            .exportCertificatePayloads(consumer.getUuid(), null);
+
         JsonNode products = result.get(0).get("products");
         assertThat(products)
             .hasSize(2);
@@ -121,7 +123,9 @@ public class SkuLevelEnableOverrideSpecTest {
         PoolDTO pool = ownerClient.createPool(owner.getKey(), Pools.random(product));
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
-        List<JsonNode> result = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> result = consumerClient.consumers()
+            .exportCertificatePayloads(consumer.getUuid(), null);
+
         JsonNode products = result.get(0).get("products");
         assertThat(products)
             .hasSize(2);
@@ -166,7 +170,9 @@ public class SkuLevelEnableOverrideSpecTest {
         assertThatJob(job).isFinished();
 
         consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
-        List<JsonNode> result = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> result = consumerClient.consumers()
+            .exportCertificatePayloads(consumer.getUuid(), null);
+
         JsonNode products = result.get(0).get("products");
         assertThat(products)
             .hasSize(2);

@@ -23,47 +23,34 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
-import org.candlepin.pki.KeyPairGenerator;
-import org.candlepin.pki.PemEncoder;
-import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
-import org.candlepin.pki.impl.BouncyCastlePemEncoder;
-import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
-import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
-import org.candlepin.test.CertificateReaderForTesting;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.test.CryptoUtil;
 import org.candlepin.util.X509ExtensionUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.security.cert.CertificateException;
+
 
 class ProductCertificateGeneratorTest {
     private ProductCertificateCurator productCertificateCurator;
-    private X509CertificateBuilder certificateBuilder;
     private ProductCertificateGenerator productCertificateGenerator;
 
     @BeforeEach
-    public void init() throws CertificateException, IOException {
-        BouncyCastleSecurityProvider securityProvider = new BouncyCastleSecurityProvider();
+    public void init() {
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager();
         X509ExtensionUtil extensionUtil = mock(X509ExtensionUtil.class);
-        KeyPairGenerator keyPairGenerator = new BouncyCastleKeyPairGenerator(
-            securityProvider, mock(KeyPairDataCurator.class));
-        PemEncoder pemEncoder = new BouncyCastlePemEncoder();
+
         this.productCertificateCurator = mock(ProductCertificateCurator.class);
-        this.certificateBuilder = new X509CertificateBuilder(new CertificateReaderForTesting(),
-            securityProvider, new BouncyCastleSubjectKeyIdentifierWriter());
+
         this.productCertificateGenerator = new ProductCertificateGenerator(
-            this.productCertificateCurator,
+            cryptoManager,
             extensionUtil,
-            keyPairGenerator,
-            pemEncoder,
-            () -> this.certificateBuilder
-        );
+            CryptoUtil.getPemEncoder(),
+            this.productCertificateCurator);
     }
 
     @Test

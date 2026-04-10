@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.model.exceptions.InvalidOrderKeyException;
+
 import org.hibernate.query.NativeQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -48,14 +48,18 @@ import org.candlepin.messaging.impl.noop.NoopSessionFactory;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.KeyPairGenerator;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.OidUtil;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
-import org.candlepin.pki.impl.BouncyCastlePemEncoder;
-import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
-import org.candlepin.pki.impl.BouncyCastleSubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.bc.BouncyCastleCryptoManager;
+import org.candlepin.pki.impl.bc.BouncyCastlePemEncoder;
+import org.candlepin.pki.impl.bc.BouncyCastlePrivateKeyReader;
+import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
+import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.jca.JcaCertificateReader;
+import org.candlepin.pki.impl.jca.JcaOidUtil;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.RulesObjectMapper;
@@ -93,7 +97,6 @@ import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
 import org.candlepin.sync.file.DBManifestService;
 import org.candlepin.sync.file.ManifestFileService;
-import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.EnforcerForTesting;
 import org.candlepin.test.VerifyAuthorizationFilterFactory;
@@ -113,6 +116,7 @@ import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.persist.jpa.JpaPersistOptions;
 import com.google.inject.servlet.RequestScoped;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.hibernate.Session;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
@@ -126,6 +130,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.InputStream;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Properties;
 
 import javax.inject.Named;
@@ -146,6 +151,44 @@ import javax.validation.ValidatorFactory;
 public class TestingModules {
     private TestingModules() {
         // This class is just a container for various Guice Modules used during testing
+    }
+
+    public static class PKIModule extends AbstractModule {
+        private final Configuration config;
+
+        public PKIModule(Configuration config) {
+            this.config = Objects.requireNonNull(config);
+        }
+
+        public PKIModule() {
+            this(TestConfig.defaults());
+        }
+
+        @Override
+        public void configure() {
+            bind(Configuration.class).toInstance(this.config);
+
+            // Security provider binding
+            bind(BouncyCastleSecurityProvider.class);
+            bind(java.security.Provider.class).toProvider(BouncyCastleSecurityProvider.class);
+            bind(BouncyCastleProvider.class).toProvider(BouncyCastleSecurityProvider.class);
+
+            // Generic crypto op wrappers and manager dependencies
+            bind(CertificateReader.class).to(JcaCertificateReader.class);
+            bind(OidUtil.class).to(JcaOidUtil.class);
+            bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class);
+            bind(PemEncoder.class).to(BouncyCastlePemEncoder.class);
+            bind(SubjectKeyIdentifierWriter.class).to(BouncyCastleSubjectKeyIdentifierWriter.class);
+
+            // CryptoManager
+            bind(CryptoManager.class).to(BouncyCastleCryptoManager.class);
+
+            // Tier-2 generators
+            bind(X509ExtensionUtil.class);
+
+            // We cannot bind the other classes here, as they may require curators or other things that are
+            // not bound in this context.
+        }
     }
 
     public static class ServletEnvironmentModule extends AbstractModule {
@@ -248,7 +291,7 @@ public class TestingModules {
     }
 
     public static class StandardTest extends AbstractModule {
-        private Configuration config;
+        private final Configuration config;
 
         public StandardTest() {
             this.config = TestConfig.defaults();
@@ -262,6 +305,9 @@ public class TestingModules {
 
         @Override
         public void configure() {
+            // Add our PKI bindings
+            install(new PKIModule(this.config));
+
             CandlepinCache mockedCandlepinCache = mock(CandlepinCache.class);
             when(mockedCandlepinCache.getStatusCache()).thenReturn(mock(StatusCache.class));
             // This is not necessary in the normal module because the config is bound in the
@@ -280,8 +326,6 @@ public class TestingModules {
             JobManager mockJobManager = mock(JobManager.class);
             bind(JobManager.class).toInstance(mockJobManager);
 
-            bind(X509ExtensionUtil.class);
-
             bind(ConsumerResource.class);
             bind(PoolResource.class);
             bind(EntitlementResource.class);
@@ -294,11 +338,6 @@ public class TestingModules {
             bind(ProductResource.class);
             bind(DateSource.class).to(DateSourceForTesting.class).asEagerSingleton();
             bind(Enforcer.class).to(EnforcerForTesting.class); // .to(JavascriptEnforcer.class);
-            bind(SubjectKeyIdentifierWriter.class).to(BouncyCastleSubjectKeyIdentifierWriter.class);
-            bind(PemEncoder.class).to(BouncyCastlePemEncoder.class);
-            bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class);
-            bind(CertificateReader.class).to(CertificateReaderForTesting.class).asEagerSingleton();
-            bind(KeyPairGenerator.class).to(BouncyCastleKeyPairGenerator.class).asEagerSingleton();
 
             bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
             bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.client.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.dto.api.client.v1.ImportRecordDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.UpstreamConsumerDTO;
@@ -28,22 +29,50 @@ import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
+import org.candlepin.spec.bootstrap.data.builder.CryptoCapabilities;
 import org.candlepin.spec.bootstrap.data.builder.ExportGenerator;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Products;
+import org.candlepin.spec.bootstrap.data.util.CryptoUtil;
+import org.candlepin.spec.bootstrap.data.util.ExportUtil;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import tools.jackson.databind.node.ObjectNode;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.KeyPair;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 
 
 @SpecTest
 @OnlyInStandalone
 public class ImportErrorSpecTest {
+    private static Stream<Arguments> capabilitiesSource() {
+        return CryptoCapabilities.getSupportedCapabilities()
+            .stream()
+            .map(Arguments::of);
+    }
 
     private static ApiClient adminClient;
 
@@ -63,12 +92,16 @@ public class ImportErrorSpecTest {
         return adminClient.jobs().waitForJob(importJob);
     }
 
-    @Test
-    public void shouldReturnCorrectErrorStatusMessageOnADuplicateImport() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldReturnCorrectErrorStatusMessageOnADuplicateImport(
+        CryptographicCapabilitiesDTO capabilities) throws Exception {
+
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         // Create a simple manifest to throw at the server twice
         File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(Products.random())
             .export();
 
@@ -91,12 +124,16 @@ public class ImportErrorSpecTest {
             .contains("Import is the same as existing data");
     }
 
-    @Test
-    public void shouldAllowForcingTheSameManifest() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldAllowForcingTheSameManifest(CryptographicCapabilitiesDTO capabilities)
+        throws Exception {
+
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         // Create a simple manifest to throw at the server twice
         File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(Products.random())
             .export();
 
@@ -119,8 +156,11 @@ public class ImportErrorSpecTest {
             .doesNotContain("_WITH_WARNING");
     }
 
-    @Test
-    public void shouldNotAllowImportingAnOldManifest() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldNotAllowImportingAnOldManifest(CryptographicCapabilitiesDTO capabilities)
+        throws Exception {
+
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         ExportGenerator exportGenerator = new ExportGenerator();
@@ -128,7 +168,9 @@ public class ImportErrorSpecTest {
         // Impl note: it's probably not strictly necessary to add or modify the subscription data
         // for this test, but it helps ensure we don't hit a "MANIFEST_SAME" error when we're not
         // looking for it.
-        File oldManifest = exportGenerator.addProduct(Products.random())
+        File oldManifest = exportGenerator
+            .usingCryptographicCapabilities(capabilities)
+            .addProduct(Products.random())
             .export();
 
         Thread.sleep(1500);
@@ -151,8 +193,11 @@ public class ImportErrorSpecTest {
             .contains("MANIFEST_OLD");
     }
 
-    @Test
-    public void shouldAllowImportingOlderManifestsIntoAnotherOwner() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldAllowImportingOlderManifestsIntoAnotherOwner(CryptographicCapabilitiesDTO capabilities)
+        throws Exception {
+
         OwnerDTO owner1 = adminClient.owners().createOwner(Owners.random());
         OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
 
@@ -160,12 +205,14 @@ public class ImportErrorSpecTest {
         // different upstream orgs or we'll get a different, unrecoverable failure.
         File oldManifest = new ExportGenerator()
             .addProduct(Products.random())
+            .usingCryptographicCapabilities(capabilities)
             .export();
 
         Thread.sleep(1500);
 
         File newManifest = new ExportGenerator()
             .addProduct(Products.random())
+            .usingCryptographicCapabilities(capabilities)
             .export();
 
         // Import the new manifest to the first org
@@ -185,13 +232,15 @@ public class ImportErrorSpecTest {
             .doesNotContain("_WITH_WARNING");
     }
 
-    @Test
-    public void shouldReturnConflictWhenImportingManifestFromDifferentSubscriptionManagementApplication()
-        throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldReturnConflictWhenImportingManifestFromDifferentSubscriptionManagementApplication(
+        CryptographicCapabilitiesDTO capabilities) throws Exception {
 
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         File manifest1 = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(Products.random())
             .export();
 
@@ -216,11 +265,15 @@ public class ImportErrorSpecTest {
     /**
      * Test is run sequentially to avoid conflicts with other tests during forced reimport.
      */
-    @Test
-    public void shouldAllowForcingManifestFromDifferentSubscriptionManagementApplication() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldAllowForcingManifestFromDifferentSubscriptionManagementApplication(
+        CryptographicCapabilitiesDTO capabilities) throws Exception {
+
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
         File manifest1 = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(Products.random())
             .export();
 
@@ -244,6 +297,7 @@ public class ImportErrorSpecTest {
         // Impl note: we want the manifest to come from different upstream sources, so we can't
         // reuse the generator
         File manifest2 = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(Products.random())
             .export();
 
@@ -277,12 +331,16 @@ public class ImportErrorSpecTest {
         assertNotEquals(upstreamConsumerUuid1, upstreamConsumerUuid2);
     }
 
-    @Test
-    public void shouldReturnBadRequestWhenImportingManifestInUseByAnotherOwner() throws Exception {
+    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
+    @MethodSource("capabilitiesSource")
+    public void shouldReturnBadRequestWhenImportingManifestInUseByAnotherOwner(
+        CryptographicCapabilitiesDTO capabilities) throws Exception {
+
         OwnerDTO owner1 = adminClient.owners().createOwner(Owners.random());
         OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
 
         File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
             .addProduct(Products.random())
             .export();
 
@@ -299,6 +357,158 @@ public class ImportErrorSpecTest {
         assertThatJob(importJob2)
             .isFailed()
             .contains("This subscription management application has already been imported by another owner");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "", "invalid" })
+    public void shouldFailImportWithInvalidSignature(String signature) throws Exception {
+        CryptographicCapabilitiesDTO capabilities = CryptoCapabilities.rsa();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+
+        File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
+            .addProduct(Products.random())
+            .export();
+
+        File modifiedManifest = this.replaceSignatureFile(manifest, signature.getBytes());
+        String expectedMessage = signature.isBlank() ?
+            "The archive does not contain the required signature file" :
+            "Archive failed signature check";
+
+        AsyncJobStatusDTO job = this.importAsync(owner, modifiedManifest);
+        assertThatJob(job)
+            .isFailed()
+            .contains(expectedMessage);
+
+        // We should be able to import a manifest with an invalid signature if we use the signature conflict
+        // override
+        if (!signature.isBlank()) {
+            job = this.importAsync(owner, modifiedManifest, "SIGNATURE_CONFLICT");
+            assertThatJob(job)
+                .isFinished()
+                .contains("SUCCESS");
+        }
+    }
+
+    @Test
+    public void shouldFailImportWithUntrustedCertificate() throws Exception {
+        CryptographicCapabilitiesDTO capabilities = CryptoCapabilities.rsa();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+
+        File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
+            .addProduct(Products.random())
+            .export();
+
+        String signatureAlgorithm = "SHA256WithRSA";
+        String keyAlgorithm = "rsa";
+        int keySize = 4096;
+
+        KeyPair keyPair = CryptoUtil.generateKeyPair(keyAlgorithm, keySize);
+        X509Certificate selfSignedCert = CryptoUtil.generateX509Certificate(keyPair, signatureAlgorithm);
+        File modifiedManifest = this.replaceCertificate(manifest, selfSignedCert);
+
+        AsyncJobStatusDTO job = this.importAsync(owner, modifiedManifest);
+        assertThatJob(job)
+            .isFailed()
+            .contains("Archive signed by an untrusted certificate");
+
+        // We should no longer fail the untrusted signature verification. We will still fail the signature
+        // verification, because we did not update the signature after modifiying the consumer export zip.
+        job = this.importAsync(owner, modifiedManifest, "UNTRUSTED_SIGNING_CERTIFICATE");
+        assertThatJob(job)
+            .isFailed()
+            .contains("Archive failed signature check");
+    }
+
+    private File replaceSignatureFile(File manifest, byte[] signature) throws IOException {
+        Path outputPath = Files.createTempFile("modified-manifest", ".zip");
+        File modifiedManifest = outputPath.toFile();
+        modifiedManifest.deleteOnExit();
+
+        try (ZipFile zip = new ZipFile(manifest);
+            ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(outputPath))) {
+            for (ZipEntry entry : zip.stream().toList()) {
+                zos.putNextEntry(new ZipEntry(entry.getName()));
+                if (ExportUtil.SIGNATURE_FILENAME.equals(entry.getName())) {
+                    zos.write(signature);
+                }
+                else {
+                    try (InputStream istream = zip.getInputStream(entry)) {
+                        istream.transferTo(zos);
+                    }
+                }
+            }
+        }
+
+        return modifiedManifest;
+    }
+
+    private File replaceCertificate(File manifest, X509Certificate certificate)
+        throws IOException, CertificateEncodingException {
+
+        String schemePath = "export/" + ExportUtil.SCHEME_FILENAME;
+        Path outputPath = Files.createTempFile("modified-manifest", ".zip");
+        File modifiedManifest = outputPath.toFile();
+        modifiedManifest.deleteOnExit();
+
+        File originalConsumerExport = Files.createTempFile("consumer_export_orig", ".zip")
+            .toFile();
+        originalConsumerExport.deleteOnExit();
+
+        File modifiedConsumerExport = Files.createTempFile("consumer_export_modified", ".zip").toFile();
+        modifiedConsumerExport.deleteOnExit();
+
+        try (ZipFile outer = new ZipFile(manifest)) {
+            ZipEntry consumerExportEntry = outer.getEntry(ExportUtil.EXPORT_NAME);
+            try (InputStream is = outer.getInputStream(consumerExportEntry);
+                FileOutputStream fos = new FileOutputStream(originalConsumerExport)) {
+                is.transferTo(fos);
+            }
+
+            try (ZipFile consumerExport = new ZipFile(originalConsumerExport);
+                ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(modifiedConsumerExport))) {
+                for (ZipEntry entry : consumerExport.stream().toList()) {
+                    zos.putNextEntry(new ZipEntry(entry));
+                    if (!entry.isDirectory()) {
+                        // Replace the certificate
+                        if (schemePath.equals(entry.getName())) {
+                            ObjectNode scheme = (ObjectNode) ApiClient.MAPPER
+                                .readTree(consumerExport.getInputStream(entry));
+                            String encodedCert = Base64.getEncoder()
+                                .encodeToString(certificate.getEncoded());
+                            scheme.put("certificate", encodedCert);
+                            zos.write(ApiClient.MAPPER.writeValueAsBytes(scheme));
+                        }
+                        else {
+                            try (InputStream entryStream = consumerExport.getInputStream(entry)) {
+                                entryStream.transferTo(zos);
+                            }
+                        }
+                    }
+                }
+            }
+
+            try (ZipOutputStream outerZos = new ZipOutputStream(Files.newOutputStream(outputPath))) {
+                for (ZipEntry entry : outer.stream().toList()) {
+                    outerZos.putNextEntry(new ZipEntry(entry.getName()));
+                    if (ExportUtil.EXPORT_NAME.equals(entry.getName())) {
+                        try (InputStream is = new FileInputStream(modifiedConsumerExport)) {
+                            is.transferTo(outerZos);
+                        }
+                    }
+                    else if (!entry.isDirectory()) {
+                        try (InputStream is = outer.getInputStream(entry)) {
+                            is.transferTo(outerZos);
+                        }
+                    }
+
+                    outerZos.closeEntry();
+                }
+            }
+        }
+
+        return modifiedManifest;
     }
 
 }

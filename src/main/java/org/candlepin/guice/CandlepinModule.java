@@ -95,7 +95,8 @@ import org.candlepin.messaging.impl.artemis.ArtemisUtil;
 import org.candlepin.messaging.impl.noop.NoopContextListener;
 import org.candlepin.messaging.impl.noop.NoopSessionFactory;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.KeyPairGenerator;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.OidUtil;
 import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.certs.AnonymousCertificateGenerator;
@@ -105,12 +106,12 @@ import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.pki.certs.ProductCertificateGenerator;
 import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.pki.certs.UeberCertificateGenerator;
-import org.candlepin.pki.certs.X509CertificateBuilder;
-import org.candlepin.pki.certs.X509CertificateBuilderProvider;
-import org.candlepin.pki.impl.BouncyCastleKeyPairGenerator;
-import org.candlepin.pki.impl.BouncyCastlePemEncoder;
-import org.candlepin.pki.impl.BouncyCastlePrivateKeyReader;
-import org.candlepin.pki.impl.BouncyCastleSecurityProvider;
+import org.candlepin.pki.impl.bc.BouncyCastleCryptoManager;
+import org.candlepin.pki.impl.bc.BouncyCastlePemEncoder;
+import org.candlepin.pki.impl.bc.BouncyCastlePrivateKeyReader;
+import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
+import org.candlepin.pki.impl.jca.JcaCertificateReader;
+import org.candlepin.pki.impl.jca.JcaOidUtil;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
@@ -175,6 +176,7 @@ import org.candlepin.sync.ConsumerTypeExporter;
 import org.candlepin.sync.Exporter;
 import org.candlepin.sync.MetaExporter;
 import org.candlepin.sync.RulesExporter;
+import org.candlepin.sync.SchemeFileExporter;
 import org.candlepin.sync.SyncUtils;
 import org.candlepin.util.AttributeValidator;
 import org.candlepin.util.DateSource;
@@ -192,6 +194,7 @@ import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.persist.jpa.JpaPersistOptions;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
 import org.quartz.SchedulerFactory;
@@ -305,15 +308,23 @@ public class CandlepinModule extends AbstractModule {
     }
 
     private void bindPki() {
-        bind(CertificateReader.class).asEagerSingleton();
-        bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class);
-        bind(X509ExtensionUtil.class);
-
+        // Security provider binding
         bind(BouncyCastleSecurityProvider.class);
-        bind(KeyPairGenerator.class).to(BouncyCastleKeyPairGenerator.class);
-        bind(PemEncoder.class).to(BouncyCastlePemEncoder.class);
-        bind(X509CertificateBuilderProvider.class);
-        bind(X509CertificateBuilder.class).toProvider(X509CertificateBuilderProvider.class);
+        bind(java.security.Provider.class).toProvider(BouncyCastleSecurityProvider.class);
+        bind(BouncyCastleProvider.class).toProvider(BouncyCastleSecurityProvider.class);
+
+        // Generic crypto op wrappers and manager dependencies
+        bind(CertificateReader.class).to(JcaCertificateReader.class).asEagerSingleton();
+        bind(OidUtil.class).to(JcaOidUtil.class).asEagerSingleton();
+        bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class).asEagerSingleton();
+        bind(PemEncoder.class).to(BouncyCastlePemEncoder.class).asEagerSingleton();
+        // Impl note: SubjectKeyIdentifier is bound in the DefaultConfig pseudo-module
+
+        // CryptoManager
+        bind(CryptoManager.class).to(BouncyCastleCryptoManager.class).asEagerSingleton();
+
+        // Tier-2 generators
+        bind(X509ExtensionUtil.class);
 
         bind(AnonymousCertificateGenerator.class);
         bind(EntitlementCertificateGenerator.class);
@@ -491,6 +502,7 @@ public class CandlepinModule extends AbstractModule {
         bind(ConsumerTypeExporter.class);
         bind(ConsumerExporter.class);
         bind(RulesExporter.class);
+        bind(SchemeFileExporter.class);
     }
 
     private void configureActiveMQComponents() {
