@@ -18,11 +18,12 @@ import org.candlepin.dto.api.client.v1.CloudAuthenticationResultDTO;
 import org.candlepin.dto.api.client.v1.CloudRegistrationDTO;
 import org.candlepin.invoker.client.ApiClient;
 import org.candlepin.resource.client.v1.CloudRegistrationApi;
+import org.candlepin.spec.bootstrap.data.builder.CloudRegistrations;
 
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ObjectNode;
 
-import java.util.Base64;
+import java.util.Objects;
+
 
 
 /**
@@ -31,11 +32,16 @@ import java.util.Base64;
  */
 public class CloudRegistrationClient extends CloudRegistrationApi {
 
-    private ObjectMapper mapper;
+    private static final int CLOUDREG_V1 = 1;
+    private static final int CLOUDREG_V2 = 2;
+
+    private final ObjectMapper mapper;
+
 
     public CloudRegistrationClient(ApiClient client, ObjectMapper mapper) {
         super(client);
-        this.mapper = mapper;
+
+        this.mapper = Objects.requireNonNull(mapper);
     }
 
     /**
@@ -53,7 +59,30 @@ public class CloudRegistrationClient extends CloudRegistrationApi {
      * @return the authentication token
      */
     public String cloudAuthorize(String metadata, String type, String signature) {
-        return super.cloudAuthorize(generateToken(metadata, type, signature), 1);
+        CloudRegistrationDTO dto = new CloudRegistrationDTO()
+            .type(type)
+            .metadata(metadata)
+            .signature(signature);
+
+        return super.cloudAuthorize(dto, CLOUDREG_V1);
+    }
+
+    /**
+     * Verifies provided cloud registration data and returns an authentication token using version two
+     * logic.
+     *
+     * @param registrationDto
+     *  a CloudRegistrationDTO instance to send as input
+     *
+     * @return
+     *  a CloudAuthenticationResultDTO containing the authentication token and related metadata
+     */
+    public CloudAuthenticationResultDTO cloudAuthorizeV2(CloudRegistrationDTO registrationDto) {
+        String json = super.cloudAuthorize(registrationDto, CLOUDREG_V2);
+
+        return json != null && !json.isBlank() ?
+            this.mapper.readValue(json, CloudAuthenticationResultDTO.class) :
+            null;
     }
 
     /**
@@ -79,37 +108,13 @@ public class CloudRegistrationClient extends CloudRegistrationApi {
      */
     public CloudAuthenticationResultDTO cloudAuthorizeV2(String accountId, String instanceId,
         String offeringId, String type, String signature) {
-        String metadata = buildMetadataJson(accountId, instanceId, offeringId);
-        String jsonString = super.cloudAuthorize(generateToken(metadata, type, signature), 2);
-        if (jsonString == null || jsonString.isBlank()) {
-            return null;
-        }
 
-        return mapper.readValue(jsonString, CloudAuthenticationResultDTO.class);
-    }
-
-    private String buildMetadataJson(String accountId, String instanceId, String offeringId) {
-        ObjectNode objectNode = mapper.createObjectNode();
-        if (accountId != null) {
-            objectNode.put("accountId", accountId);
-        }
-
-        if (instanceId != null) {
-            objectNode.put("instanceId", instanceId);
-        }
-
-        if (offeringId != null) {
-            objectNode.put("cloudOfferingId", offeringId);
-        }
-
-        return Base64.getEncoder().encodeToString(objectNode.toString().getBytes());
-    }
-
-    private CloudRegistrationDTO generateToken(String metadata, String type, String signature) {
-        return new CloudRegistrationDTO()
-            .type(type)
-            .metadata(metadata)
+        CloudRegistrationDTO dto = CloudRegistrations.forOffering(type, accountId, instanceId, offeringId)
             .signature(signature);
+
+        return this.cloudAuthorizeV2(dto);
     }
+
+
 
 }
