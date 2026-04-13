@@ -32,7 +32,7 @@
       when:
         - candlepin_home_dir.stat.isdir
   environment:
-    JAVA_HOME: "/usr/lib/jvm/java"
+    JAVA_HOME: "/usr/lib/jvm/java-25-openjdk"
   vars:
     cp_deploy_script: "{{ candlepin_home }}/bin/deployment/deploy"
   tags:

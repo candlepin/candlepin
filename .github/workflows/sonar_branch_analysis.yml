@@ -18,7 +18,7 @@ on:
 
 env:
   JAVA_DISTRIBUTION: 'temurin'
-  JAVA_VERSION: '17'
+  JAVA_VERSION: '25'
 
 # Cancel in-progress sonar branch analysis workflows. We only care about analyzing the latest commit.
 concurrency:

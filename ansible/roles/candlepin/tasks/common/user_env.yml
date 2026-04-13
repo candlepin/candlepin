@@ -6,7 +6,7 @@
   ansible.builtin.lineinfile:
     path: "{{ candlepin_user_home }}/.bashrc"
     regexp: "^export JAVA_HOME="
-    line: "export JAVA_HOME=/usr/lib/jvm/java"
+    line: "export JAVA_HOME=/usr/lib/jvm/java-25-openjdk"
     state: present
     create: true
     mode: '0644'

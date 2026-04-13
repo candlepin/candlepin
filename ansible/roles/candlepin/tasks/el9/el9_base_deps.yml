@@ -35,8 +35,7 @@
       - gcc
       - gettext
       - git
-      - java-17-openjdk-devel
-      - java-25-openjdk-headless
+      - java-25-openjdk-devel
       - make
       - openssl
       - tomcat
@@ -69,14 +68,14 @@
 # root permissions. Using become and the raw shell command invokes these in root's environment,
 # which will fail at best, or silently map the wrong command at worst.
 - name: "Configure alternatives: java"
-  ansible.builtin.shell: sh -c 'sudo alternatives --set java /usr/lib/jvm/java-17-openjdk-*/bin/java'
+  ansible.builtin.shell: sh -c 'sudo alternatives --install /usr/bin/java java /usr/lib/jvm/java-25-openjdk-*/bin/java 1'
   changed_when: false
   tags:
     - base_deps
     - candlepin
 
 - name: "Configure alternatives: javac"
-  ansible.builtin.shell: sh -c 'sudo alternatives --set javac /usr/lib/jvm/java-17-openjdk-*/bin/javac'
+  ansible.builtin.shell: sh -c 'sudo alternatives --install /usr/bin/javac javac /usr/lib/jvm/java-25-openjdk-*/bin/javac 1'
   changed_when: false
   tags:
     - base_deps
