@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.7.5
+Version: 4.8.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,110 @@ fi
 
 #raw
 %changelog
+* Mon Apr 13 2026 candlepin-bot 4.8.0-1
+- Add new translations using Weblate (hosted@weblate.org)
+- Renamed the ConsumerClient.exportCertificates utility function
+  (crog@redhat.com)
+- CANDLEPIN-1080: Updated manifest import signature validation logic
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-1180: Fixed signature validation error in multi-cert envs
+  (crog@redhat.com)
+- CANDLEPIN-1075: Updated AnonCertGenerator to be scheme-aware
+  (crog@redhat.com)
+- CANDLEPIN-1179: Fixed bug allowing non-positive cert serials
+  (crog@redhat.com)
+- CANDLEPIN-1158: Bump Java requirement from 17 to 25 for RPM
+  (nmoumoul@redhat.com)
+- Added scheme validation to BouncyCastleCryptoManager (crog@redhat.com)
+- CANDLEPIN-1173: Moved signature.json into consumer_export.zip
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-1170: Added spec tests for scheme-aware consumer cert generation
+  (crog@redhat.com)
+- CANDLEPIN-1169: Added scheme negotiation feature flag (crog@redhat.com)
+- CANDLEPIN-1079: Updated manifest export signature creation
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-1159: Bump release container to Java 25 (sbakaj@redhat.com)
+- CANDLEPIN-1076: Added crypto capabilities ueber cert creation
+  (crog@redhat.com)
+- Fixed ML-DSA algorithm names in Candlepin config template (crog@redhat.com)
+- CANDLEPIN-1156: Updated UeberCertificateGenerator to be scheme aware
+  (ceiu@cericlabs.com)
+- CANDLEPIN-1078: Added consumer crypto capabilities to the API
+  (crog@redhat.com)
+- CANDLEPIN-1152: Setup tomcat-native/APR with ML-DSA+RSA on Java 25
+  (nmoumoul@redhat.com)
+- CANDLEPIN-1155: Updated entitlement cert generator to be scheme-aware
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-1078: Added support for storing consumer crypto capabilities
+  (crog@redhat.com)
+- CANDLEPIN-1154: Updated SCACertificateGenerator to be scheme-aware
+  (crog@redhat.com)
+- Updated checked functional utility classes (crog@redhat.com)
+- CANDLEPIN-1153: Updated IdentityCertificateGenerator to be scheme-aware
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-1135: Added crypto config for token-based auth
+  (joshmalbrecht@gmail.com)
+- Added legacy scheme reading tests to the SchemeReaderTest suite
+  (crog@redhat.com)
+- CANDLEPIN-1134: Updated KeyPairGenerator to be scheme aware (crog@redhat.com)
+- CANDLEPIN-1072: Added the CryptoManager interface (crog@redhat.com)
+- CANDLEPIN-1128: Added ML-DSA certificate generation (joshmalbrecht@gmail.com)
+- Updated gitleaks' allowlist to include the private key test suite
+  (crog@redhat.com)
+- CANDLEPIN-1074: Added the SchemeReader util for reading scheme config
+  (crog@redhat.com)
+- CANDLEPIN-1130: Refactored PrivateKeyReader and its implementations
+  (crog@redhat.com)
+- Updated core configuration to support optional configuration keys
+  (crog@redhat.com)
+- CANDLEPIN-1073: Updated KeyPairData to include algorithm information
+  (sbakaj@redhat.com)
+- CANDLEPIN-1069: Added the SignatureValidator interface and implementation
+  (crog@redhat.com)
+- CANDLEPIN-1068: Created Signer interface (joshmalbrecht@gmail.com)
+- CANDLEPIN-1071: Created X509CertificateBuilder interface
+  (joshmalbrecht@gmail.com)
+- Bump org.ehcache:ehcache from 3.11.1 to 3.12.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 11.0.20 to 11.0.21
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mariadb.jdbc:mariadb-java-client from 3.5.7 to 3.5.8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson from 3.1.0 to 3.1.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.openapitools:jackson-databind-nullable from 0.2.9 to 0.2.10
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump openapi-generator from 7.20.0 to 7.21.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump artemis from 2.52.0 to 2.53.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 11.0.18 to 11.0.20
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Fixed script injection vulnerability in set_vars action (CWE-78)
+  (sbakaj@redhat.com)
+- Bump gradle-wrapper from 9.4.0 to 9.4.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1036: Fixed flaky VirtSpecTest test (joshmalbrecht@gmail.com)
+- Added the @Singleton annotation to NoopEventSink (crog@redhat.com)
+- CANDLEPIN-1163: Update for migration to Atlassian cloud jira
+  (nmoumoul@redhat.com)
+- Bump jaxb from 4.0.6 to 4.0.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1164: Added last checkin filtering to GET /consumers
+  (crog@redhat.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.22.0 to 5.23.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1140: Unified config using Gradle generateConfig across all
+  environments (sbakaj@redhat.com)
+- Add candlepin-4.7-HOTFIX branch to the i18n job (nmoumoul@redhat.com)
+- Update artemis namespace to org.apache.artemis (nmoumoul@redhat.com)
+- Bump gradle-wrapper from 9.3.1 to 9.4.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+
 * Thu Mar 05 2026 candlepin-bot 4.7.5-1
 - Add new translations using Weblate (hosted@weblate.org)
 - Bump org.sonarqube from 7.2.2.6593 to 7.2.3.7755
