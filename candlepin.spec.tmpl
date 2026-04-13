@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.6.5
+Version: 4.6.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,13 @@ fi
 
 #raw
 %changelog
+* Mon Apr 13 2026 candlepin-bot 4.6.6-1
+- Add new translations using Weblate (hosted@weblate.org)
+- CANDLEPIN-1163: Update for migration to Atlassian cloud jira
+  (nmoumoul@redhat.com)
+- CANDLEPIN-1145: Force upgrade mchance-c3p0 & mchange-commons-java
+  (nmoumoul@redhat.com)
+
 * Mon Feb 23 2026 candlepin-bot 4.6.5-1
 - CANDLEPIN-1138: Strip upstreamConsumer from consumer owner response
   (sbakaj@redhat.com)
