@@ -6,7 +6,7 @@ USER root
 
 # Update and install dependencies
 RUN dnf -y --setopt install_weak_deps=False update && \
-    dnf -y --setopt install_weak_deps=False install java-17-openjdk-devel openssl wget unzip && \
+    dnf -y --setopt install_weak_deps=False install java-25-openjdk-devel openssl wget unzip && \
     dnf clean all
 
 # Prepare Tomcat

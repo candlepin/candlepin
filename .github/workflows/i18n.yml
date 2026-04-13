@@ -18,7 +18,7 @@ jobs:
         branch: [main, candlepin-4.4-HOTFIX, candlepin-4.6-HOTFIX]
         include:
           - branch: main
-            java-version: 17
+            java-version: 25
           - branch: candlepin-4.4-HOTFIX
             java-version: 17
           - branch: candlepin-4.6-HOTFIX
