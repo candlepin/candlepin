@@ -24,9 +24,9 @@ test-logger = { id = "com.adarshr.test-logger", version.ref = "test-logger" }
 artemis-server = { module = "org.apache.artemis:artemis-server", version.ref = "artemis" }
 artemis-stomp = { module = "org.apache.artemis:artemis-stomp-protocol", version.ref = "artemis" }
 assertj = { module = "org.assertj:assertj-core", version = "3.27.7" }
-bouncycastle-prov = { module = "org.bouncycastle:bcprov-jdk18on", version = "1.83"}
-bouncycastle-pkix = { module = "org.bouncycastle:bcpkix-jdk18on", version = "1.83"}
-bouncycastle-tls = { module = "org.bouncycastle:bctls-jdk18on", version = "1.83"}
+bouncycastle-prov = { module = "org.bouncycastle:bcprov-jdk18on", version = "1.84"}
+bouncycastle-pkix = { module = "org.bouncycastle:bcpkix-jdk18on", version = "1.84"}
+bouncycastle-tls = { module = "org.bouncycastle:bctls-jdk18on", version = "1.84"}
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.3" }
 checkstyle = { module = "com.puppycrawl.tools:checkstyle", version = "12.3.1" }
 checkstyle-sevntu = { module = "com.github.sevntu-checkstyle:sevntu-checks", version = "1.44.1" }
