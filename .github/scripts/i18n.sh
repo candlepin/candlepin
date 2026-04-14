@@ -23,6 +23,6 @@ if [ ! -z "$files" ]; then
   git -c "user.name=$GIT_AUTHOR_NAME" -c "user.email=$GIT_AUTHOR_EMAIL" commit -m "updated po/keys.pot template"
   evalrc $? "Git commit was not successful for branch $GIT_BRANCH."
 
-  git push https://${GITHUB_TOKEN}@github.com/candlepin/candlepin $GIT_BRANCH
+  git push https://${CANDLEPIN_BOT_TOKEN}@github.com/candlepin/candlepin $GIT_BRANCH
   evalrc $? "Git push was not successful for branch $GIT_BRANCH."
 fi

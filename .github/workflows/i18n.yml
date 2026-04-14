@@ -30,7 +30,7 @@ jobs:
       - name: Mask secrets
         shell: bash
         run: |
-          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
+          echo "::add-mask::${{ secrets.CANDLEPIN_BOT_TOKEN }}"
 
       - name: Install dependencies
         shell: bash
@@ -48,7 +48,7 @@ jobs:
           java-version: ${{ matrix.java-version }}
           set-safe-directory: $GITHUB_WORKSPACE
 
-      - name: Run internationlization
+      - name: Run internationalization
         shell: bash
         run: |
           chmod +x ./.github/scripts/i18n.sh
@@ -57,5 +57,5 @@ jobs:
           GIT_AUTHOR_EMAIL: '3229038+candlepin-bot@users.noreply.github.com'
           GIT_AUTHOR_NAME: 'candlepin-bot'
           GIT_BRANCH: ${{ matrix.branch }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CANDLEPIN_BOT_TOKEN: ${{ secrets.CANDLEPIN_BOT_TOKEN }}
 
