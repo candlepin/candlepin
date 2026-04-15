@@ -24,7 +24,7 @@ COPY ${WAR_FILE} ./candlepin.war
 RUN mkdir -p /app/certs
 WORKDIR /app/certs
 COPY ./bin/deployment/gen_certs.sh .
-RUN ./gen_certs.sh --cert_dir /app/certs --hostname candlepin --force && \
+RUN ./gen_certs.sh --pq --cert_dir /app/certs --hostname candlepin --force && \
     rm gen_certs.sh
 
 ################################# Production Image #################################
