@@ -20,9 +20,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.any;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockingDetails;
 
@@ -801,6 +801,56 @@ public class SchemeReaderTest {
         assertThat(output)
             .returns(SchemeReader.LEGACY_SCHEME, Scheme::name)
             .returns(scheme.privateKey(), Scheme::privateKey)
+            .returns(scheme.certificate(), Scheme::certificate)
+            .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_ALGORITHM, Scheme::keyAlgorithm)
+            .extracting(Scheme::keySize, as(InstanceOfAssertFactories.OPTIONAL))
+            .hasValue(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_SIZE);
+    }
+
+    @Test
+    public void testLegacySchemeUsesLegacySchemeKeyPassword() throws Exception {
+        DevConfig config = new DevConfig();
+        Scheme scheme = CryptoUtil.generateRsaScheme();
+
+        writeSchemeConfig(config, scheme, SchemeReader.LEGACY_SCHEME, "legacy-scheme-password");
+        config.setProperty(ConfigProperties.LEGACY_CA_KEY, "some-path");
+        config.setProperty(ConfigProperties.LEGACY_CA_KEY_PASSWORD, "legacy-ca-password");
+
+        SchemeReader reader = this.buildSchemeReader(config);
+        Scheme output = reader.readDefaultScheme();
+
+        assertThat(output)
+            .returns(SchemeReader.LEGACY_SCHEME, Scheme::name)
+            .returns(scheme.privateKey(), Scheme::privateKey)
+            .returns(scheme.certificate(), Scheme::certificate)
+            .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_ALGORITHM, Scheme::keyAlgorithm)
+            .extracting(Scheme::keySize, as(InstanceOfAssertFactories.OPTIONAL))
+            .hasValue(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_SIZE);
+    }
+
+    @Test
+    public void testLegacySchemeShouldFallBackToLegacyKeyPathAndPassword() throws Exception {
+        DevConfig config = new DevConfig();
+        Scheme scheme = CryptoUtil.generateRsaScheme();
+
+        writeSchemeConfig(config, scheme, SchemeReader.LEGACY_SCHEME, "password");
+        config.clearProperty(ConfigProperties.schemeConfig(SchemeReader.LEGACY_SCHEME,
+            ConfigProperties.CRYPTO_SCHEME_KEY));
+
+        PrivateKey expectedPrivateKey = CryptoUtil.generateKeyPair(scheme)
+            .getPrivate();
+        String actualPassword = TestUtil.randomString();
+        File privateKeyFile = CryptoUtil.writePrivateKeyToFile(expectedPrivateKey, actualPassword);
+
+        config.setProperty(ConfigProperties.LEGACY_CA_KEY, privateKeyFile.getCanonicalPath());
+        config.setProperty(ConfigProperties.LEGACY_CA_KEY_PASSWORD, actualPassword);
+
+        SchemeReader reader = this.buildSchemeReader(config);
+        Scheme output = reader.readDefaultScheme();
+
+        assertThat(output)
+            .returns(SchemeReader.LEGACY_SCHEME, Scheme::name)
+            .returns(Optional.of(expectedPrivateKey), Scheme::privateKey)
             .returns(scheme.certificate(), Scheme::certificate)
             .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_ALGORITHM, Scheme::keyAlgorithm)
             .extracting(Scheme::keySize, as(InstanceOfAssertFactories.OPTIONAL))
