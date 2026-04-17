@@ -59,6 +59,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
 import javax.persistence.LockModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
@@ -541,6 +542,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             return em.createQuery(query).getSingleResult();
         }
         catch (NoResultException e) {
+            return null;
+        }
+        catch (EntityNotFoundException e) {
+            // Handle concurrently deleted entities that are eagerly fetched
             return null;
         }
     }
