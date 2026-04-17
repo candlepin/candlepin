@@ -158,11 +158,24 @@ public class SchemeReader {
 
         String keyPath = this.config.getOptionalString(ConfigProperties.schemeConfig(LEGACY_SCHEME,
             ConfigProperties.CRYPTO_SCHEME_KEY))
-            .or(() -> this.config.getOptionalString(ConfigProperties.LEGACY_CA_KEY))
-            .orElse(LEGACY_SCHEME_DEFAULT_KEY);
+            .orElse(null);
 
-        Optional<String> keyPass = this.config.getOptionalString(ConfigProperties.schemeConfig(LEGACY_SCHEME,
-            ConfigProperties.CRYPTO_SCHEME_KEY_PASSWORD));
+        // The key path and key password values should be derived from the same configuration source.
+        // So, if we have a valid key path from the legacy scheme, we should only attempt to retrieve the
+        // key password from the legacy scheme. If the legacy scheme does not have a key path, attempt to
+        // retrieve the key path and password from the legacy CA configurations.
+
+        Optional<String> keyPass = Optional.empty();
+        if (keyPath != null) {
+            keyPass = this.config.getOptionalString(ConfigProperties.schemeConfig(LEGACY_SCHEME,
+                ConfigProperties.CRYPTO_SCHEME_KEY_PASSWORD));
+        }
+        else {
+            keyPath = this.config.getOptionalString(ConfigProperties.LEGACY_CA_KEY)
+                .orElse(LEGACY_SCHEME_DEFAULT_KEY);
+
+            keyPass = this.config.getOptionalString(ConfigProperties.LEGACY_CA_KEY_PASSWORD);
+        }
 
         String signatureAlgorithm = this.config.getOptionalString(ConfigProperties.schemeConfig(LEGACY_SCHEME,
             ConfigProperties.CRYPTO_SCHEME_SIGNATURE_ALGORITHM))
