@@ -8,7 +8,7 @@
 
     <changeSet id="202601081203540-1" author="sbakaj">
         <addColumn tableName="cp_key_pair">
-            <column name="algorithm" type="VARCHAR(64)" value="rsa"/>
+            <column name="algorithm" type="VARCHAR(64)"/>
         </addColumn>
     </changeSet>
 
