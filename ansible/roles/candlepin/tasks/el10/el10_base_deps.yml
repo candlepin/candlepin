@@ -57,7 +57,7 @@
 
 - name: "Enable post-quantum crypto policy"
   become: true
-  ansible.builtin.command: update-crypto-policies --set DEFAULT:PQ
+  ansible.builtin.command: update-crypto-policies --set DEFAULT:TEST-PQ
   changed_when: true
   tags:
     - base_deps

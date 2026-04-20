@@ -72,7 +72,6 @@ def configure_ansible_provisioning(vm_config)
 end
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.synced_folder ".", "/vagrant", type: "sshfs", :owner => 'vagrant', :group => 'vagrant'
   config.vm.host_name = "candlepin.example.com"
   config.ssh.forward_agent = true
 
@@ -96,12 +95,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     vm_config.vm.box = "centos.cloud/centos9s"
     vm_config.vm.box_url = "https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-Vagrant-9-latest.x86_64.vagrant-libvirt.box"
     vm_config.vm.host_name = "candlepin-el9.example.com"
-
-    # Increase box disk size and resize partitions accordingly
+    vm_config.vm.synced_folder ".", "/vagrant", type: "sshfs", :owner => 'vagrant', :group => 'vagrant'
+    
     vm_config.vm.disk :disk, size: "100GB", primary: true
     vm_config.vm.provision "shell", inline: "echo '- +' | sfdisk --no-reread -N 1 /dev/vda && partprobe && resize2fs /dev/vda1"
-
-    # Update DNF CA certs
     vm_config.vm.provision "shell", inline: "dnf update -y dnf ca-certificates"
 
     configure_ansible_provisioning(vm_config)
@@ -109,14 +106,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.define("el10", autostart: false) do |vm_config|
     vm_config.vm.box = "centos.cloud/centos10s"
-    vm_config.vm.box_url = "https://cloud.centos.org/centos/10-stream/x86_64/images/CentOS-Stream-Vagrant-10-20250506.2.x86_64.vagrant-libvirt.box"
+    vm_config.vm.box_url = "https://cloud.centos.org/centos/10-stream/x86_64/images/CentOS-Stream-Vagrant-10-latest.x86_64.vagrant-libvirt.box"
     vm_config.vm.host_name = "candlepin-el10.example.com"
-
-    # Increase box disk size and resize partitions accordingly
+    vm_config.vm.synced_folder ".", "/vagrant", :owner => 'vagrant', :group => 'vagrant'
+  
     vm_config.vm.disk :disk, size: "100GB", primary: true
-    vm_config.vm.provision "shell", inline: "echo '- +' | sfdisk --no-reread -N 1 /dev/vda && partprobe && resize2fs /dev/vda1"
-
-    # Update DNF CA certs
+    # vm_config.vm.provision "shell", inline: "echo '- +' | sfdisk --no-reread -N 1 /dev/vda && partprobe && resize2fs /dev/vda1"
     vm_config.vm.provision "shell", inline: "dnf update -y dnf ca-certificates"
 
     configure_ansible_provisioning(vm_config)

@@ -161,5 +161,5 @@ below [3].
 
 ## Resources
 1. https://www.vagrantup.com/docs/cli
-1. https://www.candlepinproject.org/docs/candlepin/developer_deployment.html
-1. https://docs.ansible.com/ansible/latest/user_guide/playbooks_reuse_roles.html
+2. https://www.candlepinproject.org/docs/candlepin/developer_deployment.html
+3. https://docs.ansible.com/ansible/latest/user_guide/playbooks_reuse_roles.html
