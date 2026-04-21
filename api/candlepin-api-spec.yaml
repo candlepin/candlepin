@@ -614,6 +614,53 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /cloud/accounts/offerings:
+    get:
+      operationId: getAccountOfferings
+      tags:
+        - cloud_registration
+      security: []
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
+      parameters:
+        - name: used_since
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - $ref: "#/components/parameters/paging_page"
+        - $ref: "#/components/parameters/paging_per_page"
+        - $ref: "#/components/parameters/paging_order"
+        - $ref: "#/components/parameters/paging_sort_by"
+      responses:
+        200:
+          description: List of ids for jobs associated with the cloud account id that were cancelled.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CloudAccountOfferingsDTO'
+        400:
+          description: Invalid date time provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid date time provided
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        500:
+          description: An unexpected exception has occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An unexpected exception has occurred while retrieving cloud offerings
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+
   /cloud/consumers/anonymous:
     delete:
       description: Removes Anonymous Consumers (for testing purposes only)
@@ -9029,6 +9076,23 @@ components:
           minLength: 1
         signature:
           type: string
+
+    CloudAccountOfferingsDTO:
+      description: Cloud offerings that is used by a cloud account
+      required:
+        - accountId
+        - provider
+        - offerings
+      properties:
+        accountId:
+          type: string
+        provider:
+          type: string
+        offerings:
+          type: object
+          additionalProperties:
+            type: string
+            format: date-time
 
     CloudAuthenticationResultDTO:
       description: Contains the result of authenticating the provided cloud registration information.

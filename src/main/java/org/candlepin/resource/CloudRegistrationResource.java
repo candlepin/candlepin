@@ -25,6 +25,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.SecurityHole;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.dto.api.server.v1.CloudAccountOfferingsDTO;
 import org.candlepin.dto.api.server.v1.CloudAuthenticationResultDTO;
 import org.candlepin.dto.api.server.v1.CloudRegistrationDTO;
 import org.candlepin.exceptions.BadRequestException;
@@ -50,11 +51,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
@@ -384,5 +387,13 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
 
             throw new NotAuthorizedException(errmsg);
         }
+    }
+
+    @Override
+    public Stream<CloudAccountOfferingsDTO> getAccountOfferings(
+        OffsetDateTime usedSince, Integer page, Integer perPage, String order,
+        String sortBy) {
+
+        throw new UnsupportedOperationException("Unimplemented method 'getAccountOfferings'");
     }
 }
