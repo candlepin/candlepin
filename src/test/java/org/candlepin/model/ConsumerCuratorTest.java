@@ -22,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -43,6 +46,7 @@ import org.candlepin.util.PropertyValidationException;
 import org.candlepin.util.Util;
 
 import org.assertj.core.api.Assertions;
+import org.hibernate.query.spi.QueryImplementor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -69,6 +73,8 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
+import javax.persistence.criteria.CriteriaQuery;
 
 public class ConsumerCuratorTest extends DatabaseTestFixture {
 
@@ -330,6 +336,22 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         for (Consumer consumer : expected) {
             assertTrue(output.contains(consumer));
         }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testGetConsumerReturnsNullWhenEntityNotFoundExceptionIsThrown() {
+        ConsumerCurator spyCurator = Mockito.spy(this.consumerCurator);
+        EntityManager spyEntityManager = Mockito.spy(this.getEntityManager());
+        doReturn(spyEntityManager).when(spyCurator).getEntityManager();
+
+        QueryImplementor<Consumer> mockQuery = Mockito.mock(QueryImplementor.class);
+        doReturn(mockQuery).when(spyEntityManager).createQuery(any(CriteriaQuery.class));
+        doThrow(EntityNotFoundException.class).when(mockQuery).getSingleResult();
+
+        Consumer actual = spyCurator.getConsumer("uuid");
+
+        assertNull(actual);
     }
 
     @Test
