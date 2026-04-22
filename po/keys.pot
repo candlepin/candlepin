@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-21 12:34+0200\n"
+"POT-Creation-Date: 2026-04-22 11:37+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -439,13 +439,13 @@ msgstr ""
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr ""
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:859
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:865
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr ""
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1354
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1364
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1360
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1370
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:166
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."
@@ -576,8 +576,8 @@ msgstr ""
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
 msgid ""
 "Guest has not been reported on any host and is using a temporary unmapped "
-"guest subscription. For more information, please see https://"
-"access.redhat.com/solutions/1592573"
+"guest subscription. For more information, please see https://access.redhat."
+"com/solutions/1592573"
 msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
@@ -1911,8 +1911,8 @@ msgstr ""
 msgid ""
 "Your subscription redemption is being processed and should be available "
 "soon. You will be notified via email once it is available. If you have any "
-"questions, additional information can be found here: https://"
-"access.redhat.com/kb/docs/DOC-53864."
+"questions, additional information can be found here: https://access.redhat."
+"com/kb/docs/DOC-53864."
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
