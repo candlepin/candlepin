@@ -39,6 +39,7 @@ import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
+import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.Scheme;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -58,6 +59,7 @@ import org.xnap.commons.i18n.I18n;
 
 import tools.jackson.databind.ObjectMapper;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -69,6 +71,7 @@ import java.io.Reader;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -145,6 +148,7 @@ public class Importer {
     private final ImportRecordCurator importRecordCurator;
     private final SubscriptionReconciler subscriptionReconciler;
     private final ModelTranslator translator;
+    private final CertificateReader certificateReader;
 
     @Inject
     public Importer(
@@ -164,7 +168,8 @@ public class Importer {
         @Named("ImportObjectMapper") ObjectMapper mapper,
         ImportRecordCurator importRecordCurator,
         SubscriptionReconciler subscriptionReconciler,
-        ModelTranslator translator) {
+        ModelTranslator translator,
+        CertificateReader certificateReader) {
 
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.rulesImporter = Objects.requireNonNull(rulesImporter);
@@ -183,6 +188,7 @@ public class Importer {
         this.subscriptionReconciler = Objects.requireNonNull(subscriptionReconciler);
         this.translator = Objects.requireNonNull(translator);
         this.cryptoManager = Objects.requireNonNull(cryptoManager);
+        this.certificateReader = Objects.requireNonNull(certificateReader);
     }
 
     /**
@@ -501,7 +507,15 @@ public class Importer {
             SchemeFile schemeFile = this.mapper
                 .readValue(zipFile.getInputStream(schemeEntry), SchemeFile.class);
 
-            return Optional.of(SchemeFile.toScheme(schemeFile));
+            byte[] decoded = Base64.getDecoder().decode(schemeFile.certificate());
+            X509Certificate certificate = certificateReader.read(new ByteArrayInputStream(decoded));
+
+            return Optional.of(new Scheme.Builder()
+                .setCertificate(certificate)
+                .setName(schemeFile.name())
+                .setKeyAlgorithm(schemeFile.keyAlgorithm())
+                .setSignatureAlgorithm(schemeFile.signatureAlgorithm())
+                .build());
         }
     }
 
