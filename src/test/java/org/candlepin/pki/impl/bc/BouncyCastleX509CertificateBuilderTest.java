@@ -138,9 +138,19 @@ public class BouncyCastleX509CertificateBuilderTest {
 
         KeyUsage keyUsage = KeyUsage.fromExtensions(bcExtensions);
 
+        // The key usage extension should only set the digital signature bit
         assertTrue(keyUsage.hasUsages(KeyUsage.digitalSignature));
-        assertTrue(keyUsage.hasUsages(KeyUsage.keyEncipherment));
-        assertTrue(keyUsage.hasUsages(KeyUsage.dataEncipherment));
+
+        // Impl note: these *could* be OR'd together to do this check in a single call, but this is probably
+        // clearer, and will be easier to port away from BC-specific test logic.
+        assertFalse(keyUsage.hasUsages(KeyUsage.cRLSign));
+        assertFalse(keyUsage.hasUsages(KeyUsage.dataEncipherment));
+        assertFalse(keyUsage.hasUsages(KeyUsage.decipherOnly));
+        assertFalse(keyUsage.hasUsages(KeyUsage.encipherOnly));
+        assertFalse(keyUsage.hasUsages(KeyUsage.keyAgreement));
+        assertFalse(keyUsage.hasUsages(KeyUsage.keyCertSign));
+        assertFalse(keyUsage.hasUsages(KeyUsage.keyEncipherment));
+        assertFalse(keyUsage.hasUsages(KeyUsage.nonRepudiation));
 
         // Verify the extended key usage is present, non-critical, and is configured correctly
         Extension exKeyUsageExt = bcExtensions.getExtension(Extension.extendedKeyUsage);

@@ -237,8 +237,7 @@ public class BouncyCastleX509CertificateBuilder implements X509CertificateBuilde
     }
 
     private void addKeyUsage(X509v3CertificateBuilder builder) {
-        KeyUsage usage = new KeyUsage(KeyUsage.digitalSignature |
-            KeyUsage.keyEncipherment | KeyUsage.dataEncipherment);
+        KeyUsage usage = new KeyUsage(KeyUsage.digitalSignature);
         this.addExtension(builder, Extension.keyUsage, true, usage);
 
         ExtendedKeyUsage exUsage = new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth);
