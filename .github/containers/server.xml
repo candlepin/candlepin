@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Server port="8005" shutdown="SHUTDOWN">
   <Listener className="org.apache.catalina.startup.VersionLoggerListener" />
-  <Listener className="org.apache.catalina.core.AprLifecycleListener" />
+  <Listener className="org.apache.catalina.core.OpenSSLLifecycleListener" />
   <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
   <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
   <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
@@ -16,7 +16,7 @@
   <Service name="Catalina">
 
     <Connector port="8443"
-        protocol="org.apache.coyote.http11.Http11AprProtocol"
+        protocol="org.apache.coyote.http11.Http11NioProtocol"
         scheme="https"
         secure="true"
         SSLEnabled="true"
@@ -26,7 +26,6 @@
 
             <SSLHostConfig certificateVerification="optional"
                 protocols="+TLSv1.2,+TLSv1.3"
-                sslProtocol="TLS"
                 caCertificateFile="/etc/candlepin/certs/candlepin-ca-bundle.crt">
 
                 <Certificate certificateFile="/etc/candlepin/certs/candlepin-mldsa-65-ca.crt"

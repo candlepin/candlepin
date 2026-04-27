@@ -10,7 +10,7 @@ RUN dnf -y --setopt install_weak_deps=False update && \
     dnf clean all
 
 # Prepare Tomcat
-ARG TOMCAT_VERSION=9.0.110
+ARG TOMCAT_VERSION=9.0.111
 COPY apache-tomcat-${TOMCAT_VERSION}.tar.gz /tmp/
 RUN tar xzf /tmp/apache-tomcat-${TOMCAT_VERSION}.tar.gz -C /tmp && \
     mkdir /opt/tomcat && \
@@ -37,7 +37,7 @@ USER root
 RUN dnf -y update && \
     dnf -y update ca-certificates && \
     dnf install -y epel-release && \
-    dnf install -y java-25-openjdk-headless tomcat-native openssl initscripts && \
+    dnf install -y java-25-openjdk-headless openssl openssl-devel initscripts && \
     dnf clean all
 
 # Enable post-quantum algorithms (ML-DSA, ML-KEM) for OpenSSL/TLS
