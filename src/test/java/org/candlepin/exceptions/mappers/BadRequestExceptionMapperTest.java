@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -19,8 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.jboss.resteasy.spi.BadRequestException;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * BadRequestExceptionMapperTest
@@ -31,7 +31,7 @@ public class BadRequestExceptionMapperTest extends TestExceptionMapperBase {
     @Test
     public void extractIllegalValue() {
         rem = injector.getInstance(BadRequestExceptionMapper.class);
-        String foo = "javax.ws.rs.SomeThing(\"paramName\") value is 'strVal' for";
+        String foo = "jakarta.ws.rs.SomeThing(\"paramName\") value is 'strVal' for";
         BadRequestException bre = new BadRequestException(foo);
         Response r = rem.toResponse(bre);
 

@@ -48,7 +48,7 @@ else
     DATABASE_SERVER="-Pdatabase_server=postgres"
     DB_HOST="postgres"
 fi
-CONTAINERFILE="${REPO_ROOT}/.github/containers/cs9.Containerfile"
+CONTAINERFILE="${REPO_ROOT}/.github/containers/cs10.Containerfile"
 
 # Extract the Tomcat version from the Containerfile
 TOMCAT_VERSION=$(sed -n 's/^ARG TOMCAT_VERSION=\([^ ]*\)/\1/p' "$CONTAINERFILE")
@@ -63,7 +63,7 @@ TARBALL_PATH="${REPO_ROOT}/${TARBALL}"
 
 if [ ! -f "$TARBALL_PATH" ]; then
     echo "Downloading Apache Tomcat ${TOMCAT_VERSION}..."
-    wget -q "https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/${TARBALL}" -O "$TARBALL_PATH"
+    wget -q "https://archive.apache.org/dist/tomcat/tomcat-10/v${TOMCAT_VERSION}/bin/${TARBALL}" -O "$TARBALL_PATH"
     echo "Downloaded: ${TARBALL_PATH}"
 else
     echo "Tomcat ${TOMCAT_VERSION} already cached: ${TARBALL_PATH}"

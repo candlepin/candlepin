@@ -16,7 +16,7 @@ package org.candlepin.model.exceptions;
 
 import java.util.Optional;
 
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.ManagedType;
 
 
 

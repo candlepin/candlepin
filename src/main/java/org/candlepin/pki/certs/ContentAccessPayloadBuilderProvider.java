@@ -21,8 +21,8 @@ import org.candlepin.util.X509V3ExtensionUtil;
 
 import java.util.Objects;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 
 

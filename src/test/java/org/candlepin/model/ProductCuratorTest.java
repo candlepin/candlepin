@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -56,9 +56,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.persistence.LockModeType;
-import javax.persistence.PersistenceException;
-import javax.validation.ConstraintViolationException;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceException;
+import jakarta.validation.ConstraintViolationException;
 
 
 public class ProductCuratorTest extends DatabaseTestFixture {
@@ -591,7 +591,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void normalCreate() {
         Product prod = new Product("cptest-label", "My Product");
         this.productCurator.create(prod);
@@ -609,7 +608,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test
     public void testProductNameRequired() {
         Product prod = new Product("some product id", null);
-        assertThrows(PersistenceException.class, () -> productCurator.create(prod, true));
+        assertThrows(ConstraintViolationException.class, () -> productCurator.create(prod, true));
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -29,8 +29,9 @@ import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+
 import javax.security.auth.x500.X500Principal;
 
 /**
@@ -38,7 +39,7 @@ import javax.security.auth.x500.X500Principal;
  * Remember, certs are easy.
  */
 public class SSLAuth extends ConsumerAuth {
-    private static final String CERTIFICATES_ATTR = "javax.servlet.request.X509Certificate";
+    private static final String CERTIFICATES_ATTR = "jakarta.servlet.request.X509Certificate";
     private static final String UUID_DN_ATTRIBUTE = "CN";
 
     private static Logger log = LoggerFactory.getLogger(SSLAuth.class);

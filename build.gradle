@@ -53,12 +53,12 @@ ext {
     // If MYSQL set up the mysql stuff else set up postgres (default)
     if (project.findProperty("database_server") == "mysql") {
         jdbc_driver_class = "org.mariadb.jdbc.Driver"
-        jdbc_dialect = "org.hibernate.dialect.MySQL5InnoDBDialect"
+        jdbc_dialect = "org.hibernate.dialect.MariaDBDialect"
         jdbc_quartz_driver_class = "org.quartz.impl.jdbcjobstore.StdJDBCDelegate"
         jdbc_url = "jdbc:mariadb://${db_host}/${db_name}"
     } else {
         jdbc_driver_class = "org.postgresql.Driver"
-        jdbc_dialect = "org.hibernate.dialect.PostgreSQL92Dialect"
+        jdbc_dialect = "org.hibernate.dialect.PostgreSQLDialect"
         jdbc_quartz_driver_class = "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate"
         jdbc_url = "jdbc:postgresql://${db_host}/${db_name}"
     }
@@ -97,14 +97,16 @@ dependencies {
     implementation(libs.jackson.yaml)
 
     // Bean validation API
-    implementation(libs.javax.validation)
+    implementation(libs.jakarta.validation)
 
-    // Javax
     implementation(libs.hibernate)
-    implementation(libs.javax.annotation)
+    implementation(libs.jakarta.annotation)
 
     // Liquibase
-    implementation(libs.liquibase)
+    implementation(libs.liquibase) {
+        // Exclude javax library pulled by liquibase which is incompatible with Jakarta EE
+        exclude group: 'javax.xml.bind', module: 'jaxb-api'
+    }
     implementation(libs.picocli)
 
     // Logging
@@ -123,13 +125,16 @@ dependencies {
     implementation(libs.resteasy.atom)
     implementation(libs.resteasy.guice)
     implementation(libs.resteasy.multipart)
-    implementation(libs.resteasy.validator)
+    implementation(libs.resteasy.validator) {
+        // We don't need resteasy-cdi, since we use Guice
+        exclude group: 'org.jboss.resteasy', module: 'resteasy-cdi'
+    }
 
-    implementation(libs.javax.rs)
+    implementation(libs.jakarta.rs)
 
     // Sun jaxb
-    implementation(libs.jaxb)
-    implementation(libs.jaxb.core)
+    implementation(libs.jaxb.api)
+    implementation(libs.jaxb.impl)
 
     // Swagger
     implementation(libs.swagger)
@@ -151,7 +156,11 @@ dependencies {
 
     // Ehcache (for use with hibernate primarily)
     implementation(libs.hibernate.jcache)
-    implementation(libs.ehcache)
+    // We need to specify the full dependency definition here because ehcache needs
+    // the 'jakarta' classifier in order to fetch the jakarta-compatible version of
+    // ehcache, but the libs.versions.toml format does not support classifiers
+    implementation "org.ehcache:ehcache:3.12.0:jakarta"
+
     implementation(libs.javax.cache)
 
     // Artemis server & client
@@ -181,14 +190,14 @@ dependencies {
     // OTEL
     implementation(libs.otel.annotation)
 
-    providedCompile(libs.javax.servlet)
+    providedCompile(libs.jakarta.servlet)
 
     // DB Drivers
     runtimeOnly(libs.postgresql)
     runtimeOnly(libs.mariadb)
 
     testRuntimeOnly(libs.hsqldb)
-    testRuntimeOnly(libs.javax.el)
+    testRuntimeOnly(libs.jakarta.el)
 
     // Core testing libraries
     // Junit 5
@@ -255,7 +264,8 @@ openApiGenerate {
             interfaceOnly: 'true',
             dateLibrary  : "java8",
             useTags      : "true",
-            containerDefaultToNull: "true"
+            containerDefaultToNull: "true",
+            useJakartaEe : "true"
     ]
     templateDir = rootProject.layout.projectDirectory.dir("buildSrc/src/main/resources/templates")
 }
@@ -427,7 +437,7 @@ war {
         String testExtRootPath = "${buildDir}/classes/java/main/org/candlepin/testext/";
         File[] packages = new File(testExtRootPath)
             .listFiles((FileFilter) File::isDirectory);
-
+ 
         packages.each { pkg ->
             if (!testexts.contains(pkg.getName())) {
                 rootSpec.exclude("**/testext/${pkg.getName()}/**");

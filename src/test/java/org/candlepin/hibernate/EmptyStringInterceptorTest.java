@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -23,13 +23,13 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Id;
-import javax.persistence.Persistence;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Id;
+import jakarta.persistence.Persistence;
+import jakarta.persistence.Table;
 
 /**
  * EmptyStringInterceptorTest
@@ -93,7 +93,7 @@ public class EmptyStringInterceptorTest {
 
     @Test
     public void testInterceptedEmptyStringPersistence() {
-        props.put("hibernate.ejb.interceptor",
+        props.put("hibernate.session_factory.interceptor",
             "org.candlepin.hibernate.EmptyStringInterceptor");
 
         emf = Persistence.createEntityManagerFactory("testingEmptyStringInterceptor", props);
@@ -111,7 +111,7 @@ public class EmptyStringInterceptorTest {
 
     @Test
     public void testInterceptedNullStringPersistence() {
-        props.put("hibernate.ejb.interceptor", "org.candlepin.hibernate.EmptyStringInterceptor");
+        props.put("hibernate.session_factory.interceptor", "org.candlepin.hibernate.EmptyStringInterceptor");
 
         emf = Persistence.createEntityManagerFactory("testingEmptyStringInterceptor", props);
         em = emf.createEntityManager();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -51,12 +51,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.persistence.LockModeType;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.From;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 
 
 
@@ -958,7 +958,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
             ids.add(TestUtil.randomString());
         }
 
-        Optional<Predicate> actual = ownerCurator.buildQueryArgumentInPredicate(root, ids);
+        Optional<Predicate> actual = ownerCurator.buildQueryArgumentInPredicate(root.get("id"), ids);
         assertThat(actual)
             .isNotEmpty()
             .containsInstanceOf(Predicate.class);

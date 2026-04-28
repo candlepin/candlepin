@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -19,7 +19,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.Writer;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 
 /**
