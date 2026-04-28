@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -16,7 +16,6 @@ package org.candlepin.hibernate;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.usertype.UserType;
 
 import java.io.Serializable;
@@ -33,7 +32,7 @@ import java.sql.Types;
  * database level to properly implement a unique constraint with empty and null values; but may have
  * other uses.
  */
-public class NullAsEmptyStringType implements UserType {
+public class NullAsEmptyStringType implements UserType<String> {
 
     /**
      * {@inheritDoc}
@@ -51,7 +50,7 @@ public class NullAsEmptyStringType implements UserType {
      * {@inheritDoc}
      */
     @Override
-    public Object deepCopy(Object value) {
+    public String deepCopy(String value) {
         // From the Hibernate docs: "It is not necessary to copy immutable objects, or null values,
         // in which case it is safe to simply return the argument."
 
@@ -62,7 +61,7 @@ public class NullAsEmptyStringType implements UserType {
      * {@inheritDoc}
      */
     @Override
-    public Serializable disassemble(Object value) {
+    public Serializable disassemble(String value) {
         if (value != null && !(value instanceof String)) {
             throw new IllegalStateException("value is not a string: " + value);
         }
@@ -74,7 +73,7 @@ public class NullAsEmptyStringType implements UserType {
      * {@inheritDoc}
      */
     @Override
-    public boolean equals(Object x, Object y) throws HibernateException {
+    public boolean equals(String x, String y) throws HibernateException {
         if (x == y) {
             return true;
         }
@@ -94,7 +93,7 @@ public class NullAsEmptyStringType implements UserType {
      * {@inheritDoc}
      */
     @Override
-    public int hashCode(Object x) throws HibernateException {
+    public int hashCode(String x) throws HibernateException {
         return x != null ? x.hashCode() : 0;
     }
 
@@ -110,11 +109,12 @@ public class NullAsEmptyStringType implements UserType {
      * {@inheritDoc}
      */
     @Override
-    public Object nullSafeGet(ResultSet resultSet, String[] names,
-        SharedSessionContractImplementor sscImplementor, Object owner) throws SQLException {
+    public String nullSafeGet(ResultSet resultSet, int position,
+         SharedSessionContractImplementor session, Object owner) throws SQLException {
+
+        String value = resultSet.getString(position);
 
         // Convert empty strings back to nulls
-        String value = StandardBasicTypes.STRING.nullSafeGet(resultSet, names[0], sscImplementor);
         return value != null && !value.isEmpty() ? value : null;
     }
 
@@ -122,19 +122,17 @@ public class NullAsEmptyStringType implements UserType {
      * {@inheritDoc}
      */
     @Override
-    public void nullSafeSet(PreparedStatement statement, Object value, int index,
-        SharedSessionContractImplementor sscImplementor)
-        throws HibernateException, SQLException {
+    public void nullSafeSet(PreparedStatement statement, String value, int index,
+        SharedSessionContractImplementor session) throws SQLException {
 
-        // Convert null values to empty strings; ignore everything else
-        StandardBasicTypes.STRING.nullSafeSet(statement, (value != null ? value : ""), index, sscImplementor);
+        statement.setString(index, value != null ? value : "");
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Object replace(Object original, Object target, Object owner) throws HibernateException {
+    public String replace(String original, String target, Object owner) throws HibernateException {
         // From the Hibernate docs: "For immutable objects, or null values, it is safe to simply
         // return the first parameter."
 
@@ -153,8 +151,8 @@ public class NullAsEmptyStringType implements UserType {
      * {@inheritDoc}
      */
     @Override
-    public int[] sqlTypes() {
-        return new int[] { Types.VARCHAR };
+    public int getSqlType() {
+        return Types.VARCHAR;
     }
 
 }

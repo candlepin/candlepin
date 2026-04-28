@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -30,7 +30,7 @@ import tools.jackson.databind.introspect.AnnotationIntrospectorPair;
 import tools.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.ser.std.SimpleFilterProvider;
-import tools.jackson.datatype.hibernate5.Hibernate5Module;
+import tools.jackson.datatype.hibernate6.Hibernate6Module;
 import tools.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
 
@@ -56,8 +56,8 @@ public class ObjectMapperFactory implements Provider<ObjectMapper> {
         // Note: Jdk8Module and JavaTimeModule are no longer needed in Jackson 3.x
         // as their functionality is built into jackson-databind
 
-        Hibernate5Module hbm = new Hibernate5Module();
-        hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
+        Hibernate6Module hbm = new Hibernate6Module();
+        hbm.enable(Hibernate6Module.Feature.FORCE_LAZY_LOADING);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
@@ -89,8 +89,8 @@ public class ObjectMapperFactory implements Provider<ObjectMapper> {
     }
 
     public static ObjectMapper getSyncObjectMapper(Configuration config) {
-        Hibernate5Module hbm = new Hibernate5Module();
-        hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
+        Hibernate6Module hbm = new Hibernate6Module();
+        hbm.enable(Hibernate6Module.Feature.FORCE_LAZY_LOADING);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();

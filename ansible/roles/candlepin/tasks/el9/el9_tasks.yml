@@ -1,4 +1,8 @@
 ---
+- name: "Include EL9 vars"
+  ansible.builtin.include_vars:
+    file: el9.yml
+
 - name: "Include base deps tasks"
   ansible.builtin.import_tasks: el9_base_deps.yml
 

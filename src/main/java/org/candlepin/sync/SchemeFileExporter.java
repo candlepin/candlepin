@@ -23,8 +23,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.security.cert.CertificateEncodingException;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 /**
  * Generates a scheme file

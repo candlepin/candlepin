@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -22,11 +22,12 @@ import com.google.inject.Provider;
 
 import java.net.URISyntaxException;
 
+import jakarta.inject.Inject;
+
 import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
 import javax.cache.spi.CachingProvider;
-import javax.inject.Inject;
 
 /**
  * Provides object cache by indexed by String.

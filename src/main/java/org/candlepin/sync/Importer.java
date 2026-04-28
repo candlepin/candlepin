@@ -85,9 +85,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.persistence.PersistenceException;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.persistence.PersistenceException;
 
 
 public class Importer {

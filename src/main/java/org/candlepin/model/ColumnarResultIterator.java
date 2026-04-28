@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -26,7 +26,7 @@ import java.util.NoSuchElementException;
  * values from a specific column in each row.
  *
  * ColumnarResultIterators should be closed after iteration to close the backing resources.
- * Omitting this  step will prevent some elements from being evicted and will leave database
+ * Omitting this step will prevent some elements from being evicted and will leave database
  * connections open longer than necessary.
  *
  * @param <T> The element type to be returned by this iterator's "next" method.
@@ -105,7 +105,21 @@ public class ColumnarResultIterator<T> implements ResultIterator<T> {
         }
 
         this.useStateCache = false;
-        T element = (T) this.cursor.get(this.column);
+        Object result = this.cursor.get();
+
+        // In Hibernate 6, single entity selects return the entity directly, not wrapped in Object[]
+        T element;
+        if (result instanceof Object[]) {
+            Object[] row = (Object[]) result;
+            element = (T) row[this.column];
+        }
+        else {
+            if (this.column != 0) {
+                throw new IllegalStateException(
+                    "Column index " + this.column + " requested, but result is not an array");
+            }
+            element = (T) result;
+        }
 
         if (this.evict) {
             this.toEvict = element;

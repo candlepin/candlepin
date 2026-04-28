@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -104,9 +104,7 @@ import com.google.inject.persist.PersistFilter;
 import com.google.inject.util.Modules;
 
 import org.hibernate.Session;
-import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -123,12 +121,12 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Locale;
 
-import javax.inject.Provider;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.inject.Provider;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 
 
@@ -223,13 +221,6 @@ public class DatabaseTestFixture {
         EventListenerRegistry registry = sessionFactoryImpl
             .getServiceRegistry()
             .getService(EventListenerRegistry.class);
-
-        Provider<BeanValidationEventListener> listenerProvider = inj
-            .getProvider(BeanValidationEventListener.class);
-
-        registry.getEventListenerGroup(EventType.PRE_INSERT).appendListener(listenerProvider.get());
-        registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
-        registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
     }
 
     // Need a before each here and a Liquibase extension...

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -56,7 +56,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
 import java.lang.reflect.Field;
-import java.math.BigInteger;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -72,9 +71,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.CriteriaQuery;
 
 public class ConsumerCuratorTest extends DatabaseTestFixture {
 
@@ -2296,23 +2295,23 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerDeleteCascadesToContentTag() {
-        Consumer c = new Consumer()
+        Consumer consumer = new Consumer()
             .setName("testConsumer")
             .setUsername("testUser")
             .setOwner(owner)
             .setType(ct);
-        c.setContentTags(new HashSet<>(Arrays.asList("t1", "t2")));
+        consumer.setContentTags(new HashSet<>(Arrays.asList("t1", "t2")));
         EntityManager em = this.getEntityManager();
 
         String countQuery = "SELECT COUNT(*) FROM cp_consumer_content_tags";
 
-        consumerCurator.create(c);
-        BigInteger i = (BigInteger) em.createNativeQuery(countQuery).getSingleResult();
-        assertEquals(new BigInteger("2"), i);
+        consumerCurator.create(consumer);
+        Long actual = (Long) em.createNativeQuery(countQuery).getSingleResult();
+        assertEquals(2L, actual);
 
-        consumerCurator.delete(c);
-        i = (BigInteger) em.createNativeQuery(countQuery).getSingleResult();
-        assertEquals(new BigInteger("0"), i);
+        consumerCurator.delete(consumer);
+        actual = (Long) em.createNativeQuery(countQuery).getSingleResult();
+        assertEquals(0L, actual);
     }
 
     @Test

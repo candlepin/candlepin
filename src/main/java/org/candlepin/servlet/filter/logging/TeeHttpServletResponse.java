@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -26,9 +26,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 
 /**
  * Heavily borrowed from the logback-access package.
@@ -130,12 +130,6 @@ public class TeeHttpServletResponse extends HttpServletResponseWrapper
     @Override
     public void setStatus(int status) {
         super.setStatus(status);
-        this.status = status;
-    }
-
-    @Override
-    public void setStatus(int status, String sm) {
-        super.setStatus(status, sm);
         this.status = status;
     }
 

@@ -2,6 +2,7 @@
 <Server port="8005" shutdown="SHUTDOWN">
   <Listener className="org.apache.catalina.startup.VersionLoggerListener" />
   <Listener className="org.apache.catalina.core.AprLifecycleListener" />
+  <Listener className="org.apache.catalina.core.OpenSSLLifecycleListener" />
   <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
   <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
   <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
@@ -14,9 +15,8 @@
   </GlobalNamingResources>
 
   <Service name="Catalina">
-
     <Connector port="8443"
-        protocol="org.apache.coyote.http11.Http11AprProtocol"
+        protocol="org.apache.coyote.http11.Http11NioProtocol"
         scheme="https"
         secure="true"
         SSLEnabled="true"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -16,7 +16,6 @@ package org.candlepin.hibernate;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.usertype.UserType;
 
 import java.io.Serializable;
@@ -38,25 +37,14 @@ import java.sql.Types;
  * consistent across Candlepin versions.  I don't want the situation where Candlepin X does store
  * string but Candlepin X+1 does not.
  */
-public class EmptyStringUserType implements UserType {
-    @Override
-    public int[] sqlTypes() {
-        return new int[] { Types.VARCHAR };
-    }
-
+public class EmptyStringUserType implements UserType<String> {
     @Override
     public Class<String> returnedClass() {
         return String.class;
     }
 
-    /**
-     * Changes an empty string to be equal to a null.
-     *
-     * @return whether or not x == y
-     * @throws HibernateException if something goes horribly wrong.
-     */
     @Override
-    public boolean equals(Object x, Object y) throws HibernateException {
+    public boolean equals(String x, String y) throws HibernateException {
         if (x == y) {
             return true;
         }
@@ -72,26 +60,26 @@ public class EmptyStringUserType implements UserType {
     }
 
     @Override
-    public int hashCode(Object x) throws HibernateException {
+    public int hashCode(String x) throws HibernateException {
         return x.hashCode();
     }
 
     @Override
-    public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor si, Object owner)
-        throws HibernateException, SQLException {
-        String value = (String) StandardBasicTypes.STRING.nullSafeGet(rs, names[0], si);
+    public String nullSafeGet(ResultSet resultSet, int position, SharedSessionContractImplementor session,
+        Object owner) throws SQLException {
+
+        String value = resultSet.getString(position);
         return (value == null) ? "" : value;
     }
 
     @Override
-    public void nullSafeSet(PreparedStatement st, Object value, int index,
-        SharedSessionContractImplementor si)
-        throws HibernateException, SQLException {
-        StandardBasicTypes.STRING.nullSafeSet(st, value, index, si);
+    public void nullSafeSet(PreparedStatement statement, String value, int index,
+        SharedSessionContractImplementor session) throws SQLException {
+        statement.setString(index, value);
     }
 
     @Override
-    public Object deepCopy(Object value) throws HibernateException {
+    public String deepCopy(String value) throws HibernateException {
         return value;
     }
 
@@ -101,19 +89,23 @@ public class EmptyStringUserType implements UserType {
     }
 
     @Override
-    public Serializable disassemble(Object value) throws HibernateException {
+    public Serializable disassemble(String value) throws HibernateException {
         return (Serializable) value;
     }
 
     @Override
-    public Object assemble(Serializable cached, Object owner)
-        throws HibernateException {
-        return cached;
+    public String assemble(Serializable cached, Object owner) throws HibernateException {
+        return (String) cached;
     }
 
     @Override
-    public Object replace(Object original, Object target, Object owner)
-        throws HibernateException {
+    public String replace(String original, String target, Object owner) throws HibernateException {
         return original;
     }
+
+    @Override
+    public int getSqlType() {
+        return Types.VARCHAR;
+    }
+
 }

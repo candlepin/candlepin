@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2025 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -33,6 +33,8 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.DataException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -49,8 +51,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-
-import javax.validation.ConstraintViolationException;
 
 
 
@@ -101,7 +101,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         newConsumer.setOwner(owner);
         newConsumer.setType(consumerType);
 
-        assertThrows(ConstraintViolationException.class, () -> consumerCurator.create(newConsumer));
+        assertThrows(DataException.class, () -> consumerCurator.create(newConsumer));
     }
 
     @Test
@@ -116,7 +116,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         newConsumer.setOwner(owner);
         newConsumer.setType(consumerType);
 
-        assertThrows(ConstraintViolationException.class, () -> consumerCurator.update(newConsumer));
+        assertThrows(DataException.class, () -> consumerCurator.update(newConsumer));
     }
 
     @Test

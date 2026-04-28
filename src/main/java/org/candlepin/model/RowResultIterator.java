@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -75,7 +75,15 @@ public class RowResultIterator implements ResultIterator<Object[]> {
         }
 
         this.useStateCache = false;
-        return this.cursor.get();
+        Object result = this.cursor.get();
+
+        // In Hibernate 6, single entity selects return the entity directly, not wrapped in Object[]
+        if (result instanceof Object[]) {
+            return (Object[]) result;
+        }
+        else {
+            return new Object[] { result };
+        }
     }
 
     @Override

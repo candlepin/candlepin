@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -24,12 +24,12 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import javax.inject.Provider;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import jakarta.inject.Provider;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 
 
@@ -367,7 +367,7 @@ public abstract class QueryBuilder<Q extends QueryBuilder, T> {
             return (Q) this;
         }
 
-        Function<Order, javax.persistence.criteria.Order> orderMapper = order -> {
+        Function<Order, jakarta.persistence.criteria.Order> orderMapper = order -> {
             try {
                 return order.reverse() ?
                     builder.desc(root.get(order.column())) :
@@ -378,7 +378,7 @@ public abstract class QueryBuilder<Q extends QueryBuilder, T> {
             }
         };
 
-        List<javax.persistence.criteria.Order> ordering = this.order.stream()
+        List<jakarta.persistence.criteria.Order> ordering = this.order.stream()
             .map(orderMapper)
             .toList();
 

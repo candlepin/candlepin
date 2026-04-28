@@ -20,7 +20,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 // TODO: Replace the logic here with something more dynamic so we aren't tied down to only these algorithms.
 

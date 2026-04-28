@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -21,9 +21,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.persistence.Query;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.persistence.Query;
 
 /**
  * IdentityCertificateCurator
@@ -48,8 +48,8 @@ public class IdentityCertificateCurator extends AbstractHibernateCurator<Identit
         String hql = "SELECT new org.candlepin.model.CertSerial(c.id, s.id)" +
             " FROM IdentityCertificate c" +
             " INNER JOIN c.serial s" +
-            " INNER JOIN Consumer con on con.idCert = c.id" +
-            " INNER JOIN ConsumerType type on con.typeId = type.id" +
+            " INNER JOIN Consumer con ON con.idCert = c" +
+            " INNER JOIN ConsumerType type ON con.typeId = type.id" +
             " WHERE s.expiration < :nowDate" +
             " AND type.manifest <> true";
 

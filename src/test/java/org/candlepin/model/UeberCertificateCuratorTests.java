@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -24,9 +25,6 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import javax.persistence.PersistenceException;
-
 
 
 /**
@@ -64,13 +62,20 @@ public class UeberCertificateCuratorTests extends DatabaseTestFixture {
         // The second create should throw a constraint violation.
         this.createUeberCert(owner);
 
-        try {
-            this.createUeberCert(owner);
-            fail("Expected an exception due to multiple certs for the owner.");
-        }
-        catch (PersistenceException e) {
-            assertTrue(e.getCause() != null && e.getCause() instanceof ConstraintViolationException);
-        }
+        // Verify that a ConstraintViolationException exists in the cause chain
+        assertThatThrownBy(() -> this.createUeberCert(owner))
+            .satisfies(exception -> {
+                Throwable cause = exception;
+                while (cause != null) {
+                    if (cause instanceof ConstraintViolationException) {
+                        return;
+                    }
+
+                    cause = cause.getCause();
+                }
+
+                fail("Expected ConstraintViolationException in cause chain");
+            });
     }
 
     @Test

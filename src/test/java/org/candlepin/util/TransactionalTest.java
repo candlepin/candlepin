@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -35,9 +35,9 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.function.Supplier;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.transaction.Status;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
+import jakarta.transaction.Status;
 
 
 
@@ -54,6 +54,7 @@ public class TransactionalTest  {
         private boolean active;
         private boolean rollbackOnly;
         private int lastStatus;
+        private Integer timeout;
 
         @Override
         public void begin() {
@@ -97,6 +98,16 @@ public class TransactionalTest  {
 
         public int getLastStatus() {
             return this.lastStatus;
+        }
+
+        @Override
+        public void setTimeout(Integer timeout) {
+            this.timeout = timeout;
+        }
+
+        @Override
+        public Integer getTimeout() {
+            return this.timeout;
         }
     }
 
