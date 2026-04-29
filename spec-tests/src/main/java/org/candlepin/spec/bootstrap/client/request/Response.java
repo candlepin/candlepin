@@ -16,6 +16,8 @@ package org.candlepin.spec.bootstrap.client.request;
 
 import org.candlepin.spec.bootstrap.client.ApiClient;
 
+import okhttp3.ResponseBody;
+
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.JsonNode;
 
@@ -24,8 +26,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-
-import okhttp3.ResponseBody;
 
 
 /**

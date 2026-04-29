@@ -1,16 +1,69 @@
-# Candlepin containers
+# Candlepin Versioned Containers
 
-This folder contains configurations that are primarily used for building Candlepin's development and
-production container images.
+This folder contains configurations that are primarily used for building Candlepin's versioned development and
+production container images published to quay.io.
 
-## Using the Development Container
+Candlepin container images come in two types:
+- **Production Base Image**: quay.io/candlepin/candlepin:latest
+- **Development Image**: quay.io/candlepin/candlepin:dev-latest
 
-The following topic includes information on how to use the Candlepin development container for testing.
+**Note**: These images are versioned and based on specific candlepin tags. If you want to use containers for
+active development (make changes and compile & build image from source),
+see the [CONTRIBUTING.md#run-active-development-container](../CONTRIBUTING.md#run-active-development-container) section.
 
-### Prerequisites
+## Run Production Container
 
-Before building or running the development container, generate the WAR file and Candlepin
-configuration:
+The Candlepin production base image is designed to be a base image for your own Candlepin image that can run
+in a production environment. The reason for this is that the image does not include any default configurations
+and it is expected that you provide configurations that are appropriate for your production environment.
+The following are the configurations that you will need to provide:
+
+- Candlepin configurations
+- Tomcat server.xml configurations
+- Certificate and key for TLS communication and Candlepin encryption
+
+**Note:** When adding your own certificate, you must also update the Java trust store with this certificate.
+This can be done by copying the certificate to the `/etc/pki/ca-trust/source/anchors` directory and running
+`update-ca-trust`.
+
+### Extend Candlepin Production Base Image
+
+The following is an example of how to extend and run the Candlepin production image using your own
+configurations and certificates.
+
+Example:
+```dockerfile
+FROM quay.io/candlepin/candlepin:latest
+
+USER root
+
+COPY ./candlepin.conf /etc/candlepin/
+COPY ./server.xml /opt/tomcat/conf
+COPY ./certs /etc/candlepin/certs
+
+# Add the certificate to the Java trust store
+RUN ln -s /etc/candlepin/certs/*.crt /etc/pki/ca-trust/source/anchors --force; \
+  update-ca-trust;
+
+USER tomcat
+
+EXPOSE 8080 8443 5432 3306
+
+ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "run"]
+```
+
+## Run Development Container
+
+The Candlepin development image is designed to run right after pulling the image using default Candlepin
+and Tomcat configurations as well as a default certificate and key for TLS communication and encryption.
+Since this certificate and key is packaged in a publicly available container image, the use of the Candlepin
+development image should **not** be used in a production environment to avoid security risks.
+
+Two compose files are in the dev-container directory. They will pull the latest development Candlepin image
+and the latest PostgreSQL image. The Candlepin configuration is generated from a single template using the
+Gradle `generateConfig` task, ensuring consistency across all environments.
+
+Before starting the dev container, build the WAR file and generate the configuration:
 
 ```bash
 ./gradlew war -Ptest_extensions=hostedtest,manifestgen
@@ -20,6 +73,25 @@ configuration:
 The generated `build/candlepin.conf` is copied into the image during the Docker build
 (via `COPY build/candlepin.conf` in the Containerfile). When using `dev-container/docker-compose.yml`,
 it is also mounted as a volume to allow runtime overrides without rebuilding.
+
+Then start the docker container with:
+
+```bash
+docker compose up --build
+```
+
+and stop it with:
+
+```bash
+docker compose down
+```
+
+Or the Kubernetes container with:
+
+```bash
+podman play kube candlepin-deployment.yaml            # Start containers
+podman play kube candlepin-deployment.yaml --down     # Stop containers
+```
 
 ### Importing Test Data
 
@@ -80,9 +152,65 @@ curl -k -X POST https://localhost:8443/candlepin/owners/test-owner/products \
 The `test_data_importer.py` script located in the `/bin/deployment` directory reads in predefined data from a
 json file and makes HTTP requests to the Candlepin API to generate the data.
 
-An example on how to run the script once the Candlepin development container and database container are
+An example of how to run the script once the Candlepin development container and database container are
 running:
 
 ```bash
 python3 ./bin/deployment/test_data_importer.py ./bin/deployment/test_data.json
 ```
+
+## Configure Candlepin Container
+
+### Candlepin Configuration
+
+Candlepin has configuration values to control functionality that includes JPA data access, logging levels,
+OAuth, individual modules, etc. There are two ways you can set Candlepin-specific configuration values.
+
+1. Configuration file
+2. Environment variables
+
+**Configuration File**: The Candlepin configuration file (`/etc/candlepin/candlepin.conf`) is a list of
+properties and their values that is read by Candlepin.
+
+**Environment Variables**: Candlepin uses Smallrye to read environment variables and use them for running
+Candlepin. This means that we adhere to
+[Smallrye's environment variable naming and conversion rules](https://github.com/smallrye/smallrye-config/blob/main/documentation/src/main/docs/config/environment-variables.md).
+
+### Paths
+
+The following are notable paths within the Candlepin images.
+
+| Path | Description |
+| ----------- | ----------- |
+| /etc/candlepin/ | Directory for Candlepin configurations |
+| /etc/candlepin/certs | Default directory for certificate for TLS communication and Candlepin encryption |
+| /opt/tomcat/ | Tomcat installation root directory |
+| /opt/tomcat/conf | Tomcat configuration directory |
+| /opt/tomcat/bin | Directory that includes Tomcat startup, shutdown, and other scripts |
+| /var/logs/candlepin | Candlepin log directory |
+
+### Development Image Default Configurations
+
+The Candlepin development image uses a `candlepin.conf` file generated by the Gradle `generateConfig` task
+from the template at `config/candlepin/candlepin.conf.template`. The `dev-container/docker-compose.yml` file
+mounts the generated `build/candlepin.conf` into the container at `/etc/candlepin/candlepin.conf`.
+
+To generate the configuration for the dev container with default settings (PostgreSQL, hosted mode):
+
+```bash
+./gradlew generateConfig -Pdb_host=postgres -Phostedtest=true -Pmanifestgen=true -Pcpdb_password=candlepin
+```
+
+This produces a configuration that includes JPA/Hibernate settings, authentication, Quartz scheduler
+configuration, and module settings. You can customize the output by changing the flags passed to
+`generateConfig` (see [Custom Build Properties](../CONTRIBUTING.md#custom-build-properties)).
+
+The Postgres container is expected to have the following environment variables set:
+
+| Environment variable | Value |
+| ----------- | ----------- |
+| POSTGRES_USER | candlepin |
+| POSTGRES_PASSWORD | candlepin |
+| POSTGRES_DB | candlepin |
+
+Default Tomcat server.xml connector configuration can be found in [server.xml](server.xml).

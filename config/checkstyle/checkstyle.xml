@@ -70,7 +70,7 @@
 
     <module name="LineLength">
         <property name="ignorePattern" value="import"/>
-        <property name="max" value="110"/>
+        <property name="max" value="128"/>
     </module>
 
     <!--
@@ -169,7 +169,7 @@
            #######################################################################
          -->
         <module name="AvoidStarImport">
-            <property name="allowStaticMemberImports" value="true"/>
+            <property name="allowStaticMemberImports" value="false"/>
         </module>
         <module name="IllegalImport">
             <!-- Ban Junit 3 namespace -->
@@ -182,7 +182,7 @@
             <!-- Static imports should go at the top of the import list -->
             <property name="option" value="top"/>
             <property name="ordered" value="true"/>
-            <property name="groups" value="org.candlepin,ch,com,io,liquibase,net,org,tools,java,javax"/>
+            <property name="groups" value="org.candlepin,ch,com,io,liquibase,net,okhttp3,org,tools,java,jakarta,javax"/>
             <property name="separated" value="true"/>
             <property name="sortStaticImportsAlphabetically" value="true" />
         </module>
@@ -203,7 +203,7 @@
         </module>
         <module name="JavadocMethod">
             <property name="id" value="JavadocMethodMain"/>
-            <property name="accessModifiers" value="public" />
+            <property name="accessModifiers" value="public, protected, package" />
             <property name="allowMissingParamTags" value="true" />
             <property name="allowMissingReturnTag" value="false" />
         </module>
@@ -262,7 +262,7 @@
         <module name="LocalVariableName"/>
         <module name="MethodName"/>
         <module name="PackageName">
-            <property name="format" value="^[a-z]+(\.[A-Za-z][A-Za-z0-9]*)*$"/>
+            <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
         </module>
         <module name="ParameterName"/>
         <module name="StaticVariableName"/>

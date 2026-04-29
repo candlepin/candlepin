@@ -11,9 +11,15 @@ Candlepin server exposes functionality over a REST API, and stores data in a bac
   * [Documentation](https://www.candlepinproject.org/docs/candlepin/overview.html)
   * [Candlepin REST APIs](https://www.candlepinproject.org/docs/candlepin/swaggerapi.html)
 
-  
-# How to build Candlepin  
-The build instructions are available in the [contribution guide](CONTRIBUTING.md).
+# How to build Candlepin and contribute changes
+The build and contribution instructions are available in the [contribution guide](CONTRIBUTING.md).
+
+# AI agent/tool instructions
+[CLAUDE.md](CLAUDE.md) is available for AI tools.
+
+# Versioned Candlepin Containers
+See [containers/README.md](containers/README.md) for full documentation on running and configuring versioned/tagged
+Candlepin container images (production, development) that are published in quay.io.
 
 # Issue tracker
 Candlepin issues are tracked at: https://issues.redhat.com/projects/CANDLEPIN/issues.

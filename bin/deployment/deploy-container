@@ -1,0 +1,120 @@
+#!/bin/bash
+#
+# Builds and deploys Candlepin in a container (with PostgreSQL or MariaDB in another) for local development.
+# Handles downloading Tomcat if not already cached, building the WAR, generating config, and starting the containers.
+#
+
+set -euo pipefail
+
+usage() {
+    cat <<HELP
+usage: deploy-container [options]
+
+OPTIONS:
+  -g    tear down existing containers before starting (resets database)
+  -H    include test extension for hosted-mode simulation
+  -M    include test extension for manifest generation
+  -a    auto-deploy a generated candlepin.conf
+  -m    use MySQL/MariaDB instead of PostgreSQL
+HELP
+}
+
+TEARDOWN=0
+HOSTEDTEST=0
+MANIFESTGEN=0
+AUTOCONF=0
+USE_MYSQL=0
+
+while getopts ":gHMam" opt; do
+    case $opt in
+        g  ) TEARDOWN=1 ;;
+        H  ) HOSTEDTEST=1 ;;
+        M  ) MANIFESTGEN=1 ;;
+        a  ) AUTOCONF=1 ;;
+        m  ) USE_MYSQL=1 ;;
+        ?  ) usage; exit ;;
+    esac
+done
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+if [ "$USE_MYSQL" -eq 1 ]; then
+    COMPOSE_FILE="${REPO_ROOT}/.github/containers/mariadb.docker-compose.yml"
+    DATABASE_SERVER="-Pdatabase_server=mysql"
+    DB_HOST="mariadb"
+else
+    COMPOSE_FILE="${REPO_ROOT}/.github/containers/postgres.docker-compose.yml"
+    DATABASE_SERVER="-Pdatabase_server=postgres"
+    DB_HOST="postgres"
+fi
+CONTAINERFILE="${REPO_ROOT}/.github/containers/cs9.Containerfile"
+
+# Extract the Tomcat version from the Containerfile
+TOMCAT_VERSION=$(grep -oP '(?<=ARG TOMCAT_VERSION=)\S+' "$CONTAINERFILE")
+if [ -z "$TOMCAT_VERSION" ]; then
+    echo "ERROR: Could not determine TOMCAT_VERSION from $CONTAINERFILE" >&2
+    exit 1
+fi
+
+# Download Tomcat tarball if not already present
+TARBALL="apache-tomcat-${TOMCAT_VERSION}.tar.gz"
+TARBALL_PATH="${REPO_ROOT}/${TARBALL}"
+
+if [ ! -f "$TARBALL_PATH" ]; then
+    echo "Downloading Apache Tomcat ${TOMCAT_VERSION}..."
+    wget -q "https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/${TARBALL}" -O "$TARBALL_PATH"
+    echo "Downloaded: ${TARBALL_PATH}"
+else
+    echo "Tomcat ${TOMCAT_VERSION} already cached: ${TARBALL_PATH}"
+fi
+
+# Build test extensions list
+TEST_EXTS=()
+WAR_ARGS=""
+CONF_ARGS=""
+
+if [ "$HOSTEDTEST" -eq 1 ]; then
+    TEST_EXTS+=("hostedtest")
+    CONF_ARGS="${CONF_ARGS} -Phostedtest=true"
+fi
+
+if [ "$MANIFESTGEN" -eq 1 ]; then
+    TEST_EXTS+=("manifestgen")
+    CONF_ARGS="${CONF_ARGS} -Pmanifestgen=true"
+fi
+
+if [ ${#TEST_EXTS[*]} -gt 0 ]; then
+    EXT_STR=$(IFS=, ; echo "${TEST_EXTS[*]}")
+    WAR_ARGS="-Ptest_extensions=${EXT_STR}"
+fi
+
+# Build the WAR
+echo "Building Candlepin WAR..."
+"${REPO_ROOT}/gradlew" -p "$REPO_ROOT" war "$DATABASE_SERVER" "$WAR_ARGS"
+
+# Generate config
+if [ "$AUTOCONF" -eq 1 ]; then
+    echo "Generating Candlepin config..."
+    "${REPO_ROOT}/gradlew" -p "$REPO_ROOT" generateConfig \
+        "$DATABASE_SERVER" \
+        -Pdb_host=$DB_HOST \
+        -Pcpdb_password=candlepin \
+        "$CONF_ARGS"
+fi
+
+# add default env variables
+export GITHUB_WORKSPACE="${GITHUB_WORKSPACE:-$REPO_ROOT}"
+export WAR_FILE="${WAR_FILE:-build/libs/candlepin.war}"
+
+# Tear down existing containers if -g was passed
+if [ "$TEARDOWN" -eq 1 ]; then
+    echo "Tearing down existing containers..."
+    podman compose -f "$COMPOSE_FILE" down --volumes
+fi
+
+# Start the containers
+echo "Starting containers..."
+podman compose -f "$COMPOSE_FILE" up --build -d --wait
+
+echo "Candlepin is running at https://localhost:8443/candlepin"

@@ -18,6 +18,8 @@ import org.candlepin.invoker.client.ApiException;
 import org.candlepin.invoker.client.Pair;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 
+import okhttp3.Call;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,8 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import okhttp3.Call;
 
 
 
