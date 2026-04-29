@@ -73,6 +73,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.Scheme;
 import org.candlepin.pki.SignatureValidator;
@@ -187,6 +188,8 @@ public class ImporterTest extends DatabaseTestFixture {
     @Mock
     private EntitlementCertServiceAdapter mockEntitlementCertServiceAdapter;
 
+    private CertificateReader certificateReader;
+
     private ObjectMapper mapper;
     private ClassLoader classLoader = getClass().getClassLoader();
     private String mockJsPath;
@@ -212,6 +215,7 @@ public class ImporterTest extends DatabaseTestFixture {
         this.updateReleaseVersion("0.0.3", "1");
 
         this.cryptoManager = spy(CryptoUtil.getCryptoManager(this.config));
+        this.certificateReader = CryptoUtil.getCertificateReader();
 
         Principal principal = mock(Principal.class);
         doReturn(principal).when(mockPrincipalProvider).get();
@@ -247,7 +251,8 @@ public class ImporterTest extends DatabaseTestFixture {
             this.mockIdentityCertCurator, this.refresherFactory, this.cryptoManager,
             this.mockExporterMetadataCurator, this.mockCertSerialCurator, this.mockEventSink, this.i18n,
             this.mockDistributorVersionCurator, this.mockCdnCurator, this.syncUtils, this.mapper,
-            this.mockImportRecordCurator, this.mockSubscriptionReconciler, this.modelTranslator);
+            this.mockImportRecordCurator, this.mockSubscriptionReconciler, this.modelTranslator,
+            this.certificateReader);
     }
 
     private File createTempDirectory(String prefix) throws IOException {
