@@ -9029,6 +9029,8 @@ components:
           minLength: 1
         signature:
           type: string
+        cryptographicCapabilities:
+          $ref: '#/components/schemas/CryptographicCapabilitiesDTO'
 
     CloudAuthenticationResultDTO:
       description: Contains the result of authenticating the provided cloud registration information.
