@@ -92,7 +92,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Download unit test report
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: unit_test_reports
 
