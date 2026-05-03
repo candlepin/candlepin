@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-22 11:37+0000\n"
+"POT-Creation-Date: 2026-05-03 07:34+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -807,39 +807,45 @@ msgstr ""
 msgid "No such content delivery network: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:116
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:118
 msgid "No cloud registration information provided"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:121
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:123
 msgid "Request is missing cloud provider type (e.g. amazon, gcp, azure)"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:137
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:142
+msgid ""
+"Unable to process authorization request: cryptographic capabilities exceed "
+"data storage capabilities"
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:159
 msgid ""
 "cloud provider or account details could not be resolved to an organization"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:165
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:188
 msgid "unknown cloud authorization version"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:170
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:193
 msgid "Cloud registration is not supported by this Candlepin instance"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:174
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:344
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:197
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:372
 msgid ""
 "Cloud registration is not supported for the type of offering the client is "
 "using"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:190
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:213
 msgid "Cloud account ID is null or empty"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:265
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:287
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2774
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:3134
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:682
@@ -852,23 +858,23 @@ msgstr ""
 msgid "An unexpected exception occurred while scheduling job \"{0}\""
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:355
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:383
 msgid "cloud account ID could not be resolved"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:362
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:390
 msgid "cloud instance ID could not be resolved"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:369
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:397
 msgid "cloud provider could not be resolved"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:376
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:404
 msgid "offer ID could not be resolved"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:383
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:411
 msgid "product IDs could not be resolved"
 msgstr ""
 
@@ -2049,101 +2055,101 @@ msgstr ""
 msgid "Unable to find product with ID: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:216
+#: src/main/java/org/candlepin/sync/Importer.java:222
 msgid "Uploaded manifest file does not exist."
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:286
+#: src/main/java/org/candlepin/sync/Importer.java:292
 #, java-format
 msgid "{0} file imported successfully."
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:288
+#: src/main/java/org/candlepin/sync/Importer.java:294
 #, java-format
 msgid "{0} file imported forcibly."
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:293
+#: src/main/java/org/candlepin/sync/Importer.java:299
 msgid "No active subscriptions found in the file."
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:298
+#: src/main/java/org/candlepin/sync/Importer.java:304
 msgid "One or more inactive subscriptions found in the file."
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:360
+#: src/main/java/org/candlepin/sync/Importer.java:366
 msgid "Wrong metadata type"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:369
+#: src/main/java/org/candlepin/sync/Importer.java:375
 msgid "Invalid owner"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:382
+#: src/main/java/org/candlepin/sync/Importer.java:388
 msgid "Import is older than existing data"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:401
+#: src/main/java/org/candlepin/sync/Importer.java:407
 msgid "Import is the same as existing data"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:435
+#: src/main/java/org/candlepin/sync/Importer.java:441
 msgid "The provided manifest has no content in the exported consumer archive"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:460
+#: src/main/java/org/candlepin/sync/Importer.java:466
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:465
+#: src/main/java/org/candlepin/sync/Importer.java:471
 msgid "Unable to read certificates to validate manifest"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:470
-#: src/main/java/org/candlepin/sync/Importer.java:474
+#: src/main/java/org/candlepin/sync/Importer.java:476
+#: src/main/java/org/candlepin/sync/Importer.java:480
 msgid "Failed to import archive"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:478
-#: src/main/java/org/candlepin/sync/Importer.java:927
+#: src/main/java/org/candlepin/sync/Importer.java:484
+#: src/main/java/org/candlepin/sync/Importer.java:941
 msgid "Unable to extract export archive"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:517
-#: src/main/java/org/candlepin/sync/Importer.java:842
+#: src/main/java/org/candlepin/sync/Importer.java:531
+#: src/main/java/org/candlepin/sync/Importer.java:856
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:527
+#: src/main/java/org/candlepin/sync/Importer.java:541
 msgid "Archive signed by an untrusted certificate"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:558
+#: src/main/java/org/candlepin/sync/Importer.java:572
 msgid "Archive failed signature check"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:572
+#: src/main/java/org/candlepin/sync/Importer.java:586
 msgid "The archive does not contain the required signature file"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:601
+#: src/main/java/org/candlepin/sync/Importer.java:615
 msgid "The archive does not contain the required meta.json file"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:606
+#: src/main/java/org/candlepin/sync/Importer.java:620
 msgid "The archive does not contain the required consumer_types directory"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:611
+#: src/main/java/org/candlepin/sync/Importer.java:625
 msgid "The archive does not contain the required consumer.json file"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:617
+#: src/main/java/org/candlepin/sync/Importer.java:631
 msgid "The archive does not contain the required entitlements directory"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:855
+#: src/main/java/org/candlepin/sync/Importer.java:869
 #, java-format
 msgid "Entry is outside of the target directory: {0}"
 msgstr ""
