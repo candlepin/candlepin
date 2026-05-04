@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.8.0
+Version: 4.8.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,76 @@ fi
 
 #raw
 %changelog
+* Mon May 04 2026 Nikos Moumoulidis <nmoumoul@redhat.com> 4.8.1-1
+- Add new translations using Weblate (hosted@weblate.org)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Bump actions/setup-java from 4 to 5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump actions/setup-python from 5 to 6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump actions/download-artifact from 5 to 8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1161: Added crypto capabilities support to cloud reg flows
+  (crog@redhat.com)
+- Bump org.sonarqube from 7.2.3.7755 to 7.3.0.8198
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump actions/checkout from 4 to 6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump actions/upload-artifact from 4 to 7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump gradle/actions from 4 to 6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump 8BitJonny/gh-get-current-pr
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump actions/cache from 4 to 5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.postgresql:postgresql from 42.7.10 to 42.7.11
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1193: Fixed ML-DSA signature verification failure with BC 1.84
+  (sbakaj@redhat.com)
+- Bump commons-codec:commons-codec from 1.21.0 to 1.22.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump commons-io:commons-io from 2.21.0 to 2.22.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.mchange:c3p0 from 0.12.0 to 0.13.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.google.code.gson:gson from 2.13.2 to 2.14.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.mchange:mchange-commons-java from 0.4.0 to 0.5.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.opentelemetry.instrumentation:opentelemetry-instrumentation-
+  annotations (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1197: Do not persist GH action bot git credentials
+  (nmoumoul@redhat.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- CANDLEPIN-1195: Added catch for EntityNotFoundException (jalbrech@redhat.com)
+- Bump io.smallrye.config:smallrye-config from 3.17.1 to 3.17.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1197: Fix i18n job (nmoumoul@redhat.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.17.0 to 3.17.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.ben-manes.versions from 0.53.0 to 0.54.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1199: Removed rsa default value from change set
+  (jalbrech@redhat.com)
+- CANDLEPIN-1198: Fixed candlepin.ca_key_password usage (jalbrech@redhat.com)
+- Bump org.keycloak:keycloak-core from 26.6.0 to 26.6.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1194: Added ML-DSA certs to dev image (jalbrech@redhat.com)
+- Use version refs in libs.versions.toml for bouncycastle (nmoumoul@redhat.com)
+- Bump io.smallrye.config:smallrye-config from 3.16.0 to 3.17.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1191: Compile with Java 25 (nmoumoul@redhat.com)
+- Bump org.owasp.dependencycheck from 12.2.0 to 12.2.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.keycloak:keycloak-core from 26.5.3 to 26.6.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson from 3.1.1 to 3.1.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-1172: Removed extraneous key usage from generated certs
+  (crog@redhat.com)
+
 * Mon Apr 13 2026 candlepin-bot 4.8.0-1
 - Add new translations using Weblate (hosted@weblate.org)
 - Renamed the ConsumerClient.exportCertificates utility function
