@@ -14,7 +14,9 @@
  */
 package org.candlepin;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventSink;

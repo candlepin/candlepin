@@ -494,6 +494,7 @@ public class PoolManager {
      * @param originalQuantity the pool's original quantity before multiplier was applied
      * @param updateStackDerived whether or not to attempt to update stack
      *        derived pools
+     * @return the set of pool IDs that were updated
      */
     Set<String> updatePoolsForPrimaryPool(List<Pool> existingPools, Pool pool, Long originalQuantity,
         boolean updateStackDerived, Map<String, Product> changedProducts) {
@@ -1467,6 +1468,8 @@ public class PoolManager {
      * deadlocking.
      *
      * See BZ #1274074 and git history for details
+     *
+     * @return the list of created entitlements
      */
     @Transactional
     protected List<Entitlement> createEntitlements(Consumer consumer, Map<String, Integer> poolQuantityMap,

@@ -15,8 +15,10 @@
 
 package org.candlepin.pki.certs;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.guice.CandlepinCapabilities;
 import org.candlepin.model.Consumer;

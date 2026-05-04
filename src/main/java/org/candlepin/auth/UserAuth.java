@@ -46,6 +46,8 @@ public abstract class UserAuth implements AuthProvider {
 
     /**
      * Creates a user principal for a given username
+     *
+     * @return the principal for the given user
      */
     protected Principal createPrincipal(String username) {
         UserInfo user = this.userServiceAdapter.findByLogin(username);

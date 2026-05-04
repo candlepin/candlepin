@@ -54,6 +54,7 @@ dataSources/
 ansible/roles/*
 !ansible/roles/candlepin
 
+apache-tomcat-*.tar.gz
 buildconf/builder/config/local
 client.crt
 client.key

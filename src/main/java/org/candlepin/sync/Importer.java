@@ -357,6 +357,7 @@ public class Importer {
      * @param forcedConflicts Conflicts we will override if encountered
      * @throws IOException thrown if there's a problem reading the file
      * @throws ImporterException thrown if the metadata is invalid.
+     * @return the validated exporter metadata, or null if no previous import exists
      */
     protected ExporterMetadata validateMetadata(String type, Owner owner, File meta,
         ConflictOverrides forcedConflicts) throws IOException, ImporterException {

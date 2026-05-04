@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew *)",
+      "Bash(./bin/deployment/*)",
+      "Bash(podman *)",
+      "Bash(java *)",
+      "Bash(javac *)",
+      "Bash(tee *)",
+      "Bash(curl * https://localhost*)",
+      "Bash(git status *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git show *)",
+      "Bash(git branch *)",
+      "WebSearch"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
