@@ -51,7 +51,7 @@ fi
 CONTAINERFILE="${REPO_ROOT}/.github/containers/cs9.Containerfile"
 
 # Extract the Tomcat version from the Containerfile
-TOMCAT_VERSION=$(grep -oP '(?<=ARG TOMCAT_VERSION=)\S+' "$CONTAINERFILE")
+TOMCAT_VERSION=$(sed -n 's/^ARG TOMCAT_VERSION=\([^ ]*\)/\1/p' "$CONTAINERFILE")
 if [ -z "$TOMCAT_VERSION" ]; then
     echo "ERROR: Could not determine TOMCAT_VERSION from $CONTAINERFILE" >&2
     exit 1
@@ -71,27 +71,27 @@ fi
 
 # Build test extensions list
 TEST_EXTS=()
-WAR_ARGS=""
-CONF_ARGS=""
+WAR_ARGS=()
+CONF_ARGS=()
 
 if [ "$HOSTEDTEST" -eq 1 ]; then
     TEST_EXTS+=("hostedtest")
-    CONF_ARGS="${CONF_ARGS} -Phostedtest=true"
+    CONF_ARGS+=("-Phostedtest=true")
 fi
 
 if [ "$MANIFESTGEN" -eq 1 ]; then
     TEST_EXTS+=("manifestgen")
-    CONF_ARGS="${CONF_ARGS} -Pmanifestgen=true"
+    CONF_ARGS+=("-Pmanifestgen=true")
 fi
 
 if [ ${#TEST_EXTS[*]} -gt 0 ]; then
     EXT_STR=$(IFS=, ; echo "${TEST_EXTS[*]}")
-    WAR_ARGS="-Ptest_extensions=${EXT_STR}"
+    WAR_ARGS+=("-Ptest_extensions=${EXT_STR}")
 fi
 
 # Build the WAR
 echo "Building Candlepin WAR..."
-"${REPO_ROOT}/gradlew" -p "$REPO_ROOT" war "$DATABASE_SERVER" "$WAR_ARGS"
+"${REPO_ROOT}/gradlew" -p "$REPO_ROOT" war "$DATABASE_SERVER" ${WAR_ARGS[@]+"${WAR_ARGS[@]}"}
 
 # Generate config
 if [ "$AUTOCONF" -eq 1 ]; then
@@ -100,7 +100,7 @@ if [ "$AUTOCONF" -eq 1 ]; then
         "$DATABASE_SERVER" \
         -Pdb_host=$DB_HOST \
         -Pcpdb_password=candlepin \
-        "$CONF_ARGS"
+        ${CONF_ARGS[@]+"${CONF_ARGS[@]}"}
 fi
 
 # add default env variables

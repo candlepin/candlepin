@@ -46,6 +46,7 @@ RUN update-crypto-policies --set DEFAULT:PQ
 ENV JAVA_HOME=/usr/lib/jvm/jre-25-openjdk
 ENV JRE_HOME=/usr/lib/jvm/jre-25-openjdk
 ENV CATALINA_OPTS=-Djavax.net.ssl.trustStore=$JAVA_HOME/lib/security/cacerts
+ENV CATALINA_OPTS="$CATALINA_OPTS -agentlib:jdwp=transport=dt_socket,server=y,address=*:8000,suspend=n"
 
 # Tomcat Setup
 COPY --from=builder /opt/tomcat/ /opt/tomcat/
