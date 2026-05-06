@@ -74,7 +74,7 @@ public class ImportWarningSpecTest {
 
         // This needs to be far enough for our slow CI infrastructure to be able to successfully
         // bind it, but near enough to not drive us insane during manual testing.
-        OffsetDateTime expiredEndDate = now.plusSeconds(10);
+        OffsetDateTime expiredEndDate = now.plusSeconds(15);
 
         SubscriptionDTO validSubscription = Subscriptions.random()
             .product(Products.random())
