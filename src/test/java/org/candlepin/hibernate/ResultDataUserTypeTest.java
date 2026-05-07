@@ -24,6 +24,8 @@ import org.hibernate.annotations.Type;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceAccessMode;
+import org.junit.jupiter.api.parallel.ResourceLock;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -47,6 +49,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * Test for ResultDataUserType
  */
+@ResourceLock(value = "HSQLDB_MEM", mode = ResourceAccessMode.READ_WRITE)
 public class ResultDataUserTypeTest {
     private EntityManagerFactory emf;
     private EntityManager em;

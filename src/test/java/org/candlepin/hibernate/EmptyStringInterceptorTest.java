@@ -20,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceAccessMode;
+import org.junit.jupiter.api.parallel.ResourceLock;
 
 import java.util.Properties;
 
@@ -34,6 +36,7 @@ import javax.persistence.Table;
 /**
  * EmptyStringInterceptorTest
  */
+@ResourceLock(value = "HSQLDB_MEM", mode = ResourceAccessMode.READ_WRITE)
 public class EmptyStringInterceptorTest {
     private EntityManagerFactory emf;
     private EntityManager em;

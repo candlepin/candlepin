@@ -43,6 +43,7 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.Isolated;
 
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -61,6 +62,7 @@ import javax.servlet.ServletContextEvent;
 // this class and be consistent across all of these tests.
 
 @ExtendWith(LiquibaseExtension.class)
+@Isolated
 public class CandlepinContextListenerTest {
     private DevConfig config;
     private CandlepinContextListener listener;

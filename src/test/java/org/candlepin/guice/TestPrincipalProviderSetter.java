@@ -20,14 +20,13 @@ import org.candlepin.auth.Principal;
  * TestPrincipalProviderSetter
  */
 public class TestPrincipalProviderSetter {
-    private static TestPrincipalProviderSetter instance;
+    private static final ThreadLocal<TestPrincipalProviderSetter> INSTANCE =
+        ThreadLocal.withInitial(TestPrincipalProviderSetter::new);
+
     private Principal principal;
 
     public static TestPrincipalProviderSetter get() {
-        if (instance == null) {
-            instance = new TestPrincipalProviderSetter();
-        }
-        return instance;
+        return INSTANCE.get();
     }
 
     public Principal getPrincipal() {
