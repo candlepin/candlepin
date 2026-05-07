@@ -30,9 +30,9 @@ sourceSets.main.java.srcDirs = [
 compileJava.dependsOn tasks.openApiGenerate
 
 openApiGenerate {
-    inputSpec = "${projectDir}/../api/candlepin-api-spec.yaml"
-    outputDir = "${buildDir}/generated"
-    configFile = "${projectDir}/../api/candlepin-api-config.json"
+    inputSpec = rootProject.layout.projectDirectory.file("api/candlepin-api-spec.yaml")
+    outputDir = layout.buildDirectory.dir("generated")
+    configFile = rootProject.layout.projectDirectory.file("api/candlepin-api-config.json")
     generatorName = "java"
     validateSpec = true
     skipValidateSpec = true
