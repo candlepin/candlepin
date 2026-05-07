@@ -132,6 +132,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.InputStream;
 import java.util.Date;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -207,6 +208,16 @@ public class TestingModules {
     }
 
     public static class JpaModule extends AbstractModule {
+        private final Map<String, String> overrideProperties;
+
+        public JpaModule() {
+            this(Map.of());
+        }
+
+        public JpaModule(Map<String, String> overrideProperties) {
+            this.overrideProperties = overrideProperties;
+        }
+
         @Override
         public void configure() {
             // As of Guice 6.0, UnitOfWork is no longer automatically started upon fetching the
@@ -216,7 +227,12 @@ public class TestingModules {
                 .build();
 
             install(new ServletEnvironmentModule());
-            install(new JpaPersistModule("testing", jpaOptions));
+
+            JpaPersistModule jpaPersistModule = new JpaPersistModule("testing", jpaOptions);
+            if (!this.overrideProperties.isEmpty()) {
+                jpaPersistModule.properties(this.overrideProperties);
+            }
+            install(jpaPersistModule);
 
             bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
             bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);

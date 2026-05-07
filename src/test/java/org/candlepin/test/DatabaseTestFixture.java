@@ -34,7 +34,7 @@ import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
-import org.candlepin.junit.LiquibaseExtension;
+import org.candlepin.junit.CandlepinTestExtension;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.AsyncJobStatusCurator;
@@ -97,24 +97,14 @@ import org.candlepin.util.DateSource;
 import org.candlepin.util.Util;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.google.inject.persist.PersistFilter;
 import com.google.inject.util.Modules;
 
 import org.hibernate.Session;
-import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.internal.SessionFactoryImpl;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.parallel.ResourceAccessMode;
-import org.junit.jupiter.api.parallel.ResourceLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -127,7 +117,6 @@ import java.util.Locale;
 
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -137,8 +126,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Test fixture for test classes requiring access to the database.
  */
-@ExtendWith(LiquibaseExtension.class)
-@ResourceLock(value = "DATABASE_FIXTURE", mode = ResourceAccessMode.READ_WRITE)
+@ExtendWith(CandlepinTestExtension.class)
 public class DatabaseTestFixture {
     protected static Logger log = LoggerFactory.getLogger(DatabaseTestFixture.class);
 
@@ -193,8 +181,8 @@ public class DatabaseTestFixture {
     protected MethodLocator methodLocator;
     protected AnnotationLocator annotationLocator;
 
-    private static CryptoManager cryptoManager;
-    private static Injector parentInjector;
+    private CryptoManager cryptoManager;
+    private Injector parentInjector;
     protected Injector injector;
     private CandlepinRequestScope cpRequestScope;
 
@@ -203,36 +191,12 @@ public class DatabaseTestFixture {
     protected I18n i18n;
     protected Provider<I18n> i18nProvider;
 
-    @BeforeAll
-    public static void initClass() {
-        // Ensure we have a crypto manager initialized that can bind to to avoid some extra initialization
-        // slowness
-        cryptoManager = CryptoUtil.getCryptoManager();
-
-        parentInjector = Guice.createInjector(new TestingModules.JpaModule());
-        insertValidationEventListeners(parentInjector);
+    public void setParentInjector(Injector injector) {
+        this.parentInjector = injector;
     }
 
-    /**
-     * There's no way to really get Guice to perform injections on stuff that the JpaPersistModule is
-     * creating, so we resort to grabbing the EntityManagerFactory after the fact and adding the
-     * Validation EventListener ourselves.
-     *
-     * @param inj
-     */
-    private static void insertValidationEventListeners(Injector inj) {
-        Provider<EntityManagerFactory> emfProvider = inj.getProvider(EntityManagerFactory.class);
-        SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) emfProvider.get();
-        EventListenerRegistry registry = sessionFactoryImpl
-            .getServiceRegistry()
-            .getService(EventListenerRegistry.class);
-
-        Provider<BeanValidationEventListener> listenerProvider = inj
-            .getProvider(BeanValidationEventListener.class);
-
-        registry.getEventListenerGroup(EventType.PRE_INSERT).appendListener(listenerProvider.get());
-        registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
-        registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
+    public void setCryptoManager(CryptoManager cryptoManager) {
+        this.cryptoManager = cryptoManager;
     }
 
     // Need a before each here and a Liquibase extension...
@@ -355,21 +319,6 @@ public class DatabaseTestFixture {
 
         reset(parentInjector.getInstance(HttpServletRequest.class));
         reset(parentInjector.getInstance(HttpServletResponse.class));
-    }
-
-    @AfterAll
-    public static void destroy() {
-        parentInjector.getInstance(PersistFilter.class).destroy();
-
-        EntityManager manager = parentInjector.getInstance(EntityManager.class);
-        if (manager.isOpen()) {
-            manager.close();
-        }
-
-        EntityManagerFactory emf = parentInjector.getInstance(EntityManagerFactory.class);
-        if (emf.isOpen()) {
-            emf.close();
-        }
     }
 
     protected Module getGuiceOverrideModule() {
