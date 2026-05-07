@@ -23,10 +23,9 @@ import org.hibernate.annotations.Type;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.ResourceAccessMode;
-import org.junit.jupiter.api.parallel.ResourceLock;
 
-import java.util.Properties;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -38,7 +37,6 @@ import javax.persistence.Table;
 
 
 
-@ResourceLock(value = "HSQLDB_MEM", mode = ResourceAccessMode.READ_WRITE)
 public class EmptyStringUserTypeTest {
     private EntityManagerFactory emf;
     private EntityManager em;
@@ -83,12 +81,10 @@ public class EmptyStringUserTypeTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        Properties props = new Properties();
-
-        props.put("hibernate.ejb.interceptor",
-            "org.candlepin.hibernate.EmptyStringInterceptor");
-
-        emf =  Persistence.createEntityManagerFactory("testingUserType");
+        String dbName = "empty-string-ut-" + UUID.randomUUID().toString().substring(0, 8);
+        String jdbcUrl = "jdbc:hsqldb:mem:" + dbName + ";sql.enforce_strict_size=true;shutdown=true;";
+        Map<String, String> props = Map.of("hibernate.connection.url", jdbcUrl);
+        emf = Persistence.createEntityManagerFactory("testingUserType", props);
         em = emf.createEntityManager();
     }
 

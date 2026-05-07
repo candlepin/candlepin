@@ -20,10 +20,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.ResourceAccessMode;
-import org.junit.jupiter.api.parallel.ResourceLock;
 
+import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -36,11 +36,11 @@ import javax.persistence.Table;
 /**
  * EmptyStringInterceptorTest
  */
-@ResourceLock(value = "HSQLDB_MEM", mode = ResourceAccessMode.READ_WRITE)
 public class EmptyStringInterceptorTest {
     private EntityManagerFactory emf;
     private EntityManager em;
     private Properties props;
+    private String jdbcUrl;
 
     @Entity
     @Table(name = "Person")
@@ -70,7 +70,10 @@ public class EmptyStringInterceptorTest {
 
     @BeforeEach
     public void setUp() {
+        String dbName = "empty-string-int-" + UUID.randomUUID().toString().substring(0, 8);
+        this.jdbcUrl = "jdbc:hsqldb:mem:" + dbName + ";sql.enforce_strict_size=true;shutdown=true;";
         props = new Properties();
+        props.put("hibernate.connection.url", this.jdbcUrl);
     }
 
     @AfterEach
@@ -81,7 +84,8 @@ public class EmptyStringInterceptorTest {
 
     @Test
     public void testNormalEmptyStringPersistence() {
-        emf = Persistence.createEntityManagerFactory("testingEmptyStringInterceptor");
+        emf = Persistence.createEntityManagerFactory("testingEmptyStringInterceptor",
+            Map.of("hibernate.connection.url", this.jdbcUrl));
         em = emf.createEntityManager();
 
         Person p = new Person();

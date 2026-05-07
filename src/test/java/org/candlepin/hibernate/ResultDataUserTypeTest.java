@@ -24,8 +24,6 @@ import org.hibernate.annotations.Type;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.ResourceAccessMode;
-import org.junit.jupiter.api.parallel.ResourceLock;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -34,6 +32,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -49,7 +48,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * Test for ResultDataUserType
  */
-@ResourceLock(value = "HSQLDB_MEM", mode = ResourceAccessMode.READ_WRITE)
 public class ResultDataUserTypeTest {
     private EntityManagerFactory emf;
     private EntityManager em;
@@ -164,7 +162,10 @@ public class ResultDataUserTypeTest {
 
     @BeforeEach
     public void setUp() {
-        emf =  Persistence.createEntityManagerFactory("testingUserType");
+        String dbName = "result-data-" + UUID.randomUUID().toString().substring(0, 8);
+        String jdbcUrl = "jdbc:hsqldb:mem:" + dbName + ";sql.enforce_strict_size=true;shutdown=true;";
+        Map<String, String> props = Map.of("hibernate.connection.url", jdbcUrl);
+        emf = Persistence.createEntityManagerFactory("testingUserType", props);
         em = emf.createEntityManager();
     }
 
