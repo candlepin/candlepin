@@ -33,7 +33,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.TestingModules;
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
@@ -54,6 +53,7 @@ import org.candlepin.dto.api.v1.EnvironmentTranslator;
 import org.candlepin.dto.api.v1.NestedOwnerTranslator;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.junit.GuiceExtension;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -80,7 +80,6 @@ import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.RdbmsExceptionTranslator;
 import org.candlepin.util.Util;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -110,7 +109,7 @@ import java.util.stream.Stream;
 
 
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class, GuiceExtension.class})
 @MockitoSettings(strictness = Strictness.LENIENT)
 class EnvironmentResourceTest {
 
@@ -169,10 +168,7 @@ class EnvironmentResourceTest {
         this.translator.registerTranslator(new ContentTranslator(), Content.class, ContentDTO.class);
         this.translator.registerTranslator(new NestedOwnerTranslator(), Owner.class, NestedOwnerDTO.class);
 
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.ServletEnvironmentModule(),
-            new TestingModules.StandardTest());
+        Injector injector = GuiceExtension.getInjector();
 
         this.eventSink = injector.getInstance(TestEventSink.class);
         EventFactory eventFactory = injector.getInstance(EventFactory.class);

@@ -27,20 +27,44 @@ import java.util.List;
 import jakarta.inject.Inject;
 
 /**
+ * Test principal provider that stores per-thread principal state via ThreadLocal. This
+ * enables parallel test execution at the class level, where each test class runs on its
+ * own thread. Each thread maintains its own principal independently.
  *
+ * <p>Note: this assumes each test is single-threaded. Tests that spawn additional threads
+ * will not inherit the principal set on the test's thread.
  */
 public class TestPrincipalProvider extends PrincipalProvider {
 
     private static final String OWNER_NAME = "Default-Owner";
 
+    // Per-thread principal storage for parallel test isolation
+    private static final ThreadLocal<Principal> PRINCIPAL = new ThreadLocal<>();
+
     @Inject
     public TestPrincipalProvider() {
     }
 
+    /**
+     * Sets the principal for the current thread.
+     *
+     * @param principal
+     *     the principal to set, or null to clear
+     */
+    public static void setPrincipal(Principal principal) {
+        PRINCIPAL.set(principal);
+    }
+
+    /**
+     * Clears the principal for the current thread, removing the ThreadLocal entry.
+     */
+    public static void clearPrincipal() {
+        PRINCIPAL.remove();
+    }
+
     @Override
     public Principal get() {
-        TestPrincipalProviderSetter principalSingleton = TestPrincipalProviderSetter.get();
-        Principal principal = principalSingleton.getPrincipal();
+        Principal principal = PRINCIPAL.get();
         if (principal == null) {
             List<Permission> permissions = new ArrayList<>();
 

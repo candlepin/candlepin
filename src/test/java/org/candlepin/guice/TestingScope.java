@@ -44,10 +44,8 @@ public class TestingScope {
             return new Provider<T>() {
 
                 @SuppressWarnings("unchecked")
-                public T get() {
-
+                public synchronized T get() {
                     Object o = backingMap.get(key);
-
                     if (o == null) {
                         o = unscoped.get();
                         backingMap.put(key, o);

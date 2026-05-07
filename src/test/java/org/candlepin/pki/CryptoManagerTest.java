@@ -37,6 +37,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -65,6 +67,7 @@ import java.util.stream.Stream;
  * implementation to test, as well as test for any implementation-specific functionality not covered by the
  * base CryptoManager API/interface.
  */
+@Execution(ExecutionMode.CONCURRENT)
 public abstract class CryptoManagerTest {
 
     /**
