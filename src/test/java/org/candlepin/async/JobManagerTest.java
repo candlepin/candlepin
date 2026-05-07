@@ -79,9 +79,12 @@ import com.google.inject.Injector;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.hamcrest.core.StringContains;
 import org.hibernate.Session;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -127,6 +130,7 @@ import java.util.stream.Stream;
 /**
  * Test suite for the JobManager class
  */
+@Execution(ExecutionMode.CONCURRENT)
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class JobManagerTest {
@@ -186,11 +190,14 @@ public class JobManagerTest {
     private List<ImmutablePair<String, String>> scheduledJobs;
 
 
+    @BeforeAll
+    public static void beforeAll() {
+        JobManager.registerJob(TestJob.JOB_KEY, TestJob.class);
+    }
+
     @BeforeEach
     public void setUp() throws Exception {
         MDC.clear();
-
-        JobManager.registerJob(TestJob.JOB_KEY, TestJob.class);
 
         this.config = TestConfig.defaults();
         this.schedulerFactory = mock(SchedulerFactory.class);

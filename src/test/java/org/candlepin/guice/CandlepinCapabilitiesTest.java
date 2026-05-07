@@ -18,12 +18,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
 
 import java.util.Set;
 
 /**
  * Test class for CandlepinCapabilities
  */
+@ResourceLock("CandlepinCapabilities")
 public class CandlepinCapabilitiesTest {
 
     private static final Set<String> DEFAULT_CAPABILITIES = Set.of(

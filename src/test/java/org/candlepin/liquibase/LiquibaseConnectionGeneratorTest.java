@@ -38,6 +38,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -52,6 +53,7 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 
+@ResourceLock("DriverManager")
 public class LiquibaseConnectionGeneratorTest {
 
     /**

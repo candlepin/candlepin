@@ -22,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -32,6 +34,7 @@ import java.util.List;
 
 
 
+@Execution(ExecutionMode.CONCURRENT)
 public class ConsumerCloudDataTest {
 
     @Test

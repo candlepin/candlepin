@@ -21,6 +21,8 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
@@ -28,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+@Execution(ExecutionMode.CONCURRENT)
 public class PoolQualifierTest {
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")

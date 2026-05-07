@@ -64,7 +64,7 @@ public class IdentityCertificateGeneratorTest extends DatabaseTestFixture {
     public void setUp() throws CertificateException, KeyException {
         this.config.setProperty(ConfigProperties.IDENTITY_CERT_YEAR_ADDENDUM, String.valueOf(CERT_DURATION));
 
-        this.cryptoManager = CryptoUtil.getCryptoManager();
+        this.cryptoManager = this.injector.getInstance(CryptoManager.class);
 
         ConsumerKeyPairGenerator keyPairGenerator =
             new ConsumerKeyPairGenerator(cryptoManager, this.keyPairDataCurator);

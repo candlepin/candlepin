@@ -26,6 +26,8 @@ import org.candlepin.exceptions.BadRequestException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -43,6 +45,7 @@ import java.util.stream.Stream;
 /**
  * Test suite for the JobStateMapper class
  */
+@Execution(ExecutionMode.CONCURRENT)
 public class KeyValueStringParserTest {
 
     private static I18n i18n;

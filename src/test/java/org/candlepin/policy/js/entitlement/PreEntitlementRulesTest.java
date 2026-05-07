@@ -33,6 +33,8 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -42,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 
 
+@Execution(ExecutionMode.CONCURRENT)
 public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test

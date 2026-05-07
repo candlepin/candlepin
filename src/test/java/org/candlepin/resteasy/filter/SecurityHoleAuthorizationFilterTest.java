@@ -23,7 +23,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.TestingModules;
 import org.candlepin.auth.ActivationKeyPrincipal;
 import org.candlepin.auth.AnonymousCloudConsumerPrincipal;
 import org.candlepin.auth.CloudConsumerPrincipal;
@@ -31,6 +30,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.TooManyRequestsException;
+import org.candlepin.junit.GuiceExtension;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -43,7 +43,6 @@ import org.candlepin.service.exception.cloudregistration.OrgForCloudAccountNotCr
 import org.candlepin.service.exception.cloudregistration.OrgForCloudAccountNotEntitledYetException;
 import org.candlepin.test.TestUtil;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import org.jboss.resteasy.core.ResteasyContext;
@@ -73,7 +72,7 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ResourceInfo;
 import jakarta.ws.rs.core.SecurityContext;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class, GuiceExtension.class})
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class SecurityHoleAuthorizationFilterTest {
 
@@ -94,10 +93,7 @@ public class SecurityHoleAuthorizationFilterTest {
 
     @BeforeEach
     public void setUp() throws URISyntaxException, NoSuchMethodException {
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.ServletEnvironmentModule(),
-            new TestingModules.StandardTest());
+        Injector injector = GuiceExtension.getInjector();
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         MethodLocator methodLocator = new MethodLocator(injector);

@@ -22,6 +22,8 @@ import io.smallrye.config.SmallRyeConfig;
 import io.smallrye.config.SmallRyeConfigBuilder;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -36,6 +38,7 @@ import java.util.Set;
 // TODO: FIXME: This test suite is very weak. Rewrite it.
 
 
+@Execution(ExecutionMode.CONCURRENT)
 public class RyeConfigTest {
 
     private static final Map<String, String> DEFAULTS = Map.ofEntries(
