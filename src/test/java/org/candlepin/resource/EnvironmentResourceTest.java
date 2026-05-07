@@ -172,6 +172,7 @@ class EnvironmentResourceTest {
         Injector injector = Guice.createInjector(
             new TestingModules.MockJpaModule(),
             new TestingModules.ServletEnvironmentModule(),
+            new TestingModules.PKIModule(),
             new TestingModules.StandardTest());
 
         this.eventSink = injector.getInstance(TestEventSink.class);
