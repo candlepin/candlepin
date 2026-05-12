@@ -28,7 +28,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
-import org.candlepin.junit.LiquibaseExtension;
+import org.candlepin.junit.CandlepinTestExtension;
 import org.candlepin.service.EventAdapter;
 
 import com.google.inject.AbstractModule;
@@ -42,28 +42,24 @@ import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.parallel.Isolated;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.parallel.ResourceLock;
 
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
-// TODO: Currently the tests in this class are in a state where we have mocking for some objects, but we are
-// backing up and restoring the drivers as part of some tests. We should commit to a testing paradigm in
-// this class and be consistent across all of these tests.
-
-@ExtendWith(LiquibaseExtension.class)
-@Isolated
+@ResourceLock("CandlepinCapabilities")
 public class CandlepinContextListenerTest {
+
+    @RegisterExtension
+    static CandlepinTestExtension ext = new CandlepinTestExtension();
+
     private DevConfig config;
     private CandlepinContextListener listener;
     private ActiveMQContextListener hqlistener;
@@ -198,44 +194,25 @@ public class CandlepinContextListenerTest {
 
     @Test
     public void contextDestroyed() {
-        // backup jdbc drivers before calling contextDestroyed method
-        Enumeration<Driver> drivers = DriverManager.getDrivers();
-
         this.config.setProperty(ConfigProperties.ACTIVEMQ_ENABLED, "true");
         prepareForInitialization();
 
-        // we actually have to call contextInitialized before we
-        // can call contextDestroyed, otherwise the listener's
-        // member variables will be null.
         listener.contextInitialized(evt);
-
-        // what we really want to test.
         listener.contextDestroyed(evt);
 
-        // make sure we only call it 5 times all from init code
         verify(evt, atMost(5)).getServletContext();
-        verifyNoMoreInteractions(evt); // destroy shouldn't use it
+        verifyNoMoreInteractions(evt);
         verify(hqlistener).contextDestroyed(any(Injector.class));
-
-        // re-register drivers
-        registerDrivers(drivers);
     }
 
     @Test
     public void ensureAMQPClosedProperly() {
-        // backup jdbc drivers before calling contextDestroyed method
-        Enumeration<Driver> drivers = DriverManager.getDrivers();
-
         this.config.setProperty(ConfigProperties.SUSPEND_MODE_ENABLED, "true");
 
         prepareForInitialization();
         listener.contextInitialized(evt);
 
-        // test & verify
         listener.contextDestroyed(evt);
-
-        // re-register drivers
-        registerDrivers(drivers);
     }
 
     @Test
@@ -251,18 +228,9 @@ public class CandlepinContextListenerTest {
 
     @Test
     public void ensureEventAdapterIsShutdown() {
-        // backup jdbc drivers before calling contextDestroyed method
-        Enumeration<Driver> drivers = DriverManager.getDrivers();
-
         prepareForInitialization();
-        // we actually have to call contextInitialized before we
-        // can call contextDestroyed, otherwise the listener's
-        // member variables will be null.
         listener.contextInitialized(evt);
         listener.contextDestroyed(evt);
-
-        // re-register drivers
-        registerDrivers(drivers);
 
         verify(mockEventAdapter).shutdown();
     }
@@ -308,24 +276,13 @@ public class CandlepinContextListenerTest {
         when(resteasyDeployment.getRegistry()).thenReturn(registry);
     }
 
-    private void registerDrivers(Enumeration<Driver> drivers) {
-        while (drivers.hasMoreElements()) {
-            Driver driver = drivers.nextElement();
-            try {
-                DriverManager.registerDriver(driver);
-            }
-            catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     private CandlepinContextListener createContextListener() {
         return new CandlepinContextListener() {
             @Override
             protected List<Module> getModules(ServletContext context) {
                 List<Module> modules = new LinkedList<>();
-                modules.add(new TestingModules.JpaModule());
+                modules.add(new TestingModules.JpaModule(
+                    Map.of("hibernate.connection.url", ext.getJdbcUrl())));
 
                 Module testingModule = new TestingModules.StandardTest(config);
                 Module contextListenerTestModule = new ContextListenerTestModule();
@@ -345,7 +302,12 @@ public class CandlepinContextListenerTest {
 
             @Override
             protected void initializeDatabase() {
-                // Intentionally left blank
+                /* intentionally left empty */
+            }
+
+            @Override
+            protected void deregisterJdbcDrivers() {
+                /* intentionally left empty */
             }
         };
     }

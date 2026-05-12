@@ -62,6 +62,7 @@ import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.MissingResourceException;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -112,12 +113,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     private EventAdapter eventAdapter;
     private LoggerContextListener loggerListener;
 
-    // a bit of application-initialization code. Not sure if this is the
-    // best spot for it.
-    static {
-        I18nManager.getInstance().setDefaultLocale(Locale.US);
-    }
-
     private static Logger log = LoggerFactory.getLogger(CandlepinContextListener.class);
     private Configuration config;
 
@@ -141,7 +136,13 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         try {
             log.info("Candlepin initializing context.");
 
-            I18nManager.getInstance().setDefaultLocale(Locale.US);
+            try {
+                I18nManager.getInstance().setDefaultLocale(Locale.US);
+            }
+            catch (MissingResourceException e) {
+                log.debug("Failed to set default I18n locale", e);
+            }
+
             servletContext = sce.getServletContext();
 
             log.info("Candlepin reading configuration.");
@@ -251,17 +252,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         this.jobManager.shutdown();
 
         injector.getInstance(PersistService.class).stop();
-        // deregister jdbc driver to avoid warning in tomcat shutdown log
-        Enumeration<Driver> drivers = DriverManager.getDrivers();
-        while (drivers.hasMoreElements()) {
-            Driver driver = drivers.nextElement();
-            try {
-                DriverManager.deregisterDriver(driver);
-            }
-            catch (SQLException e) {
-                log.info("Failed to de-registering driver {}", driver, e);
-            }
-        }
+        this.deregisterJdbcDrivers();
 
         eventAdapter.shutdown();
 
@@ -274,6 +265,19 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         this.cpmContextListener.destroy();
 
         this.loggerListener.contextDestroyed();
+    }
+
+    protected void deregisterJdbcDrivers() {
+        Enumeration<Driver> drivers = DriverManager.getDrivers();
+        while (drivers.hasMoreElements()) {
+            Driver driver = drivers.nextElement();
+            try {
+                DriverManager.deregisterDriver(driver);
+            }
+            catch (SQLException e) {
+                log.info("Failed to de-registering driver {}", driver, e);
+            }
+        }
     }
 
     protected void setCapabilities(Configuration config) {

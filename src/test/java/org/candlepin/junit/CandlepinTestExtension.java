@@ -46,7 +46,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.inject.Provider;
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 
@@ -66,15 +65,21 @@ public class CandlepinTestExtension
     private static final ExtensionContext.Namespace NAMESPACE =
         ExtensionContext.Namespace.create(CandlepinTestExtension.class);
 
+    private String jdbcUrl;
+
+    public String getJdbcUrl() {
+        return this.jdbcUrl;
+    }
+
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         String className = context.getRequiredTestClass().getSimpleName();
         String uniqueId = UUID.randomUUID().toString().substring(0, 8);
-        String dbName = "cp-test-" + className + "-" + uniqueId;
-        String jdbcUrl = "jdbc:hsqldb:mem:" + dbName +
-            ";sql.enforce_strict_size=true;shutdown=true;";
+        String dbName = String.format("cp-test-%s-%s", className, uniqueId);
+        this.jdbcUrl = String.format("jdbc:hsqldb:mem:%s;sql.enforce_strict_size=true;shutdown=true;",
+            dbName);
 
-        Connection jdbcConnection = DriverManager.getConnection(jdbcUrl, "sa", "");
+        Connection jdbcConnection = DriverManager.getConnection(this.jdbcUrl, "sa", "");
         JdbcConnection liquibaseConnection = new JdbcConnection(jdbcConnection);
         Database database = DatabaseFactory.getInstance()
             .findCorrectDatabaseImplementation(liquibaseConnection);
@@ -87,7 +92,7 @@ public class CandlepinTestExtension
         liquibase.update("test");
 
         Map<String, String> jpaProperties = Map.of(
-            "hibernate.connection.url", jdbcUrl);
+            "hibernate.connection.url", this.jdbcUrl);
 
         Injector parentInjector = Guice.createInjector(
             new TestingModules.JpaModule(jpaProperties));
@@ -133,11 +138,6 @@ public class CandlepinTestExtension
 
         if (parentInjector != null) {
             parentInjector.getInstance(PersistFilter.class).destroy();
-
-            EntityManager manager = parentInjector.getInstance(EntityManager.class);
-            if (manager.isOpen()) {
-                manager.close();
-            }
 
             EntityManagerFactory emf = parentInjector.getInstance(EntityManagerFactory.class);
             if (emf.isOpen()) {
