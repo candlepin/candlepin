@@ -15,12 +15,15 @@
 package org.candlepin.junit;
 
 import org.candlepin.TestingModules;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.DatabaseTestFixture;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import com.google.inject.persist.PersistFilter;
 
 import liquibase.Liquibase;
@@ -37,6 +40,7 @@ import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import java.sql.Connection;
@@ -46,7 +50,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.inject.Provider;
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 
 
 /**
@@ -55,7 +61,8 @@ import javax.persistence.EntityManagerFactory;
  * with Liquibase migrations applied, enabling parallel execution of database tests.
  */
 public class CandlepinTestExtension
-    implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback {
+    implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback,
+    BeforeTestExecutionCallback {
 
     private static final String CHANGELOG_FILE = "db/changelog/changelog-update.xml";
     private static final String TRUNCATE_SQL = "TRUNCATE SCHEMA %s RESTART IDENTITY AND COMMIT NO CHECK";
@@ -113,12 +120,65 @@ public class CandlepinTestExtension
             ExtensionContext classContext = getClassContext(context);
             ExtensionContext.Store store = classContext.getStore(NAMESPACE);
 
-            Injector parentInjector = (Injector) store.get("parentInjector");
             CryptoManager cryptoManager = (CryptoManager) store.get("cryptoManager");
-
-            fixture.setParentInjector(parentInjector);
             fixture.setCryptoManager(cryptoManager);
+
+            boolean canCache = !hasCustomOverrideModule(context.getRequiredTestClass());
+            Injector childInjector = (Injector) store.get("childInjector");
+            DevConfig config = (DevConfig) store.get("config");
+
+            Injector parentInjector = (Injector) store.get("parentInjector");
+
+            if (childInjector != null && canCache) {
+                TestConfig.resetToDefaults(config);
+                fixture.setInjector(childInjector);
+            }
+            else if (canCache) {
+                config = TestConfig.defaults();
+                Module testModule = fixture.buildTestModule(config);
+                childInjector = parentInjector.createChildInjector(testModule);
+
+                store.put("childInjector", childInjector);
+                store.put("config", config);
+                fixture.setInjector(childInjector);
+            }
+            else {
+                config = TestConfig.defaults();
+                fixture.setParentInjector(parentInjector);
+            }
+
+            fixture.setConfig(config);
         }
+    }
+
+    @Override
+    public void beforeTestExecution(ExtensionContext context) throws Exception {
+        Object testInstance = context.getRequiredTestInstance();
+        if (testInstance instanceof DatabaseTestFixture fixture) {
+            if (!fixture.shouldKeepTransactionOpen()) {
+                Injector injector = fixture.getInjector();
+                EntityManager em = injector.getInstance(EntityManager.class);
+                EntityTransaction transaction = em.getTransaction();
+                if (transaction.isActive()) {
+                    em.flush();
+                    transaction.commit();
+                }
+            }
+        }
+    }
+
+    private boolean hasCustomOverrideModule(Class<?> testClass) {
+        Class<?> clazz = testClass;
+        while (clazz != null && clazz != DatabaseTestFixture.class) {
+            try {
+                clazz.getDeclaredMethod("getGuiceOverrideModule");
+                return true;
+            }
+            catch (NoSuchMethodException e) {
+                clazz = clazz.getSuperclass();
+            }
+        }
+        return false;
     }
 
     @Override

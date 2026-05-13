@@ -89,6 +89,7 @@ public final class TestConfig {
             config.setProperty(ConfigProperties.BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT,
                 String.valueOf(BULK_SET_CONSUMER_ENV_MAX_ENV_LIMIT));
             config.setProperty(ConfigProperties.SCA_X509_CERT_EXPIRY_THRESHOLD, "5");
+            config.setProperty(ConfigProperties.CRYPTO_SKIP_SCHEME_VALIDATION, "true");
 
             // Assign the default config. This is somewhat pointless because we can't make this immutable, but
             // whatever.
@@ -109,6 +110,11 @@ public final class TestConfig {
 
     public static DevConfig defaults() {
         return new DevConfig()
+            .setPropertiesFrom(DEFAULT_CONFIG);
+    }
+
+    public static void resetToDefaults(DevConfig config) {
+        config.reset()
             .setPropertiesFrom(DEFAULT_CONFIG);
     }
 

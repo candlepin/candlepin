@@ -79,6 +79,10 @@ public class PermissionFactory {
             this.ownerCache = new WeakHashMap<>();
         }
 
+        public void clearCache() {
+            this.ownerCache.clear();
+        }
+
         public Owner resolve(OwnerInfo oinfo) {
             if (oinfo == null) {
                 return null;
@@ -127,6 +131,13 @@ public class PermissionFactory {
         this.ownerResolver = new OwnerResolver(this.ownerCurator);
 
         this.builders = this.initBuilders();
+    }
+
+    /**
+     * Clears the internal owner resolution cache.
+     */
+    public void clearCache() {
+        this.ownerResolver.clearCache();
     }
 
     /**

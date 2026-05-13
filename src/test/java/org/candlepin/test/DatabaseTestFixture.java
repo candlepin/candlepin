@@ -185,18 +185,48 @@ public class DatabaseTestFixture {
     private Injector parentInjector;
     protected Injector injector;
     private CandlepinRequestScope cpRequestScope;
+    private boolean keepTransactionOpen;
 
     protected TestingInterceptor securityInterceptor;
     protected DateSourceForTesting dateSource;
     protected I18n i18n;
     protected Provider<I18n> i18nProvider;
 
-    public void setParentInjector(Injector injector) {
-        this.parentInjector = injector;
+    public Injector getInjector() {
+        return this.injector;
+    }
+
+    public void setParentInjector(Injector parentInjector) {
+        this.parentInjector = parentInjector;
+    }
+
+    public void setInjector(Injector injector) {
+        this.injector = injector;
+    }
+
+    public void setConfig(DevConfig config) {
+        this.config = config;
     }
 
     public void setCryptoManager(CryptoManager cryptoManager) {
         this.cryptoManager = cryptoManager;
+    }
+
+    public boolean shouldKeepTransactionOpen() {
+        return this.keepTransactionOpen;
+    }
+
+    /**
+     * Builds the Guice module for this test class, combining the standard test bindings
+     * with any test-specific overrides from {@link #getGuiceOverrideModule()}.
+     *
+     * @param config
+     *     the configuration to use for the standard test module
+     * @return the combined module
+     */
+    public Module buildTestModule(DevConfig config) {
+        return Modules.override(new TestingModules.StandardTest(config))
+            .with(this.getGuiceOverrideModule());
     }
 
     // Need a before each here and a Liquibase extension...
@@ -206,16 +236,10 @@ public class DatabaseTestFixture {
     }
 
     public void init(boolean beginTransaction) throws Exception {
-        this.config = TestConfig.defaults();
-
-        // Impl note: Creating a new injector on every test invocation causes *every object to be
-        // reconstructed*, even if that object was bound or flagged as a singleton! This can cause major
-        // performance issues for objects with expensive initialization (e.g. CryptoManager).
-        // This should eventually be ripped out and replaced with more consistent DI; however at the time of
-        // writing, our database setup and teardown relies upon this behavior.
-        Module instancedTestModule = Modules.override(new TestingModules.StandardTest(this.config))
-            .with(this.getGuiceOverrideModule());
-        this.injector = parentInjector.createChildInjector(instancedTestModule);
+        if (this.injector == null) {
+            Module testModule = this.buildTestModule(this.config);
+            this.injector = this.parentInjector.createChildInjector(testModule);
+        }
 
         methodLocator = new MethodLocator(injector);
         methodLocator.init();
@@ -234,6 +258,10 @@ public class DatabaseTestFixture {
         // Exit the scope to make sure that it is clean before starting the test.
         cpRequestScope.exit();
         cpRequestScope.enter();
+
+        this.beginTransaction();
+        this.rulesCurator.updateDbRules();
+
         this.injector.injectMembers(this);
 
         dateSource = (DateSourceForTesting) this.injector.getInstance(DateSource.class);
@@ -242,9 +270,7 @@ public class DatabaseTestFixture {
         HttpServletRequest req = this.injector.getInstance(HttpServletRequest.class);
         when(req.getAttribute("username")).thenReturn("mock_user");
 
-        if (beginTransaction) {
-            this.beginTransaction();
-        }
+        this.keepTransactionOpen = beginTransaction;
     }
 
     private void loadFromInjector() {
@@ -299,8 +325,9 @@ public class DatabaseTestFixture {
     public void shutdown() {
         cpRequestScope.exit();
 
-        // If we have any pending transactions, we should commit it before we move on
         EntityManager manager = this.getEntityManager();
+
+        // If we have any pending transactions, we should commit it before we move on
         EntityTransaction transaction = manager.getTransaction();
 
         if (transaction.isActive()) {
@@ -317,8 +344,11 @@ public class DatabaseTestFixture {
         TestPrincipalProviderSetter.get().setPrincipal(null);
         manager.clear();
 
-        reset(parentInjector.getInstance(HttpServletRequest.class));
-        reset(parentInjector.getInstance(HttpServletResponse.class));
+        this.securityInterceptor.disable();
+        this.permissionFactory.clearCache();
+
+        reset(this.injector.getInstance(HttpServletRequest.class));
+        reset(this.injector.getInstance(HttpServletResponse.class));
     }
 
     protected Module getGuiceOverrideModule() {
