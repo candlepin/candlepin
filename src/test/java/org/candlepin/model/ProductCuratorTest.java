@@ -30,7 +30,6 @@ import org.candlepin.util.AttributeValidator;
 import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.PropertyValidationException;
 
-import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -59,6 +58,7 @@ import java.util.stream.Stream;
 
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceException;
+import jakarta.validation.ConstraintViolationException;
 
 
 public class ProductCuratorTest extends DatabaseTestFixture {
@@ -591,7 +591,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void normalCreate() {
         Product prod = new Product("cptest-label", "My Product");
         this.productCurator.create(prod);
@@ -609,7 +608,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test
     public void testProductNameRequired() {
         Product prod = new Product("some product id", null);
-        assertThrows(PersistenceException.class, () -> productCurator.create(prod, true));
+        assertThrows(ConstraintViolationException.class, () -> productCurator.create(prod, true));
     }
 
     @Test

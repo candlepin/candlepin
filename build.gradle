@@ -122,17 +122,9 @@ dependencies {
     implementation(libs.oauth)
 
     // Resteasy
-    // Exclude org.jboss:jandex:2.x pulled by RESTEasy, because it is incompatible with
-    // the version that Hibernate 6.2 needs/pulls itself (io.smallrye:jandex:3.x+)
-    implementation(libs.resteasy.atom) {
-        exclude group: 'org.jboss', module: 'jandex'
-    }
-    implementation(libs.resteasy.guice) {
-        exclude group: 'org.jboss', module: 'jandex'
-    }
-    implementation(libs.resteasy.multipart) {
-        exclude group: 'org.jboss', module: 'jandex'
-    }
+    implementation(libs.resteasy.atom)
+    implementation(libs.resteasy.guice)
+    implementation(libs.resteasy.multipart)
     implementation(libs.resteasy.validator) {
         // We don't need resteasy-cdi, since we use Guice
         exclude group: 'org.jboss.resteasy', module: 'resteasy-cdi'

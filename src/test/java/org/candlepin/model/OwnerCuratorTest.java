@@ -47,8 +47,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-import jakarta.persistence.PersistenceException;
 import jakarta.persistence.RollbackException;
+import jakarta.validation.ConstraintViolationException;
 
 
 
@@ -129,7 +129,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
             .setDisplayName("owner2");
         owner2.setUpstreamConsumer(uc);
 
-        assertThrows(PersistenceException.class, () -> ownerCurator.create(owner1));
+        assertThrows(ConstraintViolationException.class, () -> ownerCurator.create(owner1));
     }
 
     private void createAndConsumePool(Owner o, Product p) {
