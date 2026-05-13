@@ -186,7 +186,6 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     private String complianceStatusHash;
 
     @Column(length = 255, nullable = true)
-
     @Type(EmptyStringUserType.class)
     @Size(max = 255)
     private String serviceLevel;

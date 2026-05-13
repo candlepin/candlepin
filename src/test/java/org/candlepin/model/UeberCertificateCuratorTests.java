@@ -65,13 +65,10 @@ public class UeberCertificateCuratorTests extends DatabaseTestFixture {
         // Verify that a ConstraintViolationException exists in the cause chain
         assertThatThrownBy(() -> this.createUeberCert(owner))
             .satisfies(exception -> {
-                Throwable cause = exception;
-                while (cause != null) {
+                for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
                     if (cause instanceof ConstraintViolationException) {
                         return;
                     }
-
-                    cause = cause.getCause();
                 }
 
                 fail("Expected ConstraintViolationException in cause chain");

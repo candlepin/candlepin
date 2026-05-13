@@ -652,8 +652,8 @@ def parse_options():
             help="print debug output")
     parser.add_option("--tomcat-version", action="store", default=None, type=str, dest="tc_version",
             help="specify a Tomcat version to target")
-    parser.add_option("--use-apr", action="store_true", default=False,
-            help="use APR connector with OpenSSL and dual RSA/ML-DSA certificates")
+    parser.add_option("--use-connector", action="store", type="choice", choices=["nio", "apr", "jsse"], default = "jsse", dest="connector",
+            help="Specify the connector type to use. By default, the JSSE connector will be used.")
 
     (options, args) = parser.parse_args()
     if len(args) != 1:
@@ -687,25 +687,23 @@ def main():
 
     make_backup_config(conf_dir)
 
-    use_openssl_listener = False
+    connector = options.connector
 
     # Determine which connector to use...
-    if options.use_apr:
-        logger.info("Using APR connector and dual RSA/ML-DSA certificate support")
+    if connector == "apr":
+        logger.info("Using APR connector with dual RSA/ML-DSA certificate support")
         ssl_editor_target = CandlepinConnectorAPR
-        use_apr = True
+    elif connector == "nio":
+        logger.info("Using NIO connector with dual RSA/ML-DSA certificate support")
+        ssl_editor_target = CandlepinConnectorNIO
     else:
         # Determine which SSLContextEditor we need...
         tversion = parse_tc_version(options.tc_version)
-        if tversion[0] >= 10:
-            ssl_editor_target = CandlepinConnectorNIO
-            use_openssl_listener = True
-        elif not tversion or len(tversion) < 1 or tversion[0] > 8 or (tversion[0] == 8 and tversion[1] >= 5):
+        if not tversion or len(tversion) < 1 or tversion[0] > 8 or (tversion[0] == 8 and tversion[1] >= 5):
             ssl_editor_target = CandlepinConnectorEditorV3
         else:
             logger.warn("Using legacy Tomcat configuration")
             ssl_editor_target = LegacySSLContextEditor
-        use_apr = False
 
     xml_file = os.path.join(conf_dir, "server.xml")
     logger.debug("Opening %s" % xml_file)
@@ -713,17 +711,21 @@ def main():
         ssl_editor_target(doc).insert()
         AccessLogValveEditor(doc).insert()
 
-        if use_apr:
-            # Add APR listener (required for APR connector)
+        # Based on the connector that is being used, add the corresponding listener and remove the other
+        # listeners from the configurations
+
+        if connector == "apr":
             AprListenerAdder(doc).insert()
             OpenSSLListenerDeleter(doc).remove()
-        elif use_openssl_listener:
+        elif connector == "nio":
             OpenSSLListenerAdder(doc).insert()
             AprListenerDeleter(doc).remove()
         else:
-            # Remove APR listener (causes issues with JSSE connector)
+            # Defaulting to using the JSSE connector.
+            # Remove the APR and OpenSSL listener (causes issues with JSSE connector)
             AprListenerDeleter(doc).remove()
             OpenSSLListenerDeleter(doc).remove()
+
         if options.stdout:
             print(doc.serialize())
         else:

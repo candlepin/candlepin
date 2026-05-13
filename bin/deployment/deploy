@@ -115,7 +115,7 @@ configure_tomcat() {
     $SUDO "${PROJECT_DIR}/bin/deployment/gen_certs.sh" --pq --trust $GEN_CERTS_ARGS
 
     # update server.xml
-    $SUDO python $PROJECT_DIR/bin/deployment/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR
+    $SUDO python $PROJECT_DIR/bin/deployment/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR --use-connector "nio"
 
     # create conf.d file to disable FIPS for our TC instance
     local CONTAINER_CONFD_DIR="${CONTAINER_CONF_DIR}/conf.d"

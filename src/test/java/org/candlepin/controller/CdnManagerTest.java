@@ -83,7 +83,6 @@ public class CdnManagerTest extends DatabaseTestFixture {
         Product product = this.createProduct();
         Pool pool = this.createPool(owner, product)
             .setCdn(cdn);
-        this.poolCurator.merge(pool);
         assertNotNull(pool.getCdn());
 
         this.manager.deleteCdn(cdn);

@@ -110,7 +110,7 @@ public class NullAsEmptyStringType implements UserType<String> {
      */
     @Override
     public String nullSafeGet(ResultSet resultSet, int position,
-         SharedSessionContractImplementor session, Object owner) throws SQLException {
+        SharedSessionContractImplementor session, Object owner) throws SQLException {
 
         String value = resultSet.getString(position);
 

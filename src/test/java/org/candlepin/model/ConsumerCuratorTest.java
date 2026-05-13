@@ -2300,7 +2300,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             .setUsername("testUser")
             .setOwner(owner)
             .setType(ct);
-        consumer.setContentTags(new HashSet<>(Arrays.asList("t1", "t2")));
+        consumer.setContentTags(Set.of("t1", "t2"));
         EntityManager em = this.getEntityManager();
 
         String countQuery = "SELECT COUNT(*) FROM cp_consumer_content_tags";

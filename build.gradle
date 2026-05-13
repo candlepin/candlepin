@@ -273,7 +273,8 @@ openApiGenerate {
             interfaceOnly: 'true',
             dateLibrary  : "java8",
             useTags      : "true",
-            containerDefaultToNull: "true"
+            containerDefaultToNull: "true",
+            useJakartaEe : "true"
     ]
     templateDir = rootProject.layout.projectDirectory.dir("buildSrc/src/main/resources/templates")
 }
