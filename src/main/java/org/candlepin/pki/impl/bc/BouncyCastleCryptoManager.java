@@ -23,7 +23,6 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
-import org.candlepin.pki.DistinguishedName;
 import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.OidUtil;
 import org.candlepin.pki.Scheme;
@@ -42,15 +41,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.math.BigInteger;
 import java.security.InvalidKeyException;
-import java.security.KeyException;
-import java.security.KeyPair;
+import java.security.InvalidParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -112,9 +108,10 @@ public class BouncyCastleCryptoManager implements CryptoManager {
     }
 
     /**
-     * Validates that the given scheme can actually be used to perform cryptographic operations by attempting
-     * to generate a key and certificate with each, using the configured security provider. If the scheme
-     * fails validation, this method throws an exception.
+     * Validates that the given scheme can actually be used to perform cryptographic operations by signing
+     * and verifying test data using the scheme's configured key material, and checking that the key
+     * algorithm and key size resolve correctly in the configured security provider. If the scheme fails
+     * validation, this method throws an exception.
      *
      * @param scheme
      *  the scheme to validate
@@ -126,8 +123,6 @@ public class BouncyCastleCryptoManager implements CryptoManager {
         try {
             byte[] bytes = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
-            // We don't care about the result of any of these methods, just that they seem to work, indicating
-            // that the scheme resolves to usable algorithms
             byte[] signature = this.getSigner(scheme)
                 .sign(bytes);
 
@@ -135,21 +130,20 @@ public class BouncyCastleCryptoManager implements CryptoManager {
                 .forSignature(signature)
                 .validate(bytes);
 
-            Instant startTime = Instant.now();
-            Instant endTime = startTime.plusSeconds(86400);
-
-            KeyPair keypair = this.getKeyPairGenerator(scheme)
-                .generateKeyPair();
-
-            this.getCertificateBuilder(scheme)
-                .withDN(new DistinguishedName("validation_cn", "validation_on"))
-                .withSerial(BigInteger.valueOf(123))
-                .withValidity(startTime, endTime)
-                .withKeyPair(keypair)
-                .build();
+            java.security.KeyPairGenerator generator = java.security.KeyPairGenerator.getInstance(
+                scheme.keyAlgorithm(), this.securityProvider);
+            scheme.keySize().ifPresent(generator::initialize);
         }
-        catch (KeyException | org.candlepin.pki.SignatureException e) {
+        catch (org.candlepin.pki.SignatureException e) {
             throw new ConfigurationException("Scheme validation failed for scheme: " + scheme.name(), e);
+        }
+        catch (NoSuchAlgorithmException e) {
+            throw new ConfigurationException("Scheme validation failed for scheme: " + scheme.name() +
+                "; key algorithm not supported: " + scheme.keyAlgorithm(), e);
+        }
+        catch (InvalidParameterException e) {
+            throw new ConfigurationException("Scheme validation failed for scheme: " + scheme.name() +
+                "; unsupported key size: " + scheme.keySize().orElse(null), e);
         }
     }
 
