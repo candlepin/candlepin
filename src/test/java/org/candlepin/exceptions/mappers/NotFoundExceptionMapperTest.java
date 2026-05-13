@@ -48,7 +48,7 @@ public class NotFoundExceptionMapperTest extends TestExceptionMapperBase {
     @Test
     public void handleNotFoundQueryParameterException() {
         NotFoundExceptionMapper nfem = injector.getInstance(NotFoundExceptionMapper.class);
-        String foo = "javax.ws.rs.SomeThing(\"paramName\") value is 'strVal' for";
+        String foo = "jakarta.ws.rs.SomeThing(\"paramName\") value is 'strVal' for";
         NotFoundException bre = new NotFoundException(foo);
         Response r = nfem.toResponse(bre);
 

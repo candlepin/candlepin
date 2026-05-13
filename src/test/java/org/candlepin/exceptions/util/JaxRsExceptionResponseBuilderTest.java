@@ -49,7 +49,7 @@ public class JaxRsExceptionResponseBuilderTest {
 
     @Test
     public void jaxWsRsError() {
-        String foo = "javax.ws.rs.SomeThing(\"paramName\") value is 'strVal' for";
+        String foo = "jakarta.ws.rs.SomeThing(\"paramName\") value is 'strVal' for";
         Response resp = exceptionBuilder.getResponse(new RuntimeException(foo));
         ExceptionMessage e =  (ExceptionMessage) resp.getEntity();
 
@@ -69,20 +69,20 @@ public class JaxRsExceptionResponseBuilderTest {
 
     @Test
     public void badExceptionNotHandleable() {
-        String foo = "javax.Xs.rs.SomeThing(\"paramName\") value is 'strVal' for";
+        String foo = "jakarta.Xs.rs.SomeThing(\"paramName\") value is 'strVal' for";
         assertFalse(exceptionBuilder.canHandle(new RuntimeException(foo)));
     }
 
     @Test
     public void badMessageNotHandleable() {
-        String foo = "javax.ws.rs.SomeThing(\"paramName\") value is strVal for";
+        String foo = "jakarta.ws.rs.SomeThing(\"paramName\") value is strVal for";
         assertFalse(exceptionBuilder.canHandle(new RuntimeException(foo)));
     }
 
     @Test
     public void canHandleIncorrectDateTimeFormats() {
         NotFoundException ex = new NotFoundException("Unable to extract parameter from http request: " +
-            "javax.ws.rs.QueryParam(\"param\") value is '2019-01-16T01:02:03-0400' for public",
+            "jakarta.ws.rs.QueryParam(\"param\") value is '2019-01-16T01:02:03-0400' for public",
             new RuntimeException("Invalid Date"));
 
         assertTrue(exceptionBuilder.canHandle(ex));

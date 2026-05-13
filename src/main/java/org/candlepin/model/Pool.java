@@ -24,10 +24,9 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.type.SqlTypes;
+import org.hibernate.type.NumericBooleanConverter;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collections;
@@ -40,6 +39,7 @@ import java.util.Set;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -56,7 +56,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 
 
 /**
@@ -308,7 +307,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     private Cdn cdn;
 
     @Column(name = "managed")
-    @JdbcTypeCode(SqlTypes.TINYINT)
+    @Convert(converter = NumericBooleanConverter.class)
     private Boolean managed;
 
     public Pool() {

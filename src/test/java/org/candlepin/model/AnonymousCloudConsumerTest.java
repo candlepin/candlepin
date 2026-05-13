@@ -25,7 +25,6 @@ import org.candlepin.model.exceptions.ValueTooLargeException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -34,6 +33,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import jakarta.validation.ConstraintViolationException;
 
 
 public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
