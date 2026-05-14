@@ -112,3 +112,14 @@
 
           [Install]
           WantedBy=multi-user.target
+
+    - name: "Create setenv.sh and remote debugging JVM arguments"
+      become: true
+      ansible.builtin.blockinfile:
+        path: "/var/lib/tomcat/bin/setenv.sh"
+        block: |
+          CATALINA_OPTS="${CATALINA_OPTS} -Xdebug -Xrunjdwp:transport=dt_socket,address=*:8000,server=y,suspend=n"
+        state: present
+        create: true
+        mode: 0755
+        group: tomcat
