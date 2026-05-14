@@ -28,7 +28,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
-import org.candlepin.junit.CandlepinTestExtension;
+import org.candlepin.junit.DatabaseTestExtension;
 import org.candlepin.service.EventAdapter;
 
 import com.google.inject.AbstractModule;
@@ -45,9 +45,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.parallel.ResourceLock;
 
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -58,7 +62,7 @@ import javax.servlet.ServletContextEvent;
 public class CandlepinContextListenerTest {
 
     @RegisterExtension
-    static CandlepinTestExtension ext = new CandlepinTestExtension();
+    static DatabaseTestExtension ext = new DatabaseTestExtension();
 
     private DevConfig config;
     private CandlepinContextListener listener;
@@ -194,11 +198,15 @@ public class CandlepinContextListenerTest {
 
     @Test
     public void contextDestroyed() {
+        List<Driver> drivers = backupDrivers();
+
         this.config.setProperty(ConfigProperties.ACTIVEMQ_ENABLED, "true");
         prepareForInitialization();
 
         listener.contextInitialized(evt);
         listener.contextDestroyed(evt);
+
+        restoreDrivers(drivers);
 
         verify(evt, atMost(5)).getServletContext();
         verifyNoMoreInteractions(evt);
@@ -207,12 +215,15 @@ public class CandlepinContextListenerTest {
 
     @Test
     public void ensureAMQPClosedProperly() {
+        List<Driver> drivers = backupDrivers();
+
         this.config.setProperty(ConfigProperties.SUSPEND_MODE_ENABLED, "true");
 
         prepareForInitialization();
         listener.contextInitialized(evt);
-
         listener.contextDestroyed(evt);
+
+        restoreDrivers(drivers);
     }
 
     @Test
@@ -228,9 +239,13 @@ public class CandlepinContextListenerTest {
 
     @Test
     public void ensureEventAdapterIsShutdown() {
+        List<Driver> drivers = backupDrivers();
+
         prepareForInitialization();
         listener.contextInitialized(evt);
         listener.contextDestroyed(evt);
+
+        restoreDrivers(drivers);
 
         verify(mockEventAdapter).shutdown();
     }
@@ -276,13 +291,32 @@ public class CandlepinContextListenerTest {
         when(resteasyDeployment.getRegistry()).thenReturn(registry);
     }
 
+    private static List<Driver> backupDrivers() {
+        List<Driver> drivers = new ArrayList<>();
+        Enumeration<Driver> driverEnum = DriverManager.getDrivers();
+        while (driverEnum.hasMoreElements()) {
+            drivers.add(driverEnum.nextElement());
+        }
+        return drivers;
+    }
+
+    private static void restoreDrivers(List<Driver> drivers) {
+        for (Driver driver : drivers) {
+            try {
+                DriverManager.registerDriver(driver);
+            }
+            catch (SQLException e) {
+                throw new RuntimeException("Failed to re-register driver: " + driver, e);
+            }
+        }
+    }
+
     private CandlepinContextListener createContextListener() {
         return new CandlepinContextListener() {
             @Override
             protected List<Module> getModules(ServletContext context) {
                 List<Module> modules = new LinkedList<>();
-                modules.add(new TestingModules.JpaModule(
-                    Map.of("hibernate.connection.url", ext.getJdbcUrl())));
+                modules.add(DatabaseTestExtension.createJpaModule(ext.getJdbcUrl()));
 
                 Module testingModule = new TestingModules.StandardTest(config);
                 Module contextListenerTestModule = new ContextListenerTestModule();
@@ -306,7 +340,7 @@ public class CandlepinContextListenerTest {
             }
 
             @Override
-            protected void deregisterJdbcDrivers() {
+            protected void initializeTranslations() {
                 /* intentionally left empty */
             }
         };

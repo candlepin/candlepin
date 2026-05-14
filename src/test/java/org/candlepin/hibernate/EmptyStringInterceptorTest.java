@@ -17,30 +17,23 @@ package org.candlepin.hibernate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import org.junit.jupiter.api.AfterEach;
+import org.candlepin.junit.DatabaseTestExtension;
+
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.Map;
-import java.util.Properties;
-import java.util.UUID;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
-import javax.persistence.Persistence;
 import javax.persistence.Table;
 
-/**
- * EmptyStringInterceptorTest
- */
+
 public class EmptyStringInterceptorTest {
-    private EntityManagerFactory emf;
-    private EntityManager em;
-    private Properties props;
-    private String jdbcUrl;
 
     @Entity
     @Table(name = "Person")
@@ -68,75 +61,83 @@ public class EmptyStringInterceptorTest {
         }
     }
 
-    @BeforeEach
-    public void setUp() {
-        String dbName = "empty-string-int-" + UUID.randomUUID().toString().substring(0, 8);
-        this.jdbcUrl = "jdbc:hsqldb:mem:" + dbName + ";sql.enforce_strict_size=true;shutdown=true;";
-        props = new Properties();
-        props.put("hibernate.connection.url", this.jdbcUrl);
+    @Nested
+    class WithoutInterceptor {
+
+        @RegisterExtension
+        static DatabaseTestExtension db =
+            DatabaseTestExtension.lightweight("testingEmptyStringInterceptor");
+
+        private EntityManager em;
+
+        @BeforeEach
+        void setUp() {
+            this.em = db.getEntityManager();
+        }
+
+        @Test
+        void testNormalEmptyStringPersistence() {
+            Person p = new Person();
+            p.setName("");
+            p.setId(1);
+
+            em.getTransaction().begin();
+            em.persist(p);
+            em.flush();
+            em.getTransaction().commit();
+            em.clear();
+
+            p = em.find(Person.class, 1);
+            assertEquals("", p.getName());
+        }
     }
 
-    @AfterEach
-    public void tearDown() {
-        em.close();
-        emf.close();
-    }
+    @Nested
+    class WithInterceptor {
 
-    @Test
-    public void testNormalEmptyStringPersistence() {
-        emf = Persistence.createEntityManagerFactory("testingEmptyStringInterceptor",
-            Map.of("hibernate.connection.url", this.jdbcUrl));
-        em = emf.createEntityManager();
+        @RegisterExtension
+        static DatabaseTestExtension db = DatabaseTestExtension.lightweight(
+            "testingEmptyStringInterceptor",
+            Map.of("hibernate.ejb.interceptor",
+                "org.candlepin.hibernate.EmptyStringInterceptor"));
 
-        Person p = new Person();
-        p.setName("");
-        p.setId(1);
+        private EntityManager em;
 
-        persist(p);
+        @BeforeEach
+        void setUp() {
+            this.em = db.getEntityManager();
+        }
 
-        p = em.find(Person.class, 1);
-        assertEquals("", p.getName());
-    }
+        @Test
+        void testInterceptedEmptyStringPersistence() {
+            Person p = new Person();
+            p.setName("");
+            p.setId(1);
 
-    @Test
-    public void testInterceptedEmptyStringPersistence() {
-        props.put("hibernate.ejb.interceptor",
-            "org.candlepin.hibernate.EmptyStringInterceptor");
+            em.getTransaction().begin();
+            em.persist(p);
+            em.flush();
+            em.getTransaction().commit();
+            em.clear();
 
-        emf = Persistence.createEntityManagerFactory("testingEmptyStringInterceptor", props);
-        em = emf.createEntityManager();
+            p = em.find(Person.class, 1);
+            assertNull(p.getName());
+        }
 
-        Person p = new Person();
-        p.setName("");
-        p.setId(1);
+        @Test
+        void testInterceptedNullStringPersistence() {
+            Person p = new Person();
+            p.setName(null);
+            p.setId(1);
 
-        persist(p);
+            em.getTransaction().begin();
+            em.persist(p);
+            em.flush();
+            em.getTransaction().commit();
+            em.clear();
 
-        p = em.find(Person.class, 1);
-        assertNull(p.getName());
-    }
-
-    @Test
-    public void testInterceptedNullStringPersistence() {
-        props.put("hibernate.ejb.interceptor", "org.candlepin.hibernate.EmptyStringInterceptor");
-
-        emf = Persistence.createEntityManagerFactory("testingEmptyStringInterceptor", props);
-        em = emf.createEntityManager();
-
-        Person p = new Person();
-        p.setName(null);
-        p.setId(1);
-
-        persist(p);
-
-        p = em.find(Person.class, 1);
-        assertNull(p.getName());
-    }
-
-    private void persist(Person p) {
-        em.getTransaction().begin();
-        em.persist(p);
-        em.flush();
-        em.getTransaction().commit();
+            p = em.find(Person.class, 1);
+            assertNull(p.getName());
+        }
     }
 }

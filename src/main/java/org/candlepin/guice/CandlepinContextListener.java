@@ -136,12 +136,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         try {
             log.info("Candlepin initializing context.");
 
-            try {
-                I18nManager.getInstance().setDefaultLocale(Locale.US);
-            }
-            catch (MissingResourceException e) {
-                log.debug("Failed to set default I18n locale", e);
-            }
+            initializeTranslations();
 
             servletContext = sce.getServletContext();
 
@@ -251,8 +246,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         // Tear down the job system
         this.jobManager.shutdown();
 
-        injector.getInstance(PersistService.class).stop();
-        this.deregisterJdbcDrivers();
+        this.shutdownPersistenceService();
 
         eventAdapter.shutdown();
 
@@ -267,7 +261,19 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         this.loggerListener.contextDestroyed();
     }
 
-    protected void deregisterJdbcDrivers() {
+    protected void initializeTranslations() {
+        try {
+            I18nManager.getInstance().setDefaultLocale(Locale.US);
+        }
+        catch (MissingResourceException e) {
+            log.error("Failed to initialize default I18n locale; unable to start Candlepin", e);
+            throw new RuntimeException("Failed to initialize translations", e);
+        }
+    }
+
+    private void shutdownPersistenceService() {
+        this.injector.getInstance(PersistService.class).stop();
+
         Enumeration<Driver> drivers = DriverManager.getDrivers();
         while (drivers.hasMoreElements()) {
             Driver driver = drivers.nextElement();

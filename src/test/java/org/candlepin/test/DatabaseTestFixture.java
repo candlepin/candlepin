@@ -33,8 +33,8 @@ import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.guice.CandlepinRequestScope;
-import org.candlepin.guice.TestPrincipalProviderSetter;
-import org.candlepin.junit.CandlepinTestExtension;
+import org.candlepin.guice.TestPrincipalProvider;
+import org.candlepin.junit.DatabaseTestExtension;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.AsyncJobStatusCurator;
@@ -126,7 +126,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Test fixture for test classes requiring access to the database.
  */
-@ExtendWith(CandlepinTestExtension.class)
+@ExtendWith(DatabaseTestExtension.class)
 public class DatabaseTestFixture {
     protected static Logger log = LoggerFactory.getLogger(DatabaseTestFixture.class);
 
@@ -181,52 +181,19 @@ public class DatabaseTestFixture {
     protected MethodLocator methodLocator;
     protected AnnotationLocator annotationLocator;
 
-    private CryptoManager cryptoManager;
+    private static final CryptoManager CRYPTO_MANAGER = CryptoUtil.getCryptoManager();
+
     private Injector parentInjector;
     protected Injector injector;
     private CandlepinRequestScope cpRequestScope;
-    private boolean keepTransactionOpen;
 
     protected TestingInterceptor securityInterceptor;
     protected DateSourceForTesting dateSource;
     protected I18n i18n;
     protected Provider<I18n> i18nProvider;
 
-    public Injector getInjector() {
-        return this.injector;
-    }
-
     public void setParentInjector(Injector parentInjector) {
         this.parentInjector = parentInjector;
-    }
-
-    public void setInjector(Injector injector) {
-        this.injector = injector;
-    }
-
-    public void setConfig(DevConfig config) {
-        this.config = config;
-    }
-
-    public void setCryptoManager(CryptoManager cryptoManager) {
-        this.cryptoManager = cryptoManager;
-    }
-
-    public boolean shouldKeepTransactionOpen() {
-        return this.keepTransactionOpen;
-    }
-
-    /**
-     * Builds the Guice module for this test class, combining the standard test bindings
-     * with any test-specific overrides from {@link #getGuiceOverrideModule()}.
-     *
-     * @param config
-     *     the configuration to use for the standard test module
-     * @return the combined module
-     */
-    public Module buildTestModule(DevConfig config) {
-        return Modules.override(new TestingModules.StandardTest(config))
-            .with(this.getGuiceOverrideModule());
     }
 
     // Need a before each here and a Liquibase extension...
@@ -236,10 +203,11 @@ public class DatabaseTestFixture {
     }
 
     public void init(boolean beginTransaction) throws Exception {
-        if (this.injector == null) {
-            Module testModule = this.buildTestModule(this.config);
-            this.injector = this.parentInjector.createChildInjector(testModule);
-        }
+        this.config = TestConfig.defaults();
+
+        Module instancedTestModule = Modules.override(new TestingModules.StandardTest(this.config))
+            .with(this.getGuiceOverrideModule());
+        this.injector = this.parentInjector.createChildInjector(instancedTestModule);
 
         methodLocator = new MethodLocator(injector);
         methodLocator.init();
@@ -253,15 +221,8 @@ public class DatabaseTestFixture {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.i18nProvider = () -> this.i18n;
 
-        // Because all candlepin operations are running in the CandlepinRequestScope
-        // we'll force the instance creations to be done inside the scope.
-        // Exit the scope to make sure that it is clean before starting the test.
         cpRequestScope.exit();
         cpRequestScope.enter();
-
-        this.beginTransaction();
-        this.rulesCurator.updateDbRules();
-
         this.injector.injectMembers(this);
 
         dateSource = (DateSourceForTesting) this.injector.getInstance(DateSource.class);
@@ -270,7 +231,10 @@ public class DatabaseTestFixture {
         HttpServletRequest req = this.injector.getInstance(HttpServletRequest.class);
         when(req.getAttribute("username")).thenReturn("mock_user");
 
-        this.keepTransactionOpen = beginTransaction;
+        if (beginTransaction) {
+            this.beginTransaction();
+            this.rulesCurator.updateDbRules();
+        }
     }
 
     private void loadFromInjector() {
@@ -339,16 +303,11 @@ public class DatabaseTestFixture {
             }
         }
 
-        // We are using a singleton for the principal in tests. Make sure we clear it out
-        // after every test. TestPrincipalProvider controls the default behavior.
-        TestPrincipalProviderSetter.get().setPrincipal(null);
+        TestPrincipalProvider.clearPrincipal();
         manager.clear();
 
-        this.securityInterceptor.disable();
-        this.permissionFactory.clearCache();
-
-        reset(this.injector.getInstance(HttpServletRequest.class));
-        reset(this.injector.getInstance(HttpServletResponse.class));
+        reset(this.parentInjector.getInstance(HttpServletRequest.class));
+        reset(this.parentInjector.getInstance(HttpServletResponse.class));
     }
 
     protected Module getGuiceOverrideModule() {
@@ -358,7 +317,7 @@ public class DatabaseTestFixture {
                 // Bind to a specific instance of the CryptoManager to avoid spinning up a new instance on
                 // every test. Tests which need new instances can manually construct one using CryptoUtil
                 // or direct construction; or override this module to avoid this fixed binding.
-                bind(CryptoManager.class).toInstance(cryptoManager);
+                bind(CryptoManager.class).toInstance(CRYPTO_MANAGER);
             }
         };
     }
@@ -781,7 +740,7 @@ public class DatabaseTestFixture {
     }
 
     protected Principal setupPrincipal(Principal p) {
-        TestPrincipalProviderSetter.get().setPrincipal(p);
+        TestPrincipalProvider.setPrincipal(p);
         return p;
     }
 

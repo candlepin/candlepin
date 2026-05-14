@@ -19,26 +19,26 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.candlepin.junit.DatabaseTestExtension;
+
 import org.hibernate.annotations.Type;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.Map;
-import java.util.UUID;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
-import javax.persistence.Persistence;
 import javax.persistence.Table;
 
 
 
 public class EmptyStringUserTypeTest {
-    private EntityManagerFactory emf;
+
+    @RegisterExtension
+    static DatabaseTestExtension db = DatabaseTestExtension.lightweight("testingUserType");
+
     private EntityManager em;
 
     @Entity
@@ -80,18 +80,8 @@ public class EmptyStringUserTypeTest {
     }
 
     @BeforeEach
-    public void setUp() throws Exception {
-        String dbName = "empty-string-ut-" + UUID.randomUUID().toString().substring(0, 8);
-        String jdbcUrl = "jdbc:hsqldb:mem:" + dbName + ";sql.enforce_strict_size=true;shutdown=true;";
-        Map<String, String> props = Map.of("hibernate.connection.url", jdbcUrl);
-        emf = Persistence.createEntityManagerFactory("testingUserType", props);
-        em = emf.createEntityManager();
-    }
-
-    @AfterEach
-    public void tearDown() throws Exception {
-        em.close();
-        emf.close();
+    public void setUp() {
+        this.em = db.getEntityManager();
     }
 
     @Test
