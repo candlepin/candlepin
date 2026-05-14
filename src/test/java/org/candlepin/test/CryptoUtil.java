@@ -231,7 +231,7 @@ public class CryptoUtil {
      * @return
      *  a CryptoManager configured using the standard configuration
      */
-    public static synchronized CryptoManager getCryptoManager() {
+    public static CryptoManager getCryptoManager() {
         if (standardCryptoManager == null) {
             standardCryptoManager = getCryptoManager(TestConfig.defaults());
         }
