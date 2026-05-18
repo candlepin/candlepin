@@ -104,8 +104,6 @@ import com.google.inject.persist.PersistFilter;
 import com.google.inject.util.Modules;
 
 import org.hibernate.Session;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -205,22 +203,6 @@ public class DatabaseTestFixture {
         cryptoManager = CryptoUtil.getCryptoManager();
 
         parentInjector = Guice.createInjector(new TestingModules.JpaModule());
-        insertValidationEventListeners(parentInjector);
-    }
-
-    /**
-     * There's no way to really get Guice to perform injections on stuff that the JpaPersistModule is
-     * creating, so we resort to grabbing the EntityManagerFactory after the fact and adding the
-     * Validation EventListener ourselves.
-     *
-     * @param inj
-     */
-    private static void insertValidationEventListeners(Injector inj) {
-        Provider<EntityManagerFactory> emfProvider = inj.getProvider(EntityManagerFactory.class);
-        SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) emfProvider.get();
-        EventListenerRegistry registry = sessionFactoryImpl
-            .getServiceRegistry()
-            .getService(EventListenerRegistry.class);
     }
 
     // Need a before each here and a Liquibase extension...

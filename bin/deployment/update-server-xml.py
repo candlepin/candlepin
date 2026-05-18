@@ -484,7 +484,6 @@ class CandlepinConnectorNIO(AbstractBaseEditor):
         #
         #     <SSLHostConfig certificateVerification="optional"
         #         protocols="+TLSv1.2,+TLSv1.3"
-        #         sslProtocol="TLS"
         #         caCertificateFile="/etc/candlepin/certs/candlepin-ca-bundle.crt">
         #
         #         <Certificate certificateFile="/etc/candlepin/certs/candlepin-mldsa-65-ca.crt"
@@ -504,7 +503,6 @@ class CandlepinConnectorNIO(AbstractBaseEditor):
             ("certificateVerification", "optional"),
             # Support TLS 1.2 and 1.3 for both legacy and PQC clients
             ("protocols", "+TLSv1.2,+TLSv1.3"),
-            ("sslProtocol", "TLS"),
             # Use combined CA bundle for client certificate verification
             # Contains both RSA and ML-DSA CAs to verify both types of client certificates
             ("caCertificateFile", "/etc/candlepin/certs/candlepin-ca-bundle.crt"),

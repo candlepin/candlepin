@@ -47,6 +47,7 @@ ENV JAVA_HOME=/usr/lib/jvm/jre-25-openjdk
 ENV JRE_HOME=/usr/lib/jvm/jre-25-openjdk
 ENV LD_LIBRARY_PATH=/usr/lib64
 ENV CATALINA_OPTS=-Djakarta.net.ssl.trustStore=$JAVA_HOME/lib/security/cacerts
+ENV CATALINA_OPTS="$CATALINA_OPTS -agentlib:jdwp=transport=dt_socket,server=y,address=*:8000,suspend=n"
 
 # Tomcat Setup
 COPY --from=builder /opt/tomcat/ /opt/tomcat/

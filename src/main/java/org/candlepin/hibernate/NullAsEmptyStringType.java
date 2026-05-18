@@ -62,11 +62,7 @@ public class NullAsEmptyStringType implements UserType<String> {
      */
     @Override
     public Serializable disassemble(String value) {
-        if (value != null && !(value instanceof String)) {
-            throw new IllegalStateException("value is not a string: " + value);
-        }
-
-        return (Serializable) value;
+        return value;
     }
 
     /**
@@ -78,13 +74,8 @@ public class NullAsEmptyStringType implements UserType<String> {
             return true;
         }
 
-        // We can't compare non-Strings
-        if ((x != null && !(x instanceof String)) || (y != null && !(y instanceof String))) {
-            return false;
-        }
-
-        String xstr = x != null ? (String) x : "";
-        String ystr = y != null ? (String) y : "";
+        String xstr = x != null ? x : "";
+        String ystr = y != null ? y : "";
 
         return xstr.equals(ystr);
     }

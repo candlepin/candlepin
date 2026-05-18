@@ -50,10 +50,10 @@ public class EmptyStringUserType implements UserType<String> {
         }
 
         if (x == null) {
-            return ((String) y).length() == 0;
+            return y.length() == 0;
         }
         else if (y == null) {
-            return ((String) x).length() == 0;
+            return x.length() == 0;
         }
 
         return x.equals(y);
@@ -90,7 +90,7 @@ public class EmptyStringUserType implements UserType<String> {
 
     @Override
     public Serializable disassemble(String value) throws HibernateException {
-        return (Serializable) value;
+        return value;
     }
 
     @Override

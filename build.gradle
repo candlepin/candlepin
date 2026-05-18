@@ -128,7 +128,6 @@ dependencies {
     implementation(libs.resteasy.validator) {
         // We don't need resteasy-cdi, since we use Guice
         exclude group: 'org.jboss.resteasy', module: 'resteasy-cdi'
-        exclude group: 'org.jboss', module: 'jandex'
     }
 
     implementation(libs.jakarta.rs)
@@ -160,7 +159,7 @@ dependencies {
     // We need to specify the full dependency definition here because ehcache needs
     // the 'jakarta' classifier in order to fetch the jakarta-compatible version of
     // ehcache, but the libs.versions.toml format does not support classifiers
-    implementation "org.ehcache:ehcache:3.11.1:jakarta"
+    implementation "org.ehcache:ehcache:3.12.0:jakarta"
 
     implementation(libs.javax.cache)
 
