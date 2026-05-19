@@ -161,60 +161,6 @@ class AbstractBaseEditor(object):
                 self._delete(existing_nodes, parent)
 
 
-class LegacySSLContextEditor(AbstractBaseEditor):
-    def __init__(self, *args, **kwargs):
-        super(LegacySSLContextEditor, self).__init__(*args, **kwargs)
-        self.port = "8443"
-        self._element = self._build_node()
-
-    @property
-    def parent_xpath(self):
-        return "/Server/Service"
-
-    @property
-    def search_xpath(self):
-        return "./Connector[@port='%s']" % self.port
-
-    @property
-    def new_node(self):
-        return self._element
-
-    @property
-    def attributes(self):
-        # We manually add the attributes below, so we don't want to return anything here.
-        return []
-
-    def _build_node(self):
-        # Setup our node configuration
-        connector = libxml2.newNode("Connector")
-        self._add_attributes(connector, [
-            ("port", self.port),
-            ("protocol", "HTTP/1.1"),
-            ("SSLEnabled", "true"),
-            ("maxThreads", "150"),
-            ("scheme", "https"),
-            ("secure", "true"),
-            ("clientAuth", "want"),
-            # Note SSLv3 is not included, to avoid poodle
-            # For the time being, TLSv1 needs to stay enabled in Satellite deployments to support
-            # existing python-rhsm based clients (RHEL5).
-            ("sslEnabledProtocols", "TLSv1.2,TLSv1.1,TLSv1"),
-            ("SSLProtocol", "TLSv1.2,TLSv1.1,TLSv1"),
-            ("truststoreFile", "conf/keystore"),
-            ("truststorePass", "password"),
-            ("keystoreFile", "conf/keystore"),
-            ("keystorePass", "password"),
-            ("keystoreType", "PKCS12"),
-            ("compression", "on"),
-            ("compressionMinSize", "11"),
-            ("compressableMimeType", "application/json,text/html,text/xml"),
-        ])
-
-        # Return our top-level node
-        return connector
-
-
-
 class CandlepinConnectorEditorV3(AbstractBaseEditor):
     def __init__(self, *args, **kwargs):
         super(CandlepinConnectorEditorV3, self).__init__(*args, **kwargs)
@@ -699,9 +645,6 @@ def main():
         tversion = parse_tc_version(options.tc_version)
         if not tversion or len(tversion) < 1 or tversion[0] > 8 or (tversion[0] == 8 and tversion[1] >= 5):
             ssl_editor_target = CandlepinConnectorEditorV3
-        else:
-            logger.warn("Using legacy Tomcat configuration")
-            ssl_editor_target = LegacySSLContextEditor
 
     xml_file = os.path.join(conf_dir, "server.xml")
     logger.debug("Opening %s" % xml_file)
